@@ -382,10 +382,10 @@
           "default": "",
           "description": "👨‍👩‍👧‍👦 The optional port of the connector. This allows to define explicit compatibility with other connectors.",
           "maxLength": 64,
-          "title": "Interface",
+          "title": "Port",
           "type": "string"
         },
-        "compatibleInterfaces": {
+        "compatiblePorts": {
           "description": "✅ The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.",
           "items": {
             "type": "string"

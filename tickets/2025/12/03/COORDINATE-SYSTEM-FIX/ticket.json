@@ -1,7 +1,7 @@
 {
   "title": "Fix coordinate system transformation for connectors and geometry",
   "prompt": "Fix coordinate system transformation for connectors and geometry",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

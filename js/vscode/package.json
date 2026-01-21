@@ -450,7 +450,7 @@
     "test": "vscode-test",
     "vscode:prepublish": "npm run build",
     "preflight": "tsc --noEmit",
-    "package": "vsce package --no-dependencies --out semio.vsix"
+    "publish:vsix": "vsce package --no-dependencies --out semio.vsix"
   },
   "devDependencies": {
     "@vscode/vsce": "^3.5.0",

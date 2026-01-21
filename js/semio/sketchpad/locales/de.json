@@ -1361,7 +1361,7 @@
               "manual": "manuals/semio/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
-            "showInterfaces": {
+            "showPorts": {
               "label": {
                 "normal": "Schnittstellen anzeigen",
                 "beginner": "Klicken, um alle Schnittstellen in diesem Kit anzuzeigen"
@@ -1369,7 +1369,7 @@
               "manual": "manuals/semio/kit#ports",
               "tutorial": "getting-started/intro#port"
             },
-            "createInterface": {
+            "createPort": {
               "label": {
                 "normal": "Schnittstelle erstellen",
                 "beginner": "Klicken, um eine neue Schnittstellendefinition in diesem Kit zu erstellen"
@@ -1742,7 +1742,7 @@
                 "beginner": "Alle kompatibel"
               }
             },
-            "compatibleInterfaces": {
+            "compatiblePorts": {
               "label": {
                 "normal": "Kompatible Schnittstellen",
                 "beginner": "Kompatible Schnittstellen"
@@ -2518,7 +2518,7 @@
                       "beginner": "Die Connectorfamilie für Kompatibilitätsprüfung"
                     }
                   },
-                  "compatibleInterface": {
+                  "compatiblePort": {
                     "label": {
                       "normal": "Kompatible Familie",
                       "beginner": "Die Familien, mit denen dieser Connector kompatibel ist"
@@ -2988,7 +2988,7 @@
               }
             }
           },
-          "connectorInterfacePlaceholder": {
+          "connectorPortPlaceholder": {
             "label": {
               "label": {
                 "normal": "z.B. elektrisch, mechanisch",
@@ -3020,7 +3020,7 @@
             "manual": "type#connectors",
             "tutorial": "hello-semio/model-brick-set#connectors"
           },
-          "connectorCompatibleInterfacesPlaceholder": {
+          "connectorCompatiblePortsPlaceholder": {
             "label": {
               "label": {
                 "normal": "familie1, familie2",
@@ -3196,7 +3196,7 @@
                     "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
-                  "compatibleInterfaces": {
+                  "compatiblePorts": {
                     "label": {
                       "normal": "Kompatible Familien",
                       "beginner": "Liste anderer Connector-Familien, mit denen dieser Connector verbunden werden kann. Leer lassen, um alle Familien zuzulassen."

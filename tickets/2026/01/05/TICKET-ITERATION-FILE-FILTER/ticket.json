@@ -1,7 +1,7 @@
 {
   "title": "TICKET-ITERATION-FILE-FILTER",
   "prompt": "Fix ticket iteration end to only calculate lines for files that were declared when the iteration started, not all files from git.",
-  "llm": "claude-opus-4-5",
+  "llm": "opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

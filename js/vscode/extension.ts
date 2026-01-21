@@ -23,7 +23,7 @@
 
 import { applyKitDiff, deserializeKit, DomainLocation, Fix, Kit, Problem, serializeKit, validateKit } from "@semio/js/semio";
 import { cacheExchange, Client, fetchExchange } from "@urql/core";
-import { exec } from "child_process";
+import { exec, execFile } from "child_process";
 import * as fs from "fs";
 import * as jsonc from "jsonc-parser";
 import * as path from "path";
@@ -33,13 +33,14 @@ import { DocumentType, graphql } from "./generated/gql";
 import { TicketStatus } from "./generated/graphql";
 
 const execAsync = promisify(exec);
+const execFileAsync = promisify(execFile);
 
 const LLM_OPTIONS = [
-  "claude-opus-4-5",
+  "opus-4-5",
   "claude-opus-4",
-  "claude-sonnet-4-5",
+  "sonnet-4-5",
   "claude-sonnet-4",
-  "claude-haiku-4-5",
+  "haiku-4-5",
   "gemini-3-pro",
   "gemini-3-flash",
   "gpt-5-2",
@@ -75,73 +76,85 @@ function getUrqlClient(): Client | null {
   log(`[getUrqlClient] Initializing URQL client with command: ${command}`);
   urqlClient = new Client({
     url: "local://graphql",
-    exchanges: [fetchExchange], // Skip cacheExchange for now to ensure we see every request
+    exchanges: [cacheExchange, fetchExchange],
     fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
       log("[urql] fetch triggered");
       try {
         const body = init?.body ? JSON.parse(init.body as string) : {};
         const query = (body.query as string) || "";
         const variables = body.variables || {};
-        const variablesJson = Object.keys(variables).length > 0 ? JSON.stringify(variables) : "";
-
-        // Even more robust escaping for Linux
-        const escapedQuery = query.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$").replace(/\n/g, " ");
-        const escapedVariables = variablesJson ? variablesJson.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\$/g, "\\$") : "";
-
-        const fullCommand = escapedVariables ? `"${command}" graphql "${escapedQuery}" -v "${escapedVariables}"` : `"${command}" graphql "${escapedQuery}"`;
-
-        log("[urql] executing CLI command (shortened):", fullCommand.substring(0, 300) + "...");
-
+        const variablesJson = JSON.stringify(variables);
+        log(`[urql] executing graphql via execFile. Variables: ${variablesJson.length > 100 ? variablesJson.substring(0, 100) + '...' : variablesJson}`);
+        const repoPath = getRepoCommand();
+        if (!repoPath) throw new Error("Repo command not found");
+        const repoArgs = ["graphql", query];
+        if (Object.keys(variables).length > 0) {
+          repoArgs.push("-v", variablesJson);
+        }
         const start = Date.now();
-        const { stdout, stderr } = await execAsync(fullCommand, {
+        const { stdout, stderr } = await execFileAsync(repoPath, repoArgs, {
           cwd: root,
-          timeout: 45000, // Slightly longer timeout
+          timeout: 45000,
           maxBuffer: 50 * 1024 * 1024,
         });
         const duration = Date.now() - start;
         log(`[urql] CLI execution successful in ${duration}ms, stdout size: ${stdout.length}`);
-
         if (stderr) {
           log("[urql] CLI stderr (first 100):", stderr.substring(0, 100));
         }
-
         if (!stdout.trim()) {
           logError("[urql] CLI returned empty stdout");
           throw new Error("Empty output from repo command");
         }
-
         const data = JSON.parse(stdout);
-        log("[urql] JSON parse successful");
-
-        // URQL's fetchExchange expects a Response-like object
+        const responseBody = JSON.stringify({ data });
+        if (typeof Response !== "undefined") {
+          return new Response(responseBody, {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
         return {
           status: 200,
           ok: true,
           headers: {
             get: (name: string) => (name.toLowerCase() === "content-type" ? "application/json" : null),
-            forEach: () => {},
+            has: (name: string) => name.toLowerCase() === "content-type",
+            forEach: (cb: any) => cb("application/json", "content-type"),
           },
           json: async () => ({ data }),
-          text: async () => JSON.stringify({ data }),
+          text: async () => responseBody,
         } as any;
       } catch (error) {
         logError("[urql] fetch execution error:", error);
         const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorBody = JSON.stringify({ errors: [{ message: errorMessage }] });
+
+        if (typeof Response !== "undefined") {
+          return new Response(errorBody, {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          });
+        }
+
         return {
           status: 500,
           ok: false,
           headers: {
             get: (name: string) => (name.toLowerCase() === "content-type" ? "application/json" : null),
-            forEach: () => {},
+            has: (name: string) => name.toLowerCase() === "content-type",
+            forEach: (cb: any) => cb("application/json", "content-type"),
           },
           json: async () => ({ errors: [{ message: errorMessage }] }),
-          text: async () => JSON.stringify({ errors: [{ message: errorMessage }] }),
+          text: async () => errorBody,
         } as any;
       }
     },
   });
   return urqlClient;
 }
+
+// #endregion urql Client
 
 function resetUrqlClient(): void {
   urqlClient = null;
@@ -596,8 +609,15 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
       logError("[runRepoCommandJson] stdout is empty!");
       return null;
     }
-    const parsed = JSON.parse(stdout) as T;
-    return parsed;
+    const parsed = JSON.parse(stdout);
+    if (parsed && !parsed.data && !parsed.error) {
+      const keys = Object.keys(parsed);
+      if (keys.length === 1) {
+        return { data: parsed[keys[0]], output: { exitCode: 0, lines: [] } } as any;
+      }
+      return { data: parsed, output: { exitCode: 0, lines: [] } } as any;
+    }
+    return parsed as T;
   } catch (error) {
     logError("[runRepoCommandJson] error:", error);
     if (error instanceof Error) {
@@ -619,16 +639,39 @@ function normalizeSectionTree(sections: GraphqlSection[]): SectionInfo[] {
   }));
 }
 
-function extractSections(result: ToolResult<SectionInfo[]> | { file?: { sections?: GraphqlSection[] | null } | null } | null): SectionInfo[] {
-  if (!result) return [];
-  if ("data" in result && Array.isArray(result.data)) return result.data;
-  if ("file" in result) return normalizeSectionTree(result.file?.sections ?? []);
+function extractSections(result: any): SectionInfo[] {
+  if (!result) {
+    log("[extractSections] result is null/undefined");
+    return [];
+  }
+  log("[extractSections] result keys:", Object.keys(result));
+  if ("data" in result) {
+    const data = result.data;
+    log("[extractSections] data:", typeof data, Array.isArray(data) ? "isArray" : "notArray");
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === "object") {
+      log("[extractSections] data keys:", Object.keys(data));
+      if ("sections" in data && Array.isArray(data.sections)) {
+        log("[extractSections] found", data.sections.length, "sections in data.sections");
+        return normalizeSectionTree(data.sections);
+      }
+    }
+  }
+  if ("file" in result) {
+    log("[extractSections] found sections in result.file, count:", result.file?.sections?.length ?? 0);
+    return normalizeSectionTree(result.file?.sections ?? []);
+  }
+  log("[extractSections] no sections found, returning empty array");
   return [];
 }
 
 async function getSectionListForFile(filePath: string): Promise<SectionInfo[]> {
+  log("[getSectionListForFile] fetching sections for:", filePath);
   const result = await runRepoCommandJson<ToolResult<SectionInfo[]> | { file?: { sections?: GraphqlSection[] | null } | null }>(`section list "${filePath}"`);
-  return extractSections(result);
+  log("[getSectionListForFile] result:", result ? "received" : "null", result ? JSON.stringify(result).substring(0, 200) : "");
+  const sections = extractSections(result);
+  log("[getSectionListForFile] extracted sections count:", sections.length);
+  return sections;
 }
 
 async function loadCodebase(): Promise<Codebase | null> {
@@ -904,14 +947,28 @@ let repoDiagnosticCollection: vscode.DiagnosticCollection;
 const fileViolationsMap = new Map<string, Violation[]>();
 
 function extractFilePathFromScope(scope: string): string | undefined {
-  if (scope.endsWith(".ts") || scope.endsWith(".tsx") || scope.endsWith(".js") || scope.endsWith(".json") || scope.endsWith(".py") || scope.endsWith(".cs") || scope.endsWith(".go")) {
-    return scope.split("#")[0].split("§")[0];
+  let cleanScope = scope;
+  if (cleanScope.startsWith("@semio/violations/")) {
+    cleanScope = cleanScope.replace("@semio/violations/", "");
+  } else if (cleanScope.startsWith("@semio/")) {
+    // Other scopes might look like @semio/js/path/to/file.ts
+    const parts = cleanScope.split("/");
+    if (parts.length > 2) {
+      cleanScope = parts.slice(2).join("/");
+    }
   }
+
+  const parts = cleanScope.split(/[#§:]/);
+  const filePath = parts[0];
+  if (filePath.endsWith(".ts") || filePath.endsWith(".tsx") || filePath.endsWith(".js") || filePath.endsWith(".json") || filePath.endsWith(".py") || filePath.endsWith(".cs") || filePath.endsWith(".go") || filePath.endsWith(".sh")) {
+    return filePath;
+  }
+  log("[extractFilePathFromScope] could not identify file path from scope:", scope, "cleanScope:", cleanScope, "candidate:", filePath);
   return undefined;
 }
 
 function shouldAnalyzeFile(document: vscode.TextDocument): boolean {
-  const supportedLanguages = ["typescript", "javascript", "typescriptreact", "javascriptreact", "json", "python", "csharp", "go"];
+  const supportedLanguages = ["typescript", "javascript", "typescriptreact", "javascriptreact", "json", "python", "csharp", "go", "shellscript"];
   return supportedLanguages.includes(document.languageId);
 }
 
@@ -961,6 +1018,10 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
   const root = getWorkspaceRoot();
   if (!root) return;
   const diagnosticsByUri = new Map<string, { uri: vscode.Uri; diagnostics: vscode.Diagnostic[] }>();
+
+  // Always initialize target document with empty array to ensure it's cleared if no violations found for it
+  diagnosticsByUri.set(document.uri.toString(), { uri: document.uri, diagnostics: [] });
+
   for (const violation of violations) {
     const filePath = extractFilePathFromScope(violation.scope);
     if (!filePath) continue;
@@ -1118,7 +1179,7 @@ function findEntityNode(tree: jsonc.Node, location: DomainLocation): jsonc.Node 
     Type: "types",
     Design: "designs",
     Quality: "qualities",
-    Interface: "ports",
+    Port: "ports",
     File: "files",
     Folder: "folders",
     Piece: "pieces",
@@ -2369,21 +2430,29 @@ class SectionsProvider implements vscode.TreeDataProvider<SectionTreeItem> {
   }
 
   async getChildren(element?: SectionTreeItem): Promise<SectionTreeItem[]> {
+    log("[SectionsProvider.getChildren] called, element:", element?.constructor.name ?? "root");
     if (element instanceof SectionItem) {
+      log("[SectionsProvider.getChildren] returning children of section:", element.sectionPath);
       return element.section.children.map((child) => new SectionItem(child, `${element.sectionPath}/${child.name}`));
     }
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
+      log("[SectionsProvider.getChildren] no active editor");
       return [new SectionStatusItem(getUiString("sectionsNoActiveFile"))];
     }
     if (!hasRepoAccess()) {
+      log("[SectionsProvider.getChildren] no repo access");
       return [];
     }
     const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
+    log("[SectionsProvider.getChildren] fetching sections for:", relativePath);
     const sections = await getSectionListForFile(relativePath);
+    log("[SectionsProvider.getChildren] got sections:", sections.length);
     if (sections.length === 0) {
+      log("[SectionsProvider.getChildren] returning empty status");
       return [new SectionStatusItem(getUiString("sectionsEmpty"))];
     }
+    log("[SectionsProvider.getChildren] returning", sections.length, "section items");
     return this.buildSectionItems(sections, null);
   }
 }
@@ -3754,15 +3823,19 @@ function registerCommands(context: vscode.ExtensionContext): void {
 let outputChannel: vscode.OutputChannel;
 
 function log(...args: any[]): void {
-  if (!outputChannel) return;
   const message = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-  outputChannel.appendLine(message);
+  outputChannel?.appendLine(message);
+  try {
+    fs.appendFileSync("/workspaces/semio/js/vscode/activation.log", "[LOG] " + message + "\n");
+  } catch (e) { }
 }
 
 function logError(...args: any[]): void {
-  if (!outputChannel) return;
   const message = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-  outputChannel.appendLine('[ERROR] ' + message);
+  outputChannel?.appendLine('[ERROR] ' + message);
+  try {
+    fs.appendFileSync("/workspaces/semio/js/vscode/activation.log", "[ERROR] " + message + "\n");
+  } catch (e) { }
 }
 
 export function activate(context: vscode.ExtensionContext) {

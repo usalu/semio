@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Reorganize benchmark files to follow a consistent naming convention across all language implementations (py, go, js, rs, net)",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-16T20:31:07.7786891+01:00",
       "commit": "2f0e6c6251dca141615c00c2bb4074d0c80c6443"

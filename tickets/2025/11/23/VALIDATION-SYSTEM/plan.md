@@ -166,7 +166,7 @@ Added ~550 lines of pure validation logic:
   - `semioDesignNameUniquenessConstraint`
   - `semioPieceNameUniquenessConstraint`
   - `semioQualityNameUniquenessConstraint`
-  - `semioInterfaceNameUniquenessConstraint`
+  - `semioPortNameUniquenessConstraint`
   - `semioFileNameUniquenessConstraint`
   - `semioFolderNameUniquenessConstraint`
   - `semioPortNameUniquenessConstraint`

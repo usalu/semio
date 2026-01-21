@@ -2547,7 +2547,7 @@
           }
         },
         {
-          "name": "GraphQL Context Interface",
+          "name": "GraphQL Context Port",
           "range": {
             "start": 8123,
             "end": 8155

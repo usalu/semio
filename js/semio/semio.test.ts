@@ -77,25 +77,27 @@ const findDesign = (kit: Kit, name: string, parentName?: string) => {
   return d;
 }
 
-describe("Diffs", () => {
-  const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent) };
-  const kitDiff = MetabolismKitDiff as any;
-  const kitDiffInverted = MetabolismKitDiffInverted as any;
-  const kitDiffed = MetabolismKitDiffed as any;
+describe("Diff", () => {
+  describe("Metabolism", () => {
+    const kitOriginal = { ...(MetabolismKit as any), designs: (MetabolismKit as any).designs?.filter((d: any) => !d.parent) };
+    const kitDiff = MetabolismKitDiff as any;
+    const kitDiffInverted = MetabolismKitDiffInverted as any;
+    const kitDiffed = MetabolismKitDiffed as any;
 
-  it("Kit + Diff → DiffedKit & DiffedKit + InverseDiff → Kit", () => {
-    const computedDiff = getKitDiff(kitOriginal, kitDiffed);
-    expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);
-    const computedInverseDiff = inverseKitDiff(kitOriginal, kitDiff);
-    expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);
-    const appliedForward = applyKitDiff(kitOriginal, kitDiff);
-    expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);
-    const appliedInverse = applyKitDiff(kitDiffed, kitDiffInverted);
-    expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);
+    it("Kit + Diff = DiffedKit & DiffedKit + InvertedDiff = Kit", () => {
+      const computedDiff = getKitDiff(kitOriginal, kitDiffed);
+      expect(areKitDiffsEqual(computedDiff, kitDiff)).toBe(true);
+      const computedInverseDiff = inverseKitDiff(kitOriginal, kitDiff);
+      expect(areKitDiffsEqual(computedInverseDiff, kitDiffInverted)).toBe(true);
+      const appliedForward = applyKitDiff(kitOriginal, kitDiff);
+      expect(areKitsEqual(appliedForward, kitDiffed)).toBe(true);
+      const appliedInverse = applyKitDiff(kitDiffed, kitDiffInverted);
+      expect(areKitsEqual(appliedInverse, kitOriginal)).toBe(true);
+    });
   });
 });
 
-describe("Flattening Designs", () => {
+describe("Flatten", () => {
   const kit = MetabolismKit as Kit;
 
   const testFlatten = (designName: string, parentName?: string) => {
@@ -115,66 +117,88 @@ describe("Flattening Designs", () => {
     });
   }
 
-  it("Nakagin Capsule Tower", () => {
-    testFlatten("Nakagin Capsule Tower");
-  });
-  it("Nakagin Capsule Tower/Slanted", () => {
-    testFlatten("Slanted", "Nakagin Capsule Tower");
+  describe("Nakagin Capsule Tower", () => {
+    it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
+      testFlatten("Nakagin Capsule Tower");
+    });
+    describe("Slanted", () => {
+      it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
+        testFlatten("Slanted", "Nakagin Capsule Tower");
+      });
+    });
+    describe("Twisted", () => {
+      it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
+        testFlatten("Twisted", "Nakagin Capsule Tower");
+      });
+    });
+    describe("Dancing", () => {
+      it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
+        testFlatten("Dancing", "Nakagin Capsule Tower");
+      });
+    });
   });
 
-  it("Nakagin Capsule Tower/Twisted", () => {
-    testFlatten("Twisted", "Nakagin Capsule Tower");
-  });
-
-  it("Nakagin Capsule Tower/Dancing", () => {
-    testFlatten("Dancing", "Nakagin Capsule Tower");
-  });
-
-  it("Capsule Dream", () => {
-    testFlatten("Capsule Dream");
+  describe("Capsule Dream", () => {
+    it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
+      testFlatten("Capsule Dream");
+    });
   });
 });
 
-describe("Import/Export", () => {
-  it("Kit -> JSON -> Kit", async () => {
-    const kit = MetabolismKit as unknown as Kit;
-    const serializedKit = serializeKit(kit);
-    const deserializedKit = deserializeKit(serializedKit);
-    expect(areKitsEqual(kit, deserializedKit)).toBe(true);
+describe("Roundtrip", () => {
+  describe("Json", () => {
+    describe("Metabolism", () => {
+      it("Kit -> Json -> Kit", async () => {
+        const kit = MetabolismKit as unknown as Kit;
+        const serializedKit = serializeKit(kit);
+        const deserializedKit = deserializeKit(serializedKit);
+        expect(areKitsEqual(kit, deserializedKit)).toBe(true);
+      });
+    });
   });
 
-  it("Zip -> Kit -> Zip -> Kit", async () => {
-    const fs = await import("node:fs");
-    const path = await import("node:path");
-    const zipPath = path.join(__dirname, "../../assets/semio/metabolism.zip");
-    const zipBuffer = fs.readFileSync(zipPath);
+  describe("Zip", () => {
+    describe("Metabolism", () => {
+      it("Zip -> Kit -> Zip -> Kit", async () => {
+        const fs = await import("node:fs");
+        const path = await import("node:path");
+        const zipPath = path.join(__dirname, "../../assets/semio/metabolism.zip");
+        const zipBuffer = fs.readFileSync(zipPath);
 
-    const { kit, files } = await importKit(zipBuffer.buffer);
-    expect(kit.guid).toBeDefined();
-    expect(kit.name).toBe("Metabolism");
-    expect(kit.types?.length).toBeGreaterThan(0);
-    expect(kit.designs?.length).toBeGreaterThan(0);
-    expect(files.size).toBeGreaterThan(0);
+        const { kit, files } = await importKit(zipBuffer.buffer);
+        expect(kit.guid).toBeDefined();
+        expect(kit.name).toBe("Metabolism");
+        expect(kit.types?.length).toBeGreaterThan(0);
+        expect(kit.designs?.length).toBeGreaterThan(0);
+        expect(files.size).toBeGreaterThan(0);
 
-    const exportedZip = await exportKit(kit, files);
-    const { kit: kit2, files: files2 } = await importKit(exportedZip);
+        const exportedZip = await exportKit(kit, files);
+        const { kit: kit2, files: files2 } = await importKit(exportedZip);
 
-    expect(kit2.guid).toBe(kit.guid);
-    expect(kit2.name).toBe(kit.name);
-    expect(kit2.types?.length).toBe(kit.types?.length);
-    expect(kit2.designs?.length).toBe(kit.designs?.length);
-    expect(files2.size).toBe(files.size);
+        expect(kit2.guid).toBe(kit.guid);
+        expect(kit2.name).toBe(kit.name);
+        expect(kit2.types?.length).toBe(kit.types?.length);
+        expect(kit2.designs?.length).toBe(kit.designs?.length);
+        expect(files2.size).toBe(files.size);
+      });
+    });
   });
 });
 
 describe("Validation", () => {
-  it("Validation matches expected output", () => {
-    const validKit = MetabolismKit as unknown as Kit;
-    expect(hasErrors(validateKit(validKit))).toBe(false);
+  describe("Metabolism", () => {
+    it("Metabolism Kit -> Validate = Empty report", () => {
+      const validKit = MetabolismKit as unknown as Kit;
+      expect(hasErrors(validateKit(validKit))).toBe(false);
+    });
+  });
 
-    const invalidKit = InvalidKit as unknown as Kit;
-    const result = toValidationResult(validateKit(invalidKit));
-    const expected = InvalidKitValidation as ValidationResult;
-    expect(areValidationResultsEqual(result, expected)).toBe(true);
+  describe("Invalid", () => {
+    it("Invalid Kit -> Validate = Invalid Report", () => {
+      const invalidKit = InvalidKit as unknown as Kit;
+      const result = toValidationResult(validateKit(invalidKit));
+      const expected = InvalidKitValidation as ValidationResult;
+      expect(areValidationResultsEqual(result, expected)).toBe(true);
+    });
   });
 });

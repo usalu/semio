@@ -6,7 +6,8 @@
   "projectType": "library",
   "scripts": {
     "build": "tsx ./build.ts",
-    "preflight": "echo \"No preflight checks configured for .NET project\""
+    "test": "dotnet test ../Semio.Tests/Semio.Tests.csproj",
+    "preflight": "dotnet build"
   },
   "devDependencies": {
     "@semio/assets": "*"

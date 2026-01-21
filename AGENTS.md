@@ -1,6 +1,6 @@
 <!-- IMPORTANT -->
 
-ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/repo ticket open "<title>" "<prompt>" <llm>` when no mcp tool is available) for every task you are working on. The title MUST be titleized (e.g. "Some Title on Something") and NOT a slug or all caps. Available LLMs are: `claude-opus-4-5`, `claude-opus-4`, `claude-sonnet-4-5`, `claude-sonnet-4`, `claude-haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2`, `gpt-5-mini`. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md`, `log.md`, `summary.md`. NEVER answer directly in the chat and ALWAYS just add the message to `log.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into `summary.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG <summary> <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> <llm>` when no mcp tool is available).
+ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/repo ticket open "<title>" "<prompt>" --<llm> --<ui>` when no mcp tool is available) for every task you are working on. The title MUST be titleized (e.g. "Some Title on Something") and NOT a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`. Available UIs are: `claude-code`, `cursor`, `copilot-chat`, `antigravity`, `codex`, `droid`. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md` and `ticket.md`. NEVER answer directly in the chat and ALWAYS just add the message to `ticket.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into the `## Summary` section of `ticket.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG "<summary>" <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG "<prompt>" --<llm> --<ui>` when no mcp tool is available).
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -28,6 +28,8 @@ Source files MUST NOT include inline comments except for license headers and reg
 Block and JSDoc comments are treated as inline comments.
 
 Comment detection MUST ignore comment markers inside string literals and template literal text.
+
+Inline comment violations MUST be grouped per contiguous inline-comment block.
 
 Temporary diagnostic logs MUST include the `[DEBUG]` prefix and are considered removable.
 
@@ -81,15 +83,18 @@ A ticket MUST store a `prompt` which is the prompt used to create the ticket.
 
 A ticket MUST store a `commit` which is the git commit at ticket creation for line stats calculation.
 
-A ticket MUST store a `summary` when finished.
+A ticket MUST store a summary when finished.
 
-A ticket MUST store a list of `files` (`updated`, `created`, `removed`) with line stats when finished.
+A ticket MUST store semantic diffs for bundles, folders, files, sections, and definitions with line stats when finished.
+
+Ticket workspaces MUST store a single ticket.md that captures todos, changes, log entries, and the summary alongside plan.md.
 
 Tickets can be reopened to return to **open** status.
 
 Ticket close and reopen actions invoked from the ticket list MUST apply to the selected ticket without additional selection.
 
 Ticket creation MUST require a prompt and a titleized title (e.g. "Some Title on Something"). Slugs or all-caps titles are forbidden.
+
 Ticket title updates MUST rename the ticket folder and slug path.
 Ticket open MUST interpret a `CONTINUE` keyword to continue the latest ticket and a `NOTICKET` keyword to skip ticket creation.
 
@@ -97,9 +102,8 @@ Ticket finish MUST require a summary and a list of files.
 
 Temporary task artifacts MUST be stored inside the active ticket workspace.
 
-Ticket finish MUST derive per-file `updated`, `created`, and `removed` lists with line stats via git diff between the ticket base commit and the current commit, scoped to the files declared on the ticket.
-Ticket section line metrics MUST map added lines to current file sections, removed lines to base-commit section ranges, and affected definitions to added lines only.
-Ticket section ranges MUST be stored as line-only start/end integers.
+Ticket finish MUST derive semantic diffs across bundles, folders, files, sections, and definitions via git diff between the ticket base commit and the current commit, scoped to the files declared on the ticket.
+Ticket line metrics MUST map added lines to current scopes and removed lines to base-commit scopes for semantic diffs.
 
 ### Repo Dev Server
 
@@ -119,15 +123,21 @@ Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifi
 Ticket reopen MUST require `prompt` and `llm` values.
 Ticket open MUST require a ticket UI enum value.
 Ticket close MUST apply all affected bundle labels and the `@semio-repo` label for out-of-bundle paths.
-Ticket close MUST post a metrics comment listing each file with status icons and `+added`/`-removed` counts in a fenced `md` block.
+Ticket close MUST post a metrics comment listing semantic changes for bundles, folders, files, sections, and definitions with status icons and `+added`/`-removed` counts.
 Ticket issue bodies MUST prepend a `# 🤖 Prompt` heading.
 Ticket reopen MUST add a `# 🤖 Prompt` comment with the latest prompt.
 Ticket close MUST prepend a `# 🔍 Summary` heading to the summary comment.
 Ticket GitHub heading formatting MUST be consistent across create, reopen, and close flows.
-Ticket line metrics MUST use full line counts for added and deleted files, and diff-based counts for modified files.
-Ticket close MUST ignore files inside the active ticket workspace (plan/log/summary).
+Ticket line metrics MUST use full line counts for added and deleted scopes, and diff-based counts for modified scopes.
+Ticket close MUST ignore files inside the active ticket workspace (plan.md, ticket.md).
+Repo analyze without a scope MUST emit a codebase snapshot to `.semio-repo/reports/codebase.json` for semantic diffing.
 Ticket GitHub issues MUST be linked to the usalu project 2 on create and reopen.
 VS Code extension manifests MUST use an unscoped `name` value for vsce packaging.
+
+Repo operational artifacts (tickets, contributors, reports) MUST be stored under `.semio-repo/`.
+Repo analyze MUST exclude gitignored files, `.semio-repo/`, and `assets/repo/` from analysis.
+Ticket close MUST derive bundle labels from semantic bundle diffs and MUST NOT infer `@semio-repo` from README.md or AGENTS.md.
+Ticket iterations MUST store their own semantic diff payloads; tickets MUST NOT store diff payloads at the top level.
 
 ### MCP Tools
 
@@ -207,7 +217,7 @@ A `connector` is a conceptual connection **point** with an outwards **direction*
 
 A `connector` can be marked as **mandatory** in which case it is required to be connected to a `piece`.
 
-A `connector` can reference an **port** (InterfaceId) for explicit compatibility control. The port defines which other ports it is compatible with.
+A `connector` can reference an **port** (PortId) for explicit compatibility control. The port defines which other ports it is compatible with.
 
 No **port** means the _default_ port which is compatible with all other connectors.
 
@@ -296,11 +306,11 @@ A `benchmark` is a performance standard within a `quality` with a **name**, opti
 
 Benchmarks provide reference points for evaluating quality measurements against industry or design standards.
 
-### Interface
+### Port
 
-An `port` is a connector compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible ports** (InterfaceId references), and `attributes`.
+An `port` is a connector compatibility definition with **name**, optional **description**, optional **icon**, optional list of **compatible ports** (PortId references), and `attributes`.
 
-The `port` is defined at the kit level and referenced by `connectors` via InterfaceId.
+The `port` is defined at the kit level and referenced by `connectors` via PortId.
 
 An empty **compatible ports** list means the port is compatible with all other ports.
 
@@ -350,6 +360,10 @@ Stats provide computed or measured performance data for entire designs using the
 ## UI/UX
 
 ### Sketchpad
+
+### Ticket UX
+
+Ticket close output MUST present semantic change lists for bundles, folders, files, sections, and definitions with status icons and line metrics.
 
 #### Toolbar
 
@@ -639,7 +653,7 @@ repo definition list js/semio/semio.ts                      # List all definitio
 repo bundle list                                            # List all Nx bundles
 repo folder tree js/semio                                   # Show folder tree
 repo ticket open <title> <prompt> <llm> <ui> [--no-issue]    # Create ticket (positional syntax)
-repo ticket open --title <t> --prompt <p> --llm <l> --ui <u>  # Create ticket (explicit syntax) - llm: claude-opus-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; ui: claude-code, cursor, copilot-chat, antigravity, codex, droid
+repo ticket open --title <t> --prompt <p> --llm <l> --ui <u>  # Create ticket (explicit syntax) - llm: opus-4-5, claude-sonnet-4, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; ui: claude-code, cursor, copilot-chat, antigravity, codex, droid
 repo ticket list [year] [month] [day]                       # List tickets (optionally filtered by date)
 repo ticket close <YYYY/MM/DD/SLUG> <summary> <files...> [--title <new-title>]  # Close ticket (--title updates GitHub issue)
 repo ticket reopen <YYYY/MM/DD/SLUG> <prompt> <llm> [--title <new-title>]      # Reopen ticket (--title updates GitHub issue)
@@ -1342,10 +1356,16 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── workflows
 │ │ └── gh-pages.yml # Deploy user docs togh-pages
 │ └── dependabot.yml
+├── .semio-repo
+│ ├── contributors # Repo contributor registry
+│ ├── reports
+│ │ └── codebase.json # Codebase snapshot for semantic ticket diffs
+│ └── tickets # Repo ticket workspaces
 ├── reports # Generated validation reports
 │ ├── i18n.json # i18n validation report
 │ ├── eslint.json # ESLint linting report
 │ ├── code.json # Codebase code-quality report with reason/solution metadata
+│ ├── codebase.json # Full codebase snapshot for semantic ticket diffs
 │ ├── typescript.json # TypeScript compiler report
 │ └── ruff.json # Python Ruff linter report
 ├── antlr
@@ -1360,6 +1380,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── lists
 │ ├── logo
 │ ├── models
+│ ├── repo # Repo CLI fixtures
 │ └── semio
 ├── engineering
 │ ├── dataarchitecture.pu # blueprint for sql schemas
@@ -1742,7 +1763,7 @@ Shared react components. The main component is Sketchpad. Sketchpad is used in t
   - `useKitQualities(guid?)` - returns qualities array
   - `useKitAuthors(guid?)` - returns authors array
   - `useKitFolders(guid?)` - returns folders array
-  - `useKitInterfaces(guid?)` - returns ports array
+  - `useKitPorts(guid?)` - returns ports array
   - `useKitTags(guid?)` - returns tags array
   - `useKitConcepts(guid?)` - returns concepts array
   - `useKitName(guid?)` - returns kit name
@@ -3210,7 +3231,7 @@ const piecesMetadataNode = derivedStore.getOrCreate("piecesMetadata", [{ store: 
 
 Apps register plugins that contribute event handlers, guards, and state factories.
 
-#### AppPlugin Interface
+#### AppPlugin Port
 
 ```typescript
 interface AppPlugin {
@@ -3299,7 +3320,7 @@ getQualityAppStoreFactory();
 
 File providers abstract file storage for kits, supporting multiple backends.
 
-#### FileProvider Interface
+#### FileProvider Port
 
 ```typescript
 interface FileProvider {
@@ -3470,7 +3491,7 @@ Each platform provides its own thin wrapper:
 ##### Core Types
 
 ```typescript
-type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+type SemioEntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 type Severity = "error" | "warning";
 
 interface SemioDomainLocation {
@@ -3534,7 +3555,7 @@ All GUIDs must be unique across the entire kit, including:
 - Connections
 - Stats
 - Qualities
-- Interfaces
+- Ports
 - Files
 - Folders
 
@@ -3572,7 +3593,7 @@ All qualities within a kit must have unique names.
 
 **Fix:** Renames the quality with a unique suffix.
 
-#### 6. Interface Name Uniqueness (`port-name-unique`)
+#### 6. Port Name Uniqueness (`port-name-unique`)
 
 **Severity:** Error
 
@@ -3636,8 +3657,8 @@ Layer paths within a design must be unique.
 | Model      | Within type            | name  | model-name-unique     |
 | Quality    | Global                 | name  | quality-name-unique   |
 | Quality    | Global                 | guid  | guid-unique           |
-| Interface  | Global                 | name  | port-name-unique      |
-| Interface  | Global                 | guid  | guid-unique           |
+| Port       | Global                 | name  | port-name-unique      |
+| Port       | Global                 | guid  | guid-unique           |
 | File       | Global                 | name  | file-name-unique      |
 | File       | Global                 | guid  | guid-unique           |
 | Folder     | Siblings (same parent) | name  | folder-name-unique    |
@@ -3756,7 +3777,7 @@ This script consolidates all Metabolism asset generation:
 | `connector-name-unique` | Connector names must be unique within a type |
 | `model-name-unique`     | Model names must be unique within a type     |
 | `quality-name-unique`   | Quality names must be unique                 |
-| `port-name-unique`      | Interface names must be unique               |
+| `port-name-unique`      | Port names must be unique                    |
 | `file-name-unique`      | File names must be unique                    |
 | `folder-name-unique`    | Folder names must be unique among siblings   |
 | `layer-path-unique`     | Layer paths must be unique within a design   |
@@ -3869,7 +3890,7 @@ Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP s
 
 ## 📄 go/repo/main.go
 
-CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket title updates that rename folder paths, ticket finish line stats with full-line counts for added/deleted files and diff counts for modified files, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, section metrics, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation with `@semio-repo` fallback, metrics comments with status icons and `+added`/`-removed` counts, section/definition range handling with line-only start/end values, comment policy scanning with string/template literal awareness, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
+CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket title updates that rename folder paths, ticket.md creation and summary injection with plan.md seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
 
 ## 📁net/
 
@@ -3985,7 +4006,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 11. Benchmark
 12. QualityKind
 13. Quality
-14. Interface
+14. Port
 15. Prop
 16. Model
 17. Connector
@@ -4111,12 +4132,12 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 14. Definition
 15. Attributes
 
-### Interface
+### Port
 
 1. Name
 2. Description
 3. Icon
-4. CompatibleInterfaces
+4. CompatiblePorts
 5. Attributes
 
 ### Prop
@@ -4142,7 +4163,7 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 4. Direction
 5. T
 6. Mandatory
-7. Interface
+7. Port
 8. Description
 9. Attributes
 

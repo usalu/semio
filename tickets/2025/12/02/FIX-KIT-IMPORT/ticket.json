@@ -1,7 +1,7 @@
 {
   "title": "Fix kit import and design app infinite loop",
   "prompt": "Fix kit import and design app infinite loop",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

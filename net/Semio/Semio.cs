@@ -1580,25 +1580,27 @@ public class ValidationResult
 
     public static ValidationResult Parse(string json)
     {
-        var data = JsonConvert.DeserializeObject<dynamic>(json);
+        var data = JsonConvert.DeserializeObject<Newtonsoft.Json.Linq.JObject>(json);
         var result = new ValidationResult();
-        var problems = data!.problems ?? data!.issues;
-        foreach (var issue in problems)
+        var problemsToken = data?["problems"] ?? data?["issues"];
+        if (problemsToken == null) return result;
+        foreach (var issue in problemsToken)
         {
             var fixes = new List<SemioValidationFix>();
-            if (issue.fixes != null)
+            var fixesToken = issue["fixes"];
+            if (fixesToken != null)
             {
-                foreach (var fix in issue.fixes)
+                foreach (var fix in fixesToken)
                 {
-                    fixes.Add(new SemioValidationFix { Title = (string)fix.title, Diff = fix.diff });
+                    fixes.Add(new SemioValidationFix { Title = (string?)fix["title"] ?? "", Diff = fix["diff"] });
                 }
             }
             result.Issues.Add(new Issue
             {
-                ConstraintId = (string)issue.constraintId,
-                Message = (string)issue.message,
-                EntityKind = (string)issue.entityKind,
-                EntityGuid = (string)issue.entityGuid,
+                ConstraintId = (string?)issue["constraintId"] ?? "",
+                Message = (string?)issue["message"] ?? "",
+                EntityKind = (string?)issue["entityKind"] ?? "",
+                EntityGuid = (string?)issue["entityGuid"] ?? "",
                 Fixes = fixes
             });
         }
@@ -1666,7 +1668,7 @@ public static class SemioValidator
 
         }
         foreach (var q in kit.Qualities) CheckGuid("Quality", q.Guid);
-        foreach (var i in kit.Interfaces) CheckGuid("Interface", i.Guid);
+        foreach (var i in kit.Ports) CheckGuid("Port", i.Guid);
         foreach (var f in kit.Files) CheckGuid("File", f.Guid);
         foreach (var fo in kit.Folders) CheckGuid("Folder", fo.Guid);
 
@@ -1772,7 +1774,7 @@ public static class SemioValidator
         }
 
 
-        var portNameGroups = kit.Interfaces.GroupBy(i => i.Name ?? "");
+        var portNameGroups = kit.Ports.GroupBy(i => i.Name ?? "");
         foreach (var nameGroup in portNameGroups)
         {
             var list = nameGroup.ToList();
@@ -1780,7 +1782,7 @@ public static class SemioValidator
             {
                 foreach (var iface in list.Skip(1))
                 {
-                    issues.Add(new Issue { ConstraintId = "port-name-unique", Message = $"Duplicate port name \"{nameGroup.Key}\".", EntityKind = "Interface", EntityGuid = iface.Guid });
+                    issues.Add(new Issue { ConstraintId = "port-name-unique", Message = $"Duplicate port name \"{nameGroup.Key}\".", EntityKind = "Port", EntityGuid = iface.Guid });
                 }
             }
         }
@@ -2609,109 +2611,109 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 
 #endregion Concept
 
-#region Interface
+#region Port
 
 
 
 
 
-public class InterfaceId : Entity<InterfaceId>
+public class PortId : Entity<PortId>
 {
     public string Guid { get; set; } = "";
 
-    public static implicit operator InterfaceId(Interface iface) => new() { Guid = iface.Guid };
-    public static implicit operator InterfaceId(InterfaceDiff diff) => new() { Guid = diff.Guid };
+    public static implicit operator PortId(Port iface) => new() { Guid = iface.Guid };
+    public static implicit operator PortId(PortDiff diff) => new() { Guid = diff.Guid };
 }
 
 
-public class InterfaceDiff : Entity<InterfaceDiff>
+public class PortDiff : Entity<PortDiff>
 {
     public string Guid { get; set; } = "";
     public string? Name { get; set; }
     public string? Description { get; set; }
     public string? Icon { get; set; }
-    public List<InterfaceId>? CompatibleInterfaces { get; set; }
+    public List<PortId>? CompatiblePorts { get; set; }
     public List<Attribute>? Attributes { get; set; }
 
-    public static implicit operator InterfaceDiff(InterfaceId id) => new() { Guid = id.Guid };
-    public static implicit operator InterfaceDiff(Interface iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatibleInterfaces = iface.CompatibleInterfaces?.Select(i => (InterfaceId)i).ToList(), Attributes = iface.Attributes };
+    public static implicit operator PortDiff(PortId id) => new() { Guid = id.Guid };
+    public static implicit operator PortDiff(Port iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatiblePorts = iface.CompatiblePorts?.Select(i => (PortId)i).ToList(), Attributes = iface.Attributes };
 }
 
 
-public class InterfacesDiff : Entity<InterfacesDiff>
+public class PortsDiff : Entity<PortsDiff>
 {
-    public List<InterfaceId> Removed { get; set; } = new();
-    public List<Interface> Added { get; set; } = new();
-    public List<DiffUpdate<InterfaceDiff>> Updated { get; set; } = new();
+    public List<PortId> Removed { get; set; } = new();
+    public List<Port> Added { get; set; } = new();
+    public List<DiffUpdate<PortDiff>> Updated { get; set; } = new();
 
-    public static implicit operator InterfacesDiff(List<Interface> ports) => new() { Updated = ports.Select(i => new DiffUpdate<InterfaceDiff> { Id = i.Guid, Diff = (InterfaceDiff)i }).ToList() };
+    public static implicit operator PortsDiff(List<Port> ports) => new() { Updated = ports.Select(i => new DiffUpdate<PortDiff> { Id = i.Guid, Diff = (PortDiff)i }).ToList() };
 }
 
 
 
 
 
-public class Interface : Entity<Interface>
+public class Port : Entity<Port>
 {
     public string Guid { get; set; } = "";
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public string Icon { get; set; } = "";
-    public List<InterfaceId> CompatibleInterfaces { get; set; } = new();
+    public List<PortId> CompatiblePorts { get; set; } = new();
     public List<Attribute> Attributes { get; set; } = new();
 
-    public static implicit operator Interface(InterfaceId id) => new() { Guid = id.Guid };
-    public static implicit operator Interface(InterfaceDiff diff) => new()
+    public static implicit operator Port(PortId id) => new() { Guid = id.Guid };
+    public static implicit operator Port(PortDiff diff) => new()
     {
         Guid = diff.Guid,
         Name = diff.Name ?? "",
         Description = diff.Description ?? "",
         Icon = diff.Icon ?? "",
-        CompatibleInterfaces = diff.CompatibleInterfaces ?? new(),
+        CompatiblePorts = diff.CompatiblePorts ?? new(),
         Attributes = diff.Attributes ?? new()
     };
 
-    public Interface ApplyDiff(InterfaceDiff diff)
+    public Port ApplyDiff(PortDiff diff)
     {
-        return new Interface
+        return new Port
         {
             Guid = diff.Guid ?? Guid,
             Name = diff.Name ?? Name,
             Description = diff.Description ?? Description,
             Icon = diff.Icon ?? Icon,
-            CompatibleInterfaces = diff.CompatibleInterfaces ?? CompatibleInterfaces,
+            CompatiblePorts = diff.CompatiblePorts ?? CompatiblePorts,
             Attributes = diff.Attributes ?? Attributes
         };
     }
 
-    public InterfaceDiff CreateDiff()
+    public PortDiff CreateDiff()
     {
-        return new InterfaceDiff
+        return new PortDiff
         {
             Guid = Guid,
             Name = Name,
             Description = Description,
             Icon = Icon,
-            CompatibleInterfaces = CompatibleInterfaces,
+            CompatiblePorts = CompatiblePorts,
             Attributes = Attributes
         };
     }
 
-    public InterfaceDiff InverseDiff(InterfaceDiff appliedDiff)
+    public PortDiff InverseDiff(PortDiff appliedDiff)
     {
-        return new InterfaceDiff
+        return new PortDiff
         {
             Guid = !string.IsNullOrEmpty(appliedDiff.Guid) ? Guid : "",
             Name = !string.IsNullOrEmpty(appliedDiff.Name) ? Name : null,
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? Description : null,
             Icon = !string.IsNullOrEmpty(appliedDiff.Icon) ? Icon : null,
-            CompatibleInterfaces = appliedDiff.CompatibleInterfaces?.Any() == true ? CompatibleInterfaces : null,
+            CompatiblePorts = appliedDiff.CompatiblePorts?.Any() == true ? CompatiblePorts : null,
             Attributes = appliedDiff.Attributes?.Any() == true ? Attributes : null
         };
     }
 }
 
-#endregion Interface
+#endregion Port
 
 #region Prop
 
@@ -2904,7 +2906,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     public string? Guid { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
-    public InterfaceId? Interface { get; set; }
+    public PortId? Port { get; set; }
     public bool? Mandatory { get; set; }
     public float? T { get; set; }
     public Point? Point { get; set; }
@@ -2913,7 +2915,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     public List<Attribute>? Attributes { get; set; }
 
     public static implicit operator ConnectorDiff(ConnectorId id) => new() { Guid = id.Guid };
-    public static implicit operator ConnectorDiff(Connector connector) => new() { Guid = connector.Guid, Description = connector.Description, Interface = connector.Interface, Mandatory = connector.Mandatory, T = connector.T, Point = connector.Point, Direction = connector.Direction, Props = connector.Props, Attributes = connector.Attributes };
+    public static implicit operator ConnectorDiff(Connector connector) => new() { Guid = connector.Guid, Description = connector.Description, Port = connector.Port, Mandatory = connector.Mandatory, T = connector.T, Point = connector.Point, Direction = connector.Direction, Props = connector.Props, Attributes = connector.Attributes };
 
     public ConnectorDiff MergeDiff(ConnectorDiff other)
     {
@@ -2921,7 +2923,7 @@ public class ConnectorDiff : Entity<ConnectorDiff>
         {
             Guid = other.Guid ?? Guid,
             Description = other.Description ?? Description,
-            Interface = other.Interface ?? Interface,
+            Port = other.Port ?? Port,
             Mandatory = other.Mandatory ?? Mandatory,
             T = other.T ?? T,
             Point = other.Point ?? Point,
@@ -2962,7 +2964,7 @@ public class Connector : Entity<Connector>
     public string Name { get; set; } = "";
     public string Description { get; set; } = "";
     public bool Mandatory { get; set; } = false;
-    public InterfaceId? Interface { get; set; }
+    public PortId? Port { get; set; }
     public Point? Point { get; set; } = null;
     public Vector? Direction { get; set; } = null;
     public float T { get; set; } = 0;
@@ -2973,7 +2975,7 @@ public class Connector : Entity<Connector>
     public override string ToString() => $"Por({ToHumanIdString()})";
 
     public static implicit operator Connector(ConnectorId id) => new() { Guid = id.Guid };
-    public static implicit operator Connector(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Interface = diff.Interface, Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
+    public static implicit operator Connector(ConnectorDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Description = diff.Description ?? "", Port = diff.Port, Mandatory = diff.Mandatory ?? false, T = diff.T ?? 0, Point = diff.Point, Direction = diff.Direction, Attributes = diff.Attributes ?? new() };
     public static implicit operator string(Connector connector) => connector.Guid;
     public static implicit operator Connector(string guid) => new() { Guid = guid };
 
@@ -2984,7 +2986,7 @@ public class Connector : Entity<Connector>
             Guid = diff.Guid ?? Guid,
             Name = diff.Name ?? Name,
             Description = diff.Description ?? Description,
-            Interface = diff.Interface ?? Interface,
+            Port = diff.Port ?? Port,
             Mandatory = diff.Mandatory ?? Mandatory,
             T = diff.T ?? T,
             Point = diff.Point ?? Point,
@@ -3001,7 +3003,7 @@ public class Connector : Entity<Connector>
             Guid = Guid,
             Name = Name,
             Description = Description,
-            Interface = Interface,
+            Port = Port,
             Mandatory = Mandatory,
             T = T,
             Point = Point,
@@ -3018,7 +3020,7 @@ public class Connector : Entity<Connector>
             Guid = !string.IsNullOrEmpty(appliedDiff.Guid) ? Guid : "",
             Name = !string.IsNullOrEmpty(appliedDiff.Name) ? Name : null,
             Description = !string.IsNullOrEmpty(appliedDiff.Description) ? Description : "",
-            Interface = appliedDiff.Interface is not null ? Interface : null,
+            Port = appliedDiff.Port is not null ? Port : null,
             Mandatory = appliedDiff.Mandatory.HasValue ? Mandatory : null,
             T = appliedDiff.T.HasValue ? T : null,
             Point = appliedDiff.Point is not null ? Point : null,
@@ -3063,27 +3065,27 @@ public class Connector : Entity<Connector>
         return (isValid, errors);
     }
 
-    public bool IsCompatibleWith(Connector otherPort)
+    public bool IsCompatibleWith(Connector otherConnector)
     {
-        if (Interface is null || otherPort.Interface is null) return true;
-        if (Interface.Guid == otherPort.Interface.Guid) return true;
+        if (Port is null || otherConnector.Port is null) return true;
+        if (Port.Guid == otherConnector.Port.Guid) return true;
         return false;
     }
 
-    public bool IsCompatibleWith(Connector otherPort, Kit kit)
+    public bool IsCompatibleWith(Connector otherConnector, Kit kit)
     {
-        if (Interface is null || otherPort.Interface is null) return true;
-        if (Interface.Guid == otherPort.Interface.Guid) return true;
+        if (Port is null || otherConnector.Port is null) return true;
+        if (Port.Guid == otherConnector.Port.Guid) return true;
 
-        var thisInterface = kit.Interfaces?.FirstOrDefault(i => i.Guid == Interface.Guid);
-        var otherInterface = kit.Interfaces?.FirstOrDefault(i => i.Guid == otherPort.Interface.Guid);
+        var thisPort = kit.Ports?.FirstOrDefault(i => i.Guid == Port.Guid);
+        var otherPort = kit.Ports?.FirstOrDefault(i => i.Guid == otherConnector.Port.Guid);
 
-        if (thisInterface is null || otherInterface is null) return false;
+        if (thisPort is null || otherPort is null) return false;
 
-        if (thisInterface.CompatibleInterfaces?.Count == 0 || otherInterface.CompatibleInterfaces?.Count == 0) return true;
+        if (thisPort.CompatiblePorts?.Count == 0 || otherPort.CompatiblePorts?.Count == 0) return true;
 
-        return thisInterface.CompatibleInterfaces?.Any(ci => ci.Guid == otherPort.Interface.Guid) == true ||
-               otherInterface.CompatibleInterfaces?.Any(ci => ci.Guid == Interface.Guid) == true;
+        return thisPort.CompatiblePorts?.Any(ci => ci.Guid == otherConnector.Port.Guid) == true ||
+               otherPort.CompatiblePorts?.Any(ci => ci.Guid == Port.Guid) == true;
     }
 
     public bool IsSameAs(Connector other)
@@ -3115,7 +3117,7 @@ public class Connector : Entity<Connector>
             Name = Name,
             Description = Description,
             Mandatory = Mandatory,
-            Interface = Interface,
+            Port = Port,
             Point = Point,
             Direction = Direction,
             T = T,
@@ -4471,30 +4473,30 @@ public class Design : Entity<Design>
 
         var orientationT = directionT;
         var rotateT = System.Numerics.Matrix4x4.CreateFromAxisAngle(pDir, -rotationRad);
-        orientationT = orientationT * rotateT;
+        orientationT = rotateT * orientationT;
 
         turnAxis = System.Numerics.Vector3.Transform(turnAxis, rotateT);
         tiltAxis = System.Numerics.Vector3.Transform(tiltAxis, rotateT);
 
         var turnT = System.Numerics.Matrix4x4.CreateFromAxisAngle(turnAxis, turnRad);
-        orientationT = orientationT * turnT;
+        orientationT = turnT * orientationT;
 
         var tiltT = System.Numerics.Matrix4x4.CreateFromAxisAngle(tiltAxis, tiltRad);
-        orientationT = orientationT * tiltT;
+        orientationT = tiltT * orientationT;
 
         var centerChildT = System.Numerics.Matrix4x4.CreateTranslation(-cPoint);
 
-        var transform = centerChildT * orientationT;
+        var transform = orientationT * centerChildT;
 
         var translationVec = (gapDirection * gap) + (shiftDirection * shift) + (raiseDirection * rise);
         var translationT = System.Numerics.Matrix4x4.CreateTranslation(translationVec);
 
-        transform = transform * translationT;
+        transform = translationT * transform;
 
         var moveToParentT = System.Numerics.Matrix4x4.CreateTranslation(pPoint);
-        transform = transform * moveToParentT;
+        transform = moveToParentT * transform;
 
-        var finalMatrix = transform * pMatrix;
+        var finalMatrix = pMatrix * transform;
 
         return MatrixToPlane(finalMatrix);
     }
@@ -5079,7 +5081,7 @@ public class KitDiff : Entity<KitDiff>
     public DesignsDiff? Designs { get; set; }
     public FilesDiff? Files { get; set; }
     public FoldersDiff? Folders { get; set; }
-    public InterfacesDiff? Interfaces { get; set; }
+    public PortsDiff? Ports { get; set; }
     public AuthorsDiff? Authors { get; set; }
     public AttributesDiff? Attributes { get; set; }
     public ConceptsDiff? Concepts { get; set; }
@@ -5104,7 +5106,7 @@ public class KitDiff : Entity<KitDiff>
             Designs = other.Designs ?? Designs,
             Files = other.Files ?? Files,
             Folders = other.Folders ?? Folders,
-            Interfaces = other.Interfaces ?? Interfaces,
+            Ports = other.Ports ?? Ports,
             Authors = other.Authors ?? Authors,
             Attributes = other.Attributes ?? Attributes,
             Concepts = other.Concepts ?? Concepts,
@@ -5180,7 +5182,7 @@ public class Kit : Entity<Kit>
     public string Preview { get; set; } = "";
     public List<Quality> Qualities { get; set; } = new();
     [JsonProperty("ports")]
-    public List<Interface> Interfaces { get; set; } = new();
+    public List<Port> Ports { get; set; } = new();
     public List<File> Files { get; set; } = new();
     public List<Folder> Folders { get; set; } = new();
     public List<Type> Types { get; set; } = new();
@@ -6109,6 +6111,321 @@ public static class ZipRoundtrip
 }
 
 #endregion ZipRoundtrip
+
+#region KitImporter
+
+public static class KitImporter
+{
+    public static (Kit Kit, Dictionary<string, byte[]> Files) ImportFromZip(string zipPath)
+    {
+        var result = ZipRoundtrip.ImportKit(zipPath);
+        return (result.Kit, result.Files);
+    }
+}
+
+#endregion KitImporter
+
+#region KitExporter
+
+public static class KitExporter
+{
+    private static readonly string DefaultSchemaSQL = GetEmbeddedSchema();
+
+    private static string GetEmbeddedSchema()
+    {
+        var possiblePaths = new[]
+        {
+            "../../../../../sql/sqlite/semio/schema.sql",
+            "../../../../sql/sqlite/semio/schema.sql",
+            "../../../sql/sqlite/semio/schema.sql",
+            "../../sql/sqlite/semio/schema.sql",
+            "../sql/sqlite/semio/schema.sql",
+            "sql/sqlite/semio/schema.sql"
+        };
+
+        foreach (var path in possiblePaths)
+        {
+            if (System.IO.File.Exists(path))
+                return System.IO.File.ReadAllText(path);
+        }
+
+        throw new FileNotFoundException("Could not find schema.sql for SQLite kit export");
+    }
+
+    public static void ExportToZip(Kit kit, Dictionary<string, byte[]> files, string zipPath)
+    {
+        ZipRoundtrip.ExportKit(kit, files, zipPath, DefaultSchemaSQL);
+    }
+}
+
+#endregion KitExporter
+
+#region SemioDiff
+
+public static class SemioDiff
+{
+    public static KitDiff GetKitDiff(Kit before, Kit after)
+    {
+        var diff = new KitDiff();
+
+        if (before.Name != after.Name) diff.Name = after.Name;
+        if (before.Version != after.Version) diff.Version = after.Version;
+        if (NormalizeString(before.Description) != NormalizeString(after.Description)) diff.Description = after.Description;
+        if (NormalizeString(before.Icon) != NormalizeString(after.Icon)) diff.Icon = after.Icon;
+        if (NormalizeString(before.Image) != NormalizeString(after.Image)) diff.Image = after.Image;
+        if (NormalizeString(before.Preview) != NormalizeString(after.Preview)) diff.Preview = after.Preview;
+        if (NormalizeString(before.Remote) != NormalizeString(after.Remote)) diff.Remote = after.Remote;
+        if (NormalizeString(before.Homepage) != NormalizeString(after.Homepage)) diff.Homepage = after.Homepage;
+        if (NormalizeString(before.License) != NormalizeString(after.License)) diff.License = after.License;
+
+        diff.Types = GetTypesDiff(before.Types ?? new List<Type>(), after.Types ?? new List<Type>());
+        diff.Designs = GetDesignsDiff(before.Designs ?? new List<Design>(), after.Designs ?? new List<Design>());
+
+        return diff;
+    }
+
+    private static string? NormalizeString(string? value) => string.IsNullOrEmpty(value) ? null : value;
+
+    private static TypesDiff? GetTypesDiff(List<Type> before, List<Type> after)
+    {
+        var removed = before.Where(b => !after.Any(a => a.Guid == b.Guid)).Select(t => new TypeId { Guid = t.Guid }).ToList();
+        var added = after.Where(a => !before.Any(b => b.Guid == a.Guid)).ToList();
+        var updated = new List<DiffUpdate<TypeDiff>>();
+
+        foreach (var afterType in after)
+        {
+            var beforeType = before.FirstOrDefault(b => b.Guid == afterType.Guid);
+            if (beforeType != null)
+            {
+                var typeDiff = GetTypeDiff(beforeType, afterType);
+                if (typeDiff != null)
+                    updated.Add(new DiffUpdate<TypeDiff> { Id = afterType.Guid, Diff = typeDiff });
+            }
+        }
+
+        if (removed.Count == 0 && added.Count == 0 && updated.Count == 0) return null;
+        return new TypesDiff { Removed = removed, Added = added, Updated = updated };
+    }
+
+    private static TypeDiff? GetTypeDiff(Type before, Type after)
+    {
+        var diff = new TypeDiff();
+        bool hasChanges = false;
+
+        if (before.Name != after.Name) { diff.Name = after.Name; hasChanges = true; }
+        if (NormalizeString(before.Description) != NormalizeString(after.Description)) { diff.Description = after.Description; hasChanges = true; }
+        if (NormalizeString(before.Icon) != NormalizeString(after.Icon)) { diff.Icon = after.Icon; hasChanges = true; }
+        if (NormalizeString(before.Image) != NormalizeString(after.Image)) { diff.Image = after.Image; hasChanges = true; }
+
+        return hasChanges ? diff : null;
+    }
+
+    private static DesignsDiff? GetDesignsDiff(List<Design> before, List<Design> after)
+    {
+        var removed = before.Where(b => !after.Any(a => a.Guid == b.Guid)).Select(d => new DesignId { Guid = d.Guid }).ToList();
+        var added = after.Where(a => !before.Any(b => b.Guid == a.Guid)).ToList();
+        var updated = new List<DiffUpdate<DesignDiff>>();
+
+        foreach (var afterDesign in after)
+        {
+            var beforeDesign = before.FirstOrDefault(b => b.Guid == afterDesign.Guid);
+            if (beforeDesign != null)
+            {
+                var designDiff = GetDesignDiff(beforeDesign, afterDesign);
+                if (designDiff != null)
+                    updated.Add(new DiffUpdate<DesignDiff> { Id = afterDesign.Guid, Diff = designDiff });
+            }
+        }
+
+        if (removed.Count == 0 && added.Count == 0 && updated.Count == 0) return null;
+        return new DesignsDiff { Removed = removed, Added = added, Updated = updated };
+    }
+
+    private static DesignDiff? GetDesignDiff(Design before, Design after)
+    {
+        var diff = new DesignDiff();
+        bool hasChanges = false;
+
+        if (before.Name != after.Name) { diff.Name = after.Name; hasChanges = true; }
+        if (NormalizeString(before.Description) != NormalizeString(after.Description)) { diff.Description = after.Description; hasChanges = true; }
+        if (NormalizeString(before.Icon) != NormalizeString(after.Icon)) { diff.Icon = after.Icon; hasChanges = true; }
+        if (NormalizeString(before.Image) != NormalizeString(after.Image)) { diff.Image = after.Image; hasChanges = true; }
+
+        return hasChanges ? diff : null;
+    }
+
+    public static KitDiff InverseKitDiff(Kit original, KitDiff appliedDiff)
+    {
+        var inverse = new KitDiff();
+
+        if (appliedDiff.Name != null) inverse.Name = original.Name;
+        if (appliedDiff.Version != null) inverse.Version = original.Version;
+        if (appliedDiff.Description != null) inverse.Description = original.Description;
+        if (appliedDiff.Icon != null) inverse.Icon = original.Icon;
+        if (appliedDiff.Image != null) inverse.Image = original.Image;
+        if (appliedDiff.Preview != null) inverse.Preview = original.Preview;
+        if (appliedDiff.Remote != null) inverse.Remote = original.Remote;
+        if (appliedDiff.Homepage != null) inverse.Homepage = original.Homepage;
+        if (appliedDiff.License != null) inverse.License = original.License;
+
+        if (appliedDiff.Types != null)
+            inverse.Types = InverseTypesDiff(original.Types ?? new List<Type>(), appliedDiff.Types);
+
+        if (appliedDiff.Designs != null)
+            inverse.Designs = InverseDesignsDiff(original.Designs ?? new List<Design>(), appliedDiff.Designs);
+
+        return inverse;
+    }
+
+    private static TypesDiff InverseTypesDiff(List<Type> original, TypesDiff appliedDiff)
+    {
+        var inverse = new TypesDiff
+        {
+            Removed = appliedDiff.Added?.Select(t => new TypeId { Guid = t.Guid }).ToList() ?? new List<TypeId>(),
+            Added = appliedDiff.Removed?.Select(id => original.FirstOrDefault(t => t.Guid == id.Guid)).Where(t => t != null).Cast<Type>().ToList() ?? new List<Type>(),
+            Updated = new List<DiffUpdate<TypeDiff>>()
+        };
+
+        if (appliedDiff.Updated != null)
+        {
+            foreach (var update in appliedDiff.Updated)
+            {
+                var originalType = original.FirstOrDefault(t => t.Guid == update.Id);
+                if (originalType != null && update.Diff != null)
+                {
+                    var inverseDiff = new TypeDiff();
+                    if (update.Diff.Name != null) inverseDiff.Name = originalType.Name;
+                    if (update.Diff.Description != null) inverseDiff.Description = originalType.Description;
+                    if (update.Diff.Icon != null) inverseDiff.Icon = originalType.Icon;
+                    if (update.Diff.Image != null) inverseDiff.Image = originalType.Image;
+                    inverse.Updated.Add(new DiffUpdate<TypeDiff> { Id = update.Id, Diff = inverseDiff });
+                }
+            }
+        }
+
+        return inverse;
+    }
+
+    private static DesignsDiff InverseDesignsDiff(List<Design> original, DesignsDiff appliedDiff)
+    {
+        var inverse = new DesignsDiff
+        {
+            Removed = appliedDiff.Added?.Select(d => new DesignId { Guid = d.Guid }).ToList() ?? new List<DesignId>(),
+            Added = appliedDiff.Removed?.Select(id => original.FirstOrDefault(d => d.Guid == id.Guid)).Where(d => d != null).Cast<Design>().ToList() ?? new List<Design>(),
+            Updated = new List<DiffUpdate<DesignDiff>>()
+        };
+
+        if (appliedDiff.Updated != null)
+        {
+            foreach (var update in appliedDiff.Updated)
+            {
+                var originalDesign = original.FirstOrDefault(d => d.Guid == update.Id);
+                if (originalDesign != null && update.Diff != null)
+                {
+                    var inverseDiff = new DesignDiff();
+                    if (update.Diff.Name != null) inverseDiff.Name = originalDesign.Name;
+                    if (update.Diff.Description != null) inverseDiff.Description = originalDesign.Description;
+                    if (update.Diff.Icon != null) inverseDiff.Icon = originalDesign.Icon;
+                    if (update.Diff.Image != null) inverseDiff.Image = originalDesign.Image;
+                    inverse.Updated.Add(new DiffUpdate<DesignDiff> { Id = update.Id, Diff = inverseDiff });
+                }
+            }
+        }
+
+        return inverse;
+    }
+
+    public static Kit ApplyKitDiff(Kit baseKit, KitDiff diff)
+    {
+        var result = baseKit.DeepClone()!;
+
+        if (diff.Name != null) result.Name = diff.Name;
+        if (diff.Version != null) result.Version = diff.Version;
+        if (diff.Description != null) result.Description = diff.Description;
+        if (diff.Icon != null) result.Icon = diff.Icon;
+        if (diff.Image != null) result.Image = diff.Image;
+        if (diff.Preview != null) result.Preview = diff.Preview;
+        if (diff.Remote != null) result.Remote = diff.Remote;
+        if (diff.Homepage != null) result.Homepage = diff.Homepage;
+        if (diff.License != null) result.License = diff.License;
+
+        if (diff.Types != null)
+            result.Types = ApplyTypesDiff(result.Types ?? new List<Type>(), diff.Types);
+
+        if (diff.Designs != null)
+            result.Designs = ApplyDesignsDiff(result.Designs ?? new List<Design>(), diff.Designs);
+
+        return result;
+    }
+
+    private static List<Type> ApplyTypesDiff(List<Type> baseTypes, TypesDiff diff)
+    {
+        var result = new List<Type>(baseTypes);
+
+        if (diff.Removed != null)
+            result.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var type = result.FirstOrDefault(t => t.Guid == update.Id);
+                if (type != null && update.Diff != null)
+                {
+                    if (update.Diff.Name != null) type.Name = update.Diff.Name;
+                    if (update.Diff.Description != null) type.Description = update.Diff.Description;
+                    if (update.Diff.Icon != null) type.Icon = update.Diff.Icon;
+                    if (update.Diff.Image != null) type.Image = update.Diff.Image;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Design> ApplyDesignsDiff(List<Design> baseDesigns, DesignsDiff diff)
+    {
+        var result = new List<Design>(baseDesigns);
+
+        if (diff.Removed != null)
+            result.RemoveAll(d => diff.Removed.Any(r => r.Guid == d.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var design = result.FirstOrDefault(d => d.Guid == update.Id);
+                if (design != null && update.Diff != null)
+                {
+                    if (update.Diff.Name != null) design.Name = update.Diff.Name;
+                    if (update.Diff.Description != null) design.Description = update.Diff.Description;
+                    if (update.Diff.Icon != null) design.Icon = update.Diff.Icon;
+                    if (update.Diff.Image != null) design.Image = update.Diff.Image;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    public static bool AreKitsEqual(Kit a, Kit b)
+    {
+        return a.Serialize() == b.Serialize();
+    }
+
+    public static bool AreKitDiffsEqual(KitDiff a, KitDiff b)
+    {
+        return a.Serialize() == b.Serialize();
+    }
+}
+
+#endregion SemioDiff
 
 #endregion Entitying
 

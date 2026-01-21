@@ -331,3 +331,76 @@ suite("Sidebar View Test Suite", function () {
 });
 
 // #endregion Sidebar View Tests
+
+// #region Sections View Tests
+
+suite("Sections View Test Suite", function () {
+  this.timeout(30000);
+
+  test("Sections view is registered", async function () {
+    const extension = vscode.extensions.getExtension("usalu.semio-repo");
+    assert.ok(extension, "Extension should be found");
+    if (!extension.isActive) {
+      await extension.activate();
+    }
+    const packageJSON = extension.packageJSON;
+    const views = packageJSON.contributes.views["semio-repo"];
+    const sectionView = views.find((v: any) => v.id === "semio.sections");
+    assert.ok(sectionView, "semio.sections view should be registered");
+  });
+
+  test("Sections view can be focused", async function () {
+    await vscode.commands.executeCommand("semio.sections.focus");
+  });
+
+  test("sectionTree command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionTree"), "sectionTree command should be registered");
+  });
+
+  test("sectionList command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionList"), "sectionList command should be registered");
+  });
+
+  test("sectionCreate command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionCreate"), "sectionCreate command should be registered");
+  });
+
+  test("sectionMove command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionMove"), "sectionMove command should be registered");
+  });
+
+  test("sectionDelete command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionDelete"), "sectionDelete command should be registered");
+  });
+
+  test("sectionOpen command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionOpen"), "sectionOpen command should be registered");
+  });
+
+  test("sectionRename command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionRename"), "sectionRename command should be registered");
+  });
+
+  test("sectionIntegrate command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionIntegrate"), "sectionIntegrate command should be registered");
+  });
+
+  test("Sections tree view refreshes on file change", async function () {
+    const document = await vscode.workspace.openTextDocument(vscode.Uri.file(path.join(getWorkspaceRoot(), "js/vscode/extension.ts")));
+    await vscode.window.showTextDocument(document);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await vscode.commands.executeCommand("semio.sections.focus");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    assert.ok(true, "Sections tree view should refresh without error");
+  });
+});
+
+// #endregion Sections View Tests

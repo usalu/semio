@@ -745,7 +745,7 @@
         "mode": {
           "label": {
             "normal": "Mode",
-            "beginner": "Interface mode"
+            "beginner": "Port mode"
           },
           "user": {
             "label": {
@@ -1513,17 +1513,17 @@
               "manual": "manuals/semio/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
-            "showInterfaces": {
+            "showPorts": {
               "label": {
-                "normal": "Show Interfaces",
+                "normal": "Show Ports",
                 "beginner": "Click to show all ports in this kit"
               },
               "manual": "manuals/semio/kit#ports",
               "tutorial": "getting-started/intro#port"
             },
-            "createInterface": {
+            "createPort": {
               "label": {
-                "normal": "Create Interface",
+                "normal": "Create Port",
                 "beginner": "Click to create a new port definition in this kit"
               },
               "manual": "manuals/semio/kit#ports",
@@ -1859,7 +1859,7 @@
             "language": {
               "label": {
                 "normal": "Language",
-                "beginner": "Interface language"
+                "beginner": "Port language"
               }
             },
             "device": {
@@ -1888,10 +1888,10 @@
                 "beginner": "All Compatible"
               }
             },
-            "compatibleInterfaces": {
+            "compatiblePorts": {
               "label": {
-                "normal": "Compatible Interfaces",
-                "beginner": "Compatible Interfaces"
+                "normal": "Compatible Ports",
+                "beginner": "Compatible Ports"
               }
             },
             "descriptionPlaceholder": {
@@ -1944,13 +1944,13 @@
         },
         "port": {
           "label": {
-            "normal": "Interface",
-            "beginner": "Interface"
+            "normal": "Port",
+            "beginner": "Port"
           },
           "defaultName": {
             "label": {
-              "normal": "New Interface",
-              "beginner": "New Interface"
+              "normal": "New Port",
+              "beginner": "New Port"
             }
           }
         },
@@ -2625,13 +2625,13 @@
                   },
                   "port": {
                     "label": {
-                      "normal": "Interface",
+                      "normal": "Port",
                       "beginner": "The connector port for compatibility checking"
                     }
                   },
-                  "compatibleInterface": {
+                  "compatiblePort": {
                     "label": {
-                      "normal": "Compatible Interface",
+                      "normal": "Compatible Port",
                       "beginner": "The ports this connector is compatible with"
                     }
                   },
@@ -2863,7 +2863,7 @@
               }
             }
           },
-          "connectorInterfacePlaceholder": {
+          "connectorPortPlaceholder": {
             "label": {
               "label": {
                 "normal": "e.g., electrical, mechanical",
@@ -2895,7 +2895,7 @@
             "manual": "type#connectors",
             "tutorial": "hello-semio/model-brick-set#connectors"
           },
-          "connectorCompatibleInterfacesPlaceholder": {
+          "connectorCompatiblePortsPlaceholder": {
             "label": {
               "label": {
                 "normal": "port1, port2",
@@ -3065,15 +3065,15 @@
                   },
                   "port": {
                     "label": {
-                      "normal": "Interface",
+                      "normal": "Port",
                       "beginner": "Connector port name. Connectors of the same port can connect to each other."
                     },
                     "manual": "type#connectors",
                     "tutorial": "hello-semio/model-brick-set"
                   },
-                  "compatibleInterfaces": {
+                  "compatiblePorts": {
                     "label": {
-                      "normal": "Compatible Interfaces",
+                      "normal": "Compatible Ports",
                       "beginner": "List of other connector ports this connector can connect to. Leave empty to allow all ports."
                     },
                     "manual": "type#connectors",

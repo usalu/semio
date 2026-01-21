@@ -1,7 +1,7 @@
 {
   "title": "SCHEMA-LOCATION-UPDATE",
   "prompt": "Update gqlgen.yml to reference the new schema location at graphql/repo/schema.graphql",
-  "llm": "claude-opus-4-5-20251101",
+  "llm": "opus-4-5-20251101",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

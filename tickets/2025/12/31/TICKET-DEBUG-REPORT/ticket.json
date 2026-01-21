@@ -1,7 +1,7 @@
 {
   "title": "Ticket Debug Report",
   "prompt": "Debug report for VS Code extension tickets section appearing empty",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "unknown",
   "dates": {

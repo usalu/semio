@@ -1,7 +1,7 @@
 {
   "title": "Refactor state management to triadic hooks and proper state machine",
   "prompt": "Refactor state management to triadic hooks and proper state machine",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

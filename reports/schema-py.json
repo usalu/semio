@@ -353,7 +353,7 @@
       "hasDiffs": false
     },
     {
-      "name": "Interface",
+      "name": "Port",
       "fields": [
         {
           "name": "guid",
@@ -376,7 +376,7 @@
           "optional": true
         },
         {
-          "name": "compatibleInterfaces",
+          "name": "compatiblePorts",
           "type": "string[]",
           "optional": false
         }
@@ -490,7 +490,7 @@
           "optional": false
         },
         {
-          "name": "compatibleInterfaces",
+          "name": "compatiblePorts",
           "type": "string[]",
           "optional": false
         },
@@ -1252,7 +1252,7 @@
     "QualityId",
     "PropId",
     "ModelId",
-    "InterfaceId",
+    "PortId",
     "ConnectorId",
     "TypeId",
     "LayerId",

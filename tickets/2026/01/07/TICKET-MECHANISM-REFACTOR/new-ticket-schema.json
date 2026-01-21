@@ -1,7 +1,7 @@
 {
     "title": "Ticket Mechanism Refactor",
     "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
-    "llm": "claude-opus-4-5",
+    "llm": "opus-4-5",
     "status": "closed",
     "author": "usalu",
     "dates": {
@@ -13,7 +13,7 @@
     "checkpoints": [
         {
             "prompt": "Add non-empty tests for folders, files, and violations; implement GetFolders and GetFiles in RepoContext",
-            "llm": "claude-opus-4-5",
+            "llm": "opus-4-5",
             "date": "2026-01-07T11:38:32Z",
             "author": "usalu",
             "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",

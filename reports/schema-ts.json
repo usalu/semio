@@ -353,7 +353,7 @@
       "hasDiffs": false
     },
     {
-      "name": "Interface",
+      "name": "Port",
       "fields": [
         {
           "name": "guid",
@@ -376,8 +376,8 @@
           "optional": true
         },
         {
-          "name": "compatibleInterfaces",
-          "type": "InterfaceId[]",
+          "name": "compatiblePorts",
+          "type": "PortId[]",
           "optional": true
         },
         {
@@ -496,7 +496,7 @@
         },
         {
           "name": "port",
-          "type": "InterfaceId",
+          "type": "PortId",
           "optional": true
         },
         {
@@ -1136,7 +1136,7 @@
         },
         {
           "name": "ports",
-          "type": "Interface[]",
+          "type": "Port[]",
           "optional": true
         },
         {
@@ -1341,7 +1341,7 @@
     "FolderId",
     "BenchmarkId",
     "QualityId",
-    "InterfaceId",
+    "PortId",
     "PropId",
     "ModelId",
     "ConnectorId",

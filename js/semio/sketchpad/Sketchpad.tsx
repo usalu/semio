@@ -92,8 +92,6 @@ import {
   guid,
   Guid,
   importKit,
-  Interface,
-  InterfaceDiff,
   inverseKitDiff,
   Kit,
   KitDiff,
@@ -111,6 +109,8 @@ import {
   PlaneDiff,
   Point,
   PointDiff,
+  Port,
+  PortDiff,
   Prop,
   PropDiff,
   Quality,
@@ -6831,7 +6831,7 @@ const EMPTY_FILES: SemioFile[] = [];
 const EMPTY_QUALITIES: Quality[] = [];
 const EMPTY_DESIGNS: Design[] = [];
 const EMPTY_FOLDERS: Folder[] = [];
-const EMPTY_INTERFACES: Interface[] = [];
+const EMPTY_INTERFACES: Port[] = [];
 const EMPTY_TAGS: Tag[] = [];
 const EMPTY_CONCEPTS: Concept[] = [];
 
@@ -6843,7 +6843,7 @@ const selectFiles = (k: KitShallow | Kit) => k.files ?? EMPTY_FILES;
 const selectQualities = (k: KitShallow | Kit) => k.qualities ?? EMPTY_QUALITIES;
 const selectDesigns = (k: KitShallow | Kit) => k.designs ?? EMPTY_DESIGNS;
 const selectFolders = (k: KitShallow | Kit) => k.folders ?? EMPTY_FOLDERS;
-const selectInterfaces = (k: KitShallow | Kit) => k.ports ?? EMPTY_INTERFACES;
+const selectPorts = (k: KitShallow | Kit) => k.ports ?? EMPTY_INTERFACES;
 const selectTags = (k: KitShallow | Kit) => k.tags ?? EMPTY_TAGS;
 const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
 
@@ -7049,8 +7049,8 @@ export function useKitFolders(guid?: Guid): Folder[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-export function useKitInterfaces(guid?: Guid): Interface[] {
-  return useKit(selectInterfaces, guid, true) as Interface[];
+export function useKitPorts(guid?: Guid): Port[] {
+  return useKit(selectPorts, guid, true) as Port[];
 }
 
 export function useKitTags(guid?: Guid): Tag[] {
@@ -7071,8 +7071,8 @@ export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | und
   return useMemo(() => kitDesigns?.find((d) => d.guid === designGuid), [kitDesigns, designGuid]);
 }
 
-export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Interface[] } {
-  const ports = useKitInterfaces(kitGuid);
+export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } {
+  const ports = useKitPorts(kitGuid);
   return useMemo(() => ({ ports }), [ports]);
 }
 
@@ -7132,9 +7132,9 @@ export function useKitCommands() {
     createQuality: (quality: Quality) => kitStore.execute("semio.kit.createQuality", getOrigin(), quality),
     updateQuality: (guid: Guid, diff: QualityDiff) => kitStore.execute("semio.kit.updateQuality", getOrigin(), guid, diff),
     deleteQuality: (guid: Guid) => kitStore.execute("semio.kit.deleteQuality", getOrigin(), guid),
-    createInterface: (iface: Interface) => kitStore.execute("semio.kit.createInterface", getOrigin(), iface),
-    updateInterface: (guid: Guid, diff: InterfaceDiff) => kitStore.execute("semio.kit.updateInterface", getOrigin(), guid, diff),
-    deleteInterface: (guid: Guid) => kitStore.execute("semio.kit.deleteInterface", getOrigin(), guid),
+    createPort: (iface: Port) => kitStore.execute("semio.kit.createPort", getOrigin(), iface),
+    updatePort: (guid: Guid, diff: PortDiff) => kitStore.execute("semio.kit.updatePort", getOrigin(), guid, diff),
+    deletePort: (guid: Guid) => kitStore.execute("semio.kit.deletePort", getOrigin(), guid),
     createTag: (tag: Tag) => kitStore.execute("semio.kit.createTag", getOrigin(), tag),
     updateTag: (guid: Guid, diff: TagDiff) => kitStore.execute("semio.kit.updateTag", getOrigin(), guid, diff),
     deleteTag: (guid: Guid) => kitStore.execute("semio.kit.deleteTag", getOrigin(), guid),
@@ -7227,17 +7227,17 @@ export const kitCommands = {
       diff: { qualities: { removed: [{ guid }] } },
     };
   },
-  "semio.kit.createInterface": (context: KitCommandContext, iface: Interface): KitCommandResult => {
+  "semio.kit.createPort": (context: KitCommandContext, iface: Port): KitCommandResult => {
     return {
       diff: { ports: { added: [iface] } },
     };
   },
-  "semio.kit.updateInterface": (context: KitCommandContext, guid: Guid, diff: InterfaceDiff): KitCommandResult => {
+  "semio.kit.updatePort": (context: KitCommandContext, guid: Guid, diff: PortDiff): KitCommandResult => {
     return {
       diff: { ports: { updated: [{ port: { guid }, diff }] } },
     };
   },
-  "semio.kit.deleteInterface": (context: KitCommandContext, guid: Guid): KitCommandResult => {
+  "semio.kit.deletePort": (context: KitCommandContext, guid: Guid): KitCommandResult => {
     return {
       diff: { ports: { removed: [{ guid }] } },
     };
@@ -12459,7 +12459,7 @@ class AppRegistry {
     this.listeners.add(listener);
     return () => {
       this.listeners.delete(listener);
-    }
+    };
   }
 
   private notify() {
@@ -13136,7 +13136,7 @@ export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
     useCallback((cb) => appRegistry.subscribe(cb), []),
     () => appRegistry.getAllApps(),
   );
-  
+
   const panelConfigsByApp = useMemo(() => {
     const emptyLabelFn = () => "";
     const configs: Record<string, PanelDefinition[]> = {};
@@ -15845,11 +15845,9 @@ const GlobalNavigationBridge: FC<{ children: React.ReactNode }> = ({ children })
   return <>{children}</>;
 };
 
-
 const SketchpadContent: FC = () => {
   return <LayoutWrapper />;
 };
-
 
 const Sketchpad = ({
   id,

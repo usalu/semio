@@ -1,7 +1,7 @@
 {
   "title": "SIDEPANEL-HUDPANEL-REFACTOR",
   "prompt": "Refactor panels to introduce SidePanel and HudPanel components. SidePanel is left/right with scrollable tabs. HudPanel is center. Replace dropdown toggles with simple panel toggles. Apps register tabs to panels.",
-  "llm": "claude-opus-4-5",
+  "llm": "opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

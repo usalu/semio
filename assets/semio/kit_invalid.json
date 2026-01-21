@@ -165,11 +165,11 @@
   "ports": [
     {
       "guid": "019ab664-9999-9999-9999-999999999999",
-      "name": "Duplicate Interface Name"
+      "name": "Duplicate Port Name"
     },
     {
       "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
-      "name": "Duplicate Interface Name"
+      "name": "Duplicate Port Name"
     }
   ],
   "files": [

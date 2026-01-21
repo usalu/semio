@@ -1,7 +1,7 @@
 {
   "title": "Remove reflection from Grasshopper components and hardcode inputs/outputs",
   "prompt": "Remove reflection from Grasshopper components and hardcode inputs/outputs",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

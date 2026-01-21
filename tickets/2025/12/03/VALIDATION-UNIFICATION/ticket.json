@@ -1,7 +1,7 @@
 {
   "title": "\"Unify validation mechanism across TypeScript, Python and C#\"",
   "prompt": "\"Unify validation mechanism across TypeScript, Python and C#\"",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

@@ -25,13 +25,13 @@ scalar DateTime
 
 # #endregion Scalars
 
-# #region Interfaces
+# #region Ports
 
 interface Node {
   id: ID!
 }
 
-# #endregion Interfaces
+# #endregion Ports
 
 # #region Query
 

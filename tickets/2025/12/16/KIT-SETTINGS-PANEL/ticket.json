@@ -1,7 +1,7 @@
 {
   "title": "Fix empty Kit app settings panel by splitting sections and adding i18n",
   "prompt": "\"Fix Kit app settings panel being empty. There should be two sections appearing: kit editor and sketchpad. Extend kit app test to check for the panel and at least one item per section.\"",
-  "llm": "claude-opus-4-5",
+  "llm": "opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

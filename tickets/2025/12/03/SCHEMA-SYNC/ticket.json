@@ -1,7 +1,7 @@
 {
   "title": "Schema extraction and synchronization script",
   "prompt": "Schema extraction and synchronization script",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

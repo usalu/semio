@@ -33,7 +33,7 @@ Added in new `# region Kit Diff Operations` section:
 
 - `areAttributesEqualDict`, `arePropsEqualDict`, `arePortsEqualDict`, `areModelsEqualDict`
 - `areTypesEqualDict`, `arePiecesEqualDict`, `areConnectionsEqualDict`, `areDesignsEqualDict`
-- `areInterfacesEqualDict`, `areQualitiesEqualDict`, `areFilesEqualDict`, `areFoldersEqualDict`
+- `arePortsEqualDict`, `areQualitiesEqualDict`, `areFilesEqualDict`, `areFoldersEqualDict`
 - `areAuthorsEqualDict`, `areConceptsEqualDict`, `areTagsEqualDict`
 - `areKitsDictEqual` - Deep equality check for kits (dict-based)
 
@@ -48,7 +48,7 @@ Added in new `# region Kit Diff Operations` section:
 - `_getConnectionDiff`, `_applyConnectionDiff`
 - `_getTagDiff`, `_applyTagDiff`, `_inverseTagDiff`
 - `_getConceptDiff`, `_applyConceptDiff`, `_inverseConceptDiff`
-- `_getInterfaceDiff`, `_applyInterfaceDiff`, `_inverseInterfaceDiff`
+- `_getPortDiff`, `_applyPortDiff`, `_inversePortDiff`
 - `_getFileDiff`, `_applyFileDiff`, `_inverseFileDiff`
 - `_getFolderDiff`, `_applyFolderDiff`, `_inverseFolderDiff`
 
@@ -69,7 +69,7 @@ Functions updated:
 
 - `areAttributesEqualDict`, `arePropsEqualDict`, `arePortsEqualDict`, `areModelsEqualDict`
 - `areTypesEqualDict`, `arePiecesEqualDict`, `areConnectionsEqualDict`, `areDesignsEqualDict`
-- `areInterfacesEqualDict`, `areQualitiesEqualDict`, `areFilesEqualDict`, `areFoldersEqualDict`
+- `arePortsEqualDict`, `areQualitiesEqualDict`, `areFilesEqualDict`, `areFoldersEqualDict`
 - `areAuthorsEqualDict`, `areConceptsEqualDict`, `areTagsEqualDict`, `areKitsDictEqual`
 
 **Key insight: Attributes use KEY not GUID for identification**

@@ -10,5 +10,5 @@
 
 # Changes
 
-- Added `buildLookup` helper plus `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitInterfacesByGuid`, `MetabolismKitInterfacesByName` exports.
+- Added `buildLookup` helper plus `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitPortsByGuid`, `MetabolismKitPortsByName` exports.
 - Documented the lookup tables in `README.md` and `AGENTS.md`.

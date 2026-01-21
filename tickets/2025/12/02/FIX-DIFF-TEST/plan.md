@@ -21,10 +21,10 @@ Root cause: The schema changed. `concepts` in Kit is now `Concept[]` (array of o
 
 ## `semio.ts`
 
-- Fixed `InterfaceDiffSchema` to allow nullable `description` and `icon` fields
-- Fixed `getInterfaceDiff` to use `null` instead of `undefined` for cleared values
-- Fixed `inverseInterfaceDiff` to use `null` instead of `undefined` for original undefined values
-- Fixed `applyInterfaceDiff` to properly handle `null` (clear property) vs `undefined` (no change)
+- Fixed `PortDiffSchema` to allow nullable `description` and `icon` fields
+- Fixed `getPortDiff` to use `null` instead of `undefined` for cleared values
+- Fixed `inversePortDiff` to use `null` instead of `undefined` for original undefined values
+- Fixed `applyPortDiff` to properly handle `null` (clear property) vs `undefined` (no change)
 
 ## Generated files
 

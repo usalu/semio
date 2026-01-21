@@ -47,7 +47,7 @@ A **Kit** contains reusable **Types** (building blocks with 3D models and connec
 │  │  ┌─────────────────────────────────────────────────────────────┐    │   │
 │  │  │                    SEMIO CORE DOMAIN                         │    │   │
 │  │  │  Kit • Type • Design • Piece • Connection • Connector        │    │   │
-│  │  │  Quality • Interface • Model • File • Author • Attribute     │    │   │
+│  │  │  Quality • Port • Model • File • Author • Attribute     │    │   │
 │  │  └──────────────────────────────────────────────────────────────┘    │   │
 │  │                              │                                       │   │
 │  │                              ▼                                       │   │
@@ -151,7 +151,7 @@ TYPE ENTITY                          DESIGN ENTITY
 | **Type Definition**    | Reusable component definition       | Type, Connector, Model, Prop            |
 | **Design Composition** | Assembling pieces into designs      | Design, Piece, Connection, Layer, Group |
 | **Quality System**     | Measurement and benchmarking        | Quality, Benchmark, Stat, Prop          |
-| **Interface System**   | Connector compatibility rules       | Interface, compatible ports             |
+| **Port System**        | Connector compatibility rules       | Port, compatible ports                  |
 | **Validation**         | Constraint checking and fixes       | Constraints, Problems, Fixes            |
 
 ### Supporting Domains
@@ -512,7 +512,7 @@ Kit
 │   │   └── Tags[] (TagId refs)
 │   ├── Connectors[]
 │   │   ├── Props[]
-│   │   └── Interface (InterfaceId ref)
+│   │   └── Port (PortId ref)
 │   ├── Attributes[]
 │   └── Authors[] (AuthorId refs)
 ├── Designs[]
@@ -531,8 +531,8 @@ Kit
 ├── Qualities[]
 │   ├── Benchmarks[]
 │   └── Kind (General, Type, Design, Piece, Connection, Connector)
-├── Interfaces[] (Ports)
-│   └── CompatibleInterfaces[]
+├── Ports[] (Ports)
+│   └── CompatiblePorts[]
 ├── Files[]
 ├── Folders[]
 ├── Tags[]
@@ -721,7 +721,7 @@ onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubs
 | Region              | Lines     | Purpose                                                 |
 | ------------------- | --------- | ------------------------------------------------------- |
 | Header              | 1-20      | License                                                 |
-| Internal State      | 23-200    | Interfaces for selection, hover, presence, diff         |
+| Internal State      | 23-200    | Ports for selection, hover, presence, diff              |
 | Imports             | 73-215    | Lazy loading of KitSection                              |
 | State Types         | 219-310   | `DesignAppSelection`, `DesignAppState`, `DesignAppEdit` |
 | Commands            | 310-500   | `semio.designApp.*` command implementations             |

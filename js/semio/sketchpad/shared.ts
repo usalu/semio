@@ -297,7 +297,7 @@ export enum PanelKind {
 
 // #endregion Enums
 
-// #region Interfaces
+// #region Ports
 
 // #region File Provider
 
@@ -1007,7 +1007,7 @@ export interface ResizablePanelProps {
 
 // #endregion Panel Props
 
-// #endregion Interfaces
+// #endregion Ports
 
 // #region XState Integration
 
@@ -2441,19 +2441,19 @@ export function getKitAppHooks(): KitAppHooks {
 
 // #region App Registry Exports
 
-export interface DocsRegistryInterface {
+export interface DocsRegistryPort {
   getSectionTree: (section: string) => any[];
   getAllPages: () => any[];
   getPage?: (path: string) => any;
 }
 
-let registeredDocsRegistry: DocsRegistryInterface | null = null;
+let registeredDocsRegistry: DocsRegistryPort | null = null;
 
-export function registerDocsRegistry(registry: DocsRegistryInterface): void {
+export function registerDocsRegistry(registry: DocsRegistryPort): void {
   registeredDocsRegistry = registry;
 }
 
-export function getDocsRegistry(): DocsRegistryInterface | null {
+export function getDocsRegistry(): DocsRegistryPort | null {
   return registeredDocsRegistry;
 }
 

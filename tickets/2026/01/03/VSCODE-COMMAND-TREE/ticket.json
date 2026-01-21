@@ -1,7 +1,7 @@
 {
   "title": "VSCODE-COMMAND-TREE",
   "prompt": "Show VS Code extension commands in a command/subcommand tree",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

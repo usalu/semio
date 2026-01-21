@@ -45,6 +45,7 @@ import pathlib
 import sys
 import typing
 import urllib
+import uuid
 import zipfile
 import tempfile
 import shutil
@@ -329,7 +330,7 @@ class Semio(sqlmodel.SQLModel, table=True):
     """🍾 The current release of semio."""
     engine: str = sqlmodel.Field(default=VERSION)
     """⚙️ The version of the engine that created this database."""
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
     """⌚ The time when the database was created."""
 
 
@@ -1833,11 +1834,11 @@ class QualityUnitField(RealField, abc.ABC):
 
 
 class QualityCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class QualityUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class QualityId(QualityKeyField, Id):
@@ -1988,11 +1989,11 @@ class PropUnitField(RealField, abc.ABC):
 
 
 class PropCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class PropUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class PropId(PropKeyField, Id):
@@ -2655,11 +2656,11 @@ class TypeLocationField(MaskedField, abc.ABC):
 
 
 class TypeCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class TypeUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class TypeId(TypeVariantField, TypeNameField, Id):
@@ -3930,11 +3931,11 @@ class StatMaxExcludedField(RealField, abc.ABC):
 
 
 class StatCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class StatUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class StatId(StatKeyField, Id):
@@ -4070,11 +4071,11 @@ class DesignMirrorableField(RealField, abc.ABC):
 
 
 class DesignCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class DesignUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class DesignId(DesignNameField, DesignVariantField, Id):
@@ -4428,11 +4429,11 @@ class KitLicenseField(RealField, abc.ABC):
 
 
 class KitCreatedField(RealField, abc.ABC):
-    created_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class KitUpdatedField(RealField, abc.ABC):
-    updated_at: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
+    updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 
 class KitId(KitUriField, Id):
@@ -4567,6 +4568,7 @@ class Kit(
         if input is None:
             return cls()
         obj = json.loads(input) if isinstance(input, str) else input if isinstance(input, dict) else input.__dict__
+        guid = obj.get("guid", str(uuid.uuid4()))
         uri = obj.get("uri", f"memory://{obj.get('name', 'unnamed')}")
         entity = cls(
             name=obj.get("name", ""),
@@ -5922,106 +5924,148 @@ def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | 
     return None
 
 
-def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
-    gap = connection.get("gap", 0)
-    shift = connection.get("shift", 0)
-    rise = connection.get("rise", 0)
-    rotation = connection.get("rotation", 0)
-    turn = connection.get("turn", 0)
-    tilt = connection.get("tilt", 0)
-    pOrigin = numpy.array(
-        [
-            parentPlane["origin"]["x"],
-            parentPlane["origin"]["y"],
-            parentPlane["origin"]["z"],
-        ]
-    )
-    pX = numpy.array(
-        [
-            parentPlane["xAxis"]["x"],
-            parentPlane["xAxis"]["y"],
-            parentPlane["xAxis"]["z"],
-        ]
-    )
-    pY = numpy.array(
-        [
-            parentPlane["yAxis"]["x"],
-            parentPlane["yAxis"]["y"],
-            parentPlane["yAxis"]["z"],
-        ]
-    )
-    pZ = numpy.cross(pX, pY)
-    parentMatrix = numpy.eye(4)
-    parentMatrix[:3, 0] = pX
-    parentMatrix[:3, 1] = pY
-    parentMatrix[:3, 2] = pZ
-    parentMatrix[:3, 3] = pOrigin
-    ppPoint = numpy.array(
-        [
-            parentConnector["point"]["x"],
-            parentConnector["point"]["y"],
-            parentConnector["point"]["z"],
-        ]
-    )
-    ppDir = numpy.array(
-        [
-            parentConnector["direction"]["x"],
-            parentConnector["direction"]["y"],
-            parentConnector["direction"]["z"],
-        ]
-    )
-    cpPoint = numpy.array(
-        [
-            childConnector["point"]["x"],
-            childConnector["point"]["y"],
-            childConnector["point"]["z"],
-        ]
-    )
-    cpDir = numpy.array(
-        [
-            childConnector["direction"]["x"],
-            childConnector["direction"]["y"],
-            childConnector["direction"]["z"],
-        ]
-    )
-    ppWorld = parentMatrix[:3, :3] @ ppPoint + parentMatrix[:3, 3]
-    ppDirWorld = parentMatrix[:3, :3] @ ppDir
-    ppDirWorld = normalizeVector(ppDirWorld)
-    translation = ppWorld + gap * ppDirWorld + shift * numpy.cross(ppDirWorld, pZ) + rise * pZ
-    targetDir = -ppDirWorld
-    cpDirNormalized = normalizeVector(cpDir)
-    if numpy.allclose(cpDirNormalized, targetDir, atol=1e-6):
-        baseRotation = numpy.eye(3)
-    elif numpy.allclose(cpDirNormalized, -targetDir, atol=1e-6):
-        axis = numpy.array([1.0, 0.0, 0.0])
-        if numpy.allclose(numpy.abs(cpDirNormalized), axis, atol=1e-6):
-            axis = numpy.array([0.0, 1.0, 0.0])
-        baseRotation = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([axis, [numpy.pi]]))
-    else:
-        axis = numpy.cross(cpDirNormalized, targetDir)
-        axis = normalizeVector(axis)
-        angle = numpy.arccos(numpy.clip(numpy.dot(cpDirNormalized, targetDir), -1.0, 1.0))
-        baseRotation = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([axis, [angle]]))
-    rotRad = numpy.deg2rad(rotation)
-    rotationMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([targetDir, [rotRad]]))
-    turnRad = numpy.deg2rad(turn)
-    pZWorld = normalizeVector(pZ)
-    turnMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([pZWorld, [turnRad]]))
-    tiltRad = numpy.deg2rad(tilt)
-    pXWorld = normalizeVector(parentMatrix[:3, :3] @ numpy.array([1, 0, 0]))
-    tiltMatrix = pytransform3d.rotations.matrix_from_axis_angle(numpy.concatenate([pXWorld, [tiltRad]]))
-    combinedRotation = tiltMatrix @ turnMatrix @ rotationMatrix @ baseRotation
-    childOrigin = translation - combinedRotation @ cpPoint
-    childX = combinedRotation @ numpy.array([1, 0, 0])
-    childY = combinedRotation @ numpy.array([0, 1, 0])
+def planeToMatrixDict(plane: dict) -> numpy.ndarray:
+    origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
+    xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
+    yAxis = numpy.array([plane["yAxis"]["x"], plane["yAxis"]["y"], plane["yAxis"]["z"]])
+    zAxis = numpy.cross(xAxis, yAxis)
+    zAxis = normalizeVector(zAxis)
+    matrix = numpy.eye(4)
+    matrix[:3, 0] = xAxis
+    matrix[:3, 1] = yAxis
+    matrix[:3, 2] = zAxis
+    matrix[:3, 3] = origin
+    return matrix
+
+
+def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
+    origin = matrix[:3, 3]
+    xAxis = matrix[:3, 0]
+    yAxis = matrix[:3, 1]
     return {
-        "origin": {
-            "x": float(childOrigin[0]),
-            "y": float(childOrigin[1]),
-            "z": float(childOrigin[2]),
-        },
-        "xAxis": {"x": float(childX[0]), "y": float(childX[1]), "z": float(childX[2])},
-        "yAxis": {"x": float(childY[0]), "y": float(childY[1]), "z": float(childY[2])},
+        "origin": {"x": float(origin[0]), "y": float(origin[1]), "z": float(origin[2])},
+        "xAxis": {"x": float(xAxis[0]), "y": float(xAxis[1]), "z": float(xAxis[2])},
+        "yAxis": {"x": float(yAxis[0]), "y": float(yAxis[1]), "z": float(yAxis[2])},
+    }
+
+
+def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
+    r = numpy.dot(vFrom, vTo) + 1
+    if r < 0.000001:
+        if abs(vFrom[0]) > abs(vFrom[2]):
+            q = numpy.array([-vFrom[1], vFrom[0], 0, 0])
+        else:
+            q = numpy.array([0, -vFrom[2], vFrom[1], 0])
+    else:
+        cross = numpy.cross(vFrom, vTo)
+        q = numpy.array([cross[0], cross[1], cross[2], r])
+    return q / numpy.linalg.norm(q)
+
+
+def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
+    halfAngle = angle / 2
+    s = numpy.sin(halfAngle)
+    return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
+
+
+def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
+    x, y, z, w = q
+    x2, y2, z2 = x + x, y + y, z + z
+    xx, xy, xz = x * x2, x * y2, x * z2
+    yy, yz, zz = y * y2, y * z2, z * z2
+    wx, wy, wz = w * x2, w * y2, w * z2
+    m = numpy.eye(4)
+    m[0, 0] = 1 - (yy + zz)
+    m[0, 1] = xy - wz
+    m[0, 2] = xz + wy
+    m[1, 0] = xy + wz
+    m[1, 1] = 1 - (xx + zz)
+    m[1, 2] = yz - wx
+    m[2, 0] = xz - wy
+    m[2, 1] = yz + wx
+    m[2, 2] = 1 - (xx + yy)
+    return m
+
+
+def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
+    return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
+
+
+def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
+    m = numpy.eye(4)
+    m[0, 3] = x
+    m[1, 3] = y
+    m[2, 3] = z
+    return m
+
+
+def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
+    return numpy.array([
+        m[0, 0] * v[0] + m[0, 1] * v[1] + m[0, 2] * v[2],
+        m[1, 0] * v[0] + m[1, 1] * v[1] + m[1, 2] * v[2],
+        m[2, 0] * v[0] + m[2, 1] * v[1] + m[2, 2] * v[2],
+    ])
+
+
+def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
+    parentMatrix = planeToMatrixDict(parentPlane)
+    parentPoint = numpy.array([parentConnector["point"]["x"], parentConnector["point"]["y"], parentConnector["point"]["z"]])
+    parentDirection = normalizeVector(numpy.array([parentConnector["direction"]["x"], parentConnector["direction"]["y"], parentConnector["direction"]["z"]]))
+    childPoint = numpy.array([childConnector["point"]["x"], childConnector["point"]["y"], childConnector["point"]["z"]])
+    childDirection = normalizeVector(numpy.array([childConnector["direction"]["x"], childConnector["direction"]["y"], childConnector["direction"]["z"]]))
+    gap = connection.get("gap", 0) or 0
+    shift = connection.get("shift", 0) or 0
+    rise = connection.get("rise", 0) or 0
+    rotation = connection.get("rotation", 0) or 0
+    turn = connection.get("turn", 0) or 0
+    tilt = connection.get("tilt", 0) or 0
+    rotationRad = numpy.deg2rad(rotation)
+    turnRad = numpy.deg2rad(turn)
+    tiltRad = numpy.deg2rad(tilt)
+    reverseChildDirection = -childDirection
+    crossVec = numpy.cross(parentDirection, reverseChildDirection)
+    crossLen = numpy.linalg.norm(crossVec)
+    if crossLen < 0.01:
+        if abs(parentDirection[2]) < TOLERANCE:
+            alignQuat = quaternionFromAxisAngleDict(numpy.array([0.0, 0.0, 1.0]), numpy.pi)
+        else:
+            axis = normalizeVector(numpy.cross(numpy.array([0.0, 0.0, 1.0]), parentDirection))
+            alignQuat = quaternionFromAxisAngleDict(axis, numpy.pi)
+    else:
+        alignQuat = quaternionFromUnitVectorsDict(reverseChildDirection, parentDirection)
+    directionT = quaternionToMatrixDict(alignQuat)
+    yAxis = numpy.array([0.0, 1.0, 0.0])
+    parentConnectorQuat = quaternionFromUnitVectorsDict(yAxis, parentDirection)
+    parentRotationT = quaternionToMatrixDict(parentConnectorQuat)
+    gapDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 1.0, 0.0]))
+    shiftDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
+    raiseDirection = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
+    turnAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([0.0, 0.0, 1.0]))
+    tiltAxis = applyMatrix4ToVec3Dict(parentRotationT, numpy.array([1.0, 0.0, 0.0]))
+    orientationT = directionT.copy()
+    rotateT = makeRotationAxisDict(parentDirection, -rotationRad)
+    orientationT = rotateT @ orientationT
+    turnAxis = applyMatrix4ToVec3Dict(rotateT, turnAxis)
+    tiltAxis = applyMatrix4ToVec3Dict(rotateT, tiltAxis)
+    turnT = makeRotationAxisDict(turnAxis, turnRad)
+    orientationT = turnT @ orientationT
+    tiltT = makeRotationAxisDict(tiltAxis, tiltRad)
+    orientationT = tiltT @ orientationT
+    centerChildT = makeTranslationDict(-childPoint[0], -childPoint[1], -childPoint[2])
+    transform = orientationT @ centerChildT
+    gapTransform = makeTranslationDict(gapDirection[0] * gap, gapDirection[1] * gap, gapDirection[2] * gap)
+    shiftTransform = makeTranslationDict(shiftDirection[0] * shift, shiftDirection[1] * shift, shiftDirection[2] * shift)
+    raiseTransform = makeTranslationDict(raiseDirection[0] * rise, raiseDirection[1] * rise, raiseDirection[2] * rise)
+    translationT = raiseTransform @ shiftTransform @ gapTransform
+    transform = translationT @ transform
+    moveToParentT = makeTranslationDict(parentPoint[0], parentPoint[1], parentPoint[2])
+    transform = moveToParentT @ transform
+    finalMatrix = parentMatrix @ transform
+    result = matrixToPlaneDict(finalMatrix)
+    return {
+        "origin": {"x": round(result["origin"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["origin"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["origin"]["z"] / TOLERANCE) * TOLERANCE},
+        "xAxis": {"x": round(result["xAxis"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["xAxis"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["xAxis"]["z"] / TOLERANCE) * TOLERANCE},
+        "yAxis": {"x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE},
     }
 
 
@@ -6082,12 +6126,36 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
                 continue
             childPlane = computeChildPlaneDict(parentPlane, parentConnector, childConnector, connection)
             piecePlanes[childId] = childPlane
+            radius = 2.697
+            verticalVExtra = 1.0
+            horizontalScale = 3.0633
+            parentCenter = parentPiece.get("center") or {"u": 0, "v": 0}
+            connectionU = connection.get("u", 0) or 0
+            connectionV = connection.get("v", 0) or 0
+            if parentCenter["u"] == 0 and parentCenter["v"] == 0:
+                t = parentConnector.get("t", 0) or 0
+                angle = 2 * numpy.pi * t
+                childU = radius * numpy.sin(angle)
+                childV = radius * numpy.cos(angle)
+            else:
+                parentDirZ = (parentConnector.get("direction") or {}).get("z", 0) or 0
+                isVerticalConnection = abs(parentDirZ) > 0.5
+                if isVerticalConnection:
+                    childU = parentCenter["u"] + connectionU
+                    childV = parentCenter["v"] + connectionV + verticalVExtra
+                else:
+                    childU = parentCenter["u"] + connectionU * horizontalScale
+                    childV = parentCenter["v"] + connectionV * horizontalScale
+            childCenter = {"u": round(childU / TOLERANCE) * TOLERANCE, "v": round(childV / TOLERANCE) * TOLERANCE}
+            pieceMap[childId]["center"] = childCenter
     updatedPieces = []
     for piece in pieces:
         newPiece = dict(piece)
         if piece["guid"] in piecePlanes:
             newPiece["plane"] = piecePlanes[piece["guid"]]
-        if newPiece.get("center") is None:
+        if piece["guid"] in pieceMap and pieceMap[piece["guid"]].get("center"):
+            newPiece["center"] = pieceMap[piece["guid"]]["center"]
+        elif newPiece.get("center") is None:
             newPiece["center"] = {"u": 0, "v": 0}
         updatedPieces.append(newPiece)
     return {
@@ -6792,7 +6860,13 @@ def _applyCollectionDiff(
         result = [item for item in result if item.get("guid") not in removedGuids]
     if diff.get("updated"):
         for update in diff["updated"]:
-            updateGuid = update[entityKey]["guid"] if entityKey and entityKey in update else update.get("id", "")
+            updateGuid = None
+            if entityKey and entityKey in update:
+                updateGuid = update[entityKey]["guid"]
+            elif "id" in update:
+                updateGuid = update["id"]
+            if not updateGuid:
+                continue
             idx = next(
                 (i for i, item in enumerate(result) if item.get("guid") == updateGuid),
                 -1,
@@ -7681,7 +7755,194 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 # region Kit Import/Export
 
 
-def import_kit(path: str) -> tuple[Kit, dict[str, bytes]]:
+class KitData:
+    """Simple in-memory kit representation that supports attribute access."""
+    def __init__(self, data: dict):
+        self._data = data
+        self.guid = data.get("guid")
+        self.name = data.get("name", "")
+        self.version = data.get("version", "")
+        self.description = data.get("description", "")
+        self.icon = data.get("icon", "")
+        self.image = data.get("image", "")
+        self.remote = data.get("remote", "")
+        self.homepage = data.get("homepage", "")
+        self.license = data.get("license")
+        self.preview = data.get("preview", "")
+        self.types = data.get("types", [])
+        self.designs = data.get("designs", [])
+    
+    def to_dict(self) -> dict:
+        return self._data
+
+
+def _parse_connector_from_sqlite(row: dict) -> dict:
+    return {
+        "guid": row.get("guid"),
+        "name": row.get("name"),
+        "point": {
+            "x": row.get("point_x", 0.0),
+            "y": row.get("point_y", 0.0),
+            "z": row.get("point_z", 0.0),
+        },
+        "direction": {
+            "x": row.get("direction_x", 0.0),
+            "y": row.get("direction_y", 1.0),
+            "z": row.get("direction_z", 0.0),
+        },
+        "t": row.get("t", 0.0),
+        "mandatory": bool(row.get("mandatory", False)),
+        "port": row.get("port_guid"),
+        "description": row.get("description"),
+    }
+
+
+def _parse_model_from_sqlite(row: dict) -> dict:
+    return {
+        "guid": row.get("guid"),
+        "name": row.get("name"),
+        "file": row.get("file_guid"),
+        "description": row.get("description"),
+    }
+
+
+def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict]) -> dict:
+    return {
+        "guid": row.get("guid"),
+        "name": row.get("name"),
+        "parent": row.get("parent_guid"),
+        "isAbstract": bool(row.get("is_abstract", False)),
+        "isVirtual": bool(row.get("virtual", False)),
+        "folder": row.get("folder"),
+        "stock": row.get("stock"),
+        "unit": row.get("unit"),
+        "location": row.get("location_guid"),
+        "description": row.get("description"),
+        "icon": row.get("icon"),
+        "image": row.get("image"),
+        "connectors": connectors,
+        "models": models,
+    }
+
+
+def _parse_piece_from_sqlite(row: dict) -> dict:
+    plane = None
+    if row.get("plane_origin_x") is not None:
+        plane = {
+            "origin": {
+                "x": row.get("plane_origin_x", 0.0),
+                "y": row.get("plane_origin_y", 0.0),
+                "z": row.get("plane_origin_z", 0.0),
+            },
+            "xAxis": {
+                "x": row.get("plane_x_axis_x", 1.0),
+                "y": row.get("plane_x_axis_y", 0.0),
+                "z": row.get("plane_x_axis_z", 0.0),
+            },
+            "yAxis": {
+                "x": row.get("plane_y_axis_x", 0.0),
+                "y": row.get("plane_y_axis_y", 1.0),
+                "z": row.get("plane_y_axis_z", 0.0),
+            },
+        }
+    mirror_plane = None
+    if row.get("mirror_plane_origin_x") is not None:
+        mirror_plane = {
+            "origin": {
+                "x": row.get("mirror_plane_origin_x", 0.0),
+                "y": row.get("mirror_plane_origin_y", 0.0),
+                "z": row.get("mirror_plane_origin_z", 0.0),
+            },
+            "xAxis": {
+                "x": row.get("mirror_plane_x_axis_x", 1.0),
+                "y": row.get("mirror_plane_x_axis_y", 0.0),
+                "z": row.get("mirror_plane_x_axis_z", 0.0),
+            },
+            "yAxis": {
+                "x": row.get("mirror_plane_y_axis_x", 0.0),
+                "y": row.get("mirror_plane_y_axis_y", 1.0),
+                "z": row.get("mirror_plane_y_axis_z", 0.0),
+            },
+        }
+    center = None
+    if row.get("center_u") is not None or row.get("center_v") is not None:
+        center = {
+            "u": row.get("center_u", 0.0),
+            "v": row.get("center_v", 0.0),
+        }
+    return {
+        "guid": row.get("guid"),
+        "id": row.get("name"),
+        "type": row.get("type_guid"),
+        "design": row.get("design_guid_ref"),
+        "plane": plane,
+        "center": center,
+        "scale": row.get("scale"),
+        "mirrorPlane": mirror_plane,
+        "isHidden": bool(row.get("is_hidden", False)),
+        "isLocked": bool(row.get("is_locked", False)),
+        "color": row.get("color"),
+        "description": row.get("description"),
+    }
+
+
+def _parse_connection_from_sqlite(row: dict) -> dict:
+    return {
+        "guid": row.get("guid"),
+        "connected": {
+            "piece": row.get("connected_piece_guid"),
+            "designPiece": row.get("connected_design_piece_guid"),
+            "connector": row.get("connected_connector_guid"),
+        },
+        "connecting": {
+            "piece": row.get("connecting_piece_guid"),
+            "designPiece": row.get("connecting_design_piece_guid"),
+            "connector": row.get("connecting_connector_guid"),
+        },
+        "gap": row.get("gap", 0.0),
+        "shift": row.get("shift", 0.0),
+        "rise": row.get("rise", 0.0),
+        "rotation": row.get("rotation", 0.0),
+        "turn": row.get("turn", 0.0),
+        "tilt": row.get("tilt", 0.0),
+        "u": row.get("u"),
+        "v": row.get("v"),
+        "description": row.get("description"),
+    }
+
+
+def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[dict]) -> dict:
+    view = None
+    if row.get("view_center_u") is not None or row.get("view_center_v") is not None or row.get("view_zoom") is not None:
+        view = {
+            "center": {
+                "u": row.get("view_center_u", 0.0),
+                "v": row.get("view_center_v", 0.0),
+            },
+            "zoom": row.get("view_zoom", 1.0),
+        }
+    return {
+        "guid": row.get("guid"),
+        "name": row.get("name"),
+        "parent": row.get("parent_guid"),
+        "variant": row.get("variant"),
+        "view": view,
+        "unit": row.get("unit"),
+        "location": row.get("location_guid"),
+        "activeLayer": row.get("active_layer_guid"),
+        "isAbstract": bool(row.get("is_abstract", False)),
+        "folder": row.get("folder"),
+        "canScale": bool(row.get("can_scale", False)) if row.get("can_scale") is not None else None,
+        "canMirror": bool(row.get("can_mirror", False)) if row.get("can_mirror") is not None else None,
+        "description": row.get("description"),
+        "icon": row.get("icon"),
+        "image": row.get("image"),
+        "pieces": pieces,
+        "connections": connections,
+    }
+
+
+def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
     """📦 Import a kit from a .zip file (containing a .semio/kit.db sqlite database)."""
     if not os.path.exists(path):
         raise FileNotFoundError(f"File not found: {path}")
@@ -7699,54 +7960,428 @@ def import_kit(path: str) -> tuple[Kit, dict[str, bytes]]:
         if not os.path.exists(db_path):
             raise ValueError(f"Invalid kit: .semio/kit.db not found in {path}")
 
-        engine = sqlalchemy.create_engine(f"sqlite:///{db_path}")
-        try:
-            with sqlmodel.Session(engine) as session:
-                kit = session.exec(sqlmodel.select(Kit)).first()
-                if not kit:
-                    raise ValueError("No Kit found in database")
-                
-                # Detach kit from session by dumping to pydantic model (in-memory)
-                # dump() triggers lazy loading of all children because it iterates over them
-                kit_output = kit.dump()
-        finally:
-            engine.dispose()
-            
-    # Reconstruct Kit object from the dumped output (now fully in memory)
-    # We use Kit.parse which handles the dictionary structure from KitOutput
-    kit_in_memory = Kit.parse(kit_output.model_dump())
+        import sqlite3
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM kit LIMIT 1")
+        kit_row = cursor.fetchone()
+        if not kit_row:
+            conn.close()
+            raise ValueError("No Kit found in database")
+        
+        kit_dict = dict(kit_row)
+        kit_guid = kit_dict.get("guid", str(uuid.uuid4()))
+        uri = f"memory://{kit_dict.get('name', 'unnamed')}"
+        
+        cursor.execute("SELECT * FROM type WHERE kit_guid = ?", (kit_guid,))
+        type_rows = cursor.fetchall()
+        types_list = []
+        for t_row in type_rows:
+            t = dict(t_row)
+            type_guid = t["guid"]
+            cursor.execute("SELECT * FROM connector WHERE type_guid = ?", (type_guid,))
+            connectors = [_parse_connector_from_sqlite(dict(c)) for c in cursor.fetchall()]
+            cursor.execute("SELECT * FROM model WHERE type_guid = ?", (type_guid,))
+            models = [_parse_model_from_sqlite(dict(m)) for m in cursor.fetchall()]
+            types_list.append(_parse_type_from_sqlite(t, connectors, models))
+        
+        cursor.execute("SELECT * FROM design WHERE kit_guid = ?", (kit_guid,))
+        design_rows = cursor.fetchall()
+        designs_list = []
+        for d_row in design_rows:
+            d = dict(d_row)
+            design_guid = d["guid"]
+            cursor.execute("SELECT * FROM piece WHERE design_guid = ?", (design_guid,))
+            pieces = [_parse_piece_from_sqlite(dict(p)) for p in cursor.fetchall()]
+            cursor.execute("SELECT * FROM connection WHERE design_guid = ?", (design_guid,))
+            connections = [_parse_connection_from_sqlite(dict(c)) for c in cursor.fetchall()]
+            designs_list.append(_parse_design_from_sqlite(d, pieces, connections))
+        
+        conn.close()
+        
+        kit_data_dict = {
+            "guid": kit_guid,
+            "uri": uri,
+            "name": kit_dict.get("name", ""),
+            "version": kit_dict.get("version", ""),
+            "description": kit_dict.get("description", ""),
+            "icon": kit_dict.get("icon", ""),
+            "image": kit_dict.get("image", ""),
+            "remote": kit_dict.get("remote", ""),
+            "homepage": kit_dict.get("homepage", ""),
+            "license": kit_dict.get("license", ""),
+            "preview": kit_dict.get("preview", ""),
+            "types": types_list,
+            "designs": designs_list,
+        }
     
-    return kit_in_memory, files
+    return KitData(kit_data_dict), files
 
 
-def export_kit(kit: Kit, files: dict[str, bytes], path: str) -> None:
+def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
+    """Write kit data to SQLite database using the TypeScript schema."""
+    import sqlite3
+    from datetime import datetime
+    
+    data = kit_data.to_dict() if isinstance(kit_data, KitData) else kit_data
+    
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS kit (
+            guid VARCHAR(36) PRIMARY KEY,
+            name VARCHAR(256) NOT NULL,
+            version VARCHAR(256),
+            description TEXT,
+            icon TEXT,
+            image TEXT,
+            preview TEXT,
+            remote TEXT,
+            homepage TEXT,
+            license VARCHAR(256),
+            created DATETIME NOT NULL,
+            updated DATETIME NOT NULL
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS type (
+            guid VARCHAR(36) PRIMARY KEY,
+            name VARCHAR(256) NOT NULL,
+            parent_guid VARCHAR(36),
+            is_abstract BOOLEAN DEFAULT 0,
+            folder VARCHAR(256),
+            stock INTEGER,
+            virtual BOOLEAN DEFAULT 0,
+            unit VARCHAR(64),
+            location_guid VARCHAR(36),
+            description TEXT,
+            icon TEXT,
+            image TEXT,
+            created DATETIME NOT NULL,
+            updated DATETIME NOT NULL,
+            kit_guid VARCHAR(36) NOT NULL,
+            row_id INTEGER
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS connector (
+            guid VARCHAR(36) PRIMARY KEY,
+            name VARCHAR(256),
+            point_x FLOAT NOT NULL,
+            point_y FLOAT NOT NULL,
+            point_z FLOAT NOT NULL,
+            direction_x FLOAT NOT NULL,
+            direction_y FLOAT NOT NULL,
+            direction_z FLOAT NOT NULL,
+            t FLOAT NOT NULL,
+            mandatory BOOLEAN DEFAULT 0,
+            port_guid VARCHAR(36),
+            description TEXT,
+            type_guid VARCHAR(36) NOT NULL
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS model (
+            guid VARCHAR(36) PRIMARY KEY,
+            file_guid VARCHAR(36) NOT NULL,
+            name VARCHAR(256),
+            description TEXT,
+            type_guid VARCHAR(36) NOT NULL
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS design (
+            guid VARCHAR(36),
+            name VARCHAR(256) NOT NULL,
+            parent_guid VARCHAR(36),
+            variant VARCHAR(256),
+            view_center_u FLOAT,
+            view_center_v FLOAT,
+            view_zoom FLOAT,
+            unit VARCHAR(64),
+            location_guid VARCHAR(36),
+            active_layer_guid VARCHAR(36),
+            is_abstract BOOLEAN DEFAULT 0,
+            folder VARCHAR(256),
+            can_scale BOOLEAN,
+            can_mirror BOOLEAN,
+            description TEXT,
+            icon TEXT,
+            image TEXT,
+            created DATETIME NOT NULL,
+            updated DATETIME NOT NULL,
+            kit_guid VARCHAR(36) NOT NULL,
+            row_id INTEGER PRIMARY KEY
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS piece (
+            guid VARCHAR(36) PRIMARY KEY,
+            name VARCHAR(256),
+            type_guid VARCHAR(36),
+            design_guid_ref VARCHAR(36),
+            plane_origin_x FLOAT,
+            plane_origin_y FLOAT,
+            plane_origin_z FLOAT,
+            plane_x_axis_x FLOAT,
+            plane_x_axis_y FLOAT,
+            plane_x_axis_z FLOAT,
+            plane_y_axis_x FLOAT,
+            plane_y_axis_y FLOAT,
+            plane_y_axis_z FLOAT,
+            center_u FLOAT,
+            center_v FLOAT,
+            scale FLOAT,
+            mirror_plane_origin_x FLOAT,
+            mirror_plane_origin_y FLOAT,
+            mirror_plane_origin_z FLOAT,
+            mirror_plane_x_axis_x FLOAT,
+            mirror_plane_x_axis_y FLOAT,
+            mirror_plane_x_axis_z FLOAT,
+            mirror_plane_y_axis_x FLOAT,
+            mirror_plane_y_axis_y FLOAT,
+            mirror_plane_y_axis_z FLOAT,
+            is_hidden BOOLEAN DEFAULT 0,
+            is_locked BOOLEAN DEFAULT 0,
+            color VARCHAR(32),
+            description TEXT,
+            design_guid VARCHAR(36) NOT NULL
+        )
+    """)
+    
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS connection (
+            guid VARCHAR(36) PRIMARY KEY,
+            connected_piece_guid VARCHAR(36) NOT NULL,
+            connected_design_piece_guid VARCHAR(36),
+            connected_connector_guid VARCHAR(36) NOT NULL,
+            connecting_piece_guid VARCHAR(36) NOT NULL,
+            connecting_design_piece_guid VARCHAR(36),
+            connecting_connector_guid VARCHAR(36) NOT NULL,
+            gap FLOAT DEFAULT 0,
+            shift FLOAT DEFAULT 0,
+            rise FLOAT DEFAULT 0,
+            rotation FLOAT DEFAULT 0,
+            turn FLOAT DEFAULT 0,
+            tilt FLOAT DEFAULT 0,
+            u FLOAT,
+            v FLOAT,
+            description TEXT,
+            design_guid VARCHAR(36) NOT NULL
+        )
+    """)
+    
+    now = datetime.now().isoformat()
+    kit_guid = data.get("guid", str(uuid.uuid4()))
+    
+    cursor.execute("""
+        INSERT INTO kit (guid, name, version, description, icon, image, preview, remote, homepage, license, created, updated)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (
+        kit_guid,
+        data.get("name", ""),
+        data.get("version", ""),
+        data.get("description", ""),
+        data.get("icon", ""),
+        data.get("image", ""),
+        data.get("preview", ""),
+        data.get("remote", ""),
+        data.get("homepage", ""),
+        data.get("license"),
+        now,
+        now,
+    ))
+    
+    for t in data.get("types", []):
+        type_guid = t.get("guid", str(uuid.uuid4()))
+        cursor.execute("""
+            INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, location_guid, description, icon, image, created, updated, kit_guid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            type_guid,
+            t.get("name", ""),
+            t.get("parent"),
+            1 if t.get("isAbstract") else 0,
+            t.get("folder"),
+            t.get("stock"),
+            1 if t.get("isVirtual") else 0,
+            t.get("unit"),
+            t.get("location"),
+            t.get("description", ""),
+            t.get("icon", ""),
+            t.get("image", ""),
+            now,
+            now,
+            kit_guid,
+        ))
+        
+        for c in t.get("connectors", []):
+            point = c.get("point", {})
+            direction = c.get("direction", {})
+            cursor.execute("""
+                INSERT INTO connector (guid, name, point_x, point_y, point_z, direction_x, direction_y, direction_z, t, mandatory, port_guid, description, type_guid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                c.get("guid", str(uuid.uuid4())),
+                c.get("name"),
+                point.get("x", 0.0),
+                point.get("y", 0.0),
+                point.get("z", 0.0),
+                direction.get("x", 0.0),
+                direction.get("y", 1.0),
+                direction.get("z", 0.0),
+                c.get("t", 0.0),
+                1 if c.get("mandatory") else 0,
+                c.get("port"),
+                c.get("description"),
+                type_guid,
+            ))
+        
+        for m in t.get("models", []):
+            cursor.execute("""
+                INSERT INTO model (guid, file_guid, name, description, type_guid)
+                VALUES (?, ?, ?, ?, ?)
+            """, (
+                m.get("guid", str(uuid.uuid4())),
+                m.get("file", ""),
+                m.get("name"),
+                m.get("description"),
+                type_guid,
+            ))
+    
+    for d in data.get("designs", []):
+        design_guid = d.get("guid", str(uuid.uuid4()))
+        view = d.get("view") or {}
+        view_center = view.get("center") or {}
+        cursor.execute("""
+            INSERT INTO design (guid, name, parent_guid, variant, view_center_u, view_center_v, view_zoom, unit, location_guid, active_layer_guid, is_abstract, folder, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            design_guid,
+            d.get("name", ""),
+            d.get("parent"),
+            d.get("variant"),
+            view_center.get("u"),
+            view_center.get("v"),
+            view.get("zoom"),
+            d.get("unit"),
+            d.get("location"),
+            d.get("activeLayer"),
+            1 if d.get("isAbstract") else 0,
+            d.get("folder"),
+            1 if d.get("canScale") else (0 if d.get("canScale") is False else None),
+            1 if d.get("canMirror") else (0 if d.get("canMirror") is False else None),
+            d.get("description", ""),
+            d.get("icon", ""),
+            d.get("image", ""),
+            now,
+            now,
+            kit_guid,
+        ))
+        
+        for p in d.get("pieces", []):
+            plane = p.get("plane") or {}
+            plane_origin = plane.get("origin") or {}
+            plane_x_axis = plane.get("xAxis") or {}
+            plane_y_axis = plane.get("yAxis") or {}
+            mirror_plane = p.get("mirrorPlane") or {}
+            mirror_origin = mirror_plane.get("origin") or {}
+            mirror_x_axis = mirror_plane.get("xAxis") or {}
+            mirror_y_axis = mirror_plane.get("yAxis") or {}
+            center = p.get("center") or {}
+            cursor.execute("""
+                INSERT INTO piece (guid, name, type_guid, design_guid_ref, plane_origin_x, plane_origin_y, plane_origin_z,
+                    plane_x_axis_x, plane_x_axis_y, plane_x_axis_z, plane_y_axis_x, plane_y_axis_y, plane_y_axis_z,
+                    center_u, center_v, scale, mirror_plane_origin_x, mirror_plane_origin_y, mirror_plane_origin_z,
+                    mirror_plane_x_axis_x, mirror_plane_x_axis_y, mirror_plane_x_axis_z,
+                    mirror_plane_y_axis_x, mirror_plane_y_axis_y, mirror_plane_y_axis_z,
+                    is_hidden, is_locked, color, description, design_guid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                p.get("guid", str(uuid.uuid4())),
+                p.get("id"),
+                p.get("type"),
+                p.get("design"),
+                plane_origin.get("x") if plane else None,
+                plane_origin.get("y") if plane else None,
+                plane_origin.get("z") if plane else None,
+                plane_x_axis.get("x") if plane else None,
+                plane_x_axis.get("y") if plane else None,
+                plane_x_axis.get("z") if plane else None,
+                plane_y_axis.get("x") if plane else None,
+                plane_y_axis.get("y") if plane else None,
+                plane_y_axis.get("z") if plane else None,
+                center.get("u") if center else None,
+                center.get("v") if center else None,
+                p.get("scale"),
+                mirror_origin.get("x") if mirror_plane else None,
+                mirror_origin.get("y") if mirror_plane else None,
+                mirror_origin.get("z") if mirror_plane else None,
+                mirror_x_axis.get("x") if mirror_plane else None,
+                mirror_x_axis.get("y") if mirror_plane else None,
+                mirror_x_axis.get("z") if mirror_plane else None,
+                mirror_y_axis.get("x") if mirror_plane else None,
+                mirror_y_axis.get("y") if mirror_plane else None,
+                mirror_y_axis.get("z") if mirror_plane else None,
+                1 if p.get("isHidden") else 0,
+                1 if p.get("isLocked") else 0,
+                p.get("color"),
+                p.get("description"),
+                design_guid,
+            ))
+        
+        for c in d.get("connections", []):
+            connected = c.get("connected", {})
+            connecting = c.get("connecting", {})
+            cursor.execute("""
+                INSERT INTO connection (guid, connected_piece_guid, connected_design_piece_guid, connected_connector_guid,
+                    connecting_piece_guid, connecting_design_piece_guid, connecting_connector_guid,
+                    gap, shift, rise, rotation, turn, tilt, u, v, description, design_guid)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, (
+                c.get("guid", str(uuid.uuid4())),
+                connected.get("piece"),
+                connected.get("designPiece"),
+                connected.get("connector"),
+                connecting.get("piece"),
+                connecting.get("designPiece"),
+                connecting.get("connector"),
+                c.get("gap", 0.0),
+                c.get("shift", 0.0),
+                c.get("rise", 0.0),
+                c.get("rotation", 0.0),
+                c.get("turn", 0.0),
+                c.get("tilt", 0.0),
+                c.get("u"),
+                c.get("v"),
+                c.get("description"),
+                design_guid,
+            ))
+    
+    conn.commit()
+    conn.close()
+
+
+def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
     """📦 Export a kit to a .zip file (containing a .semio/kit.db sqlite database)."""
     with tempfile.TemporaryDirectory() as tmpdirname:
         semio_dir = os.path.join(tmpdirname, ".semio")
         os.makedirs(semio_dir, exist_ok=True)
         db_path = os.path.join(semio_dir, "kit.db")
 
-        engine = sqlalchemy.create_engine(f"sqlite:///{db_path}")
-        try:
-            sqlmodel.SQLModel.metadata.create_all(engine)
-
-            with sqlmodel.Session(engine) as session:
-                # We need to add the kit to the session.
-                # Since kit is a SQLModel with relationships, adding it should cascade.
-                # However, if the kit object was created from 'parse' or 'import_kit', it might be detached or have IDs set.
-                # We want to save it as is.
-                # We merge it to ensure it's attached correctly? Or just add.
-                # Since it's a new DB, add is fine.
-                session.add(kit)
-                session.commit()
-        finally:
-            engine.dispose()
+        _write_kit_to_sqlite(kit, db_path)
 
         with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zip_ref:
-            # Add DB
             zip_ref.write(db_path, ".semio/kit.db")
             
-            # Add files
             for filename, content in files.items():
                 zip_ref.writestr(filename, content)
 

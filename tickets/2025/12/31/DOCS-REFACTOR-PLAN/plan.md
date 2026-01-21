@@ -1,7 +1,7 @@
 # Previously
 
 - Initial analysis compared `AGENTS.md` and other docs with current implementation.
-- Found multiple mismatches: missing `hooks/` folder, `scripts/log.ts` references, `repo` CLI vs scripts, `tool` command mismatch, terminology inconsistencies (Interface vs port), and several undocumented commands and files.
+- Found multiple mismatches: missing `hooks/` folder, `scripts/log.ts` references, `repo` CLI vs scripts, `tool` command mismatch, terminology inconsistencies (Port vs port), and several undocumented commands and files.
 
 # Plan
 
@@ -11,7 +11,7 @@ The documentation requires fixes across several areas:
 
 - Remove or update outdated references (scripts/log.ts, tool command, hook file names).
 - Add documentation for implemented repo commands and features (update-metabolism, definition tree, caching).
-- Standardize terminology (Interface → port, AppStore naming).
+- Standardize terminology (Port → port, AppStore naming).
 - Create or restore missing tooling files referenced by docs (`hooks/*.tsx`) or update docs to reflect current implementation.
 
 ## Phase 1: Critical Infrastructure Fixes
@@ -40,8 +40,8 @@ The documentation requires fixes across several areas:
 
 ## Phase 3: Terminology Standardization
 
-1. Interface vs Port
-   - Update `AGENTS.md` to use `port` for user-facing documentation while documenting the code-level `Interface`/`InterfaceId` types and mapping.
+1. Port vs Port
+   - Update `AGENTS.md` to use `port` for user-facing documentation while documenting the code-level `Port`/`PortId` types and mapping.
 
 2. Store class names
    - Clarify that `PlainAppStore` / `PlainKitDiffAppStore` are the concrete class names; update the Store Architecture section accordingly.
@@ -75,7 +75,7 @@ Add missing documentation entries for:
 2. P0: Fix ticket status mismatch in `go/repo` or docs.
 3. P1: Replace `scripts/log.ts` references with `repo` CLI.
 4. P1: Remove/resolve `tool` command documentation.
-5. P2: Standardize Interface/Port terminology.
+5. P2: Standardize Port/Port terminology.
 6. P2: Document implemented commands in `AGENTS.md`.
 7. P3: Misc cleanup and validation.
 

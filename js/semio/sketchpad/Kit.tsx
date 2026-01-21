@@ -40,12 +40,12 @@ import {
   FolderIcon,
   HandIcon,
   HashIcon,
-  InterfaceIcon,
   LayoutIcon,
   LightbulbIcon,
   MonitorIcon,
   MoonIcon,
   MousePointerIcon,
+  PortIcon,
   SortAscendingIcon,
   SortDescendingIcon,
   SunIcon,
@@ -62,7 +62,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
-import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Interface, Kit, KitDiff, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
+import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Port, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
 import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
   AppWindowConfig,
@@ -225,7 +225,7 @@ export interface KitAppSelectionQualitiesDiff {
   added?: string[];
   removed?: string[];
 }
-export interface KitAppSelectionInterfacesDiff {
+export interface KitAppSelectionPortsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
@@ -253,7 +253,7 @@ export interface KitAppSelectionDiff {
   types?: KitAppSelectionTypesDiff;
   designs?: KitAppSelectionDesignsDiff;
   qualities?: KitAppSelectionQualitiesDiff;
-  ports?: KitAppSelectionInterfacesDiff;
+  ports?: KitAppSelectionPortsDiff;
   tags?: KitAppSelectionTagsDiff;
   concepts?: KitAppSelectionConceptsDiff;
   files?: KitAppSelectionFilesDiff;
@@ -1198,10 +1198,10 @@ export function useKitAppCommands(id?: KitAppId) {
       selectQualities: noOp,
       addQualityToSelection: noOp,
       removeQualityFromSelection: noOp,
-      selectInterface: noOp,
-      selectInterfaces: noOp,
-      addInterfaceToSelection: noOp,
-      removeInterfaceFromSelection: noOp,
+      selectPort: noOp,
+      selectPorts: noOp,
+      addPortToSelection: noOp,
+      removePortFromSelection: noOp,
       selectTag: noOp,
       selectTags: noOp,
       addTagToSelection: noOp,
@@ -1264,10 +1264,10 @@ export function useKitAppCommands(id?: KitAppId) {
     selectQualities: (keys: string[]) => controller.execute("semio.kitApp.selectQualities", getOrigin(), keys),
     addQualityToSelection: (key: string) => controller.execute("semio.kitApp.addQualityToSelection", getOrigin(), key),
     removeQualityFromSelection: (key: string) => controller.execute("semio.kitApp.removeQualityFromSelection", getOrigin(), key),
-    selectInterface: (guid: Guid) => controller.execute("semio.kitApp.selectInterface", getOrigin(), guid),
-    selectInterfaces: (guids: Guid[]) => controller.execute("semio.kitApp.selectInterfaces", getOrigin(), guids),
-    addInterfaceToSelection: (guid: Guid) => controller.execute("semio.kitApp.addInterfaceToSelection", getOrigin(), guid),
-    removeInterfaceFromSelection: (guid: Guid) => controller.execute("semio.kitApp.removeInterfaceFromSelection", getOrigin(), guid),
+    selectPort: (guid: Guid) => controller.execute("semio.kitApp.selectPort", getOrigin(), guid),
+    selectPorts: (guids: Guid[]) => controller.execute("semio.kitApp.selectPorts", getOrigin(), guids),
+    addPortToSelection: (guid: Guid) => controller.execute("semio.kitApp.addPortToSelection", getOrigin(), guid),
+    removePortFromSelection: (guid: Guid) => controller.execute("semio.kitApp.removePortFromSelection", getOrigin(), guid),
     selectTag: (guid: Guid) => controller.execute("semio.kitApp.selectTag", getOrigin(), guid),
     selectTags: (guids: Guid[]) => controller.execute("semio.kitApp.selectTags", getOrigin(), guids),
     addTagToSelection: (guid: Guid) => controller.execute("semio.kitApp.addTagToSelection", getOrigin(), guid),
@@ -1884,7 +1884,7 @@ export const commands = {
       },
     };
   },
-  "semio.kitApp.selectInterface": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+  "semio.kitApp.selectPort": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
     const currentSelection = context.kitApp.selection;
     return {
       diff: {
@@ -1903,7 +1903,7 @@ export const commands = {
       },
     };
   },
-  "semio.kitApp.selectInterfaces": (context: KitAppCommandContext, guids: Guid[]): KitAppCommandResult => {
+  "semio.kitApp.selectPorts": (context: KitAppCommandContext, guids: Guid[]): KitAppCommandResult => {
     const currentSelection = context.kitApp.selection;
     return {
       diff: {
@@ -1922,7 +1922,7 @@ export const commands = {
       },
     };
   },
-  "semio.kitApp.addInterfaceToSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+  "semio.kitApp.addPortToSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
     return {
       diff: {
         selection: {
@@ -1931,7 +1931,7 @@ export const commands = {
       },
     };
   },
-  "semio.kitApp.removeInterfaceFromSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
+  "semio.kitApp.removePortFromSelection": (context: KitAppCommandContext, guid: Guid): KitAppCommandResult => {
     return {
       diff: {
         selection: {
@@ -2492,9 +2492,9 @@ const KitToolbarFilters: FC = () => {
         onPressedChange={() => toggleKind("ports")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("ports")}
-        id="semio.sketchpad.app.kit.toolbar.showInterfaces"
-        actionId="semio.sketchpad.app.kit.toolbar.createInterface"
-        icon={<InterfaceIcon />}
+        id="semio.sketchpad.app.kit.toolbar.showPorts"
+        actionId="semio.sketchpad.app.kit.toolbar.createPort"
+        icon={<PortIcon />}
       />
       <Toggle
         kind="withAction"
@@ -2561,7 +2561,7 @@ type TableRow = {
   parentId?: string;
   hasChildren: boolean;
   isExpanded: boolean;
-  data: Design | Type | Quality | Interface | Tag | Concept | SemioFile | Author | Folder;
+  data: Design | Type | Quality | Port | Tag | Concept | SemioFile | Author | Folder;
   folderId?: string;
   concepts?: string[];
 };
@@ -2755,7 +2755,7 @@ const AppContent: FC = () => {
   const defaultTypeName = useLabel("semio.sketchpad.app.type.defaultName");
   const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
   const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
-  const defaultInterfaceName = useLabel("semio.sketchpad.app.port.defaultName");
+  const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
   const defaultTagName = useLabel("semio.sketchpad.app.tag.defaultName");
   const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
   const kitLoadingLabel = useLabel("semio.sketchpad.app.kit.loading");
@@ -2778,7 +2778,7 @@ const AppContent: FC = () => {
   const selectionTypes = selection?.types || [];
   const selectionDesigns = selection?.designs || [];
   const selectionQualities = selection?.qualities || [];
-  const selectionInterfaces = selection?.ports || [];
+  const selectionPorts = selection?.ports || [];
   const selectionTags = selection?.tags || [];
   const selectionConcepts = selection?.concepts || [];
   const selectionFiles = selection?.files || [];
@@ -2787,7 +2787,7 @@ const AppContent: FC = () => {
   const selectionTypesKey = selectionTypes.join(",");
   const selectionDesignsKey = selectionDesigns.join(",");
   const selectionQualitiesKey = selectionQualities.join(",");
-  const selectionInterfacesKey = selectionInterfaces.join(",");
+  const selectionPortsKey = selectionPorts.join(",");
   const selectionTagsKey = selectionTags.join(",");
   const selectionConceptsKey = selectionConcepts.join(",");
   const selectionFilesKey = selectionFiles.join(",");
@@ -2798,20 +2798,20 @@ const AppContent: FC = () => {
       types: selectionTypes,
       designs: selectionDesigns,
       qualities: selectionQualities,
-      ports: selectionInterfaces,
+      ports: selectionPorts,
       tags: selectionTags,
       concepts: selectionConcepts,
       files: selectionFiles,
       folders: selectionFolders,
       authors: selectionAuthors,
     }),
-    [selectionTypesKey, selectionDesignsKey, selectionQualitiesKey, selectionInterfacesKey, selectionTagsKey, selectionConceptsKey, selectionFilesKey, selectionFoldersKey, selectionAuthorsKey],
+    [selectionTypesKey, selectionDesignsKey, selectionQualitiesKey, selectionPortsKey, selectionTagsKey, selectionConceptsKey, selectionFilesKey, selectionFoldersKey, selectionAuthorsKey],
   );
 
   const kitDesigns = kit?.designs;
   const kitTypes = kit?.types;
   const kitQualities = kit?.qualities;
-  const kitInterfaces = kit?.ports;
+  const kitPorts = kit?.ports;
   const kitTags = kit?.tags;
   const kitConcepts = kit?.concepts;
   const kitFiles = kit?.files;
@@ -2820,7 +2820,7 @@ const AppContent: FC = () => {
   const kitDesignsKey = useMemo(() => kitDesigns?.map((d) => `${d.guid}:${d.name}:${d.parent?.guid || ""}:${d.folder || ""}:${d.updatedAt || ""}`).join("|") || "", [kitDesigns]);
   const kitTypesKey = useMemo(() => kitTypes?.map((t) => `${t.guid}:${t.name}:${t.parent?.guid || ""}:${t.folder || ""}:${t.updatedAt || ""}`).join("|") || "", [kitTypes]);
   const kitQualitiesKey = useMemo(() => kitQualities?.map((q) => `${q.guid}:${q.name}:${q.folder || ""}`).join("|") || "", [kitQualities]);
-  const kitInterfacesKey = useMemo(() => kitInterfaces?.map((i) => `${i.guid}:${i.name}`).join("|") || "", [kitInterfaces]);
+  const kitPortsKey = useMemo(() => kitPorts?.map((i) => `${i.guid}:${i.name}`).join("|") || "", [kitPorts]);
   const kitTagsKey = useMemo(() => kitTags?.map((tag) => `${tag.guid}:${tag.name}`).join("|") || "", [kitTags]);
   const kitConceptsKey = useMemo(() => kitConcepts?.map((c) => `${c.guid}:${c.name}`).join("|") || "", [kitConcepts]);
   const kitFilesKey = useMemo(() => kitFiles?.map((f) => `${f.guid}:${f.name}:${f.folder?.guid || ""}:${f.updatedAt || ""}`).join("|") || "", [kitFiles]);
@@ -2954,7 +2954,7 @@ const AppContent: FC = () => {
           kit ? (
             <React.Suspense fallback={null}>
               <KitScopeProvider guid={kit.guid}>
-                <InterfaceSection />
+                <PortSection />
               </KitScopeProvider>
             </React.Suspense>
           ) : null,
@@ -3307,13 +3307,13 @@ const AppContent: FC = () => {
     }
 
     if (!selectedKind || selectedKind === "ports") {
-      kitInterfaces?.forEach((iface: Interface) => {
+      kitPorts?.forEach((iface: Port) => {
         if (searchQuery && !iface.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
           id: `port-${iface.guid}`,
           kind: "ports",
           artifact: iface.name,
-          authors: iface.compatibleInterfaces?.length ? `${iface.compatibleInterfaces.length} compatible` : "All compatible",
+          authors: iface.compatiblePorts?.length ? `${iface.compatiblePorts.length} compatible` : "All compatible",
           updatedAt: "",
           createdAt: "",
           level: 0,
@@ -3668,7 +3668,7 @@ const AppContent: FC = () => {
     kitDesigns,
     kitTypes,
     kitQualities,
-    kitInterfaces,
+    kitPorts,
     kitTags,
     kitConcepts,
     kitFiles,
@@ -3677,7 +3677,7 @@ const AppContent: FC = () => {
     kitDesignsKey,
     kitTypesKey,
     kitQualitiesKey,
-    kitInterfacesKey,
+    kitPortsKey,
     kitTagsKey,
     kitConceptsKey,
     kitFilesKey,
@@ -3736,7 +3736,7 @@ const AppContent: FC = () => {
       if (row.kind === "designs") isSelected = selection.designs?.includes((row.data as Design).guid) ?? false;
       else if (row.kind === "types") isSelected = selection.types?.includes((row.data as Type).guid) ?? false;
       else if (row.kind === "qualities") isSelected = selection.qualities?.includes((row.data as Quality).key) ?? false;
-      else if (row.kind === "ports") isSelected = selection.ports?.includes((row.data as Interface).guid) ?? false;
+      else if (row.kind === "ports") isSelected = selection.ports?.includes((row.data as Port).guid) ?? false;
       else if (row.kind === "tags") isSelected = selection.tags?.includes((row.data as Tag).guid) ?? false;
       else if (row.kind === "concepts") isSelected = selection.concepts?.includes((row.data as Concept).guid) ?? false;
       else if (row.kind === "files") isSelected = selection.files?.includes((row.data as SemioFile).guid) ?? false;
@@ -3756,7 +3756,7 @@ const AppContent: FC = () => {
       if (row.kind === "designs") return hover.design === (row.data as Design).guid ? "bg-hover-base" : "";
       if (row.kind === "types") return hover.type === (row.data as Type).guid ? "bg-hover-base" : "";
       if (row.kind === "qualities") return hover.quality === (row.data as Quality).guid ? "bg-hover-base" : "";
-      if (row.kind === "ports") return hover.port === (row.data as Interface).guid ? "bg-hover-base" : "";
+      if (row.kind === "ports") return hover.port === (row.data as Port).guid ? "bg-hover-base" : "";
       if (row.kind === "tags") return hover.tag === (row.data as Tag).guid ? "bg-hover-base" : "";
       if (row.kind === "concepts") return hover.concept === (row.data as Concept).guid ? "bg-hover-base" : "";
       if (row.kind === "files") return hover.file === (row.data as SemioFile).guid ? "bg-hover-base" : "";
@@ -3779,7 +3779,7 @@ const AppContent: FC = () => {
         const guid = (row.data as Quality).guid;
         if (hover?.quality !== guid) setHover({ quality: guid });
       } else if (row.kind === "ports") {
-        const guid = (row.data as Interface).guid;
+        const guid = (row.data as Port).guid;
         if (hover?.port !== guid) setHover({ port: guid });
       } else if (row.kind === "tags") {
         const guid = (row.data as Tag).guid;
@@ -4046,15 +4046,15 @@ const AppContent: FC = () => {
         break;
       }
       case "ports": {
-        const existingNames = (kit.ports || []).map((i: Interface) => i.name);
-        const uniqueName = generateUniqueName(defaultInterfaceName, existingNames);
-        const newInterface: Interface = {
+        const existingNames = (kit.ports || []).map((i: Port) => i.name);
+        const uniqueName = generateUniqueName(defaultPortName, existingNames);
+        const newPort: Port = {
           guid: guid(),
           name: uniqueName,
         };
-        if (kitCommands) kitCommands.createInterface(newInterface);
+        if (kitCommands) kitCommands.createPort(newPort);
         setKind("ports");
-        setSelectionAction?.({ ports: [newInterface.guid] });
+        setSelectionAction?.({ ports: [newPort.guid] });
         break;
       }
       case "tags": {
@@ -4240,7 +4240,7 @@ const AppContent: FC = () => {
           if (r.kind === "types") selectedByKind.types.push((r.data as Type).guid);
           else if (r.kind === "designs") selectedByKind.designs.push((r.data as Design).guid);
           else if (r.kind === "qualities") selectedByKind.qualities.push((r.data as Quality).key);
-          else if (r.kind === "ports") selectedByKind.ports.push((r.data as Interface).guid);
+          else if (r.kind === "ports") selectedByKind.ports.push((r.data as Port).guid);
           else if (r.kind === "tags") selectedByKind.tags.push((r.data as Tag).guid);
           else if (r.kind === "concepts") selectedByKind.concepts.push((r.data as Concept).guid);
           else if (r.kind === "files") selectedByKind.files.push((r.data as SemioFile).guid);
@@ -4276,7 +4276,7 @@ const AppContent: FC = () => {
             setSelectionAction?.({ ...selection, qualities: [...(selection.qualities || []), qualityKey] });
           }
         } else if (row.kind === "ports") {
-          const portId = (row.data as Interface).guid;
+          const portId = (row.data as Port).guid;
           if (selection.ports?.includes(portId)) {
             setSelectionAction?.({ ...selection, ports: selection.ports.filter((i) => i !== portId) });
           } else {
@@ -4330,7 +4330,7 @@ const AppContent: FC = () => {
         } else if (row.kind === "qualities") {
           setSelectionAction?.({ qualities: [(row.data as Quality).key] });
         } else if (row.kind === "ports") {
-          setSelectionAction?.({ ports: [(row.data as Interface).guid] });
+          setSelectionAction?.({ ports: [(row.data as Port).guid] });
         } else if (row.kind === "tags") {
           setSelectionAction?.({ tags: [(row.data as Tag).guid] });
         } else if (row.kind === "concepts") {
@@ -4602,7 +4602,7 @@ const AppContent: FC = () => {
                         {row.kind === "designs" && <LayoutIcon />}
                         {row.kind === "types" && <TypeIcon />}
                         {row.kind === "qualities" && <AwardIcon />}
-                        {row.kind === "ports" && <InterfaceIcon />}
+                        {row.kind === "ports" && <PortIcon />}
                         {row.kind === "tags" && <HashIcon />}
                         {row.kind === "concepts" && <LightbulbIcon />}
                         {row.kind === "files" && <DocumentIcon />}
@@ -5908,21 +5908,21 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
   );
 };
 
-export const InterfaceSection: FC = () => {
+export const PortSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
-  const selectedInterfaces = selection?.ports || [];
-  if (selectedInterfaces.length === 0) return null;
-  if (selectedInterfaces.length === 1) return <SingleInterfaceSection portGuid={selectedInterfaces[0]} />;
-  return <MultipleInterfacesSection portGuids={selectedInterfaces} />;
+  const selectedPorts = selection?.ports || [];
+  if (selectedPorts.length === 0) return null;
+  if (selectedPorts.length === 1) return <SinglePortSection portGuid={selectedPorts[0]} />;
+  return <MultiplePortsSection portGuids={selectedPorts} />;
 };
 
-const SingleInterfaceSection: FC<{ portGuid: string }> = ({ portGuid }) => {
+const SinglePortSection: FC<{ portGuid: string }> = ({ portGuid }) => {
   const { t } = useTranslation();
   const kit = useKit() as Kit;
   const iface = kit?.ports?.find((i) => i.guid === portGuid);
   if (!iface) return null;
-  const compatibleCount = iface.compatibleInterfaces?.length || 0;
+  const compatibleCount = iface.compatiblePorts?.length || 0;
   return (
     <>
       <TreeItem>
@@ -5939,7 +5939,7 @@ const SingleInterfaceSection: FC<{ portGuid: string }> = ({ portGuid }) => {
         <TreeContent>
           <Input
             id="semio.sketchpad.app.kit.panel.details.section.port.compatible"
-            value={compatibleCount === 0 ? t("semio.sketchpad.app.kit.port.allCompatible") : `${compatibleCount} ${t("semio.sketchpad.app.kit.port.compatibleInterfaces")}`}
+            value={compatibleCount === 0 ? t("semio.sketchpad.app.kit.port.allCompatible") : `${compatibleCount} ${t("semio.sketchpad.app.kit.port.compatiblePorts")}`}
             readOnly
             showLabel
           />
@@ -5949,10 +5949,10 @@ const SingleInterfaceSection: FC<{ portGuid: string }> = ({ portGuid }) => {
   );
 };
 
-const MultipleInterfacesSection: FC<{ portGuids: string[] }> = ({ portGuids }) => {
+const MultiplePortsSection: FC<{ portGuids: string[] }> = ({ portGuids }) => {
   const { t } = useTranslation();
   const kit = useKit() as Kit;
-  const ports = portGuids.map((guid) => kit?.ports?.find((i) => i.guid === guid)).filter((i) => i !== undefined) as Interface[];
+  const ports = portGuids.map((guid) => kit?.ports?.find((i) => i.guid === guid)).filter((i) => i !== undefined) as Port[];
   return (
     <>
       <TreeItem>

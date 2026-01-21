@@ -2123,11 +2123,11 @@
           "port": {
             "type": "string",
             "maxLength": 64,
-            "title": "Interface",
+            "title": "Port",
             "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional port of the connector. This allows to define explicit compatibility with other connectors.",
             "default": ""
           },
-          "compatibleInterfaces": {
+          "compatiblePorts": {
             "items": {
               "type": "string"
             },
@@ -2205,11 +2205,11 @@
           "port": {
             "type": "string",
             "maxLength": 64,
-            "title": "Interface",
+            "title": "Port",
             "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional port of the connector. This allows to define explicit compatibility with other connectors.",
             "default": ""
           },
-          "compatibleInterfaces": {
+          "compatiblePorts": {
             "items": {
               "type": "string"
             },
@@ -2273,11 +2273,11 @@
           "port": {
             "type": "string",
             "maxLength": 64,
-            "title": "Interface",
+            "title": "Port",
             "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional port of the connector. This allows to define explicit compatibility with other connectors.",
             "default": ""
           },
-          "compatibleInterfaces": {
+          "compatiblePorts": {
             "items": {
               "type": "string"
             },

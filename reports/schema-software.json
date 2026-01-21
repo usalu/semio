@@ -982,7 +982,7 @@
           "type": "str"
         },
         {
-          "name": "compatibleInterfaces",
+          "name": "compatiblePorts",
           "type": "list[str]"
         },
         {
@@ -1034,7 +1034,7 @@
           "type": "str"
         },
         {
-          "name": "compatibleInterfaces",
+          "name": "compatiblePorts",
           "type": "list[str]"
         },
         {
@@ -2489,13 +2489,13 @@
     },
     {
       "from": "Connector",
-      "to": "Interface",
+      "to": "Port",
       "type": "composition",
       "cardinality": "1"
     },
     {
       "from": "Connector",
-      "to": "Interface",
+      "to": "Port",
       "type": "composition",
       "cardinality": "0..*"
     },

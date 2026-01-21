@@ -1,7 +1,7 @@
 {
   "title": "ITERATION-LINES",
   "prompt": "Compute git line stats on iteration and ticket end; derive files and lines instead of null.",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "closed",
   "author": "uelisaluz",
   "dates": {

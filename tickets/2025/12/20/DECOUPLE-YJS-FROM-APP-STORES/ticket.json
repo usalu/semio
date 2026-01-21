@@ -1,7 +1,7 @@
 {
   "title": "Decoupled yjs from all app stores except Kit. Only KitStore uses yjs for state persistence. Design, Type, Quality, Docs, Home, and Feedback apps use PlainAppStore/PlainKitDiffAppStore.",
   "prompt": "Decouple yjs from all app stores except Kit. All app stores are still entangled with yjs. Only the kit store should use yjs. All other stores should use the state machine for state management.",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

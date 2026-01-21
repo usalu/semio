@@ -3,14 +3,14 @@
   "iterations": [
     {
       "prompt": "Add pandas and other data science libraries to dev dependencies of the main .venv to be able to run jupyter notebooks seamlessly.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-14T16:43:19.939311+01:00",
       "commit": "82726d47abeb46fb37e42f0abb86500da4f429bc"
     },
     {
       "prompt": "ipykernel and jupyter packages were missing - need to sync with --group dev flag",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-14T17:07:51.8147276+01:00",
       "commit": "82726d47abeb46fb37e42f0abb86500da4f429bc"

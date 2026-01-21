@@ -1,7 +1,7 @@
 {
   "title": "Sync C# schema with TypeScript semio.ts",
   "prompt": "Sync C# schema with TypeScript semio.ts",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

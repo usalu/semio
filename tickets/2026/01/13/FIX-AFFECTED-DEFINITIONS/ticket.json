@@ -3,14 +3,14 @@
   "iterations": [
     {
       "prompt": "Fix bug where affected definitions in ticket file metrics includes non-top-level definitions like local variables. E.g. Tickets section shows definitions like 'result', 'affectedDefs', 'diff', 'intersection', 'currentFile' which are local variables, not top-level definitions. Should only include actual function definitions that were modified: CreateTicket, ComputeTicketFiles, computeAffectedSections, GetGitDiffLines.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-13T18:01:06.4665669+01:00",
       "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
     },
     {
       "prompt": "Still too many definitions. The Tickets section shows GetTicketPlanPath, CreateTicket, ListTickets, ComputeTicketFiles, computeAffectedSections, setDifference, setIntersection, GetGitDiffLines but only CreateTicket, ComputeTicketFiles, computeAffectedSections, GetGitDiffLines were actually modified. The logic needs to check if changed lines actually fall within each definition's range, not just within the section's range.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-13T18:07:20.7140246+01:00",
       "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"

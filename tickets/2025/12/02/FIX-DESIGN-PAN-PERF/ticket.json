@@ -1,7 +1,7 @@
 {
   "title": "Fix design app panning performance",
   "prompt": "Fix design app panning performance",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

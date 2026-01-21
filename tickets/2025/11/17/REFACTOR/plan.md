@@ -294,7 +294,7 @@ export class DocsAppStore extends AppStore<DocsState, DocsDiff, DocsSelectionDif
 // #region Types
 //   Y.js type aliases (YAppVal, YApp, YApps)
 //   Enums
-//   Interface definitions (State, Selection, Diff, Edit, Context, Result, etc.)
+//   Port definitions (State, Selection, Diff, Edit, Context, Result, etc.)
 // #endregion
 
 // #region Store

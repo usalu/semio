@@ -6,7 +6,7 @@ Successfully unified all transaction patterns to use a single `Transaction` obje
 
 ## Changes Implemented
 
-### 1. Core Transaction Interface (elements.tsx)
+### 1. Core Transaction Port (elements.tsx)
 
 - Kept `Transaction` port with `start`, `finalize`, `abort` methods
 - Removed individual `startTransaction`, `finalizeTransaction`, `abortTransaction` props from:

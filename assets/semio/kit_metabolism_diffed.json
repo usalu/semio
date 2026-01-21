@@ -121502,7 +121502,7 @@
       "guid": "019ab243-21f3-7380-93c6-9e678ad2f321",
       "name": "core circular top Modified",
       "description": "Updated port description",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f3-7380-93c6-994a9a023448"
         }
@@ -121511,7 +121511,7 @@
     {
       "guid": "019ab243-21f3-7380-93c6-a04a8b137527",
       "name": "core rectangular bottom",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab"
         }
@@ -121520,7 +121520,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-46be42c7d6ab",
       "name": "core rectangular top",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f3-7380-93c6-a04a8b137527"
         }
@@ -121529,7 +121529,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645",
       "name": "door capsule east",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
         }
@@ -121538,7 +121538,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25",
       "name": "door capsule west",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
         }
@@ -121547,7 +121547,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-50266f6860b8",
       "name": "door tambour east",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-4f2766b68b25"
         },
@@ -121559,7 +121559,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-57263e420e70",
       "name": "door tambour west",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-4ac2be8fc645"
         },
@@ -121571,7 +121571,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-58d90f95991e",
       "name": "platform east",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-57263e420e70"
         }
@@ -121580,7 +121580,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-5d94ed5e51b1",
       "name": "platform west",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-50266f6860b8"
         }
@@ -121589,7 +121589,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-60ea93872506",
       "name": "roof circular bottom",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb"
         }
@@ -121598,7 +121598,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-671a4aea23eb",
       "name": "roof circular top",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-60ea93872506"
         }
@@ -121607,7 +121607,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb",
       "name": "roof rectangular bottom",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6"
         }
@@ -121616,7 +121616,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-6c704c2a75e6",
       "name": "roof rectangular top",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-6b15b40049fb"
         }
@@ -121625,7 +121625,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c",
       "name": "tambour circular bottom",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a"
         }
@@ -121634,7 +121634,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-76bc3f56347a",
       "name": "tambour circular top",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-73ce526cb47c"
         }
@@ -121643,7 +121643,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea",
       "name": "tambour rectangular bottom",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702"
         }
@@ -121652,7 +121652,7 @@
     {
       "guid": "019ab243-21f4-73df-8cb4-7ddf5d3ba702",
       "name": "tambour rectangular top",
-      "compatibleInterfaces": [
+      "compatiblePorts": [
         {
           "guid": "019ab243-21f4-73df-8cb4-7a9a1e3c40ea"
         }
@@ -121660,7 +121660,7 @@
     },
     {
       "guid": "019b4b71-0cfe-73a8-9259-4289a4d64b87",
-      "name": "New Test Interface",
+      "name": "New Test Port",
       "description": "A new port for testing",
       "icon": "test-interface-icon.svg"
     }

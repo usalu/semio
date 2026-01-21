@@ -42,7 +42,7 @@ The **kit JSON files must be corrected**:
 - OR connections must use connectors that exist in the piece types
 - This is a data generation/export issue that needs to be fixed at the source
 
-### Option 2: Workaround - Connector Interface Matching (NOT RECOMMENDED)
+### Option 2: Workaround - Connector Port Matching (NOT RECOMMENDED)
 
 Match connectors by port instead of GUID:
 

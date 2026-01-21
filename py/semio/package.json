@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "py/semio",
-  "projectType": "application",
+  "projectType": "library",
+  "scripts": {
+    "build": "uv build",
+    "test": "uv run pytest",
+    "preflight": "ruff format . && ruff check --fix ."
+  },
   "author": {
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",

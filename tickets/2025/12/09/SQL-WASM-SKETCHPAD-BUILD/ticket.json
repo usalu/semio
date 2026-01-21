@@ -1,7 +1,7 @@
 {
   "title": "Fix sql-wasm.wasm not being included in sketchpad production build",
   "prompt": "Fix sql-wasm.wasm not being included in sketchpad production build",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

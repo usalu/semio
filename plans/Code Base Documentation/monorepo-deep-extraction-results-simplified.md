@@ -86,7 +86,7 @@ Think of each container as a separate building in our city:
 | **@semio/net**         | C# .NET              | Core library for Rhino integration                    | Bridge to Rhino City            |
 | **@semio/grasshopper** | C# Grasshopper       | Visual programming plugin                             | LEGO Mindstorms (visual coding) |
 | **@semio/repo**        | Go                   | Command-line tools for managing the codebase          | City maintenance crew           |
-| **@semio/mcp**         | Go MCP               | Interface for AI agents to work with code             | Robot assistant protocol        |
+| **@semio/mcp**         | Go MCP               | Port for AI agents to work with code                  | Robot assistant protocol        |
 
 #### Real-World Comparison:
 
@@ -300,7 +300,7 @@ Let's break down the main ideas using our solar house example:
 - **Direction**: Which way it faces (like an arrow pointing outward)
 - **t**: Position on a ring diagram (0-1, where 0 = top of circle)
 - **Mandatory**: Must be connected or can stay free?
-- **Interface**: What it's compatible with
+- **Port**: What it's compatible with
 
 **Real Example**: Window Frame Connectors
 
@@ -445,7 +445,7 @@ Let's break down the main ideas using our solar house example:
 
 ---
 
-### 7. Interface (Compatibility Rules)
+### 7. Port (Compatibility Rules)
 
 **Analogy**: USB-C ports (certain devices can only connect to compatible ports)
 
@@ -460,7 +460,7 @@ Let's break down the main ideas using our solar house example:
   description: "Type C/E/F electrical plug",
   icon: "🔌",
 
-  compatibleInterfaces: [
+  compatiblePorts: [
     "electrical-socket-220v-typeC",
     "electrical-socket-220v-typeE",
     "electrical-socket-220v-typeF"
@@ -483,7 +483,7 @@ Let's break down the main ideas using our solar house example:
 
 ## 🎨 How Users Interact with Semio
 
-### Different Interfaces for Different Users
+### Different Ports for Different Users
 
 Think of Semio like a Swiss Army knife - same core tool, different interfaces:
 
@@ -1470,7 +1470,7 @@ test("user can create and connect wall pieces", async ({ page }) => {
 
 **For absolute beginners - every technical term explained:**
 
-- **API** (Application Programming Interface): A menu of commands a program can use to talk to another program
+- **API** (Application Programming Port): A menu of commands a program can use to talk to another program
   - _Example_: Restaurant menu (API) lets you order food (commands) from kitchen (program)
 
 - **CRDT** (Conflict-free Replicated Data Type): Special data structure that automatically merges simultaneous edits

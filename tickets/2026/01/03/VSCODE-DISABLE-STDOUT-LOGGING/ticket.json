@@ -1,7 +1,7 @@
 {
   "title": "VSCODE-DISABLE-STDOUT-LOGGING",
   "prompt": "The vscode extension shouldnt log anything from stdout",
-  "llm": "claude-opus-4-5-20251101",
+  "llm": "opus-4-5-20251101",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

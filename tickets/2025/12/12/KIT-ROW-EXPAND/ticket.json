@@ -1,7 +1,7 @@
 {
   "title": "Fix kit table row expansion",
   "prompt": "Fix kit table row expansion",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

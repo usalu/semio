@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "The repo binary creates tickets in the wrong place (go/repo/tickets instead of tickets/). Also, the documentation in AGENTS.md for using the repo binary is outdated and needs to include every flag with the right syntax.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T10:34:57.633312917Z",
@@ -11,7 +11,7 @@
     },
     {
       "prompt": "UI values should not be in caps. The llm and ui should be accepted as flags like --opus-4-5 --claude-code instead of positional arguments.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T10:40:20.236253703Z",
@@ -19,7 +19,7 @@
     },
     {
       "prompt": "Add explicit flag syntax: --title, --prompt, --llm, --ui with string values. Ensure MCP server works.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T10:46:14.366521215Z",
@@ -27,7 +27,7 @@
     },
     {
       "prompt": "Support both positional args and explicit flags for ticket open command",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T10:57:29.383044028Z",
@@ -35,7 +35,7 @@
     },
     {
       "prompt": "Add gpt-5-2-codex to list of valid LLMs",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T10:59:27.521727608Z",
@@ -43,7 +43,7 @@
     },
     {
       "prompt": "Add gpt-5-2-codex everywhere - GraphQL, VSCode, etc.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T11:02:36.150449954Z",
@@ -51,7 +51,7 @@
     },
     {
       "prompt": "Add optional --title flag to ticket reopen and close commands to allow renaming tickets and updating GitHub issue titles",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T11:04:34.761102025Z",
@@ -59,7 +59,7 @@
     },
     {
       "prompt": "Refactor GitHub integration: prepend '# 🤖 Prompt' to ticket descriptions and reopen comments, prepend '# 🔍 Summary' to summaries",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-20T11:12:21.27121224Z",

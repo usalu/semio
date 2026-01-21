@@ -368,7 +368,7 @@
       "hasDiffs": false
     },
     {
-      "name": "Interface",
+      "name": "Port",
       "fields": [
         {
           "name": "Guid",
@@ -391,8 +391,8 @@
           "optional": false
         },
         {
-          "name": "CompatibleInterfaces",
-          "type": "InterfaceId[]",
+          "name": "CompatiblePorts",
+          "type": "PortId[]",
           "optional": false
         },
         {
@@ -500,8 +500,8 @@
           "optional": false
         },
         {
-          "name": "Interface",
-          "type": "InterfaceId",
+          "name": "Port",
+          "type": "PortId",
           "optional": true
         },
         {
@@ -1220,8 +1220,8 @@
           "optional": false
         },
         {
-          "name": "Interfaces",
-          "type": "Interface[]",
+          "name": "Ports",
+          "type": "Port[]",
           "optional": false
         },
         {
@@ -1380,7 +1380,7 @@
     "QualityId",
     "TagId",
     "ConceptId",
-    "InterfaceId",
+    "PortId",
     "PropId",
     "ModelId",
     "ConnectorId",
@@ -1393,5 +1393,11 @@
     "DesignId",
     "KitId"
   ],
-  "weakEntities": ["Coord", "Point", "Vector", "Plane", "Side"]
+  "weakEntities": [
+    "Coord",
+    "Point",
+    "Vector",
+    "Plane",
+    "Side"
+  ]
 }

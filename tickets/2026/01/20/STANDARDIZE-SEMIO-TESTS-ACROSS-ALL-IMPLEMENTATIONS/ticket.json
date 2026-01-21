@@ -1,0 +1,173 @@
+{
+  "title": "Standardize Semio Tests Across All Implementations",
+  "iterations": [
+    {
+      "prompt": "Refactor all semio tests across TypeScript, Python, C#, Go, and Rust to be identical. Use semio.ts tests as blueprint. Remove all other tests. Tests to implement: Roundtrip/Json/Metabolism, Roundtrip/Zip/Metabolism, Flatten/Nakagin Capsule Tower (and variants), Flatten/Capsule Dream, Diff/Metabolism, Validation/Invalid, Validation/Metabolism. Make all tests pass across all implementations.",
+      "llm": "claude-opus-4",
+      "ui": "copilot-chat",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T19:03:40.784877372Z",
+      "commit": "e3f8dfdfb8e2879a9e31963e8c7a69c7a16782aa"
+    },
+    {
+      "prompt": "Continue fixing all test implementations to ensure they pass. Fix Go compilation issues, Python flatten/zip issues, TypeScript validation issue, and verify C#/Rust tests work.",
+      "llm": "claude-opus-4",
+      "ui": "copilot-chat",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-20T19:20:51.421531135Z",
+      "commit": "e3f8dfdfb8e2879a9e31963e8c7a69c7a16782aa"
+    }
+  ],
+  "status": "open",
+  "dates": {},
+  "summary": "Standardized all semio test suites across TypeScript, Python, C#, Go, and Rust with identical structure and naming. Tests follow hierarchy: Roundtrip/Json/Metabolism, Roundtrip/Zip/Metabolism, Flatten/Nakagin Capsule Tower (+variants), Flatten/Capsule Dream, Diff/Metabolism, Validation/Metabolism, Validation/Invalid.",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "js/semio/semio.test.ts",
+        "status": "modified",
+        "lines": {
+          "added": 90,
+          "removed": 66
+        }
+      },
+      {
+        "path": "py/semio/semio.test.py",
+        "status": "modified",
+        "lines": {
+          "added": 89,
+          "removed": 78
+        }
+      },
+      {
+        "path": "go/semio/semio_test.go",
+        "status": "modified",
+        "lines": {
+          "added": 185,
+          "removed": 167
+        }
+      },
+      {
+        "path": "net/Semio.Tests/Tests.cs",
+        "status": "modified",
+        "lines": {
+          "added": 143,
+          "removed": 66
+        }
+      },
+      {
+        "path": "rs/semio/semio.rs",
+        "status": "modified",
+        "lines": {
+          "added": 246,
+          "removed": 246
+        },
+        "sections": [
+          {
+            "name": "Tests",
+            "range": {
+              "start": 2641,
+              "end": 2919
+            },
+            "definitions": [
+              "tests",
+              "ASSETS_DIR",
+              "TOLERANCE",
+              "load_kit_diff",
+              "load_validation_result",
+              "float_eq",
+              "vectors_equal",
+              "planes_equal",
+              "centers_equal",
+              "find_design_by_name",
+              "find_piece_by_name",
+              "test_flatten_design"
+            ],
+            "lines": {
+              "added": 78,
+              "removed": 246
+            }
+          },
+          {
+            "name": "Tests#Roundtrip Tests",
+            "range": {
+              "start": 2746,
+              "end": 2792
+            },
+            "definitions": [
+              "roundtrip",
+              "json",
+              "metabolism_kit_json_kit",
+              "zip",
+              "metabolism_zip_kit_zip_kit"
+            ],
+            "lines": {
+              "added": 47,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Tests#Flatten Tests",
+            "range": {
+              "start": 2794,
+              "end": 2850
+            },
+            "definitions": [
+              "flatten",
+              "nakagin_capsule_tower",
+              "kit_flatten_diff_apply_flat",
+              "slanted",
+              "twisted",
+              "dancing",
+              "capsule_dream"
+            ],
+            "lines": {
+              "added": 57,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Tests#Diff Tests",
+            "range": {
+              "start": 2852,
+              "end": 2884
+            },
+            "definitions": [
+              "diff",
+              "metabolism",
+              "kit_diff_diffedkit_inversediff_kit"
+            ],
+            "lines": {
+              "added": 33,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Tests#Validation Tests",
+            "range": {
+              "start": 2886,
+              "end": 2916
+            },
+            "definitions": [
+              "validation",
+              "metabolism",
+              "metabolism_kit_validate_empty_report",
+              "invalid",
+              "invalid_kit_validate_invalid_report"
+            ],
+            "lines": {
+              "added": 31,
+              "removed": 0
+            }
+          }
+        ]
+      }
+    ],
+    "added": []
+  },
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/177"
+  }
+}

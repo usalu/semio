@@ -1,7 +1,7 @@
 {
   "title": "Fix TypeScript errors in sketchpad components",
   "prompt": "Fix TypeScript errors in sketchpad components",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

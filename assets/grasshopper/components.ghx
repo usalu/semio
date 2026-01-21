@@ -9444,7 +9444,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                       <items count="6">
                         <item name="Description" type_name="gh_string" type_code="10">The optional family of the connector. This allows to define explicit compatibility with other connectors.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">90838771-9a97-49e7-bdb1-74c4981c1e10</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Interface</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Port</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Fa?</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -9471,7 +9471,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">ac0e0044-442a-4c7c-ba22-6f73b902a4a6</item>
-                        <item name="Name" type_name="gh_string" type_code="10">CompatibleInterfaces</item>
+                        <item name="Name" type_name="gh_string" type_code="10">CompatiblePorts</item>
                         <item name="NickName" type_name="gh_string" type_code="10">CF*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">true</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -9732,7 +9732,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                       <items count="6">
                         <item name="Description" type_name="gh_string" type_code="10">The optional family of the connector. This allows to define explicit compatibility with other connectors.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">63afaaf4-8421-4a0c-8269-86e48c834107</item>
-                        <item name="Name" type_name="gh_string" type_code="10">Interface</item>
+                        <item name="Name" type_name="gh_string" type_code="10">Port</item>
                         <item name="NickName" type_name="gh_string" type_code="10">Fa?</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>
@@ -9759,7 +9759,7 @@ If none is provided, it will try to see if the Grasshopper script is executed in
                         <item name="Access" type_name="gh_int32" type_code="3">1</item>
                         <item name="Description" type_name="gh_string" type_code="10">The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.</item>
                         <item name="InstanceGuid" type_name="gh_guid" type_code="9">aff6689a-2292-45c0-9ad5-41e95977f254</item>
-                        <item name="Name" type_name="gh_string" type_code="10">CompatibleInterfaces</item>
+                        <item name="Name" type_name="gh_string" type_code="10">CompatiblePorts</item>
                         <item name="NickName" type_name="gh_string" type_code="10">CF*</item>
                         <item name="Optional" type_name="gh_bool" type_code="1">false</item>
                         <item name="SourceCount" type_name="gh_int32" type_code="3">0</item>

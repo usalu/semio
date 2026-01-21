@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Fix devcontainer configs to persist Claude Code and Codex authentication and chat history across rebuilds",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-19T14:42:27.094006783Z",
@@ -11,7 +11,7 @@
     },
     {
       "prompt": "Also need to persist Windsurf configs across devcontainer rebuilds",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-19T16:54:33.466295888Z",

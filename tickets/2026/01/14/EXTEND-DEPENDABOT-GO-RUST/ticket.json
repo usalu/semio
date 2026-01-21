@@ -3,14 +3,14 @@
   "iterations": [
     {
       "prompt": "Extend dependabot configuration to include Go and Rust package ecosystems",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-14T00:56:23.5417695+01:00",
       "commit": "71fe6601cd68d7bf68ef3546de7481af2ad643db"
     },
     {
       "prompt": "User still getting dependency update PRs for ignored packages - need to fix ignore rules",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-14T13:55:56.7574136+01:00",
       "commit": "82726d47abeb46fb37e42f0abb86500da4f429bc"

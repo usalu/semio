@@ -1,7 +1,7 @@
 {
   "title": "Hooks auto-inject command origins via useOrigin",
   "prompt": "Hooks auto-inject command origins via useOrigin",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

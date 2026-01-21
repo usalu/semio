@@ -5,44 +5,46 @@
 CONTINUE. After rebuilding the 
 
 Continue.
-Change/refactor/extend whatever is necessary to get it working. 
+Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear. 
 Dont ask in between, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
 Make sure to open and close a ticket. Dont forget to add the plan.md, to log in log.md and create a summary.md in the end.
 
 ## History
 
-The ticket close currently adds file information. It should turn fully semantic and not only document file changes but also track bundles, folders, files, sections and definitions. Every single one of them has deleted, renamed, modified, added. The repo binary must be smart to derive all this only from git diffs (e.g. check if the the section name changed, definition name changed, a folder was moved, etc). Aggregate the line metrics for all of them (some have only + and some only - and some both with different meaning). Use this for
+Currently every ticket tracks one codebase diff. Make sure that every iteration has its own `"diff":{…}` and remove it from the ticket level.
+
+Fix all semio tests.
+
+Continue ticket to fix vscode extension:
+- The vscode extension shows `No sections found` for all kind of files. Make sure this works and it is tested for all supported languages.
+
+Continue repo binary changes ticket:
+- tickets, contributors, reports folder should be inside `.semio-repo`
+- The analyze command should not analyze all the files but only the files considered (gitignored files are excluded, all files from `.semio-repo` are excluded, all files from `assets/repo` are excluded because they are only used for testing the repo binary)
+- Make sure to extend the repo test to test every violationKind fix. Use `assets/repo/` for example files. Try to bundle as many violationKind into one file as possible. Create for every language an invalid file which tests the language specific features and a fixed file which is the invalid file after everything was autofixed.
+- The inline comment violation should not produce for every line but a list of inline comments (even with newlines between) should count as one violation
+- Derive the labels from the ticket codebase diff. E.g. if `@semio-repo/go` was edited then add the bundle label `@semio-repo/go` to the github issue. There are general file such as AGENTS.md or README.md where every task must work on. Dont derive `@semio-repo` from them.
+- Automatically link every ticket github issue with the project `https://github.com/users/usalu/projects/2`
 
 
+The ticket close currently adds file information. It should turn fully semantic codebase diff and not only document file changes but also track bundles, folders, files, sections and definitions. Turn the file array from ticket.json into a diff dictionary for bundles, folders, files, sections and definitions. Every single one of them has deleted, renamed, modified, added. For this purpose add reports/codebase.json that exports the codebase (all bundles, folders, files, sections and definitions). When you run repo anaylze without any arguments, it should produce the codebase report. Based on the codebase.json and the git diffs you can derive the semantic diffs (e.g. check if the the section name changed, definition name changed, a folder was moved, etc). Aggregate the line metrics for all of them (some have only + and some only - and some both with different meaning). Remvove general information from files array (e.g. section ranges) and only leave the semantic diffs.
+Change the list of `# ✍️ Changes` for the github issue based on this templates:
 Deleted `.storybook` folder inside `@semio/js` bundle with total lines removed: 📁<del>@semio/js/.storybook</del> -13483
-
 Renamed `js` folder to `semio` inside `@semio/js` bundle with total lines from old `js` folder and total lines in `semio` new folder: 📁@semio/js/<del>js</del>semio -1455 +1455 
-
 Added `sketchpad` folder inside `@semio/js` bundle  with total lines: 📂@semio/js/sketchpad +1673
-
 Deleted file with the lines from the previous file: 📄<del>js/semio/sketchpad/Quality.tsx</del> -2312
-
 Renamed file with the lines from the previous file and the lines from the new file 📄@semio/js/sketchpad/<del>Attribute.tsx</del>Property.tsx +2565 -2312
-
 Modified file with lines added and removed: 📝@semio/js/sketchpad/Design.tsx -12 +250
-
 Added file with the lines: 📄@semio/js/sketchpad/Prop.tsx +4125
-
 Added section with the lines: 📑@semio/js/sketchpad/Design.tsx#State Managment#Hooks +478
-
 Modified section with the lines added and removed: 🔖@semio/js/sketchpad/Design.tsx#State Managment#Hooks -192 +478
-
 Renamed section with lines from previous section and lines in the new section: 🔖@semio/js/sketchpad/Design.tsx#State Managment#<del>React Hooks</del>Hooks -64 +494 
-
 Deleted section with lines deleted: 🔖@semio/js/sketchpad/Design.tsx<del>#State Managment#React Hooks</del> -793
-
 Added definition with lines: 🏷️@semio/js/semio.ts#Diffs§KitDiff +42
-
 Renamed definition with lines: 🏷️@semio/js/semio.ts#KitDiff<del>erence</del> -53 +69
-
-Modified definition with lines: 🏷️@semio/js/semio.ts#KitDiff<del>erence</del> -53 +69
-
+Modified definition with lines: 🏷️@semio/js/semio.ts#KitDiff -41 +64
+Deleted definition with lines: 🏷️@semio/js/semio.ts<del>#KitDiff</del> -59
 📁~~@semio/js/.storybook~~ -13483
 📁@semio/js/~~js~~semio -1455 +1455
 📂@semio/js/sketchpad +1673
@@ -53,8 +55,6 @@ Modified definition with lines: 🏷️@semio/js/semio.ts#KitDiff<del>erence</de
 🔖@semio/js/sketchpad/Design.tsx#State Managment#Hooks -192 +478
 🔖@semio/js/sketchpad/Design.tsx#State Managment#All ~~React Hooks~~Hooks -64 +494 
 🔖@semio/js/sketchpad/Design.tsx~~#State Managment#React Hooks~~ -793
-
-The repo binary should
 
 The semio-repo vscode extension is not showing in vscode despite:
 
@@ -103,7 +103,7 @@ The github integration of tickets should be changed/refactored/extended:
 - When it is reopened, create a comment with `# 🤖 Prompt` same as on create
 - Prepend `#🔍 Summary` to the summary of the ticket on ticket close
 
-The derived labels are not working properly. E.g. go/repo/main.go was edited but the `@semio-repo/go` was not correctly derived. There are general file such as `AGENTS.md` or `README.md` where every task must work on. Dont derive `@semio-repo` from them.
+The derived labels are not working properly. E.g. `go/repo/main.go` was edited but the `@semio-repo/go` was not correctly derived. There are general file such as `AGENTS.md` or `README.md` where every task must work on. Dont derive `@semio-repo` from them.
 
 The ui values should not be in caps. The llm and the and the ui should also be accepted like this --opus-4-5 --claude-code.
 The explicit syntax should also work: 
@@ -396,7 +396,6 @@ Flatten/Capsule Dream # Kit -> Flatten -> Diff -> Apply = Flat
 Diff/Metabolism # Kit + Diff = DiffedKit & DiffedKit + InvertedDiff = Kit
 Validation/Invalid # Invalid Kit -> Validate = Invalid Report
 Validation/Metabolism # Metabolism Kit -> Validate = Empty report
-Ignore that no active workspace is loaded. Searching files and editing works. Dont ask in between, just finish the task. Edit files in workspaces/semio 
 @semio_test.go@semio.go @semio.py@semio.test.py @semio.rs @semio.test.ts@semio.ts @Semio.cs@Tests.cs 
 
 When opening a ticket the llm should be more forgiving. e.g. claude-opus-4-5-20251101 or Claude Opus 4.5 should also automatically work. Slugify and check for prefixes. Some legacy code still uses model as concept. Replace model with llm everywhere.
@@ -650,7 +649,7 @@ Make sure the commands have this api:
 
 The vscode extension commands are not matching the cli command arguments.
 E.g. ticket open requires to select at least one file although ticket open does not require any files.
-Ticket finish should show a list of open tickets and let the user select one and then ask for the summary and at least one file. The llm should be an enum from a fixed list of llms (claude-opus-4-5, claude-opus-4, claude-sonnet-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gemini-3-flash, gpt-5-2, gpt-5-mini).
+Ticket finish should show a list of open tickets and let the user select one and then ask for the summary and at least one file. The llm should be an enum from a fixed list of llms (opus-4-5, claude-opus-4, sonnet-4-5, claude-sonnet-4, haiku-4-5, gemini-3-pro, gemini-3-flash, gpt-5-2, gpt-5-mini).
 Scan for all commands and make sure that whenever something is referenced then vscode should show the list of options to choose from (bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations).
 
 Make sure the commands have this api:
@@ -2242,7 +2241,7 @@ date:
 created: '2025-12-16T16:09:53.578Z'
 finished: '2025-12-16T16:25:36.733Z'
 commit: c44e5e38193be007ca56cc649aa2f58238c1ec40
-model: claude-opus-4-5
+model: opus-4-5
 iterations:
 
 - prompt: >-
@@ -2457,7 +2456,7 @@ It is the digital pencil for sketching plans and digital scalpel for building mo
 The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 ```
 
-3. Human-Interface-Design
+3. Human-Port-Design
 
 ```markdown
 # Software Requirements Specification
@@ -3164,7 +3163,7 @@ PLAN and IMPLEMENT
 There are several schema changes:
 
 - Piece, Connector and Model receive a name.
-- Interface becomes a separate kit artifact (with guid, name, description, icon, compatibleInteraces [InterfaceId with guid]).
+- Port becomes a separate kit artifact (with guid, name, description, icon, compatibleInteraces [PortId with guid]).
 
 - Refactor all commands to not have side effects. (e.g. setLanguage)
 

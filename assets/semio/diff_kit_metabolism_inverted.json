@@ -7058,7 +7058,7 @@
       {
         "guid": "019ab243-21f3-7380-93c6-994a9a023448",
         "name": "core circular bottom",
-        "compatibleInterfaces": [
+        "compatiblePorts": [
           {
             "guid": "019ab243-21f3-7380-93c6-9e678ad2f321"
           }

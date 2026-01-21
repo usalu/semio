@@ -1,7 +1,7 @@
 {
   "title": "Create Feedback app for bug reports and feature ideas",
   "prompt": "Complete Feedback app implementation including German translations, global footer action, documentation, and Playwright tests",
-  "llm": "claude-opus-4-5",
+  "llm": "opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

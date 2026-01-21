@@ -1,7 +1,7 @@
 {
   "title": "\"Finish the UI state machine with proper states, guards, menus, and context\"",
   "prompt": "\"Finish the UI state machine with proper states, guards, menus, and context\"",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

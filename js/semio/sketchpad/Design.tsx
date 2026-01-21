@@ -4059,11 +4059,11 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
           <Input id="semio.sketchpad.app.design.panel.details.section.connector.direction" value={`(${connector.direction.x.toFixed(2)}, ${connector.direction.y.toFixed(2)}, ${connector.direction.z.toFixed(2)})`} disabled showLabel />
         </TreeContent>
       </TreeItem>
-      {(connector as any).compatibleInterfaces &&
-        (connector as any).compatibleInterfaces.map((port_: string, index: number) => (
+      {(connector as any).compatiblePorts &&
+        (connector as any).compatiblePorts.map((port_: string, index: number) => (
           <TreeItem key={`compatible-interface-${index}`}>
             <TreeContent>
-              <Input id="semio.sketchpad.app.design.panel.details.section.connector.compatibleInterface" value={port_} disabled showLabel />
+              <Input id="semio.sketchpad.app.design.panel.details.section.connector.compatiblePort" value={port_} disabled showLabel />
             </TreeContent>
           </TreeItem>
         ))}

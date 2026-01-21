@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "VSCode extension should be automatically installed by the devcontainer instead of requiring manual installation via 'Developer: Install Extension From Location...'",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "",
       "date": "2026-01-17T16:38:58.121780689Z",
       "commit": ""

@@ -224,7 +224,7 @@ type Connector implements Node {
   The ID of the object
   """
   id: ID!
-  compatibleInterfaces: [String!]!
+  compatiblePorts: [String!]!
   point: Point!
   direction: Vector!
   connections: [Connection!]!
@@ -719,7 +719,7 @@ input ConnectorInputNode {
   """
   ✅ The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.
   """
-  compatibleInterfaces: [String] = null
+  compatiblePorts: [String] = null
 
   """
   💍 The parameter t [0,1[ where the connector will be shown on the ring of a piece in the diagram. It starts at 12 o`clock and turns clockwise.

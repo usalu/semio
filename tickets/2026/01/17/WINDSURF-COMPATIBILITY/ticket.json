@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Make the VSCode extension compatible with Windsurf IDE",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "",
       "date": "2026-01-17T15:48:37.904603838Z",
       "commit": ""

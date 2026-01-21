@@ -70,7 +70,7 @@
       "source": "grasshopper"
     },
     {
-      "entity": "Interface",
+      "entity": "Port",
       "message": "Missing Grasshopper component",
       "source": "grasshopper"
     },

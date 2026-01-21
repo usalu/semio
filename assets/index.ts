@@ -30,7 +30,7 @@ export { MetabolismKitData as MetabolismKit };
 
 export const MetabolismKitTypes = MetabolismKitData.types ?? [];
 export const MetabolismKitDesigns = MetabolismKitData.designs ?? [];
-export const MetabolismKitInterfaces = MetabolismKitData.ports ?? [];
+export const MetabolismKitPorts = MetabolismKitData.ports ?? [];
 export const MetabolismKitQualities = (MetabolismKitData as { qualities?: unknown[] }).qualities ?? [];
 export const MetabolismKitFiles = MetabolismKitData.files ?? [];
 export const MetabolismKitFolders = MetabolismKitData.folders ?? [];
@@ -53,14 +53,14 @@ const buildLookup = (items: any[] = []) => {
 
 const typeLookup = buildLookup(MetabolismKitTypes);
 const designLookup = buildLookup(MetabolismKitDesigns);
-const portLookup = buildLookup(MetabolismKitInterfaces);
+const portLookup = buildLookup(MetabolismKitPorts);
 
 export const MetabolismKitTypesByGuid = typeLookup.byGuid;
 export const MetabolismKitTypesByName = typeLookup.byName;
 export const MetabolismKitDesignsByGuid = designLookup.byGuid;
 export const MetabolismKitDesignsByName = designLookup.byName;
-export const MetabolismKitInterfacesByGuid = portLookup.byGuid;
-export const MetabolismKitInterfacesByName = portLookup.byName;
+export const MetabolismKitPortsByGuid = portLookup.byGuid;
+export const MetabolismKitPortsByName = portLookup.byName;
 
 const nakaginCapsuleTowerDesign = MetabolismKitDesigns.find((d) => d.name === "Nakagin Capsule Tower");
 const nakaginCapsuleTowerFlatDesign = MetabolismKitDesigns.find((d) => d.name === "Flat" && d.parent?.guid === nakaginCapsuleTowerDesign?.guid);

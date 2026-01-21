@@ -48,7 +48,7 @@ Recursively compares:
 - **Groups** - pieces, name, color, description, attributes
 - **Stats** - quality, min, max, unit, attributes
 - **Designs** - name, description, icon, image, concepts, pieces, connections, layers, groups, stats, attributes
-- **Interfaces** - name, description, compatibleInterfaces, attributes
+- **Ports** - name, description, compatiblePorts, attributes
 - **Qualities** - key, name, benchmarks, attributes
 - **Files** - name, folder, size, hash, remote, attributes
 - **Folders** - name, parent, attributes

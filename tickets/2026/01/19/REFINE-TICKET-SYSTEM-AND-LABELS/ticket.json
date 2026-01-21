@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "1. Re-extend instructions for the ticket system in AGENTS.md. 2. Derive github labels from bundles with @semio/ prefix. 3. MD code block for comment metrics with status icons. 4. Updated LLM list in AGENTS.md and VS Code extension. 5. Strict mixed-case title validation. 6. Verified with unit tests.",
-      "llm": "claude-sonnet-4-5",
+      "llm": "sonnet-4-5",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-19T15:31:18.0615274Z",
       "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"

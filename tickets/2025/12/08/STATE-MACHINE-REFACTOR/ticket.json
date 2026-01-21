@@ -1,7 +1,7 @@
 {
   "title": "Refactor sketchpad state machine for proper state transitions",
   "prompt": ">-",
-  "llm": "claude-opus-4-5",
+  "llm": "opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

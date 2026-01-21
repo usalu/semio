@@ -82,7 +82,7 @@ type QualityId struct {
 	Guid string `json:"guid"`
 }
 
-type InterfaceId struct {
+type PortId struct {
 	Guid string `json:"guid"`
 }
 
@@ -422,30 +422,30 @@ type QualitiesDiff struct {
 
 // #endregion Quality
 
-// #region Interface
+// #region Port
 
-type Interface struct {
+type Port struct {
 	Guid                 string        `json:"guid"`
 	Name                 string        `json:"name"`
 	Description          *string       `json:"description,omitempty"`
 	Icon                 *string       `json:"icon,omitempty"`
-	CompatibleInterfaces []InterfaceId `json:"compatibleInterfaces,omitempty"`
+	CompatiblePorts []PortId `json:"compatiblePorts,omitempty"`
 	Attributes           []Attribute   `json:"attributes,omitempty"`
 	CreatedAt            string        `json:"createdAt,omitempty"`
 	UpdatedAt            string        `json:"updatedAt,omitempty"`
 }
 
-type InterfaceDiff struct {
+type PortDiff struct {
 	Name                 *string         `json:"name,omitempty"`
 	Description          *string         `json:"description,omitempty"`
 	Icon                 *string         `json:"icon,omitempty"`
-	CompatibleInterfaces []InterfaceId   `json:"compatibleInterfaces,omitempty"`
+	CompatiblePorts []PortId   `json:"compatiblePorts,omitempty"`
 	Attributes           *AttributesDiff `json:"attributes,omitempty"`
 	setFields            map[string]bool `json:"-"`
 }
 
-func (d *InterfaceDiff) UnmarshalJSON(data []byte) error {
-	type Alias InterfaceDiff
+func (d *PortDiff) UnmarshalJSON(data []byte) error {
+	type Alias PortDiff
 	aux := &struct {
 		*Alias
 	}{
@@ -462,23 +462,23 @@ func (d *InterfaceDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
-func (d *InterfaceDiff) HasField(field string) bool {
+func (d *PortDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
 	}
 	return d.setFields[field]
 }
 
-type InterfacesDiff struct {
-	Removed []InterfaceId `json:"removed,omitempty"`
+type PortsDiff struct {
+	Removed []PortId `json:"removed,omitempty"`
 	Updated []struct {
-		Port InterfaceId   `json:"port"`
-		Diff InterfaceDiff `json:"diff"`
+		Port PortId   `json:"port"`
+		Diff PortDiff `json:"diff"`
 	} `json:"updated,omitempty"`
-	Added []Interface `json:"added,omitempty"`
+	Added []Port `json:"added,omitempty"`
 }
 
-// #endregion Interface
+// #endregion Port
 
 // #region Prop
 
@@ -659,7 +659,7 @@ type Connector struct {
 	Direction   Vector       `json:"direction"`
 	T           float64      `json:"t"`
 	Mandatory   *bool        `json:"mandatory,omitempty"`
-	Port        *InterfaceId `json:"port,omitempty"`
+	Port        *PortId `json:"port,omitempty"`
 	Props       []Prop       `json:"props,omitempty"`
 	Description *string      `json:"description,omitempty"`
 	Attributes  []Attribute  `json:"attributes,omitempty"`
@@ -683,7 +683,7 @@ type ConnectorDiff struct {
 	Direction   *VectorDiff     `json:"direction,omitempty"`
 	T           *float64        `json:"t,omitempty"`
 	Mandatory   *bool           `json:"mandatory,omitempty"`
-	Port        *InterfaceId    `json:"port,omitempty"`
+	Port        *PortId    `json:"port,omitempty"`
 	Props       *PropsDiff      `json:"props,omitempty"`
 	Description *string         `json:"description,omitempty"`
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
@@ -1073,7 +1073,7 @@ type Kit struct {
 	Designs     []Design    `json:"designs,omitempty"`
 	Tags        []Tag       `json:"tags,omitempty"`
 	Concepts    []Concept   `json:"concepts,omitempty"`
-	Ports       []Interface `json:"ports,omitempty"`
+	Ports       []Port `json:"ports,omitempty"`
 	Qualities   []Quality   `json:"qualities,omitempty"`
 	Files       []File      `json:"files,omitempty"`
 	Folders     []Folder    `json:"folders,omitempty"`
@@ -1097,7 +1097,7 @@ type KitDiff struct {
 	Designs     *DesignsDiff    `json:"designs,omitempty"`
 	Tags        *TagsDiff       `json:"tags,omitempty"`
 	Concepts    *ConceptsDiff   `json:"concepts,omitempty"`
-	Ports       *InterfacesDiff `json:"ports,omitempty"`
+	Ports       *PortsDiff `json:"ports,omitempty"`
 	Qualities   *QualitiesDiff  `json:"qualities,omitempty"`
 	Files       *FilesDiff      `json:"files,omitempty"`
 	Folders     *FoldersDiff    `json:"folders,omitempty"`
@@ -1222,7 +1222,7 @@ func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
 	return nil
 }
 
-func FindInterfaceInKit(kit *Kit, interfaceGuid string) *Interface {
+func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
 	for i := range kit.Ports {
 		if kit.Ports[i].Guid == interfaceGuid {
 			return &kit.Ports[i]
@@ -1347,9 +1347,9 @@ func NewQuality(key, name string) Quality {
 	}
 }
 
-func NewInterface(name string) Interface {
+func NewPort(name string) Port {
 	now := ""
-	return Interface{
+	return Port{
 		Guid:      Guid(),
 		Name:      name,
 		CreatedAt: now,
@@ -1495,7 +1495,7 @@ func AreKitsEqual(a, b Kit) bool {
 		found := false
 		for _, ib := range b.Ports {
 			if ia.Guid == ib.Guid {
-				if !areInterfacesEqual(ia, ib) {
+				if !arePortsEqual(ia, ib) {
 					return false
 				}
 				found = true
@@ -1594,7 +1594,7 @@ func AreKitDiffsEqual(a, b KitDiff) bool {
 	if !areConceptsDiffsEqual(a.Concepts, b.Concepts) {
 		return false
 	}
-	if !areInterfacesDiffsEqual(a.Ports, b.Ports) {
+	if !arePortsDiffsEqual(a.Ports, b.Ports) {
 		return false
 	}
 	if !areFilesDiffsEqual(a.Files, b.Files) {
@@ -1745,7 +1745,7 @@ func areConceptsDiffsEqual(a, b *ConceptsDiff) bool {
 	return true
 }
 
-func areInterfacesDiffsEqual(a, b *InterfacesDiff) bool {
+func arePortsDiffsEqual(a, b *PortsDiff) bool {
 	if (a == nil) != (b == nil) {
 		return false
 	}
@@ -1926,7 +1926,7 @@ func GetKitDiff(before, after Kit) KitDiff {
 	if len(conceptsDiff.Added) > 0 || len(conceptsDiff.Removed) > 0 || len(conceptsDiff.Updated) > 0 {
 		diff.Concepts = &conceptsDiff
 	}
-	interfacesDiff := getInterfacesDiff(before.Ports, after.Ports)
+	interfacesDiff := getPortsDiff(before.Ports, after.Ports)
 	if len(interfacesDiff.Added) > 0 || len(interfacesDiff.Removed) > 0 || len(interfacesDiff.Updated) > 0 {
 		diff.Ports = &interfacesDiff
 	}
@@ -2129,39 +2129,39 @@ func isConceptDiffEmpty(diff ConceptDiff) bool {
 	return diff.Name == nil && diff.Description == nil
 }
 
-func getInterfacesDiff(before, after []Interface) InterfacesDiff {
-	diff := InterfacesDiff{}
-	beforeMap := make(map[string]Interface)
+func getPortsDiff(before, after []Port) PortsDiff {
+	diff := PortsDiff{}
+	beforeMap := make(map[string]Port)
 	for _, i := range before {
 		beforeMap[i.Guid] = i
 	}
-	afterMap := make(map[string]Interface)
+	afterMap := make(map[string]Port)
 	for _, i := range after {
 		afterMap[i.Guid] = i
 	}
 	for _, i := range before {
 		if _, ok := afterMap[i.Guid]; !ok {
-			diff.Removed = append(diff.Removed, InterfaceId{Guid: i.Guid})
+			diff.Removed = append(diff.Removed, PortId{Guid: i.Guid})
 		}
 	}
 	for _, i := range after {
 		if _, ok := beforeMap[i.Guid]; !ok {
 			diff.Added = append(diff.Added, i)
 		} else {
-			interfaceDiff := getInterfaceDiff(beforeMap[i.Guid], i)
-			if !isInterfaceDiffEmpty(interfaceDiff) {
+			interfaceDiff := getPortDiff(beforeMap[i.Guid], i)
+			if !isPortDiffEmpty(interfaceDiff) {
 				diff.Updated = append(diff.Updated, struct {
-					Port InterfaceId   `json:"port"`
-					Diff InterfaceDiff `json:"diff"`
-				}{Port: InterfaceId{Guid: i.Guid}, Diff: interfaceDiff})
+					Port PortId   `json:"port"`
+					Diff PortDiff `json:"diff"`
+				}{Port: PortId{Guid: i.Guid}, Diff: interfaceDiff})
 			}
 		}
 	}
 	return diff
 }
 
-func getInterfaceDiff(before, after Interface) InterfaceDiff {
-	diff := InterfaceDiff{}
+func getPortDiff(before, after Port) PortDiff {
+	diff := PortDiff{}
 	if before.Name != after.Name {
 		diff.Name = &after.Name
 	}
@@ -2171,7 +2171,7 @@ func getInterfaceDiff(before, after Interface) InterfaceDiff {
 	return diff
 }
 
-func isInterfaceDiffEmpty(diff InterfaceDiff) bool {
+func isPortDiffEmpty(diff PortDiff) bool {
 	return diff.Name == nil && diff.Description == nil
 }
 
@@ -2356,7 +2356,7 @@ func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {
 		inverse.Concepts = &conceptsDiff
 	}
 	if appliedDiff.Ports != nil {
-		interfacesDiff := inverseInterfacesDiff(original.Ports, *appliedDiff.Ports)
+		interfacesDiff := inversePortsDiff(original.Ports, *appliedDiff.Ports)
 		inverse.Ports = &interfacesDiff
 	}
 	if appliedDiff.Files != nil {
@@ -2530,10 +2530,10 @@ func inverseConceptDiff(original Concept, appliedDiff ConceptDiff) ConceptDiff {
 	return inverse
 }
 
-func inverseInterfacesDiff(original []Interface, appliedDiff InterfacesDiff) InterfacesDiff {
-	inverse := InterfacesDiff{}
+func inversePortsDiff(original []Port, appliedDiff PortsDiff) PortsDiff {
+	inverse := PortsDiff{}
 	for _, added := range appliedDiff.Added {
-		inverse.Removed = append(inverse.Removed, InterfaceId{Guid: added.Guid})
+		inverse.Removed = append(inverse.Removed, PortId{Guid: added.Guid})
 	}
 	for _, removed := range appliedDiff.Removed {
 		for _, i := range original {
@@ -2546,11 +2546,11 @@ func inverseInterfacesDiff(original []Interface, appliedDiff InterfacesDiff) Int
 	for _, updated := range appliedDiff.Updated {
 		for _, i := range original {
 			if i.Guid == updated.Port.Guid {
-				inverseDiff := inverseInterfaceDiff(i, updated.Diff)
+				inverseDiff := inversePortDiff(i, updated.Diff)
 				inverse.Updated = append(inverse.Updated, struct {
-					Port InterfaceId   `json:"port"`
-					Diff InterfaceDiff `json:"diff"`
-				}{Port: InterfaceId{Guid: i.Guid}, Diff: inverseDiff})
+					Port PortId   `json:"port"`
+					Diff PortDiff `json:"diff"`
+				}{Port: PortId{Guid: i.Guid}, Diff: inverseDiff})
 				break
 			}
 		}
@@ -2558,8 +2558,8 @@ func inverseInterfacesDiff(original []Interface, appliedDiff InterfacesDiff) Int
 	return inverse
 }
 
-func inverseInterfaceDiff(original Interface, appliedDiff InterfaceDiff) InterfaceDiff {
-	inverse := InterfaceDiff{}
+func inversePortDiff(original Port, appliedDiff PortDiff) PortDiff {
+	inverse := PortDiff{}
 	if appliedDiff.Name != nil {
 		inverse.Name = &original.Name
 	}
@@ -2863,7 +2863,7 @@ func areConceptsEqual(a, b Concept) bool {
 	return true
 }
 
-func areInterfacesEqual(a, b Interface) bool {
+func arePortsEqual(a, b Port) bool {
 	if a.Name != b.Name {
 		return false
 	}
@@ -2942,7 +2942,7 @@ func ApplyKitDiff(base Kit, diff KitDiff) Kit {
 		result.Concepts = applyConceptsDiff(base.Concepts, *diff.Concepts)
 	}
 	if diff.Ports != nil {
-		result.Ports = applyInterfacesDiff(base.Ports, *diff.Ports)
+		result.Ports = applyPortsDiff(base.Ports, *diff.Ports)
 	}
 	if diff.Files != nil {
 		result.Files = applyFilesDiff(base.Files, *diff.Files)
@@ -3340,13 +3340,13 @@ func applyConceptDiff(base Concept, diff ConceptDiff) Concept {
 	return result
 }
 
-func applyInterfacesDiff(base []Interface, diff InterfacesDiff) []Interface {
-	result := make([]Interface, 0)
+func applyPortsDiff(base []Port, diff PortsDiff) []Port {
+	result := make([]Port, 0)
 	removedGuids := make(map[string]bool)
 	for _, r := range diff.Removed {
 		removedGuids[r.Guid] = true
 	}
-	updatedDiffs := make(map[string]InterfaceDiff)
+	updatedDiffs := make(map[string]PortDiff)
 	for _, u := range diff.Updated {
 		updatedDiffs[u.Port.Guid] = u.Diff
 	}
@@ -3355,7 +3355,7 @@ func applyInterfacesDiff(base []Interface, diff InterfacesDiff) []Interface {
 			continue
 		}
 		if d, ok := updatedDiffs[i.Guid]; ok {
-			result = append(result, applyInterfaceDiff(i, d))
+			result = append(result, applyPortDiff(i, d))
 		} else {
 			result = append(result, i)
 		}
@@ -3364,7 +3364,7 @@ func applyInterfacesDiff(base []Interface, diff InterfacesDiff) []Interface {
 	return result
 }
 
-func applyInterfaceDiff(base Interface, diff InterfaceDiff) Interface {
+func applyPortDiff(base Port, diff PortDiff) Port {
 	result := base
 	if diff.Name != nil {
 		result.Name = *diff.Name
@@ -3539,18 +3539,18 @@ func RemoveFileFromKit(fileGuid string) KitDiff {
 	}
 }
 
-func AddInterfaceToKit(iface Interface) KitDiff {
+func AddPortToKit(iface Port) KitDiff {
 	return KitDiff{
-		Ports: &InterfacesDiff{
-			Added: []Interface{iface},
+		Ports: &PortsDiff{
+			Added: []Port{iface},
 		},
 	}
 }
 
-func RemoveInterfaceFromKit(interfaceGuid string) KitDiff {
+func RemovePortFromKit(interfaceGuid string) KitDiff {
 	return KitDiff{
-		Ports: &InterfacesDiff{
-			Removed: []InterfaceId{{Guid: interfaceGuid}},
+		Ports: &PortsDiff{
+			Removed: []PortId{{Guid: interfaceGuid}},
 		},
 	}
 }
@@ -3604,7 +3604,7 @@ const (
 	EntityKindFile       SemioEntityKind = "File"
 	EntityKindFolder     SemioEntityKind = "Folder"
 	EntityKindQuality    SemioEntityKind = "Quality"
-	EntityKindInterface  SemioEntityKind = "Interface"
+	EntityKindPort  SemioEntityKind = "Port"
 	EntityKindProp       SemioEntityKind = "Prop"
 	EntityKindModel      SemioEntityKind = "Model"
 	EntityKindLayer      SemioEntityKind = "Layer"
@@ -3754,7 +3754,7 @@ func GuidUniquenessConstraint(ctx *ValidationContext) []Problem {
 		check(EntityKindQuality, q.Guid)
 	}
 	for _, i := range ctx.Kit.Ports {
-		check(EntityKindInterface, i.Guid)
+		check(EntityKindPort, i.Guid)
 	}
 	for _, f := range ctx.Kit.Files {
 		check(EntityKindFile, f.Guid)
@@ -3831,9 +3831,9 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 		if kit.Ports[i].Guid == oldGuid {
 			kit.Ports[i].Guid = newGuid
 		}
-		for j := range kit.Ports[i].CompatibleInterfaces {
-			if kit.Ports[i].CompatibleInterfaces[j].Guid == oldGuid {
-				kit.Ports[i].CompatibleInterfaces[j].Guid = newGuid
+		for j := range kit.Ports[i].CompatiblePorts {
+			if kit.Ports[i].CompatiblePorts[j].Guid == oldGuid {
+				kit.Ports[i].CompatiblePorts[j].Guid = newGuid
 			}
 		}
 	}
@@ -4070,9 +4070,9 @@ func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
-func InterfaceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
+func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
-	names := make(map[string][]Interface)
+	names := make(map[string][]Port)
 	for _, p := range ctx.Kit.Ports {
 		name := p.Name
 		names[name] = append(names[name], p)
@@ -4095,7 +4095,7 @@ func InterfaceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 				ConstraintId: "port-name-unique",
 				Severity:     SeverityError,
 				Message:      fmt.Sprintf("Duplicate port name \"%s\".", name),
-				Location:     DomainLocation{EntityKind: EntityKindInterface, EntityGuid: iface.Guid, Field: "name"},
+				Location:     DomainLocation{EntityKind: EntityKindPort, EntityGuid: iface.Guid, Field: "name"},
 				RelatedGuids: relatedGuids,
 				Fixes: []Fix{
 					makeFix(ctx, fmt.Sprintf("Rename port \"%s\"", name), func(clone *Kit) {
@@ -4400,7 +4400,7 @@ var DefaultConstraints = []Constraint{
 	DesignNameUniquenessConstraint,
 	PieceNameUniquenessConstraint,
 	QualityNameUniquenessConstraint,
-	InterfaceNameUniquenessConstraint,
+	PortNameUniquenessConstraint,
 	FileNameUniquenessConstraint,
 	FolderNameUniquenessConstraint,
 	ConnectorNameUniquenessConstraint,

@@ -1,7 +1,7 @@
 {
   "title": "Document Sketchpad apps and core mechanisms",
   "prompt": "The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.",
-  "llm": "claude-opus-4-5",
+  "llm": "opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Make sure playwright is cached same as node modules in devcontainer.json",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-19T23:32:35.779626245Z",

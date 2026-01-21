@@ -1,7 +1,7 @@
 {
   "title": "Fix broken panel code and extend sketchpad tests for all panel types",
   "prompt": "Fix broken panel code and extend sketchpad tests for all panel types",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

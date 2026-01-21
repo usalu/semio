@@ -1,7 +1,7 @@
 {
   "title": "STATE-MANAGEMENT-REFACTOR",
   "prompt": "\"Implement state management refactor plan: fix hasInitialized patterns, remove duplicate handlers, replace useKit() overfetch with narrow hooks, fix effect dependencies, remove window module cache patterns\"",
-  "llm": "claude-opus-4-5",
+  "llm": "opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

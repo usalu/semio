@@ -9,12 +9,12 @@
 - **Expected**: Use the existing `layer.guid` and `group.guid`
 - **Status**: Fixed - now using existing GUIDs
 
-### 2. Interface Compatible Property Name Mismatch ✅ FIXED
+### 2. Port Compatible Property Name Mismatch ✅ FIXED
 
-- **Problem**: Schema uses `compatibleInterfaces` but SQL uses `compatible`
+- **Problem**: Schema uses `compatiblePorts` but SQL uses `compatible`
 - **Current**: Reading as `compatible` in `sqliteToKit`
-- **Expected**: Should be `compatibleInterfaces`
-- **Status**: Fixed - now using `compatibleInterfaces`
+- **Expected**: Should be `compatiblePorts`
+- **Status**: Fixed - now using `compatiblePorts`
 
 ### 3. Missing Prop.key in Connector Props ✅ FIXED
 

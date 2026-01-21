@@ -18,7 +18,7 @@ Implement 100% data persistence for Kit import/export with:
 - [x] Kit metadata + concepts + attributes
 - [x] Types + models + tags + connectors + props + attributes + concepts
 - [x] Designs + pieces + connections + layers + groups + stats + attributes + concepts
-- [x] Interfaces + compatibility + attributes
+- [x] Ports + compatibility + attributes
 - [x] Qualities + benchmarks + attributes
 - [x] Files + folders
 - [x] Authors
@@ -37,7 +37,7 @@ Implement 100% data persistence for Kit import/export with:
 - [x] areSameKit() - top level implemented
 - [x] areSameType() - basic implementation
 - [x] areSameDesign() - basic implementation
-- [x] areSameInterface() - basic implementation
+- [x] areSamePort() - basic implementation
 - [x] areSameQuality() - basic implementation
 - [x] areSameFile() - basic implementation
 - [x] areSameFolder() - basic implementation

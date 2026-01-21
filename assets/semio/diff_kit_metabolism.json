@@ -227,7 +227,7 @@
     "added": [
       {
         "guid": "019b4b71-0cfe-73a8-9259-4289a4d64b87",
-        "name": "New Test Interface",
+        "name": "New Test Port",
         "description": "A new port for testing",
         "icon": "test-interface-icon.svg"
       }

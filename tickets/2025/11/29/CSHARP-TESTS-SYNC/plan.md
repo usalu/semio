@@ -24,7 +24,7 @@ The C# codebase was out of date compared to the JavaScript/TypeScript implementa
 3. **KitDiff Changes**:
    - Changed `Attributes` from `List<Attribute>` to `AttributesDiff?`
    - Changed `Authors` from `List<Author>` to `AuthorsDiff?`
-   - Changed `Interfaces` to use proper `InterfacesDiff?`
+   - Changed `Ports` to use proper `PortsDiff?`
    - Updated `Kit.ApplyDiff` and implicit operators
 
 4. **New Diff Classes**:

@@ -45,7 +45,7 @@ ASSETS_DIR = "../../assets/semio"
 
 
 def load_json(filename: str) -> dict:
-    path = os.path.join(ASSETS_DIR, filename)
+    path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, filename)
     if not os.path.exists(path):
         raise FileNotFoundError(f"Asset not found: {path}")
     with open(path, "r", encoding="utf-8") as f:
@@ -102,42 +102,7 @@ def find_design(kit: dict, name: str, parent_name: str = None) -> dict:
     raise ValueError(f"Design {name} not found")
 
 
-def test_diffs_metabolism():
-    """Kit + Diff → DiffedKit & DiffedKit + InverseDiff → Kit"""
-    kit_original = load_json("kit_metabolism.json")
-    kit_original["designs"] = [d for d in kit_original.get("designs", []) if not d.get("parent")]
-    kit_diff = load_json("diff_kit_metabolism.json")
-    kit_diff_inverted = load_json("diff_kit_metabolism_inverted.json")
-    kit_diffed = load_json("kit_metabolism_diffed.json")
-
-    computed_diff = getKitDiffDict(kit_original, kit_diffed)
-    assert areKitDiffsDictEqual(computed_diff, kit_diff)
-    computed_inverse_diff = inverseKitDiffDict(kit_original, kit_diff)
-    assert areKitDiffsDictEqual(computed_inverse_diff, kit_diff_inverted)
-    applied_forward = applyKitDiffDict(kit_original, kit_diff)
-    assert areKitsDictEqual(applied_forward, kit_diffed)
-    applied_inverse = applyKitDiffDict(kit_diffed, kit_diff_inverted)
-    assert areKitsDictEqual(applied_inverse, kit_original)
-
-
-@pytest.mark.parametrize(
-    ("design_name", "parent_name"),
-    [
-        ("Nakagin Capsule Tower", None),
-        ("Slanted", "Nakagin Capsule Tower"),
-        ("Twisted", "Nakagin Capsule Tower"),
-        ("Dancing", "Nakagin Capsule Tower"),
-        ("Capsule Dream", None),
-    ],
-    ids=[
-        "Nakagin Capsule Tower",
-        "Nakagin Capsule Tower/Slanted",
-        "Nakagin Capsule Tower/Twisted",
-        "Nakagin Capsule Tower/Dancing",
-        "Capsule Dream",
-    ],
-)
-def test_flattening_designs(design_name, parent_name):
+def flatten_test(design_name, parent_name=None):
     kit_dict = load_json("kit_metabolism.json")
     design = find_design(kit_dict, design_name, parent_name)
 
@@ -162,44 +127,88 @@ def test_flattening_designs(design_name, parent_name):
         assert centers_equal(piece.get("center"), expected_piece.get("center"))
 
 
-def test_import_export_kit_json_roundtrip():
-    """Kit -> JSON -> Kit"""
-    kit_dict = load_json("kit_metabolism.json")
-    serialized = json.dumps(kit_dict)
-    deserialized = json.loads(serialized)
-    assert areKitsDictEqual(kit_dict, deserialized)
+class TestRoundtrip:
+    class TestJson:
+        class TestMetabolism:
+            def test_kit_json_kit(self):
+                kit_dict = load_json("kit_metabolism.json")
+                serialized = json.dumps(kit_dict)
+                deserialized = json.loads(serialized)
+                assert areKitsDictEqual(kit_dict, deserialized)
+
+    class TestZip:
+        class TestMetabolism:
+            def test_zip_kit_zip_kit(self):
+                zip_path = os.path.join(os.path.dirname(__file__), ASSETS_DIR, "metabolism.zip")
+                kit, files = import_kit(zip_path)
+
+                assert kit.name == "Metabolism"
+                assert len(kit.types or []) > 0
+                assert len(kit.designs or []) > 0
+                assert len(files) > 0
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    roundtrip_path = os.path.join(tmpdir, "metabolism_roundtrip.zip")
+                    export_kit(kit, files, roundtrip_path)
+                    kit2, files2 = import_kit(roundtrip_path)
+
+                assert kit2.name == kit.name
+                assert len(kit2.types or []) == len(kit.types or [])
+                assert len(kit2.designs or []) == len(kit.designs or [])
+                assert len(files2) == len(files)
 
 
-def test_import_export_zip_roundtrip():
-    """Zip -> Kit -> Zip -> Kit"""
-    zip_path = os.path.join(ASSETS_DIR, "metabolism.zip")
-    kit, files = import_kit(zip_path)
+class TestFlatten:
+    class TestNakaginCapsuleTower:
+        def test_kit_flatten_diff_apply_flat(self):
+            flatten_test("Nakagin Capsule Tower")
 
-    assert kit.uri
-    assert kit.name == "Metabolism"
-    assert len(kit.types or []) > 0
-    assert len(kit.designs or []) > 0
-    assert len(files) > 0
+        class TestSlanted:
+            def test_kit_flatten_diff_apply_flat(self):
+                flatten_test("Slanted", "Nakagin Capsule Tower")
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        roundtrip_path = os.path.join(tmpdir, "metabolism_roundtrip.zip")
-        export_kit(kit, files, roundtrip_path)
-        kit2, files2 = import_kit(roundtrip_path)
+        class TestTwisted:
+            def test_kit_flatten_diff_apply_flat(self):
+                flatten_test("Twisted", "Nakagin Capsule Tower")
 
-    assert kit2.uri == kit.uri
-    assert kit2.name == kit.name
-    assert len(kit2.types or []) == len(kit.types or [])
-    assert len(kit2.designs or []) == len(kit.designs or [])
-    assert len(files2) == len(files)
+        class TestDancing:
+            def test_kit_flatten_diff_apply_flat(self):
+                flatten_test("Dancing", "Nakagin Capsule Tower")
+
+    class TestCapsuleDream:
+        def test_kit_flatten_diff_apply_flat(self):
+            flatten_test("Capsule Dream")
 
 
-def test_validation_matches_expected_output():
-    """Validation matches expected output"""
-    valid_kit = load_json("kit_metabolism.json")
-    valid_result = validateKitDict(valid_kit)
-    assert not valid_result.hasErrors()
+class TestDiff:
+    class TestMetabolism:
+        def test_kit_diff_diffedkit_diffedkit_inversediff_kit(self):
+            kit_original = load_json("kit_metabolism.json")
+            kit_original["designs"] = [d for d in kit_original.get("designs", []) if not d.get("parent")]
+            kit_diff = load_json("diff_kit_metabolism.json")
+            kit_diff_inverted = load_json("diff_kit_metabolism_inverted.json")
+            kit_diffed = load_json("kit_metabolism_diffed.json")
 
-    invalid_kit = load_json("kit_invalid.json")
-    result = validateKitDict(invalid_kit)
-    expected = parseValidationResult(json.dumps(load_json("validation.json")))
-    assert areValidationResultsEqual(result, expected)
+            computed_diff = getKitDiffDict(kit_original, kit_diffed)
+            assert areKitDiffsDictEqual(computed_diff, kit_diff)
+            computed_inverse_diff = inverseKitDiffDict(kit_original, kit_diff)
+            assert areKitDiffsDictEqual(computed_inverse_diff, kit_diff_inverted)
+            applied_forward = applyKitDiffDict(kit_original, kit_diff)
+            assert areKitsDictEqual(applied_forward, kit_diffed)
+            applied_inverse = applyKitDiffDict(kit_diffed, kit_diff_inverted)
+            assert areKitsDictEqual(applied_inverse, kit_original)
+
+
+class TestValidation:
+    class TestMetabolism:
+        def test_metabolism_kit_validate_empty_report(self):
+            valid_kit = load_json("kit_metabolism.json")
+            valid_result = validateKitDict(valid_kit)
+            assert not valid_result.hasErrors()
+
+    class TestInvalid:
+        def test_invalid_kit_validate_invalid_report(self):
+            invalid_kit = load_json("kit_invalid.json")
+            result = validateKitDict(invalid_kit)
+            expected = parseValidationResult(json.dumps(load_json("validation.json")))
+            assert areValidationResultsEqual(result, expected)

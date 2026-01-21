@@ -1,7 +1,7 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
-' #region Interfaces
+' #region Ports
 interface Id {
 }
 
@@ -33,7 +33,7 @@ interface Context {
 
 interface Prediction {
 }
-' #endregion Interfaces
+' #endregion Ports
 
 ' #region Classes
 
@@ -420,7 +420,7 @@ class Connector {
   t: float
   mandatory: bool
   port: str
-  compatibleInterfaces: list[str]
+  compatiblePorts: list[str]
   description: str
   attributes: list[Attribute]
   --
@@ -431,8 +431,8 @@ class Connector {
     t >= 0 and t < 1
   context Connector inv directionIsUnitVector:
     direction.x * direction.x + direction.y * direction.y + direction.z * direction.z = 1
-  context Connector inv compatibleInterfacesIncludesOwnInterface:
-    port->notEmpty() implies compatibleInterfaces->includes(port)
+  context Connector inv compatiblePortsIncludesOwnPort:
+    port->notEmpty() implies compatiblePorts->includes(port)
 }
 
 class ConnectorId {
@@ -446,7 +446,7 @@ class ConnectorDiff {
   t?: float
   mandatory?: bool
   port?: str
-  compatibleInterfaces?: list[str]
+  compatiblePorts?: list[str]
   description?: str
   attributes?: AttributesDiff
 }
@@ -849,8 +849,8 @@ Model o-- "1" File : references >
 Connector *-- "0..*" Attribute : has >
 Connector *-- "1" Point : at >
 Connector *-- "1" Vector : oriented by >
-Connector *-- "1" Interface : has >
-Connector *-- "0..*" Interface : compatible with >
+Connector *-- "1" Port : has >
+Connector *-- "0..*" Port : compatible with >
 
 Layer *-- "0..*" Attribute : has >
 
@@ -940,7 +940,7 @@ enum SemioEntityKind {
   Connection
   Connector
   Quality
-  Interface
+  Port
   File
   Folder
   Model

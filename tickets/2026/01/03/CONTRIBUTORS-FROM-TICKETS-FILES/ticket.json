@@ -1,7 +1,7 @@
 {
   "title": "CONTRIBUTORS-FROM-TICKETS-FILES",
   "prompt": "contributions should be derived from the tickets (frontmatter) and files (headers) instead of being hardcoded. Sort contributors by amount of tickets contributed. Extend the contributions list command. Adjust also the vscode extension tree.",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

@@ -284,13 +284,12 @@ func TestFilterTicketWorkspaceFiles(t *testing.T) {
 		Month:      1,
 		Day:        20,
 		Slug:       "SAMPLE",
-		FolderPath: filepath.Join(rootDir, "tickets", "2026", "01", "20", "SAMPLE"),
+		FolderPath: filepath.Join(rootDir, ".semio-repo", "tickets", "2026", "01", "20", "SAMPLE"),
 	}
 	files := []string{
-		"tickets/2026/01/20/SAMPLE/plan.md",
-		"./tickets/2026/01/20/SAMPLE/log.md",
-		"tickets/2026/01/20/SAMPLE/summary.md",
-		filepath.Join(rootDir, "tickets", "2026", "01", "20", "SAMPLE", "extra.txt"),
+		".semio-repo/tickets/2026/01/20/SAMPLE/plan.md",
+		"./.semio-repo/tickets/2026/01/20/SAMPLE/ticket.md",
+		filepath.Join(rootDir, ".semio-repo", "tickets", "2026", "01", "20", "SAMPLE", "extra.txt"),
 		absMain,
 	}
 	filtered := FilterTicketWorkspaceFiles(ticket, files)
@@ -948,6 +947,103 @@ func TestPolicyViolationListCommand(t *testing.T) {
 	result := ToolPolicyViolationList("code")
 	if result.Error != "" {
 		t.Errorf("ToolPolicyViolationList returned error: %s", result.Error)
+	}
+}
+
+func TestFixtureViolationsGroupedInline(t *testing.T) {
+	path := "assets/repo/some/folder/file_invalid.tsx"
+	bundles := GetProjects()
+	scope := Scope{Kind: ScopeFile, FilePath: path}
+	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("fixture policy check failed: %v", err)
+	}
+	if len(violations) == 0 {
+		t.Fatal("expected fixture violations")
+	}
+	counts := map[ViolationKind]int{}
+	for _, v := range violations {
+		counts[v.Kind]++
+	}
+	required := []ViolationKind{
+		ViolationCodeHeaderMissingFilename,
+		ViolationCodeHeaderMissingContributors,
+		ViolationCodeHeaderWrongLicense,
+		ViolationCodeSectionMissingStartName,
+		ViolationCodeSectionMissingEndName,
+		ViolationCodeSectionNameMismatch,
+		ViolationCodeSectionEmpty,
+		ViolationCodeSectionOrphanDefinition,
+		ViolationCodeCommentInline,
+		ViolationCodeCommentBlock,
+		ViolationCodeCommentJSDoc,
+	}
+	for _, kind := range required {
+		if counts[kind] == 0 {
+			t.Fatalf("expected violation kind %s", kind)
+		}
+	}
+	if counts[ViolationCodeCommentInline] != 1 {
+		t.Fatalf("expected 1 inline comment violation, got %d", counts[ViolationCodeCommentInline])
+	}
+}
+
+func TestFixtureViolationsByLanguage(t *testing.T) {
+	bundles := GetProjects()
+	fixtures := []struct {
+		path          string
+		requiredKinds []ViolationKind
+	}{
+		{
+			path:          "assets/repo/some/folder/file_invalid.py",
+			requiredKinds: []ViolationKind{ViolationCodeHeaderMissingRegion},
+		},
+		{
+			path:          "assets/repo/some/folder/file_invalid.cs",
+			requiredKinds: []ViolationKind{ViolationCodeHeaderMissingContributors},
+		},
+		{
+			path:          "assets/repo/some/folder/file_invalid.go",
+			requiredKinds: []ViolationKind{ViolationCodeHeaderMissingLicense},
+		},
+	}
+	for _, fixture := range fixtures {
+		scope := Scope{Kind: ScopeFile, FilePath: fixture.path}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{fixture.path})
+		violations, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("fixture policy check failed for %s: %v", fixture.path, err)
+		}
+		if len(violations) == 0 {
+			t.Fatalf("expected fixture violations for %s", fixture.path)
+		}
+		counts := map[ViolationKind]int{}
+		for _, v := range violations {
+			counts[v.Kind]++
+		}
+		for _, kind := range fixture.requiredKinds {
+			if counts[kind] == 0 {
+				t.Fatalf("expected violation kind %s in %s", kind, fixture.path)
+			}
+		}
+	}
+	clean := []string{
+		"assets/repo/some/folder/file_fixed.tsx",
+		"assets/repo/some/folder/file_fixed.py",
+		"assets/repo/some/folder/file_fixed.cs",
+		"assets/repo/some/folder/file_fixed.go",
+	}
+	for _, path := range clean {
+		scope := Scope{Kind: ScopeFile, FilePath: path}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
+		violations, err := CheckPoliciesWithContext(ctx, nil)
+		if err != nil {
+			t.Fatalf("fixture policy check failed for %s: %v", path, err)
+		}
+		if len(violations) != 0 {
+			t.Fatalf("expected no violations for %s, got %d", path, len(violations))
+		}
 	}
 }
 

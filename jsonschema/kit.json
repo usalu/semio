@@ -432,7 +432,7 @@
         "port": {
           "anyOf": [
             {
-              "$ref": "#/$defs/InterfaceId"
+              "$ref": "#/$defs/PortId"
             },
             {
               "type": "null"
@@ -508,7 +508,7 @@
       "title": "Attribute",
       "type": "object"
     },
-    "InterfaceId": {
+    "PortId": {
       "description": "\ud83e\udeaa The props to identify the port.",
       "properties": {
         "guid": {
@@ -521,10 +521,10 @@
       "required": [
         "guid"
       ],
-      "title": "InterfaceId",
+      "title": "PortId",
       "type": "object"
     },
-    "Interface": {
+    "Port": {
       "description": "\ud83d\udd0c An port defines connector compatibility.",
       "properties": {
         "guid": {
@@ -553,10 +553,10 @@
           "title": "Icon",
           "type": "string"
         },
-        "compatibleInterfaces": {
+        "compatiblePorts": {
           "description": "\u2705 The optional other compatible ports. An empty list means this port is compatible with all other ports.",
           "items": {
-            "$ref": "#/$defs/InterfaceId"
+            "$ref": "#/$defs/PortId"
           },
           "title": "Compatibleports",
           "type": "array"
@@ -574,10 +574,10 @@
         "guid",
         "name"
       ],
-      "title": "Interface",
+      "title": "Port",
       "type": "object"
     },
-    "InterfaceId": {
+    "PortId": {
       "description": "\ud83e\udeaa The props to identify the port.",
       "properties": {
         "guid": {
@@ -590,10 +590,10 @@
       "required": [
         "guid"
       ],
-      "title": "InterfaceId",
+      "title": "PortId",
       "type": "object"
     },
-    "Interface": {
+    "Port": {
       "description": "\ud83d\udd0c An port defines connector compatibility.",
       "properties": {
         "guid": {
@@ -622,10 +622,10 @@
           "title": "Icon",
           "type": "string"
         },
-        "compatibleInterfaces": {
+        "compatiblePorts": {
           "description": "\u2705 The optional other compatible ports. An empty list means this port is compatible with all other ports.",
           "items": {
-            "$ref": "#/$defs/InterfaceId"
+            "$ref": "#/$defs/PortId"
           },
           "title": "Compatibleports",
           "type": "array"
@@ -643,7 +643,7 @@
         "guid",
         "name"
       ],
-      "title": "Interface",
+      "title": "Port",
       "type": "object"
     },
     "Model": {
@@ -981,9 +981,9 @@
     "ports": {
       "description": "\ud83d\udd0c The ports of the kit.",
       "items": {
-        "$ref": "#/$defs/Interface"
+        "$ref": "#/$defs/Port"
       },
-      "title": "Interfaces",
+      "title": "Ports",
       "type": "array"
     },
     "attributes": {

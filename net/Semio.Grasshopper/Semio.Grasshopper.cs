@@ -3172,18 +3172,18 @@ public class ConceptIdParam : IdParam<ConceptIdGoo, ConceptId>
 
 #endregion Concept
 
-#region Interface
+#region Port
 
-public class InterfaceGoo : Goo<Interface>
+public class PortGoo : Goo<Port>
 {
-    public InterfaceGoo() { }
-    public InterfaceGoo(Interface value) : base(value) { }
+    public PortGoo() { }
+    public PortGoo(Port value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
-        if (typeof(Q).IsAssignableFrom(typeof(InterfaceIdGoo)))
+        if (typeof(Q).IsAssignableFrom(typeof(PortIdGoo)))
         {
-            target = (Q)(object)new InterfaceIdGoo(Value);
+            target = (Q)(object)new PortIdGoo(Value);
             return true;
         }
         if (typeof(Q).IsAssignableFrom(typeof(GH_String)))
@@ -3197,33 +3197,33 @@ public class InterfaceGoo : Goo<Interface>
     internal override bool CustomCastFrom(object source)
     {
         if (source is null) return false;
-        if (source is InterfaceIdGoo portIdGoo)
+        if (source is PortIdGoo portIdGoo)
         {
             Value = portIdGoo.Value;
             return true;
         }
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new Interface { Guid = str };
+            Value = new Port { Guid = str };
             return true;
         }
         return false;
     }
 }
 
-public class InterfaceParam : Param<InterfaceGoo, Interface>
+public class PortParam : Param<PortGoo, Port>
 {
-    protected override string ModelName => "Interface";
+    protected override string ModelName => "Port";
     protected override string ModelNickname => "Ifc";
     protected override string ModelDescription => "Connector compatibility";
     protected override string IconResourceName => "interface_24x24";
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D2");
 }
 
-public class InterfaceComponent : PassthroughComponent<InterfaceParam, InterfaceGoo, Interface>
+public class PortComponent : PassthroughComponent<PortParam, PortGoo, Port>
 {
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D3");
-    protected override string ModelName => "Interface";
+    protected override string ModelName => "Port";
     protected override string ModelNickname => "Ifc";
     protected override string ModelDescription => "Construct, deconstruct or modify an port.";
 
@@ -3235,7 +3235,7 @@ public class InterfaceComponent : PassthroughComponent<InterfaceParam, Interface
         pManager.AddTextParameter("Name", "Nm", "The name of the port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
-        pManager.AddParameter(new InterfaceIdParam() { Access = GH_ParamAccess.list }, "CompatibleInterfaces", "CF*", "The optional compatible ports.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortIdParam() { Access = GH_ParamAccess.list }, "CompatiblePorts", "CF*", "The optional compatible ports.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
 
@@ -3245,50 +3245,50 @@ public class InterfaceComponent : PassthroughComponent<InterfaceParam, Interface
         pManager.AddTextParameter("Name", "Nm", "The name of the port.", GH_ParamAccess.item);
         pManager.AddTextParameter("Description", "Dc?", "The optional description.", GH_ParamAccess.item);
         pManager.AddTextParameter("Icon", "Ic?", "The optional icon.", GH_ParamAccess.item);
-        pManager.AddParameter(new InterfaceIdParam() { Access = GH_ParamAccess.list }, "CompatibleInterfaces", "CF*", "The optional compatible ports.", GH_ParamAccess.list);
+        pManager.AddParameter(new PortIdParam() { Access = GH_ParamAccess.list }, "CompatiblePorts", "CF*", "The optional compatible ports.", GH_ParamAccess.list);
         pManager.AddParameter(new AttributeParam() { Access = GH_ParamAccess.list }, "Attributes", "At*", "The optional attributes.", GH_ParamAccess.list);
     }
 
-    protected override void GetModelData(IGH_DataAccess DA, Interface model)
+    protected override void GetModelData(IGH_DataAccess DA, Port model)
     {
         string guid = "", name = "", description = "", icon = "";
-        var compatibleInterfaces = new List<InterfaceIdGoo>();
+        var compatiblePorts = new List<PortIdGoo>();
         var attributes = new List<AttributeGoo>();
         if (DA.GetData(2, ref guid)) model.Guid = guid;
         if (DA.GetData(3, ref name)) model.Name = name;
         if (DA.GetData(4, ref description)) model.Description = description;
         if (DA.GetData(5, ref icon)) model.Icon = icon;
-        if (DA.GetDataList(6, compatibleInterfaces)) model.CompatibleInterfaces = compatibleInterfaces.Select(i => i.Value).ToList();
+        if (DA.GetDataList(6, compatiblePorts)) model.CompatiblePorts = compatiblePorts.Select(i => i.Value).ToList();
         if (DA.GetDataList(7, attributes)) model.Attributes = attributes.Select(a => a.Value).ToList();
     }
 
-    protected override void SetModelData(IGH_DataAccess DA, Interface model)
+    protected override void SetModelData(IGH_DataAccess DA, Port model)
     {
         DA.SetData(2, model.Guid);
         DA.SetData(3, model.Name);
         DA.SetData(4, model.Description);
         DA.SetData(5, model.Icon);
-        DA.SetDataList(6, model.CompatibleInterfaces.Select(i => new InterfaceIdGoo(i)).ToList());
+        DA.SetDataList(6, model.CompatiblePorts.Select(i => new PortIdGoo(i)).ToList());
         DA.SetDataList(7, model.Attributes.Select(a => new AttributeGoo(a)).ToList());
     }
 }
 
-public class SerializeInterfaceComponent : SerializeComponent<InterfaceParam, InterfaceGoo, Interface>
+public class SerializePortComponent : SerializeComponent<PortParam, PortGoo, Port>
 {
-    public SerializeInterfaceComponent() { }
+    public SerializePortComponent() { }
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D4");
 }
 
-public class DeserializeInterfaceComponent : DeserializeComponent<InterfaceParam, InterfaceGoo, Interface>
+public class DeserializePortComponent : DeserializeComponent<PortParam, PortGoo, Port>
 {
-    public DeserializeInterfaceComponent() { }
+    public DeserializePortComponent() { }
     public override Guid ComponentGuid => new("A0B8C9D0-E1F2-A3B4-C5D6-E7F8A9B0C1D5");
 }
 
-public class InterfaceIdGoo : IdGoo<InterfaceId>
+public class PortIdGoo : IdGoo<PortId>
 {
-    public InterfaceIdGoo() { }
-    public InterfaceIdGoo(InterfaceId value) : base(value) { }
+    public PortIdGoo() { }
+    public PortIdGoo(PortId value) : base(value) { }
 
     internal override bool CustomCastTo<Q>(ref Q target)
     {
@@ -3305,24 +3305,24 @@ public class InterfaceIdGoo : IdGoo<InterfaceId>
         if (source is null) return false;
         if (GH_Convert.ToString(source, out string str, GH_Conversion.Both))
         {
-            Value = new InterfaceId { Guid = str };
+            Value = new PortId { Guid = str };
             return true;
         }
         return false;
     }
 }
 
-public class InterfaceIdParam : IdParam<InterfaceIdGoo, InterfaceId>
+public class PortIdParam : IdParam<PortIdGoo, PortId>
 {
-    protected override string ModelName => "InterfaceId";
+    protected override string ModelName => "PortId";
     protected override string ModelNickname => "IId";
-    protected override string ModelDescription => "Interface identifier";
+    protected override string ModelDescription => "Port identifier";
     protected override string IconResourceName => "interface_24x24";
     protected override string IdIconResourceName => "interfaceid_24x24";
     public override Guid ComponentGuid => new("78187B1A-F476-44D9-A382-DE2C47019DB8");
 }
 
-#endregion Interface
+#endregion Port
 
 #region Type
 

@@ -2,7 +2,6 @@
   "problems": [
     {
       "constraintId": "connector-name-unique",
-      "severity": "error",
       "message": "Duplicate connector name \"Duplicate Connector Name\" inside type \"Duplicate Type Name\".",
       "entityKind": "Connector",
       "entityGuid": "019ab664-BBBB-BBBB-BBBB-BBBBBBBBBBBB",
@@ -39,7 +38,6 @@
     },
     {
       "constraintId": "design-name-unique",
-      "severity": "error",
       "message": "Duplicate design name \"Duplicate Design Name\" among siblings.",
       "entityKind": "Design",
       "entityGuid": "019ab664-6666-6666-6666-666666666666",
@@ -65,7 +63,6 @@
     },
     {
       "constraintId": "file-name-unique",
-      "severity": "error",
       "message": "Duplicate file name \"duplicate-file.txt\".",
       "entityKind": "File",
       "entityGuid": "019ab664-CCCC-CCCC-CCCC-CCCCCCCC0000",
@@ -91,7 +88,6 @@
     },
     {
       "constraintId": "folder-name-unique",
-      "severity": "error",
       "message": "Duplicate folder name \"duplicate-folder\" among siblings.",
       "entityKind": "Folder",
       "entityGuid": "019ab664-EEEE-EEEE-EEEE-EEEEEEEE0000",
@@ -117,7 +113,6 @@
     },
     {
       "constraintId": "guid-unique",
-      "severity": "error",
       "message": "Duplicate GUID \"019ab664-3333-3333-3333-333333333333\". First occurrence kept.",
       "entityKind": "Connection",
       "entityGuid": "019ab664-3333-3333-3333-333333333333",
@@ -133,7 +128,7 @@
               ],
               "added": [
                 {
-                  "guid": "019b4b71-0ddd-73a3-9fcf-6990cc66c77a",
+                  "guid": "019bdcdf-1100-74c9-aaf6-40e1a0d74def",
                   "name": "Duplicate Design Name",
                   "pieces": [
                     {
@@ -187,7 +182,7 @@
                   ],
                   "connections": [
                     {
-                      "guid": "019b4b71-0ddd-73a3-9fcf-6990cc66c77a",
+                      "guid": "019bdcdf-1100-74c9-aaf6-40e1a0d74def",
                       "connected": {
                         "piece": {
                           "guid": "019ab664-4444-4444-4444-444444444444"
@@ -224,34 +219,7 @@
       ]
     },
     {
-      "constraintId": "port-name-unique",
-      "severity": "error",
-      "message": "Duplicate port name \"Duplicate Interface Name\".",
-      "entityKind": "Port",
-      "entityGuid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
-      "fixes": [
-        {
-          "title": "Rename port \"Duplicate Interface Name\"",
-          "diff": {
-            "ports": {
-              "updated": [
-                {
-                  "port": {
-                    "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000"
-                  },
-                  "diff": {
-                    "name": "Duplicate Interface Name 2"
-                  }
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
       "constraintId": "layer-path-unique",
-      "severity": "error",
       "message": "Duplicate layer path \"Duplicate.Layer.Path\" inside design \"Duplicate Design Name\".",
       "entityKind": "Layer",
       "entityGuid": "019ab664-3333-3333-3333-333333330002",
@@ -270,7 +238,7 @@
                       "updated": [
                         {
                           "layer": {
-                            "guid": "019ab664-3333-3333-3333-333333330002"
+                            "guid": "019ab664-3333-3333-3333-333333330001"
                           },
                           "diff": {
                             "path": "Duplicate.Layer.Path 2"
@@ -288,7 +256,6 @@
     },
     {
       "constraintId": "model-name-unique",
-      "severity": "error",
       "message": "Duplicate model name \"Duplicate Model Name\" inside type \"Duplicate Type Name\".",
       "entityKind": "Model",
       "entityGuid": "019ab664-1111-1111-1111-111111110002",
@@ -325,7 +292,6 @@
     },
     {
       "constraintId": "piece-name-unique",
-      "severity": "error",
       "message": "Duplicate piece name \"Duplicate Piece Name\" inside design \"Duplicate Design Name\".",
       "entityKind": "Piece",
       "entityGuid": "019ab664-5555-5555-5555-555555555555",
@@ -361,8 +327,32 @@
       ]
     },
     {
+      "constraintId": "port-name-unique",
+      "message": "Duplicate port name \"Duplicate Port Name\".",
+      "entityKind": "Port",
+      "entityGuid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000",
+      "fixes": [
+        {
+          "title": "Rename port \"Duplicate Port Name\"",
+          "diff": {
+            "ports": {
+              "updated": [
+                {
+                  "port": {
+                    "guid": "019ab664-AAAA-AAAA-AAAA-AAAAAAAA0000"
+                  },
+                  "diff": {
+                    "name": "Duplicate Port Name 2"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
       "constraintId": "quality-name-unique",
-      "severity": "error",
       "message": "Duplicate quality name \"Duplicate Quality Name\".",
       "entityKind": "Quality",
       "entityGuid": "019ab664-8888-8888-8888-888888888888",
@@ -388,7 +378,6 @@
     },
     {
       "constraintId": "type-name-unique",
-      "severity": "error",
       "message": "Duplicate type name \"Duplicate Type Name\" among siblings.",
       "entityKind": "Type",
       "entityGuid": "019ab664-2222-2222-2222-222222222222",

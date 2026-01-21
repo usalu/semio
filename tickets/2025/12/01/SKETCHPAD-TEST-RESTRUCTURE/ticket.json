@@ -1,7 +1,7 @@
 {
   "title": "Restructure sketchpad tests to one test per app with parent initialization",
   "prompt": "Restructure sketchpad tests to one test per app with parent initialization",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

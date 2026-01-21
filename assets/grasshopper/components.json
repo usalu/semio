@@ -2694,15 +2694,15 @@
           },
           {
             "description": "The optional family of the connector. This allows to define explicit compatibility with other connectors.",
-            "name": "Interface",
+            "name": "Port",
             "nickname": "Fa?",
-            "kind": "Interface"
+            "kind": "Port"
           },
           {
             "description": "The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.",
-            "name": "CompatibleInterfaces",
+            "name": "CompatiblePorts",
             "nickname": "CF*",
-            "kind": "CompatibleInterfaces"
+            "kind": "CompatiblePorts"
           },
           {
             "description": "The connection point of the connector that is attracted to another connection point.",
@@ -2762,15 +2762,15 @@
           },
           {
             "description": "The optional family of the connector. This allows to define explicit compatibility with other connectors.",
-            "name": "Interface",
+            "name": "Port",
             "nickname": "Fa?",
-            "kind": "Interface"
+            "kind": "Port"
           },
           {
             "description": "The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.",
-            "name": "CompatibleInterfaces",
+            "name": "CompatiblePorts",
             "nickname": "CF*",
-            "kind": "CompatibleInterfaces"
+            "kind": "CompatiblePorts"
           },
           {
             "description": "The connection point of the connector that is attracted to another connection point.",

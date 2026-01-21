@@ -1,7 +1,7 @@
 {
   "title": "COMMENT-STRING-DETECT",
   "prompt": "inside strings are wrongly identified as comments.",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

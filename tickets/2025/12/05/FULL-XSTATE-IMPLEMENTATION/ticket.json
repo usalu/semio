@@ -1,7 +1,7 @@
 {
   "title": "Implement full XState transition - no Yjs in apps",
   "prompt": "Implement full XState transition - no Yjs in apps",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

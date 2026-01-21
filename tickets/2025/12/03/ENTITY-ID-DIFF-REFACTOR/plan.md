@@ -28,7 +28,7 @@ This made it unclear which entity was being referenced and was inconsistent with
 - Updated generic collection diff functions to use `entityKey` parameter
 - Updated all entity-specific diff functions
 - Updated `mergeKitDiff` to use proper entity-specific merge functions
-- Updated helper functions: `removeTypeFromKit`, `removeDesignFromKit`, `removeInterfaceFromKit`, `removeFileFromKit`, `removeTagFromKit`, `removeConceptFromKit`
+- Updated helper functions: `removeTypeFromKit`, `removeDesignFromKit`, `removePortFromKit`, `removeFileFromKit`, `removeTagFromKit`, `removeConceptFromKit`
 - Updated utility functions: `fixPieceInDesign`, `fixPiecesInDesign`, `removePiecesAndConnectionsFromDesign`, `replaceClusterWithDesign`
 - Updated diff equality comparison functions (`areKitDiffsEqual` and nested functions)
 - Added `areRemovedArraysEqual` helper for comparing EntityId arrays

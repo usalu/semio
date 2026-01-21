@@ -6,7 +6,8 @@
   "projectType": "application",
   "scripts": {
     "build": "tsx ./build.ts",
-    "preflight": "echo \"No preflight checks configured for .NET project\""
+    "test": "dotnet test ../Semio.Grasshopper.Tests/Semio.Grasshopper.Tests.csproj",
+    "preflight": "dotnet build"
   },
   "devDependencies": {
     "@semio/net": "*"

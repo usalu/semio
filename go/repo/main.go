@@ -63,7 +63,7 @@ const (
 	DefinitionKindFunction  DefinitionKind = "function"
 	DefinitionKindClass     DefinitionKind = "class"
 	DefinitionKindVariable  DefinitionKind = "variable"
-	DefinitionKindInterface DefinitionKind = "interface"
+	DefinitionKindPort DefinitionKind = "interface"
 	DefinitionKindType      DefinitionKind = "type"
 	DefinitionKindEnum      DefinitionKind = "enum"
 	DefinitionKindMethod    DefinitionKind = "method"
@@ -73,7 +73,7 @@ const (
 func (e DefinitionKind) IsValid() bool {
 	switch e {
 	case DefinitionKindFunction, DefinitionKindClass, DefinitionKindVariable,
-		DefinitionKindInterface, DefinitionKindType, DefinitionKindEnum,
+		DefinitionKindPort, DefinitionKindType, DefinitionKindEnum,
 		DefinitionKindMethod, DefinitionKindProperty:
 		return true
 	}
@@ -124,11 +124,11 @@ func (e ViolationPriority) String() string {
 }
 
 var AllowedLLMs = []string{
-	"claude-opus-4-5",
+	"opus-4-5",
 	"claude-opus-4",
-	"claude-sonnet-4-5",
+	"sonnet-4-5",
 	"claude-sonnet-4",
-	"claude-haiku-4-5",
+	"haiku-4-5",
 	"gemini-3-pro",
 	"gemini-3-flash",
 	"gpt-5-2",
@@ -286,6 +286,19 @@ func normalizeBundleID(name string) string {
 	return normalizeBundleLabel(name)
 }
 
+func bundlePathPrefix(name string) string {
+	if name == "" {
+		return ""
+	}
+	if name == "@semio-repo" {
+		return ""
+	}
+	if strings.HasPrefix(name, "@semio/") {
+		return strings.TrimPrefix(name, "@semio/") + "/"
+	}
+	return name + "/"
+}
+
 type Folder struct {
 	ID       string  `json:"id"`
 	Path     string  `json:"path"`
@@ -383,8 +396,7 @@ type Ticket struct {
 	FolderPath  string      `json:"folderPath"`
 	JsonPath    string      `json:"jsonPath,omitempty"`
 	PlanPath    string      `json:"planPath,omitempty"`
-	LogPath     string      `json:"logPath,omitempty"`
-	SummaryPath string      `json:"summaryPath,omitempty"`
+	TicketPath  string      `json:"ticketPath,omitempty"`
 }
 
 func (t *Ticket) IsNode() {}
@@ -469,11 +481,37 @@ func (t *Ticket) GetDateFinished() *time.Time {
 	return nil
 }
 
-func (t *Ticket) GetFiles() *TicketFiles {
-	if t.Data != nil && t.Data.Files != nil {
-		return t.Data.Files
+func (t *Ticket) GetFiles() *TicketDiffs {
+	result := newTicketDiffs()
+	if t.Data == nil {
+		return result
 	}
-	return &TicketFiles{}
+	for _, iteration := range t.Data.Iterations {
+		if iteration.Diff == nil {
+			continue
+		}
+		result.Bundles.Added = append(result.Bundles.Added, iteration.Diff.Bundles.Added...)
+		result.Bundles.Modified = append(result.Bundles.Modified, iteration.Diff.Bundles.Modified...)
+		result.Bundles.Deleted = append(result.Bundles.Deleted, iteration.Diff.Bundles.Deleted...)
+		result.Bundles.Renamed = append(result.Bundles.Renamed, iteration.Diff.Bundles.Renamed...)
+		result.Folders.Added = append(result.Folders.Added, iteration.Diff.Folders.Added...)
+		result.Folders.Modified = append(result.Folders.Modified, iteration.Diff.Folders.Modified...)
+		result.Folders.Deleted = append(result.Folders.Deleted, iteration.Diff.Folders.Deleted...)
+		result.Folders.Renamed = append(result.Folders.Renamed, iteration.Diff.Folders.Renamed...)
+		result.Files.Added = append(result.Files.Added, iteration.Diff.Files.Added...)
+		result.Files.Modified = append(result.Files.Modified, iteration.Diff.Files.Modified...)
+		result.Files.Deleted = append(result.Files.Deleted, iteration.Diff.Files.Deleted...)
+		result.Files.Renamed = append(result.Files.Renamed, iteration.Diff.Files.Renamed...)
+		result.Sections.Added = append(result.Sections.Added, iteration.Diff.Sections.Added...)
+		result.Sections.Modified = append(result.Sections.Modified, iteration.Diff.Sections.Modified...)
+		result.Sections.Deleted = append(result.Sections.Deleted, iteration.Diff.Sections.Deleted...)
+		result.Sections.Renamed = append(result.Sections.Renamed, iteration.Diff.Sections.Renamed...)
+		result.Definitions.Added = append(result.Definitions.Added, iteration.Diff.Definitions.Added...)
+		result.Definitions.Modified = append(result.Definitions.Modified, iteration.Diff.Definitions.Modified...)
+		result.Definitions.Deleted = append(result.Definitions.Deleted, iteration.Diff.Definitions.Deleted...)
+		result.Definitions.Renamed = append(result.Definitions.Renamed, iteration.Diff.Definitions.Renamed...)
+	}
+	return result
 }
 
 type TicketBundleContrib struct {
@@ -551,7 +589,6 @@ type ContributionFile struct {
 	Metrics *LineMetrics `json:"metrics"`
 }
 
-type ContributionSection struct {
 	SectionID string       `json:"sectionId"`
 	Metrics   *LineMetrics `json:"metrics"`
 }
@@ -559,6 +596,466 @@ type ContributionSection struct {
 type ContributionDefinition struct {
 	DefinitionID string       `json:"definitionId"`
 	Metrics      *LineMetrics `json:"metrics"`
+}
+
+type SemanticChangeType string
+
+const (
+	SemanticChangeAdded    SemanticChangeType = "added"
+	SemanticChangeDeleted  SemanticChangeType = "deleted"
+	SemanticChangeModified SemanticChangeType = "modified"
+	SemanticChangeRenamed  SemanticChangeType = "renamed"
+)
+
+type SemanticChange struct {
+	Kind     string
+	Status   SemanticChangeType
+	Path     string
+	FromPath string
+	ToPath   string
+	Lines    LineMetrics
+}
+
+func newTicketDiffSet() TicketDiffSet {
+	return TicketDiffSet{
+		Deleted:  []TicketFile{},
+		Renamed:  []TicketFileRenamed{},
+		Modified: []TicketFile{},
+		Added:    []TicketFile{},
+	}
+}
+
+func newTicketDiffs() *TicketDiffs {
+	return &TicketDiffs{
+		Bundles:     newTicketDiffSet(),
+		Folders:     newTicketDiffSet(),
+		Files:       newTicketDiffSet(),
+		Sections:    newTicketDiffSet(),
+		Definitions: newTicketDiffSet(),
+	}
+}
+
+func addTicketDiffEntry(set *TicketDiffSet, change SemanticChange) {
+	lines := &LineMetrics{Added: change.Lines.Added, Removed: change.Lines.Removed}
+	switch change.Status {
+	case SemanticChangeAdded:
+		set.Added = append(set.Added, TicketFile{Path: change.Path, Lines: lines})
+	case SemanticChangeDeleted:
+		set.Deleted = append(set.Deleted, TicketFile{Path: change.Path, Lines: lines})
+	case SemanticChangeRenamed:
+		set.Renamed = append(set.Renamed, TicketFileRenamed{From: change.FromPath, To: change.ToPath, Lines: lines})
+	case SemanticChangeModified:
+		set.Modified = append(set.Modified, TicketFile{Path: change.Path, Lines: lines})
+	}
+}
+
+func mergeLineMetrics(target *LineMetrics, add LineMetrics) {
+	if target == nil {
+		return
+	}
+	target.Added += add.Added
+	target.Removed += add.Removed
+}
+
+func computeLineMetricsForDiff(diff *DiffLines, baseCommit, filePath string) LineMetrics {
+	if diff == nil {
+		return LineMetrics{}
+	}
+	if len(diff.Added) > 0 && len(diff.Removed) == 0 {
+		return LineMetrics{Added: CountLinesInFile(filepath.Join(GetRootDir(), filePath)), Removed: 0}
+	}
+	if len(diff.Removed) > 0 && len(diff.Added) == 0 {
+		return LineMetrics{Added: 0, Removed: CountLinesAtCommit(baseCommit, filePath)}
+	}
+	return LineMetrics{Added: len(diff.Added), Removed: len(diff.Removed)}
+}
+
+func buildCodebasePathSet(codebase *Codebase) map[string]struct{} {
+	result := make(map[string]struct{})
+	if codebase == nil {
+		return result
+	}
+	for _, bundle := range codebase.Bundles {
+		result[bundle.ID] = struct{}{}
+	}
+	for _, folder := range codebase.Folders {
+		result[folder.Path] = struct{}{}
+	}
+	for _, file := range codebase.Files {
+		result[file.Path] = struct{}{}
+	}
+	for _, section := range codebase.Sections {
+		result[section.Path] = struct{}{}
+	}
+	for _, def := range codebase.Definitions {
+		result[def.Path] = struct{}{}
+	}
+	return result
+}
+
+func buildFolderLineTotals(files []string, baseCommit string) (map[string]int, map[string]int) {
+	currentTotals := make(map[string]int)
+	baseTotals := make(map[string]int)
+	for _, file := range files {
+		folder := NormalizePath(filepath.Dir(file))
+		if folder == "." {
+			continue
+		}
+		currentTotals[folder] += CountLinesInFile(filepath.Join(GetRootDir(), file))
+		baseTotals[folder] += CountLinesAtCommit(baseCommit, file)
+	}
+	return currentTotals, baseTotals
+}
+
+func buildBundleLineTotals(files []string, baseCommit string, bundles []Bundle) (map[string]int, map[string]int) {
+	currentTotals := make(map[string]int)
+	baseTotals := make(map[string]int)
+	for _, file := range files {
+		if file == "README.md" || file == "AGENTS.md" {
+			continue
+		}
+		bundleName := ResolveBundleForPath(file, bundles)
+		if bundleName == "" {
+			bundleName = "@semio-repo"
+		}
+		currentTotals[bundleName] += CountLinesInFile(filepath.Join(GetRootDir(), file))
+		baseTotals[bundleName] += CountLinesAtCommit(baseCommit, file)
+	}
+	return currentTotals, baseTotals
+}
+
+func extractFilePrefix(path string) string {
+	if path == "" {
+		return ""
+	}
+	if idx := strings.Index(path, "#"); idx != -1 {
+		return path[:idx]
+	}
+	if idx := strings.Index(path, "§"); idx != -1 {
+		return path[:idx]
+	}
+	return path
+}
+
+func reconcileRenamePairs(diffSet *TicketDiffSet, matchKey func(path string) string) {
+	if diffSet == nil {
+		return
+	}
+	usedAdded := make(map[int]struct{})
+	var renamed []TicketFileRenamed
+	var remainingDeleted []TicketFile
+	for _, del := range diffSet.Deleted {
+		matchIndex := -1
+		key := matchKey(del.Path)
+		for i, add := range diffSet.Added {
+			if _, ok := usedAdded[i]; ok {
+				continue
+			}
+			if key != "" && matchKey(add.Path) != key {
+				continue
+			}
+			removedLines := 0
+			if del.Lines != nil {
+				removedLines = del.Lines.Removed
+			}
+			addedLines := 0
+			if add.Lines != nil {
+				addedLines = add.Lines.Added
+			}
+			if removedLines > 0 && addedLines > 0 && removedLines != addedLines {
+				continue
+			}
+			matchIndex = i
+			break
+		}
+		if matchIndex == -1 {
+			remainingDeleted = append(remainingDeleted, del)
+			continue
+		}
+		add := diffSet.Added[matchIndex]
+		usedAdded[matchIndex] = struct{}{}
+		lines := &LineMetrics{}
+		if add.Lines != nil {
+			lines.Added = add.Lines.Added
+		}
+		if del.Lines != nil {
+			lines.Removed = del.Lines.Removed
+		}
+		renamed = append(renamed, TicketFileRenamed{From: del.Path, To: add.Path, Lines: lines})
+	}
+	var remainingAdded []TicketFile
+	for i, add := range diffSet.Added {
+		if _, ok := usedAdded[i]; ok {
+			continue
+		}
+		remainingAdded = append(remainingAdded, add)
+	}
+	diffSet.Added = remainingAdded
+	diffSet.Deleted = remainingDeleted
+	diffSet.Renamed = append(diffSet.Renamed, renamed...)
+}
+
+func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines) TicketDiffSet {
+	result := newTicketDiffSet()
+	currentSectionMap := make(map[string]CodebaseSection)
+	baseSectionMap := make(map[string]CodebaseSection)
+	for _, section := range currentCodebase.Sections {
+		currentSectionMap[section.Path] = section
+	}
+	for _, section := range baseCodebase.Sections {
+		baseSectionMap[section.Path] = section
+	}
+
+	for path := range currentSectionMap {
+		if _, ok := baseSectionMap[path]; !ok {
+			lines := 0
+			if currentSectionMap[path].Metrics != nil {
+				lines = currentSectionMap[path].Metrics.Lines
+			}
+			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeAdded, Path: path, Lines: LineMetrics{Added: lines}})
+		}
+	}
+	for path := range baseSectionMap {
+		if _, ok := currentSectionMap[path]; !ok {
+			lines := 0
+			if baseSectionMap[path].Metrics != nil {
+				lines = baseSectionMap[path].Metrics.Lines
+			}
+			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeDeleted, Path: path, Lines: LineMetrics{Removed: lines}})
+		}
+	}
+
+	for filePath, diff := range diffLines {
+		if diff == nil {
+			continue
+		}
+		content, err := ReadTextFile(filepath.Join(GetRootDir(), filePath))
+		if err != nil {
+			continue
+		}
+		baseContent, err := ReadTextFileAtCommit(baseCommit, filePath)
+		if err != nil {
+			continue
+		}
+		lang := GetLanguage(filePath)
+		if lang == nil || !lang.SupportsSections() {
+			continue
+		}
+		currentSections := lang.ParseSections(content)
+		baseSections := lang.ParseSections(baseContent)
+		addedMap := computeSectionLineMap(currentSections, diff.Added, "")
+		removedMap := computeSectionLineMap(baseSections, diff.Removed, "")
+		for sectionPath, addedLines := range addedMap {
+			removedLines := removedMap[sectionPath]
+			if len(addedLines) == 0 && len(removedLines) == 0 {
+				continue
+			}
+			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeModified, Path: filePath + "#" + sectionPath, Lines: LineMetrics{Added: len(addedLines), Removed: len(removedLines)}})
+		}
+		for sectionPath, removedLines := range removedMap {
+			if _, ok := addedMap[sectionPath]; ok {
+				continue
+			}
+			if len(removedLines) == 0 {
+				continue
+			}
+			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeModified, Path: filePath + "#" + sectionPath, Lines: LineMetrics{Removed: len(removedLines)}})
+		}
+	}
+	reconcileRenamePairs(&result, func(path string) string {
+		return extractFilePrefix(path)
+	})
+
+	return result
+}
+
+func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines) TicketDiffSet {
+	result := newTicketDiffSet()
+	currentDefMap := make(map[string]CodebaseDefinition)
+	baseDefMap := make(map[string]CodebaseDefinition)
+	for _, def := range currentCodebase.Definitions {
+		currentDefMap[def.Path] = def
+	}
+	for _, def := range baseCodebase.Definitions {
+		baseDefMap[def.Path] = def
+	}
+
+	for path := range currentDefMap {
+		if _, ok := baseDefMap[path]; !ok {
+			lines := 0
+			if currentDefMap[path].Metrics != nil {
+				lines = currentDefMap[path].Metrics.Lines
+			}
+			addTicketDiffEntry(&result, SemanticChange{Kind: "definition", Status: SemanticChangeAdded, Path: path, Lines: LineMetrics{Added: lines}})
+		}
+	}
+	for path := range baseDefMap {
+		if _, ok := currentDefMap[path]; !ok {
+			lines := 0
+			if baseDefMap[path].Metrics != nil {
+				lines = baseDefMap[path].Metrics.Lines
+			}
+			addTicketDiffEntry(&result, SemanticChange{Kind: "definition", Status: SemanticChangeDeleted, Path: path, Lines: LineMetrics{Removed: lines}})
+		}
+	}
+
+	for filePath, diff := range diffLines {
+		if diff == nil {
+			continue
+		}
+		content, err := ReadTextFile(filepath.Join(GetRootDir(), filePath))
+		if err != nil {
+			continue
+		}
+		baseContent, err := ReadTextFileAtCommit(baseCommit, filePath)
+		if err != nil {
+			continue
+		}
+		lang := GetLanguage(filePath)
+		if lang == nil || !lang.SupportsDefinitions() {
+			continue
+		}
+		currentLines := strings.Split(content, "\n")
+		baseLines := strings.Split(baseContent, "\n")
+		currentDefs := lang.ParseDefinitions(content, currentLines)
+		baseDefs := lang.ParseDefinitions(baseContent, baseLines)
+		currentSections := lang.ParseSections(content)
+		baseSections := lang.ParseSections(baseContent)
+		for _, def := range currentDefs {
+			addedLines := computeLinesInRange(diff.Added, def.Start, def.End)
+			removedLines := computeLinesInRange(diff.Removed, def.Start, def.End)
+			if len(addedLines) == 0 && len(removedLines) == 0 {
+				continue
+			}
+			sectionPath := findSectionForDefinition(currentSections, def.Start, def.End, "")
+			defPath := filePath + "§" + def.Name
+			if sectionPath != "" {
+				defPath = filePath + "#" + sectionPath + "§" + def.Name
+			}
+			addTicketDiffEntry(&result, SemanticChange{Kind: "definition", Status: SemanticChangeModified, Path: defPath, Lines: LineMetrics{Added: len(addedLines), Removed: len(removedLines)}})
+		}
+		for _, def := range baseDefs {
+			removedLines := computeLinesInRange(diff.Removed, def.Start, def.End)
+			if len(removedLines) == 0 {
+				continue
+			}
+			sectionPath := findSectionForDefinition(baseSections, def.Start, def.End, "")
+			defPath := filePath + "§" + def.Name
+			if sectionPath != "" {
+				defPath = filePath + "#" + sectionPath + "§" + def.Name
+			}
+			addTicketDiffEntry(&result, SemanticChange{Kind: "definition", Status: SemanticChangeModified, Path: defPath, Lines: LineMetrics{Removed: len(removedLines)}})
+		}
+	}
+	reconcileRenamePairs(&result, func(path string) string {
+		return extractFilePrefix(path)
+	})
+
+	return result
+}
+
+func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, diffStatuses []GitDiffStatus, bundles []Bundle) *TicketDiffs {
+	result := newTicketDiffs()
+	currentFiles := []string{}
+	if currentCodebase != nil {
+		for _, file := range currentCodebase.Files {
+			currentFiles = append(currentFiles, file.Path)
+		}
+	}
+	baseFiles := []string{}
+	if baseCodebase != nil {
+		for _, file := range baseCodebase.Files {
+			baseFiles = append(baseFiles, file.Path)
+		}
+	}
+	currentFolderLines, _ := buildFolderLineTotals(currentFiles, baseCommit)
+	_, baseFolderLines := buildFolderLineTotals(baseFiles, baseCommit)
+	currentBundleLines, _ := buildBundleLineTotals(currentFiles, baseCommit, bundles)
+	_, baseBundleLines := buildBundleLineTotals(baseFiles, baseCommit, bundles)
+
+	currentBundleMap := make(map[string]CodebaseBundle)
+	baseBundleMap := make(map[string]CodebaseBundle)
+	for _, bundle := range currentCodebase.Bundles {
+		currentBundleMap[bundle.ID] = bundle
+	}
+	for _, bundle := range baseCodebase.Bundles {
+		baseBundleMap[bundle.ID] = bundle
+	}
+	for id, bundle := range currentBundleMap {
+		if _, ok := baseBundleMap[id]; !ok {
+			lines := LineMetrics{Added: currentBundleLines[id], Removed: 0}
+			addTicketDiffEntry(&result.Bundles, SemanticChange{Kind: "bundle", Status: SemanticChangeAdded, Path: normalizeBundleLabel(id), Lines: lines})
+		} else if bundle.Metrics != nil {
+			baseBundle := baseBundleMap[id]
+			if baseBundle.Metrics != nil {
+				added := currentBundleLines[id] - baseBundleLines[id]
+				removed := 0
+				if added < 0 {
+					removed = -added
+					added = 0
+				}
+				if added > 0 || removed > 0 {
+					addTicketDiffEntry(&result.Bundles, SemanticChange{Kind: "bundle", Status: SemanticChangeModified, Path: normalizeBundleLabel(id), Lines: LineMetrics{Added: added, Removed: removed}})
+				}
+			}
+		}
+	}
+	for id := range baseBundleMap {
+		if _, ok := currentBundleMap[id]; !ok {
+			lines := LineMetrics{Added: 0, Removed: baseBundleLines[id]}
+			addTicketDiffEntry(&result.Bundles, SemanticChange{Kind: "bundle", Status: SemanticChangeDeleted, Path: normalizeBundleLabel(id), Lines: lines})
+		}
+	}
+
+	currentFolderMap := make(map[string]CodebaseFolder)
+	baseFolderMap := make(map[string]CodebaseFolder)
+	for _, folder := range currentCodebase.Folders {
+		currentFolderMap[folder.Path] = folder
+	}
+	for _, folder := range baseCodebase.Folders {
+		baseFolderMap[folder.Path] = folder
+	}
+	for path := range currentFolderMap {
+		if _, ok := baseFolderMap[path]; !ok {
+			addTicketDiffEntry(&result.Folders, SemanticChange{Kind: "folder", Status: SemanticChangeAdded, Path: path, Lines: LineMetrics{Added: currentFolderLines[path]}})
+		}
+	}
+	for path := range baseFolderMap {
+		if _, ok := currentFolderMap[path]; !ok {
+			addTicketDiffEntry(&result.Folders, SemanticChange{Kind: "folder", Status: SemanticChangeDeleted, Path: path, Lines: LineMetrics{Removed: baseFolderLines[path]}})
+		}
+	}
+
+	for _, status := range diffStatuses {
+		if status.Status == "renamed" {
+			fromFolder := NormalizePath(filepath.Dir(status.From))
+			toFolder := NormalizePath(filepath.Dir(status.To))
+			if fromFolder != toFolder && fromFolder != "." && toFolder != "." {
+				addTicketDiffEntry(&result.Folders, SemanticChange{Kind: "folder", Status: SemanticChangeRenamed, FromPath: fromFolder, ToPath: toFolder, Lines: LineMetrics{Added: currentFolderLines[toFolder], Removed: baseFolderLines[fromFolder]}})
+			}
+			addTicketDiffEntry(&result.Files, SemanticChange{Kind: "file", Status: SemanticChangeRenamed, FromPath: status.From, ToPath: status.To, Lines: LineMetrics{Added: CountLinesInFile(filepath.Join(GetRootDir(), status.To)), Removed: CountLinesAtCommit(baseCommit, status.From)}})
+		}
+	}
+
+	for filePath, diff := range diffLines {
+		metrics := computeLineMetricsForDiff(diff, baseCommit, filePath)
+		status := SemanticChangeModified
+		if len(diff.Added) > 0 && len(diff.Removed) == 0 {
+			status = SemanticChangeAdded
+		} else if len(diff.Removed) > 0 && len(diff.Added) == 0 {
+			status = SemanticChangeDeleted
+		}
+		addTicketDiffEntry(&result.Files, SemanticChange{Kind: "file", Status: status, Path: filePath, Lines: metrics})
+	}
+
+	reconcileRenamePairs(&result.Bundles, func(path string) string {
+		return path
+	})
+
+	result.Sections = buildSectionDiffs(baseCodebase, currentCodebase, baseCommit, diffLines)
+	result.Definitions = buildDefinitionDiffs(baseCodebase, currentCodebase, baseCommit, diffLines)
+
+	return result
 }
 
 // #region GraphQL Input Types
@@ -971,6 +1468,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 	}
 	charIndex := 0
 	scanState := CommentScanState{}
+	inlineCommentActive := false
 	for i, line := range lines {
 		lineNum := i + 1
 		// Skip comments inside header section
@@ -980,6 +1478,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 		}
 		lineStart := charIndex
 		j := 0
+		foundInline := false
 		for j < len(line) {
 			if scanState.InBlockComment {
 				if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
@@ -1095,14 +1594,23 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 				}
 				debugMarker := strings.Contains(line, "[DEBUG]")
 				if !debugMarker {
-					violations = append(violations, ctx.CreateViolation(
-						fmt.Sprintf("Inline comment in %s:%d", file, lineNum),
-						ViolationCodeCommentInline,
-						file, lineNum, strings.TrimSpace(line[j:])))
+					foundInline = true
+					if !inlineCommentActive {
+						violations = append(violations, ctx.CreateViolation(
+							fmt.Sprintf("Inline comment in %s:%d", file, lineNum),
+							ViolationCodeCommentInline,
+							file, lineNum, strings.TrimSpace(line[j:])))
+						inlineCommentActive = true
+					}
 				}
 				break
 			}
 			j++
+		}
+		if !foundInline {
+			if strings.TrimSpace(line) != "" {
+				inlineCommentActive = false
+			}
 		}
 		charIndex += len(line) + 1
 	}
@@ -1802,6 +2310,7 @@ type TicketIteration struct {
 	Date   time.Time    `json:"date"`
 	Commit string       `json:"commit"`
 	Files  []TicketFile `json:"files,omitempty"`
+	Diff   *TicketDiffs `json:"diff,omitempty"`
 }
 
 type TicketSection struct {
@@ -1812,10 +2321,8 @@ type TicketSection struct {
 }
 
 type TicketFile struct {
-	Path     string          `json:"path"`
-	Status   string          `json:"status,omitempty"`
-	Lines    *LineMetrics    `json:"lines,omitempty"`
-	Sections []TicketSection `json:"sections,omitempty"`
+	Path  string       `json:"path"`
+	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
 type TicketGithubData struct {
@@ -1823,17 +2330,24 @@ type TicketGithubData struct {
 }
 
 type TicketFileRenamed struct {
-	From     string          `json:"from"`
-	To       string          `json:"to"`
-	Lines    *LineMetrics    `json:"lines,omitempty"`
-	Sections []TicketSection `json:"sections,omitempty"`
+	From  string       `json:"from"`
+	To    string       `json:"to"`
+	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
-type TicketFiles struct {
+type TicketDiffSet struct {
 	Deleted  []TicketFile        `json:"deleted"`
 	Renamed  []TicketFileRenamed `json:"renamed"`
 	Modified []TicketFile        `json:"modified"`
 	Added    []TicketFile        `json:"added"`
+}
+
+type TicketDiffs struct {
+	Bundles     TicketDiffSet `json:"bundles"`
+	Folders     TicketDiffSet `json:"folders"`
+	Files       TicketDiffSet `json:"files"`
+	Sections    TicketDiffSet `json:"sections"`
+	Definitions TicketDiffSet `json:"definitions"`
 }
 
 type TicketData struct {
@@ -1842,7 +2356,6 @@ type TicketData struct {
 	Status     TicketStatus      `json:"status"`
 	Dates      TicketDates       `json:"dates"`
 	Summary    string            `json:"summary,omitempty"`
-	Files      *TicketFiles      `json:"files,omitempty"`
 	GitHub     *TicketGithubData `json:"github,omitempty"`
 }
 
@@ -2491,6 +3004,14 @@ func SetRootDir(dir string) {
 	rootDir = dir
 }
 
+func GetRepoMetaDir() string {
+	return filepath.Join(rootDir, ".semio-repo")
+}
+
+func GetRepoMetaPath(path string) string {
+	return filepath.Join(GetRepoMetaDir(), path)
+}
+
 func findRepoRoot(startDir string) string {
 	dir, err := filepath.Abs(startDir)
 	if err != nil {
@@ -2753,7 +3274,7 @@ func GetGitAuthor() string {
 }
 
 func GetGitAuthorGithub() string {
-	contributorsDir := filepath.Join(GetRootDir(), "contributors")
+	contributorsDir := filepath.Join(GetRepoMetaDir(), "contributors")
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	name = strings.TrimSpace(name)
 	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
@@ -3577,6 +4098,7 @@ type PolicyContext struct {
 	fileCache    map[string]string
 	sectionCache map[string][]Section
 	ignoreCache  map[string]map[int][]string // file -> line -> ignore patterns
+	filesOverride []string
 }
 
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
@@ -3590,7 +4112,16 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	}
 }
 
+func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *PolicyContext {
+	ctx := NewPolicyContext(scope, bundles)
+	ctx.filesOverride = files
+	return ctx
+}
+
 func (ctx *PolicyContext) Files() ([]string, error) {
+	if ctx.filesOverride != nil {
+		return ctx.filesOverride, nil
+	}
 	return ScopeToFiles(ctx.Scope, ctx.Bundles)
 }
 
@@ -3721,6 +4252,10 @@ func randomString(n int) string {
 
 func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Violation, error) {
 	ctx := NewPolicyContext(scope, bundles)
+	return CheckPoliciesWithContext(ctx, policyIDs)
+}
+
+func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Violation, error) {
 	var violations []Violation
 	var policiesToRun []PolicyDef
 	if len(policyIDs) > 0 {
@@ -3734,7 +4269,7 @@ func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Violati
 		}
 	} else {
 		for _, p := range policies {
-			if matchesScope(p.Scopes, scope) {
+			if matchesScope(p.Scopes, ctx.Scope) {
 				policiesToRun = append(policiesToRun, p)
 			}
 		}
@@ -4428,6 +4963,9 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	}
 
 	for _, file := range ctx.Files {
+		if file == "README.md" || file == "AGENTS.md" {
+			continue
+		}
 		bundleName := ctx.GetBundleForFile(file)
 		if bundleName == "" {
 			continue
@@ -4470,9 +5008,34 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 
 	for _, ticket := range ctx.Tickets {
 		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-		if ticket.Data != nil && ticket.Data.Files != nil {
-			for _, entry := range ticket.Data.Files.Modified {
+		fileDiffs := ticket.GetFiles().Files
+		if fileDiffs.Added != nil || fileDiffs.Modified != nil || fileDiffs.Deleted != nil || fileDiffs.Renamed != nil {
+			for _, entry := range fileDiffs.Modified {
 				bundleName := ctx.GetBundleForFile(entry.Path)
+				if bundleName != "" {
+					if _, ok := ticketSets[bundleName]; ok {
+						ticketSets[bundleName][ticketID] = struct{}{}
+					}
+				}
+			}
+			for _, entry := range fileDiffs.Added {
+				bundleName := ctx.GetBundleForFile(entry.Path)
+				if bundleName != "" {
+					if _, ok := ticketSets[bundleName]; ok {
+						ticketSets[bundleName][ticketID] = struct{}{}
+					}
+				}
+			}
+			for _, entry := range fileDiffs.Deleted {
+				bundleName := ctx.GetBundleForFile(entry.Path)
+				if bundleName != "" {
+					if _, ok := ticketSets[bundleName]; ok {
+						ticketSets[bundleName][ticketID] = struct{}{}
+					}
+				}
+			}
+			for _, entry := range fileDiffs.Renamed {
+				bundleName := ctx.GetBundleForFile(entry.To)
 				if bundleName != "" {
 					if _, ok := ticketSets[bundleName]; ok {
 						ticketSets[bundleName][ticketID] = struct{}{}
@@ -4792,8 +5355,8 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 		result = append(result, CodebaseContributor{
 			ID:            c.Github,
-			URI:           ctx.FileURI("contributors/" + c.Github),
-			Path:          "contributors/" + c.Github + "/contributor.json",
+			URI:           ctx.FileURI(".semio-repo/contributors/" + c.Github),
+			Path:          ".semio-repo/contributors/" + c.Github + "/contributor.json",
 			Name:          c.Name,
 			Icons:         icons,
 			Emails:        c.Emails,
@@ -4819,39 +5382,38 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 	for _, ticket := range ctx.Tickets {
 		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-		ticketPath := fmt.Sprintf("tickets/%04d/%02d/%02d/%s/ticket.md", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
-		if ticket.Data != nil {
-			ticketPath = fmt.Sprintf("tickets/%04d/%02d/%02d/%s/ticket.json", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+		ticketPath := ticket.TicketPath
+		if ticketPath == "" {
+			ticketPath = fmt.Sprintf(".semio-repo/tickets/%04d/%02d/%02d/%s/ticket.md", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		}
 
 		bundleFiles := make(map[string]int)
-		if ticket.Data != nil && ticket.Data.Files != nil {
-			var paths []string
-			if ticket.Data.Files.Added != nil {
-				for _, f := range ticket.Data.Files.Added {
-					paths = append(paths, f.Path)
-				}
+		var paths []string
+		files := ticket.GetFiles().Files
+		if files.Added != nil {
+			for _, f := range files.Added {
+				paths = append(paths, f.Path)
 			}
-			if ticket.Data.Files.Modified != nil {
-				for _, f := range ticket.Data.Files.Modified {
-					paths = append(paths, f.Path)
-				}
+		}
+		if files.Modified != nil {
+			for _, f := range files.Modified {
+				paths = append(paths, f.Path)
 			}
-			if ticket.Data.Files.Deleted != nil {
-				for _, f := range ticket.Data.Files.Deleted {
-					paths = append(paths, f.Path)
-				}
+		}
+		if files.Deleted != nil {
+			for _, f := range files.Deleted {
+				paths = append(paths, f.Path)
 			}
-			if ticket.Data.Files.Renamed != nil {
-				for _, f := range ticket.Data.Files.Renamed {
-					paths = append(paths, f.To)
-				}
+		}
+		if files.Renamed != nil {
+			for _, f := range files.Renamed {
+				paths = append(paths, f.To)
 			}
-			for _, path := range paths {
-				bundleName := ctx.GetBundleForFile(path)
-				if bundleName != "" {
-					bundleFiles[bundleName]++
-				}
+		}
+		for _, path := range paths {
+			bundleName := ctx.GetBundleForFile(path)
+			if bundleName != "" {
+				bundleFiles[bundleName]++
 			}
 		}
 		var bundleContribs []TicketBundleContribInfo
@@ -5055,6 +5617,249 @@ func BuildCodebase(ctx *CodebaseContext) *Codebase {
 	}
 }
 
+func BuildCodebaseSnapshot(files []string, bundles []Bundle, commit string) (*Codebase, error) {
+	ctx := &CodebaseContext{RootDir: rootDir, RootURI: "file://" + NormalizePath(rootDir)}
+	ctx.Bundles = bundles
+	ctx.Files = files
+	ctx.Policies = GetPolicies()
+	codebase := &Codebase{}
+	codebase.Bundles = BuildCodebaseBundlesForFiles(ctx, commit)
+	codebase.Folders = BuildCodebaseFoldersForFiles(ctx, commit)
+	codebase.Files = BuildCodebaseFilesForFiles(ctx, commit)
+	codebase.Sections = BuildCodebaseSectionsForFiles(ctx, commit)
+	codebase.Definitions = BuildCodebaseDefinitionsForFiles(ctx, commit)
+	codebase.Tree = BuildCodebaseTree(ctx, codebase.Bundles, codebase.Files, codebase.Sections, codebase.Definitions)
+	return codebase, nil
+}
+
+func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []CodebaseBundle {
+	var result []CodebaseBundle
+	fileCounts := make(map[string]int)
+	lineCounts := make(map[string]int)
+	sectionCounts := make(map[string]int)
+	definitionCounts := make(map[string]int)
+	folderSets := make(map[string]map[string]struct{})
+
+	for _, bundle := range ctx.Bundles {
+		folderSets[bundle.Name] = make(map[string]struct{})
+	}
+
+	for _, file := range ctx.Files {
+		bundleName := ctx.GetBundleForFile(file)
+		if bundleName == "" {
+			continue
+		}
+		fileCounts[bundleName]++
+		folder := NormalizePath(filepath.Dir(file))
+		if folder != "." {
+			folderSets[bundleName][folder] = struct{}{}
+		}
+		content, err := ReadTextFileAtCommit(commit, file)
+		if err != nil {
+			continue
+		}
+		lineCounts[bundleName] += CountLines(content)
+		sections := ParseSections(content, file)
+		sectionCounts[bundleName] += countSections(sections)
+		lang := GetLanguage(file)
+		if lang != nil && lang.SupportsDefinitions() {
+			lines := strings.Split(content, "\n")
+			defs := lang.ParseDefinitions(content, lines)
+			definitionCounts[bundleName] += len(defs)
+		}
+	}
+
+	for _, bundle := range ctx.Bundles {
+		result = append(result, CodebaseBundle{
+			ID:     bundle.Name,
+			Folder: bundle.Root,
+			URI:    ctx.FileURI(bundle.Root),
+			Metrics: &BundleMetricsInternal{
+				Folders:     len(folderSets[bundle.Name]),
+				Files:       fileCounts[bundle.Name],
+				Sections:    sectionCounts[bundle.Name],
+				Definitions: definitionCounts[bundle.Name],
+				Lines:       lineCounts[bundle.Name],
+			},
+		})
+	}
+	return result
+}
+
+func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []CodebaseFolder {
+	folderSet := make(map[string]struct{})
+	fileCounts := make(map[string]int)
+	lineCounts := make(map[string]int)
+
+	for _, file := range ctx.Files {
+		folder := NormalizePath(filepath.Dir(file))
+		if folder == "." {
+			continue
+		}
+		folderSet[folder] = struct{}{}
+		fileCounts[folder]++
+		content, err := ReadTextFileAtCommit(commit, file)
+		if err == nil {
+			lineCounts[folder] += CountLines(content)
+		}
+	}
+
+	var result []CodebaseFolder
+	for folder := range folderSet {
+		bundleName := ctx.GetBundleForFile(folder)
+		id := folder
+		if bundleName != "" {
+			id = bundleName + "/" + folder
+		}
+		parent := filepath.Dir(folder)
+		var parentID *string
+		if parent != "." && parent != "" {
+			parentValue := parent
+			parentID = &parentValue
+		}
+		result = append(result, CodebaseFolder{
+			ID:       id,
+			Path:     folder,
+			URI:      ctx.FolderURI(folder),
+			Name:     filepath.Base(folder),
+			ParentID: parentID,
+			Metrics: &FolderMetricsInternal{
+				Files: fileCounts[folder],
+				Lines: lineCounts[folder],
+			},
+		})
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
+	return result
+}
+
+func BuildCodebaseFilesForFiles(ctx *CodebaseContext, commit string) []CodebaseFile {
+	var result []CodebaseFile
+	for _, file := range ctx.Files {
+		bundleName := ctx.GetBundleForFile(file)
+		id := file
+		if bundleName != "" {
+			id = bundleName + "/" + filepath.Base(file)
+		}
+		var metrics *FileMetricsInternal
+		content, err := ReadTextFileAtCommit(commit, file)
+		if err == nil {
+			sections := ParseSections(content, file)
+			sectionCount := countSections(sections)
+			lines := strings.Split(content, "\n")
+			lang := GetLanguage(file)
+			defCount := 0
+			if lang != nil && lang.SupportsDefinitions() {
+				defs := lang.ParseDefinitions(content, lines)
+				defCount = len(defs)
+			}
+			metrics = &FileMetricsInternal{
+				Sections:    sectionCount,
+				Definitions: defCount,
+				Lines:       len(lines),
+			}
+		}
+		result = append(result, CodebaseFile{
+			ID:      id,
+			Path:    file,
+			URI:     ctx.FileURI(file),
+			Metrics: metrics,
+		})
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
+	return result
+}
+
+func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, commit string) []CodebaseSection {
+	var result []CodebaseSection
+	for _, file := range ctx.Files {
+		content, err := ReadTextFileAtCommit(commit, file)
+		if err != nil {
+			continue
+		}
+		sections := ParseSections(content, file)
+		bundleName := ctx.GetBundleForFile(file)
+		addSectionsForContent(ctx, &result, file, bundleName, content, sections, "")
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
+	return result
+}
+
+func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file, bundleName, content string, sections []Section, parentPath string) {
+	for _, section := range sections {
+		sectionPath := section.Name
+		if parentPath != "" {
+			sectionPath = parentPath + "#" + section.Name
+		}
+		id := file + "#" + sectionPath
+		if bundleName != "" {
+			id = bundleName + "/" + filepath.Base(file) + "#" + sectionPath
+		}
+		sectionContent := ""
+		if section.StartIndex < len(content) && section.EndIndex <= len(content) {
+			sectionContent = content[section.StartIndex:section.EndIndex]
+		}
+		defCount := 0
+		lang := GetLanguage(file)
+		if lang != nil && lang.SupportsDefinitions() {
+			lines := strings.Split(sectionContent, "\n")
+			defs := lang.ParseDefinitions(sectionContent, lines)
+			defCount = len(defs)
+		}
+		*result = append(*result, CodebaseSection{
+			ID:   id,
+			Path: file + "#" + sectionPath,
+			URI:  ctx.FileURI(file) + "#" + sectionPath,
+			Metrics: &SectionMetricsInternal{
+				Definitions: defCount,
+				Lines:       section.EndLine - section.StartLine + 1,
+			},
+		})
+		addSectionsForContent(ctx, result, file, bundleName, content, section.Children, sectionPath)
+	}
+}
+
+func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, commit string) []CodebaseDefinition {
+	var result []CodebaseDefinition
+	for _, file := range ctx.Files {
+		content, err := ReadTextFileAtCommit(commit, file)
+		if err != nil {
+			continue
+		}
+		lang := GetLanguage(file)
+		if lang == nil || !lang.SupportsDefinitions() {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		defs := lang.ParseDefinitions(content, lines)
+		sections := ParseSections(content, file)
+		bundleName := ctx.GetBundleForFile(file)
+		for _, def := range defs {
+			sectionPath := findSectionForDefinition(sections, def.Start, def.End, "")
+			defPath := file
+			if sectionPath != "" {
+				defPath = file + "#" + sectionPath + "§" + def.Name
+			} else {
+				defPath = file + "§" + def.Name
+			}
+			id := defPath
+			if bundleName != "" {
+				id = bundleName + "/" + filepath.Base(file) + "§" + def.Name
+			}
+			result = append(result, CodebaseDefinition{
+				ID:   id,
+				Path: defPath,
+				URI:  ctx.FileURI(file) + "§" + def.Name,
+				Metrics: &DefinitionMetricsInternal{
+					Lines: def.End - def.Start + 1,
+				},
+			})
+		}
+	}
+	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
+	return result
+}
+
 func ToolCodebase() ToolResult {
 	output := NewOutput()
 	ctx := NewCodebaseContext()
@@ -5087,7 +5892,7 @@ func ToolCodebase() ToolResult {
 // #region Tickets
 
 func GetTicketsDir() string {
-	return filepath.Join(rootDir, "tickets")
+	return filepath.Join(GetRepoMetaDir(), "tickets")
 }
 
 func GetTicketPath(year, month, day int, slug string) string {
@@ -5104,14 +5909,6 @@ func GetTicketJsonPath(year, month, day int, slug string) string {
 
 func GetTicketPlanPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "plan.md")
-}
-
-func GetTicketLogPath(year, month, day int, slug string) string {
-	return filepath.Join(GetTicketPath(year, month, day, slug), "log.md")
-}
-
-func GetTicketSummaryPath(year, month, day int, slug string) string {
-	return filepath.Join(GetTicketPath(year, month, day, slug), "summary.md")
 }
 
 func normalizeTicketKeyword(value string) string {
@@ -5211,8 +6008,7 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	ticket.FolderPath = newFolderPath
 	ticket.JsonPath = GetTicketJsonPath(ticket.Year, ticket.Month, ticket.Day, slug)
 	ticket.PlanPath = GetTicketPlanPath(ticket.Year, ticket.Month, ticket.Day, slug)
-	ticket.LogPath = GetTicketLogPath(ticket.Year, ticket.Month, ticket.Day, slug)
-	ticket.SummaryPath = GetTicketSummaryPath(ticket.Year, ticket.Month, ticket.Day, slug)
+	ticket.TicketPath = GetTicketFilePath(ticket.Year, ticket.Month, ticket.Day, slug)
 	return nil
 }
 
@@ -5247,8 +6043,7 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 	}
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
 	planFilePath := GetTicketPlanPath(year, month, day, slug)
-	logFilePath := GetTicketLogPath(year, month, day, slug)
-	summaryFilePath := GetTicketSummaryPath(year, month, day, slug)
+	ticketFilePath := GetTicketFilePath(year, month, day, slug)
 	gitAuthor := GetGitAuthorGithub()
 	gitCommit := GetGitCommit()
 
@@ -5266,11 +6061,8 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 			return nil, fmt.Errorf("failed to write plan file: %w", err)
 		}
 	}
-	if err := WriteTextFile(logFilePath, ""); err != nil {
-		return nil, fmt.Errorf("failed to write log file: %w", err)
-	}
-	if err := WriteTextFile(summaryFilePath, ""); err != nil {
-		return nil, fmt.Errorf("failed to write summary file: %w", err)
+	if err := WriteTextFile(ticketFilePath, buildTicketMarkdown(planContent)); err != nil {
+		return nil, fmt.Errorf("failed to write ticket file: %w", err)
 	}
 
 	ticketData := &TicketData{
@@ -5311,8 +6103,7 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 		FolderPath:  ticketDir,
 		JsonPath:    jsonPath,
 		PlanPath:    planFilePath,
-		LogPath:     logFilePath,
-		SummaryPath: summaryFilePath,
+		TicketPath:  ticketFilePath,
 	}
 
 	if err := SaveTicket(ticket); err != nil {
@@ -5352,6 +6143,57 @@ func CountLines(content string) int {
 	return strings.Count(content, "\n") + 1
 }
 
+func CountLinesInFile(path string) int {
+	content, err := ReadTextFile(path)
+	if err != nil {
+		return 0
+	}
+	return CountLines(content)
+}
+
+func CountLinesAtCommit(commit, filePath string) int {
+	stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", commit, filePath)}, "")
+	if exitCode != 0 {
+		return 0
+	}
+	return CountLines(stdout)
+}
+
+func ReadTextFileAtCommit(commit, filePath string) (string, error) {
+	if commit == "" {
+		return ReadTextFile(filepath.Join(rootDir, filePath))
+	}
+	stdout, stderr, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", commit, filePath)}, "")
+	if exitCode != 0 {
+		return "", fmt.Errorf("git show failed: %s", strings.TrimSpace(stderr))
+	}
+	return stdout, nil
+}
+
+func ListFilesAtCommit(commit string) ([]string, error) {
+	if commit == "" {
+		files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, GetProjects())
+		if err != nil {
+			return nil, err
+		}
+		return files, nil
+	}
+	stdout, stderr, exitCode := ExecCommand("git", []string{"ls-tree", "-r", "--name-only", commit}, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git ls-tree failed: %s", strings.TrimSpace(stderr))
+	}
+	var files []string
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if line == "" {
+			continue
+		}
+		files = append(files, strings.TrimSpace(line))
+	}
+	files = filterConsideredFiles(files)
+	files = filterGitIgnored(files)
+	return files, nil
+}
+
 func formatPromptHeading(body string) string {
 	if body == "" {
 		return "# 🤖 Prompt"
@@ -5364,6 +6206,38 @@ func formatSummaryHeading(body string) string {
 		return "# 🔍 Summary"
 	}
 	return "# 🔍 Summary\n\n" + body
+}
+
+func buildTicketMarkdown(planContent string) string {
+	var builder strings.Builder
+	builder.WriteString("# Ticket\n\n## Todos\n\n")
+	if planContent != "" {
+		builder.WriteString(strings.TrimSpace(planContent))
+		builder.WriteString("\n\n")
+	}
+	builder.WriteString("## Changes\n\n")
+	builder.WriteString("## Log\n\n")
+	builder.WriteString("## Summary\n")
+	return builder.String()
+}
+
+func updateTicketSummaryFile(ticketPath, summary string) error {
+	if ticketPath == "" {
+		return nil
+	}
+	content, err := ReadTextFile(ticketPath)
+	if err != nil {
+		return err
+	}
+	marker := "## Summary"
+	if !strings.Contains(content, marker) {
+		content = strings.TrimRight(content, "\n") + "\n\n" + marker + "\n\n" + summary + "\n"
+		return WriteTextFile(ticketPath, content)
+	}
+	parts := strings.Split(content, marker)
+	prefix := strings.TrimRight(parts[0], "\n")
+	updated := prefix + "\n\n" + marker + "\n\n" + summary + "\n"
+	return WriteTextFile(ticketPath, updated)
 }
 
 func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
@@ -5465,8 +6339,7 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	folderPath := GetTicketPath(year, month, day, slug)
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
 	planPath := GetTicketPlanPath(year, month, day, slug)
-	logPath := GetTicketLogPath(year, month, day, slug)
-	summaryPath := GetTicketSummaryPath(year, month, day, slug)
+	ticketPath := GetTicketFilePath(year, month, day, slug)
 	if !FileExists(jsonPath) {
 		return nil, fmt.Errorf("ticket not found: %s", jsonPath)
 	}
@@ -5487,8 +6360,7 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 		FolderPath:  folderPath,
 		JsonPath:    jsonPath,
 		PlanPath:    planPath,
-		LogPath:     logPath,
-		SummaryPath: summaryPath,
+		TicketPath:  ticketPath,
 	}, nil
 }
 
@@ -5771,47 +6643,172 @@ func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	return bestMatch
 }
 
-type fileMetric struct {
-	path    string
-	status  string
-	added   int
-	removed int
-}
-
-func generateMetricsComment(files []fileMetric) string {
-	if len(files) == 0 {
+func formatLineMetrics(metrics *LineMetrics) string {
+	if metrics == nil {
 		return ""
 	}
-	sort.Slice(files, func(i, j int) bool {
-		return files[i].path < files[j].path
-	})
-	var lines []string
-	for _, f := range files {
-		var icon string
-		switch f.status {
-		case "deleted":
-			icon = "➖"
-		case "modified":
-			icon = "✏️"
-		case "added":
-			icon = "➕"
-		case "renamed":
-			icon = "➡"
-		default:
-			icon = "✏️"
-		}
-
-		lineInfo := ""
-		if f.added > 0 {
-			lineInfo += fmt.Sprintf(" +%d", f.added)
-		}
-		if f.removed > 0 {
-			lineInfo += fmt.Sprintf(" -%d", f.removed)
-		}
-
-		lines = append(lines, fmt.Sprintf("%s%s%s", icon, f.path, lineInfo))
+	var parts []string
+	if metrics.Removed > 0 {
+		parts = append(parts, fmt.Sprintf("-%d", metrics.Removed))
 	}
+	if metrics.Added > 0 {
+		parts = append(parts, fmt.Sprintf("+%d", metrics.Added))
+	}
+	if len(parts) == 0 {
+		return ""
+	}
+	return " " + strings.Join(parts, " ")
+}
 
+func formatPathWithBundle(path string, bundles []Bundle) string {
+	bundleName := ResolveBundleForPath(path, bundles)
+	if bundleName == "" {
+		return path
+	}
+	bundleLabel := normalizeBundleLabel(bundleName)
+	root := ""
+	for _, bundle := range bundles {
+		if normalizeBundleLabel(bundle.Name) == bundleLabel || bundle.Name == bundleName {
+			root = bundle.Root
+			break
+		}
+	}
+	if root != "" {
+		relative := strings.TrimPrefix(path, root+"/")
+		if relative != path {
+			if relative == "" {
+				return bundleLabel
+			}
+			return bundleLabel + "/" + relative
+		}
+	}
+	return bundleLabel + "/" + path
+}
+
+func formatSemanticPath(path string, bundles []Bundle) string {
+	filePath := extractFilePrefix(path)
+	remainder := path[len(filePath):]
+	return formatPathWithBundle(filePath, bundles) + remainder
+}
+
+func formatDeletedPath(path string, bundles []Bundle) string {
+	filePath := extractFilePrefix(path)
+	remainder := path[len(filePath):]
+	base := formatPathWithBundle(filePath, bundles)
+	if remainder == "" {
+		return "<del>" + base + "</del>"
+	}
+	return base + "<del>" + remainder + "</del>"
+}
+
+func commonPrefixLength(a, b string) int {
+	limit := len(a)
+	if len(b) < limit {
+		limit = len(b)
+	}
+	idx := 0
+	for idx < limit {
+		if a[idx] != b[idx] {
+			break
+		}
+		idx++
+	}
+	return idx
+}
+
+func commonSuffixLength(a, b string, prefix int) int {
+	max := len(a) - prefix
+	if len(b)-prefix < max {
+		max = len(b) - prefix
+	}
+	idx := 0
+	for idx < max {
+		if a[len(a)-1-idx] != b[len(b)-1-idx] {
+			break
+		}
+		idx++
+	}
+	return idx
+}
+
+func formatRenameDelta(from, to string) string {
+	if from == to {
+		return from
+	}
+	prefix := commonPrefixLength(from, to)
+	suffix := commonSuffixLength(from, to, prefix)
+	fromMiddle := from[prefix : len(from)-suffix]
+	toMiddle := to[prefix : len(to)-suffix]
+	return from[:prefix] + "<del>" + fromMiddle + "</del>" + toMiddle + from[len(from)-suffix:]
+}
+
+func formatRenamePath(from, to string, bundles []Bundle) string {
+	fromFormatted := formatSemanticPath(from, bundles)
+	toFormatted := formatSemanticPath(to, bundles)
+	return formatRenameDelta(fromFormatted, toFormatted)
+}
+
+func appendDiffLines(lines *[]string, diffSet TicketDiffSet, iconAdded, iconChanged, iconRemoved, iconRenamed string, bundles []Bundle, formatter func(string) string, renameFormatter func(string, string) string) {
+	if len(diffSet.Added) > 0 {
+		sort.Slice(diffSet.Added, func(i, j int) bool { return diffSet.Added[i].Path < diffSet.Added[j].Path })
+		for _, entry := range diffSet.Added {
+			path := formatter(entry.Path)
+			*lines = append(*lines, fmt.Sprintf("%s%s%s", iconAdded, path, formatLineMetrics(entry.Lines)))
+		}
+	}
+	if len(diffSet.Modified) > 0 {
+		sort.Slice(diffSet.Modified, func(i, j int) bool { return diffSet.Modified[i].Path < diffSet.Modified[j].Path })
+		for _, entry := range diffSet.Modified {
+			path := formatter(entry.Path)
+			*lines = append(*lines, fmt.Sprintf("%s%s%s", iconChanged, path, formatLineMetrics(entry.Lines)))
+		}
+	}
+	if len(diffSet.Renamed) > 0 {
+		sort.Slice(diffSet.Renamed, func(i, j int) bool { return diffSet.Renamed[i].To < diffSet.Renamed[j].To })
+		for _, entry := range diffSet.Renamed {
+			path := renameFormatter(entry.From, entry.To)
+			*lines = append(*lines, fmt.Sprintf("%s%s%s", iconRenamed, path, formatLineMetrics(entry.Lines)))
+		}
+	}
+	if len(diffSet.Deleted) > 0 {
+		sort.Slice(diffSet.Deleted, func(i, j int) bool { return diffSet.Deleted[i].Path < diffSet.Deleted[j].Path })
+		for _, entry := range diffSet.Deleted {
+			path := formatDeletedPath(entry.Path, bundles)
+			*lines = append(*lines, fmt.Sprintf("%s%s%s", iconRemoved, path, formatLineMetrics(entry.Lines)))
+		}
+	}
+}
+
+func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
+	if diffs == nil {
+		return ""
+	}
+	var lines []string
+	appendDiffLines(&lines, diffs.Bundles, "📦", "📦", "📦", "📦", bundles, func(path string) string {
+		return path
+	}, func(from, to string) string {
+		return formatRenameDelta(from, to)
+	})
+	appendDiffLines(&lines, diffs.Folders, "📂", "📁", "📁", "📁", bundles, func(path string) string {
+		return formatPathWithBundle(path, bundles)
+	}, func(from, to string) string {
+		return formatRenamePath(from, to, bundles)
+	})
+	appendDiffLines(&lines, diffs.Files, "📄", "📝", "📄", "📄", bundles, func(path string) string {
+		return formatSemanticPath(path, bundles)
+	}, func(from, to string) string {
+		return formatRenamePath(from, to, bundles)
+	})
+	appendDiffLines(&lines, diffs.Sections, "📑", "🔖", "🔖", "🔖", bundles, func(path string) string {
+		return formatSemanticPath(path, bundles)
+	}, func(from, to string) string {
+		return formatRenamePath(from, to, bundles)
+	})
+	appendDiffLines(&lines, diffs.Definitions, "🏷️", "🏷️", "🏷️", "🏷️", bundles, func(path string) string {
+		return formatSemanticPath(path, bundles)
+	}, func(from, to string) string {
+		return formatRenamePath(from, to, bundles)
+	})
 	if len(lines) == 0 {
 		return ""
 	}
@@ -5843,25 +6840,24 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 		labels := make(map[string]struct{})
 		if tickFilesResult != nil {
 			addLabel := func(path string) {
-				b := ResolveBundleForPath(path, bundles)
-				if b != "" {
-					labels[b] = struct{}{}
+				if path == "" {
 					return
 				}
-				labels["@semio-repo"] = struct{}{}
+				labels[path] = struct{}{}
 			}
-			for _, tf := range tickFilesResult.Added {
-				addLabel(tf.Path)
+			bundleDiffs := tickFilesResult.Bundles
+			for _, entry := range bundleDiffs.Added {
+				addLabel(entry.Path)
 			}
-			for _, tf := range tickFilesResult.Modified {
-				addLabel(tf.Path)
+			for _, entry := range bundleDiffs.Modified {
+				addLabel(entry.Path)
 			}
-			for _, tf := range tickFilesResult.Deleted {
-				addLabel(tf.Path)
+			for _, entry := range bundleDiffs.Deleted {
+				addLabel(entry.Path)
 			}
-			for _, tf := range tickFilesResult.Renamed {
-				addLabel(tf.From)
-				addLabel(tf.To)
+			for _, entry := range bundleDiffs.Renamed {
+				addLabel(entry.From)
+				addLabel(entry.To)
 			}
 		}
 		var labelList []string
@@ -5875,40 +6871,8 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 		}
 
 		// 3. Add metrics comment and close
-		var allMetrics []fileMetric
-		if tickFilesResult != nil {
-			for _, f := range tickFilesResult.Added {
-				added, removed := 0, 0
-				if f.Lines != nil {
-					added, removed = f.Lines.Added, f.Lines.Removed
-				}
-				allMetrics = append(allMetrics, fileMetric{path: f.Path, status: "added", added: added, removed: removed})
-			}
-			for _, f := range tickFilesResult.Modified {
-				added, removed := 0, 0
-				if f.Lines != nil {
-					added, removed = f.Lines.Added, f.Lines.Removed
-				}
-				allMetrics = append(allMetrics, fileMetric{path: f.Path, status: "modified", added: added, removed: removed})
-			}
-			for _, f := range tickFilesResult.Deleted {
-				added, removed := 0, 0
-				if f.Lines != nil {
-					added, removed = f.Lines.Added, f.Lines.Removed
-				}
-				allMetrics = append(allMetrics, fileMetric{path: f.Path, status: "deleted", added: added, removed: removed})
-			}
-			for _, f := range tickFilesResult.Renamed {
-				added, removed := 0, 0
-				if f.Lines != nil {
-					added, removed = f.Lines.Added, f.Lines.Removed
-				}
-				allMetrics = append(allMetrics, fileMetric{path: f.To, status: "renamed", added: added, removed: removed})
-			}
-		}
-
 		comment := formatSummaryHeading(summary)
-		metricsComment := generateMetricsComment(allMetrics)
+		metricsComment := generateMetricsComment(tickFilesResult, bundles)
 		if metricsComment != "" {
 			comment += "\n\n# ✍️ Changes\n\n" + metricsComment
 		}
@@ -5924,7 +6888,13 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 	}
 
 	ticket.Data.Summary = summary
-	ticket.Data.Files = tickFilesResult
+	if err := updateTicketSummaryFile(ticket.TicketPath, summary); err != nil {
+		return err
+	}
+	if len(ticket.Data.Iterations) > 0 {
+		lastIndex := len(ticket.Data.Iterations) - 1
+		ticket.Data.Iterations[lastIndex].Diff = tickFilesResult
+	}
 	ticket.Data.Status = TicketStatusClosed
 	now := time.Now()
 	ticket.Data.Dates.Closed = &now
@@ -6004,11 +6974,8 @@ func ToolTicketOpen(title, prompt, llm, ui, planPath string, noIssue bool) ToolR
 	if ticket.PlanPath != "" {
 		output.Info(fmt.Sprintf("   Plan:   %s", ticket.PlanPath))
 	}
-	if ticket.LogPath != "" {
-		output.Info(fmt.Sprintf("   Log:    %s", ticket.LogPath))
-	}
-	if ticket.SummaryPath != "" {
-		output.Info(fmt.Sprintf("   Summary: %s", ticket.SummaryPath))
+	if ticket.TicketPath != "" {
+		output.Info(fmt.Sprintf("   Ticket: %s", ticket.TicketPath))
 	}
 	if ticket.Data != nil && ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
 		output.Info(fmt.Sprintf("   Issue:  %s", ticket.Data.GitHub.Issue))
@@ -6049,9 +7016,9 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	if ticket.GetLLM() != "" {
 		output.Plain(fmt.Sprintf("   LLM: %s", ticket.GetLLM()))
 	}
-	planContent, _ := ReadTextFile(ticket.PlanPath)
-	if planContent != "" {
-		output.Plain(fmt.Sprintf("\n%s", planContent))
+	ticketContent, _ := ReadTextFile(ticket.TicketPath)
+	if ticketContent != "" {
+		output.Plain(fmt.Sprintf("\n%s", ticketContent))
 	}
 	return ToolResult{Output: *output, Data: ticket}
 }
@@ -6072,25 +7039,9 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string)
 	sectionsCount := 0
 	defsCount := 0
 	if filesResult != nil {
-		filesCount = len(filesResult.Modified) + len(filesResult.Added) + len(filesResult.Renamed) + len(filesResult.Deleted)
-		for _, entry := range filesResult.Modified {
-			sectionsCount += len(entry.Sections)
-			for _, section := range entry.Sections {
-				defsCount += len(section.Definitions)
-			}
-		}
-		for _, entry := range filesResult.Added {
-			sectionsCount += len(entry.Sections)
-			for _, section := range entry.Sections {
-				defsCount += len(section.Definitions)
-			}
-		}
-		for _, entry := range filesResult.Renamed {
-			sectionsCount += len(entry.Sections)
-			for _, section := range entry.Sections {
-				defsCount += len(section.Definitions)
-			}
-		}
+		filesCount = len(filesResult.Files.Modified) + len(filesResult.Files.Added) + len(filesResult.Files.Renamed) + len(filesResult.Files.Deleted)
+		sectionsCount = len(filesResult.Sections.Modified) + len(filesResult.Sections.Added) + len(filesResult.Sections.Renamed) + len(filesResult.Sections.Deleted)
+		defsCount = len(filesResult.Definitions.Modified) + len(filesResult.Definitions.Added) + len(filesResult.Definitions.Renamed) + len(filesResult.Definitions.Deleted)
 	}
 	output.Success(fmt.Sprintf("\n✅ Ticket finished: %s", ticket.Slug))
 	output.Info(fmt.Sprintf("   Summary: %s", summary))
@@ -7291,22 +8242,23 @@ func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
 		if _, err := ticketStmt.Exec(ticketID, t.Year, t.Month, t.Day, t.Slug, t.GetTitle(), t.FolderPath, uri, t.GetPrompt(), summary, status, authorID, llm, ui, commit, createdAt, finishedAt); err != nil {
 			return 0, err
 		}
-		for _, entry := range t.GetFiles().Modified {
+		fileDiffs := t.GetFiles().Files
+		for _, entry := range fileDiffs.Modified {
 			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
 				return 0, err
 			}
 		}
-		for _, entry := range t.GetFiles().Added {
+		for _, entry := range fileDiffs.Added {
 			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
 				return 0, err
 			}
 		}
-		for _, entry := range t.GetFiles().Deleted {
+		for _, entry := range fileDiffs.Deleted {
 			if _, err := ticketFileStmt.Exec(ticketID, entry.Path); err != nil {
 				return 0, err
 			}
 		}
-		for _, entry := range t.GetFiles().Renamed {
+		for _, entry := range fileDiffs.Renamed {
 			if _, err := ticketFileStmt.Exec(ticketID, entry.To); err != nil {
 				return 0, err
 			}
@@ -7422,7 +8374,7 @@ func ToolExport(outputPath string) ToolResult {
 
 // #endregion Commands
 
-// #region GraphQL Context Interface
+// #region GraphQL Context Port
 
 type RepoContext interface {
 	GetRootDir() string
@@ -7454,7 +8406,7 @@ type RepoContext interface {
 	ContributorRemove(github string) error
 }
 
-// #endregion GraphQL Context Interface
+// #endregion GraphQL Context Port
 
 // #region GraphQL Resolver
 
@@ -7937,7 +8889,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"FUNCTION":  &graphql.EnumValueConfig{Value: DefinitionKindFunction},
 			"CLASS":     &graphql.EnumValueConfig{Value: DefinitionKindClass},
 			"VARIABLE":  &graphql.EnumValueConfig{Value: DefinitionKindVariable},
-			"INTERFACE": &graphql.EnumValueConfig{Value: DefinitionKindInterface},
+			"INTERFACE": &graphql.EnumValueConfig{Value: DefinitionKindPort},
 			"TYPE":      &graphql.EnumValueConfig{Value: DefinitionKindType},
 			"ENUM":      &graphql.EnumValueConfig{Value: DefinitionKindEnum},
 			"METHOD":    &graphql.EnumValueConfig{Value: DefinitionKindMethod},
@@ -8365,6 +9317,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
+						if ticket.TicketPath != "" {
+							return ticket.TicketPath, nil
+						}
 						return ticket.JsonPath, nil
 					},
 				},
@@ -8405,7 +9360,11 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
-						absPath := filepath.Join(rootDir, ticket.JsonPath)
+						path := ticket.JsonPath
+						if ticket.TicketPath != "" {
+							path = ticket.TicketPath
+						}
+						absPath := filepath.Join(rootDir, path)
 						return "file://" + strings.ReplaceAll(absPath, "\\", "/"), nil
 					},
 				},
@@ -11391,6 +12350,25 @@ var analyzeCmd = &cobra.Command{
 		if len(args) > 0 {
 			scope = &args[0]
 		}
+		if scope == nil {
+			ctx := NewCodebaseContext()
+			ctx.LoadBundles()
+			if err := ctx.LoadFiles(); err != nil {
+				return err
+			}
+			if err := ctx.LoadViolations(); err != nil {
+				return err
+			}
+			if err := ctx.LoadTickets(); err != nil {
+				return err
+			}
+			ctx.LoadPolicies()
+			codebase := BuildCodebase(ctx)
+			reportPath := filepath.Join(GetRepoMetaDir(), "reports", "codebase.json")
+			if err := WriteJSONFile(reportPath, codebase); err != nil {
+				return err
+			}
+		}
 		variables := map[string]interface{}{}
 		if scope != nil {
 			variables["scope"] = *scope
@@ -11530,7 +12508,7 @@ var ticketOpenCmd = &cobra.Command{
 Positional: repo ticket open <title> <prompt> <llm> <ui>
 Explicit:   repo ticket open --title <title> --prompt <prompt> --llm <llm> --ui <ui>
 
-LLM values: claude-opus-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex
+LLM values: opus-4-5, claude-sonnet-4, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex
 UI values:  claude-code, cursor, copilot-chat, antigravity, codex, droid`,
 	Args: cobra.MaximumNArgs(4),
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -11563,7 +12541,7 @@ UI values:  claude-code, cursor, copilot-chat, antigravity, codex, droid`,
 			llm = args[2]
 		}
 		if llm == "" {
-			return fmt.Errorf("llm is required (positional arg or --llm flag): claude-opus-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex")
+			return fmt.Errorf("llm is required (positional arg or --llm flag): opus-4-5, claude-sonnet-4, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex")
 		}
 
 		// Get UI from positional arg or flag
@@ -11617,7 +12595,7 @@ func init() {
 	ticketOpenCmd.Flags().Bool("no-issue", false, "Do not create a GitHub issue")
 	ticketOpenCmd.Flags().String("title", "", "Ticket title")
 	ticketOpenCmd.Flags().String("prompt", "", "Ticket prompt/description")
-	ticketOpenCmd.Flags().String("llm", "", "LLM (claude-opus-4-5, claude-sonnet-4, claude-haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex)")
+	ticketOpenCmd.Flags().String("llm", "", "LLM (opus-4-5, claude-sonnet-4, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex)")
 	ticketOpenCmd.Flags().String("ui", "", "UI (claude-code, cursor, copilot-chat, antigravity, codex, droid)")
 	ticketCmd.AddCommand(ticketOpenCmd)
 }
@@ -12282,19 +13260,40 @@ func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 		}
 	case ScopeFile, ScopeSection, ScopeDefinition:
 		if scope.FilePath != "" {
-			return []string{scope.FilePath}, nil
+			files = []string{scope.FilePath}
 		}
 	}
 	if err != nil {
 		return nil, err
 	}
-	if len(files) <= 10 {
-		return files, nil
-	}
-	return filterGitIgnored(files), nil
+	files = filterConsideredFiles(files)
+	files = filterGitIgnored(files)
+	return files, nil
 }
 
-func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFiles, error) {
+func filterConsideredFiles(files []string) []string {
+	if len(files) == 0 {
+		return files
+	}
+	filtered := make([]string, 0, len(files))
+	for _, filePath := range files {
+		normalized := NormalizePath(filePath)
+		if filepath.IsAbs(filePath) {
+			normalized = GetRelativePath(filePath)
+		}
+		normalized = strings.TrimPrefix(normalized, "./")
+		if normalized == ".semio-repo" || strings.HasPrefix(normalized, ".semio-repo/") {
+			continue
+		}
+		if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") {
+			continue
+		}
+		filtered = append(filtered, filePath)
+	}
+	return filtered
+}
+
+func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 	if ticket.Data == nil {
 		return nil, fmt.Errorf("ticket data is nil")
 	}
@@ -12306,105 +13305,55 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketFiles, error) {
 		return nil, fmt.Errorf("no base commit found for ticket")
 	}
 	files = FilterTicketWorkspaceFiles(ticket, files)
+	files = filterConsideredFiles(files)
+	files = filterGitIgnored(files)
 	if len(files) == 0 {
 		return nil, fmt.Errorf("at least one file is required")
 	}
 
+	diffStatuses, err := GetGitDiffStatus(baseCommit, "", files)
+	if err != nil {
+		return nil, err
+	}
 	diffLines, err := GetGitDiffLines(baseCommit, "", files)
 	if err != nil {
 		return nil, err
 	}
 
-	result := &TicketFiles{
-		Added:    []TicketFile{},
-		Modified: []TicketFile{},
-		Deleted:  []TicketFile{},
-		Renamed:  []TicketFileRenamed{},
+	currentFiles := make(map[string]struct{})
+	baseFiles := make(map[string]struct{})
+	for _, file := range files {
+		currentFiles[file] = struct{}{}
+		baseFiles[file] = struct{}{}
 	}
-
-	for _, filePath := range files {
-		fileDiff := diffLines[filePath]
-		sections := []TicketSection{}
-		currentContent := ""
-		currentContentLoaded := false
-		baseContent := ""
-		baseContentLoaded := false
-
-		if fileDiff != nil && (len(fileDiff.Added) > 0 || len(fileDiff.Removed) > 0) {
-			content, readErr := ReadTextFile(filepath.Join(GetRootDir(), filePath))
-			if readErr == nil {
-				currentContent = content
-				currentContentLoaded = true
-				lines := strings.Split(content, "\n")
-				lang := GetLanguage(filePath)
-				if lang != nil {
-					fileSections := lang.ParseSections(content)
-					fileDefs := lang.ParseDefinitions(content, lines)
-					removedLineMap := map[string][]int{}
-					if len(fileDiff.Removed) > 0 {
-						stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", baseCommit, filePath)}, "")
-						if exitCode == 0 {
-							baseContent = stdout
-							baseContentLoaded = true
-							removedLineMap = computeSectionLineMap(lang.ParseSections(stdout), fileDiff.Removed, "")
-						}
-					}
-					affectedSections := computeAffectedSections(filePath, fileSections, fileDefs, computeSectionLineMap(fileSections, fileDiff.Added, ""), removedLineMap, "")
-					for _, sectionMetrics := range affectedSections {
-						sections = append(sections, sectionMetrics)
-					}
-				}
-			}
+	for _, status := range diffStatuses {
+		if status.To != "" {
+			currentFiles[status.To] = struct{}{}
 		}
-
-		tf := TicketFile{
-			Path:     filePath,
-			Sections: sections,
-		}
-		if fileDiff != nil {
-			if len(fileDiff.Added) > 0 && len(fileDiff.Removed) == 0 {
-				tf.Status = "created"
-			} else if len(fileDiff.Removed) > 0 && len(fileDiff.Added) == 0 {
-				tf.Status = "deleted"
-			} else {
-				tf.Status = "modified"
-			}
-			tf.Lines = &LineMetrics{}
-			if tf.Status == "created" {
-				if !currentContentLoaded {
-					content, readErr := ReadTextFile(filepath.Join(GetRootDir(), filePath))
-					if readErr == nil {
-						currentContent = content
-						currentContentLoaded = true
-					}
-				}
-				tf.Lines.Added = CountLines(currentContent)
-				tf.Lines.Removed = 0
-			} else if tf.Status == "deleted" {
-				if !baseContentLoaded {
-					stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", baseCommit, filePath)}, "")
-					if exitCode == 0 {
-						baseContent = stdout
-						baseContentLoaded = true
-					}
-				}
-				tf.Lines.Added = 0
-				tf.Lines.Removed = CountLines(baseContent)
-			} else {
-				tf.Lines.Added += len(fileDiff.Added)
-				tf.Lines.Removed += len(fileDiff.Removed)
-			}
-			if tf.Status == "created" {
-				result.Added = append(result.Added, tf)
-			} else if tf.Status == "deleted" {
-				result.Deleted = append(result.Deleted, tf)
-			} else {
-				result.Modified = append(result.Modified, tf)
-			}
-		} else {
-			result.Modified = append(result.Modified, tf)
+		if status.From != "" {
+			baseFiles[status.From] = struct{}{}
 		}
 	}
+	var currentFileList []string
+	for file := range currentFiles {
+		currentFileList = append(currentFileList, file)
+	}
+	var baseFileList []string
+	for file := range baseFiles {
+		baseFileList = append(baseFileList, file)
+	}
+
+	bundles := GetProjects()
+	baseCodebase, err := BuildCodebaseSnapshot(baseFileList, bundles, baseCommit)
+	if err != nil {
+		return nil, err
+	}
+	currentCodebase, err := BuildCodebaseSnapshot(currentFileList, bundles, "")
+	if err != nil {
+		return nil, err
+	}
+
+	result := BuildSemanticDiffs(baseCodebase, currentCodebase, baseCommit, diffLines, diffStatuses, bundles)
 	return result, nil
 }
 
@@ -12421,7 +13370,16 @@ func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]
 	var currentFile string
 	lineRegex := regexp.MustCompile(`^@@\s+-(\d+)(?:,(\d+))?\s+\+(\d+)(?:,(\d+))?\s+@@`)
 	for _, line := range strings.Split(stdout, "\n") {
-		if strings.HasPrefix(line, "+++ b/") {
+		if strings.HasPrefix(line, "diff --git ") {
+			parts := strings.Fields(line)
+			if len(parts) >= 4 {
+				newPath := strings.TrimPrefix(parts[3], "b/")
+				currentFile = newPath
+				if result[currentFile] == nil {
+					result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
+				}
+			}
+		} else if strings.HasPrefix(line, "+++ b/") {
 			currentFile = strings.TrimPrefix(line, "+++ b/")
 			if result[currentFile] == nil {
 				result[currentFile] = &DiffLines{Added: []int{}, Removed: []int{}}
@@ -12680,14 +13638,65 @@ func findSectionForLine(sections []Section, line int) string {
 func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
 	if headCommit == "" {
 		if len(paths) == 0 {
-			return []string{"diff", flag, "--no-renames", baseCommit}
+			return []string{"diff", flag, "-M", baseCommit}
 		}
-		return append([]string{"diff", flag, "--no-renames", baseCommit, "--"}, paths...)
+		return append([]string{"diff", flag, "-M", baseCommit, "--"}, paths...)
 	}
 	if len(paths) == 0 {
-		return []string{"diff", flag, "--no-renames", baseCommit, headCommit}
+		return []string{"diff", flag, "-M", baseCommit, headCommit}
 	}
-	return append([]string{"diff", flag, "--no-renames", baseCommit, headCommit, "--"}, paths...)
+	return append([]string{"diff", flag, "-M", baseCommit, headCommit, "--"}, paths...)
+}
+
+type GitDiffStatus struct {
+	Status string
+	From   string
+	To     string
+}
+
+func GetGitDiffStatus(baseCommit, headCommit string, paths []string) ([]GitDiffStatus, error) {
+	if baseCommit == "" {
+		return nil, fmt.Errorf("base commit is required")
+	}
+	args := []string{"diff", "--name-status", "-M", baseCommit}
+	if headCommit != "" {
+		args = append(args, headCommit)
+	}
+	if len(paths) > 0 {
+		args = append(args, "--")
+		args = append(args, paths...)
+	}
+	stdout, stderr, exitCode := ExecCommand("git", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("git diff status failed: %s", strings.TrimSpace(stderr))
+	}
+	var results []GitDiffStatus
+	for _, line := range strings.Split(strings.TrimSpace(stdout), "\n") {
+		if line == "" {
+			continue
+		}
+		parts := strings.Split(line, "\t")
+		if len(parts) < 2 {
+			continue
+		}
+		status := strings.TrimSpace(parts[0])
+		if strings.HasPrefix(status, "R") && len(parts) >= 3 {
+			results = append(results, GitDiffStatus{Status: "renamed", From: parts[1], To: parts[2]})
+			continue
+		}
+		file := parts[1]
+		switch status {
+		case "A":
+			results = append(results, GitDiffStatus{Status: "added", To: file})
+		case "D":
+			results = append(results, GitDiffStatus{Status: "deleted", From: file})
+		case "M":
+			results = append(results, GitDiffStatus{Status: "modified", To: file})
+		default:
+			results = append(results, GitDiffStatus{Status: "modified", To: file})
+		}
+	}
+	return results, nil
 }
 
 // #endregion Missing Utilities
@@ -12697,7 +13706,10 @@ func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
 		Kind:     ScopeFile,
 		FilePath: filePath,
 	}
-	return CheckPolicies(scope, bundles, nil)
+	files := filterConsideredFiles([]string{filePath})
+	files = filterGitIgnored(files)
+	ctx := NewPolicyContextWithFiles(scope, bundles, files)
+	return CheckPoliciesWithContext(ctx, nil)
 }
 
 func ParseContributorIdentity(line string) (name, email string, ok bool) {
@@ -12729,7 +13741,7 @@ func findSectionForDefinition(sections []Section, startLine, endLine int, prefix
 
 func ListContributors() ([]Contributor, error) {
 	var result []Contributor
-	dir := filepath.Join(rootDir, "contributors")
+	dir := filepath.Join(GetRepoMetaDir(), "contributors")
 	if !FileExists(dir) {
 		return result, nil
 	}
@@ -12754,15 +13766,15 @@ func ListContributors() ([]Contributor, error) {
 }
 
 func GetContributorAvatarPath(github string) string {
-	return filepath.Join(rootDir, "contributors", github, "avatar.png")
+	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar.png")
 }
 
 func GetContributorAvatarRoundPath(github string) string {
-	return filepath.Join(rootDir, "contributors", github, "avatar-round.png")
+	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar-round.png")
 }
 
 func GetContributorPath(github string) string {
-	return filepath.Join(rootDir, "contributors", github)
+	return filepath.Join(GetRepoMetaDir(), "contributors", github)
 }
 
 func CreateContributor(github string) (*Contributor, error) {
@@ -12778,7 +13790,7 @@ func CreateContributor(github string) (*Contributor, error) {
 }
 
 func RemoveContributor(github string) error {
-	dir := filepath.Join(rootDir, "contributors", github)
+	dir := filepath.Join(GetRepoMetaDir(), "contributors", github)
 	if !FileExists(dir) {
 		return fmt.Errorf("contributor not found: %s", github)
 	}
@@ -12790,7 +13802,32 @@ func GetRegisteredPolicies() []PolicyDef {
 }
 
 func filterGitIgnored(files []string) []string {
-	return files
+	if len(files) == 0 {
+		return files
+	}
+	relPaths := make([]string, len(files))
+	for i, filePath := range files {
+		normalized := NormalizePath(filePath)
+		if filepath.IsAbs(filePath) {
+			normalized = GetRelativePath(filePath)
+		}
+		normalized = strings.TrimPrefix(normalized, "./")
+		relPaths[i] = normalized
+	}
+	ignored := GetGitIgnoredSet(relPaths)
+	filtered := make([]string, 0, len(files))
+	for i, filePath := range files {
+		normalized := NormalizePath(filePath)
+		if filepath.IsAbs(filePath) {
+			normalized = GetRelativePath(filePath)
+		}
+		normalized = strings.TrimPrefix(normalized, "./")
+		if normalized != "" && ignored[relPaths[i]] {
+			continue
+		}
+		filtered = append(filtered, filePath)
+	}
+	return filtered
 }
 
 var repoResolverInstance *Resolver

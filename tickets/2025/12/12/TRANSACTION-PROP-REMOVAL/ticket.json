@@ -1,7 +1,7 @@
 {
   "title": "Remove transaction props from elements",
   "prompt": "Remove transaction props from elements",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

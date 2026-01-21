@@ -599,7 +599,7 @@ Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
 
 In our understanding, policy-of-thumbs are most useful when they are concrete 🔨
 
-Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself) vs <strong>WET</strong> (Write-Every-Thing-Twice)/<strong>RUG</strong> (Repeat-Until-Good), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (<strong>SR</strong> (Single Responsibility), <strong>OC</strong> (Open/Closed), <strong>LS</strong> (Liskov's Substitution), <strong>IS</strong> (Interface Segregation), <strong>DI</strong> (Dependency Inversion)), …
+Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-Stupid), <strong>DRY</strong> (Dont-Repeat-Yourself) vs <strong>WET</strong> (Write-Every-Thing-Twice)/<strong>RUG</strong> (Repeat-Until-Good), <strong>YAGNI</strong> (You-Aren't-Gonna-Need-It), <strong>SoC</strong> (Separation-of-Concerns), <strong>Avoid Premature Optimization</strong>, <strong>Law of Demeter</strong>, <strong>LCHC</strong> (Low-Coupling-High-Cohesion), <strong>SOLID</strong> (<strong>SR</strong> (Single Responsibility), <strong>OC</strong> (Open/Closed), <strong>LS</strong> (Liskov's Substitution), <strong>IS</strong> (Port Segregation), <strong>DI</strong> (Dependency Inversion)), …
 
 But as always, the devil is in the details 😈
 
@@ -763,6 +763,7 @@ Then you can run `npm run build` from the root to build all packages, or run `ts
 ## 🎫 Tickets [↑](#-development)
 
 Contributor workflows use tickets to track each task across iterations, recording prompts, file touch lists, and per-file line diffs so work is auditable and easy to continue.
+Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and summary sections so all task context stays in one place alongside `plan.md`.
 
 ## 🧰 Violations [↑](#-development)
 
@@ -1133,6 +1134,8 @@ The repo CLI is the single source of truth for ticket workflows and the GraphQL 
 The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
 Devcontainer attach builds and installs the local extension automatically, keeping the workspace ready without manual steps.
 VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.
+Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo/` so workflow state stays centralized and out of product bundles.
+Repo analyze only inspects considered files by honoring `.gitignore`, excluding `.semio-repo/`, and skipping `assets/repo/` fixtures.
 
 ## 🧱 Devcontainer Persistence [↑](#-bundles-)
 
@@ -1151,15 +1154,19 @@ Webhook receivers enrich GitHub issue events, and Discord notifications format p
 
 Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every iteration records the toolchain context.
 Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen actions add a prompt comment with the same heading so each iteration is surfaced in GitHub.
-Ticket closing derives bundle labels from every touched path, adds `@semio-repo` when a file falls outside bundles, and posts a metrics comment that lists each file with a status icon plus `+added`/`-removed` counts in a fenced `md` block.
+Ticket closing derives bundle labels from every touched path, adds `@semio-repo` when a file falls outside bundles, and posts a semantic change list for bundles, folders, files, sections, and definitions using status icons plus `-removed`/`+added` counts.
 Ticket summary comments prepend a `# 🔍 Summary` heading so the close summary is visually consistent in GitHub issues.
-Ticket line metrics report full line counts for added and deleted files, and diff-based added/removed counts for modified files.
-Ticket close ignores files inside the active ticket workspace (plan/log/summary) so ticket artifacts never appear in change lists.
+Ticket line metrics report full line counts for added and deleted scopes, and diff-based added/removed counts for modified scopes.
+Ticket close ignores files inside the active ticket workspace (`plan.md`, `ticket.md`) so ticket artifacts never appear in change lists.
 Prompt and summary headings are formatted through shared ticket helpers to keep create, reopen, and close flows consistent.
 Ticket title updates rename the ticket folder to the new slug so ticket paths stay aligned with their titles.
 Ticket GitHub issues are automatically linked to the usalu project 2 during create and reopen flows.
 Ticket open respects the `CONTINUE` keyword to resume the latest ticket and the `NOTICKET` keyword to skip ticket creation while still running the task.
 These signals keep GitHub issues, metrics, and bundle ownership consistent across CLI, GraphQL, and the VS Code extension.
+Ticket bundle labels come from semantic bundle diffs so README/AGENTS changes do not force `@semio-repo` labels.
+Each ticket iteration stores its own semantic diff payload; tickets no longer keep a top-level diff snapshot.
+
+Semantic ticket diffs are computed against a full codebase snapshot exported to `.semio-repo/reports/codebase.json` when `repo analyze` runs without a scope, keeping bundle/folder/file/section/definition changes grounded in the same snapshot structure.
 
 ## ✅ Validation System [↑](#-bundles-)
 
@@ -1172,7 +1179,7 @@ semio includes a **domain-pure validation system** built entirely in `semio.ts` 
 3. **Design Name Uniqueness** - Sibling designs must have unique names
 4. **Piece Name Uniqueness** - Pieces in a design must have unique names
 5. **Quality Name Uniqueness** - All qualities must have unique names
-6. **Interface Name Uniqueness** - All ports must have unique names
+6. **Port Name Uniqueness** - All ports must have unique names
 7. **File Name Uniqueness** - All files must have unique names
 8. **Folder Name Uniqueness** - Sibling folders must have unique names
 9. **Connector Name Uniqueness** - Connectors in a type must have unique names
@@ -1203,7 +1210,7 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 ## 🧾 Code Report [↑](#-bundles-)
 
 The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (including multi-line and JSDoc blocks, with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `js/semio` files do not import outside the workspace unless they are the shared `elements.tsx`, flags domain-specific terminology inside those shared elements, and includes reason/solution text for each problem to make remediation explicit.
-Comment detection skips comment markers inside string literals and template literal text so valid content does not raise false violations.
+Inline comment violations are grouped per contiguous inline-comment block while comment detection skips markers inside string literals and template literal text.
 
 ## 🧩 Devcontainer Extension Install [↑](#-bundles-)
 
@@ -1230,6 +1237,7 @@ Shell files follow the same `# region` and `# endregion` markers as other hash-c
 
 Development work is tracked as tickets composed of iterations. Ticket creation does not create an iteration; iterations are explicitly started and finished, require file lists (`updated`, `created`, `removed`), and iteration finish derives the per-file lists and line stats from git diffs between the last iteration commit (or ticket base) and the current commit. Ticket finish aggregates all iteration files and recomputes total line stats from git against the ticket base commit.
 Ticket entry points require prompt text for ticket creation and iteration start, while file arrays can be omitted at entry and still enforced by iteration rules.
+Each ticket workspace stores `plan.md` plus a single `ticket.md` that holds todos, changes, log, and summary sections; closing a ticket writes the summary into the `ticket.md` summary block.
 Line totals only include the files declared in the ticket iterations so unrelated diffs stay out of ticket reports.
 Section line metrics map added lines using current file sections, map removed lines using base-commit section ranges, and determine affected definitions from added lines only so edits stay attributed to the right sections.
 Ticket section ranges are stored as line-only start/end integers with no column data so tooling treats them as line spans.
@@ -1759,9 +1767,9 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 ### 🧱 Kits
 
-`assets/index.ts` is the shared entry point for `@semio/assets`. It re-exports the icon layer plus the Metabolism kit fixtures and helper constants. The kit fixtures are available as `MetabolismKit`, `MetabolismKitDiff`, `MetabolismKitDiffed`, `MetabolismKitDiffInverted`, `InvalidKit`, and `InvalidKitValidation`, while each kit entity list is exposed through `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitInterfaces`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, and the dedicated `MetabolismKitNakaginCapsuleTowerDesigns`.
+`assets/index.ts` is the shared entry point for `@semio/assets`. It re-exports the icon layer plus the Metabolism kit fixtures and helper constants. The kit fixtures are available as `MetabolismKit`, `MetabolismKitDiff`, `MetabolismKitDiffed`, `MetabolismKitDiffInverted`, `InvalidKit`, and `InvalidKitValidation`, while each kit entity list is exposed through `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitPorts`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, and the dedicated `MetabolismKitNakaginCapsuleTowerDesigns`.
 
-Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitInterfacesByGuid`, and `MetabolismKitInterfacesByName` provide direct access to every type, design, and port without filtering.
+Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitPortsByGuid`, and `MetabolismKitPortsByName` provide direct access to every type, design, and port without filtering.
 
 # 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
 

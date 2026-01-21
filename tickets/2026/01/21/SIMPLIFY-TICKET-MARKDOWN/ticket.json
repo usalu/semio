@@ -1,0 +1,589 @@
+{
+  "title": "Simplify Ticket Markdown",
+  "iterations": [
+    {
+      "prompt": "Simplify the ticket system to use a single ticket.md file instead of log.md and summary.md. Update all related code and dev docs.",
+      "llm": "gpt-5-2",
+      "ui": "codex",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-21T08:36:08.728762913Z",
+      "commit": "e3f8dfdfb8e2879a9e31963e8c7a69c7a16782aa"
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-21T09:06:17.591129825Z"
+  },
+  "summary": "Simplified ticket artifacts to ticket.md and updated docs/tooling to match.",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "go/repo/main.go",
+        "status": "modified",
+        "lines": {
+          "added": 1332,
+          "removed": 295
+        },
+        "sections": [
+          {
+            "name": "GraphQL Types",
+            "range": {
+              "start": 53,
+              "end": 1106
+            },
+            "definitions": [
+              "DefinitionKind",
+              "IsValid",
+              "bundlePathPrefix",
+              "Ticket",
+              "GetFiles",
+              "SemanticChangeType",
+              "SemanticChange",
+              "newTicketDiffSet",
+              "newTicketDiffs",
+              "addTicketDiffEntry",
+              "mergeLineMetrics",
+              "computeLineMetricsForDiff",
+              "buildCodebasePathSet",
+              "buildFolderLineTotals",
+              "buildBundleLineTotals",
+              "extractFilePrefix",
+              "reconcileRenamePairs",
+              "buildSectionDiffs",
+              "buildDefinitionDiffs",
+              "BuildSemanticDiffs"
+            ],
+            "lines": {
+              "added": 506,
+              "removed": 9
+            }
+          },
+          {
+            "name": "Types",
+            "range": {
+              "start": 1108,
+              "end": 2975
+            },
+            "definitions": [
+              "TicketIteration",
+              "TicketFile",
+              "TicketFileRenamed",
+              "TicketDiffSet",
+              "TicketDiffs"
+            ],
+            "lines": {
+              "added": 15,
+              "removed": 10
+            }
+          },
+          {
+            "name": "Types#Languages#TypeScript",
+            "range": {
+              "start": 1432,
+              "end": 1620
+            },
+            "lines": {
+              "added": 15,
+              "removed": 4
+            }
+          },
+          {
+            "name": "Utils",
+            "range": {
+              "start": 2977,
+              "end": 3462
+            },
+            "definitions": [
+              "GetRepoMetaDir",
+              "GetRepoMetaPath",
+              "GetGitAuthorGithub"
+            ],
+            "lines": {
+              "added": 9,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Policies",
+            "range": {
+              "start": 4014,
+              "end": 4865
+            },
+            "definitions": [
+              "PolicyContext",
+              "NewPolicyContextWithFiles",
+              "Files",
+              "CheckPolicies",
+              "CheckPoliciesWithContext"
+            ],
+            "lines": {
+              "added": 15,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase",
+            "range": {
+              "start": 4867,
+              "end": 5890
+            },
+            "definitions": [
+              "BuildCodebaseBundles",
+              "BuildCodebaseContributors",
+              "BuildCodebaseTickets",
+              "BuildCodebaseSnapshot",
+              "BuildCodebaseBundlesForFiles",
+              "BuildCodebaseFoldersForFiles",
+              "BuildCodebaseFilesForFiles",
+              "BuildCodebaseSectionsForFiles",
+              "addSectionsForContent",
+              "BuildCodebaseDefinitionsForFiles"
+            ],
+            "lines": {
+              "added": 300,
+              "removed": 30
+            }
+          },
+          {
+            "name": "Tickets",
+            "range": {
+              "start": 5892,
+              "end": 8375
+            },
+            "definitions": [
+              "GetTicketsDir",
+              "UpdateTicketTitle",
+              "CreateTicket",
+              "CountLinesInFile",
+              "CountLinesAtCommit",
+              "ReadTextFileAtCommit",
+              "ListFilesAtCommit",
+              "buildTicketMarkdown",
+              "updateTicketSummaryFile",
+              "ReadTicket",
+              "formatLineMetrics",
+              "formatPathWithBundle",
+              "formatSemanticPath",
+              "formatDeletedPath",
+              "commonPrefixLength",
+              "commonSuffixLength",
+              "formatRenameDelta",
+              "formatRenamePath",
+              "appendDiffLines",
+              "generateMetricsComment",
+              "FinishTicket",
+              "ToolTicketOpen",
+              "ToolTicketRead",
+              "ToolTicketClose"
+            ],
+            "lines": {
+              "added": 275,
+              "removed": 129
+            }
+          },
+          {
+            "name": "Tickets#SQLite Export",
+            "range": {
+              "start": 7929,
+              "end": 8373
+            },
+            "definitions": [
+              "exportTickets"
+            ],
+            "lines": {
+              "added": 5,
+              "removed": 4
+            }
+          },
+          {
+            "name": "GraphQL Context Port",
+            "range": {
+              "start": 8377,
+              "end": 8409
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Schema Builder",
+            "range": {
+              "start": 8840,
+              "end": 10186
+            },
+            "definitions": [
+              "buildSchema"
+            ],
+            "lines": {
+              "added": 9,
+              "removed": 2
+            }
+          }
+        ]
+      },
+      {
+        "path": "go/repo/main_test.go",
+        "status": "modified",
+        "lines": {
+          "added": 101,
+          "removed": 5
+        },
+        "sections": [
+          {
+            "name": "Collection Tests",
+            "range": {
+              "start": 66,
+              "end": 413
+            },
+            "definitions": [
+              "TestFilterTicketWorkspaceFiles"
+            ],
+            "lines": {
+              "added": 4,
+              "removed": 5
+            }
+          },
+          {
+            "name": "Cli#Policy Tests",
+            "range": {
+              "start": 909,
+              "end": 1050
+            },
+            "definitions": [
+              "TestFixtureViolationsGroupedInline",
+              "TestFixtureViolationsByLanguage"
+            ],
+            "lines": {
+              "added": 97,
+              "removed": 0
+            }
+          }
+        ]
+      },
+      {
+        "path": "README.md",
+        "status": "modified",
+        "lines": {
+          "added": 16,
+          "removed": 8
+        },
+        "sections": [
+          {
+            "name": "🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
+            "range": {
+              "start": 423,
+              "end": 611
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "🧑‍💻 Development [↑](#-overview)#🎫 Tickets [↑](#-development)",
+            "range": {
+              "start": 763,
+              "end": 767
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+            "range": {
+              "start": 1131,
+              "end": 1139
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "📦 Bundles [↑](#-overview)#🎟️ Ticket Workflow Signals [↑](#-bundles-)",
+            "range": {
+              "start": 1153,
+              "end": 1170
+            },
+            "lines": {
+              "added": 7,
+              "removed": 3
+            }
+          },
+          {
+            "name": "📦 Bundles [↑](#-overview)#✅ Validation System [↑](#-bundles-)",
+            "range": {
+              "start": 1171,
+              "end": 1209
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "📦 Bundles [↑](#-overview)#🧾 Code Report [↑](#-bundles-)",
+            "range": {
+              "start": 1210,
+              "end": 1214
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "📦 Bundles [↑](#-overview)#🎫 Ticket System [↑](#-bundles-)",
+            "range": {
+              "start": 1236,
+              "end": 1245
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🧱 Kits",
+            "range": {
+              "start": 1768,
+              "end": 1773
+            },
+            "lines": {
+              "added": 2,
+              "removed": 2
+            }
+          }
+        ]
+      },
+      {
+        "path": "AGENTS.md",
+        "status": "modified",
+        "lines": {
+          "added": 48,
+          "removed": 27
+        },
+        "sections": [
+          {
+            "name": "Software Requirements Specification#Business Logic#Code Hygiene",
+            "range": {
+              "start": 22,
+              "end": 53
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Software Requirements Specification#Business Logic#Ticket",
+            "range": {
+              "start": 76,
+              "end": 107
+            },
+            "lines": {
+              "added": 7,
+              "removed": 5
+            }
+          },
+          {
+            "name": "Software Requirements Specification#Business Logic#Repo Tooling",
+            "range": {
+              "start": 119,
+              "end": 141
+            },
+            "lines": {
+              "added": 9,
+              "removed": 3
+            }
+          },
+          {
+            "name": "Software Requirements Specification#Business Logic#Connector",
+            "range": {
+              "start": 214,
+              "end": 227
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Software Requirements Specification#Business Logic#Port",
+            "range": {
+              "start": 309,
+              "end": 323
+            },
+            "lines": {
+              "added": 3,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Software Requirements Specification#UI/UX#Ticket UX",
+            "range": {
+              "start": 364,
+              "end": 405
+            },
+            "lines": {
+              "added": 4,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase",
+            "range": {
+              "start": 1338,
+              "end": 3989
+            },
+            "lines": {
+              "added": 7,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📁 js/semio/",
+            "range": {
+              "start": 1698,
+              "end": 3790
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase#📁 js/semio/#App Plugin Registry#AppPlugin Port",
+            "range": {
+              "start": 3234,
+              "end": 3253
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📁 js/semio/#File Providers#FileProvider Port",
+            "range": {
+              "start": 3323,
+              "end": 3333
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📁 js/semio/#Validation#Validation Types#Core Types",
+            "range": {
+              "start": 3491,
+              "end": 3521
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase#📁 js/semio/#Validation#1. GUID Uniqueness (`guid-unique`)",
+            "range": {
+              "start": 3545,
+              "end": 3563
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase#📁 js/semio/#Validation#6. Port Name Uniqueness (`port-name-unique`)",
+            "range": {
+              "start": 3596,
+              "end": 3603
+            },
+            "lines": {
+              "added": 1,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📁 js/semio/#Validation#Uniqueness Requirements Summary",
+            "range": {
+              "start": 3644,
+              "end": 3668
+            },
+            "lines": {
+              "added": 2,
+              "removed": 2
+            }
+          },
+          {
+            "name": "Codebase#📁 js/semio/#Validation#Cross-Platform Connectorable Validation#Validation Constraints",
+            "range": {
+              "start": 3769,
+              "end": 3784
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Codebase#📄 go/repo/main.go",
+            "range": {
+              "start": 3891,
+              "end": 3894
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Hierarchies#1. Models",
+            "range": {
+              "start": 3994,
+              "end": 4022
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          },
+          {
+            "name": "Hierarchies#3. Properties#Port",
+            "range": {
+              "start": 4135,
+              "end": 4142
+            },
+            "lines": {
+              "added": 2,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Hierarchies#3. Properties#Connector",
+            "range": {
+              "start": 4158,
+              "end": 4169
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          }
+        ]
+      }
+    ],
+    "added": []
+  },
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/179"
+  }
+}

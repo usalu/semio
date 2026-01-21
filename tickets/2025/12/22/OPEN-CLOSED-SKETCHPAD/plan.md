@@ -26,7 +26,7 @@ These violated the open/closed principle: adding/removing an app required modify
 - Added `DesignAppHooks` and `KitAppHooks` interfaces
 - Added `registerDesignAppHooks()`, `getDesignAppHooks()` functions
 - Added `registerKitAppHooks()`, `getKitAppHooks()` functions
-- Added `DocsRegistryInterface` and `registerDocsRegistry()`, `getDocsRegistry()` functions
+- Added `DocsRegistryPort` and `registerDocsRegistry()`, `getDocsRegistry()` functions
 
 ## Sketchpad.tsx
 

@@ -1,7 +1,7 @@
 {
   "title": "Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies",
   "prompt": "Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

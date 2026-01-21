@@ -75,10 +75,10 @@
           "default": "",
           "description": "\ud83d\udc68\u200d\ud83d\udc69\u200d\ud83d\udc67\u200d\ud83d\udc66 The optional port of the connector. This allows to define explicit compatibility with other connectors.",
           "maxLength": 64,
-          "title": "Interface",
+          "title": "Port",
           "type": "string"
         },
-        "compatibleInterfaces": {
+        "compatiblePorts": {
           "description": "\u2705 The optional other compatible ports of the connector. An empty list means this connector is compatible with all other connectors.",
           "items": {
             "type": "string"

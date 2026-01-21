@@ -45,7 +45,7 @@ model: MODEL # LLM model identifier
 ---
 ```
 
-### 3. CLI Interface
+### 3. CLI Port
 
 ```bash
 npx tsx scripts/log.ts create SLUG "Summary"

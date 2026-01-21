@@ -1,7 +1,7 @@
 {
   "title": "Optimize TypeApp state management to fix overfetching and overrendering",
   "prompt": "Optimize TypeApp state management to fix overfetching and overrendering",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

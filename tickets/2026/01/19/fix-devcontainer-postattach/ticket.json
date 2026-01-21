@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "The postAttachCommand from devcontainer.json failed with exit code 127 because code or code-insiders is not installed. Investigate and fix.",
-      "llm": "claude-opus-4-5-20251101",
+      "llm": "opus-4-5-20251101",
       "author": "",
       "date": "2026-01-19T12:15:00Z",
       "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"

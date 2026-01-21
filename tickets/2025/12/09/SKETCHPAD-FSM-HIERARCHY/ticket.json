@@ -1,7 +1,7 @@
 {
   "title": "Migrate sketchpad FSM to hierarchical states with proper constraints",
   "prompt": "Migrate sketchpad FSM to hierarchical states with proper constraints",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

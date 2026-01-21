@@ -1,7 +1,7 @@
 {
   "title": "Add optional comparator parameter to useSyncField and useSyncFields for custom equality checks",
   "prompt": "Add optional comparator parameter to useSyncField and useSyncFields to allow custom equality checks instead of JSON.stringify",
-  "llm": "claude-opus-4-5",
+  "llm": "opus-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

@@ -1,7 +1,7 @@
 {
   "title": "COPILOT-MCP-VALIDATE-ERROR",
   "prompt": "Copilot MCP ticket open fails with tool parameters array type must have items",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

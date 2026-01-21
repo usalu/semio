@@ -212,7 +212,7 @@ export enum DefinitionKind {
   Class = 'CLASS',
   Enum = 'ENUM',
   Function = 'FUNCTION',
-  Interface = 'INTERFACE',
+  Port = 'INTERFACE',
   Method = 'METHOD',
   Property = 'PROPERTY',
   Type = 'TYPE',

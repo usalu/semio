@@ -64,10 +64,10 @@ Created new schema extraction script that:
 
 **Python (52 errors):**
 
-- Missing `Interface` entity entirely
+- Missing `Port` entity entirely
 - Many entities missing `attributes` field
 - Missing fields: `Quality.*` (most fields), `Layer.path/isHidden/isLocked`, `Concept.*`, `Tag.*`
-- Missing Id types: `LocationId`, `InterfaceId`, `TagId`, `ConceptId`
+- Missing Id types: `LocationId`, `PortId`, `TagId`, `ConceptId`
 
 **C# (25 errors):**
 
@@ -119,7 +119,7 @@ After iterative fixes, the schema is now synchronized across TypeScript, Python,
 - Added `LayerIsHiddenField`, `LayerIsLockedField` to `Layer`
 - Added `ModelNameField` to `Model`
 - Renamed `KitHomepage` to `KitHomepageField` (consistent naming)
-- Added `Interface` entity with all required fields
+- Added `Port` entity with all required fields
 
 ### Script Improvements
 

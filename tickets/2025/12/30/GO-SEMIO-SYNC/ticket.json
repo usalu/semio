@@ -1,7 +1,7 @@
 {
   "title": "GO-SEMIO-SYNC",
   "prompt": "Synchronize Go Library with TypeScript - extend Go tests to match TS/C# tests for validation, import/export, and flatten, then implement missing features",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Add benchmark to vscode launch to recompute all benchmarks",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-14T17:30:20.4731248+01:00",
       "commit": "82726d47abeb46fb37e42f0abb86500da4f429bc"

@@ -83,10 +83,6 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
         connectors, err := loadConnectors(db, t.Guid)
         if err != nil { return nil, err }
         t.Connectors = connectors
-
-        llms, err := loadLlms(db, t.Guid)
-        if err != nil { return nil, err }
-        t.Llms = llms
         
         types = append(types, t)
     }
@@ -238,32 +234,11 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
         c.Direction = Vector{X: dirX, Y: dirY, Z: dirZ}
         c.T = t
         c.Mandatory = &mandatory
-        if portGuid.Valid { c.Port = &InterfaceId{Guid: portGuid.String} }
+        if portGuid.Valid { c.Port = &PortId{Guid: portGuid.String} }
         if description.Valid { c.Description = &description.String }
         connectors = append(connectors, c)
     }
     return connectors, nil
-}
-
-func loadLlms(db *sql.DB, typeGuid string) ([]Llm, error) {
-    rows, err := db.Query(`SELECT guid, file_guid, name, description FROM llm WHERE type_guid = ?`, typeGuid)
-    if err != nil { return nil, err }
-    defer rows.Close()
-
-    var llms []Llm
-    for rows.Next() {
-        var l Llm
-        var name, description sql.NullString
-        var fileGuid string
-        if err := rows.Scan(&l.Guid, &fileGuid, &name, &description); err != nil {
-            return nil, err
-        }
-        l.File = FileId{Guid: fileGuid}
-        if name.Valid { l.Name = &name.String }
-        if description.Valid { l.Description = &description.String }
-        llms = append(llms, l)
-    }
-    return llms, nil
 }
 
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {

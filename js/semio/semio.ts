@@ -154,7 +154,7 @@ export type FileId = { guid: Guid };
 export type FolderId = { guid: Guid };
 export type BenchmarkId = { guid: Guid };
 export type QualityId = { guid: Guid };
-export type InterfaceId = { guid: Guid };
+export type PortId = { guid: Guid };
 export type PropId = { guid: Guid };
 export type ModelId = { guid: Guid };
 export type ConnectorId = { guid: Guid };
@@ -176,7 +176,7 @@ export const FileIdSchema = z.object({ guid: z.string() });
 export const FolderIdSchema = z.object({ guid: z.string() });
 export const BenchmarkIdSchema = z.object({ guid: z.string() });
 export const QualityIdSchema = z.object({ guid: z.string() });
-export const InterfaceIdSchema = z.object({ guid: z.string() });
+export const PortIdSchema = z.object({ guid: z.string() });
 export const PropIdSchema = z.object({ guid: z.string() });
 export const ModelIdSchema = z.object({ guid: z.string() });
 export const ConnectorIdSchema = z.object({ guid: z.string() });
@@ -198,10 +198,10 @@ export const createFileId = (guid: Guid): FileId => ({ guid });
 export const createFolderId = (guid: Guid): FolderId => ({ guid });
 export const createBenchmarkId = (guid: Guid): BenchmarkId => ({ guid });
 export const createQualityId = (guid: Guid): QualityId => ({ guid });
-export const createInterfaceId = (guid: Guid): InterfaceId => ({ guid });
+export const createPortId = (guid: Guid): PortId => ({ guid });
 export const createPropId = (guid: Guid): PropId => ({ guid });
 export const createModelId = (guid: Guid): ModelId => ({ guid });
-export const createPortId = (guid: Guid): ConnectorId => ({ guid });
+export const createConnectorId = (guid: Guid): ConnectorId => ({ guid });
 export const createTypeId = (guid: Guid): TypeId => ({ guid });
 export const createLayerId = (guid: Guid): LayerId => ({ guid });
 export const createPieceId = (guid: Guid): PieceId => ({ guid });
@@ -220,10 +220,10 @@ export const areSameFileId = (a: FileId, b: FileId): boolean => a.guid === b.gui
 export const areSameFolderId = (a: FolderId, b: FolderId): boolean => a.guid === b.guid;
 export const areSameBenchmarkId = (a: BenchmarkId, b: BenchmarkId): boolean => a.guid === b.guid;
 export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid === b.guid;
-export const areSameInterfaceId = (a: InterfaceId, b: InterfaceId): boolean => a.guid === b.guid;
+export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.guid;
 export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
 export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.guid;
-export const areSamePortId = (a: ConnectorId, b: ConnectorId): boolean => a.guid === b.guid;
+export const areSameConnectorId = (a: ConnectorId, b: ConnectorId): boolean => a.guid === b.guid;
 export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.guid;
 export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.guid;
 export const areSamePieceId = (a: PieceId, b: PieceId): boolean => a.guid === b.guid;
@@ -242,7 +242,7 @@ export const getFileGuid = (id: FileId): Guid => id.guid;
 export const getFolderGuid = (id: FolderId): Guid => id.guid;
 export const getBenchmarkGuid = (id: BenchmarkId): Guid => id.guid;
 export const getQualityGuid = (id: QualityId): Guid => id.guid;
-export const getInterfaceGuid = (id: InterfaceId): Guid => id.guid;
+export const getPortGuid = (id: PortId): Guid => id.guid;
 export const getPropGuid = (id: PropId): Guid => id.guid;
 export const getModelGuid = (id: ModelId): Guid => id.guid;
 export const getConnectorGuid = (id: ConnectorId): Guid => id.guid;
@@ -1233,58 +1233,58 @@ export const QualitiesDiffSchema = z.object({
 
 // #endregion Quality
 
-// #region Interface
+// #region Port
 
-export const InterfaceSchema = z.object({
+export const PortSchema = z.object({
   guid: z.string(),
   name: z.string(),
   description: z.string().optional(),
   icon: z.string().optional(),
-  compatibleInterfaces: z.array(InterfaceIdSchema).optional(),
+  compatiblePorts: z.array(PortIdSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
-export type Interface = z.infer<typeof InterfaceSchema>;
-export const serializeInterface = (iface: Interface): string => JSON.stringify(InterfaceSchema.parse(iface));
-export const deserializeInterface = (json: string): Interface => InterfaceSchema.parse(JSON.parse(json));
+export type Port = z.infer<typeof PortSchema>;
+export const serializePort = (iface: Port): string => JSON.stringify(PortSchema.parse(iface));
+export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
 
-export const InterfaceDiffSchema = InterfaceSchema.partial()
-  .omit({ compatibleInterfaces: true, attributes: true })
+export const PortDiffSchema = PortSchema.partial()
+  .omit({ compatiblePorts: true, attributes: true })
   .extend({
-    compatibleInterfaces: z.array(InterfaceIdSchema).optional(),
+    compatiblePorts: z.array(PortIdSchema).optional(),
     attributes: AttributesDiffSchema.optional(),
     description: z.string().nullable().optional(),
     icon: z.string().nullable().optional(),
   });
-export type InterfaceDiff = z.infer<typeof InterfaceDiffSchema>;
-export const getInterfaceDiff = (before: Interface, after: Interface): InterfaceDiff => {
-  const diff: InterfaceDiff = {};
+export type PortDiff = z.infer<typeof PortDiffSchema>;
+export const getPortDiff = (before: Port, after: Port): PortDiff => {
+  const diff: PortDiff = {};
   if (before.name !== after.name) diff.name = after.name;
   if (before.description !== after.description) diff.description = after.description ?? null;
   if (before.icon !== after.icon) diff.icon = after.icon ?? null;
-  if (JSON.stringify(before.compatibleInterfaces) !== JSON.stringify(after.compatibleInterfaces)) diff.compatibleInterfaces = after.compatibleInterfaces;
+  if (JSON.stringify(before.compatiblePorts) !== JSON.stringify(after.compatiblePorts)) diff.compatiblePorts = after.compatiblePorts;
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
-export const inverseInterfaceDiff = (original: Interface, appliedDiff: InterfaceDiff): InterfaceDiff => {
-  const inverse: InterfaceDiff = {};
+export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
+  const inverse: PortDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.description !== undefined) inverse.description = original.description ?? null;
   if (appliedDiff.icon !== undefined) inverse.icon = original.icon ?? null;
-  if (appliedDiff.compatibleInterfaces !== undefined) inverse.compatibleInterfaces = original.compatibleInterfaces;
+  if (appliedDiff.compatiblePorts !== undefined) inverse.compatiblePorts = original.compatiblePorts;
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
-export const mergeInterfaceDiff = (diff1: InterfaceDiff, diff2: InterfaceDiff): InterfaceDiff => {
+export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
   return {
     ...diff1,
     ...diff2,
     attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
-export const applyInterfaceDiff = (base: Interface, diff: InterfaceDiff): Interface => {
+export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
-  const result: Interface = {
+  const result: Port = {
     guid: base.guid,
     name: diff.name ?? base.name,
   };
@@ -1299,20 +1299,20 @@ export const applyInterfaceDiff = (base: Interface, diff: InterfaceDiff): Interf
   } else if (base.icon !== undefined) {
     result.icon = base.icon;
   }
-  if (diff.compatibleInterfaces !== undefined || base.compatibleInterfaces !== undefined) result.compatibleInterfaces = diff.compatibleInterfaces ?? base.compatibleInterfaces;
+  if (diff.compatiblePorts !== undefined || base.compatiblePorts !== undefined) result.compatiblePorts = diff.compatiblePorts ?? base.compatiblePorts;
   if (attributes && attributes.length > 0) result.attributes = attributes;
 
   return result;
 };
 
-export const InterfacesDiffSchema = z.object({
-  removed: z.array(InterfaceIdSchema).optional(),
-  updated: z.array(z.object({ port: InterfaceIdSchema, diff: InterfaceDiffSchema })).optional(),
-  added: z.array(InterfaceSchema).optional(),
+export const PortsDiffSchema = z.object({
+  removed: z.array(PortIdSchema).optional(),
+  updated: z.array(z.object({ port: PortIdSchema, diff: PortDiffSchema })).optional(),
+  added: z.array(PortSchema).optional(),
 });
-export type InterfacesDiff = z.infer<typeof InterfacesDiffSchema>;
-export const getInterfacesDiff = (before: Interface[], after: Interface[]): InterfacesDiff => {
-  const diff: InterfacesDiff = {};
+export type PortsDiff = z.infer<typeof PortsDiffSchema>;
+export const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
+  const diff: PortsDiff = {};
   const beforeGuids = new Set(before.map((i) => i.guid));
   const afterGuids = new Set(after.map((i) => i.guid));
   const removed = before.filter((i) => !afterGuids.has(i.guid)).map((i) => ({ guid: i.guid }));
@@ -1320,8 +1320,8 @@ export const getInterfacesDiff = (before: Interface[], after: Interface[]): Inte
   const updated = before
     .filter((i) => afterGuids.has(i.guid))
     .map((i) => {
-      const afterInterface = after.find((a) => a.guid === i.guid)!;
-      const portDiff = getInterfaceDiff(i, afterInterface);
+      const afterPort = after.find((a) => a.guid === i.guid)!;
+      const portDiff = getPortDiff(i, afterPort);
       return { port: { guid: i.guid }, diff: portDiff };
     })
     .filter((u) => Object.keys(u.diff).length > 0);
@@ -1330,27 +1330,27 @@ export const getInterfacesDiff = (before: Interface[], after: Interface[]): Inte
   if (added.length > 0) diff.added = added;
   return diff;
 };
-export const inverseInterfacesDiff = (original: Interface[], appliedDiff: InterfacesDiff): InterfacesDiff => {
-  const inverse: InterfacesDiff = {};
+export const inversePortsDiff = (original: Port[], appliedDiff: PortsDiff): PortsDiff => {
+  const inverse: PortsDiff = {};
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
   if (appliedDiff.removed) inverse.added = original.filter((i) => removedGuids.includes(i.guid));
   if (appliedDiff.added) inverse.removed = appliedDiff.added.map((i) => ({ guid: i.guid }));
   if (appliedDiff.updated) {
     inverse.updated = appliedDiff.updated.map((u) => {
-      const originalInterface = original.find((i) => i.guid === u.port.guid)!;
-      return { port: { guid: u.port.guid }, diff: inverseInterfaceDiff(originalInterface, u.diff) };
+      const originalPort = original.find((i) => i.guid === u.port.guid)!;
+      return { port: { guid: u.port.guid }, diff: inversePortDiff(originalPort, u.diff) };
     });
   }
   return inverse;
 };
-export const mergeInterfacesDiff = (diff1: InterfacesDiff, diff2: InterfacesDiff): InterfacesDiff => {
+export const mergePortsDiff = (diff1: PortsDiff, diff2: PortsDiff): PortsDiff => {
   return {
     removed: [...(diff1.removed ?? []), ...(diff2.removed ?? [])],
     updated: [...(diff1.updated ?? []), ...(diff2.updated ?? [])],
     added: [...(diff1.added ?? []), ...(diff2.added ?? [])],
   };
 };
-export const applyInterfacesDiff = (base: Interface[], diff: InterfacesDiff): Interface[] => {
+export const applyPortsDiff = (base: Port[], diff: PortsDiff): Port[] => {
   let result = [...base];
   if (diff.removed) {
     const removedGuids = new Set(diff.removed.map((r) => r.guid));
@@ -1360,7 +1360,7 @@ export const applyInterfacesDiff = (base: Interface[], diff: InterfacesDiff): In
     for (const update of diff.updated) {
       const index = result.findIndex((i) => i.guid === update.port.guid);
       if (index !== -1) {
-        result[index] = applyInterfaceDiff(result[index], update.diff);
+        result[index] = applyPortDiff(result[index], update.diff);
       }
     }
   }
@@ -1370,18 +1370,18 @@ export const applyInterfacesDiff = (base: Interface[], diff: InterfacesDiff): In
   return result;
 };
 
-export const areInterfacesCompatible = (iface1: Interface | undefined, iface2: Interface | undefined, allInterfaces: Interface[]): boolean => {
+export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | undefined, allPorts: Port[]): boolean => {
   if (!iface1 || !iface2) return true;
   if (iface1.guid === iface2.guid) return true;
-  const iface1Compatible = iface1.compatibleInterfaces ?? [];
-  const iface2Compatible = iface2.compatibleInterfaces ?? [];
+  const iface1Compatible = iface1.compatiblePorts ?? [];
+  const iface2Compatible = iface2.compatiblePorts ?? [];
   if (iface1Compatible.length === 0 && iface2Compatible.length === 0) return true;
   if (iface1Compatible.length === 0) return iface2Compatible.some((c) => c.guid === iface1.guid);
   if (iface2Compatible.length === 0) return iface1Compatible.some((c) => c.guid === iface2.guid);
   return iface1Compatible.some((c) => c.guid === iface2.guid) || iface2Compatible.some((c) => c.guid === iface1.guid);
 };
 
-// #endregion Interface
+// #endregion Port
 
 // #region Prop
 
@@ -2000,14 +2000,14 @@ export const ConnectorSchema = z.object({
   point: PointSchema,
   direction: VectorSchema,
   description: z.string().optional(),
-  port: InterfaceIdSchema.optional(),
+  port: PortIdSchema.optional(),
   mandatory: z.boolean().optional(),
   props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
 export type Connector = z.infer<typeof ConnectorSchema>;
-export const serializePort = (connector: Connector): string => JSON.stringify(ConnectorSchema.parse(connector));
-export const deserializePort = (json: string): Connector => ConnectorSchema.parse(JSON.parse(json));
+export const serializeConnector = (connector: Connector): string => JSON.stringify(ConnectorSchema.parse(connector));
+export const deserializeConnector = (json: string): Connector => ConnectorSchema.parse(JSON.parse(json));
 
 export const ConnectorDiffSchema = ConnectorSchema.partial().omit({ point: true, direction: true, props: true, attributes: true }).extend({
   point: PointDiffSchema.optional(),
@@ -2029,7 +2029,7 @@ export const getConnectorDiff = (before: Connector, after: Connector): Connector
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
-export const mergePortDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): ConnectorDiff => {
+export const mergeConnectorDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): ConnectorDiff => {
   return {
     ...diff1,
     ...diff2,
@@ -2039,7 +2039,7 @@ export const mergePortDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): Conne
     attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
-export const inversePortDiff = (original: Connector, appliedDiff: ConnectorDiff): ConnectorDiff => {
+export const inverseConnectorDiff = (original: Connector, appliedDiff: ConnectorDiff): ConnectorDiff => {
   const inverse: ConnectorDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
   if (appliedDiff.description !== undefined) inverse.description = original.description;
@@ -2100,15 +2100,15 @@ const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsD
   return diff;
 };
 
-export const unifyConnectorInterfacesAndCompatibleInterfacesForTypes = (types: Type[]): TypesDiff => {
+export const unifyConnectorPortsAndCompatiblePortsForTypes = (types: Type[]): TypesDiff => {
   return { updated: [] };
   /*
-  const allInterfaces = new Set<string>();
+  const allPorts = new Set<string>();
   for (const type of types) {
     for (const connector of type.connectors || []) {
-      if (connector.port && connector.port !== "") allInterfaces.add(connector.port);
-      for (const compatibleInterface of connector.compatibleInterfaces || []) {
-        if (compatibleInterface && compatibleInterface !== "") allInterfaces.add(compatibleInterface);
+      if (connector.port && connector.port !== "") allPorts.add(connector.port);
+      for (const compatiblePort of connector.compatiblePorts || []) {
+        if (compatiblePort && compatiblePort !== "") allPorts.add(compatiblePort);
       }
     }
   }
@@ -2118,7 +2118,7 @@ export const unifyConnectorInterfacesAndCompatibleInterfacesForTypes = (types: T
   const rank = new Map<string, number>();
 
   // Initialize each port as its own parent
-  for (const port_ of Array.from(allInterfaces)) {
+  for (const port_ of Array.from(allPorts)) {
     parent.set(port_, port_);
     rank.set(port_, 0);
   }
@@ -2152,23 +2152,23 @@ export const unifyConnectorInterfacesAndCompatibleInterfacesForTypes = (types: T
   // Build compatibility groups by examining all connectors
   for (const type of types) {
     for (const connector of type.connectors || []) {
-      const connectorInterface = connector.port;
-      const compatibleInterfaces = connector.compatibleInterfaces || [];
+      const connectorPort = connector.port;
+      const compatiblePorts = connector.compatiblePorts || [];
 
-      if (connectorInterface && connectorInterface !== "") {
+      if (connectorPort && connectorPort !== "") {
         // Union connector's port with all its compatible ports
-        for (const compatibleInterface of compatibleInterfaces) {
-          if (compatibleInterface && compatibleInterface !== "") {
-            union(connectorInterface, compatibleInterface);
+        for (const compatiblePort of compatiblePorts) {
+          if (compatiblePort && compatiblePort !== "") {
+            union(connectorPort, compatiblePort);
           }
         }
       }
 
       // Also union all compatible ports with each other
-      for (let i = 0; i < compatibleInterfaces.length; i++) {
-        for (let j = i + 1; j < compatibleInterfaces.length; j++) {
-          const port1 = compatibleInterfaces[i];
-          const port2 = compatibleInterfaces[j];
+      for (let i = 0; i < compatiblePorts.length; i++) {
+        for (let j = i + 1; j < compatiblePorts.length; j++) {
+          const port1 = compatiblePorts[i];
+          const port2 = compatiblePorts[j];
           if (port1 && port1 !== "" && port2 && port2 !== "") {
             union(port1, port2);
           }
@@ -2179,7 +2179,7 @@ export const unifyConnectorInterfacesAndCompatibleInterfacesForTypes = (types: T
 
   // Create mapping from any port to its representative
   const portToRepresentative = new Map<string, string>();
-  for (const port_ of Array.from(allInterfaces)) {
+  for (const port_ of Array.from(allPorts)) {
     portToRepresentative.set(port_, find(port_));
   }
 
@@ -2188,17 +2188,17 @@ export const unifyConnectorInterfacesAndCompatibleInterfacesForTypes = (types: T
 
   for (const type of types) {
     const updatedConnectors = type.connectors?.map((connector) => {
-      const connectorInterface = connector.port;
-      const compatibleInterfaces = connector.compatibleInterfaces || [];
+      const connectorPort = connector.port;
+      const compatiblePorts = connector.compatiblePorts || [];
 
       // Determine the representative port for this connector
       let representative: string | undefined;
 
-      if (connectorInterface && connectorInterface !== "") {
-        representative = portToRepresentative.get(connectorInterface);
-      } else if (compatibleInterfaces.length > 0) {
+      if (connectorPort && connectorPort !== "") {
+        representative = portToRepresentative.get(connectorPort);
+      } else if (compatiblePorts.length > 0) {
         // If no port but has compatible ports, use the first one's representative
-        const firstCompatible = compatibleInterfaces.find((f) => f && f !== "");
+        const firstCompatible = compatiblePorts.find((f) => f && f !== "");
         if (firstCompatible) {
           representative = portToRepresentative.get(firstCompatible);
         }
@@ -2208,7 +2208,7 @@ export const unifyConnectorInterfacesAndCompatibleInterfacesForTypes = (types: T
         return {
           ...connector,
           port: representative,
-          compatibleInterfaces: [representative],
+          compatiblePorts: [representative],
         };
       } else {
         // No port information, keep as is
@@ -2231,13 +2231,13 @@ export const unifyConnectorInterfacesAndCompatibleInterfacesForTypes = (types: T
   */
 };
 
-export const arePortsCompatible = (connector: Connector, otherPort: Connector): boolean => {
+export const areConnectorsCompatible = (connector: Connector, otherPort: Connector): boolean => {
   return true;
   /*
-  const normalizedConnectorInterface = normalize(connector.port);
-  const normalizedOtherPortInterface = normalize(otherPort.port);
-  if (normalizedConnectorInterface === "" || normalizedOtherPortInterface === "") return true;
-  return (connector.compatibleInterfaces ?? []).includes(normalizedOtherPortInterface) || (otherPort.compatibleInterfaces ?? []).includes(normalizedConnectorInterface);
+  const normalizedConnectorPort = normalize(connector.port);
+  const normalizedOtherPortPort = normalize(otherPort.port);
+  if (normalizedConnectorPort === "" || normalizedOtherPortPort === "") return true;
+  return (connector.compatiblePorts ?? []).includes(normalizedOtherPortPort) || (otherPort.compatiblePorts ?? []).includes(normalizedConnectorPort);
   */
 };
 
@@ -2385,7 +2385,7 @@ export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff
   if (appliedDiff.authors !== undefined) inverse.authors = original.authors ?? null;
   if (appliedDiff.concepts !== undefined) inverse.concepts = original.concepts ?? null;
   if (appliedDiff.models) inverse.models = inverseCollectionDiff("model", original.models ?? [], appliedDiff.models, inverseModelDiff);
-  if (appliedDiff.connectors) inverse.connectors = inverseCollectionDiff("connector", original.connectors ?? [], appliedDiff.connectors, inversePortDiff);
+  if (appliedDiff.connectors) inverse.connectors = inverseCollectionDiff("connector", original.connectors ?? [], appliedDiff.connectors, inverseConnectorDiff);
   if (appliedDiff.props) inverse.props = inverseCollectionDiff("prop", original.props ?? [], appliedDiff.props, inversePropDiff);
   if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
@@ -3932,7 +3932,7 @@ export const KitSchema = z.object({
   designs: z.array(DesignSchema).optional(),
   tags: z.array(TagSchema).optional(),
   concepts: z.array(ConceptSchema).optional(),
-  ports: z.array(InterfaceSchema).optional(),
+  ports: z.array(PortSchema).optional(),
   qualities: z.array(QualitySchema).optional(),
   files: z.array(FileSchema).optional(),
   folders: z.array(FolderSchema).optional(),
@@ -3970,7 +3970,7 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
   designs: DesignsDiffSchema.optional(),
   tags: TagsDiffSchema.optional(),
   concepts: ConceptsDiffSchema.optional(),
-  ports: InterfacesDiffSchema.optional(),
+  ports: PortsDiffSchema.optional(),
   qualities: QualitiesDiffSchema.optional(),
   authors: AuthorsDiffSchema.optional(),
   files: FilesDiffSchema.optional(),
@@ -4086,7 +4086,7 @@ export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   if (Object.keys(tagsDiff).length > 0) diff.tags = tagsDiff;
   const conceptsDiff = getConceptsDiff(before.concepts ?? [], after.concepts ?? []);
   if (Object.keys(conceptsDiff).length > 0) diff.concepts = conceptsDiff;
-  const portsDiff = getInterfacesDiff(before.ports ?? [], after.ports ?? []);
+  const portsDiff = getPortsDiff(before.ports ?? [], after.ports ?? []);
   if (Object.keys(portsDiff).length > 0) diff.ports = portsDiff;
   const qualitiesDiff = getCollectionDiff("quality", before.qualities ?? [], after.qualities ?? [], getQualityDiff);
   if (Object.keys(qualitiesDiff).length > 0) diff.qualities = qualitiesDiff;
@@ -4115,7 +4115,7 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
   if (appliedDiff.designs) inverse.designs = inverseCollectionDiff("design", original.designs ?? [], appliedDiff.designs, inverseDesignDiff);
   if (appliedDiff.tags) inverse.tags = inverseTagsDiff(original.tags ?? [], appliedDiff.tags);
   if (appliedDiff.concepts) inverse.concepts = inverseConceptsDiff(original.concepts ?? [], appliedDiff.concepts);
-  if (appliedDiff.ports) inverse.ports = inverseInterfacesDiff(original.ports ?? [], appliedDiff.ports);
+  if (appliedDiff.ports) inverse.ports = inversePortsDiff(original.ports ?? [], appliedDiff.ports);
   if (appliedDiff.qualities) inverse.qualities = inverseCollectionDiff("quality", original.qualities ?? [], appliedDiff.qualities, inverseQualityDiff);
   if (appliedDiff.files) inverse.files = inverseCollectionDiff("file", original.files ?? [], appliedDiff.files, inverseFileDiff);
   if (appliedDiff.folders) inverse.folders = inverseCollectionDiff("folder", original.folders ?? [], appliedDiff.folders, inverseFolderDiff);
@@ -4132,7 +4132,7 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
     designs: diff1.designs || diff2.designs ? mergeCollectionDiff("design", diff1.designs ?? {}, diff2.designs ?? {}, mergeDesignDiff) : undefined,
     tags: diff1.tags || diff2.tags ? mergeTagsDiff(diff1.tags ?? {}, diff2.tags ?? {}) : undefined,
     concepts: diff1.concepts || diff2.concepts ? mergeConceptsDiff(diff1.concepts ?? {}, diff2.concepts ?? {}) : undefined,
-    ports: diff1.ports || diff2.ports ? mergeInterfacesDiff(diff1.ports ?? {}, diff2.ports ?? {}) : undefined,
+    ports: diff1.ports || diff2.ports ? mergePortsDiff(diff1.ports ?? {}, diff2.ports ?? {}) : undefined,
     qualities: diff1.qualities || diff2.qualities ? mergeCollectionDiff("quality", diff1.qualities ?? {}, diff2.qualities ?? {}, mergeQualityDiff) : undefined,
     files: diff1.files || diff2.files ? mergeCollectionDiff("file", diff1.files ?? {}, diff2.files ?? {}, mergeSimpleDiff) : undefined,
     folders: diff1.folders || diff2.folders ? mergeCollectionDiff("folder", diff1.folders ?? {}, diff2.folders ?? {}, mergeSimpleDiff) : undefined,
@@ -4176,7 +4176,7 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
     if (concepts.length > 0) result.concepts = concepts;
   }
   if (diff.ports || base.ports) {
-    const ports = applyInterfacesDiff(base.ports ?? [], diff.ports ?? {});
+    const ports = applyPortsDiff(base.ports ?? [], diff.ports ?? {});
     if (ports.length > 0) result.ports = ports;
   }
   if (diff.qualities || base.qualities) {
@@ -4247,20 +4247,20 @@ export const updateDesignInKit = (design: Design): KitDiff => ({
   },
 });
 
-export const addInterfaceToKit = (iface: Interface): KitDiff => ({
+export const addPortToKit = (iface: Port): KitDiff => ({
   ports: {
     added: [iface],
   },
 });
-export const setInterfaceInKit = (iface: Interface): KitDiff => ({
+export const setPortInKit = (iface: Port): KitDiff => ({
   ports: {
     added: [iface],
   },
 });
-export const removeInterfaceFromKit = (portGuid: string): KitDiff => ({
+export const removePortFromKit = (portGuid: string): KitDiff => ({
   ports: { removed: [{ guid: portGuid }] },
 });
-export const updateInterfaceInKit = (iface: Interface): KitDiff => ({
+export const updatePortInKit = (iface: Port): KitDiff => ({
   ports: {
     added: [iface],
   },
@@ -4430,9 +4430,9 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 
 // #endregion Type Family Helpers
 
-export const findInterfaceInKit = (kit: Kit, portGuid: string): Interface => {
+export const findPortInKit = (kit: Kit, portGuid: string): Port => {
   const iface = kit.ports?.find((i) => i.guid === portGuid);
-  if (!iface) throw new Error(`Interface ${portGuid} not found in kit ${kit.name}`);
+  if (!iface) throw new Error(`Port ${portGuid} not found in kit ${kit.name}`);
   return iface;
 };
 
@@ -4498,7 +4498,7 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
       if (variants !== undefined && !variants.includes(replacementType.parent?.guid ?? "")) return false;
       if (!replacementType.connectors || replacementType.connectors.length === 0) return requiredConnectors.length === 0;
       return requiredConnectors.every((requiredConnector) => {
-        return replacementType.connectors!.some((replacementConnector) => arePortsCompatible(replacementConnector, requiredConnector));
+        return replacementType.connectors!.some((replacementConnector) => areConnectorsCompatible(replacementConnector, requiredConnector));
       });
     }) ?? []
   );
@@ -4535,7 +4535,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
       if (variants !== undefined && !variants.includes(replacementType.parent?.guid ?? "")) return false;
       if (!replacementType.connectors || replacementType.connectors.length === 0) return externalConnections.length === 0;
       return externalConnections.every(({ requiredConnector }) => {
-        return replacementType.connectors!.some((replacementConnector) => arePortsCompatible(replacementConnector, requiredConnector));
+        return replacementType.connectors!.some((replacementConnector) => areConnectorsCompatible(replacementConnector, requiredConnector));
       });
     }) ?? []
   );
@@ -4945,7 +4945,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     return true;
   };
 
-  const arePortsEqual = (a?: Connector[], b?: Connector[]): boolean => {
+  const areConnectorsEqual = (a?: Connector[], b?: Connector[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
     if (arrA.length !== arrB.length) return false;
@@ -5012,7 +5012,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
       if (!arraysEqual(normalizeArray(typeA.authors?.map((a) => a.guid)), normalizeArray(typeB.authors?.map((a) => a.guid)))) return false;
       if (!arePropsEqual(typeA.props, typeB.props)) return false;
       if (!areModelsEqual(typeA.models, typeB.models)) return false;
-      if (!arePortsEqual(typeA.connectors, typeB.connectors)) return false;
+      if (!areConnectorsEqual(typeA.connectors, typeB.connectors)) return false;
       if (!areAttributesEqual(typeA.attributes, typeB.attributes)) return false;
     }
     return true;
@@ -5122,7 +5122,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
     return true;
   };
 
-  const areInterfacesEqual = (a?: Interface[], b?: Interface[]): boolean => {
+  const arePortsEqual = (a?: Port[], b?: Port[]): boolean => {
     const arrA = normalizeArray(a);
     const arrB = normalizeArray(b);
     if (arrA.length !== arrB.length) return false;
@@ -5232,7 +5232,7 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   if (!areTagsEqual(a.tags, b.tags)) return false;
   if (!areTypesEqual(a.types, b.types)) return false;
   if (!areDesignsEqual(a.designs, b.designs)) return false;
-  if (!areInterfacesEqual(a.ports, b.ports)) return false;
+  if (!arePortsEqual(a.ports, b.ports)) return false;
   if (!areQualitiesEqual(a.qualities, b.qualities)) return false;
   if (!areFilesEqual(a.files, b.files)) return false;
   if (!areFoldersEqual(a.folders, b.folders)) return false;
@@ -5330,7 +5330,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     return true;
   };
 
-  const arePortsDiffsEqual = (a?: z.infer<typeof ConnectorsDiffSchema>, b?: z.infer<typeof ConnectorsDiffSchema>): boolean => {
+  const areConnectorsDiffsEqual = (a?: z.infer<typeof ConnectorsDiffSchema>, b?: z.infer<typeof ConnectorsDiffSchema>): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
@@ -5340,7 +5340,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     for (const ua of updatedA) {
       const ub = updatedB.find((x) => x.connector.guid === ua.connector.guid);
       if (!ub) return false;
-      if (!arePortDiffsEqual(ua.diff, ub.diff)) return false;
+      if (!areConnectorDiffEqual(ua.diff, ub.diff)) return false;
     }
     const addedA = normalizeArray(a.added);
     const addedB = normalizeArray(b.added);
@@ -5361,7 +5361,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     return true;
   };
 
-  const arePortDiffsEqual = (a?: ConnectorDiff, b?: ConnectorDiff): boolean => {
+  const areConnectorDiffEqual = (a?: ConnectorDiff, b?: ConnectorDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
@@ -5468,7 +5468,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
       return false;
     }
     if (!areModelsDiffsEqual(a.models, b.models)) return false;
-    if (!arePortsDiffsEqual(a.connectors, b.connectors)) return false;
+    if (!areConnectorsDiffsEqual(a.connectors, b.connectors)) return false;
     if (!arePropsDiffsEqual(a.props, b.props)) return false;
     if (!areAttributesDiffsEqual(a.attributes, b.attributes)) return false;
     return true;
@@ -5621,7 +5621,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     return true;
   };
 
-  const areInterfacesDiffsEqual = (a?: InterfacesDiff, b?: InterfacesDiff): boolean => {
+  const arePortsDiffsEqual = (a?: PortsDiff, b?: PortsDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (!areRemovedArraysEqual(a.removed, b.removed)) return false;
@@ -5631,7 +5631,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     for (const ua of updatedA) {
       const ub = updatedB.find((x) => x.port.guid === ua.port.guid);
       if (!ub) return false;
-      if (!areInterfaceDiffsEqual(ua.diff, ub.diff)) return false;
+      if (!arePortDiffsEqual(ua.diff, ub.diff)) return false;
     }
     const addedA = normalizeArray(a.added);
     const addedB = normalizeArray(b.added);
@@ -5644,7 +5644,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
     return true;
   };
 
-  const areInterfaceDiffsEqual = (a?: InterfaceDiff, b?: InterfaceDiff): boolean => {
+  const arePortDiffsEqual = (a?: PortDiff, b?: PortDiff): boolean => {
     if (!a && !b) return true;
     if (!a || !b) return false;
     if (normalizeValue(a.name) !== normalizeValue(b.name)) return false;
@@ -5796,7 +5796,7 @@ export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   }
   if (!areTypesDiffsEqual(a.types, b.types)) return false;
   if (!areDesignsDiffsEqual(a.designs, b.designs)) return false;
-  if (!areInterfacesDiffsEqual(a.ports, b.ports)) return false;
+  if (!arePortsDiffsEqual(a.ports, b.ports)) return false;
   if (!areQualitiesDiffsEqual(a.qualities, b.qualities)) return false;
   if (!areFilesDiffsEqual(a.files, b.files)) return false;
   if (!areFoldersDiffsEqual(a.folders, b.folders)) return false;
@@ -6112,14 +6112,14 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
 
   const ports = execResult("SELECT * FROM port WHERE kit_guid = ?", [kit.guid]);
   kit.ports = mapOrUndefined(ports, (row: any) => {
-    const compatibleInterfaces = execResult("SELECT compatible_port_guid FROM port_compatibility WHERE port_guid = ?", [row.guid]);
+    const compatiblePorts = execResult("SELECT compatible_port_guid FROM port_compatibility WHERE port_guid = ?", [row.guid]);
     const portAttributes = execResult("SELECT * FROM attribute WHERE port_guid = ?", [row.guid]);
     return {
       guid: row.guid,
       name: row.name,
       description: toUndefined(row.description),
       icon: toUndefined(row.icon),
-      compatibleInterfaces: compatibleInterfaces.length > 0 ? compatibleInterfaces.map((ci: any) => ({ guid: ci.compatible_port_guid })) : undefined,
+      compatiblePorts: compatiblePorts.length > 0 ? compatiblePorts.map((ci: any) => ({ guid: ci.compatible_port_guid })) : undefined,
       attributes: mapOrUndefined(portAttributes, buildAttribute),
     };
   });
@@ -6700,7 +6700,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
   toArray(kit.ports).forEach((iface) => {
     db.run("INSERT INTO port (guid, name, description, icon, kit_guid) VALUES (?, ?, ?, ?, ?)", [iface.guid, iface.name, iface.description || null, iface.icon || null, kit.guid]);
 
-    toArray(iface.compatibleInterfaces).forEach((compat) => {
+    toArray(iface.compatiblePorts).forEach((compat) => {
       db.run("INSERT INTO port_compatibility (port_guid, compatible_port_guid) VALUES (?, ?)", [iface.guid, compat.guid]);
     });
 
@@ -7024,7 +7024,7 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 
 // #region Validation core types
 
-export type EntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Interface" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
+export type EntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 
 export interface DomainLocation {
   entityKind: EntityKind;
@@ -7118,13 +7118,13 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
     if (obj.parent?.guid === oldGuid) obj.parent = createTypeId(newGuid);
     if (obj.type?.guid === oldGuid) obj.type = createTypeId(newGuid);
     if (obj.design?.guid === oldGuid) obj.design = createDesignId(newGuid);
-    if (obj.port?.guid === oldGuid) obj.port = createInterfaceId(newGuid);
+    if (obj.port?.guid === oldGuid) obj.port = createPortId(newGuid);
     if (obj.quality?.guid === oldGuid) obj.quality = createQualityId(newGuid);
     if (obj.piece?.guid === oldGuid) obj.piece = createPieceId(newGuid);
     if (obj.designPiece?.guid === oldGuid) obj.designPiece = createPieceId(newGuid);
-    if (obj.connector?.guid === oldGuid) obj.connector = createPortId(newGuid);
-    if (Array.isArray(obj.compatibleInterfaces)) {
-      obj.compatibleInterfaces = obj.compatibleInterfaces.map((iid: InterfaceId) => (iid.guid === oldGuid ? createInterfaceId(newGuid) : iid));
+    if (obj.connector?.guid === oldGuid) obj.connector = createConnectorId(newGuid);
+    if (Array.isArray(obj.compatiblePorts)) {
+      obj.compatiblePorts = obj.compatiblePorts.map((iid: PortId) => (iid.guid === oldGuid ? createPortId(newGuid) : iid));
     }
     if (Array.isArray(obj.pieces)) {
       obj.pieces = obj.pieces.map((p: PieceId) => (p.guid === oldGuid ? createPieceId(newGuid) : p));
@@ -7176,7 +7176,7 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
     toArray(d.stats).forEach((s) => check("Stat", s.guid));
   });
   toArray(ctx.kit.qualities).forEach((q) => check("Quality", q.guid));
-  toArray(ctx.kit.ports).forEach((i) => check("Interface", i.guid));
+  toArray(ctx.kit.ports).forEach((i) => check("Port", i.guid));
   toArray(ctx.kit.files).forEach((f) => check("File", f.guid));
   toArray(ctx.kit.folders).forEach((f) => check("Folder", f.guid));
   return problems;
@@ -7346,12 +7346,12 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #endregion Constraint: Quality name uniqueness
 
-// #region Constraint: Interface name uniqueness
+// #region Constraint: Port name uniqueness
 
-export const semioInterfaceNameUniquenessConstraint: Constraint = (ctx) => {
+export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const ports = toArray(ctx.kit.ports);
-  const nameMap = new Map<string, Interface[]>();
+  const nameMap = new Map<string, Port[]>();
   ports.forEach((i) => {
     const name = i.name ?? "";
     if (!nameMap.has(name)) nameMap.set(name, []);
@@ -7370,7 +7370,7 @@ export const semioInterfaceNameUniquenessConstraint: Constraint = (ctx) => {
       problems.push({
         constraintId: "port-name-unique",
         message: `Duplicate port name "${name}".`,
-        location: { entityKind: "Interface", entityGuid: iface.guid, field: "name" },
+        location: { entityKind: "Port", entityGuid: iface.guid, field: "name" },
         relatedGuids: list.map((i) => i.guid),
         fixes: [fix],
       });
@@ -7379,7 +7379,7 @@ export const semioInterfaceNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Interface name uniqueness
+// #endregion Constraint: Port name uniqueness
 
 // #region Constraint: File name uniqueness
 
@@ -7461,7 +7461,7 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
 
 // #region Constraint: Connector name uniqueness within type
 
-export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
+export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   for (const [typeGuid, connectors] of ctx.connectorsByTypeGuid) {
     if (connectors.length === 0) continue;
@@ -7643,10 +7643,10 @@ defaultConstraints = [
   semioDesignNameUniquenessConstraint,
   semioPieceNameUniquenessConstraint,
   semioQualityNameUniquenessConstraint,
-  semioInterfaceNameUniquenessConstraint,
+  semioPortNameUniquenessConstraint,
   semioFileNameUniquenessConstraint,
   semioFolderNameUniquenessConstraint,
-  semioPortNameUniquenessConstraint,
+  semioConnectorNameUniquenessConstraint,
   semioModelNameUniquenessConstraint,
   semioLayerPathUniquenessConstraint,
   semioDesignPieceSameFamilyConstraint,

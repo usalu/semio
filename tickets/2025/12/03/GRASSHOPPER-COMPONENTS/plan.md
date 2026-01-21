@@ -1,13 +1,13 @@
 # Previously
 
-The Grasshopper components in `Semio.Grasshopper.cs` were missing several entity types (Folder, Tag, Concept, Interface) and the Layer entity used outdated schema (Name instead of Path/Guid).
+The Grasshopper components in `Semio.Grasshopper.cs` were missing several entity types (Folder, Tag, Concept, Port) and the Layer entity used outdated schema (Name instead of Path/Guid).
 
 # Plan
 
 1. Add missing Folder entity region (Goo, Param, Component, Id*, Diff*, sDiff\*, Serialize/Deserialize)
 2. Add missing Tag entity region
 3. Add missing Concept entity region
-4. Add missing Interface entity region
+4. Add missing Port entity region
 5. Fix Layer component to use new schema (Guid, Path instead of Name)
 6. Verify build succeeds
 
@@ -20,7 +20,7 @@ The Grasshopper components in `Semio.Grasshopper.cs` were missing several entity
 - **Folder** (after File region): FolderGoo, FolderParam, FolderComponent, FolderIdGoo, FolderIdParam, FolderDiffGoo, FolderDiffParam, FolderDiffComponent, FoldersDiffGoo, FoldersDiffParam, FoldersDiffComponent, Serialize/Deserialize components
 - **Tag** (after Quality region): TagGoo, TagParam, TagComponent, TagIdGoo, TagIdParam, Serialize/Deserialize components
 - **Concept** (after Connector region): ConceptGoo, ConceptParam, ConceptComponent, ConceptIdGoo, ConceptIdParam, Serialize/Deserialize components
-- **Interface** (after Concept region): InterfaceGoo, InterfaceParam, InterfaceComponent, InterfaceIdGoo, InterfaceIdParam, Serialize/Deserialize components
+- **Port** (after Concept region): PortGoo, PortParam, PortComponent, PortIdGoo, PortIdParam, Serialize/Deserialize components
 
 ### Updated Components
 

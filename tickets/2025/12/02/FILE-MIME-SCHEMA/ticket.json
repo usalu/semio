@@ -1,7 +1,7 @@
 {
   "title": "Add mime field to File schema and migrate kit_metabolism.json",
   "prompt": "Add mime field to File schema and migrate kit_metabolism.json",
-  "llm": "claude-sonnet-4-5",
+  "llm": "sonnet-4-5",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

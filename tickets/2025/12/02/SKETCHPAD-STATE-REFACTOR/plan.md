@@ -48,7 +48,7 @@ Rewrote hooks to use `useSyncExternalStore` with field-level observers:
 - `useTypeFromKit(typeGuid, kitGuid)` - uses useKitTypes internally
 - `useDesignFromKit(designGuid, kitGuid)` - uses useKitDesigns internally
 
-Note: `useKitInterfaces`, `useKitTags`, `useKitConcepts` still use `useKit` because these don't have separate Y.Arrays in KitStore yet.
+Note: `useKitPorts`, `useKitTags`, `useKitConcepts` still use `useKit` because these don't have separate Y.Arrays in KitStore yet.
 
 ## Design.tsx
 
