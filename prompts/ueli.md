@@ -6,13 +6,19 @@ CONTINUE. After rebuilding the
 
 Continue.
 Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear. 
-Dont ask in between, no matter the issue. Figure it out.
+Dont ask in between, no confirmations, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
 Make sure to open and close a ticket. Dont forget to add the plan.md, to track everything (todos, changes, summary, etc) in ticket.md
 
 Dont keep any legacy api or backwards compatiblity.
 
 ## History
+
+
+The ticket mechanism should be extended:
+- reopen can also receive a plan
+
+The new event- and adapter-based repo binary was recently started. Finish it until only the new architecture remains, all tests pass, and all the source code remains in in `go/repo/**.go` is only the single file `go/repo/main.go`. Use the integrate command to start to integrate all the other go files into it.
 
 Create a new ticket for completing repo binary and vsccode extension.
 - When a plan is provided

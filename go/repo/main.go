@@ -1,5 +1,7 @@
 // #region Header
 
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 // go/repo/repo.go
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
@@ -18,18 +20,21 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // #endregion Header
+
 package repo
 
 import (
 	"bufio"
 	"context"
 	"database/sql"
+	"encoding/csv"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"math"
 	"math/rand"
-	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -47,8 +52,1081 @@ import (
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/mark3labs/mcp-go/server"
 	"github.com/spf13/cobra"
+	"gopkg.in/yaml.v3"
 	_ "modernc.org/sqlite"
 )
+
+// #region Engine Events
+
+type Kind string
+
+const (
+	KindStart    Kind = "start"
+	KindLog      Kind = "log"
+	KindProgress Kind = "progress"
+	KindResult   Kind = "result"
+	KindArtifact Kind = "artifact"
+	KindError    Kind = "error"
+	KindDone     Kind = "done"
+)
+
+type Event struct {
+	Kind     Kind            `json:"kind"`
+	Command  string          `json:"command,omitempty"`
+	ID       string          `json:"id,omitempty"`
+	Message  string          `json:"message,omitempty"`
+	Level    string          `json:"level,omitempty"`
+	Progress *Progress       `json:"progress,omitempty"`
+	Data     json.RawMessage `json:"data,omitempty"`
+	Artifact *Artifact       `json:"artifact,omitempty"`
+	Error    *ErrPayload     `json:"error,omitempty"`
+	Done     *DonePayload    `json:"done,omitempty"`
+}
+
+type Progress struct {
+	Current int    `json:"current,omitempty"`
+	Total   int    `json:"total,omitempty"`
+	Percent int    `json:"percent,omitempty"`
+	Step    string `json:"step,omitempty"`
+}
+
+type Artifact struct {
+	Type string `json:"type"`
+	URI  string `json:"uri"`
+	Note string `json:"note,omitempty"`
+}
+
+type ErrPayload struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+	Detail  string `json:"detail,omitempty"`
+	Fatal   bool   `json:"fatal,omitempty"`
+}
+
+type DonePayload struct {
+	ExitCode int    `json:"exit_code"`
+	Status   string `json:"status"`
+}
+
+// #endregion Engine Events
+
+// #region Engine Errors
+
+type ErrorCode string
+
+const (
+	ErrInternal ErrorCode = "E_INTERNAL"
+	ErrParse    ErrorCode = "E_PARSE"
+	ErrCanceled ErrorCode = "E_CANCELED"
+	ErrNetwork  ErrorCode = "E_NETWORK"
+	ErrAuth     ErrorCode = "E_AUTH"
+)
+
+// #endregion Engine Errors
+
+// #region Engine Requests
+
+type Command string
+
+const (
+	CmdGraphQL Command = "graphql"
+	CmdAnalyze Command = "analyze"
+	CmdFix     Command = "fix"
+	CmdPolicy  Command = "policy"
+	CmdTicket  Command = "ticket"
+	CmdBundle  Command = "bundle"
+	CmdFolder  Command = "folder"
+	CmdFile    Command = "file"
+	CmdSection Command = "section"
+	CmdDef     Command = "definition"
+)
+
+type Request struct {
+	Command  Command
+	Args     json.RawMessage
+	RepoRoot string
+	Verbose  bool
+}
+
+type GraphQLArgs struct {
+	Query     string         `json:"query"`
+	Variables map[string]any `json:"variables,omitempty"`
+}
+
+// #endregion Engine Requests
+
+// #region Engine
+
+type GraphQLExecutor interface {
+	Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error)
+}
+
+type Engine struct {
+	GraphQL GraphQLExecutor
+}
+
+func NewEngine(graphql GraphQLExecutor) *Engine {
+	return &Engine{GraphQL: graphql}
+}
+
+func (e *Engine) Run(ctx context.Context, req Request) <-chan Event {
+	out := make(chan Event)
+	go func() {
+		defer func() {
+			if recovered := recover(); recovered != nil {
+				e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: "internal error", Detail: fmt.Sprintf("%v", recovered), Fatal: true})
+				e.emitDone(out, exitCodeError, "error")
+			}
+			close(out)
+		}()
+
+		e.emitStart(out, req)
+
+		if ctx.Err() != nil {
+			e.emitError(out, req, ErrPayload{Code: string(ErrCanceled), Message: ctx.Err().Error(), Fatal: true})
+			e.emitDone(out, exitCodeCanceled, "canceled")
+			return
+		}
+
+		switch req.Command {
+		case CmdGraphQL, CmdAnalyze, CmdFix, CmdPolicy, CmdTicket, CmdBundle, CmdFolder, CmdFile, CmdSection, CmdDef:
+			e.runGraphQL(ctx, req, out)
+		default:
+			e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: "unsupported command", Fatal: true})
+			e.emitDone(out, exitCodeError, "error")
+		}
+	}()
+	return out
+}
+
+func (e *Engine) runGraphQL(ctx context.Context, req Request, out chan<- Event) {
+	var args GraphQLArgs
+	if err := json.Unmarshal(req.Args, &args); err != nil {
+		e.emitError(out, req, ErrPayload{Code: string(ErrParse), Message: "invalid arguments", Detail: err.Error(), Fatal: true})
+		e.emitDone(out, exitCodeUsage, "error")
+		return
+	}
+	if e.GraphQL == nil {
+		e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: "graphql executor missing", Fatal: true})
+		e.emitDone(out, exitCodeError, "error")
+		return
+	}
+	result, err := e.GraphQL.Execute(ctx, args.Query, args.Variables)
+	if err != nil {
+		e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: err.Error(), Fatal: true})
+		e.emitDone(out, exitCodeError, "error")
+		return
+	}
+	payload, err := json.Marshal(map[string]interface{}{"data": result})
+	if err != nil {
+		e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: "failed to encode result", Detail: err.Error(), Fatal: true})
+		e.emitDone(out, exitCodeError, "error")
+		return
+	}
+	out <- Event{Kind: KindResult, Command: string(req.Command), Data: payload}
+	e.emitDone(out, exitCodeOK, "ok")
+}
+
+func (e *Engine) emitStart(out chan<- Event, req Request) {
+	out <- Event{Kind: KindStart, Command: string(req.Command)}
+}
+
+func (e *Engine) emitError(out chan<- Event, req Request, payload ErrPayload) {
+	out <- Event{Kind: KindError, Command: string(req.Command), Error: &payload}
+}
+
+func (e *Engine) emitDone(out chan<- Event, code int, status string) {
+	out <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: code, Status: status}}
+}
+
+const (
+	exitCodeOK       = 0
+	exitCodeError    = 1
+	exitCodeUsage    = 2
+	exitCodeCanceled = 130
+)
+
+// #endregion Engine
+
+// #region Cli Adapter
+
+type Config struct {
+	Format  string
+	Verbose bool
+	Repo    string
+	Timeout time.Duration
+}
+
+type EngineFactory func(Config) (*Engine, error)
+
+type ExitError struct {
+	Code int
+}
+
+func (e ExitError) Error() string {
+	return fmt.Sprintf("exit status %d", e.Code)
+}
+
+func NewRoot(factory EngineFactory) *cobra.Command {
+	root, _ := NewRootWithConfig(factory)
+	return root
+}
+
+func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
+	config := Config{Format: "compact"}
+	root := &cobra.Command{
+		Use:   "repo",
+		Short: "Monorepo CLI for Semio",
+	}
+	root.PersistentFlags().StringVar(&config.Format, "format", "compact", "Output format: compact|jsonl|json")
+	root.PersistentFlags().BoolVar(&config.Verbose, "verbose", false, "Verbose output")
+	root.PersistentFlags().StringVar(&config.Repo, "repo", "", "Repo root path")
+	root.PersistentFlags().DurationVar(&config.Timeout, "timeout", 0, "Timeout for command execution")
+	root.AddCommand(mcpCommand(factory, &config))
+	root.AddCommand(graphqlCommand(factory, &config))
+	root.AddCommand(analyzeCommand(factory, &config))
+	root.AddCommand(fixCommand(factory, &config))
+	root.AddCommand(policyCommand(factory, &config))
+	root.AddCommand(ticketCommand(factory, &config))
+	root.AddCommand(contributorCommand(factory, &config))
+	root.AddCommand(bundleCommand(factory, &config))
+	root.AddCommand(folderCommand(factory, &config))
+	root.AddCommand(fileCommand(factory, &config))
+	root.AddCommand(sectionCommand(factory, &config))
+	root.AddCommand(definitionCommand(factory, &config))
+	root.AddCommand(benchmarkCmd)
+	root.AddCommand(preflightCmd)
+	root.AddCommand(updateCmd)
+	return root, &config
+}
+
+func Execute(factory EngineFactory) error {
+	return NewRoot(factory).Execute()
+}
+
+func defaultEngineFactory(config Config) (*Engine, error) {
+	repoRoot := config.Repo
+	if repoRoot == "" {
+		cwd, err := os.Getwd()
+		if err != nil {
+			return nil, err
+		}
+		repoRoot = findRepoRoot(cwd)
+	}
+	SetRootDir(repoRoot)
+	exec, err := NewExecutorWithContext(repoRoot, NewRepoContext(repoRoot))
+	if err != nil {
+		return nil, err
+	}
+	return NewEngine(exec), nil
+}
+
+func main() {
+	if err := Execute(defaultEngineFactory); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
+	return &cobra.Command{
+		Use:   "mcp",
+		Short: "Run MCP server",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			engine, err := factory(*config)
+			if err != nil {
+				return err
+			}
+			ctx := context.Background()
+			if config.Timeout > 0 {
+				ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
+				defer cancel()
+				ctx = ctxWithTimeout
+			}
+			return serveMcp(ctx, engine)
+		},
+	}
+}
+
+func serveMcp(ctx context.Context, engine *Engine) error {
+	_ = ctx
+	_ = engine
+	return runMcpServer(nil, nil)
+}
+
+func graphqlCommand(factory EngineFactory, config *Config) *cobra.Command {
+	var query string
+	var variablesJSON string
+	cmd := &cobra.Command{
+		Use:   "graphql [query]",
+		Short: "Execute a GraphQL query",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			resolvedQuery := query
+			if resolvedQuery == "" && len(args) > 0 {
+				resolvedQuery = args[0]
+			}
+			if resolvedQuery == "" {
+				return fmt.Errorf("missing query")
+			}
+			var variables map[string]interface{}
+			if variablesJSON != "" {
+				if err := json.Unmarshal([]byte(variablesJSON), &variables); err != nil {
+					return fmt.Errorf("invalid variables JSON: %w", err)
+				}
+			}
+			var payload struct {
+				Query     string                 `json:"query"`
+				Variables map[string]interface{} `json:"variables"`
+			}
+			if err := json.Unmarshal([]byte(resolvedQuery), &payload); err == nil && payload.Query != "" {
+				resolvedQuery = payload.Query
+				if variables == nil {
+					variables = map[string]interface{}{}
+				}
+				for key, value := range payload.Variables {
+					if _, exists := variables[key]; !exists {
+						variables[key] = value
+					}
+				}
+			}
+			return runGraphQL(cmd, factory, config, resolvedQuery, variables)
+		},
+	}
+	cmd.Flags().StringVar(&query, "query", "", "GraphQL query")
+	cmd.Flags().StringVarP(&variablesJSON, "vars", "v", "", "GraphQL variables JSON")
+	return cmd
+}
+
+func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
+	var scope string
+	cmd := &cobra.Command{
+		Use:   "analyze",
+		Short: "Analyze codebase for policy violations",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			variables := map[string]interface{}{}
+			if scope != "" {
+				variables["scope"] = scope
+			}
+			query := `query Analyze($scope: String) {
+				analyze(scope: $scope) {
+					violations {
+						id
+						summary
+						scope
+						line
+						column
+						excerpt
+						kind { id priority autofixable reason solution }
+					}
+					metrics { total autofixable byPriority { high medium low } }
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	cmd.Flags().StringVar(&scope, "scope", "", "Scope to analyze")
+	return cmd
+}
+
+func fixCommand(factory EngineFactory, config *Config) *cobra.Command {
+	var scope string
+	cmd := &cobra.Command{
+		Use:   "fix",
+		Short: "Apply autofixes for violations",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			variables := map[string]interface{}{}
+			if scope != "" {
+				variables["scope"] = scope
+			}
+			query := `mutation Fix($scope: String) {
+				fix(scope: $scope) {
+					fixed
+					remaining
+					violations { id summary scope excerpt line }
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	cmd.Flags().StringVar(&scope, "scope", "", "Scope to fix")
+	return cmd
+}
+
+func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "policy", Short: "Policy management commands"}
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List all registered policies",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := `query Policies {
+				repo {
+					policies {
+						id
+						name
+						description
+						scopes
+						violationKinds { id priority autofixable reason solution }
+					}
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, nil)
+		},
+	}
+	checkCmd := &cobra.Command{
+		Use:   "check",
+		Short: "Check a policy against a scope",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			policyID, err := cmd.Flags().GetString("id")
+			if err != nil {
+				return err
+			}
+			if policyID == "" {
+				return fmt.Errorf("missing policy id")
+			}
+			scope, err := cmd.Flags().GetString("scope")
+			if err != nil {
+				return err
+			}
+			variables := map[string]interface{}{"id": policyID}
+			if scope != "" {
+				variables["scope"] = scope
+			}
+			query := `query PolicyCheck($id: String!, $scope: String) {
+				policy(id: $id) {
+					id
+					name
+					description
+					scopes
+					violationKinds { id priority autofixable reason solution }
+				}
+				violations(scope: $scope) {
+					id
+					summary
+					scope
+					excerpt
+					kind { id priority autofixable reason solution }
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	checkCmd.Flags().String("id", "", "Policy id")
+	checkCmd.Flags().String("scope", "", "Scope to analyze")
+	root.AddCommand(listCmd)
+	root.AddCommand(checkCmd)
+	return root
+}
+
+func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "ticket", Short: "Ticket management commands"}
+	openCmd := &cobra.Command{
+		Use:   "open",
+		Short: "Open a new ticket",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			title, _ := cmd.Flags().GetString("title")
+			prompt, _ := cmd.Flags().GetString("prompt")
+			llm, _ := cmd.Flags().GetString("llm")
+			ui, _ := cmd.Flags().GetString("ui")
+			noIssue, _ := cmd.Flags().GetBool("no-issue")
+			planPath, _ := cmd.Flags().GetString("plan-path")
+			if title == "" {
+				return fmt.Errorf("missing title")
+			}
+			if prompt == "" {
+				prompt = title
+			}
+			if llm == "" {
+				return fmt.Errorf("missing llm")
+			}
+			if ui == "" {
+				return fmt.Errorf("missing ui")
+			}
+			input := map[string]interface{}{
+				"title":   title,
+				"prompt":  prompt,
+				"llm":     llm,
+				"ui":      strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
+				"noIssue": noIssue,
+			}
+			if planPath != "" {
+				input["planPath"] = planPath
+			}
+			variables := map[string]interface{}{"input": input}
+			query := `mutation TicketOpen($input: TicketOpenInput!) {
+				ticketOpen(input: $input) {
+					id
+					slug
+					status
+					path
+					uri
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	openCmd.Flags().String("title", "", "Ticket title")
+	openCmd.Flags().String("prompt", "", "Ticket prompt")
+	openCmd.Flags().String("llm", "", "LLM")
+	openCmd.Flags().String("ui", "", "UI")
+	openCmd.Flags().Bool("no-issue", false, "Skip GitHub issue")
+	openCmd.Flags().String("plan-path", "", "Plan file path")
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List tickets",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			year, _ := cmd.Flags().GetInt("year")
+			month, _ := cmd.Flags().GetInt("month")
+			day, _ := cmd.Flags().GetInt("day")
+			variables := map[string]interface{}{}
+			if year != 0 {
+				variables["year"] = year
+			}
+			if month != 0 {
+				variables["month"] = month
+			}
+			if day != 0 {
+				variables["day"] = day
+			}
+			query := `query Tickets($year: Int, $month: Int, $day: Int) {
+				repo {
+					tickets(year: $year, month: $month, day: $day) {
+						id
+						year
+						month
+						day
+						slug
+						status
+						prompt
+						summary
+						path
+						uri
+						date { created finished }
+					}
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	listCmd.Flags().Int("year", 0, "Filter by year")
+	listCmd.Flags().Int("month", 0, "Filter by month")
+	listCmd.Flags().Int("day", 0, "Filter by day")
+	closeCmd := &cobra.Command{
+		Use:   "close",
+		Short: "Close a ticket",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			year, _ := cmd.Flags().GetInt("year")
+			month, _ := cmd.Flags().GetInt("month")
+			day, _ := cmd.Flags().GetInt("day")
+			slug, _ := cmd.Flags().GetString("slug")
+			summary, _ := cmd.Flags().GetString("summary")
+			files, _ := cmd.Flags().GetStringSlice("files")
+			title, _ := cmd.Flags().GetString("title")
+			if year == 0 || month == 0 || day == 0 || slug == "" {
+				return fmt.Errorf("missing ticket path")
+			}
+			if summary == "" {
+				return fmt.Errorf("missing summary")
+			}
+			if len(files) == 0 {
+				return fmt.Errorf("missing files")
+			}
+			input := map[string]interface{}{
+				"year":    year,
+				"month":   month,
+				"day":     day,
+				"slug":    slug,
+				"summary": summary,
+				"files":   files,
+			}
+			if title != "" {
+				input["title"] = title
+			}
+			variables := map[string]interface{}{"input": input}
+			query := `mutation TicketClose($input: TicketCloseInput!) {
+				ticketClose(input: $input) {
+					id
+					slug
+					status
+					date { created finished }
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	closeCmd.Flags().Int("year", 0, "Ticket year")
+	closeCmd.Flags().Int("month", 0, "Ticket month")
+	closeCmd.Flags().Int("day", 0, "Ticket day")
+	closeCmd.Flags().String("slug", "", "Ticket slug")
+	closeCmd.Flags().String("summary", "", "Summary")
+	closeCmd.Flags().StringSlice("files", nil, "Files")
+	closeCmd.Flags().String("title", "", "Title")
+	reopenCmd := &cobra.Command{
+		Use:   "reopen",
+		Short: "Reopen a ticket",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			year, _ := cmd.Flags().GetInt("year")
+			month, _ := cmd.Flags().GetInt("month")
+			day, _ := cmd.Flags().GetInt("day")
+			slug, _ := cmd.Flags().GetString("slug")
+			prompt, _ := cmd.Flags().GetString("prompt")
+			llm, _ := cmd.Flags().GetString("llm")
+			title, _ := cmd.Flags().GetString("title")
+			if year == 0 || month == 0 || day == 0 || slug == "" {
+				return fmt.Errorf("missing ticket path")
+			}
+			if prompt == "" || llm == "" {
+				return fmt.Errorf("missing prompt or llm")
+			}
+			input := map[string]interface{}{
+				"year":   year,
+				"month":  month,
+				"day":    day,
+				"slug":   slug,
+				"prompt": prompt,
+				"llm":    llm,
+			}
+			if title != "" {
+				input["title"] = title
+			}
+			variables := map[string]interface{}{"input": input}
+			query := `mutation TicketReopen($input: TicketReopenInput!) {
+				ticketReopen(input: $input) {
+					id
+					slug
+					status
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	reopenCmd.Flags().Int("year", 0, "Ticket year")
+	reopenCmd.Flags().Int("month", 0, "Ticket month")
+	reopenCmd.Flags().Int("day", 0, "Ticket day")
+	reopenCmd.Flags().String("slug", "", "Ticket slug")
+	reopenCmd.Flags().String("prompt", "", "Prompt")
+	reopenCmd.Flags().String("llm", "", "LLM")
+	reopenCmd.Flags().String("title", "", "Title")
+	root.AddCommand(openCmd)
+	root.AddCommand(listCmd)
+	root.AddCommand(closeCmd)
+	root.AddCommand(reopenCmd)
+	return root
+}
+
+func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "contributor", Short: "Contributor management commands"}
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List contributors",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := `query Contributors {
+				repo {
+					contributors {
+						id
+						github
+						name
+						emails
+						icons { avatar avatarRound github }
+						links { name url }
+						metrics { commits tickets bundles folders files sections definitions lines }
+					}
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, nil)
+		},
+	}
+	addCmd := &cobra.Command{
+		Use:   "add",
+		Short: "Add a contributor",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			github, _ := cmd.Flags().GetString("github")
+			name, _ := cmd.Flags().GetString("name")
+			emails, _ := cmd.Flags().GetStringSlice("email")
+			if github == "" {
+				return fmt.Errorf("missing github")
+			}
+			input := map[string]interface{}{"github": github}
+			if name != "" {
+				input["name"] = name
+			}
+			if len(emails) > 0 {
+				input["emails"] = emails
+			}
+			variables := map[string]interface{}{"input": input}
+			query := `mutation ContributorAdd($input: ContributorAddInput!) {
+				contributorAdd(input: $input) { id github name emails }
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	addCmd.Flags().String("github", "", "GitHub username")
+	addCmd.Flags().String("name", "", "Contributor name")
+	addCmd.Flags().StringSlice("email", nil, "Contributor emails")
+	removeCmd := &cobra.Command{
+		Use:   "remove",
+		Short: "Remove a contributor",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			github, _ := cmd.Flags().GetString("github")
+			if github == "" {
+				return fmt.Errorf("missing github")
+			}
+			variables := map[string]interface{}{"github": github}
+			query := `mutation ContributorRemove($github: String!) { contributorRemove(github: $github) }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	removeCmd.Flags().String("github", "", "GitHub username")
+	root.AddCommand(listCmd)
+	root.AddCommand(addCmd)
+	root.AddCommand(removeCmd)
+	return root
+}
+
+func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "bundle", Short: "Bundle management commands"}
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List bundles",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := `query Bundles { repo { bundles { id name root sourceRoot projectType tags uri } } }`
+			return runGraphQL(cmd, factory, config, query, nil)
+		},
+	}
+	root.AddCommand(listCmd)
+	return root
+}
+
+func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "folder", Short: "Folder management commands"}
+	createCmd := &cobra.Command{
+		Use:   "create",
+		Short: "Create a folder",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path, _ := cmd.Flags().GetString("path")
+			if path == "" {
+				return fmt.Errorf("missing path")
+			}
+			variables := map[string]interface{}{"path": path}
+			query := `mutation FolderCreate($path: String!) { folderCreate(path: $path) { id path name uri } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	createCmd.Flags().String("path", "", "Folder path")
+	moveCmd := &cobra.Command{
+		Use:   "move",
+		Short: "Move a folder",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			src, _ := cmd.Flags().GetString("source")
+			dst, _ := cmd.Flags().GetString("target")
+			if src == "" || dst == "" {
+				return fmt.Errorf("missing source or target")
+			}
+			variables := map[string]interface{}{"src": src, "dst": dst}
+			query := `mutation FolderMove($src: String!, $dst: String!) { folderMove(src: $src, dst: $dst) { id path name uri } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	moveCmd.Flags().String("source", "", "Source path")
+	moveCmd.Flags().String("target", "", "Target path")
+	deleteCmd := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete a folder",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path, _ := cmd.Flags().GetString("path")
+			if path == "" {
+				return fmt.Errorf("missing path")
+			}
+			variables := map[string]interface{}{"path": path}
+			query := `mutation FolderDelete($path: String!) { folderDelete(path: $path) }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	deleteCmd.Flags().String("path", "", "Folder path")
+	root.AddCommand(createCmd)
+	root.AddCommand(moveCmd)
+	root.AddCommand(deleteCmd)
+	return root
+}
+
+func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "file", Short: "File management commands"}
+	createCmd := &cobra.Command{
+		Use:   "create",
+		Short: "Create a file",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path, _ := cmd.Flags().GetString("path")
+			if path == "" {
+				return fmt.Errorf("missing path")
+			}
+			variables := map[string]interface{}{"path": path}
+			query := `mutation FileCreate($path: String!) { fileCreate(path: $path) { id path name uri } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	createCmd.Flags().String("path", "", "File path")
+	moveCmd := &cobra.Command{
+		Use:   "move",
+		Short: "Move a file",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			src, _ := cmd.Flags().GetString("source")
+			dst, _ := cmd.Flags().GetString("target")
+			if src == "" || dst == "" {
+				return fmt.Errorf("missing source or target")
+			}
+			variables := map[string]interface{}{"src": src, "dst": dst}
+			query := `mutation FileMove($src: String!, $dst: String!) { fileMove(src: $src, dst: $dst) { id path name uri } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	moveCmd.Flags().String("source", "", "Source path")
+	moveCmd.Flags().String("target", "", "Target path")
+	deleteCmd := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete a file",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path, _ := cmd.Flags().GetString("path")
+			if path == "" {
+				return fmt.Errorf("missing path")
+			}
+			variables := map[string]interface{}{"path": path}
+			query := `mutation FileDelete($path: String!) { fileDelete(path: $path) }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	deleteCmd.Flags().String("path", "", "File path")
+	root.AddCommand(createCmd)
+	root.AddCommand(moveCmd)
+	root.AddCommand(deleteCmd)
+	return root
+}
+
+func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "section", Short: "Section management commands"}
+	createCmd := &cobra.Command{
+		Use:   "create",
+		Short: "Create a section",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			file, _ := cmd.Flags().GetString("file")
+			name, _ := cmd.Flags().GetString("name")
+			parent, _ := cmd.Flags().GetString("parent")
+			if file == "" || name == "" {
+				return fmt.Errorf("missing file or name")
+			}
+			variables := map[string]interface{}{"file": file, "name": name}
+			if parent != "" {
+				variables["parent"] = parent
+			}
+			query := `mutation SectionCreate($file: String!, $name: String!, $parent: String) { sectionCreate(file: $file, name: $name, parent: $parent) { id name range { start end } } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	createCmd.Flags().String("file", "", "File path")
+	createCmd.Flags().String("name", "", "Section name")
+	createCmd.Flags().String("parent", "", "Parent section")
+	moveCmd := &cobra.Command{
+		Use:   "move",
+		Short: "Move a section",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			file, _ := cmd.Flags().GetString("file")
+			oldName, _ := cmd.Flags().GetString("old")
+			newName, _ := cmd.Flags().GetString("new")
+			if file == "" || oldName == "" || newName == "" {
+				return fmt.Errorf("missing file or names")
+			}
+			variables := map[string]interface{}{"file": file, "oldName": oldName, "newName": newName}
+			query := `mutation SectionMove($file: String!, $oldName: String!, $newName: String!) { sectionMove(file: $file, oldName: $oldName, newName: $newName) { id name range { start end } } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	moveCmd.Flags().String("file", "", "File path")
+	moveCmd.Flags().String("old", "", "Old section name")
+	moveCmd.Flags().String("new", "", "New section name")
+	deleteCmd := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete a section",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			file, _ := cmd.Flags().GetString("file")
+			name, _ := cmd.Flags().GetString("name")
+			if file == "" || name == "" {
+				return fmt.Errorf("missing file or name")
+			}
+			variables := map[string]interface{}{"file": file, "name": name}
+			query := `mutation SectionDelete($file: String!, $name: String!) { sectionDelete(file: $file, name: $name) }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	deleteCmd.Flags().String("file", "", "File path")
+	deleteCmd.Flags().String("name", "", "Section name")
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List sections",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			file, _ := cmd.Flags().GetString("file")
+			if file == "" {
+				return fmt.Errorf("missing file")
+			}
+			variables := map[string]interface{}{"path": file}
+			query := `query SectionList($path: String!) { file(path: $path) { sections { id name range { start end } children { id name range { start end } children { id name range { start end } children { id name range { start end } } } } } } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	listCmd.Flags().String("file", "", "File path")
+	root.AddCommand(createCmd)
+	root.AddCommand(moveCmd)
+	root.AddCommand(deleteCmd)
+	root.AddCommand(listCmd)
+	return root
+}
+
+func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "definition", Short: "Definition management commands"}
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List definitions",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			path, _ := cmd.Flags().GetString("file")
+			if path == "" {
+				return fmt.Errorf("missing file")
+			}
+			variables := map[string]interface{}{"path": path}
+			query := `query DefinitionList($path: String!) { file(path: $path) { definitions { id name kind range { start end } } } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	listCmd.Flags().String("file", "", "File path")
+	root.AddCommand(listCmd)
+	return root
+}
+
+func RenderJSONL(out io.Writer, stream <-chan Event) (int, error) {
+	encoder := json.NewEncoder(out)
+	encoder.SetEscapeHTML(false)
+	exitCode := 0
+	for event := range stream {
+		if event.Kind == KindDone && event.Done != nil {
+			exitCode = event.Done.ExitCode
+		}
+		if err := encoder.Encode(event); err != nil {
+			return exitCode, err
+		}
+	}
+	return exitCode, nil
+}
+
+func RenderJSON(out io.Writer, stream <-chan Event) (int, error) {
+	items := make([]Event, 0)
+	exitCode := 0
+	for event := range stream {
+		if event.Kind == KindDone && event.Done != nil {
+			exitCode = event.Done.ExitCode
+		}
+		items = append(items, event)
+	}
+	encoder := json.NewEncoder(out)
+	encoder.SetEscapeHTML(false)
+	if err := encoder.Encode(items); err != nil {
+		return exitCode, err
+	}
+	return exitCode, nil
+}
+
+func RenderCompact(out io.Writer, errOut io.Writer, stream <-chan Event, verbose bool) (int, error) {
+	exitCode := 0
+	for event := range stream {
+		if event.Kind == KindDone && event.Done != nil {
+			exitCode = event.Done.ExitCode
+			continue
+		}
+		if event.Kind == KindError && event.Error != nil {
+			if event.Error.Detail != "" && verbose {
+				if _, err := errOut.Write([]byte(event.Error.Detail + "\n")); err != nil {
+					return exitCode, err
+				}
+			}
+			if event.Error.Message != "" {
+				if _, err := errOut.Write([]byte(event.Error.Message + "\n")); err != nil {
+					return exitCode, err
+				}
+			}
+			continue
+		}
+		if event.Kind == KindLog && event.Message != "" {
+			if _, err := errOut.Write([]byte(event.Message + "\n")); err != nil {
+				return exitCode, err
+			}
+			continue
+		}
+		if event.Kind == KindResult && len(event.Data) > 0 {
+			formatted := event.Data
+			var decoded interface{}
+			if err := json.Unmarshal(event.Data, &decoded); err == nil {
+				if pretty, err := json.MarshalIndent(decoded, "", "  "); err == nil {
+					formatted = pretty
+				}
+			}
+			if _, err := out.Write(append(formatted, '\n')); err != nil {
+				return exitCode, err
+			}
+		}
+	}
+	return exitCode, nil
+}
+
+func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
+	switch config.Format {
+	case "jsonl":
+		exitCode, err := RenderJSONL(cmd.OutOrStdout(), stream)
+		if err != nil {
+			return err
+		}
+		if exitCode != 0 {
+			return ExitError{Code: exitCode}
+		}
+		return nil
+	case "json":
+		exitCode, err := RenderJSON(cmd.OutOrStdout(), stream)
+		if err != nil {
+			return err
+		}
+		if exitCode != 0 {
+			return ExitError{Code: exitCode}
+		}
+		return nil
+	default:
+		exitCode, err := RenderCompact(cmd.OutOrStdout(), cmd.ErrOrStderr(), stream, config.Verbose)
+		if err != nil {
+			return err
+		}
+		if exitCode != 0 {
+			return ExitError{Code: exitCode}
+		}
+		return nil
+	}
+}
+
+func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query string, variables map[string]interface{}) error {
+	argsPayload := GraphQLArgs{Query: query, Variables: variables}
+	payloadBytes, err := json.Marshal(argsPayload)
+	if err != nil {
+		return err
+	}
+	engine, err := factory(*config)
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	if config.Timeout > 0 {
+		ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
+		defer cancel()
+		ctx = ctxWithTimeout
+	}
+	request := Request{Command: CmdGraphQL, Args: payloadBytes, RepoRoot: config.Repo, Verbose: config.Verbose}
+	stream := engine.Run(ctx, request)
+	return renderStream(cmd, config, stream)
+}
+
+// #endregion Cli Adapter
 
 // #region GraphQL Types
 
@@ -60,14 +1138,14 @@ type Node interface {
 type DefinitionKind string
 
 const (
-	DefinitionKindFunction  DefinitionKind = "function"
-	DefinitionKindClass     DefinitionKind = "class"
-	DefinitionKindVariable  DefinitionKind = "variable"
-	DefinitionKindPort DefinitionKind = "interface"
-	DefinitionKindType      DefinitionKind = "type"
-	DefinitionKindEnum      DefinitionKind = "enum"
-	DefinitionKindMethod    DefinitionKind = "method"
-	DefinitionKindProperty  DefinitionKind = "property"
+	DefinitionKindFunction DefinitionKind = "function"
+	DefinitionKindClass    DefinitionKind = "class"
+	DefinitionKindVariable DefinitionKind = "variable"
+	DefinitionKindPort     DefinitionKind = "interface"
+	DefinitionKindType     DefinitionKind = "type"
+	DefinitionKindEnum     DefinitionKind = "enum"
+	DefinitionKindMethod   DefinitionKind = "method"
+	DefinitionKindProperty DefinitionKind = "property"
 )
 
 func (e DefinitionKind) IsValid() bool {
@@ -388,15 +1466,15 @@ func (c *Commit) IsNode()       {}
 func (c *Commit) GetID() string { return "@semio/commits/" + c.SHA }
 
 type Ticket struct {
-	Year        int         `json:"year"`
-	Month       int         `json:"month"`
-	Day         int         `json:"day"`
-	Slug        string      `json:"slug"`
-	Data        *TicketData `json:"data,omitempty"`
-	FolderPath  string      `json:"folderPath"`
-	JsonPath    string      `json:"jsonPath,omitempty"`
-	PlanPath    string      `json:"planPath,omitempty"`
-	TicketPath  string      `json:"ticketPath,omitempty"`
+	Year       int         `json:"year"`
+	Month      int         `json:"month"`
+	Day        int         `json:"day"`
+	Slug       string      `json:"slug"`
+	Data       *TicketData `json:"data,omitempty"`
+	FolderPath string      `json:"folderPath"`
+	JsonPath   string      `json:"jsonPath,omitempty"`
+	PlanPath   string      `json:"planPath,omitempty"`
+	TicketPath string      `json:"ticketPath,omitempty"`
 }
 
 func (t *Ticket) IsNode() {}
@@ -589,6 +1667,7 @@ type ContributionFile struct {
 	Metrics *LineMetrics `json:"metrics"`
 }
 
+type ContributionSection struct {
 	SectionID string       `json:"sectionId"`
 	Metrics   *LineMetrics `json:"metrics"`
 }
@@ -2785,10 +3864,12 @@ type CodebaseBundle struct {
 }
 
 type CodebaseFolder struct {
-	ID      string                 `json:"id"`
-	Path    string                 `json:"path"`
-	URI     string                 `json:"uri"`
-	Metrics *FolderMetricsInternal `json:"metrics,omitempty"`
+	ID       string                 `json:"id"`
+	Path     string                 `json:"path"`
+	URI      string                 `json:"uri"`
+	Name     string                 `json:"name"`
+	ParentID *string                `json:"parentId,omitempty"`
+	Metrics  *FolderMetricsInternal `json:"metrics,omitempty"`
 }
 
 type FileViolationRef struct {
@@ -4092,12 +5173,12 @@ func GetPolicies() []PolicyDef {
 }
 
 type PolicyContext struct {
-	Scope        Scope
-	RootDir      string
-	Bundles      []Bundle
-	fileCache    map[string]string
-	sectionCache map[string][]Section
-	ignoreCache  map[string]map[int][]string // file -> line -> ignore patterns
+	Scope         Scope
+	RootDir       string
+	Bundles       []Bundle
+	fileCache     map[string]string
+	sectionCache  map[string][]Section
+	ignoreCache   map[string]map[int][]string // file -> line -> ignore patterns
 	filesOverride []string
 }
 
@@ -6095,15 +7176,15 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 	}
 
 	ticket := &Ticket{
-		Year:        year,
-		Month:       month,
-		Day:         day,
-		Slug:        slug,
-		Data:        ticketData,
-		FolderPath:  ticketDir,
-		JsonPath:    jsonPath,
-		PlanPath:    planFilePath,
-		TicketPath:  ticketFilePath,
+		Year:       year,
+		Month:      month,
+		Day:        day,
+		Slug:       slug,
+		Data:       ticketData,
+		FolderPath: ticketDir,
+		JsonPath:   jsonPath,
+		PlanPath:   planFilePath,
+		TicketPath: ticketFilePath,
 	}
 
 	if err := SaveTicket(ticket); err != nil {
@@ -6352,15 +7433,15 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 		return nil, err
 	}
 	return &Ticket{
-		Year:        year,
-		Month:       month,
-		Day:         day,
-		Slug:        slug,
-		Data:        &data,
-		FolderPath:  folderPath,
-		JsonPath:    jsonPath,
-		PlanPath:    planPath,
-		TicketPath:  ticketPath,
+		Year:       year,
+		Month:      month,
+		Day:        day,
+		Slug:       slug,
+		Data:       &data,
+		FolderPath: folderPath,
+		JsonPath:   jsonPath,
+		PlanPath:   planPath,
+		TicketPath: ticketPath,
 	}, nil
 }
 
@@ -12160,186 +13241,6 @@ func printGQL(query string, variables map[string]interface{}) error {
 
 // #endregion GraphQL Helpers
 
-// #region Commands
-
-func main() {
-	if err := Execute(); err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
-	}
-}
-
-func Execute() error {
-	return rootCmd.Execute()
-}
-
-var rootCmd = &cobra.Command{
-	Use:   "repo",
-	Short: "Monorepo CLI for Semio",
-	Long:  `repo - Monorepo CLI for Semio. All commands output JSON via GraphQL.`,
-}
-
-var mcpCmd = &cobra.Command{
-	Use:   "mcp",
-	Short: "Run MCP server",
-	RunE:  runMcpServer,
-}
-
-func init() {
-	rootCmd.AddCommand(mcpCmd)
-	rootCmd.AddCommand(graphqlCmd)
-	rootCmd.AddCommand(analyzeCmd)
-	rootCmd.AddCommand(fixCmd)
-	rootCmd.AddCommand(policyCmd)
-	rootCmd.AddCommand(ticketCmd)
-	rootCmd.AddCommand(contributorCmd)
-	rootCmd.AddCommand(bundleCmd)
-	rootCmd.AddCommand(folderCmd)
-	rootCmd.AddCommand(fileCmd)
-	rootCmd.AddCommand(sectionCmd)
-}
-
-// #region GraphQL Command
-
-var graphqlCmd = &cobra.Command{
-	Use:   "graphql <query>",
-	Short: "Execute a GraphQL query",
-	Long:  `Execute a GraphQL query against the repo schema and return JSON result.`,
-	Args:  cobra.ExactArgs(1),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		query := args[0]
-		variablesJSON, _ := cmd.Flags().GetString("variables")
-		var variables map[string]interface{}
-		if variablesJSON != "" {
-			if err := json.Unmarshal([]byte(variablesJSON), &variables); err != nil {
-				return fmt.Errorf("invalid variables JSON: %w", err)
-			}
-		}
-
-		// Support JSON encoded query/variables (urql style)
-		var payload struct {
-			Query     string                 `json:"query"`
-			Variables map[string]interface{} `json:"variables"`
-		}
-		if err := json.Unmarshal([]byte(query), &payload); err == nil && payload.Query != "" {
-			query = payload.Query
-			if variables == nil {
-				variables = make(map[string]interface{})
-			}
-			for k, v := range payload.Variables {
-				if _, exists := variables[k]; !exists {
-					variables[k] = v
-				}
-			}
-		}
-
-		return printGQL(query, variables)
-	},
-}
-
-func init() {
-	graphqlCmd.Flags().StringP("variables", "v", "", "JSON object with query variables")
-}
-
-// #endregion GraphQL Command
-
-// #region Serve Command
-
-var devCmd = &cobra.Command{
-	Use:   "dev",
-	Short: "Start GraphQL server with GraphiQL interface",
-	Long:  `Start an HTTP server exposing the GraphQL API with introspection and GraphiQL interface.`,
-	RunE: func(cmd *cobra.Command, args []string) error {
-		port, _ := cmd.Flags().GetInt("port")
-		addr := fmt.Sprintf(":%d", port)
-
-		http.HandleFunc("/graphql", graphqlHandler)
-		http.HandleFunc("/", graphiqlHandler)
-
-		fmt.Printf("GraphQL server running at http://localhost%s/graphql\n", addr)
-		fmt.Printf("GraphiQL interface at http://localhost%s/\n", addr)
-		return http.ListenAndServe(addr, nil)
-	},
-}
-
-func graphqlHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
-	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
-
-	if r.Method == http.MethodOptions {
-		w.WriteHeader(http.StatusOK)
-		return
-	}
-
-	var request struct {
-		Query         string                 `json:"query"`
-		Variables     map[string]interface{} `json:"variables"`
-		OperationName string                 `json:"operationName"`
-	}
-
-	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		http.Error(w, `{"errors":[{"message":"Invalid JSON"}]}`, http.StatusBadRequest)
-		return
-	}
-
-	result, err := executor.Execute(r.Context(), request.Query, request.Variables)
-	response := map[string]interface{}{}
-	if err != nil {
-		response["errors"] = []map[string]string{{"message": err.Error()}}
-	} else {
-		response["data"] = result
-	}
-
-	json.NewEncoder(w).Encode(response)
-}
-
-func graphiqlHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(graphiqlHTML))
-}
-
-const graphiqlHTML = `<!DOCTYPE html>
-<html>
-<head>
-  <title>GraphiQL - Semio Repo</title>
-  <style>
-    body { height: 100%; margin: 0; width: 100%; overflow: hidden; }
-    #graphiql { height: 100vh; }
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js" crossorigin></script>
-  <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js" crossorigin></script>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/graphiql@3.0.10/graphiql.min.css" />
-</head>
-<body>
-  <div id="graphiql">Loading...</div>
-  <script src="https://cdn.jsdelivr.net/npm/graphiql@3.0.10/graphiql.min.js" crossorigin></script>
-  <script>
-    const root = ReactDOM.createRoot(document.getElementById('graphiql'));
-    root.render(
-      React.createElement(GraphiQL, {
-        fetcher: async (graphQLParams) => {
-          const response = await fetch('/graphql', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(graphQLParams),
-          });
-          return response.json();
-        },
-      }),
-    );
-  </script>
-</body>
-</html>`
-
-func init() {
-	devCmd.Flags().IntP("port", "p", 8080, "Port to listen on")
-	rootCmd.AddCommand(devCmd)
-}
-
-// #endregion Serve Command
-
 // #region Analyze Command
 
 var analyzeCmd = &cobra.Command{
@@ -12452,10 +13353,6 @@ var exportCmd = &cobra.Command{
 		fmt.Println(string(jsonBytes))
 		return nil
 	},
-}
-
-func init() {
-	rootCmd.AddCommand(exportCmd)
 }
 
 // #endregion Export Command
@@ -12573,6 +13470,10 @@ UI values:  claude-code, cursor, copilot-chat, antigravity, codex, droid`,
 			"llm":     llm,
 			"ui":      uiEnum,
 			"noIssue": noIssue,
+		}
+		// Add optional title if provided
+		if title, _ := cmd.Flags().GetString("title"); title != "" {
+			input["title"] = title
 		}
 		variables := map[string]interface{}{
 			"input": input,
@@ -13227,11 +14128,6 @@ var definitionListCmd = &cobra.Command{
 			}
 		`, variables)
 	},
-}
-
-func init() {
-	definitionCmd.AddCommand(definitionListCmd)
-	rootCmd.AddCommand(definitionCmd)
 }
 
 // #endregion Definition Commands
@@ -13946,3 +14842,654 @@ func ToolPolicyViolationList(policyID string) ToolResult {
 }
 
 // #endregion Missing Tool Functions
+
+// #region Benchmark Command
+
+var benchmarkCmd = &cobra.Command{
+	Use:   "benchmark",
+	Short: "Run benchmarks for all ecosystems",
+	RunE:  runBenchmark,
+}
+
+type BenchmarkResult struct {
+	Test string
+	Lang string
+	Time string
+}
+
+func runBenchmark(cmd *cobra.Command, args []string) error {
+	rootDir := findRepoRoot(".")
+	results := make([]BenchmarkResult, 0)
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	tasks := []struct {
+		Name    string
+		Cmd     string
+		Args    []string
+		Dir     string
+		Enabled bool
+	}{
+		{
+			Name:    "Typescript",
+			Cmd:     "npx",
+			Args:    []string{"tsx", "semio.benchmark.ts"},
+			Dir:     filepath.Join(rootDir, "js", "semio"),
+			Enabled: true,
+		},
+		{
+			Name:    "Python",
+			Cmd:     "uv",
+			Args:    []string{"run", "semio.benchmark.py"},
+			Dir:     filepath.Join(rootDir, "py", "semio"),
+			Enabled: true,
+		},
+		{
+			Name:    "Go",
+			Cmd:     "go",
+			Args:    []string{"run", "semio_benchmark.go"},
+			Dir:     filepath.Join(rootDir, "go", "semio"),
+			Enabled: true,
+		},
+		{
+			Name:    "C#",
+			Cmd:     "dotnet",
+			Args:    []string{"run", "--project", "Semio.Benchmark/Semio.Benchmark.csproj", "--configuration", "Release"},
+			Dir:     filepath.Join(rootDir, "net"),
+			Enabled: true,
+		},
+		{
+			Name:    "Rust",
+			Cmd:     "cargo",
+			Args:    []string{"run", "--release", "--bin", "semio-benchmark"},
+			Dir:     filepath.Join(rootDir, "rs", "semio"),
+			Enabled: true,
+		},
+	}
+
+	fmt.Println("Running benchmarks...")
+
+	for _, task := range tasks {
+		if !task.Enabled {
+			continue
+		}
+		wg.Add(1)
+		go func(t struct {
+			Name    string
+			Cmd     string
+			Args    []string
+			Dir     string
+			Enabled bool
+		}) {
+			defer wg.Done()
+			fmt.Printf("Running %s...\n", t.Name)
+			if _, err := os.Stat(t.Dir); os.IsNotExist(err) {
+				fmt.Printf("Skipping %s: directory %s not found\n", t.Name, t.Dir)
+				return
+			}
+
+			c := exec.Command(t.Cmd, t.Args...)
+			c.Dir = t.Dir
+			output, err := c.Output()
+			if err != nil {
+				if exitErr, ok := err.(*exec.ExitError); ok {
+					fmt.Printf("%s failed: %s\n%s\n", t.Name, err, string(exitErr.Stderr))
+				} else {
+					fmt.Printf("%s failed: %s\n", t.Name, err)
+				}
+				return
+			}
+
+			mu.Lock()
+			parseBenchmarkOutput(&results, t.Name, string(output))
+			mu.Unlock()
+		}(task)
+	}
+
+	wg.Wait()
+	if len(results) > 0 {
+		return writeBenchmarkReport(rootDir, results)
+	}
+
+	return nil
+}
+
+func parseBenchmarkOutput(results *[]BenchmarkResult, lang string, output string) {
+	lines := strings.Split(output, "\n")
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		parts := strings.Split(trimmed, ",")
+		if len(parts) == 2 &&
+			!strings.Contains(parts[0], "warning") &&
+			!strings.Contains(parts[0], ":") &&
+			!strings.Contains(parts[0], string(os.PathSeparator)) {
+			*results = append(*results, BenchmarkResult{
+				Test: parts[0],
+				Lang: lang,
+				Time: parts[1],
+			})
+		}
+	}
+}
+
+func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
+	reportFile := filepath.Join(rootDir, "reports", "benchmark.csv")
+	if err := os.MkdirAll(filepath.Dir(reportFile), 0755); err != nil {
+		return err
+	}
+
+	testsMap := make(map[string]bool)
+	for _, r := range results {
+		testsMap[r.Test] = true
+	}
+	var tests []string
+	for t := range testsMap {
+		tests = append(tests, t)
+	}
+	sort.Strings(tests)
+
+	langs := []string{"Typescript", "Python", "Go", "C#", "Rust"}
+
+	file, err := os.Create(reportFile)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	writer := csv.NewWriter(file)
+	defer writer.Flush()
+	header := []string{"Test"}
+	header = append(header, langs...)
+	if err := writer.Write(header); err != nil {
+		return err
+	}
+
+	for _, test := range tests {
+		row := []string{test}
+		for _, lang := range langs {
+			timeVal := ""
+			for _, r := range results {
+				if r.Test == test && r.Lang == lang {
+					timeVal = r.Time
+					break
+				}
+			}
+			row = append(row, timeVal)
+		}
+		if err := writer.Write(row); err != nil {
+			return err
+		}
+	}
+
+	fmt.Printf("Benchmark report written to %s\n", reportFile)
+	return nil
+}
+
+// #endregion Benchmark Command
+
+// #region Preflight Command
+
+var preflightCmd = &cobra.Command{
+	Use:   "preflight [command]",
+	Short: "Run preflight checks (fix, analyze, test, build, publish)",
+	RunE:  runPreflight,
+}
+
+func runPreflight(cmd *cobra.Command, args []string) error {
+	command := "preflight"
+	if len(args) > 0 {
+		command = args[0]
+	}
+	switch command {
+	case "fix":
+		return runPreflightFix()
+	case "analyze":
+		return runPreflightAnalyze()
+	case "preflight":
+		if err := runPreflightFix(); err != nil {
+			return err
+		}
+		return runPreflightAnalyze()
+	case "test":
+		if err := runPreflightFix(); err != nil {
+			return err
+		}
+		if err := runPreflightAnalyze(); err != nil {
+			return err
+		}
+		return runNx("test")
+	case "build":
+		if err := runNx("test"); err != nil {
+			return err
+		}
+		return runNx("build")
+	case "publish:test":
+		if err := runNx("build"); err != nil {
+			return err
+		}
+		return runNx("publish:test")
+	case "publish":
+		if err := runNx("build"); err != nil {
+			return err
+		}
+		return runNx("publish")
+	default:
+		return fmt.Errorf("unknown command: %s", command)
+	}
+}
+
+func runPreflightFix() error {
+	fmt.Println("Running fix...")
+	return fixCmd.RunE(fixCmd, []string{})
+}
+
+func runPreflightAnalyze() error {
+	fmt.Println("Running analyze...")
+	return analyzeCmd.RunE(analyzeCmd, []string{})
+}
+
+func runNx(target string, args ...string) error {
+	fmt.Printf("Running nx %s...\n", target)
+	cmdArgs := []string{"nx", "run-many", "-t", target}
+	cmdArgs = append(cmdArgs, args...)
+
+	cmd := exec.Command("npx", cmdArgs...)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+
+	return cmd.Run()
+}
+
+// #endregion Preflight Command
+
+// #region Update Command
+
+var updateCmd = &cobra.Command{
+	Use:   "update [target]",
+	Short: "Update dependencies (npm, python, rust, go, dotnet)",
+	RunE:  runUpdate,
+}
+
+var updateDryRun bool
+
+func init() {
+	updateCmd.Flags().BoolVar(&updateDryRun, "dry-run", false, "Show what would be updated without making changes")
+}
+
+type DependabotConfig struct {
+	Version int `yaml:"version"`
+	Updates []struct {
+		PackageEcosystem string `yaml:"package-ecosystem"`
+		Directory        string `yaml:"directory"`
+		Ignore           []struct {
+			DependencyName string   `yaml:"dependency-name"`
+			Versions       []string `yaml:"versions"`
+		} `yaml:"ignore"`
+	} `yaml:"updates"`
+	XSemioConfig struct {
+		PreserveLocalVersions struct {
+			Npm struct {
+				Pattern string `yaml:"pattern"`
+			} `yaml:"npm"`
+		} `yaml:"preserveLocalVersions"`
+	} `yaml:"x-semio-config"`
+}
+
+type UpdateConfig struct {
+	Exclude               map[string][]string
+	Constraints           map[string][]Constraint
+	PreserveLocalVersions struct {
+		Npm struct {
+			Pattern string
+		}
+	}
+	Paths struct {
+		Npm    []string
+		Python []string
+		Rust   []string
+		Go     []string
+		Dotnet []string
+	}
+}
+
+type Constraint struct {
+	Dependency string
+	MaxMajor   int
+}
+
+func runUpdate(cmd *cobra.Command, args []string) error {
+	target := "all"
+	if len(args) > 0 {
+		target = args[0]
+	}
+
+	rootDir := findRepoRoot(".")
+	config, err := loadUpdateConfig(rootDir)
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("=== Dependency Update Script ===")
+	if updateDryRun {
+		fmt.Println("Running in DRY RUN mode - no changes will be made.")
+	}
+	fmt.Printf("Target: %s\n", target)
+
+	var wg sync.WaitGroup
+
+	if target == "all" || target == "npm" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			updateNpm(rootDir, config, updateDryRun)
+		}()
+	}
+
+	if target == "all" || target == "python" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			updatePython(rootDir, config, updateDryRun)
+		}()
+	}
+
+	if target == "all" || target == "rust" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			updateRust(rootDir, config, updateDryRun)
+		}()
+	}
+
+	if target == "all" || target == "go" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			updateGo(rootDir, config, updateDryRun)
+		}()
+	}
+
+	if target == "all" || target == "dotnet" {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			updateDotNet(rootDir, config, updateDryRun)
+		}()
+	}
+
+	wg.Wait()
+	fmt.Println("\n=== Update Complete ===")
+	return nil
+}
+
+func loadUpdateConfig(rootDir string) (*UpdateConfig, error) {
+	dependabotPath := filepath.Join(rootDir, ".github", "dependabot.yml")
+	data, err := ioutil.ReadFile(dependabotPath)
+	if err != nil {
+		return nil, fmt.Errorf("dependabot.yml not found: %w", err)
+	}
+
+	var dependabot DependabotConfig
+	if err := yaml.Unmarshal(data, &dependabot); err != nil {
+		return nil, err
+	}
+
+	config := &UpdateConfig{
+		Exclude:     make(map[string][]string),
+		Constraints: make(map[string][]Constraint),
+	}
+	config.Paths.Npm = []string{}
+	config.Paths.Python = []string{}
+	config.Paths.Rust = []string{}
+	config.Paths.Go = []string{}
+	config.Paths.Dotnet = []string{}
+
+	config.PreserveLocalVersions.Npm.Pattern = "*"
+	if dependabot.XSemioConfig.PreserveLocalVersions.Npm.Pattern != "" {
+		config.PreserveLocalVersions.Npm.Pattern = dependabot.XSemioConfig.PreserveLocalVersions.Npm.Pattern
+	}
+
+	for _, update := range dependabot.Updates {
+		dir := strings.TrimPrefix(update.Directory, "/")
+		ecosystem := update.PackageEcosystem
+
+		switch ecosystem {
+		case "npm":
+			config.Paths.Npm = append(config.Paths.Npm, dir)
+		case "uv":
+			config.Paths.Python = append(config.Paths.Python, dir)
+		case "cargo":
+			config.Paths.Rust = append(config.Paths.Rust, dir)
+		case "gomod":
+			config.Paths.Go = append(config.Paths.Go, dir)
+		case "nuget":
+			files := findCsprojFiles(rootDir, dir)
+			for _, file := range files {
+				config.Paths.Dotnet = append(config.Paths.Dotnet, file)
+				if len(update.Ignore) > 0 {
+					for _, ignore := range update.Ignore {
+						if len(ignore.Versions) > 0 {
+							for _, v := range ignore.Versions {
+								re := regexp.MustCompile(`>=\s*(\d+)\.`)
+								match := re.FindStringSubmatch(v)
+								if len(match) > 1 {
+									maxMajor, _ := strconv.Atoi(match[1])
+									maxMajor = maxMajor - 1
+									config.Constraints[file] = append(config.Constraints[file], Constraint{
+										Dependency: ignore.DependencyName,
+										MaxMajor:   maxMajor,
+									})
+								}
+							}
+						} else {
+							config.Exclude[file] = append(config.Exclude[file], ignore.DependencyName)
+						}
+					}
+				}
+			}
+		}
+	}
+	return config, nil
+}
+
+func findCsprojFiles(rootDir, dir string) []string {
+	fullDir := filepath.Join(rootDir, dir)
+	var files []string
+	entries, err := os.ReadDir(fullDir)
+	if err != nil {
+		return files
+	}
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.HasSuffix(entry.Name(), ".csproj") {
+			files = append(files, filepath.Join(dir, entry.Name()))
+		}
+	}
+	return files
+}
+
+func runCommand(dir, name string, args ...string) error {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	fmt.Printf("  Running: %s %s in %s\n", name, strings.Join(args, " "), dir)
+	return cmd.Run()
+}
+
+func runCommandQuiet(dir, name string, args ...string) (string, error) {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = dir
+	output, err := cmd.Output()
+	return string(output), err
+}
+
+func updateNpm(rootDir string, config *UpdateConfig, dryRun bool) {
+	fmt.Println("\n[NPM] Updating npm packages...")
+	if dryRun {
+		fmt.Println("  [DRY RUN] Would run: npm update -S")
+		return
+	}
+
+	if err := runCommand(rootDir, "npm", "update", "-S"); err != nil {
+		fmt.Printf("Error updating npm: %v\n", err)
+	}
+	fmt.Println("[NPM] Done.")
+}
+
+func updatePython(rootDir string, config *UpdateConfig, dryRun bool) {
+	fmt.Println("\n[Python] Updating Python packages...")
+	for _, pyPath := range config.Paths.Python {
+		fullPath := filepath.Join(rootDir, pyPath)
+		tomlPath := filepath.Join(fullPath, "pyproject.toml")
+		if _, err := os.Stat(tomlPath); os.IsNotExist(err) {
+			continue
+		}
+
+		fmt.Printf("  Updating %s...\n", pyPath)
+		if dryRun {
+			fmt.Println("  [DRY RUN] Would update pyproject.toml and run uv lock")
+			continue
+		}
+
+		if err := runCommand(fullPath, "uv", "lock", "--upgrade"); err != nil {
+			fmt.Printf("Error updating python in %s: %v\n", pyPath, err)
+		}
+	}
+	fmt.Println("[Python] Done.")
+}
+
+func updateRust(rootDir string, config *UpdateConfig, dryRun bool) {
+	fmt.Println("\n[Rust] Updating Rust packages...")
+	for _, rsPath := range config.Paths.Rust {
+		fullPath := filepath.Join(rootDir, rsPath)
+		if _, err := os.Stat(filepath.Join(fullPath, "Cargo.toml")); os.IsNotExist(err) {
+			continue
+		}
+
+		fmt.Printf("  Updating %s...\n", rsPath)
+		if dryRun {
+			fmt.Println("  [DRY RUN] Would run cargo update")
+			continue
+		}
+
+		if err := runCommand(fullPath, "cargo", "update"); err != nil {
+			fmt.Printf("Error updating rust in %s: %v\n", rsPath, err)
+		}
+	}
+	fmt.Println("[Rust] Done.")
+}
+
+func updateGo(rootDir string, config *UpdateConfig, dryRun bool) {
+	fmt.Println("\n[Go] Updating Go modules...")
+	for _, goPath := range config.Paths.Go {
+		fullPath := filepath.Join(rootDir, goPath)
+		if _, err := os.Stat(filepath.Join(fullPath, "go.mod")); os.IsNotExist(err) {
+			continue
+		}
+
+		fmt.Printf("  Updating %s...\n", goPath)
+		if dryRun {
+			fmt.Println("  [DRY RUN] Would run: go get -u ./... && go mod tidy")
+			continue
+		}
+
+		runCommand(fullPath, "go", "get", "-u", "./...")
+		runCommand(fullPath, "go", "mod", "tidy")
+	}
+	fmt.Println("[Go] Done.")
+}
+
+func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
+	fmt.Println("\n[.NET] Updating .NET packages...")
+	for _, csprojPath := range config.Paths.Dotnet {
+		fullPath := filepath.Join(rootDir, csprojPath)
+		if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+			continue
+		}
+
+		fmt.Printf("  Updating %s...\n", csprojPath)
+		if dryRun {
+			fmt.Println("  [DRY RUN] Would check for package updates")
+			continue
+		}
+
+		output, err := runCommandQuiet(filepath.Dir(fullPath), "dotnet", "list", fullPath, "package", "--outdated")
+		if err != nil {
+			continue
+		}
+
+		lines := strings.Split(output, "\n")
+		for _, line := range lines {
+			if strings.Contains(line, ">") {
+				parts := strings.Fields(line)
+				if len(parts) >= 5 {
+					name := parts[1]
+					latest := parts[4]
+
+					excluded := false
+					if ex, ok := config.Exclude[csprojPath]; ok {
+						for _, e := range ex {
+							if e == name {
+								excluded = true
+								break
+							}
+						}
+					}
+					if excluded {
+						continue
+					}
+
+					fmt.Printf("    Updating %s to %s\n", name, latest)
+					runCommand(filepath.Dir(fullPath), "dotnet", "add", fullPath, "package", name, "--version", latest)
+				}
+			}
+		}
+	}
+	fmt.Println("[.NET] Done.")
+}
+
+// #endregion Update Command
+
+func GenerateMetricsComment(files []TicketFile) string {
+	var lines []string
+	lines = append(lines, "```md")
+	sortedFiles := make([]TicketFile, len(files))
+	copy(sortedFiles, files)
+	sort.Slice(sortedFiles, func(i, j int) bool {
+		return sortedFiles[i].Path < sortedFiles[j].Path
+	})
+
+	for _, f := range sortedFiles {
+		added := 0
+		removed := 0
+		for _, s := range f.Sections {
+			if s.Lines != nil {
+				added += s.Lines.Added
+				removed += s.Lines.Removed
+			}
+		}
+
+		icon := "✏️"
+		if f.Status == "created" {
+			icon = "➕"
+		} else if f.Status == "removed" {
+			icon = "➖"
+		}
+
+		lineStr := ""
+		if added > 0 {
+			lineStr += fmt.Sprintf(" +%d", added)
+		}
+		if removed > 0 {
+			lineStr += fmt.Sprintf(" -%d", removed)
+		}
+
+		lines = append(lines, fmt.Sprintf("%s%s%s", icon, f.Path, lineStr))
+	}
+	lines = append(lines, "```")
+	return strings.Join(lines, "\n")
+}

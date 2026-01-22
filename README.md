@@ -1133,6 +1133,9 @@ All code must sit inside named regions; orphan definitions outside any section a
 The repo CLI is the single source of truth for ticket workflows and the GraphQL schema that powers tooling.
 The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
 The repo CLI streams command execution as JSONL events and adapters decide whether to render compact human output or machine-readable event lines.
+The repo binary is consolidated into a single `go/repo/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
+Legacy adapter packages are removed so every command is dispatched through the same engine event stream and GraphQL executor.
+Benchmark, preflight, and dependency update workflows are implemented inside the same single-file entrypoint so operational commands share the unified event pipeline.
 VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
 Devcontainer attach builds and installs the local extension automatically, keeping the workspace ready without manual steps.
 VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.

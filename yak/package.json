@@ -6,7 +6,8 @@
   "projectType": "library",
   "scripts": {
     "build": "tsx ./build.ts",
-    "publish": "tsx ./publish.ts"
+    "publish": "tsx ./publish.ts",
+    "preflight": "tsc --noEmit"
   },
   "devDependencies": {
     "@semio/grasshopper": "*"

@@ -168,7 +168,13 @@ public class Tests
                 }
                 if (p.Center != null && expectedPiece.Center != null)
                 {
-                     Assert.True(Tests.CentersEqual(p.Center, expectedPiece.Center), $"Center mismatch for piece {p.Name}");
+                    if (!Tests.CentersEqual(p.Center, expectedPiece.Center))
+                    {
+                        Console.WriteLine($"[DEBUG] Center mismatch for piece {p.Name}");
+                        Console.WriteLine($"  Expected: ({expectedPiece.Center.U:F6}, {expectedPiece.Center.V:F6})");
+                        Console.WriteLine($"  Actual:   ({p.Center.U:F6}, {p.Center.V:F6})");
+                        Assert.Fail($"Center mismatch for piece {p.Name}");
+                    }
                 }
             }
         }
@@ -206,9 +212,49 @@ public class Tests
             var kitDiffed = Tests.LoadAsset<Kit>("kit_metabolism_diffed.json");
 
             var computedDiff = SemioDiff.GetKitDiff(kitOriginal, kitDiffed);
+            if (!SemioDiff.AreKitDiffsEqual(computedDiff, kitDiff))
+            {
+                var computedJson = computedDiff.Serialize();
+                var expectedJson = kitDiff.Serialize();
+                var debugMsg = $"[DEBUG] Computed JSON Length: {computedJson.Length}, Expected JSON Length: {expectedJson.Length}\n";
+                var minLen = Math.Min(computedJson.Length, expectedJson.Length);
+                for (int i = 0; i < minLen; i++)
+                {
+                    if (computedJson[i] != expectedJson[i])
+                    {
+                        debugMsg += $"[DEBUG] First diff at position {i}\n";
+                        debugMsg += $"[DEBUG] Computed around diff: ...{computedJson.Substring(Math.Max(0, i - 50), Math.Min(100, computedJson.Length - Math.Max(0, i - 50)))}...\n";
+                        debugMsg += $"[DEBUG] Expected around diff: ...{expectedJson.Substring(Math.Max(0, i - 50), Math.Min(100, expectedJson.Length - Math.Max(0, i - 50)))}...\n";
+                        break;
+                    }
+                }
+                System.IO.File.WriteAllText("/tmp/computed_diff.json", computedJson);
+                System.IO.File.WriteAllText("/tmp/expected_diff.json", expectedJson);
+                Assert.Fail(debugMsg);
+            }
             Assert.True(SemioDiff.AreKitDiffsEqual(computedDiff, kitDiff));
             
             var computedInverseDiff = SemioDiff.InverseKitDiff(kitOriginal, kitDiff);
+            if (!SemioDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted))
+            {
+                var computedJson = computedInverseDiff.Serialize();
+                var expectedJson = kitDiffInverted.Serialize();
+                var debugMsg = $"[DEBUG] Inverse diff mismatch. Computed JSON Length: {computedJson.Length}, Expected JSON Length: {expectedJson.Length}\n";
+                var minLen = Math.Min(computedJson.Length, expectedJson.Length);
+                for (int i = 0; i < minLen; i++)
+                {
+                    if (computedJson[i] != expectedJson[i])
+                    {
+                        debugMsg += $"[DEBUG] First diff at position {i}\n";
+                        debugMsg += $"[DEBUG] Computed around diff: ...{computedJson.Substring(Math.Max(0, i - 50), Math.Min(100, computedJson.Length - Math.Max(0, i - 50)))}...\n";
+                        debugMsg += $"[DEBUG] Expected around diff: ...{expectedJson.Substring(Math.Max(0, i - 50), Math.Min(100, expectedJson.Length - Math.Max(0, i - 50)))}...\n";
+                        break;
+                    }
+                }
+                System.IO.File.WriteAllText("/tmp/computed_inverse_diff.json", computedJson);
+                System.IO.File.WriteAllText("/tmp/expected_inverse_diff.json", expectedJson);
+                Assert.Fail(debugMsg);
+            }
             Assert.True(SemioDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted));
             
             var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, kitDiff);

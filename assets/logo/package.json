@@ -5,9 +5,9 @@
   "sourceRoot": "logo",
   "projectType": "library",
   "scripts": {
+    "dev": "tsx watch logo.ts",
     "build": "tsx logo.ts",
-    "animate": "tsx logo.ts",
-    "dev": "tsx watch logo.ts"
+    "preflight": "tsc --noEmit"
   },
   "dependencies": {
     "jsdom": "^24.1.3"

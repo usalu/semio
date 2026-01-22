@@ -29,10 +29,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/usalu/semio/go/repo/internal/adapters/cli"
-	"github.com/usalu/semio/go/repo/internal/core"
-	"github.com/usalu/semio/go/repo/internal/events"
 )
 
 // #region Helpers
@@ -59,7 +55,7 @@ func (t testGraphQLAdapter) Execute(ctx context.Context, query string, variables
 	return t.exec.Execute(ctx, query, variables)
 }
 
-func testEngineFactory(config cli.Config) (*core.Engine, error) {
+func testEngineFactory(config Config) (*Engine, error) {
 	repoRoot := config.Repo
 	if repoRoot == "" {
 		cwd, err := os.Getwd()
@@ -73,7 +69,7 @@ func testEngineFactory(config cli.Config) (*core.Engine, error) {
 	if err != nil {
 		return nil, err
 	}
-	return core.NewEngine(testGraphQLAdapter{exec: executor}), nil
+	return NewEngine(testGraphQLAdapter{exec: executor}), nil
 }
 
 func getTestExecutor(t *testing.T) *Executor {
@@ -861,7 +857,7 @@ func TestDefinitionsEdges(t *testing.T) {
 
 func executeCommand(args ...string) (string, error) {
 	buf := new(bytes.Buffer)
-	root, config := cli.NewRootWithConfig(testEngineFactory)
+	root, config := NewRootWithConfig(testEngineFactory)
 	root.SetOut(buf)
 	root.SetErr(buf)
 	root.SetArgs(args)
@@ -870,8 +866,8 @@ func executeCommand(args ...string) (string, error) {
 	return buf.String(), err
 }
 
-func parseJSONOutput(output string) ([]events.Event, error) {
-	var result []events.Event
+func parseJSONOutput(output string) ([]Event, error) {
+	var result []Event
 	err := json.Unmarshal([]byte(output), &result)
 	return result, err
 }
@@ -882,7 +878,7 @@ func hasExitCode(output string, code int) bool {
 		return false
 	}
 	for _, event := range parsed {
-		if event.Kind == events.KindDone && event.Done != nil {
+		if event.Kind == KindDone && event.Done != nil {
 			return event.Done.ExitCode == code
 		}
 	}

@@ -119,6 +119,9 @@ The repo dev server MUST send outbound notifications formatted with prompt and s
 ### Repo Tooling
 
 Ticket open inputs MUST allow optional `noIssue` and `planPath` fields.
+The repo CLI binary MUST be consolidated into a single `go/repo/main.go` source file that owns engine, CLI, MCP, and rendering behavior.
+Legacy repo CLI adapter packages MUST NOT exist outside `go/repo/main.go`.
+Repo operational commands (benchmark, preflight, update) MUST live in the single-file repo entrypoint.
 Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifiers.
 Ticket reopen MUST require `prompt` and `llm` values.
 Ticket open MUST require a ticket UI enum value.
@@ -3899,7 +3902,7 @@ Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP s
 
 ## 📄 go/repo/main.go
 
-CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket title updates that rename folder paths, ticket.md creation and summary injection with plan.md seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
+Single-file repo CLI implementation with embedded engine, CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket title updates that rename folder paths, ticket.md creation and summary injection with plan.md seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, benchmark/preflight/update operational command wiring, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
 
 ## 📁net/
 
