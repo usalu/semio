@@ -19,7 +19,7 @@
 
 // #endregion Header
 
-package repo
+package main
 
 import (
 	"bytes"

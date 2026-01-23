@@ -1,0 +1,112 @@
+{
+  "title": "Repo Binary Streaming Refactor",
+  "iterations": [
+    {
+      "prompt": "Implement the plan in /workspaces/semio/plans/repo_binary_streaming_refactor_plan.md. Change/refactor/extend whatever is necessary to get it working, ensure it works everywhere, update plan.md and ticket.md, and close the ticket.",
+      "llm": "gpt-5-2-codex",
+      "ui": "codex",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-23T13:20:16.926981086Z",
+      "commit": "f32fb38f994a3d9b9183172112063a202a53fd22"
+    },
+    {
+      "prompt": "Received follow-up message; logging update.",
+      "llm": "claude-sonnet-4-5",
+      "ui": "codex",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-23T14:57:05.197344449Z",
+      "commit": "f32fb38f994a3d9b9183172112063a202a53fd22"
+    },
+    {
+      "prompt": "Received new user message; recording response.",
+      "llm": "claude-sonnet-4-5",
+      "ui": "codex",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-23T14:57:50.11301237Z",
+      "commit": "f32fb38f994a3d9b9183172112063a202a53fd22"
+    },
+    {
+      "prompt": "Received new user message; logging response.",
+      "llm": "claude-sonnet-4-5",
+      "ui": "codex",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-23T14:59:18.880823754Z",
+      "commit": "f32fb38f994a3d9b9183172112063a202a53fd22"
+    },
+    {
+      "prompt": "Ensure command tests pass and restore VS Code extension run flow.",
+      "llm": "claude-sonnet-4-5",
+      "ui": "codex",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-23T16:29:20.454246437Z",
+      "commit": "f32fb38f994a3d9b9183172112063a202a53fd22"
+    }
+  ],
+  "status": "open",
+  "dates": {},
+  "summary": "Implemented streaming registry integration across repo adapters and documented the shared event model, registry invocation, and MCP paging behavior.",
+  "files": {
+    "deleted": [],
+    "renamed": [],
+    "modified": [
+      {
+        "path": "AGENTS.md",
+        "status": "modified",
+        "lines": {
+          "added": 8,
+          "removed": 1
+        },
+        "sections": [
+          {
+            "name": "Software Requirements Specification#Business Logic#Repo Tooling",
+            "range": {
+              "start": 119,
+              "end": 153
+            },
+            "lines": {
+              "added": 7,
+              "removed": 0
+            }
+          },
+          {
+            "name": "Codebase#📄 go/repo/main.go",
+            "range": {
+              "start": 3910,
+              "end": 3913
+            },
+            "lines": {
+              "added": 1,
+              "removed": 1
+            }
+          }
+        ]
+      }
+    ],
+    "added": [
+      {
+        "path": "README.md",
+        "status": "created",
+        "lines": {
+          "added": 2020,
+          "removed": 0
+        },
+        "sections": [
+          {
+            "name": "📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+            "range": {
+              "start": 1131,
+              "end": 1152
+            },
+            "lines": {
+              "added": 8,
+              "removed": 0
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/188"
+  }
+}

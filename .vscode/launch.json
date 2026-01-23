@@ -147,13 +147,13 @@
       "console": "integratedTerminal"
     },
     {
-      "name": "@semio-repo/vscode publish:vsix",
+      "name": "@semio-repo/vscode package",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
-        "publish:vsix",
+        "package",
         "semio-repo"
       ],
       "cwd": "${workspaceFolder}",

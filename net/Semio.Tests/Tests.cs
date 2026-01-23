@@ -212,56 +212,16 @@ public class Tests
             var kitDiffed = Tests.LoadAsset<Kit>("kit_metabolism_diffed.json");
 
             var computedDiff = SemioDiff.GetKitDiff(kitOriginal, kitDiffed);
-            if (!SemioDiff.AreKitDiffsEqual(computedDiff, kitDiff))
-            {
-                var computedJson = computedDiff.Serialize();
-                var expectedJson = kitDiff.Serialize();
-                var debugMsg = $"[DEBUG] Computed JSON Length: {computedJson.Length}, Expected JSON Length: {expectedJson.Length}\n";
-                var minLen = Math.Min(computedJson.Length, expectedJson.Length);
-                for (int i = 0; i < minLen; i++)
-                {
-                    if (computedJson[i] != expectedJson[i])
-                    {
-                        debugMsg += $"[DEBUG] First diff at position {i}\n";
-                        debugMsg += $"[DEBUG] Computed around diff: ...{computedJson.Substring(Math.Max(0, i - 50), Math.Min(100, computedJson.Length - Math.Max(0, i - 50)))}...\n";
-                        debugMsg += $"[DEBUG] Expected around diff: ...{expectedJson.Substring(Math.Max(0, i - 50), Math.Min(100, expectedJson.Length - Math.Max(0, i - 50)))}...\n";
-                        break;
-                    }
-                }
-                System.IO.File.WriteAllText("/tmp/computed_diff.json", computedJson);
-                System.IO.File.WriteAllText("/tmp/expected_diff.json", expectedJson);
-                Assert.Fail(debugMsg);
-            }
-            Assert.True(SemioDiff.AreKitDiffsEqual(computedDiff, kitDiff));
+            Assert.True(SemioDiff.AreKitDiffsEqual(computedDiff, kitDiff), "GetKitDiff: computed diff doesn't match expected diff");
             
             var computedInverseDiff = SemioDiff.InverseKitDiff(kitOriginal, kitDiff);
-            if (!SemioDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted))
-            {
-                var computedJson = computedInverseDiff.Serialize();
-                var expectedJson = kitDiffInverted.Serialize();
-                var debugMsg = $"[DEBUG] Inverse diff mismatch. Computed JSON Length: {computedJson.Length}, Expected JSON Length: {expectedJson.Length}\n";
-                var minLen = Math.Min(computedJson.Length, expectedJson.Length);
-                for (int i = 0; i < minLen; i++)
-                {
-                    if (computedJson[i] != expectedJson[i])
-                    {
-                        debugMsg += $"[DEBUG] First diff at position {i}\n";
-                        debugMsg += $"[DEBUG] Computed around diff: ...{computedJson.Substring(Math.Max(0, i - 50), Math.Min(100, computedJson.Length - Math.Max(0, i - 50)))}...\n";
-                        debugMsg += $"[DEBUG] Expected around diff: ...{expectedJson.Substring(Math.Max(0, i - 50), Math.Min(100, expectedJson.Length - Math.Max(0, i - 50)))}...\n";
-                        break;
-                    }
-                }
-                System.IO.File.WriteAllText("/tmp/computed_inverse_diff.json", computedJson);
-                System.IO.File.WriteAllText("/tmp/expected_inverse_diff.json", expectedJson);
-                Assert.Fail(debugMsg);
-            }
-            Assert.True(SemioDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted));
+            Assert.True(SemioDiff.AreKitDiffsEqual(computedInverseDiff, kitDiffInverted), "InverseKitDiff: computed inverse diff doesn't match expected inverse diff");
             
             var appliedForward = SemioDiff.ApplyKitDiff(kitOriginal, kitDiff);
-            Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed));
+            Assert.True(SemioDiff.AreKitsEqual(appliedForward, kitDiffed), "ApplyKitDiff forward: applied kit doesn't match expected diffed kit");
             
             var appliedInverse = SemioDiff.ApplyKitDiff(kitDiffed, kitDiffInverted);
-            Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal));
+            Assert.True(SemioDiff.AreKitsEqual(appliedInverse, kitOriginal), "ApplyKitDiff inverse: applied inverse kit doesn't match original kit");
         }
     }
 

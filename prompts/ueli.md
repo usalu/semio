@@ -2,21 +2,57 @@
 
 ## Templates
 
-CONTINUE. After rebuilding the 
-
+Implement the following plan: 
 Continue.
+
 Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear. 
 Dont ask in between, no confirmations, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
 Make sure to open and close a ticket. Dont forget to add the plan.md, to track everything (todos, changes, summary, etc) in ticket.md
 
+Make a refactor plan that cleanly achieves this. 
 Dont keep any legacy api or backwards compatiblity.
+
+The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+A new system is implemented: a design `assistance` which uses automated compliance checking.
+There is one source `design` and many `targets` which are used to validated the design. The `design` is modeled within an authoring software that provides an mcp tool. For each `target` there is a `translator` with a corresponding `validator`.
+There is an assistant go binary that calls `translators` (each translator is an agent) and `validators` (each validator is a binary) to check if a design is compliant. The result from a `translator` is directly piped into the `validator`. Every `translator` and `validator` pair is concurrently called. The assistant fans out to all `translators` and as soon as a `translator` returns the assistant calls the `validator` with the result. Then it waits until all `validators` have returned for all `targets`. It aggregates the result to a `report`. If the `report`contains `violations`, then the `report` is provided to the `changer` (agent) which changes the `design` over the design mcp server. The `changer` iterates as much as it can to fix all the violations from the `report`. It uses both anylze tools and change tools from the design mcp. Once it thinks it fixed all the violations, it signals the `assistant`. The `assistant` then calls the `translators` and `validators` again on the changed `design`.
+
+ In general there are `rules` which are validated by the `validators`. Every `rule` consists of `clauses`. A violation appears when one `clause` is not satisfied. There are  `measures`
+
+It should all be within one file `go/assistant/main.go`.
+
+As example, the design format/authoring platform/mcp server is `semio` and the targets are `BerlinBuildingCode` and `RoomProgram`.
+There is one translator
+for `semio->BerlinBuildingCode`
+and a validator
+for `BerlinBuildingCode`.
+There is one translator
+for `semio->RoomProgram`
+and a validator
+for `RoomProgram`.
+
+Make a detailed architectural plan that I can download.
+
+new design assistant 
+
 
 The ticket mechanism should be extended:
-- reopen can also receive a plan
+- reopen can also receive a plan and the markdown file should also be moved to the ticket folder. In order to prevent the markdown file from being overwritten, it should be renamed to `plan_ITERATIONINDEX+1.md`. Ticket create starts the first iteration hence `plan_1.md`
+├─ .semio-repo
+│ └─ tickets
+│ │ ├─ YYYY
+│ │ │ ├─ MM
+│ │ │ │ ├─ DD
+│ │ │ │ │ ├─ SLUG
+│ │ │ │ │ │ ├─ ticket.md
+│ │ │ │ │ │ ├─ ticket.json
+│ │ │ │ │ │ ├─ plan_ITERATION.md
+│ │ │ │ │ │ └─ FILES
+
 
 The new event- and adapter-based repo binary was recently started. Finish it until only the new architecture remains, all tests pass, and all the source code remains in in `go/repo/**.go` is only the single file `go/repo/main.go`. Use the integrate command to start to integrate all the other go files into it.
 

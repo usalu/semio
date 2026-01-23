@@ -1135,7 +1135,15 @@ The VS Code extension uses the schema mirror to generate typed documents and for
 The repo CLI streams command execution as JSONL events and adapters decide whether to render compact human output or machine-readable event lines.
 The repo binary is consolidated into a single `go/repo/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
 Legacy adapter packages are removed so every command is dispatched through the same engine event stream and GraphQL executor.
+The streaming core uses a command registry with an emitter that surfaces progress, errors, items, logs, and a terminal done payload so CLI, MCP, and VS Code share one execution model.
+Registry invocation accepts JSON inputs and emits item metadata alongside data payloads so tooling can page through large result sets without rehydrating full responses.
+The MCP adapter forwards commands through the same streaming registry and supports cursor plus limit paging over item events for list-style tools.
 Benchmark, preflight, and dependency update workflows are implemented inside the same single-file entrypoint so operational commands share the unified event pipeline.
+The CLI exposes an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
+Section management includes an integrate command so source files can be merged into target sections through the same GraphQL-backed CLI surface.
+GraphQL ticket UI inputs accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) so CLI and tooling inputs map cleanly to schema enums.
+Section and definition ranges expose line/column start/end positions so editors can locate code precisely.
+Ticket listing reads from the active `.semio-repo/tickets` workspace and falls back to legacy root `tickets/` directories when needed.
 VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
 Devcontainer attach builds and installs the local extension automatically, keeping the workspace ready without manual steps.
 VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.

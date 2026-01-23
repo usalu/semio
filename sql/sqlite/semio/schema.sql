@@ -116,7 +116,7 @@ CREATE TABLE author (
 );
 
 CREATE TABLE type (
-	guid VARCHAR(36) NOT NULL,
+	guid VARCHAR(36) NOT NULL UNIQUE,
 	name VARCHAR(256) NOT NULL,
 	parent_guid VARCHAR(36),
 	is_abstract BOOLEAN NOT NULL DEFAULT 0,
@@ -198,7 +198,7 @@ CREATE TABLE connector (
 );
 
 CREATE TABLE design (
-	guid VARCHAR(36) NOT NULL,
+	guid VARCHAR(36) NOT NULL UNIQUE,
 	name VARCHAR(256) NOT NULL,
 	parent_guid VARCHAR(36),
 	variant VARCHAR(256),

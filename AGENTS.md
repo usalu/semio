@@ -124,7 +124,12 @@ Legacy repo CLI adapter packages MUST NOT exist outside `go/repo/main.go`.
 Repo operational commands (benchmark, preflight, update) MUST live in the single-file repo entrypoint.
 Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifiers.
 Ticket reopen MUST require `prompt` and `llm` values.
+GraphQL TicketUI inputs MUST accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) for UI selection.
+GraphQL section/definition ranges MUST expose line and column positions for start and end.
+Ticket listing MUST read from `.semio-repo/tickets` and fall back to legacy `tickets/` directories when present.
 Ticket open MUST require a ticket UI enum value.
+Repo CLI MUST expose an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
+Repo section tooling MUST expose an integrate command that merges source files into target sections.
 Ticket close MUST apply all affected bundle labels and the `@semio-repo` label for out-of-bundle paths.
 Ticket close MUST post a metrics comment listing semantic changes for bundles, folders, files, sections, and definitions with status icons and `+added`/`-removed` counts.
 Ticket issue bodies MUST prepend a `# 🤖 Prompt` heading.
@@ -138,6 +143,8 @@ Ticket GitHub issues MUST be linked to the usalu project 2 on create and reopen.
 VS Code extension manifests MUST use an unscoped `name` value for vsce packaging.
 Repo CLI commands MUST emit a JSONL event stream with a terminal done payload for machine consumption.
 VS Code tooling MUST parse JSONL event streams, surface fatal errors, and use the final result payload as the GraphQL response body.
+Repo tooling MUST execute CLI, MCP, and VS Code commands through the streaming registry with emitter events for progress, items, errors, logs, and done payloads.
+MCP list tools MUST support cursor and limit paging over streamed item events.
 
 Repo operational artifacts (tickets, contributors, reports) MUST be stored under `.semio-repo/`.
 Repo analyze MUST exclude gitignored files, `.semio-repo/`, and `assets/repo/` from analysis.
@@ -500,13 +507,12 @@ The monorepo uses a devcontainer for consistent cross-platform development. The 
 - NEVER add raw text to ui elements. ALWAYS use i18n setups and provide translations for the existing languages.
 - ALWAYS add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 - Keep Sketchpad runtime console output clean: avoid persistent `console.log` usage and rely on warnings/errors plus removable `[DEBUG]` diagnostics only when investigating.
-- NEVER build or run the code.
 - NEVER care about backwards compatibility unless explicitly asked to. Even on schema changes ALWAYS refactor to clean code and introduce breaking changes.
 - NEVER use `type` for naming enums, ports, or types. ALWAYS use `kind` instead to avoid confusion with the native `type` concept in Semio. Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc.
 - When fixing problems, ALWAYS update the existing file and NEVER create new fixed, updated, migrated, etc. files next to the old one.
 - NEVER change (e.g. simplify/remove functionality) or skip any test to pass. ALWAYS adjust implementation to pass the tests.
 - NEVER create additional scripts, tests, fixtures, assets, …
-- NEVER create scripts outside the `scripts` folder. Not even when debugging or diagnosing a library problem.
+- NEVER create scripts outside the folder of the current ticket. Not even when debugging or diagnosing a library problem.
 - ALWAYS create temporary scripts, tests, fixtures, assets, … inside the active ticket folder.
 - ALWAYS run specific tests and NEVER use default interactive test mode that creates a never ending process.
 - NEVER say that a test is passing when you didn't run it. ALWAYS run the test and check the report.
@@ -3902,7 +3908,7 @@ Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP s
 
 ## 📄 go/repo/main.go
 
-Single-file repo CLI implementation with embedded engine, CLI command definitions with GraphQL query strings for repo operations, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, ticket UI enum validation, MCP tool handlers, ticket title updates that rename folder paths, ticket.md creation and summary injection with plan.md seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, benchmark/preflight/update operational command wiring, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, and contributor aggregation from tickets and source headers.
+Single-file repo CLI implementation with embedded engine, streaming command registry and emitter event model for CLI/MCP/VS Code adapters, CLI command definitions with GraphQL query strings for repo operations (including export and section integrate commands), ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, TicketUI enum normalization for GraphQL inputs, range resolution returning line/column positions, ticket UI validation, MCP tool handlers with cursor/limit paging over streamed item events, ticket title updates that rename folder paths, ticket.md creation and summary injection with plan.md seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, benchmark/preflight/update operational command wiring, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, legacy ticket directory fallback for reads, and contributor aggregation from tickets and source headers.
 
 ## 📁net/
 

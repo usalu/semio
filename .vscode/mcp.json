@@ -23,7 +23,7 @@
 				"py/engine",
 				"run",
 				"engine.py",
-				"--mcp-stdio",
+				"--mcp-stdio"
 			]
 		}
 	},

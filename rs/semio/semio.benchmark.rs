@@ -59,7 +59,7 @@ fn main() {
     // 1. Roundtrip/Metabolism
     let metabolism_zip_path = Path::new(ASSETS_DIR).join("metabolism.zip");
     let metabolism_zip_str = metabolism_zip_path.to_str().unwrap();
-    let schema_path = "../../sql/sqlite/semio/schema.sql";
+    let _schema_path = "../../sql/sqlite/semio/schema.sql";
     // We assume running from rs/semio
     
     bench("Roundtrip/Metabolism", || {

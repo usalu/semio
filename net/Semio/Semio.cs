@@ -280,7 +280,7 @@ public static class Utility
     {
         var isTabbed = indent.StartsWith("\t");
         var formatting = string.IsNullOrEmpty(indent) ? Formatting.None : Formatting.Indented;
-        var settings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver(), Formatting = formatting };
+        var settings = new JsonSerializerSettings { ContractResolver = new SemioContractResolver(), Formatting = formatting };
         if (formatting == Formatting.None) return JsonConvert.SerializeObject(obj, settings);
         var stringWriter = new StringWriter();
         using (var jsonWriter = new JsonTextWriter(stringWriter))
@@ -291,6 +291,24 @@ public static class Utility
             JsonSerializer.Create(settings).Serialize(jsonWriter, obj);
         }
         return stringWriter.ToString();
+    }
+
+    public class SemioContractResolver : CamelCasePropertyNamesContractResolver
+    {
+        protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
+        {
+            var property = base.CreateProperty(member, memberSerialization);
+            var declaringType = member.DeclaringType;
+            if (declaringType != null)
+            {
+                var shouldSerializeMethod = declaringType.GetMethod($"ShouldSerialize{member.Name}", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (shouldSerializeMethod != null && shouldSerializeMethod.ReturnType == typeof(bool))
+                {
+                    property.ShouldSerialize = instance => (bool)(shouldSerializeMethod.Invoke(instance, null) ?? true);
+                }
+            }
+            return property;
+        }
     }
 
 
@@ -1996,10 +2014,21 @@ public class AttributeId : Entity<AttributeId>
 
 public class AttributeDiff : Entity<AttributeDiff>
 {
-    public string? Guid { get; set; }
-    public string Key { get; set; } = "";
-    public string Value { get; set; } = "";
-    public string Definition { get; set; } = "";
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _key;
+    private string? _value;
+    private string? _definition;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Key { get => _key; set { _key = value; _setProperties.Add("Key"); } }
+    public string? Value { get => _value; set { _value = value; _setProperties.Add("Value"); } }
+    public string? Definition { get => _definition; set { _definition = value; _setProperties.Add("Definition"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeKey() => _setProperties.Contains("Key");
+    public bool ShouldSerializeValue() => _setProperties.Contains("Value");
+    public bool ShouldSerializeDefinition() => _setProperties.Contains("Definition");
 
     public static implicit operator AttributeDiff(AttributeId id) => new() { Guid = id.Guid };
     public static implicit operator AttributeDiff(Attribute attribute) => new() { Guid = attribute.Guid, Key = attribute.Key, Value = attribute.Value, Definition = attribute.Definition };
@@ -2269,10 +2298,21 @@ public class ArtifactAuthor : Entity<ArtifactAuthor>
 
 public class AuthorDiff : Entity<AuthorDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Email { get; set; }
-    public List<Attribute>? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _email;
+    private List<Attribute>? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Email { get => _email; set { _email = value; _setProperties.Add("Email"); } }
+    public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeEmail() => _setProperties.Contains("Email");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
     public static implicit operator AuthorDiff(Author author) => new() { Guid = author.Guid, Name = author.Name, Email = author.Email, Attributes = author.Attributes };
 
@@ -2356,16 +2396,39 @@ public class FileId : Entity<FileId>
 
 public class FileDiff : Entity<FileDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Remote { get; set; }
-    public FolderId? Folder { get; set; }
-    public int? Size { get; set; }
-    public string? Hash { get; set; }
-    public DateTime? CreatedAt { get; set; }
-    public string? CreatedBy { get; set; }
-    public DateTime? UpdatedAt { get; set; }
-    public string? UpdatedBy { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _remote;
+    private FolderId? _folder;
+    private int? _size;
+    private string? _hash;
+    private DateTime? _createdAt;
+    private string? _createdBy;
+    private DateTime? _updatedAt;
+    private string? _updatedBy;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Remote { get => _remote; set { _remote = value; _setProperties.Add("Remote"); } }
+    public FolderId? Folder { get => _folder; set { _folder = value; _setProperties.Add("Folder"); } }
+    public int? Size { get => _size; set { _size = value; _setProperties.Add("Size"); } }
+    public string? Hash { get => _hash; set { _hash = value; _setProperties.Add("Hash"); } }
+    public DateTime? CreatedAt { get => _createdAt; set { _createdAt = value; _setProperties.Add("CreatedAt"); } }
+    public string? CreatedBy { get => _createdBy; set { _createdBy = value; _setProperties.Add("CreatedBy"); } }
+    public DateTime? UpdatedAt { get => _updatedAt; set { _updatedAt = value; _setProperties.Add("UpdatedAt"); } }
+    public string? UpdatedBy { get => _updatedBy; set { _updatedBy = value; _setProperties.Add("UpdatedBy"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeRemote() => _setProperties.Contains("Remote");
+    public bool ShouldSerializeFolder() => _setProperties.Contains("Folder");
+    public bool ShouldSerializeSize() => _setProperties.Contains("Size");
+    public bool ShouldSerializeHash() => _setProperties.Contains("Hash");
+    public bool ShouldSerializeCreatedAt() => _setProperties.Contains("CreatedAt");
+    public bool ShouldSerializeCreatedBy() => _setProperties.Contains("CreatedBy");
+    public bool ShouldSerializeUpdatedAt() => _setProperties.Contains("UpdatedAt");
+    public bool ShouldSerializeUpdatedBy() => _setProperties.Contains("UpdatedBy");
 
     public FileDiff MergeDiff(FileDiff other)
     {
@@ -2438,15 +2501,36 @@ public class FolderId : Entity<FolderId>
 
 public class FolderDiff : Entity<FolderDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Parent { get; set; }
-    public string? Description { get; set; }
-    public List<Attribute>? Attributes { get; set; }
-    public string? CreatedAt { get; set; }
-    public string? CreatedBy { get; set; }
-    public string? UpdatedAt { get; set; }
-    public string? UpdatedBy { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _parent;
+    private string? _description;
+    private List<Attribute>? _attributes;
+    private string? _createdAt;
+    private string? _createdBy;
+    private string? _updatedAt;
+    private string? _updatedBy;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Parent { get => _parent; set { _parent = value; _setProperties.Add("Parent"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+    public string? CreatedAt { get => _createdAt; set { _createdAt = value; _setProperties.Add("CreatedAt"); } }
+    public string? CreatedBy { get => _createdBy; set { _createdBy = value; _setProperties.Add("CreatedBy"); } }
+    public string? UpdatedAt { get => _updatedAt; set { _updatedAt = value; _setProperties.Add("UpdatedAt"); } }
+    public string? UpdatedBy { get => _updatedBy; set { _updatedBy = value; _setProperties.Add("UpdatedBy"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeParent() => _setProperties.Contains("Parent");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+    public bool ShouldSerializeCreatedAt() => _setProperties.Contains("CreatedAt");
+    public bool ShouldSerializeCreatedBy() => _setProperties.Contains("CreatedBy");
+    public bool ShouldSerializeUpdatedAt() => _setProperties.Contains("UpdatedAt");
+    public bool ShouldSerializeUpdatedBy() => _setProperties.Contains("UpdatedBy");
 
     public FolderDiff MergeDiff(FolderDiff other)
     {
@@ -2549,14 +2633,33 @@ public class Benchmark : Entity<Benchmark>
 
 public class BenchmarkDiff : Entity<BenchmarkDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Icon { get; set; }
-    public float? Min { get; set; }
-    public bool? MinExcluded { get; set; }
-    public float? Max { get; set; }
-    public bool? MaxExcluded { get; set; }
-    public AttributesDiff? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _icon;
+    private float? _min;
+    private bool? _minExcluded;
+    private float? _max;
+    private bool? _maxExcluded;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public float? Min { get => _min; set { _min = value; _setProperties.Add("Min"); } }
+    public bool? MinExcluded { get => _minExcluded; set { _minExcluded = value; _setProperties.Add("MinExcluded"); } }
+    public float? Max { get => _max; set { _max = value; _setProperties.Add("Max"); } }
+    public bool? MaxExcluded { get => _maxExcluded; set { _maxExcluded = value; _setProperties.Add("MaxExcluded"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeMin() => _setProperties.Contains("Min");
+    public bool ShouldSerializeMinExcluded() => _setProperties.Contains("MinExcluded");
+    public bool ShouldSerializeMax() => _setProperties.Contains("Max");
+    public bool ShouldSerializeMaxExcluded() => _setProperties.Contains("MaxExcluded");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
 #endregion Benchmark
@@ -2701,11 +2804,24 @@ public class Tag : Entity<Tag>
 
 public class TagDiff : Entity<TagDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public AttributesDiff? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private string? _icon;
+    private AttributesDiff? _attributes;
+    
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+    
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
 
@@ -2749,11 +2865,24 @@ public class Concept : Entity<Concept>
 
 public class ConceptDiff : Entity<ConceptDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public AttributesDiff? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private string? _icon;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
 
@@ -2793,12 +2922,27 @@ public class PortId : Entity<PortId>
 
 public class PortDiff : Entity<PortDiff>
 {
-    public string Guid { get; set; } = "";
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public List<PortId>? CompatiblePorts { get; set; }
-    public List<Attribute>? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string _guid = "";
+    private string? _name;
+    private string? _description;
+    private string? _icon;
+    private List<PortId>? _compatiblePorts;
+    private List<Attribute>? _attributes;
+
+    public string Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public List<PortId>? CompatiblePorts { get => _compatiblePorts; set { _compatiblePorts = value; _setProperties.Add("CompatiblePorts"); } }
+    public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeCompatiblePorts() => _setProperties.Contains("CompatiblePorts");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
     public static implicit operator PortDiff(PortId id) => new() { Guid = id.Guid };
     public static implicit operator PortDiff(Port iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatiblePorts = iface.CompatiblePorts?.Select(i => (PortId)i).ToList(), Attributes = iface.Attributes };
@@ -2912,11 +3056,24 @@ public class Prop : Entity<Prop>
 
 public class PropDiff : Entity<PropDiff>
 {
-    public string? Guid { get; set; }
-    public QualityId? Quality { get; set; }
-    public string? Value { get; set; }
-    public string? Unit { get; set; }
-    public AttributesDiff? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private QualityId? _quality;
+    private string? _value;
+    private string? _unit;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public QualityId? Quality { get => _quality; set { _quality = value; _setProperties.Add("Quality"); } }
+    public string? Value { get => _value; set { _value = value; _setProperties.Add("Value"); } }
+    public string? Unit { get => _unit; set { _unit = value; _setProperties.Add("Unit"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeQuality() => _setProperties.Contains("Quality");
+    public bool ShouldSerializeValue() => _setProperties.Contains("Value");
+    public bool ShouldSerializeUnit() => _setProperties.Contains("Unit");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
 #endregion Prop
@@ -2937,12 +3094,27 @@ public class ModelId : Entity<ModelId>
 
 public class ModelDiff : Entity<ModelDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public FileId? File { get; set; }
-    public string? Description { get; set; }
-    public List<TagId> Tags { get; set; } = new();
-    public List<Attribute> Attributes { get; set; } = new();
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private FileId? _file;
+    private string? _description;
+    private List<TagId> _tags = new();
+    private List<Attribute> _attributes = new();
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public FileId? File { get => _file; set { _file = value; _setProperties.Add("File"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public List<TagId> Tags { get => _tags; set { _tags = value; _setProperties.Add("Tags"); } }
+    public List<Attribute> Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeFile() => _setProperties.Contains("File");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeTags() => _setProperties.Contains("Tags");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
     public static implicit operator ModelDiff(ModelId id) => new() { Guid = id.Guid };
     public static implicit operator ModelDiff(Model model) => new() { Guid = model.Guid, Name = model.Name, File = model.File, Description = model.Description, Tags = model.Tags, Attributes = model.Attributes };
@@ -3078,16 +3250,39 @@ public class ConnectorId : Entity<ConnectorId>
 
 public class ConnectorDiff : Entity<ConnectorDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public PortId? Port { get; set; }
-    public bool? Mandatory { get; set; }
-    public float? T { get; set; }
-    public Point? Point { get; set; }
-    public Vector? Direction { get; set; }
-    public List<Prop>? Props { get; set; }
-    public List<Attribute>? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private PortId? _port;
+    private bool? _mandatory;
+    private float? _t;
+    private Point? _point;
+    private Vector? _direction;
+    private List<Prop>? _props;
+    private List<Attribute>? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public PortId? Port { get => _port; set { _port = value; _setProperties.Add("Port"); } }
+    public bool? Mandatory { get => _mandatory; set { _mandatory = value; _setProperties.Add("Mandatory"); } }
+    public float? T { get => _t; set { _t = value; _setProperties.Add("T"); } }
+    public Point? Point { get => _point; set { _point = value; _setProperties.Add("Point"); } }
+    public Vector? Direction { get => _direction; set { _direction = value; _setProperties.Add("Direction"); } }
+    public List<Prop>? Props { get => _props; set { _props = value; _setProperties.Add("Props"); } }
+    public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializePort() => _setProperties.Contains("Port");
+    public bool ShouldSerializeMandatory() => _setProperties.Contains("Mandatory");
+    public bool ShouldSerializeT() => _setProperties.Contains("T");
+    public bool ShouldSerializePoint() => _setProperties.Contains("Point");
+    public bool ShouldSerializeDirection() => _setProperties.Contains("Direction");
+    public bool ShouldSerializeProps() => _setProperties.Contains("Props");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
     public static implicit operator ConnectorDiff(ConnectorId id) => new() { Guid = id.Guid };
     public static implicit operator ConnectorDiff(Connector connector) => new() { Guid = connector.Guid, Description = connector.Description, Port = connector.Port, Mandatory = connector.Mandatory, T = connector.T, Point = connector.Point, Direction = connector.Direction, Props = connector.Props, Attributes = connector.Attributes };
@@ -3320,26 +3515,69 @@ public class TypeId : Entity<TypeId>
 
 public class TypeDiff : Entity<TypeDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public TypeId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public int? Stock { get; set; }
-    public bool? Virtual { get; set; }
-    public string Uri { get; set; } = "";
-    public string Unit { get; set; } = "";
-    public Location? Location { get; set; }
-    public ModelsDiff? Models { get; set; }
-    public ConnectorsDiff? Connectors { get; set; }
-    public List<AuthorId>? Authors { get; set; }
-    public List<Attribute>? Attributes { get; set; }
-    public List<ConceptId>? Concepts { get; set; }
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private TypeId? _parent;
+    private bool? _isAbstract;
+    private string? _folder;
+    private string? _description;
+    private string? _icon;
+    private string? _image;
+    private int? _stock;
+    private bool? _virtual;
+    private string _uri = "";
+    private string _unit = "";
+    private Location? _location;
+    private ModelsDiff? _models;
+    private ConnectorsDiff? _connectors;
+    private List<AuthorId>? _authors;
+    private List<Attribute>? _attributes;
+    private List<ConceptId>? _concepts;
+    private DateTime? _createdAt;
+    private DateTime? _updatedAt;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public TypeId? Parent { get => _parent; set { _parent = value; _setProperties.Add("Parent"); } }
+    public bool? IsAbstract { get => _isAbstract; set { _isAbstract = value; _setProperties.Add("IsAbstract"); } }
+    public string? Folder { get => _folder; set { _folder = value; _setProperties.Add("Folder"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public string? Image { get => _image; set { _image = value; _setProperties.Add("Image"); } }
+    public int? Stock { get => _stock; set { _stock = value; _setProperties.Add("Stock"); } }
+    public bool? Virtual { get => _virtual; set { _virtual = value; _setProperties.Add("Virtual"); } }
+    public string Uri { get => _uri; set { _uri = value; _setProperties.Add("Uri"); } }
+    public string Unit { get => _unit; set { _unit = value; _setProperties.Add("Unit"); } }
+    public Location? Location { get => _location; set { _location = value; _setProperties.Add("Location"); } }
+    public ModelsDiff? Models { get => _models; set { _models = value; _setProperties.Add("Models"); } }
+    public ConnectorsDiff? Connectors { get => _connectors; set { _connectors = value; _setProperties.Add("Connectors"); } }
+    public List<AuthorId>? Authors { get => _authors; set { _authors = value; _setProperties.Add("Authors"); } }
+    public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+    public List<ConceptId>? Concepts { get => _concepts; set { _concepts = value; _setProperties.Add("Concepts"); } }
+    public DateTime? CreatedAt { get => _createdAt; set { _createdAt = value; _setProperties.Add("CreatedAt"); } }
+    public DateTime? UpdatedAt { get => _updatedAt; set { _updatedAt = value; _setProperties.Add("UpdatedAt"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeParent() => _setProperties.Contains("Parent");
+    public bool ShouldSerializeIsAbstract() => _setProperties.Contains("IsAbstract");
+    public bool ShouldSerializeFolder() => _setProperties.Contains("Folder");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeImage() => _setProperties.Contains("Image");
+    public bool ShouldSerializeStock() => _setProperties.Contains("Stock");
+    public bool ShouldSerializeVirtual() => _setProperties.Contains("Virtual");
+    public bool ShouldSerializeUri() => _setProperties.Contains("Uri");
+    public bool ShouldSerializeUnit() => _setProperties.Contains("Unit");
+    public bool ShouldSerializeLocation() => _setProperties.Contains("Location");
+    public bool ShouldSerializeModels() => _setProperties.Contains("Models");
+    public bool ShouldSerializeConnectors() => _setProperties.Contains("Connectors");
+    public bool ShouldSerializeAuthors() => _setProperties.Contains("Authors");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+    public bool ShouldSerializeConcepts() => _setProperties.Contains("Concepts");
+    public bool ShouldSerializeCreatedAt() => _setProperties.Contains("CreatedAt");
+    public bool ShouldSerializeUpdatedAt() => _setProperties.Contains("UpdatedAt");
 
     public TypeDiff MergeDiff(TypeDiff other)
     {
@@ -3681,13 +3919,30 @@ public class Layer : Entity<Layer>
 
 public class LayerDiff : Entity<LayerDiff>
 {
-    public string? Guid { get; set; }
-    public string? Path { get; set; }
-    public bool? IsHidden { get; set; }
-    public bool? IsLocked { get; set; }
-    public string? Color { get; set; }
-    public string? Description { get; set; }
-    public AttributesDiff? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _path;
+    private bool? _isHidden;
+    private bool? _isLocked;
+    private string? _color;
+    private string? _description;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Path { get => _path; set { _path = value; _setProperties.Add("Path"); } }
+    public bool? IsHidden { get => _isHidden; set { _isHidden = value; _setProperties.Add("IsHidden"); } }
+    public bool? IsLocked { get => _isLocked; set { _isLocked = value; _setProperties.Add("IsLocked"); } }
+    public string? Color { get => _color; set { _color = value; _setProperties.Add("Color"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializePath() => _setProperties.Contains("Path");
+    public bool ShouldSerializeIsHidden() => _setProperties.Contains("IsHidden");
+    public bool ShouldSerializeIsLocked() => _setProperties.Contains("IsLocked");
+    public bool ShouldSerializeColor() => _setProperties.Contains("Color");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
 #endregion Layer
@@ -3725,12 +3980,27 @@ public class Group : Entity<Group>
 
 public class GroupDiff : Entity<GroupDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public List<PieceId>? Pieces { get; set; }
-    public string? Color { get; set; }
-    public AttributesDiff? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private List<PieceId>? _pieces;
+    private string? _color;
+    private AttributesDiff? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public List<PieceId>? Pieces { get => _pieces; set { _pieces = value; _setProperties.Add("Pieces"); } }
+    public string? Color { get => _color; set { _color = value; _setProperties.Add("Color"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializePieces() => _setProperties.Contains("Pieces");
+    public bool ShouldSerializeColor() => _setProperties.Contains("Color");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
 #endregion Group
@@ -3772,20 +4042,51 @@ public class PiecesDiff : Entity<PiecesDiff>
 
 public class PieceDiff : Entity<PieceDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public TypeId? Type { get; set; }
-    public DesignId? Design { get; set; }
-    public Plane? Plane { get; set; }
-    public Coord? Center { get; set; }
-    public float? Scale { get; set; }
-    public Plane? MirrorPlane { get; set; }
-    public bool? IsHidden { get; set; }
-    public bool? IsLocked { get; set; }
-    public string? Color { get; set; }
-    public List<Prop>? Props { get; set; }
-    public List<Attribute>? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private TypeId? _type;
+    private DesignId? _design;
+    private Plane? _plane;
+    private Coord? _center;
+    private float? _scale;
+    private Plane? _mirrorPlane;
+    private bool? _isHidden;
+    private bool? _isLocked;
+    private string? _color;
+    private List<Prop>? _props;
+    private List<Attribute>? _attributes;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public TypeId? Type { get => _type; set { _type = value; _setProperties.Add("Type"); } }
+    public DesignId? Design { get => _design; set { _design = value; _setProperties.Add("Design"); } }
+    public Plane? Plane { get => _plane; set { _plane = value; _setProperties.Add("Plane"); } }
+    public Coord? Center { get => _center; set { _center = value; _setProperties.Add("Center"); } }
+    public float? Scale { get => _scale; set { _scale = value; _setProperties.Add("Scale"); } }
+    public Plane? MirrorPlane { get => _mirrorPlane; set { _mirrorPlane = value; _setProperties.Add("MirrorPlane"); } }
+    public bool? IsHidden { get => _isHidden; set { _isHidden = value; _setProperties.Add("IsHidden"); } }
+    public bool? IsLocked { get => _isLocked; set { _isLocked = value; _setProperties.Add("IsLocked"); } }
+    public string? Color { get => _color; set { _color = value; _setProperties.Add("Color"); } }
+    public List<Prop>? Props { get => _props; set { _props = value; _setProperties.Add("Props"); } }
+    public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeType() => _setProperties.Contains("Type");
+    public bool ShouldSerializeDesign() => _setProperties.Contains("Design");
+    public bool ShouldSerializePlane() => _setProperties.Contains("Plane");
+    public bool ShouldSerializeCenter() => _setProperties.Contains("Center");
+    public bool ShouldSerializeScale() => _setProperties.Contains("Scale");
+    public bool ShouldSerializeMirrorPlane() => _setProperties.Contains("MirrorPlane");
+    public bool ShouldSerializeIsHidden() => _setProperties.Contains("IsHidden");
+    public bool ShouldSerializeIsLocked() => _setProperties.Contains("IsLocked");
+    public bool ShouldSerializeColor() => _setProperties.Contains("Color");
+    public bool ShouldSerializeProps() => _setProperties.Contains("Props");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
     public static implicit operator PieceDiff(PieceId id) => new() { Guid = id.Guid };
     public static implicit operator PieceDiff(Piece piece) => new() { Guid = piece.Guid, Name = piece.Name, Description = piece.Description, Type = piece.Type, Design = piece.Design, Plane = piece.Plane, Center = piece.Center, Scale = piece.Scale, MirrorPlane = piece.MirrorPlane, IsHidden = piece.IsHidden, IsLocked = piece.IsLocked, Color = piece.Color, Props = piece.Props, Attributes = piece.Attributes };
@@ -3868,10 +4169,21 @@ public class Piece : Entity<Piece>
 
 public class SideDiff : Entity<SideDiff>
 {
-    public PieceId? Piece { get; set; }
-    public PieceId? DesignPiece { get; set; } = null;
-    public ConnectorId? Connector { get; set; }
-    public string? Description { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private PieceId? _piece;
+    private PieceId? _designPiece = null;
+    private ConnectorId? _connector;
+    private string? _description;
+
+    public PieceId? Piece { get => _piece; set { _piece = value; _setProperties.Add("Piece"); } }
+    public PieceId? DesignPiece { get => _designPiece; set { _designPiece = value; _setProperties.Add("DesignPiece"); } }
+    public ConnectorId? Connector { get => _connector; set { _connector = value; _setProperties.Add("Connector"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+
+    public bool ShouldSerializePiece() => _setProperties.Contains("Piece");
+    public bool ShouldSerializeDesignPiece() => _setProperties.Contains("DesignPiece");
+    public bool ShouldSerializeConnector() => _setProperties.Contains("Connector");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
 
     public static implicit operator SideDiff(Side side) => new() { Piece = side.Piece, DesignPiece = side.DesignPiece, Connector = side.Connector };
 
@@ -3972,18 +4284,45 @@ public class ConnectionId : Entity<ConnectionId>
 
 public class ConnectionDiff : Entity<ConnectionDiff>
 {
-    public SideDiff? Connected { get; set; }
-    public SideDiff? Connecting { get; set; }
-    public string? Description { get; set; }
-    public float? Gap { get; set; }
-    public float? Shift { get; set; }
-    public float? Rise { get; set; }
-    public float? Rotation { get; set; }
-    public float? Turn { get; set; }
-    public float? Tilt { get; set; }
-    public float? U { get; set; }
-    public float? V { get; set; }
-    public List<Attribute>? Attributes { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private SideDiff? _connected;
+    private SideDiff? _connecting;
+    private string? _description;
+    private float? _gap;
+    private float? _shift;
+    private float? _rise;
+    private float? _rotation;
+    private float? _turn;
+    private float? _tilt;
+    private float? _u;
+    private float? _v;
+    private List<Attribute>? _attributes;
+
+    public SideDiff? Connected { get => _connected; set { _connected = value; _setProperties.Add("Connected"); } }
+    public SideDiff? Connecting { get => _connecting; set { _connecting = value; _setProperties.Add("Connecting"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public float? Gap { get => _gap; set { _gap = value; _setProperties.Add("Gap"); } }
+    public float? Shift { get => _shift; set { _shift = value; _setProperties.Add("Shift"); } }
+    public float? Rise { get => _rise; set { _rise = value; _setProperties.Add("Rise"); } }
+    public float? Rotation { get => _rotation; set { _rotation = value; _setProperties.Add("Rotation"); } }
+    public float? Turn { get => _turn; set { _turn = value; _setProperties.Add("Turn"); } }
+    public float? Tilt { get => _tilt; set { _tilt = value; _setProperties.Add("Tilt"); } }
+    public float? U { get => _u; set { _u = value; _setProperties.Add("U"); } }
+    public float? V { get => _v; set { _v = value; _setProperties.Add("V"); } }
+    public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+
+    public bool ShouldSerializeConnected() => _setProperties.Contains("Connected");
+    public bool ShouldSerializeConnecting() => _setProperties.Contains("Connecting");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeGap() => _setProperties.Contains("Gap");
+    public bool ShouldSerializeShift() => _setProperties.Contains("Shift");
+    public bool ShouldSerializeRise() => _setProperties.Contains("Rise");
+    public bool ShouldSerializeRotation() => _setProperties.Contains("Rotation");
+    public bool ShouldSerializeTurn() => _setProperties.Contains("Turn");
+    public bool ShouldSerializeTilt() => _setProperties.Contains("Tilt");
+    public bool ShouldSerializeU() => _setProperties.Contains("U");
+    public bool ShouldSerializeV() => _setProperties.Contains("V");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 
     public static implicit operator ConnectionDiff(ConnectionId id) => new() { Connected = new SideDiff { Piece = id.Connected.Piece, DesignPiece = id.Connected.DesignPiece, Connector = id.Connected.Connector }, Connecting = new SideDiff { Piece = id.Connecting.Piece, DesignPiece = id.Connecting.DesignPiece, Connector = id.Connecting.Connector } };
     public static implicit operator ConnectionDiff(Connection connection) => new() { Connected = connection.Connected.CreateDiff(), Connecting = connection.Connecting.CreateDiff(), Description = connection.Description, Gap = connection.Gap, Shift = connection.Shift, Rise = connection.Rise, Rotation = connection.Rotation, Turn = connection.Turn, Tilt = connection.Tilt, U = connection.U, V = connection.V, Attributes = connection.Attributes };
@@ -4190,13 +4529,30 @@ public class Stat : Entity<Stat>
 
 public class StatDiff : Entity<StatDiff>
 {
-    public string? Guid { get; set; }
-    public QualityId? Quality { get; set; }
-    public string? Unit { get; set; }
-    public float? Min { get; set; }
-    public bool? MinExcluded { get; set; }
-    public float? Max { get; set; }
-    public bool? MaxExcluded { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private QualityId? _quality;
+    private string? _unit;
+    private float? _min;
+    private bool? _minExcluded;
+    private float? _max;
+    private bool? _maxExcluded;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public QualityId? Quality { get => _quality; set { _quality = value; _setProperties.Add("Quality"); } }
+    public string? Unit { get => _unit; set { _unit = value; _setProperties.Add("Unit"); } }
+    public float? Min { get => _min; set { _min = value; _setProperties.Add("Min"); } }
+    public bool? MinExcluded { get => _minExcluded; set { _minExcluded = value; _setProperties.Add("MinExcluded"); } }
+    public float? Max { get => _max; set { _max = value; _setProperties.Add("Max"); } }
+    public bool? MaxExcluded { get => _maxExcluded; set { _maxExcluded = value; _setProperties.Add("MaxExcluded"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeQuality() => _setProperties.Contains("Quality");
+    public bool ShouldSerializeUnit() => _setProperties.Contains("Unit");
+    public bool ShouldSerializeMin() => _setProperties.Contains("Min");
+    public bool ShouldSerializeMinExcluded() => _setProperties.Contains("MinExcluded");
+    public bool ShouldSerializeMax() => _setProperties.Contains("Max");
+    public bool ShouldSerializeMaxExcluded() => _setProperties.Contains("MaxExcluded");
 }
 
 #endregion Stat
@@ -4216,30 +4572,81 @@ public class DesignsDiff : Entity<DesignsDiff>
 
 public class DesignDiff : Entity<DesignDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public DesignId? Parent { get; set; }
-    public bool? IsAbstract { get; set; }
-    public string? Folder { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public Location? Location { get; set; }
-    public string? Unit { get; set; }
-    public bool? CanScale { get; set; }
-    public bool? CanMirror { get; set; }
-    public string? ActiveLayer { get; set; }
-    public PiecesDiff? Pieces { get; set; }
-    public ConnectionsDiff? Connections { get; set; }
-    public List<Prop>? Props { get; set; }
-    public List<Stat>? Stats { get; set; }
-    public List<Layer>? Layers { get; set; }
-    public List<Group>? Groups { get; set; }
-    public List<AuthorId>? Authors { get; set; }
-    public List<ConceptId>? Concepts { get; set; }
-    public List<Attribute>? Attributes { get; set; }
-    public DateTime? CreatedAt { get; set; }
-    public DateTime? UpdatedAt { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private DesignId? _parent;
+    private bool? _isAbstract;
+    private string? _folder;
+    private string? _description;
+    private string? _icon;
+    private string? _image;
+    private Location? _location;
+    private string? _unit;
+    private bool? _canScale;
+    private bool? _canMirror;
+    private string? _activeLayer;
+    private PiecesDiff? _pieces;
+    private ConnectionsDiff? _connections;
+    private List<Prop>? _props;
+    private List<Stat>? _stats;
+    private List<Layer>? _layers;
+    private List<Group>? _groups;
+    private List<AuthorId>? _authors;
+    private List<ConceptId>? _concepts;
+    private List<Attribute>? _attributes;
+    private DateTime? _createdAt;
+    private DateTime? _updatedAt;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public DesignId? Parent { get => _parent; set { _parent = value; _setProperties.Add("Parent"); } }
+    public bool? IsAbstract { get => _isAbstract; set { _isAbstract = value; _setProperties.Add("IsAbstract"); } }
+    public string? Folder { get => _folder; set { _folder = value; _setProperties.Add("Folder"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public string? Image { get => _image; set { _image = value; _setProperties.Add("Image"); } }
+    public Location? Location { get => _location; set { _location = value; _setProperties.Add("Location"); } }
+    public string? Unit { get => _unit; set { _unit = value; _setProperties.Add("Unit"); } }
+    public bool? CanScale { get => _canScale; set { _canScale = value; _setProperties.Add("CanScale"); } }
+    public bool? CanMirror { get => _canMirror; set { _canMirror = value; _setProperties.Add("CanMirror"); } }
+    public string? ActiveLayer { get => _activeLayer; set { _activeLayer = value; _setProperties.Add("ActiveLayer"); } }
+    public PiecesDiff? Pieces { get => _pieces; set { _pieces = value; _setProperties.Add("Pieces"); } }
+    public ConnectionsDiff? Connections { get => _connections; set { _connections = value; _setProperties.Add("Connections"); } }
+    public List<Prop>? Props { get => _props; set { _props = value; _setProperties.Add("Props"); } }
+    public List<Stat>? Stats { get => _stats; set { _stats = value; _setProperties.Add("Stats"); } }
+    public List<Layer>? Layers { get => _layers; set { _layers = value; _setProperties.Add("Layers"); } }
+    public List<Group>? Groups { get => _groups; set { _groups = value; _setProperties.Add("Groups"); } }
+    public List<AuthorId>? Authors { get => _authors; set { _authors = value; _setProperties.Add("Authors"); } }
+    public List<ConceptId>? Concepts { get => _concepts; set { _concepts = value; _setProperties.Add("Concepts"); } }
+    public List<Attribute>? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+    public DateTime? CreatedAt { get => _createdAt; set { _createdAt = value; _setProperties.Add("CreatedAt"); } }
+    public DateTime? UpdatedAt { get => _updatedAt; set { _updatedAt = value; _setProperties.Add("UpdatedAt"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeParent() => _setProperties.Contains("Parent");
+    public bool ShouldSerializeIsAbstract() => _setProperties.Contains("IsAbstract");
+    public bool ShouldSerializeFolder() => _setProperties.Contains("Folder");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeImage() => _setProperties.Contains("Image");
+    public bool ShouldSerializeLocation() => _setProperties.Contains("Location");
+    public bool ShouldSerializeUnit() => _setProperties.Contains("Unit");
+    public bool ShouldSerializeCanScale() => _setProperties.Contains("CanScale");
+    public bool ShouldSerializeCanMirror() => _setProperties.Contains("CanMirror");
+    public bool ShouldSerializeActiveLayer() => _setProperties.Contains("ActiveLayer");
+    public bool ShouldSerializePieces() => _setProperties.Contains("Pieces");
+    public bool ShouldSerializeConnections() => _setProperties.Contains("Connections");
+    public bool ShouldSerializeProps() => _setProperties.Contains("Props");
+    public bool ShouldSerializeStats() => _setProperties.Contains("Stats");
+    public bool ShouldSerializeLayers() => _setProperties.Contains("Layers");
+    public bool ShouldSerializeGroups() => _setProperties.Contains("Groups");
+    public bool ShouldSerializeAuthors() => _setProperties.Contains("Authors");
+    public bool ShouldSerializeConcepts() => _setProperties.Contains("Concepts");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+    public bool ShouldSerializeCreatedAt() => _setProperties.Contains("CreatedAt");
+    public bool ShouldSerializeUpdatedAt() => _setProperties.Contains("UpdatedAt");
 
     public static implicit operator DesignDiff(DesignId id) => new() { Guid = id.Guid };
     public static implicit operator DesignDiff(Design design) => new() { Guid = design.Guid, Name = design.Name, Parent = design.Parent, IsAbstract = design.IsAbstract, Folder = design.Folder, Description = design.Description, Icon = design.Icon, Image = design.Image, Location = design.Location, Unit = design.Unit, CanScale = design.CanScale, CanMirror = design.CanMirror, ActiveLayer = design.ActiveLayer, Pieces = new PiecesDiff { Removed = new List<PieceId>(), Updated = design.Pieces.Select(p => new PieceDiffUpdate { Piece = p, Diff = p.CreateDiff() }).ToList(), Added = new List<Piece>() }, Connections = new ConnectionsDiff { Removed = new List<ConnectionId>(), Updated = design.Connections.Select(c => new ConnectionDiffUpdate { Connection = c, Diff = c.CreateDiff() }).ToList(), Added = new List<Connection>() }, Props = design.Props, Stats = design.Stats, Layers = design.Layers, Groups = design.Groups, Authors = design.Authors, Concepts = design.Concepts, Attributes = design.Attributes, CreatedAt = design.CreatedAt, UpdatedAt = design.UpdatedAt };
@@ -5417,27 +5824,72 @@ text {
 
 public class KitDiff : Entity<KitDiff>
 {
-    public string? Guid { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Icon { get; set; }
-    public string? Image { get; set; }
-    public string? Preview { get; set; }
-    public string? Version { get; set; }
-    public string? Remote { get; set; }
-    public string? Homepage { get; set; }
-    public string? License { get; set; }
-    public TypesDiff? Types { get; set; }
-    public DesignsDiff? Designs { get; set; }
-    public TagsDiff? Tags { get; set; }
-    public FilesDiff? Files { get; set; }
-    public FoldersDiff? Folders { get; set; }
-    public PortsDiff? Ports { get; set; }
-    public AuthorsDiff? Authors { get; set; }
-    public AttributesDiff? Attributes { get; set; }
-    public ConceptsDiff? Concepts { get; set; }
-    public string? CreatedAt { get; set; }
-    public string? UpdatedAt { get; set; }
+    private readonly HashSet<string> _setProperties = new();
+    private string? _guid;
+    private string? _name;
+    private string? _description;
+    private string? _icon;
+    private string? _image;
+    private string? _preview;
+    private string? _version;
+    private string? _remote;
+    private string? _homepage;
+    private string? _license;
+    private TypesDiff? _types;
+    private DesignsDiff? _designs;
+    private TagsDiff? _tags;
+    private FilesDiff? _files;
+    private FoldersDiff? _folders;
+    private PortsDiff? _ports;
+    private AuthorsDiff? _authors;
+    private AttributesDiff? _attributes;
+    private ConceptsDiff? _concepts;
+    private string? _createdAt;
+    private string? _updatedAt;
+
+    public string? Guid { get => _guid; set { _guid = value; _setProperties.Add("Guid"); } }
+    public string? Name { get => _name; set { _name = value; _setProperties.Add("Name"); } }
+    public string? Description { get => _description; set { _description = value; _setProperties.Add("Description"); } }
+    public string? Icon { get => _icon; set { _icon = value; _setProperties.Add("Icon"); } }
+    public string? Image { get => _image; set { _image = value; _setProperties.Add("Image"); } }
+    public string? Preview { get => _preview; set { _preview = value; _setProperties.Add("Preview"); } }
+    public string? Version { get => _version; set { _version = value; _setProperties.Add("Version"); } }
+    public string? Remote { get => _remote; set { _remote = value; _setProperties.Add("Remote"); } }
+    public string? Homepage { get => _homepage; set { _homepage = value; _setProperties.Add("Homepage"); } }
+    public string? License { get => _license; set { _license = value; _setProperties.Add("License"); } }
+    public TypesDiff? Types { get => _types; set { _types = value; _setProperties.Add("Types"); } }
+    public DesignsDiff? Designs { get => _designs; set { _designs = value; _setProperties.Add("Designs"); } }
+    public TagsDiff? Tags { get => _tags; set { _tags = value; _setProperties.Add("Tags"); } }
+    public FilesDiff? Files { get => _files; set { _files = value; _setProperties.Add("Files"); } }
+    public FoldersDiff? Folders { get => _folders; set { _folders = value; _setProperties.Add("Folders"); } }
+    public PortsDiff? Ports { get => _ports; set { _ports = value; _setProperties.Add("Ports"); } }
+    public AuthorsDiff? Authors { get => _authors; set { _authors = value; _setProperties.Add("Authors"); } }
+    public AttributesDiff? Attributes { get => _attributes; set { _attributes = value; _setProperties.Add("Attributes"); } }
+    public ConceptsDiff? Concepts { get => _concepts; set { _concepts = value; _setProperties.Add("Concepts"); } }
+    public string? CreatedAt { get => _createdAt; set { _createdAt = value; _setProperties.Add("CreatedAt"); } }
+    public string? UpdatedAt { get => _updatedAt; set { _updatedAt = value; _setProperties.Add("UpdatedAt"); } }
+
+    public bool ShouldSerializeGuid() => _setProperties.Contains("Guid");
+    public bool ShouldSerializeName() => _setProperties.Contains("Name");
+    public bool ShouldSerializeDescription() => _setProperties.Contains("Description");
+    public bool ShouldSerializeIcon() => _setProperties.Contains("Icon");
+    public bool ShouldSerializeImage() => _setProperties.Contains("Image");
+    public bool ShouldSerializePreview() => _setProperties.Contains("Preview");
+    public bool ShouldSerializeVersion() => _setProperties.Contains("Version");
+    public bool ShouldSerializeRemote() => _setProperties.Contains("Remote");
+    public bool ShouldSerializeHomepage() => _setProperties.Contains("Homepage");
+    public bool ShouldSerializeLicense() => _setProperties.Contains("License");
+    public bool ShouldSerializeTypes() => _setProperties.Contains("Types");
+    public bool ShouldSerializeDesigns() => _setProperties.Contains("Designs");
+    public bool ShouldSerializeTags() => _setProperties.Contains("Tags");
+    public bool ShouldSerializeFiles() => _setProperties.Contains("Files");
+    public bool ShouldSerializeFolders() => _setProperties.Contains("Folders");
+    public bool ShouldSerializePorts() => _setProperties.Contains("Ports");
+    public bool ShouldSerializeAuthors() => _setProperties.Contains("Authors");
+    public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
+    public bool ShouldSerializeConcepts() => _setProperties.Contains("Concepts");
+    public bool ShouldSerializeCreatedAt() => _setProperties.Contains("CreatedAt");
+    public bool ShouldSerializeUpdatedAt() => _setProperties.Contains("UpdatedAt");
 
     public KitDiff MergeDiff(KitDiff other)
     {
@@ -6391,6 +6843,34 @@ public static class ZipRoundtrip
         return designs;
     }
 
+    private static List<T> TopologicalSort<T>(IEnumerable<T> items, Func<T, string> getGuid, Func<T, string?> getParentGuid) where T : class
+    {
+        var itemsByGuid = items.ToDictionary(getGuid);
+        var visited = new HashSet<string>();
+        var result = new List<T>();
+        
+        void Visit(T item)
+        {
+            var guid = getGuid(item);
+            if (visited.Contains(guid)) return;
+            visited.Add(guid);
+            
+            var parentGuid = getParentGuid(item);
+            if (parentGuid != null && itemsByGuid.TryGetValue(parentGuid, out var parent))
+            {
+                Visit(parent);
+            }
+            result.Add(item);
+        }
+        
+        foreach (var item in items)
+        {
+            Visit(item);
+        }
+        
+        return result;
+    }
+
     private static void SaveKitToSqlite(Kit kit, string dbPath, string schemaSQL)
     {
         using var connection = new SqliteConnection($"Data Source={dbPath}");
@@ -6419,7 +6899,8 @@ public static class ZipRoundtrip
             cmd.ExecuteNonQuery();
         }
 
-        foreach (var t in kit.Types)
+        var sortedTypes = TopologicalSort(kit.Types, t => t.Guid, t => t.Parent?.Guid);
+        foreach (var t in sortedTypes)
         {
             using var cmd = connection.CreateCommand();
             cmd.CommandText = @"INSERT INTO type (guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image, created, updated, kit_guid)
@@ -6439,7 +6920,8 @@ public static class ZipRoundtrip
             cmd.ExecuteNonQuery();
         }
 
-        foreach (var d in kit.Designs)
+        var sortedDesigns = TopologicalSort(kit.Designs, d => d.Guid, d => d.Parent?.Guid);
+        foreach (var d in sortedDesigns)
         {
             using var cmd = connection.CreateCommand();
             cmd.CommandText = @"INSERT INTO design (guid, name, parent_guid, unit, folder, is_abstract, can_scale, can_mirror, description, icon, image, created, updated, kit_guid)
@@ -7262,21 +7744,232 @@ public static class SemioDiff
     {
         var result = baseKit.DeepClone()!;
 
-        if (diff.Name != null) result.Name = diff.Name;
-        if (diff.Version != null) result.Version = diff.Version;
-        if (diff.Description != null) result.Description = diff.Description;
-        if (diff.Icon != null) result.Icon = diff.Icon;
-        if (diff.Image != null) result.Image = diff.Image;
-        if (diff.Preview != null) result.Preview = diff.Preview;
-        if (diff.Remote != null) result.Remote = diff.Remote;
-        if (diff.Homepage != null) result.Homepage = diff.Homepage;
-        if (diff.License != null) result.License = diff.License;
+        if (diff.ShouldSerializeName()) result.Name = diff.Name ?? "";
+        if (diff.ShouldSerializeVersion()) result.Version = diff.Version ?? "";
+        if (diff.ShouldSerializeDescription()) result.Description = diff.Description;
+        if (diff.ShouldSerializeIcon()) result.Icon = diff.Icon;
+        if (diff.ShouldSerializeImage()) result.Image = diff.Image;
+        if (diff.ShouldSerializePreview()) result.Preview = diff.Preview;
+        if (diff.ShouldSerializeRemote()) result.Remote = diff.Remote;
+        if (diff.ShouldSerializeHomepage()) result.Homepage = diff.Homepage;
+        if (diff.ShouldSerializeLicense()) result.License = diff.License;
+        if (diff.ShouldSerializeCreatedAt()) result.CreatedAt = diff.CreatedAt;
+        if (diff.ShouldSerializeUpdatedAt()) result.UpdatedAt = diff.UpdatedAt;
 
         if (diff.Types != null)
             result.Types = ApplyTypesDiff(result.Types ?? new List<Type>(), diff.Types);
 
         if (diff.Designs != null)
             result.Designs = ApplyDesignsDiff(result.Designs ?? new List<Design>(), diff.Designs);
+
+        if (diff.Tags != null)
+            result.Tags = ApplyTagsDiff(result.Tags ?? new List<Tag>(), diff.Tags);
+
+        if (diff.Folders != null)
+            result.Folders = ApplyFoldersDiff(result.Folders ?? new List<Folder>(), diff.Folders);
+
+        if (diff.Ports != null)
+            result.Ports = ApplyPortsDiff(result.Ports ?? new List<Port>(), diff.Ports);
+
+        if (diff.Concepts != null)
+            result.Concepts = ApplyConceptsDiff(result.Concepts ?? new List<Concept>(), diff.Concepts);
+
+        if (diff.Files != null)
+            result.Files = ApplyFilesDiff(result.Files ?? new List<File>(), diff.Files);
+
+        if (diff.Authors != null)
+            result.Authors = ApplyAuthorsDiff(result.Authors ?? new List<Author>(), diff.Authors);
+
+        if (diff.Attributes != null)
+            result.Attributes = ApplyAttributesDiff(result.Attributes ?? new List<Attribute>(), diff.Attributes);
+
+        return result;
+    }
+
+    private static List<Tag> ApplyTagsDiff(List<Tag> baseTags, TagsDiff diff)
+    {
+        var result = new List<Tag>(baseTags);
+
+        if (diff.Removed != null)
+            result.RemoveAll(t => diff.Removed.Any(r => r.Guid == t.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var tag = result.FirstOrDefault(t => t.Guid == update.Tag.Guid);
+                if (tag != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) tag.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) tag.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) tag.Icon = update.Diff.Icon;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Folder> ApplyFoldersDiff(List<Folder> baseFolders, FoldersDiff diff)
+    {
+        var result = new List<Folder>(baseFolders);
+
+        if (diff.Removed != null)
+            result.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var folder = result.FirstOrDefault(f => f.Guid == update.Folder.Guid);
+                if (folder != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) folder.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) folder.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeParent()) folder.Parent = update.Diff.Parent;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Port> ApplyPortsDiff(List<Port> basePorts, PortsDiff diff)
+    {
+        var result = new List<Port>(basePorts);
+
+        if (diff.Removed != null)
+            result.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var port = result.FirstOrDefault(p => p.Guid == update.Port.Guid);
+                if (port != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) port.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) port.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) port.Icon = update.Diff.Icon;
+                    if (update.Diff.ShouldSerializeCompatiblePorts()) port.CompatiblePorts = update.Diff.CompatiblePorts;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Concept> ApplyConceptsDiff(List<Concept> baseConcepts, ConceptsDiff diff)
+    {
+        var result = new List<Concept>(baseConcepts);
+
+        if (diff.Removed != null)
+            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var concept = result.FirstOrDefault(c => c.Guid == update.Concept.Guid);
+                if (concept != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) concept.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) concept.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) concept.Icon = update.Diff.Icon;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<File> ApplyFilesDiff(List<File> baseFiles, FilesDiff diff)
+    {
+        var result = new List<File>(baseFiles);
+
+        if (diff.Removed != null)
+            result.RemoveAll(f => diff.Removed.Any(r => r.Guid == f.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var file = result.FirstOrDefault(f => f.Guid == update.File.Guid);
+                if (file != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) file.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeRemote()) file.Remote = update.Diff.Remote;
+                    if (update.Diff.ShouldSerializeFolder()) file.Folder = update.Diff.Folder;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Author> ApplyAuthorsDiff(List<Author> baseAuthors, AuthorsDiff diff)
+    {
+        var result = new List<Author>(baseAuthors);
+
+        if (diff.Removed != null)
+            result.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var author = result.FirstOrDefault(a => a.Guid == update.Author.Guid);
+                if (author != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) author.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeEmail()) author.Email = update.Diff.Email ?? "";
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Attribute> ApplyAttributesDiff(List<Attribute> baseAttributes, AttributesDiff diff)
+    {
+        var result = new List<Attribute>(baseAttributes);
+
+        if (diff.Removed != null)
+            result.RemoveAll(a => diff.Removed.Any(r => r.Guid == a.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var attr = result.FirstOrDefault(a => a.Guid == update.Attribute.Guid);
+                if (attr != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeValue()) attr.Value = update.Diff.Value;
+                    if (update.Diff.ShouldSerializeDefinition()) attr.Definition = update.Diff.Definition;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
 
         return result;
     }
@@ -7295,10 +7988,69 @@ public static class SemioDiff
                 var type = result.FirstOrDefault(t => t.Guid == update.Type.Guid);
                 if (type != null && update.Diff != null)
                 {
-                    if (update.Diff.Name != null) type.Name = update.Diff.Name;
-                    if (update.Diff.Description != null) type.Description = update.Diff.Description;
-                    if (update.Diff.Icon != null) type.Icon = update.Diff.Icon;
-                    if (update.Diff.Image != null) type.Image = update.Diff.Image;
+                    if (update.Diff.ShouldSerializeName()) type.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) type.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) type.Icon = update.Diff.Icon;
+                    if (update.Diff.ShouldSerializeImage()) type.Image = update.Diff.Image;
+                    if (update.Diff.Connectors != null) 
+                        type.Connectors = ApplyConnectorsDiff(type.Connectors ?? new List<Connector>(), update.Diff.Connectors);
+                    if (update.Diff.Models != null)
+                        type.Models = ApplyModelsDiff(type.Models ?? new List<Model>(), update.Diff.Models);
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Connector> ApplyConnectorsDiff(List<Connector> baseConnectors, ConnectorsDiff diff)
+    {
+        var result = new List<Connector>(baseConnectors);
+
+        if (diff.Removed != null)
+            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var connector = result.FirstOrDefault(c => c.Guid == update.Connector.Guid);
+                if (connector != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) connector.Name = update.Diff.Name;
+                    if (update.Diff.ShouldSerializeDescription()) connector.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializePoint()) connector.Point = update.Diff.Point;
+                    if (update.Diff.ShouldSerializeDirection()) connector.Direction = update.Diff.Direction;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Model> ApplyModelsDiff(List<Model> baseModels, ModelsDiff diff)
+    {
+        var result = new List<Model>(baseModels);
+
+        if (diff.Removed != null)
+            result.RemoveAll(m => diff.Removed.Any(r => r.Guid == m.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var model = result.FirstOrDefault(m => m.Guid == update.Model.Guid);
+                if (model != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) model.Name = update.Diff.Name;
+                    if (update.Diff.ShouldSerializeDescription()) model.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeFile()) model.File = update.Diff.File;
                 }
             }
         }
@@ -7323,10 +8075,72 @@ public static class SemioDiff
                 var design = result.FirstOrDefault(d => d.Guid == update.Design.Guid);
                 if (design != null && update.Diff != null)
                 {
-                    if (update.Diff.Name != null) design.Name = update.Diff.Name;
-                    if (update.Diff.Description != null) design.Description = update.Diff.Description;
-                    if (update.Diff.Icon != null) design.Icon = update.Diff.Icon;
-                    if (update.Diff.Image != null) design.Image = update.Diff.Image;
+                    if (update.Diff.ShouldSerializeName()) design.Name = update.Diff.Name ?? "";
+                    if (update.Diff.ShouldSerializeDescription()) design.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeIcon()) design.Icon = update.Diff.Icon;
+                    if (update.Diff.ShouldSerializeImage()) design.Image = update.Diff.Image;
+                    if (update.Diff.Pieces != null)
+                        design.Pieces = ApplyPiecesDiff(design.Pieces ?? new List<Piece>(), update.Diff.Pieces);
+                    if (update.Diff.Connections != null)
+                        design.Connections = ApplyConnectionsDiff(design.Connections ?? new List<Connection>(), update.Diff.Connections);
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Piece> ApplyPiecesDiff(List<Piece> basePieces, PiecesDiff diff)
+    {
+        var result = new List<Piece>(basePieces);
+
+        if (diff.Removed != null)
+            result.RemoveAll(p => diff.Removed.Any(r => r.Guid == p.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var piece = result.FirstOrDefault(p => p.Guid == update.Piece.Guid);
+                if (piece != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeName()) piece.Name = update.Diff.Name;
+                    if (update.Diff.ShouldSerializeDescription()) piece.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeType()) piece.Type = update.Diff.Type;
+                    if (update.Diff.ShouldSerializeDesign()) piece.Design = update.Diff.Design;
+                    if (update.Diff.ShouldSerializePlane()) piece.Plane = update.Diff.Plane;
+                    if (update.Diff.ShouldSerializeCenter()) piece.Center = update.Diff.Center;
+                }
+            }
+        }
+
+        if (diff.Added != null)
+            result.AddRange(diff.Added);
+
+        return result;
+    }
+
+    private static List<Connection> ApplyConnectionsDiff(List<Connection> baseConnections, ConnectionsDiff diff)
+    {
+        var result = new List<Connection>(baseConnections);
+
+        if (diff.Removed != null)
+            result.RemoveAll(c => diff.Removed.Any(r => r.Guid == c.Guid));
+
+        if (diff.Updated != null)
+        {
+            foreach (var update in diff.Updated)
+            {
+                var connection = result.FirstOrDefault(c => c.Guid == update.Connection.Guid);
+                if (connection != null && update.Diff != null)
+                {
+                    if (update.Diff.ShouldSerializeDescription()) connection.Description = update.Diff.Description;
+                    if (update.Diff.ShouldSerializeGap()) connection.Gap = update.Diff.Gap ?? 0;
+                    if (update.Diff.ShouldSerializeShift()) connection.Shift = update.Diff.Shift ?? 0;
+                    if (update.Diff.ShouldSerializeRise()) connection.Rise = update.Diff.Rise ?? 0;
                 }
             }
         }
@@ -7339,7 +8153,380 @@ public static class SemioDiff
 
     public static bool AreKitsEqual(Kit a, Kit b)
     {
-        return a.Serialize() == b.Serialize();
+        List<T> NormalizeArray<T>(List<T>? arr) => arr ?? new List<T>();
+        string? NormalizeValue(string? value) => string.IsNullOrEmpty(value) ? null : value;
+        bool? NormalizeBoolean(bool? value) => value == true ? true : null;
+
+        bool AreAttributesEqual(List<Attribute>? arrA, List<Attribute>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var attrA in listA)
+            {
+                var attrB = listB.FirstOrDefault(x => x.Guid == attrA.Guid);
+                if (attrB == null) return false;
+                if (attrA.Key != attrB.Key) return false;
+                if (NormalizeValue(attrA.Value) != NormalizeValue(attrB.Value)) return false;
+                if (NormalizeValue(attrA.Definition) != NormalizeValue(attrB.Definition)) return false;
+            }
+            return true;
+        }
+
+        bool ArePropsEqual(List<Prop>? arrA, List<Prop>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var propA in listA)
+            {
+                var propB = listB.FirstOrDefault(x => x.Guid == propA.Guid);
+                if (propB == null) return false;
+                if (propA.Quality?.Guid != propB.Quality?.Guid) return false;
+                if (propA.Value != propB.Value) return false;
+                if (NormalizeValue(propA.Unit) != NormalizeValue(propB.Unit)) return false;
+                if (!AreAttributesEqual(propA.Attributes, propB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreConnectorsEqual(List<Connector>? arrA, List<Connector>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var connA in listA)
+            {
+                var connB = listB.FirstOrDefault(x => x.Guid == connA.Guid);
+                if (connB == null) return false;
+                if (NormalizeValue(connA.Name) != NormalizeValue(connB.Name)) return false;
+                if (connA.Point?.X != connB.Point?.X) return false;
+                if (connA.Point?.Y != connB.Point?.Y) return false;
+                if (connA.Point?.Z != connB.Point?.Z) return false;
+                if (connA.Direction?.X != connB.Direction?.X) return false;
+                if (connA.Direction?.Y != connB.Direction?.Y) return false;
+                if (connA.Direction?.Z != connB.Direction?.Z) return false;
+                if (connA.T != connB.T) return false;
+                if (NormalizeBoolean(connA.Mandatory) != NormalizeBoolean(connB.Mandatory)) return false;
+                if (connA.Port?.Guid != connB.Port?.Guid) return false;
+                if (!ArePropsEqual(connA.Props, connB.Props)) return false;
+                if (!AreAttributesEqual(connA.Attributes, connB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreModelsEqual(List<Model>? arrA, List<Model>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var modelA in listA)
+            {
+                var modelB = listB.FirstOrDefault(x => x.Guid == modelA.Guid);
+                if (modelB == null) return false;
+                if (NormalizeValue(modelA.Name) != NormalizeValue(modelB.Name)) return false;
+                if (modelA.File?.Guid != modelB.File?.Guid) return false;
+                var tagsA = NormalizeArray(modelA.Tags).Select(t => t.Guid).OrderBy(g => g).ToList();
+                var tagsB = NormalizeArray(modelB.Tags).Select(t => t.Guid).OrderBy(g => g).ToList();
+                if (!tagsA.SequenceEqual(tagsB)) return false;
+                if (!AreAttributesEqual(modelA.Attributes, modelB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreTypesEqual(List<Type>? arrA, List<Type>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var typeA in listA)
+            {
+                var typeB = listB.FirstOrDefault(t =>
+                {
+                    if (t.Guid != typeA.Guid) return false;
+                    if (t.Parent == null && typeA.Parent == null) return true;
+                    if (t.Parent == null || typeA.Parent == null) return false;
+                    return t.Parent.Guid == typeA.Parent.Guid;
+                });
+                if (typeB == null) return false;
+                if (typeA.Name != typeB.Name) return false;
+                if (NormalizeValue(typeA.Description) != NormalizeValue(typeB.Description)) return false;
+                if (NormalizeValue(typeA.Icon) != NormalizeValue(typeB.Icon)) return false;
+                if (NormalizeValue(typeA.Image) != NormalizeValue(typeB.Image)) return false;
+                if (NormalizeValue(typeA.Folder) != NormalizeValue(typeB.Folder)) return false;
+                if (NormalizeValue(typeA.Unit) != NormalizeValue(typeB.Unit)) return false;
+                if (typeA.Stock != typeB.Stock) return false;
+                if (NormalizeBoolean(typeA.IsAbstract) != NormalizeBoolean(typeB.IsAbstract)) return false;
+                if (NormalizeBoolean(typeA.Virtual) != NormalizeBoolean(typeB.Virtual)) return false;
+                if (typeA.Location?.Guid != typeB.Location?.Guid) return false;
+                var conceptsA = NormalizeArray(typeA.Concepts).Select(c => c.Guid).OrderBy(g => g).ToList();
+                var conceptsB = NormalizeArray(typeB.Concepts).Select(c => c.Guid).OrderBy(g => g).ToList();
+                if (!conceptsA.SequenceEqual(conceptsB)) return false;
+                var authorsA = NormalizeArray(typeA.Authors).Select(a => a.Guid).OrderBy(g => g).ToList();
+                var authorsB = NormalizeArray(typeB.Authors).Select(a => a.Guid).OrderBy(g => g).ToList();
+                if (!authorsA.SequenceEqual(authorsB)) return false;
+                if (!ArePropsEqual(typeA.Props, typeB.Props)) return false;
+                if (!AreModelsEqual(typeA.Models, typeB.Models)) return false;
+                if (!AreConnectorsEqual(typeA.Connectors, typeB.Connectors)) return false;
+                if (!AreAttributesEqual(typeA.Attributes, typeB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool ArePiecesEqual(List<Piece>? arrA, List<Piece>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var pieceA in listA)
+            {
+                var pieceB = listB.FirstOrDefault(x => x.Guid == pieceA.Guid);
+                if (pieceB == null) return false;
+                if (NormalizeValue(pieceA.Name) != NormalizeValue(pieceB.Name)) return false;
+                if (pieceA.Type?.Guid != pieceB.Type?.Guid) return false;
+                if (pieceA.Design?.Guid != pieceB.Design?.Guid) return false;
+                if (pieceA.Plane != null && pieceB.Plane != null)
+                {
+                    if (pieceA.Plane.Origin?.X != pieceB.Plane.Origin?.X) return false;
+                    if (pieceA.Plane.Origin?.Y != pieceB.Plane.Origin?.Y) return false;
+                    if (pieceA.Plane.Origin?.Z != pieceB.Plane.Origin?.Z) return false;
+                    if (pieceA.Plane.XAxis?.X != pieceB.Plane.XAxis?.X) return false;
+                    if (pieceA.Plane.XAxis?.Y != pieceB.Plane.XAxis?.Y) return false;
+                    if (pieceA.Plane.XAxis?.Z != pieceB.Plane.XAxis?.Z) return false;
+                    if (pieceA.Plane.YAxis?.X != pieceB.Plane.YAxis?.X) return false;
+                    if (pieceA.Plane.YAxis?.Y != pieceB.Plane.YAxis?.Y) return false;
+                    if (pieceA.Plane.YAxis?.Z != pieceB.Plane.YAxis?.Z) return false;
+                }
+                else if (pieceA.Plane != null || pieceB.Plane != null)
+                {
+                    return false;
+                }
+                if (pieceA.Center != null && pieceB.Center != null)
+                {
+                    if (pieceA.Center.U != pieceB.Center.U) return false;
+                    if (pieceA.Center.V != pieceB.Center.V) return false;
+                }
+                else if (pieceA.Center != null || pieceB.Center != null)
+                {
+                    return false;
+                }
+                if (pieceA.Scale != pieceB.Scale) return false;
+                if (pieceA.MirrorPlane != null && pieceB.MirrorPlane != null)
+                {
+                    if (pieceA.MirrorPlane.Origin?.X != pieceB.MirrorPlane.Origin?.X) return false;
+                    if (pieceA.MirrorPlane.Origin?.Y != pieceB.MirrorPlane.Origin?.Y) return false;
+                    if (pieceA.MirrorPlane.Origin?.Z != pieceB.MirrorPlane.Origin?.Z) return false;
+                    if (pieceA.MirrorPlane.XAxis?.X != pieceB.MirrorPlane.XAxis?.X) return false;
+                    if (pieceA.MirrorPlane.XAxis?.Y != pieceB.MirrorPlane.XAxis?.Y) return false;
+                    if (pieceA.MirrorPlane.XAxis?.Z != pieceB.MirrorPlane.XAxis?.Z) return false;
+                    if (pieceA.MirrorPlane.YAxis?.X != pieceB.MirrorPlane.YAxis?.X) return false;
+                    if (pieceA.MirrorPlane.YAxis?.Y != pieceB.MirrorPlane.YAxis?.Y) return false;
+                    if (pieceA.MirrorPlane.YAxis?.Z != pieceB.MirrorPlane.YAxis?.Z) return false;
+                }
+                else if (pieceA.MirrorPlane != null || pieceB.MirrorPlane != null)
+                {
+                    return false;
+                }
+                if (NormalizeBoolean(pieceA.IsHidden) != NormalizeBoolean(pieceB.IsHidden)) return false;
+                if (NormalizeBoolean(pieceA.IsLocked) != NormalizeBoolean(pieceB.IsLocked)) return false;
+                if (NormalizeValue(pieceA.Color) != NormalizeValue(pieceB.Color)) return false;
+                if (NormalizeValue(pieceA.Description) != NormalizeValue(pieceB.Description)) return false;
+                if (!ArePropsEqual(pieceA.Props, pieceB.Props)) return false;
+                if (!AreAttributesEqual(pieceA.Attributes, pieceB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreConnectionsEqual(List<Connection>? arrA, List<Connection>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var connA in listA)
+            {
+                var connB = listB.FirstOrDefault(x => x.Guid == connA.Guid);
+                if (connB == null) return false;
+                if (connA.Connected?.Piece?.Guid != connB.Connected?.Piece?.Guid) return false;
+                if (connA.Connected?.DesignPiece?.Guid != connB.Connected?.DesignPiece?.Guid) return false;
+                if (connA.Connected?.Connector?.Guid != connB.Connected?.Connector?.Guid) return false;
+                if (connA.Connecting?.Piece?.Guid != connB.Connecting?.Piece?.Guid) return false;
+                if (connA.Connecting?.DesignPiece?.Guid != connB.Connecting?.DesignPiece?.Guid) return false;
+                if (connA.Connecting?.Connector?.Guid != connB.Connecting?.Connector?.Guid) return false;
+                if (connA.Gap != connB.Gap) return false;
+                if (connA.Shift != connB.Shift) return false;
+                if (connA.Rise != connB.Rise) return false;
+                if (connA.Rotation != connB.Rotation) return false;
+                if (connA.Turn != connB.Turn) return false;
+                if (connA.Tilt != connB.Tilt) return false;
+                if (connA.U != connB.U) return false;
+                if (connA.V != connB.V) return false;
+                if (NormalizeValue(connA.Description) != NormalizeValue(connB.Description)) return false;
+                if (!AreAttributesEqual(connA.Attributes, connB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreDesignsEqual(List<Design>? arrA, List<Design>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var designA in listA)
+            {
+                var designB = listB.FirstOrDefault(d =>
+                {
+                    if (d.Guid != designA.Guid) return false;
+                    if (d.Parent == null && designA.Parent == null) return true;
+                    if (d.Parent == null || designA.Parent == null) return false;
+                    return d.Parent.Guid == designA.Parent.Guid;
+                });
+                if (designB == null) return false;
+                if (designA.Name != designB.Name) return false;
+                if (NormalizeValue(designA.Description) != NormalizeValue(designB.Description)) return false;
+                if (NormalizeValue(designA.Icon) != NormalizeValue(designB.Icon)) return false;
+                if (NormalizeValue(designA.Image) != NormalizeValue(designB.Image)) return false;
+                var conceptsA = NormalizeArray(designA.Concepts).Select(c => c.Guid).OrderBy(g => g).ToList();
+                var conceptsB = NormalizeArray(designB.Concepts).Select(c => c.Guid).OrderBy(g => g).ToList();
+                if (!conceptsA.SequenceEqual(conceptsB)) return false;
+                if (!ArePiecesEqual(designA.Pieces, designB.Pieces)) return false;
+                if (!AreConnectionsEqual(designA.Connections, designB.Connections)) return false;
+                if (!AreAttributesEqual(designA.Attributes, designB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool ArePortsEqual(List<Port>? arrA, List<Port>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var portA in listA)
+            {
+                var portB = listB.FirstOrDefault(x => x.Guid == portA.Guid);
+                if (portB == null) return false;
+                if (portA.Name != portB.Name) return false;
+                if (NormalizeValue(portA.Description) != NormalizeValue(portB.Description)) return false;
+                if (!AreAttributesEqual(portA.Attributes, portB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreQualitiesEqual(List<Quality>? arrA, List<Quality>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var qualA in listA)
+            {
+                var qualB = listB.FirstOrDefault(x => x.Guid == qualA.Guid);
+                if (qualB == null) return false;
+                if (qualA.Key != qualB.Key) return false;
+                if (qualA.Name != qualB.Name) return false;
+                if (!AreAttributesEqual(qualA.Attributes, qualB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreFilesEqual(List<File>? arrA, List<File>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var fileA in listA)
+            {
+                var fileB = listB.FirstOrDefault(x => x.Guid == fileA.Guid);
+                if (fileB == null) return false;
+                if (fileA.Name != fileB.Name) return false;
+            }
+            return true;
+        }
+
+        bool AreFoldersEqual(List<Folder>? arrA, List<Folder>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var folderA in listA)
+            {
+                var folderB = listB.FirstOrDefault(x => x.Guid == folderA.Guid);
+                if (folderB == null) return false;
+                if (folderA.Name != folderB.Name) return false;
+                if (!AreAttributesEqual(folderA.Attributes, folderB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreAuthorsEqual(List<Author>? arrA, List<Author>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var authorA in listA)
+            {
+                var authorB = listB.FirstOrDefault(x => x.Guid == authorA.Guid);
+                if (authorB == null) return false;
+                if (authorA.Name != authorB.Name) return false;
+                if (NormalizeValue(authorA.Email) != NormalizeValue(authorB.Email)) return false;
+                if (!AreAttributesEqual(authorA.Attributes, authorB.Attributes)) return false;
+            }
+            return true;
+        }
+
+        bool AreConceptsEqual(List<Concept>? arrA, List<Concept>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var conceptA in listA)
+            {
+                var conceptB = listB.FirstOrDefault(x => x.Guid == conceptA.Guid);
+                if (conceptB == null) return false;
+                if (conceptA.Name != conceptB.Name) return false;
+                if (NormalizeValue(conceptA.Description) != NormalizeValue(conceptB.Description)) return false;
+                if (NormalizeValue(conceptA.Icon) != NormalizeValue(conceptB.Icon)) return false;
+            }
+            return true;
+        }
+
+        bool AreTagsEqual(List<Tag>? arrA, List<Tag>? arrB)
+        {
+            var listA = NormalizeArray(arrA);
+            var listB = NormalizeArray(arrB);
+            if (listA.Count != listB.Count) return false;
+            foreach (var tagA in listA)
+            {
+                var tagB = listB.FirstOrDefault(x => x.Guid == tagA.Guid);
+                if (tagB == null) return false;
+                if (tagA.Name != tagB.Name) return false;
+                if (NormalizeValue(tagA.Description) != NormalizeValue(tagB.Description)) return false;
+                if (NormalizeValue(tagA.Icon) != NormalizeValue(tagB.Icon)) return false;
+            }
+            return true;
+        }
+
+        if (a.Guid != b.Guid) return false;
+        if (a.Name != b.Name) return false;
+        if (NormalizeValue(a.Version) != NormalizeValue(b.Version)) return false;
+        if (NormalizeValue(a.Description) != NormalizeValue(b.Description)) return false;
+        if (NormalizeValue(a.Icon) != NormalizeValue(b.Icon)) return false;
+        if (NormalizeValue(a.Image) != NormalizeValue(b.Image)) return false;
+        if (NormalizeValue(a.Preview) != NormalizeValue(b.Preview)) return false;
+        if (NormalizeValue(a.Remote) != NormalizeValue(b.Remote)) return false;
+        if (NormalizeValue(a.Homepage) != NormalizeValue(b.Homepage)) return false;
+        if (NormalizeValue(a.License) != NormalizeValue(b.License)) return false;
+
+        if (!AreConceptsEqual(a.Concepts, b.Concepts)) return false;
+        if (!AreTagsEqual(a.Tags, b.Tags)) return false;
+        if (!AreTypesEqual(a.Types, b.Types)) return false;
+        if (!AreDesignsEqual(a.Designs, b.Designs)) return false;
+        if (!ArePortsEqual(a.Ports, b.Ports)) return false;
+        if (!AreQualitiesEqual(a.Qualities, b.Qualities)) return false;
+        if (!AreFilesEqual(a.Files, b.Files)) return false;
+        if (!AreFoldersEqual(a.Folders, b.Folders)) return false;
+        if (!AreAuthorsEqual(a.Authors, b.Authors)) return false;
+        if (!AreAttributesEqual(a.Attributes, b.Attributes)) return false;
+
+        return true;
     }
 
     public static bool AreKitDiffsEqual(KitDiff a, KitDiff b)

@@ -444,13 +444,13 @@
     }
   },
   "scripts": {
-    "build": "npm run build:codegen && vite build && vite build --config vite.test.config.ts",
-    "build:codegen": "graphql-codegen --config codegen.ts",
     "dev": "vite build --watch",
     "test": "vscode-test",
-    "vscode:prepublish": "npm run build",
+    "build": "npm run build:codegen && vite build && vite build --config vite.test.config.ts",
+    "build:codegen": "graphql-codegen --config codegen.ts",
+    "package": "vsce package --no-dependencies --out semio.vsix",
     "preflight": "tsc --noEmit",
-    "publish:vsix": "vsce package --no-dependencies --out semio.vsix"
+    "vscode:prepublish": "npm run build"
   },
   "devDependencies": {
     "@vscode/vsce": "^3.5.0",

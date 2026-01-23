@@ -155,9 +155,9 @@
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/vscode publish:vsix",
+      "label": "@semio-repo/vscode package",
       "type": "shell",
-      "command": "npx nx publish:vsix @semio-repo/vscode",
+      "command": "npx nx package semio-repo",
       "problemMatcher": []
     },
     // ========================================
