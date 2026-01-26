@@ -3,7 +3,7 @@ module github.com/usalu/semio/go/repo
 go 1.24.0
 
 require (
-	github.com/bmatcuk/doublestar/v4 v4.9.2
+	github.com/bmatcuk/doublestar/v4 v4.10.0
 	github.com/graphql-go/graphql v0.8.1
 	github.com/mark3labs/mcp-go v0.43.2
 	github.com/spf13/cobra v1.10.2
