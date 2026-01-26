@@ -7,7 +7,8 @@ WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 echo "Setting up semio development environment..."
 #endregion Startup
 #region Ownership
-echo "Fixing ownership of mounted config directories..."
+echo "Fixing ownership of workspace and mounted config directories..."
+sudo chown -R vscode:vscode "$WORKSPACE" || true
 sudo chown -R vscode:vscode /home/vscode/.cache || true
 sudo chown -R vscode:vscode /home/vscode/.config/gh || true
 #endregion Ownership

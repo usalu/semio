@@ -57,6 +57,10 @@ Devcontainer provisioning MUST install the workspace VS Code extension automatic
 Playwright browser caches MUST use the workspace `node_modules` volume path so `npx playwright install` stays cached across reloads.
 Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
 Claude Code auth files MUST live in the persisted Claude volume and be linked into `$HOME`.
+Devcontainer named volume mount points MUST be pre-created in the Dockerfile with correct user ownership.
+Devcontainer lifecycle scripts MUST recursively enforce workspace ownership to current user to resolve volume permission conflicts.
+Devcontainer disk hygiene MUST be maintained by purging unused images, volumes, and builder caches when available space is low.
+Frontend applications MUST use EcmaScript Modules (ESM) to optimize development performance and ensure modern ecosystem compatibility.
 
 ### Sections
 
@@ -1687,15 +1691,15 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## 📄 .devcontainer/post-create.sh
 
-Devcontainer provisioning steps for dependency installs, including Playwright browser install into the shared cache path.
+Devcontainer provisioning steps for dependency installs, including Playwright browser install into the shared cache path. Enforces recursive workspace ownership to resolve volume permission issues.
 
 ## 📄 .devcontainer/post-start.sh
 
-Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, and activates the Python virtual environment.
+Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, and activates the Python virtual environment. Enforces recursive ownership of root-owned volume mounts.
 
 ## 📄 .devcontainer/post-attach.sh
 
-Devcontainer post-attach script that builds and installs the local semio VS Code extension.
+Devcontainer post-attach script that builds and installs the local semio VS Code extension. Automatically runs on every editor attach.
 
 ## 📁 js/
 

@@ -40,16 +40,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-RUN echo 'export PATH="$HOME/.local/bin:$HOME/.cargo/bin:$PATH"' >> /etc/bash.bashrc
+RUN curl -LsSf https://astral.sh/uv/install.sh | UV_INSTALL_DIR=/usr/local/bin sh
 
 USER vscode
 
-RUN mkdir -p /home/vscode/.local/bin
-
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-ENV PATH="/home/vscode/.local/bin:/home/vscode/.cargo/bin:${PATH}"
+RUN mkdir -p /home/vscode/.local/bin \
+    /home/vscode/.claude \
+    /home/vscode/.codex \
+    /home/vscode/.config/gh \
+    /home/vscode/.config/cursor \
+    /home/vscode/.config/antigravity \
+    /home/vscode/.config/openai \
+    /home/vscode/.codeium \
+    /home/vscode/.vscode-server \
+    /home/vscode/.windsurf-server \
+    /home/vscode/.cache/ms-playwright
 
 WORKDIR /workspaces/semio

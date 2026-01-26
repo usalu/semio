@@ -7403,7 +7403,7 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, bundleNa
 			id = bundleName + "/" + filepath.Base(file) + "#" + sectionPath
 		}
 		sectionContent := ""
-		if section.StartIndex < len(content) && section.EndIndex <= len(content) {
+		if section.StartIndex >= 0 && section.EndIndex >= section.StartIndex && section.EndIndex <= len(content) {
 			sectionContent = content[section.StartIndex:section.EndIndex]
 		}
 		defCount := 0
@@ -7969,7 +7969,7 @@ func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file
 			id = bundleName + "/" + filepath.Base(file) + "#" + sectionPath
 		}
 		sectionContent := ""
-		if section.StartIndex < len(content) && section.EndIndex <= len(content) {
+		if section.StartIndex >= 0 && section.EndIndex >= section.StartIndex && section.EndIndex <= len(content) {
 			sectionContent = content[section.StartIndex:section.EndIndex]
 		}
 		defCount := 0
@@ -9188,30 +9188,31 @@ func formatDeletedPath(path string, bundles []Bundle) string {
 }
 
 func commonPrefixLength(a, b string) int {
-	limit := len(a)
-	if len(b) < limit {
-		limit = len(b)
+	lenA := len(a)
+	lenB := len(b)
+	limit := lenA
+	if lenB < limit {
+		limit = lenB
 	}
 	idx := 0
-	for idx < limit {
-		if a[idx] != b[idx] {
-			break
-		}
+	for idx < limit && a[idx] == b[idx] {
 		idx++
 	}
 	return idx
 }
 
 func commonSuffixLength(a, b string, prefix int) int {
-	max := len(a) - prefix
-	if len(b)-prefix < max {
-		max = len(b) - prefix
+	lenA := len(a)
+	lenB := len(b)
+	max := lenA - prefix
+	if lenB-prefix < max {
+		max = lenB - prefix
+	}
+	if max <= 0 {
+		return 0
 	}
 	idx := 0
-	for idx < max {
-		if a[len(a)-1-idx] != b[len(b)-1-idx] {
-			break
-		}
+	for idx < max && a[lenA-1-idx] == b[lenB-1-idx] {
 		idx++
 	}
 	return idx
@@ -9223,6 +9224,21 @@ func formatRenameDelta(from, to string) string {
 	}
 	prefix := commonPrefixLength(from, to)
 	suffix := commonSuffixLength(from, to, prefix)
+
+	// Ensure indices are within bounds and don't overlap in a way that causes negative slice length
+	if prefix > len(from) {
+		prefix = len(from)
+	}
+	if suffix > len(from)-prefix {
+		suffix = len(from) - prefix
+	}
+	if prefix > len(to) {
+		prefix = len(to)
+	}
+	if suffix > len(to)-prefix {
+		suffix = len(to) - prefix
+	}
+
 	fromMiddle := from[prefix : len(from)-suffix]
 	toMiddle := to[prefix : len(to)-suffix]
 	return from[:prefix] + "<del>" + fromMiddle + "</del>" + toMiddle + from[len(from)-suffix:]
