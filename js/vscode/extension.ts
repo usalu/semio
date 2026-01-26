@@ -838,7 +838,13 @@ function resolveTicketPath(ticket: TicketData | ContributorTicketData): string |
   if (ticket.filePath) return ticket.filePath;
   const root = getWorkspaceRoot();
   if (!root) return undefined;
-  return path.join(root, "tickets", String(ticket.year), String(ticket.month).padStart(2, "0"), String(ticket.day).padStart(2, "0"), ticket.slug, "ticket.md");
+  
+  const relPath = path.join(String(ticket.year), String(ticket.month).padStart(2, "0"), String(ticket.day).padStart(2, "0"), ticket.slug, "ticket.md");
+  const metaPath = path.join(root, ".semio-repo", "tickets", relPath);
+  if (fs.existsSync(metaPath)) {
+    return metaPath;
+  }
+  return path.join(root, "tickets", relPath);
 }
 
 function resolveCommitSha(commit: string | { sha?: string } | undefined): string | undefined {
@@ -1001,14 +1007,49 @@ function pinDiagnosticPreview(editor?: vscode.TextEditor): void {
 
 let repoDiagnosticCollection: vscode.DiagnosticCollection;
 const fileViolationsMap = new Map<string, Violation[]>();
-const gitIgnoreCache = new Map<string, boolean>();
+let bundleCache: Bundle[] = [];
+
+async function updateBundleCache() {
+  const bundles = await fetchBundlesViaGraphQL();
+  if (bundles.length > 0) {
+    bundleCache = bundles;
+  }
+}
 
 function extractFilePathFromScope(scope: string): string | undefined {
   let cleanScope = scope;
   if (cleanScope.startsWith("@semio/violations/")) {
     cleanScope = cleanScope.replace("@semio/violations/", "");
-  } else if (cleanScope.startsWith("@semio/")) {
-    // Other scopes might look like @semio/js/path/to/file.ts
+  }
+
+  // Handle hierarchical IDs: BUNDLE/RELATIVEPATH
+  // We find the longest matching bundle ID
+  let bestBundle: Bundle | undefined;
+  for (const b of bundleCache) {
+    if (cleanScope.startsWith(b.id + "/")) {
+      if (!bestBundle || b.id.length > bestBundle.id.length) {
+        bestBundle = b;
+      }
+    } else if (cleanScope === b.id) {
+        if (!bestBundle || b.id.length > bestBundle.id.length) {
+          bestBundle = b;
+        }
+    }
+  }
+
+  if (bestBundle) {
+    const relPath = cleanScope === bestBundle.id ? "" : cleanScope.substring(bestBundle.id.length + 1);
+    const parts = relPath.split(/[#§:]/);
+    const fileName = parts[0];
+    const root = bestBundle.root === "." ? "" : (bestBundle.root.endsWith("/") ? bestBundle.root : bestBundle.root + "/");
+    const filePath = root + fileName;
+    
+    // Clean up trailing slash if it was just the root
+    return filePath.endsWith("/") ? filePath.slice(0, -1) : filePath;
+  }
+
+  // Fallback to legacy guessing logic if bundle not found or cache empty
+  if (cleanScope.startsWith("@semio/") || cleanScope.startsWith("@semio-repo/")) {
     const parts = cleanScope.split("/");
     if (parts.length > 2) {
       cleanScope = parts.slice(2).join("/");
@@ -1029,78 +1070,19 @@ function shouldAnalyzeFile(document: vscode.TextDocument): boolean {
   return supportedLanguages.includes(document.languageId);
 }
 
-function isRepoMetaPath(relativePath: string): boolean {
-  if (relativePath === ".semio-repo" || relativePath.startsWith(".semio-repo/")) {
-    return true;
-  }
-  if (relativePath === "assets/repo" || relativePath.startsWith("assets/repo/")) {
-    return true;
-  }
-  return false;
-}
-
-async function isGitIgnoredPath(root: string, relativePath: string): Promise<boolean> {
-  const cacheKey = `${root}:${relativePath}`;
-  if (gitIgnoreCache.has(cacheKey)) {
-    return gitIgnoreCache.get(cacheKey) ?? false;
-  }
-  try {
-    const { stdout } = await execFileAsync("git", ["check-ignore", relativePath], { cwd: root });
-    const ignored = stdout.trim().length > 0;
-    gitIgnoreCache.set(cacheKey, ignored);
-    return ignored;
-  } catch (error) {
-    if (typeof error === "object" && error !== null && "code" in error) {
-      const code = (error as { code?: number }).code;
-      if (code === 1) {
-        gitIgnoreCache.set(cacheKey, false);
-        return false;
-      }
-    }
-    return false;
-  }
-}
-
-async function shouldAnalyzeDocument(document: vscode.TextDocument): Promise<boolean> {
-  if (!shouldAnalyzeFile(document)) {
-    return false;
-  }
-  if (document.uri.scheme !== "file") {
-    return false;
-  }
-  const root = getWorkspaceRoot();
-  if (!root) {
-    return false;
-  }
-  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
-  if (relativePath.startsWith("..")) {
-    return false;
-  }
-  if (isRepoMetaPath(relativePath)) {
-    return false;
-  }
-  if (await isGitIgnoredPath(root, relativePath)) {
-    return false;
-  }
-  return true;
-}
-
 async function analyzeFile(document: vscode.TextDocument): Promise<void> {
-  if (!(await shouldAnalyzeDocument(document))) {
-    return;
-  }
+  if (!shouldAnalyzeFile(document)) return;
+  if (document.uri.scheme !== "file") return;
   const root = getWorkspaceRoot();
-  if (!root) {
-    return;
+  if (!root) return;
+
+  // Ensure bundle cache is populated
+  if (bundleCache.length === 0) {
+    await updateBundleCache();
   }
 
   const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
-  if (relativePath.startsWith("..")) {
-    return;
-  }
-  if (isRepoMetaPath(relativePath)) {
-    return;
-  }
+  if (relativePath.startsWith("..")) return;
   const fileUri = vscode.Uri.file(path.join(root, relativePath));
   const processKey = `analyze:${relativePath}`;
 
@@ -1146,9 +1128,6 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
   for (const violation of violations) {
     const filePath = extractFilePathFromScope(violation.scope);
     if (!filePath) continue;
-    if (isRepoMetaPath(filePath)) {
-      continue;
-    }
     const absPath = path.join(root, filePath);
     const fileUri = vscode.Uri.file(absPath);
     const uriKey = fileUri.toString();
@@ -3908,8 +3887,8 @@ export function activate(context: vscode.ExtensionContext) {
     pinDiagnosticPreview(vscode.window.activeTextEditor);
 
     context.subscriptions.push(
-      vscode.workspace.onDidOpenTextDocument(async (document) => {
-        if (await shouldAnalyzeDocument(document)) {
+      vscode.workspace.onDidOpenTextDocument((document) => {
+        if (shouldAnalyzeFile(document)) {
           analyzeFile(document);
         }
         if (isKitDocument(document)) {
@@ -3921,8 +3900,8 @@ export function activate(context: vscode.ExtensionContext) {
           validateKitDocument(e.document);
         }
       }),
-      vscode.workspace.onDidSaveTextDocument(async (document) => {
-        if (await shouldAnalyzeDocument(document)) {
+      vscode.workspace.onDidSaveTextDocument((document) => {
+        if (shouldAnalyzeFile(document)) {
           analyzeFile(document);
         }
         if (isKitDocument(document)) {
@@ -3952,11 +3931,9 @@ export function activate(context: vscode.ExtensionContext) {
     setTimeout(() => {
       log("[ACTIVATION] Starting initial diagnostics background task...");
       vscode.workspace.textDocuments.forEach((document) => {
-        void shouldAnalyzeDocument(document).then((shouldAnalyze) => {
-          if (shouldAnalyze) {
-            analyzeFile(document);
-          }
-        });
+        if (shouldAnalyzeFile(document)) {
+          analyzeFile(document);
+        }
         if (isKitDocument(document)) {
           validateKitDocument(document);
         }

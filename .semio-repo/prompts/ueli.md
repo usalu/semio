@@ -8,24 +8,29 @@ Continue.
 Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
-Make sure to open and close a ticket. Dont forget to add the plan.md, to track everything (todos, changes, summary, etc) in ticket.md
+Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in ticket.md
+Dont keep any legacy api or backwards compatiblity.
 
 Make a refactor plan that cleanly achieves this.
-Dont keep any legacy api or backwards compatiblity.
 
 The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+Here a list of changes to made to repo go file and vscode extension file along with the tests for each of them:
+
+Create ticket shouldnt throw an error on a title like this: "Refactor Resource ID System to Bundle-Based Hierarchy". Only throw if the title is equal to the lower or uppercase slug of it: "refactor-resource-id-system-to-bundle-based-hierarchy" or "REFACTOR-RESOURCE-ID-SYSTEM-TO-BUNDLE-BASED-HIERARCHY". Extend test. Make sure that all tests cleanup the created tickets and that no github issue is created.
+
+The author string that is put to ticket.json should first try to find one of the contributors in the `.semio-repo/contributors/` if one of the emails match. If a match is found it, use the GitHub username as author. If no match is found, use the git config NAME <EMAIL> format.
+
 The ticket mechanism should change:
-When a plan is provided by the user, then move the original plan file (keep the file name) to the ticket folder and add the plan to the `ticket.json`. Dont create the `plan_ITERATION.md` files anymore. Everything else should be now part of `ticket.md`
-{
-"iterations":[
-{
-"plan": "some-exisiting-filename.md"
-}
-]
-}
+When a plan is provided by the user, then move the original plan file (keep the file name) to the ticket folder and add the plan to the `ticket.json`. Dont create the `plan_ITERATION.md` files anymore. Everything else should be now part of `ticket.md`.
+{"iterations":[{"plan": "some-exisiting-filename.md"}]}
+
+Not all gitignored files are ignored by the repo binary. E.g. go/server/server is currently not ignored.
+Further ignore all LICENSE.md files.
+Only consider files that have a lanugage processor in the repo go file.
+Remove the json language.
 
 The Sections section of the vscode extension explorer sidebar view is not showing any sections. E.g. When opening Design.tsx I get:
 

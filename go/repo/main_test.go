@@ -259,19 +259,41 @@ func TestTicketTitleValidation(t *testing.T) {
 	}{
 		{"Titleized Valid", "Some Title on Something", false},
 		{"Single Word Valid", "Cleanup", false},
+		{"With Hyphen Valid", "Refactor Resource ID System to Bundle-Based Hierarchy", false},
 		{"Slug Invalid", "some-slug-title", true},
-		{"Lowercase Invalid", "some title", true},
-		{"Allcaps Invalid", "FIX EVERYTHING", true},
+		{"Lowercase Valid", "some title", false},
+		{"Allcaps Valid", "FIX EVERYTHING", false},
 		{"Slug with Dashes Invalid", "fix-vscode-types-version-mismatch", true},
 		{"Uppercase Slug Invalid", "ENSURE-SEMIO-REPO-MCP-WORKS-ALLIDES", true},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", ui: COPILOT_CHAT, noIssue: true }) { id } }`
-			_, err := executor.ExecuteJSON(ctx, query, nil)
+			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", ui: COPILOT_CHAT, noIssue: true }) { id slug year month day } }`
+			result, err := executor.ExecuteJSON(ctx, query, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			
+			// Cleanup
+			if err == nil {
+			    // Parse result to get path
+			    // But result is JSON string of map.
+			    // Basic cleanup: title matches slug derived.
+			    // We need date.
+			    // The mutation returns year/month/day.
+			    var resp struct {
+			        TicketOpen struct {
+			            Slug string `json:"slug"`
+			            Year int    `json:"year"`
+			            Month int   `json:"month"`
+			            Day int     `json:"day"`
+			        } `json:"ticketOpen"`
+			    }
+			    if json.Unmarshal([]byte(result), &resp) == nil {
+			        path := GetTicketPath(resp.TicketOpen.Year, resp.TicketOpen.Month, resp.TicketOpen.Day, resp.TicketOpen.Slug)
+			        os.RemoveAll(path)
+			    }
 			}
 		})
 	}

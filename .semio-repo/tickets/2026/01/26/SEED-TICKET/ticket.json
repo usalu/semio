@@ -1,0 +1,16 @@
+{
+  "title": "Seed Ticket",
+  "iterations": [
+    {
+      "prompt": "Seed prompt",
+      "plan": "plan.md",
+      "llm": "gpt-5-mini",
+      "ui": "codex",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-26T10:21:07.961750044Z",
+      "commit": "eeb8272d91c5437d9c455971d216c6c538261f87"
+    }
+  ],
+  "status": "open",
+  "dates": {}
+}

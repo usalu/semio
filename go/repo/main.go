@@ -405,7 +405,11 @@ func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "analyze",
 		Short: "Analyze codebase for policy violations",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if scope == "" && len(args) > 0 {
+				scope = args[0]
+			}
 			variables := map[string]interface{}{}
 			if scope != "" {
 				variables["scope"] = scope
@@ -436,7 +440,11 @@ func fixCommand(factory EngineFactory, config *Config) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "fix",
 		Short: "Apply autofixes for violations",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if scope == "" && len(args) > 0 {
+				scope = args[0]
+			}
 			variables := map[string]interface{}{}
 			if scope != "" {
 				variables["scope"] = scope
@@ -1590,7 +1598,30 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 				return fmt.Errorf("missing file")
 			}
 			variables := map[string]interface{}{"path": file}
-			query := `query SectionList($path: String!) { file(path: $path) { sections { id name range { start { line column } end { line column } } children { id name range { start { line column } end { line column } } children { id name range { start { line column } end { line column } } children { id name range { start { line column } end { line column } } } } } } }`
+			query := `query SectionList($path: String!) {
+				file(path: $path) {
+					sections {
+						id
+						name
+						range { start { line column } end { line column } }
+						children {
+							id
+							name
+							range { start { line column } end { line column } }
+							children {
+								id
+								name
+								range { start { line column } end { line column } }
+								children {
+									id
+									name
+									range { start { line column } end { line column } }
+								}
+							}
+						}
+					}
+				}
+			}`
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
@@ -2349,7 +2380,7 @@ type Repo struct {
 }
 
 func (r *Repo) IsNode()       {}
-func (r *Repo) GetID() string { return "@semio" }
+func (r *Repo) GetID() string { return "@semio-repo/repo" }
 
 type Bundle struct {
 	Name        string   `json:"name"`
@@ -2373,13 +2404,13 @@ func normalizeBundleLabel(name string) string {
 		return "@semio-repo/vscode"
 	}
 	if name == "repo" {
-		return "@semio-repo"
+		return "@semio-repo/repo"
 	}
 	return "@semio/" + name
 }
 
 func normalizeBundleID(name string) string {
-	return "bundle:" + normalizeBundleLabel(name)
+	return normalizeBundleLabel(name)
 }
 
 func bundlePathPrefix(name string) string {
@@ -2421,6 +2452,7 @@ func (f *File) IsNode()       {}
 func (f *File) GetID() string { return f.ID }
 
 type Section struct {
+	ID         string    `json:"id,omitempty"`
 	Name       string    `json:"name"`
 	Path       string    `json:"path,omitempty"`
 	FilePath   string    `json:"filePath,omitempty"`
@@ -2433,13 +2465,17 @@ type Section struct {
 
 func (s *Section) IsNode() {}
 func (s *Section) GetID() string {
+	if s.ID != "" {
+		return s.ID
+	}
 	if s.FilePath != "" && s.Path != "" {
 		return s.FilePath + "#" + s.Path
 	}
-	return "section:" + s.Name
+	return "@semio-repo/section/" + s.Name
 }
 
 type Definition struct {
+	ID          string         `json:"id,omitempty"`
 	Name        string         `json:"name"`
 	Kind        DefinitionKind `json:"kind"`
 	FilePath    string         `json:"filePath,omitempty"`
@@ -2452,13 +2488,16 @@ type Definition struct {
 
 func (d *Definition) IsNode() {}
 func (d *Definition) GetID() string {
+	if d.ID != "" {
+		return d.ID
+	}
 	if d.FilePath != "" {
 		if d.SectionPath != "" {
 			return d.FilePath + "#" + d.SectionPath + "§" + d.Name
 		}
 		return d.FilePath + "§" + d.Name
 	}
-	return "definition:" + d.Name
+	return "@semio-repo/definition/" + d.Name
 }
 
 type Contributor struct {
@@ -2470,7 +2509,7 @@ type Contributor struct {
 }
 
 func (c *Contributor) IsNode()       {}
-func (c *Contributor) GetID() string { return "@semio/contributors/" + c.Github }
+func (c *Contributor) GetID() string { return "@semio-repo/contributor/" + c.Github }
 
 type Commit struct {
 	ID       string    `json:"id"`
@@ -2481,7 +2520,7 @@ type Commit struct {
 }
 
 func (c *Commit) IsNode()       {}
-func (c *Commit) GetID() string { return "@semio/commits/" + c.SHA }
+func (c *Commit) GetID() string { return "@semio-repo/commit/" + c.SHA }
 
 type Ticket struct {
 	Year       int         `json:"year"`
@@ -2497,7 +2536,7 @@ type Ticket struct {
 
 func (t *Ticket) IsNode() {}
 func (t *Ticket) GetID() string {
-	return fmt.Sprintf("@semio/tickets/%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
+	return fmt.Sprintf("@semio-repo/ticket/%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
 }
 
 func (t *Ticket) GetTitle() string {
@@ -2635,7 +2674,7 @@ type Policy struct {
 }
 
 func (p *Policy) IsNode()       {}
-func (p *Policy) GetID() string { return "@semio/policies/" + p.Name }
+func (p *Policy) GetID() string { return "@semio-repo/policy/" + p.ID }
 
 type ViolationKindMeta struct {
 	Kind        ViolationKind     `json:"kind"`
@@ -2648,7 +2687,7 @@ type ViolationKindMeta struct {
 
 func (v *ViolationKindMeta) IsNode() {}
 func (v *ViolationKindMeta) GetID() string {
-	return "@semio/policies/" + v.PolicyID + "/violations/" + string(v.Kind)
+	return "@semio-repo/violation-kind/" + string(v.Kind)
 }
 
 type AnalyzeResult struct {
@@ -2790,16 +2829,18 @@ func buildCodebasePathSet(codebase *Codebase) map[string]struct{} {
 	return result
 }
 
-func buildFolderLineTotals(files []string, baseCommit string) (map[string]int, map[string]int) {
+func buildFolderLineTotals(files []string, baseCommit string, bundles []Bundle) (map[string]int, map[string]int) {
 	currentTotals := make(map[string]int)
 	baseTotals := make(map[string]int)
+	ctx := &CodebaseContext{Bundles: bundles}
 	for _, file := range files {
-		folder := NormalizePath(filepath.Dir(file))
-		if folder == "." {
+		folderPath := NormalizePath(filepath.Dir(file))
+		if folderPath == "." {
 			continue
 		}
-		currentTotals[folder] += CountLinesInFile(filepath.Join(GetRootDir(), file))
-		baseTotals[folder] += CountLinesAtCommit(baseCommit, file)
+		id := ctx.GetFolderID(folderPath)
+		currentTotals[id] += CountLinesInFile(filepath.Join(GetRootDir(), file))
+		baseTotals[id] += CountLinesAtCommit(baseCommit, file)
 	}
 	return currentTotals, baseTotals
 }
@@ -2807,14 +2848,12 @@ func buildFolderLineTotals(files []string, baseCommit string) (map[string]int, m
 func buildBundleLineTotals(files []string, baseCommit string, bundles []Bundle) (map[string]int, map[string]int) {
 	currentTotals := make(map[string]int)
 	baseTotals := make(map[string]int)
+	ctx := &CodebaseContext{Bundles: bundles}
 	for _, file := range files {
 		if file == "README.md" || file == "AGENTS.md" {
 			continue
 		}
-		bundleName := ResolveBundleForPath(file, bundles)
-		if bundleName == "" {
-			bundleName = "@semio-repo"
-		}
+		bundleName := ctx.GetBundleForFile(file)
 		currentTotals[bundleName] += CountLinesInFile(filepath.Join(GetRootDir(), file))
 		baseTotals[bundleName] += CountLinesAtCommit(baseCommit, file)
 	}
@@ -2892,10 +2931,12 @@ func reconcileRenamePairs(diffSet *TicketDiffSet, matchKey func(path string) str
 	diffSet.Renamed = append(diffSet.Renamed, renamed...)
 }
 
-func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines) TicketDiffSet {
+func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
 	result := newTicketDiffSet()
+	ctx := &CodebaseContext{Bundles: bundles}
 	currentSectionMap := make(map[string]CodebaseSection)
 	baseSectionMap := make(map[string]CodebaseSection)
+	// ... (rest of the map building)
 	for _, section := range currentCodebase.Sections {
 		currentSectionMap[section.Path] = section
 	}
@@ -2926,6 +2967,7 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit strin
 		if diff == nil {
 			continue
 		}
+		fileID := ctx.GetFileID(filePath)
 		content, err := ReadTextFile(filepath.Join(GetRootDir(), filePath))
 		if err != nil {
 			continue
@@ -2947,7 +2989,7 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit strin
 			if len(addedLines) == 0 && len(removedLines) == 0 {
 				continue
 			}
-			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeModified, Path: filePath + "#" + sectionPath, Lines: LineMetrics{Added: len(addedLines), Removed: len(removedLines)}})
+			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeModified, Path: fileID + "#" + sectionPath, Lines: LineMetrics{Added: len(addedLines), Removed: len(removedLines)}})
 		}
 		for sectionPath, removedLines := range removedMap {
 			if _, ok := addedMap[sectionPath]; ok {
@@ -2956,7 +2998,7 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit strin
 			if len(removedLines) == 0 {
 				continue
 			}
-			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeModified, Path: filePath + "#" + sectionPath, Lines: LineMetrics{Removed: len(removedLines)}})
+			addTicketDiffEntry(&result, SemanticChange{Kind: "section", Status: SemanticChangeModified, Path: fileID + "#" + sectionPath, Lines: LineMetrics{Removed: len(removedLines)}})
 		}
 	}
 	reconcileRenamePairs(&result, func(path string) string {
@@ -2966,10 +3008,12 @@ func buildSectionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit strin
 	return result
 }
 
-func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines) TicketDiffSet {
+func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, bundles []Bundle) TicketDiffSet {
 	result := newTicketDiffSet()
+	ctx := &CodebaseContext{Bundles: bundles}
 	currentDefMap := make(map[string]CodebaseDefinition)
 	baseDefMap := make(map[string]CodebaseDefinition)
+	// ... (rest of the map building)
 	for _, def := range currentCodebase.Definitions {
 		currentDefMap[def.Path] = def
 	}
@@ -3000,6 +3044,7 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit st
 		if diff == nil {
 			continue
 		}
+		fileID := ctx.GetFileID(filePath)
 		content, err := ReadTextFile(filepath.Join(GetRootDir(), filePath))
 		if err != nil {
 			continue
@@ -3025,9 +3070,9 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit st
 				continue
 			}
 			sectionPath := findSectionForDefinition(currentSections, def.Start, def.End, "")
-			defPath := filePath + "§" + def.Name
+			defPath := fileID + "§" + def.Name
 			if sectionPath != "" {
-				defPath = filePath + "#" + sectionPath + "§" + def.Name
+				defPath = fileID + "#" + sectionPath + "§" + def.Name
 			}
 			addTicketDiffEntry(&result, SemanticChange{Kind: "definition", Status: SemanticChangeModified, Path: defPath, Lines: LineMetrics{Added: len(addedLines), Removed: len(removedLines)}})
 		}
@@ -3037,9 +3082,9 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit st
 				continue
 			}
 			sectionPath := findSectionForDefinition(baseSections, def.Start, def.End, "")
-			defPath := filePath + "§" + def.Name
+			defPath := fileID + "§" + def.Name
 			if sectionPath != "" {
-				defPath = filePath + "#" + sectionPath + "§" + def.Name
+				defPath = fileID + "#" + sectionPath + "§" + def.Name
 			}
 			addTicketDiffEntry(&result, SemanticChange{Kind: "definition", Status: SemanticChangeModified, Path: defPath, Lines: LineMetrics{Removed: len(removedLines)}})
 		}
@@ -3053,30 +3098,47 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit st
 
 func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, diffStatuses []GitDiffStatus, bundles []Bundle) *TicketDiffs {
 	result := newTicketDiffs()
-	currentFiles := []string{}
-	if currentCodebase != nil {
-		for _, file := range currentCodebase.Files {
-			currentFiles = append(currentFiles, file.Path)
+	ctx := &CodebaseContext{Bundles: bundles}
+
+	currentFilesSet := make(map[string]struct{})
+	baseFilesSet := make(map[string]struct{})
+	for filePath := range diffLines {
+		currentFilesSet[filePath] = struct{}{}
+		baseFilesSet[filePath] = struct{}{}
+	}
+	for _, status := range diffStatuses {
+		if status.From != "" {
+			baseFilesSet[status.From] = struct{}{}
+		}
+		if status.To != "" {
+			currentFilesSet[status.To] = struct{}{}
 		}
 	}
-	baseFiles := []string{}
-	if baseCodebase != nil {
-		for _, file := range baseCodebase.Files {
-			baseFiles = append(baseFiles, file.Path)
-		}
+	var currentFiles []string
+	for f := range currentFilesSet {
+		currentFiles = append(currentFiles, f)
 	}
-	currentFolderLines, _ := buildFolderLineTotals(currentFiles, baseCommit)
-	_, baseFolderLines := buildFolderLineTotals(baseFiles, baseCommit)
+	var baseFiles []string
+	for f := range baseFilesSet {
+		baseFiles = append(baseFiles, f)
+	}
+
+	currentFolderLines, _ := buildFolderLineTotals(currentFiles, baseCommit, bundles)
+	_, baseFolderLines := buildFolderLineTotals(baseFiles, baseCommit, bundles)
 	currentBundleLines, _ := buildBundleLineTotals(currentFiles, baseCommit, bundles)
 	_, baseBundleLines := buildBundleLineTotals(baseFiles, baseCommit, bundles)
 
 	currentBundleMap := make(map[string]CodebaseBundle)
 	baseBundleMap := make(map[string]CodebaseBundle)
-	for _, bundle := range currentCodebase.Bundles {
-		currentBundleMap[bundle.ID] = bundle
+	if currentCodebase != nil {
+		for _, bundle := range currentCodebase.Bundles {
+			currentBundleMap[bundle.ID] = bundle
+		}
 	}
-	for _, bundle := range baseCodebase.Bundles {
-		baseBundleMap[bundle.ID] = bundle
+	if baseCodebase != nil {
+		for _, bundle := range baseCodebase.Bundles {
+			baseBundleMap[bundle.ID] = bundle
+		}
 	}
 	for id, bundle := range currentBundleMap {
 		if _, ok := baseBundleMap[id]; !ok {
@@ -3106,11 +3168,15 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit stri
 
 	currentFolderMap := make(map[string]CodebaseFolder)
 	baseFolderMap := make(map[string]CodebaseFolder)
-	for _, folder := range currentCodebase.Folders {
-		currentFolderMap[folder.Path] = folder
+	if currentCodebase != nil {
+		for _, folder := range currentCodebase.Folders {
+			currentFolderMap[folder.Path] = folder
+		}
 	}
-	for _, folder := range baseCodebase.Folders {
-		baseFolderMap[folder.Path] = folder
+	if baseCodebase != nil {
+		for _, folder := range baseCodebase.Folders {
+			baseFolderMap[folder.Path] = folder
+		}
 	}
 	for path := range currentFolderMap {
 		if _, ok := baseFolderMap[path]; !ok {
@@ -3127,14 +3193,19 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit stri
 		if status.Status == "renamed" {
 			fromFolder := NormalizePath(filepath.Dir(status.From))
 			toFolder := NormalizePath(filepath.Dir(status.To))
-			if fromFolder != toFolder && fromFolder != "." && toFolder != "." {
-				addTicketDiffEntry(&result.Folders, SemanticChange{Kind: "folder", Status: SemanticChangeRenamed, FromPath: fromFolder, ToPath: toFolder, Lines: LineMetrics{Added: currentFolderLines[toFolder], Removed: baseFolderLines[fromFolder]}})
+			fromFolderID := ctx.GetFolderID(fromFolder)
+			toFolderID := ctx.GetFolderID(toFolder)
+			if fromFolderID != toFolderID && fromFolder != "." && toFolder != "." {
+				addTicketDiffEntry(&result.Folders, SemanticChange{Kind: "folder", Status: SemanticChangeRenamed, FromPath: fromFolderID, ToPath: toFolderID, Lines: LineMetrics{Added: currentFolderLines[toFolderID], Removed: baseFolderLines[fromFolderID]}})
 			}
-			addTicketDiffEntry(&result.Files, SemanticChange{Kind: "file", Status: SemanticChangeRenamed, FromPath: status.From, ToPath: status.To, Lines: LineMetrics{Added: CountLinesInFile(filepath.Join(GetRootDir(), status.To)), Removed: CountLinesAtCommit(baseCommit, status.From)}})
+			fromFileID := ctx.GetFileID(status.From)
+			toFileID := ctx.GetFileID(status.To)
+			addTicketDiffEntry(&result.Files, SemanticChange{Kind: "file", Status: SemanticChangeRenamed, FromPath: fromFileID, ToPath: toFileID, Lines: LineMetrics{Added: CountLinesInFile(filepath.Join(GetRootDir(), status.To)), Removed: CountLinesAtCommit(baseCommit, status.From)}})
 		}
 	}
 
 	for filePath, diff := range diffLines {
+		fileID := ctx.GetFileID(filePath)
 		metrics := computeLineMetricsForDiff(diff, baseCommit, filePath)
 		status := SemanticChangeModified
 		if len(diff.Added) > 0 && len(diff.Removed) == 0 {
@@ -3142,15 +3213,15 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit stri
 		} else if len(diff.Removed) > 0 && len(diff.Added) == 0 {
 			status = SemanticChangeDeleted
 		}
-		addTicketDiffEntry(&result.Files, SemanticChange{Kind: "file", Status: status, Path: filePath, Lines: metrics})
+		addTicketDiffEntry(&result.Files, SemanticChange{Kind: "file", Status: status, Path: fileID, Lines: metrics})
 	}
 
 	reconcileRenamePairs(&result.Bundles, func(path string) string {
 		return path
 	})
 
-	result.Sections = buildSectionDiffs(baseCodebase, currentCodebase, baseCommit, diffLines)
-	result.Definitions = buildDefinitionDiffs(baseCodebase, currentCodebase, baseCommit, diffLines)
+	result.Sections = buildSectionDiffs(baseCodebase, currentCodebase, baseCommit, diffLines, bundles)
+	result.Definitions = buildDefinitionDiffs(baseCodebase, currentCodebase, baseCommit, diffLines, bundles)
 
 	return result
 }
@@ -4368,7 +4439,6 @@ var languageRegistry = []LanguagePlugin{
 	NewGoLanguage(),
 	NewPythonLanguage(),
 	NewCSharpLanguage(),
-	NewJSONLanguage(),
 	NewMarkdownLanguage(),
 	NewRustLanguage(),
 	NewRubyLanguage(),
@@ -4402,6 +4472,7 @@ func GetLanguageByName(name string) LanguagePlugin {
 
 type TicketIteration struct {
 	Prompt string       `json:"prompt"`
+	Plan   string       `json:"plan,omitempty"`
 	LLM    string       `json:"llm"`
 	UI     string       `json:"ui,omitempty"`
 	Author string       `json:"author"`
@@ -5143,13 +5214,18 @@ func findRepoRoot(startDir string) string {
 	}
 }
 
+type GitignorePattern struct {
+	Pattern string
+	Negate  bool
+}
+
 var (
-	cachedGitignorePatterns []string
+	cachedGitignorePatterns []GitignorePattern
 	gitignoreLoaded         bool
 	gitignoreMutex          sync.Mutex
 )
 
-func getGitignorePatterns() []string {
+func getGitignorePatterns() []GitignorePattern {
 	gitignoreMutex.Lock()
 	defer gitignoreMutex.Unlock()
 	if gitignoreLoaded {
@@ -5163,11 +5239,37 @@ func getGitignorePatterns() []string {
 	}
 	for _, line := range strings.Split(string(content), "\n") {
 		line = strings.TrimSpace(line)
-		if line != "" && !strings.HasPrefix(line, "#") {
-			if !strings.Contains(line, "/") {
-				line = "**/" + line
+		if line == "" {
+			continue
+		}
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		negate := false
+		if strings.HasPrefix(line, "!") {
+			negate = true
+			line = strings.TrimSpace(strings.TrimPrefix(line, "!"))
+		}
+		if line == "" {
+			continue
+		}
+		rooted := strings.HasPrefix(line, "/")
+		if rooted {
+			line = strings.TrimPrefix(line, "/")
+		}
+		trimmed := strings.TrimSuffix(line, "/")
+		if trimmed == "" {
+			continue
+		}
+		patterns := []string{trimmed}
+		if !strings.HasSuffix(trimmed, "/**") {
+			patterns = append(patterns, trimmed+"/**")
+		}
+		for _, pattern := range patterns {
+			if !strings.Contains(pattern, "/") && !rooted {
+				pattern = "**/" + pattern
 			}
-			cachedGitignorePatterns = append(cachedGitignorePatterns, line)
+			cachedGitignorePatterns = append(cachedGitignorePatterns, GitignorePattern{Pattern: pattern, Negate: negate})
 		}
 	}
 	gitignoreLoaded = true
@@ -5175,27 +5277,35 @@ func getGitignorePatterns() []string {
 }
 
 func isGitIgnored(filePath string) bool {
-	relPath, err := filepath.Rel(rootDir, filePath)
-	if err != nil {
-		return false
+	if filepath.Base(filePath) == "LICENSE.md" {
+		return true
 	}
-	relPath = NormalizePath(relPath)
-	for _, pattern := range getGitignorePatterns() {
-		if matched, _ := doublestar.Match(pattern, relPath); matched {
+
+	info, err := os.Stat(filePath)
+	if err == nil && !info.IsDir() {
+		if GetLanguage(filePath) == nil {
 			return true
 		}
-		parent := relPath
-		for {
-			parent = filepath.Dir(parent)
-			if parent == "." || parent == "/" {
-				break
-			}
-			if matched, _ := doublestar.Match(pattern, NormalizePath(parent)); matched {
-				return true
+	}
+
+	relPath := normalizeRepoPath(filePath)
+	if relPath == "" {
+		return false
+	}
+	ignored := false
+	for _, pattern := range getGitignorePatterns() {
+		if pattern.Pattern == "" {
+			continue
+		}
+		if matched, _ := doublestar.Match(pattern.Pattern, relPath); matched {
+			if pattern.Negate {
+				ignored = false
+			} else {
+				ignored = true
 			}
 		}
 	}
-	return false
+	return ignored
 }
 
 func policyAppliesToScope(policyID string, scope Scope) bool {
@@ -5490,9 +5600,7 @@ func GetGitAuthorGithub() string {
 				}
 			}
 		}
-		if strings.EqualFold(config.Name, name) {
-			return github
-		}
+		// Name check removed as per requirement to prioritize email matching
 	}
 	return fallback
 }
@@ -7095,19 +7203,58 @@ func (ctx *CodebaseContext) LoadPolicies() {
 }
 
 func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
-	normalizedPath := NormalizePath(filePath)
+	name, _, ok := ctx.GetBundleInfo(filePath)
+	if !ok {
+		return "@semio-repo/repo"
+	}
+	return name
+}
+
+func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bool) {
+	normalizedPath := NormalizePath(path)
 	var matchedBundle string
+	var matchedRoot string
 	var matchedLen int
 	for _, bundle := range ctx.Bundles {
 		root := NormalizePath(bundle.Root)
 		if strings.HasPrefix(normalizedPath, root+"/") || normalizedPath == root {
 			if len(root) > matchedLen {
 				matchedBundle = bundle.Name
+				matchedRoot = root
 				matchedLen = len(root)
 			}
 		}
 	}
-	return matchedBundle
+	if matchedLen > 0 || matchedBundle != "" {
+		return normalizeBundleLabel(matchedBundle), matchedRoot, true
+	}
+	return "", "", false
+}
+
+func (ctx *CodebaseContext) GetFileID(file string) string {
+	name, root, ok := ctx.GetBundleInfo(file)
+	if !ok {
+		name = "@semio-repo/repo"
+		root = "."
+	}
+	rel, _ := filepath.Rel(root, file)
+	return name + "/" + NormalizePath(rel)
+}
+
+func (ctx *CodebaseContext) GetFolderID(folder string) string {
+	if folder == "." {
+		return "@semio-repo/repo"
+	}
+	name, root, ok := ctx.GetBundleInfo(folder)
+	if !ok {
+		name = "@semio-repo/repo"
+		root = "."
+	}
+	rel, _ := filepath.Rel(root, folder)
+	if rel == "." {
+		return name
+	}
+	return name + "/" + NormalizePath(rel)
 }
 
 func (ctx *CodebaseContext) FileURI(path string) string {
@@ -7130,9 +7277,16 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	violationCounts := make(map[string]int)
 
 	for _, bundle := range ctx.Bundles {
-		folderSets[bundle.Name] = make(map[string]struct{})
-		contributorSets[bundle.Name] = make(map[string]struct{})
-		ticketSets[bundle.Name] = make(map[string]struct{})
+		name := normalizeBundleLabel(bundle.Name)
+		folderSets[name] = make(map[string]struct{})
+		contributorSets[name] = make(map[string]struct{})
+		ticketSets[name] = make(map[string]struct{})
+	}
+	// Always ensure fallback bundle exists
+	if _, ok := folderSets["@semio-repo/repo"]; !ok {
+		folderSets["@semio-repo/repo"] = make(map[string]struct{})
+		contributorSets["@semio-repo/repo"] = make(map[string]struct{})
+		ticketSets["@semio-repo/repo"] = make(map[string]struct{})
 	}
 
 	for _, file := range ctx.Files {
@@ -7180,7 +7334,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	}
 
 	for _, ticket := range ctx.Tickets {
-		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+		ticketID := ticket.GetID()
 		fileDiffs := ticket.GetFiles().Files
 		if fileDiffs.Added != nil || fileDiffs.Modified != nil || fileDiffs.Deleted != nil || fileDiffs.Renamed != nil {
 			for _, entry := range fileDiffs.Modified {
@@ -7218,32 +7372,46 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 		}
 	}
 
-	for _, bundle := range ctx.Bundles {
+	var bundleNames []string
+	for name := range folderSets {
+		bundleNames = append(bundleNames, name)
+	}
+	sort.Strings(bundleNames)
+
+	for _, name := range bundleNames {
 		var contributors []string
-		for c := range contributorSets[bundle.Name] {
+		for c := range contributorSets[name] {
 			contributors = append(contributors, c)
 		}
 		sort.Strings(contributors)
 
 		var tickets []string
-		for t := range ticketSets[bundle.Name] {
+		for t := range ticketSets[name] {
 			tickets = append(tickets, t)
 		}
 		sort.Strings(tickets)
 
+		bundleRoot := ""
+		for _, b := range ctx.Bundles {
+			if normalizeBundleLabel(b.Name) == name {
+				bundleRoot = b.Root
+				break
+			}
+		}
+
 		result = append(result, CodebaseBundle{
-			ID:           bundle.Name,
-			Folder:       bundle.Root,
-			URI:          ctx.FileURI(bundle.Root),
+			ID:           name,
+			Folder:       bundleRoot,
+			URI:          ctx.FileURI(bundleRoot),
 			Contributors: contributors,
 			Tickets:      tickets,
 			Metrics: &BundleMetricsInternal{
-				Folders:     len(folderSets[bundle.Name]),
-				Files:       fileCounts[bundle.Name],
-				Sections:    sectionCounts[bundle.Name],
-				Definitions: definitionCounts[bundle.Name],
-				Lines:       lineCounts[bundle.Name],
-				Violations:  violationCounts[bundle.Name],
+				Folders:     len(folderSets[name]),
+				Files:       fileCounts[name],
+				Sections:    sectionCounts[name],
+				Definitions: definitionCounts[name],
+				Lines:       lineCounts[name],
+				Violations:  violationCounts[name],
 			},
 		})
 	}
@@ -7289,11 +7457,7 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 
 	var result []CodebaseFolder
 	for folder := range folderSet {
-		bundleName := ctx.GetBundleForFile(folder)
-		id := folder
-		if bundleName != "" {
-			id = bundleName + "/" + folder
-		}
+		id := ctx.GetFolderID(folder)
 		result = append(result, CodebaseFolder{
 			ID:   id,
 			Path: folder,
@@ -7327,11 +7491,7 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 	}
 
 	for _, file := range ctx.Files {
-		bundleName := ctx.GetBundleForFile(file)
-		id := file
-		if bundleName != "" {
-			id = bundleName + "/" + filepath.Base(file)
-		}
+		id := ctx.GetFileID(file)
 
 		var metrics *FileMetricsInternal
 		absPath := filepath.Join(rootDir, file)
@@ -7385,23 +7545,22 @@ func BuildCodebaseSections(ctx *CodebaseContext) []CodebaseSection {
 			continue
 		}
 		sections := ParseSections(content, file)
-		bundleName := ctx.GetBundleForFile(file)
-		addSections(ctx, &result, file, bundleName, content, sections, "")
+
+		fileID := ctx.GetFileID(file)
+
+		addSections(ctx, &result, file, fileID, content, sections, "")
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
 	return result
 }
 
-func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, bundleName, content string, sections []Section, parentPath string) {
+func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, content string, sections []Section, parentPath string) {
 	for _, section := range sections {
 		sectionPath := section.Name
 		if parentPath != "" {
 			sectionPath = parentPath + "#" + section.Name
 		}
-		id := file + "#" + sectionPath
-		if bundleName != "" {
-			id = bundleName + "/" + filepath.Base(file) + "#" + sectionPath
-		}
+		id := fileID + "#" + sectionPath
 		sectionContent := ""
 		if section.StartIndex < len(content) && section.EndIndex <= len(content) {
 			sectionContent = content[section.StartIndex:section.EndIndex]
@@ -7423,7 +7582,7 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, bundleNa
 				Violations:  0,
 			},
 		})
-		addSections(ctx, result, file, bundleName, content, section.Children, sectionPath)
+		addSections(ctx, result, file, fileID, content, section.Children, sectionPath)
 	}
 }
 
@@ -7443,23 +7602,19 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 		lines := strings.Split(content, "\n")
 		defs := lang.ParseDefinitions(content, lines)
 		sections := ParseSections(content, file)
-		bundleName := ctx.GetBundleForFile(file)
+		fileID := ctx.GetFileID(file)
 
 		for _, def := range defs {
 			sectionPath := findSectionForDefinition(sections, def.Start, def.End, "")
-			defPath := file
+			id := ""
 			if sectionPath != "" {
-				defPath = file + "#" + sectionPath + "§" + def.Name
+				id = fileID + "#" + sectionPath + "§" + def.Name
 			} else {
-				defPath = file + "§" + def.Name
-			}
-			id := defPath
-			if bundleName != "" {
-				id = bundleName + "/" + filepath.Base(file) + "§" + def.Name
+				id = fileID + "§" + def.Name
 			}
 			result = append(result, CodebaseDefinition{
 				ID:   id,
-				Path: defPath,
+				Path: id, // Use ID as path too for codebase metrics
 				URI:  ctx.FileURI(file) + "§" + def.Name,
 				Metrics: &DefinitionMetricsInternal{
 					Definitions: 0,
@@ -7554,7 +7709,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 	var result []CodebaseTicket
 
 	for _, ticket := range ctx.Tickets {
-		ticketID := fmt.Sprintf("%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+		ticketID := ticket.GetID()
 		ticketPath := ticket.TicketPath
 		if ticketPath == "" {
 			ticketPath = fmt.Sprintf(".semio-repo/tickets/%04d/%02d/%02d/%s/ticket.md", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
@@ -7814,7 +7969,12 @@ func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []Codebas
 	folderSets := make(map[string]map[string]struct{})
 
 	for _, bundle := range ctx.Bundles {
-		folderSets[bundle.Name] = make(map[string]struct{})
+		name := normalizeBundleLabel(bundle.Name)
+		folderSets[name] = make(map[string]struct{})
+	}
+	// Always ensure fallback bundle exists
+	if _, ok := folderSets["@semio-repo/repo"]; !ok {
+		folderSets["@semio-repo/repo"] = make(map[string]struct{})
 	}
 
 	for _, file := range ctx.Files {
@@ -7842,17 +8002,31 @@ func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []Codebas
 		}
 	}
 
-	for _, bundle := range ctx.Bundles {
+	var bundleNames []string
+	for name := range folderSets {
+		bundleNames = append(bundleNames, name)
+	}
+	sort.Strings(bundleNames)
+
+	for _, name := range bundleNames {
+		bundleRoot := ""
+		for _, b := range ctx.Bundles {
+			if normalizeBundleLabel(b.Name) == name {
+				bundleRoot = b.Root
+				break
+			}
+		}
+
 		result = append(result, CodebaseBundle{
-			ID:     bundle.Name,
-			Folder: bundle.Root,
-			URI:    ctx.FileURI(bundle.Root),
+			ID:     name,
+			Folder: bundleRoot,
+			URI:    ctx.FileURI(bundleRoot),
 			Metrics: &BundleMetricsInternal{
-				Folders:     len(folderSets[bundle.Name]),
-				Files:       fileCounts[bundle.Name],
-				Sections:    sectionCounts[bundle.Name],
-				Definitions: definitionCounts[bundle.Name],
-				Lines:       lineCounts[bundle.Name],
+				Folders:     len(folderSets[name]),
+				Files:       fileCounts[name],
+				Sections:    sectionCounts[name],
+				Definitions: definitionCounts[name],
+				Lines:       lineCounts[name],
 			},
 		})
 	}
@@ -7879,11 +8053,7 @@ func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []Codebas
 
 	var result []CodebaseFolder
 	for folder := range folderSet {
-		bundleName := ctx.GetBundleForFile(folder)
-		id := folder
-		if bundleName != "" {
-			id = bundleName + "/" + folder
-		}
+		id := ctx.GetFolderID(folder)
 		parent := filepath.Dir(folder)
 		var parentID *string
 		if parent != "." && parent != "" {
@@ -7909,11 +8079,7 @@ func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []Codebas
 func BuildCodebaseFilesForFiles(ctx *CodebaseContext, commit string) []CodebaseFile {
 	var result []CodebaseFile
 	for _, file := range ctx.Files {
-		bundleName := ctx.GetBundleForFile(file)
-		id := file
-		if bundleName != "" {
-			id = bundleName + "/" + filepath.Base(file)
-		}
+		id := ctx.GetFileID(file)
 		var metrics *FileMetricsInternal
 		content, err := ReadTextFileAtCommit(commit, file)
 		if err == nil {
@@ -7951,23 +8117,20 @@ func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, commit string) []Codeba
 			continue
 		}
 		sections := ParseSections(content, file)
-		bundleName := ctx.GetBundleForFile(file)
-		addSectionsForContent(ctx, &result, file, bundleName, content, sections, "")
+		fileID := ctx.GetFileID(file)
+		addSectionsForContent(ctx, &result, file, fileID, content, sections, "")
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
 	return result
 }
 
-func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file, bundleName, content string, sections []Section, parentPath string) {
+func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, content string, sections []Section, parentPath string) {
 	for _, section := range sections {
 		sectionPath := section.Name
 		if parentPath != "" {
 			sectionPath = parentPath + "#" + section.Name
 		}
-		id := file + "#" + sectionPath
-		if bundleName != "" {
-			id = bundleName + "/" + filepath.Base(file) + "#" + sectionPath
-		}
+		id := fileID + "#" + sectionPath
 		sectionContent := ""
 		if section.StartIndex < len(content) && section.EndIndex <= len(content) {
 			sectionContent = content[section.StartIndex:section.EndIndex]
@@ -7988,7 +8151,7 @@ func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file
 				Lines:       section.EndLine - section.StartLine + 1,
 			},
 		})
-		addSectionsForContent(ctx, result, file, bundleName, content, section.Children, sectionPath)
+		addSectionsForContent(ctx, result, file, fileID, content, section.Children, sectionPath)
 	}
 }
 
@@ -8006,22 +8169,18 @@ func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, commit string) []Cod
 		lines := strings.Split(content, "\n")
 		defs := lang.ParseDefinitions(content, lines)
 		sections := ParseSections(content, file)
-		bundleName := ctx.GetBundleForFile(file)
+		fileID := ctx.GetFileID(file)
 		for _, def := range defs {
 			sectionPath := findSectionForDefinition(sections, def.Start, def.End, "")
-			defPath := file
+			id := ""
 			if sectionPath != "" {
-				defPath = file + "#" + sectionPath + "§" + def.Name
+				id = fileID + "#" + sectionPath + "§" + def.Name
 			} else {
-				defPath = file + "§" + def.Name
-			}
-			id := defPath
-			if bundleName != "" {
-				id = bundleName + "/" + filepath.Base(file) + "§" + def.Name
+				id = fileID + "§" + def.Name
 			}
 			result = append(result, CodebaseDefinition{
 				ID:   id,
-				Path: defPath,
+				Path: id,
 				URI:  ctx.FileURI(file) + "§" + def.Name,
 				Metrics: &DefinitionMetricsInternal{
 					Lines: def.End - def.Start + 1,
@@ -8158,16 +8317,13 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if title == "" {
 		return fmt.Errorf("ticket title is required")
 	}
-	if title == strings.ToLower(title) {
-		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug or all lowercase")
-	}
-	if title == strings.ToUpper(title) {
-		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT only in caps")
-	}
-	if strings.Contains(title, "-") || strings.Contains(title, "_") {
-		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT contain dashes or underscores")
-	}
 	slug := Slugify(title)
+	if title == slug {
+		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT an all-caps slug")
+	}
+	if title == strings.ToLower(slug) {
+		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
+	}
 	newFolderPath := GetTicketPath(ticket.Year, ticket.Month, ticket.Day, slug)
 	if slug != ticket.Slug {
 		if FileExists(newFolderPath) {
@@ -8191,19 +8347,16 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 
 func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticket, error) {
 	title = strings.TrimSpace(title)
-	if title == strings.ToLower(title) {
-		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug or all lowercase")
+	slug := Slugify(title)
+	if title == slug {
+		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT an all-caps slug")
 	}
-	if title == strings.ToUpper(title) {
-		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT only in caps")
-	}
-	if strings.Contains(title, "-") || strings.Contains(title, "_") {
-		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT contain dashes or underscores")
+	if title == strings.ToLower(slug) {
+		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
 	}
 
 	now := time.Now()
 	year, month, day := FormatDate(now)
-	slug := Slugify(title)
 
 	llmSlug, err := ResolveAllowedLLM(llm)
 	if err != nil {
@@ -8219,21 +8372,27 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 		return nil, err
 	}
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
-	planFilePath := GetTicketPlanPath(year, month, day, slug)
+	// planFilePath := GetTicketPlanPath(year, month, day, slug) // Removed as per new logic
 	ticketFilePath := GetTicketFilePath(year, month, day, slug)
 	gitAuthor := GetGitAuthorGithub()
 	gitCommit := GetGitCommit()
 
 	var planContent string
+	var finalPlanFilename string
+	var planFilePath string
 	if planPath != "" && FileExists(planPath) {
 		planContent, err = ReadTextFile(planPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read plan file: %w", err)
 		}
+		finalPlanFilename = filepath.Base(planPath)
+		planFilePath = filepath.Join(ticketDir, finalPlanFilename)
 		if err := os.Rename(planPath, planFilePath); err != nil {
 			return nil, fmt.Errorf("failed to move plan file: %w", err)
 		}
 	} else {
+		finalPlanFilename = "plan.md"
+		planFilePath = filepath.Join(ticketDir, finalPlanFilename)
 		if err := WriteTextFile(planFilePath, ""); err != nil {
 			return nil, fmt.Errorf("failed to write plan file: %w", err)
 		}
@@ -8247,6 +8406,7 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 		Status: TicketStatusOpen,
 		Iterations: []TicketIteration{{
 			Prompt: prompt,
+			Plan:   finalPlanFilename,
 			LLM:    llmSlug,
 			UI:     uiSlug,
 			Author: gitAuthor,
@@ -9414,23 +9574,20 @@ func ReopenTicket(ticket *Ticket, prompt, llm, planPath string) error {
 		Commit: gitCommit,
 	}
 
+	// Handle plan file for this iteration
+	if planPath != "" && FileExists(planPath) {
+		planFilename := filepath.Base(planPath)
+		destPath := filepath.Join(ticket.FolderPath, planFilename)
+		if err := os.Rename(planPath, destPath); err != nil {
+			return fmt.Errorf("failed to move plan file: %w", err)
+		}
+		ticket.PlanPath = destPath
+		iteration.Plan = planFilename
+	}
+
 	ticket.Data.Iterations = append(ticket.Data.Iterations, iteration)
 	ticket.Data.Status = TicketStatusOpen
 	ticket.Data.Dates.Closed = nil
-
-	// Handle plan file for this iteration
-	iterationIndex := len(ticket.Data.Iterations)
-	planFilePath := GetTicketPlanPathForIteration(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, iterationIndex)
-	if planPath != "" && FileExists(planPath) {
-		if err := os.Rename(planPath, planFilePath); err != nil {
-			return fmt.Errorf("failed to move plan file: %w", err)
-		}
-	} else {
-		if err := WriteTextFile(planFilePath, ""); err != nil {
-			return fmt.Errorf("failed to write plan file: %w", err)
-		}
-	}
-	ticket.PlanPath = planFilePath
 
 	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
 		issueURL := ticket.Data.GitHub.Issue
@@ -10504,7 +10661,7 @@ func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 
 func exportRepo(tx *sql.Tx, ctx RepoContext) error {
 	_, err := tx.Exec(`INSERT INTO repo (id, name, path, exported_at) VALUES (?, ?, ?, ?)`,
-		"repo:semio",
+		"@semio-repo/repo",
 		"semio",
 		ctx.GetRootDir(),
 		time.Now().UTC().Format(time.RFC3339))
@@ -10523,8 +10680,9 @@ func exportBundles(tx *sql.Tx, ctx RepoContext) (int, error) {
 		return 0, err
 	}
 	defer tagStmt.Close()
+
 	for _, b := range bundles {
-		id := "bundle:" + b.Name
+		id := b.GetID()
 		uri := "file://" + NormalizePath(filepath.Join(ctx.GetRootDir(), b.Root))
 		var sourceRoot, projectType interface{}
 		if b.SourceRoot != "" {
@@ -10552,20 +10710,8 @@ func exportFolders(tx *sql.Tx, ctx RepoContext) (int, error) {
 		return 0, err
 	}
 	defer stmt.Close()
-	bundles := ctx.GetBundles()
-	bundleMap := make(map[string]string)
-	for _, b := range bundles {
-		bundleMap[b.Root] = "bundle:" + b.Name
-	}
 	for _, f := range folders {
-		var bundleID interface{}
-		for root, bid := range bundleMap {
-			if strings.HasPrefix(f.Path, root) {
-				bundleID = bid
-				break
-			}
-		}
-		if _, err := stmt.Exec(f.ID, f.Path, f.URI, f.Name, f.ParentID, bundleID); err != nil {
+		if _, err := stmt.Exec(f.ID, f.Path, f.URI, f.Name, f.ParentID, f.BundleID); err != nil {
 			return 0, err
 		}
 	}
@@ -10589,27 +10735,16 @@ func exportFiles(tx *sql.Tx, ctx RepoContext) (int, int, int, error) {
 		return 0, 0, 0, err
 	}
 	defer defStmt.Close()
-	bundles := ctx.GetBundles()
-	bundleMap := make(map[string]string)
-	for _, b := range bundles {
-		bundleMap[b.Root] = "bundle:" + b.Name
-	}
+
 	totalSections := 0
 	totalDefs := 0
 	for _, f := range files {
-		var bundleID interface{}
-		for root, bid := range bundleMap {
-			if strings.HasPrefix(f.Path, root) {
-				bundleID = bid
-				break
-			}
-		}
 		absPath := filepath.Join(ctx.GetRootDir(), f.Path)
 		lines := 0
 		if content, err := ReadTextFile(absPath); err == nil {
 			lines = strings.Count(content, "\n") + 1
 		}
-		if _, err := fileStmt.Exec(f.ID, f.Path, f.URI, f.Name, f.Extension, f.FolderID, bundleID, lines); err != nil {
+		if _, err := fileStmt.Exec(f.ID, f.Path, f.URI, f.Name, f.Extension, f.FolderID, f.BundleID, lines); err != nil {
 			return 0, 0, 0, err
 		}
 		if content, err := ReadTextFile(absPath); err == nil {
@@ -10619,6 +10754,29 @@ func exportFiles(tx *sql.Tx, ctx RepoContext) (int, int, int, error) {
 				return 0, 0, 0, err
 			}
 			totalSections += sectionCount
+
+			// Export definitions
+			lang := GetLanguage(f.Path)
+			if lang != nil && lang.SupportsDefinitions() {
+				lines := strings.Split(content, "\n")
+				defs := lang.ParseDefinitions(content, lines)
+				for _, d := range defs {
+					sectionPath := findSectionForDefinition(sections, d.Start, d.End, "")
+					var sectionID interface{}
+					id := f.ID + "§" + d.Name
+					if sectionPath != "" {
+						sid := f.ID + "#" + sectionPath
+						sectionID = sid
+						id = sid + "§" + d.Name
+					}
+					// TODO: Get actual kind from LanguagePlugin
+					kind := "variable"
+					if _, err := defStmt.Exec(id, d.Name, kind, f.ID, sectionID, d.Start, d.End, 0, 0); err != nil {
+						return 0, 0, 0, err
+					}
+					totalDefs++
+				}
+			}
 		}
 	}
 	return len(files), totalSections, totalDefs, nil
@@ -10627,12 +10785,14 @@ func exportFiles(tx *sql.Tx, ctx RepoContext) (int, int, int, error) {
 func exportSectionsRecursive(sectionStmt *sql.Stmt, sections []Section, fileID, filePath string, parentID *string) (int, error) {
 	count := 0
 	for _, s := range sections {
-		sectionID := fmt.Sprintf("section:%s#%s", filePath, s.Name)
 		sectionPath := s.Name
 		if parentID != nil {
-			sectionPath = strings.TrimPrefix(*parentID, "section:"+filePath+"#") + "/" + s.Name
-			sectionID = fmt.Sprintf("section:%s#%s", filePath, sectionPath)
+			// Extract section path from parentID
+			parentPath := strings.SplitN(*parentID, "#", 2)[1]
+			sectionPath = parentPath + "#" + s.Name
 		}
+		sectionID := fileID + "#" + sectionPath
+
 		if _, err := sectionStmt.Exec(sectionID, s.Name, sectionPath, fileID, parentID, s.StartLine, s.EndLine, 0, 0); err != nil {
 			return 0, err
 		}
@@ -10669,7 +10829,7 @@ func exportContributors(tx *sql.Tx, ctx RepoContext) (int, error) {
 	}
 	defer linkStmt.Close()
 	for _, c := range contributors {
-		id := "contributor:" + c.Github
+		id := c.GetID()
 		var name interface{}
 		if c.Name != "" {
 			name = c.Name
@@ -10715,7 +10875,7 @@ func exportTickets(tx *sql.Tx, ctx RepoContext) (int, error) {
 		}
 		var authorID, llm, ui, summary, commit, finishedAt interface{}
 		if author := t.GetAuthor(); author != "" {
-			authorID = "contributor:" + author
+			authorID = "@semio-repo/contributor/" + author
 		}
 		if val := t.GetLLM(); val != "" {
 			llm = val
@@ -10786,7 +10946,7 @@ func exportPolicies(tx *sql.Tx, ctx RepoContext) (int, int, error) {
 	defer kindStmt.Close()
 	totalKinds := 0
 	for _, p := range policies {
-		policyID := "policy:" + p.ID
+		policyID := p.GetID()
 		var desc interface{}
 		if p.Description != nil {
 			desc = *p.Description
@@ -10800,7 +10960,7 @@ func exportPolicies(tx *sql.Tx, ctx RepoContext) (int, int, error) {
 			}
 		}
 		for _, vk := range p.ViolationKinds {
-			kindID := "violationKind:" + string(vk.Kind)
+			kindID := vk.GetID()
 			autofixable := 0
 			if vk.Autofixable {
 				autofixable = 1
@@ -10820,8 +10980,10 @@ func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
 		return 0, err
 	}
 	defer stmt.Close()
+	ctx := NewCodebaseContext()
+	ctx.LoadBundles()
 	for _, v := range violations {
-		kindID := "violationKind:" + string(v.Kind)
+		kindID := "@semio-repo/violation-kind/" + string(v.Kind)
 		var fileID, folderID, line, column, excerpt interface{}
 		if v.Line > 0 {
 			line = v.Line
@@ -10834,10 +10996,10 @@ func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
 		}
 		filePath := extractFileFromScope(v.Scope)
 		if filePath != "" {
-			fileID = "file:" + filePath
+			fileID = ctx.GetFileID(filePath)
 			dir := filepath.Dir(filePath)
 			if dir != "." && dir != "" {
-				folderID = "folder:" + dir
+				folderID = ctx.GetFolderID(dir)
 			}
 		}
 		if _, err := stmt.Exec(v.ID, kindID, v.Scope, fileID, folderID, line, column, excerpt, v.Summary); err != nil {
@@ -10953,6 +11115,16 @@ func NewRepoContext(rootDir string) RepoContext {
 
 func (c *repoContext) GetRootDir() string { return c.rootDir }
 
+func (c *repoContext) GetFileID(path string) string {
+	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
+	return ctx.GetFileID(path)
+}
+
+func (c *repoContext) GetFolderID(path string) string {
+	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
+	return ctx.GetFolderID(path)
+}
+
 func (c *repoContext) GetBundles() []*Bundle {
 	result := make([]*Bundle, len(c.bundles))
 	for i := range c.bundles {
@@ -10973,22 +11145,17 @@ func (c *repoContext) GetFolders() []*Folder {
 		parent := filepath.Dir(entry.Path)
 		var parentID *string
 		if parent != "." {
-			pid := "folder:" + NormalizePath(parent)
+			pid := ctx.GetFolderID(parent)
 			parentID = &pid
 		}
-		bundleName := ResolveBundleForPath(entry.Path, c.bundles)
-		var bundleID *string
-		if bundleName != "" {
-			bid := "bundle:" + bundleName
-			bundleID = &bid
-		}
+		bundleID := ctx.GetBundleForFile(entry.Path)
 		results = append(results, &Folder{
-			ID:       "folder:" + entry.Path,
+			ID:       entry.ID,
 			Path:     entry.Path,
 			URI:      entry.URI,
 			Name:     entry.Name,
 			ParentID: parentID,
-			BundleID: bundleID,
+			BundleID: &bundleID,
 		})
 	}
 	return results
@@ -11003,27 +11170,22 @@ func (c *repoContext) GetFiles() []*File {
 	files := BuildCodebaseFiles(ctx)
 	results := make([]*File, 0, len(files))
 	for _, entry := range files {
-		bundleName := ResolveBundleForPath(entry.Path, c.bundles)
-		var bundleID *string
-		if bundleName != "" {
-			bid := "bundle:" + bundleName
-			bundleID = &bid
-		}
+		bundleID := ctx.GetBundleForFile(entry.Path)
 		folder := filepath.Dir(entry.Path)
 		var folderID *string
 		if folder != "." {
-			fid := "folder:" + NormalizePath(folder)
+			fid := ctx.GetFolderID(folder)
 			folderID = &fid
 		}
 		ext := strings.TrimPrefix(filepath.Ext(entry.Path), ".")
 		results = append(results, &File{
-			ID:        "file:" + entry.Path,
+			ID:        entry.ID,
 			Path:      entry.Path,
 			URI:       entry.URI,
 			Name:      filepath.Base(entry.Path),
 			Extension: ext,
 			FolderID:  folderID,
-			BundleID:  bundleID,
+			BundleID:  &bundleID,
 		})
 	}
 	return results
@@ -11042,9 +11204,24 @@ func (c *repoContext) GetDefinitions() []*Definition {
 		if !ok {
 			continue
 		}
+		fileID := ctx.GetFileID(file)
 		for i := range definitions {
 			def := definitions[i]
-			results = append(results, &def)
+			// Update ID to hierarchical
+			var sectionSegments []string
+			if def.SectionPath != "" {
+				sectionSegments = strings.Split(def.SectionPath, "/")
+			}
+			id := buildDefinitionID(fileID, sectionSegments, def.Name)
+			results = append(results, &Definition{
+				Name:        def.Name,
+				Kind:        def.Kind,
+				FilePath:    def.FilePath,
+				SectionPath: def.SectionPath,
+				StartLine:   def.StartLine,
+				EndLine:     def.EndLine,
+				ID:          id, // Explicit ID for GQL
+			})
 		}
 	}
 	return results
@@ -11063,9 +11240,21 @@ func (c *repoContext) GetSections() []*Section {
 		if !ok {
 			continue
 		}
+		fileID := ctx.GetFileID(file)
 		for i := range sections {
 			sec := sections[i]
-			results = append(results, &sec)
+			// Update ID to hierarchical
+			id := buildSectionID(fileID, strings.Split(sec.Path, "/"))
+			results = append(results, &Section{
+				Name:       sec.Name,
+				Path:       sec.Path,
+				FilePath:   sec.FilePath,
+				StartLine:  sec.StartLine,
+				EndLine:    sec.EndLine,
+				StartIndex: sec.StartIndex,
+				EndIndex:   sec.EndIndex,
+				ID:         id, // Explicit ID for GQL
+			})
 		}
 	}
 	return results
@@ -11202,7 +11391,8 @@ func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	if result.Error != "" {
 		return nil, errors.New(result.Error)
 	}
-	return &Folder{ID: "folder:" + dst, Path: dst, Name: filepath.Base(dst)}, nil
+	ctx := &CodebaseContext{Bundles: c.bundles}
+	return &Folder{ID: ctx.GetFolderID(dst), Path: dst, Name: filepath.Base(dst)}, nil
 }
 
 func (c *repoContext) FolderDelete(path string) error {
@@ -11218,7 +11408,8 @@ func (c *repoContext) FileCreate(path string) (*File, error) {
 	if result.Error != "" {
 		return nil, errors.New(result.Error)
 	}
-	return &File{ID: "file:" + path, Path: path, Name: filepath.Base(path), Extension: strings.TrimPrefix(filepath.Ext(path), ".")}, nil
+	ctx := &CodebaseContext{Bundles: c.bundles}
+	return &File{ID: ctx.GetFileID(path), Path: path, Name: filepath.Base(path), Extension: strings.TrimPrefix(filepath.Ext(path), ".")}, nil
 }
 
 func (c *repoContext) FileMove(src, dst string) (*File, error) {
@@ -11226,7 +11417,8 @@ func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	if result.Error != "" {
 		return nil, errors.New(result.Error)
 	}
-	return &File{ID: "file:" + dst, Path: dst, Name: filepath.Base(dst), Extension: strings.TrimPrefix(filepath.Ext(dst), ".")}, nil
+	ctx := &CodebaseContext{Bundles: c.bundles}
+	return &File{ID: ctx.GetFileID(dst), Path: dst, Name: filepath.Base(dst), Extension: strings.TrimPrefix(filepath.Ext(dst), ".")}, nil
 }
 
 func (c *repoContext) FileDelete(path string) error {
@@ -11246,7 +11438,9 @@ func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section
 	if result.Error != "" {
 		return nil, errors.New(result.Error)
 	}
-	return &Section{Name: name, Path: sectionPath, FilePath: file}, nil
+	fileID := c.GetFileID(file)
+	id := buildSectionID(fileID, strings.Split(sectionPath, "/"))
+	return &Section{ID: id, Name: name, Path: sectionPath, FilePath: file}, nil
 }
 
 func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, error) {
@@ -11254,7 +11448,9 @@ func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, erro
 	if result.Error != "" {
 		return nil, errors.New(result.Error)
 	}
-	return &Section{Name: newName, Path: newName, FilePath: file}, nil
+	fileID := c.GetFileID(file)
+	id := buildSectionID(fileID, strings.Split(newName, "/"))
+	return &Section{ID: id, Name: newName, Path: newName, FilePath: file}, nil
 }
 
 func (c *repoContext) SectionDelete(file, name string) error {
@@ -11286,7 +11482,7 @@ func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent 
 	if result.Error != "" {
 		return nil, errors.New(result.Error)
 	}
-	return &File{ID: "file:" + tf, Path: tf, Name: filepath.Base(tf)}, nil
+	return &File{ID: c.GetFileID(tf), Path: tf, Name: filepath.Base(tf)}, nil
 }
 
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
@@ -11701,7 +11897,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						result := make([]*Section, len(sections))
 						stack := make([]*Section, 0, len(sections))
 						for i := range sections {
-							sections[i].FilePath = file.Path
+							sections[i].FilePath = file.ID
 							sections[i].Path = sections[i].Name
 							result[i] = &sections[i]
 							if len(sections[i].Children) > 0 {
@@ -11713,11 +11909,11 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 							stack = stack[:len(stack)-1]
 							for i := range section.Children {
 								child := &section.Children[i]
-								child.FilePath = file.Path
+								child.FilePath = file.ID
 								if section.Path == "" {
 									child.Path = child.Name
 								} else {
-									child.Path = section.Path + "/" + child.Name
+									child.Path = section.Path + "#" + child.Name
 								}
 								if len(child.Children) > 0 {
 									stack = append(stack, child)
@@ -11776,11 +11972,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						folderPath := filepath.Dir(normalizedPath)
 						var folderID *string
 						if folderPath != "." {
-							id := fmt.Sprintf("folder:%s", folderPath)
+							// Use buildFolderID to get consistent ID
+							id := buildFolderID(folderPath, nil)
 							folderID = &id
 						}
 						return &File{
-							ID:        fmt.Sprintf("file:%s", normalizedPath),
+							ID:        buildFileID(normalizedPath, nil),
 							Path:      normalizedPath,
 							URI:       fmt.Sprintf("file://%s/%s", rootDir, normalizedPath),
 							Name:      name,
@@ -13101,7 +13298,7 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 		}
 	}
 	return &Policy{
-		ID:     "@semio/policies/" + id,
+		ID:     "@semio-repo/policy/" + id,
 		Name:   id,
 		Scopes: []string{},
 	}, nil
@@ -14994,6 +15191,9 @@ func filterConsideredFiles(files []string) []string {
 		if isRepoExcludedPath(filePath) {
 			continue
 		}
+		if isGitIgnored(filePath) {
+			continue
+		}
 		filtered = append(filtered, filePath)
 	}
 	return filtered
@@ -15118,12 +15318,12 @@ func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]
 
 func buildViolationID(scope string, line int, col int) string {
 	if line > 0 && col > 0 {
-		return fmt.Sprintf("@semio/violations/%s#%d:%d", scope, line, col)
+		return fmt.Sprintf("@semio-repo/violation/%s#%d:%d", scope, line, col)
 	}
 	if line > 0 {
-		return fmt.Sprintf("@semio/violations/%s#%d", scope, line)
+		return fmt.Sprintf("@semio-repo/violation/%s#%d", scope, line)
 	}
-	return fmt.Sprintf("@semio/violations/%s", scope)
+	return fmt.Sprintf("@semio-repo/violation/%s", scope)
 }
 
 func CanCloseTicket(ticket *Ticket) (bool, []string) {
@@ -15139,36 +15339,69 @@ func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	return len(reasons) == 0, reasons
 }
 
-func buildFolderID(path string, bundleID *string) string {
-	normalizedPath := strings.ReplaceAll(path, "\\", "/")
-	if bundleID != nil && *bundleID != "" {
-		bundleName := strings.TrimPrefix(*bundleID, "@semio/")
-		return "@semio/" + bundleName + "/" + normalizedPath
+func findBundleInfo(path string) (name, root string, ok bool) {
+	bundles := GetProjects()
+	normalizedPath := NormalizePath(path)
+	var matchedBundle string
+	var matchedRoot string
+	var matchedLen int
+	for _, bundle := range bundles {
+		root := NormalizePath(bundle.Root)
+		if strings.HasPrefix(normalizedPath, root+"/") || normalizedPath == root {
+			if len(root) > matchedLen {
+				matchedBundle = bundle.Name
+				matchedRoot = root
+				matchedLen = len(root)
+			}
+		}
 	}
-	return "@semio/repo/" + normalizedPath
+	if matchedLen > 0 || matchedBundle != "" {
+		return matchedBundle, matchedRoot, true
+	}
+	return "", "", false
+}
+
+func buildFolderID(path string, bundleID *string) string {
+	normalizedPath := NormalizePath(path)
+	name, root, ok := findBundleInfo(normalizedPath)
+	if ok {
+		rel, _ := filepath.Rel(root, normalizedPath)
+		if rel == "." {
+			return normalizeBundleLabel(name)
+		}
+		return normalizeBundleLabel(name) + "/" + NormalizePath(rel)
+	}
+	return "@semio-repo/repo/" + normalizedPath
 }
 
 func buildFileID(path string, bundleID *string) string {
-	normalizedPath := strings.ReplaceAll(path, "\\", "/")
-	if bundleID != nil && *bundleID != "" {
-		bundleName := strings.TrimPrefix(*bundleID, "@semio/")
-		return "@semio/" + bundleName + "/" + normalizedPath
+	normalizedPath := NormalizePath(path)
+	name, root, ok := findBundleInfo(normalizedPath)
+	if ok {
+		rel, _ := filepath.Rel(root, normalizedPath)
+		return normalizeBundleLabel(name) + "/" + NormalizePath(rel)
 	}
-	return "@semio/repo/" + normalizedPath
+	return "@semio-repo/repo/" + normalizedPath
 }
 
 func buildSectionID(fileID string, sectionPath []string) string {
-	if len(sectionPath) == 0 {
+	if len(sectionPath) == 0 || (len(sectionPath) == 1 && sectionPath[0] == "") {
 		return fileID
 	}
-	return fileID + "#" + strings.Join(sectionPath, "#")
+	var segments []string
+	for _, s := range sectionPath {
+		if s != "" {
+			segments = append(segments, s)
+		}
+	}
+	if len(segments) == 0 {
+		return fileID
+	}
+	return fileID + "#" + strings.Join(segments, "#")
 }
 
 func buildDefinitionID(fileID string, sectionPath []string, name string) string {
-	if len(sectionPath) > 0 {
-		return fileID + "#" + strings.Join(sectionPath, "#") + "§" + name
-	}
-	return fileID + "§" + name
+	return buildSectionID(fileID, sectionPath) + "§" + name
 }
 
 func GuessSectionName(filePath string) string {
@@ -15587,6 +15820,9 @@ func filterGitIgnored(files []string) []string {
 	for i, filePath := range files {
 		normalized := normalizeRepoPath(filePath)
 		if normalized != "" && ignored[relPaths[i]] {
+			continue
+		}
+		if normalized != "" && isGitIgnored(normalized) {
 			continue
 		}
 		filtered = append(filtered, filePath)

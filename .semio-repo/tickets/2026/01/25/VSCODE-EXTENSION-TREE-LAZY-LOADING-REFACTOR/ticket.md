@@ -31,12 +31,17 @@
 - Updated section and definition GraphQL queries to request line/column subfields for start/end positions
 - Aligned CLI and MCP section/definition queries with Position selection requirements so tooling can parse ranges
 
+### Section List Query Repair
+- Rewrote the section list GraphQL query to use valid nested selections
+- Rebuilt the repo CLI binary so tooling runs the corrected query
+
 ## Log
 
 - Fixed additional issue: `runRepoCommandJson` was also missing the `--json` flag
 - Rebuilt and reinstalled extension
 - Updated repo GraphQL queries to include Position subfields for section/definition ranges
+- Rebuilt repo CLI binary after correcting the section list query
 
 ## Summary
 
-Fix section/definition GraphQL range selections so VS Code section listing works and document the Position subfield requirement.
+Repair section list query syntax, rebuild the repo CLI, and document nested section selection for the VS Code Sections view.

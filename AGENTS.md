@@ -127,6 +127,7 @@ Ticket reopen MUST require `prompt` and `llm` values.
 GraphQL TicketUI inputs MUST accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) for UI selection.
 GraphQL section/definition ranges MUST expose line and column positions for start and end.
 GraphQL range selections MUST request Position subfields (line, column) for start and end.
+Section list queries MUST include nested children ranges for full tree hydration.
 Ticket listing MUST read from `.semio-repo/tickets` and fall back to legacy `tickets/` directories when present.
 Ticket open MUST require a ticket UI enum value.
 Repo CLI MUST expose an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
@@ -149,7 +150,8 @@ MCP list tools MUST support cursor and limit paging over streamed item events.
 
 Repo operational artifacts (tickets, contributors, reports) MUST be stored under `.semio-repo/`.
 Repo analyze MUST exclude gitignored files, `.semio-repo/`, and `assets/repo/` from analysis.
-Repo file/folder listing and VS Code diagnostics MUST exclude gitignored files and `.semio-repo/` paths.
+Repo file/folder listing and diagnostics MUST apply `.gitignore` patterns directly (including tracked matches) and exclude `.semio-repo/` paths in the repo CLI.
+Repo CLI analyze and fix commands MUST accept scope arguments through flags or positional inputs.
 Ticket close MUST derive bundle labels from semantic bundle diffs and MUST NOT infer `@semio-repo` from README.md or AGENTS.md.
 Ticket iterations MUST store their own semantic diff payloads; tickets MUST NOT store diff payloads at the top level.
 
@@ -427,7 +429,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Ticket detail views consume git-derived per-file and total line stats stored on iterations and ticket close.
 - Command trees mirror the CLI command and subcommand hierarchy; matching a command group keeps its subtree visible.
 - Problem list diagnostics open in pinned editor tabs for immediate saves.
-- Repo diagnostics and trees exclude gitignored files and `.semio-repo/` content.
+- Repo diagnostics and trees are driven by repo CLI ignore rules for gitignored files and `.semio-repo/` content.
 - Contributor tree items list emails with mailto actions, links with external navigation, and contribution nodes with line summary descriptions.
 - Contributor contributions are grouped into commits, bundles, tickets (year/month/day), and files (folder/file) with navigation actions and inline ticket close/reopen actions.
 - The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, JSON keys surface as sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
@@ -3875,7 +3877,7 @@ Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline 
 
 ## 📄 js/vscode/extension.ts
 
-Extension activation, repo CLI command execution helpers, GraphQL client piping through the repo CLI, ticket command prompts aligned to repo ticket inputs including LLM and UI selection on ticket open, gitignore-aware analysis gating with `.semio-repo/` and `assets/repo/` exclusions for diagnostics, and section tree normalization for the Sections view based on repo section list output with line-only range start/end values.
+Extension activation, repo CLI command execution helpers, GraphQL client piping through the repo CLI, ticket command prompts aligned to repo ticket inputs including LLM and UI selection on ticket open, and section tree normalization for the Sections view based on repo section list output with line-only range start/end values.
 
 ## 📄 js/vscode/package.json
 
@@ -3911,7 +3913,7 @@ Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP s
 
 ## 📄 go/repo/main.go
 
-Single-file repo CLI implementation with embedded engine, streaming command registry and emitter event model for CLI/MCP/VS Code adapters, CLI command definitions with GraphQL query strings for repo operations (including export and section integrate commands), ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, TicketUI enum normalization for GraphQL inputs, range resolution returning line/column positions with Position subfield selections in GraphQL queries, ticket UI validation, MCP tool handlers with cursor/limit paging over streamed item events, ticket title updates that rename folder paths, ticket.md creation and summary injection with plan.md seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, benchmark/preflight/update operational command wiring, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, file/folder streaming and folder file listing filtered by gitignored paths plus `.semio-repo/` and `assets/repo/` exclusions, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, legacy ticket directory fallback for reads, and contributor aggregation from tickets and source headers.
+Single-file repo CLI implementation with embedded engine, streaming command registry and emitter event model for CLI/MCP/VS Code adapters, CLI command definitions with GraphQL query strings for repo operations (including export and section integrate commands), analyze/fix commands accepting scope via flags or positional arguments, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, TicketUI enum normalization for GraphQL inputs, range resolution returning line/column positions with Position subfield selections and nested section list queries for full tree hydration, ticket UI validation, MCP tool handlers with cursor/limit paging over streamed item events, ticket title updates that rename folder paths, ticket.md creation and summary injection with plan.md seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, benchmark/preflight/update operational command wiring, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, file/folder streaming and folder file listing filtered by `.gitignore` patterns (including tracked matches) plus `.semio-repo/` and `assets/repo/` exclusions, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, legacy ticket directory fallback for reads, and contributor aggregation from tickets and source headers.
 
 ## 📁net/
 
