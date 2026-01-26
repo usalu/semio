@@ -1,0 +1,4 @@
+- Remove gitignore and repo metadata filtering logic from the VS Code extension.
+- Keep repo binary as the single source of truth for ignore rules.
+- Update README.md and AGENTS.md to reflect repo-owned ignore behavior.
+- Record ticket changes and summary, then close the ticket with affected files.

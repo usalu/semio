@@ -117,7 +117,7 @@ function getUrqlClient(): Client | null {
         log(`[urql] executing graphql via execFile. Variables: ${variablesJson.length > 100 ? variablesJson.substring(0, 100) + '...' : variablesJson}`);
         const repoPath = getRepoCommand();
         if (!repoPath) throw new Error("Repo command not found");
-        const repoArgs = ["--format", "jsonl", "graphql", query];
+        const repoArgs = ["--json", "graphql", query];
         if (Object.keys(variables).length > 0) {
           repoArgs.push("-v", variablesJson);
         }
@@ -247,6 +247,23 @@ const RepoDocument = graphql(`
           name
           url
         }
+      }
+    }
+  }
+`);
+
+const FolderContentDocument = graphql(`
+  query FolderContent($path: String!) {
+    folder(path: $path) {
+      children {
+        path
+        name
+        uri
+      }
+      files {
+        path
+        name
+        uri
       }
     }
   }
@@ -420,6 +437,17 @@ async function fetchBundlesViaGraphQL(): Promise<Bundle[]> {
     return [];
   }
   return result.data?.repo?.bundles ?? [];
+}
+
+async function fetchFolderContent(path: string): Promise<DocumentType<typeof FolderContentDocument>["folder"] | null> {
+  const client = getUrqlClient();
+  if (!client) return null;
+  const result = await client.query(FolderContentDocument, { path });
+  if (result.error) {
+    logError("[GraphQL] fetchFolderContent error:", result.error);
+    return null;
+  }
+  return result.data?.folder ?? null;
 }
 
 async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: number, status?: TicketStatus): Promise<Ticket[]> {
@@ -627,7 +655,8 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
     logError("[runRepoCommandJson] no repo command found");
     return null;
   }
-  const fullCommand = `"${command}" ${args}`;
+  // Add --json flag to get JSONL output
+  const fullCommand = `"${command}" --json ${args}`;
   log("[runRepoCommandJson] executing:", fullCommand, "cwd:", root);
   try {
     const { stdout, stderr } = await execAsync(fullCommand, { cwd: root, timeout: 60000, maxBuffer: 10 * 1024 * 1024 });
@@ -638,15 +667,13 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
       logError("[runRepoCommandJson] stdout is empty!");
       return null;
     }
-    const parsed = JSON.parse(stdout);
-    if (parsed && !parsed.data && !parsed.error) {
-      const keys = Object.keys(parsed);
-      if (keys.length === 1) {
-        return { data: parsed[keys[0]], output: { exitCode: 0, lines: [] } } as any;
-      }
-      return { data: parsed, output: { exitCode: 0, lines: [] } } as any;
+    // Parse JSONL output - extract result from event stream
+    const events = parseRepoEvents(stdout);
+    const result = extractRepoResult(events);
+    if (result && "data" in result) {
+      return { data: result.data, output: { exitCode: 0, lines: [] } } as any;
     }
-    return parsed as T;
+    return result as T;
   } catch (error) {
     logError("[runRepoCommandJson] error:", error);
     if (error instanceof Error) {
@@ -696,7 +723,7 @@ function extractSections(result: any): SectionInfo[] {
 
 async function getSectionListForFile(filePath: string): Promise<SectionInfo[]> {
   log("[getSectionListForFile] fetching sections for:", filePath);
-  const result = await runRepoCommandJson<ToolResult<SectionInfo[]> | { file?: { sections?: GraphqlSection[] | null } | null }>(`section list "${filePath}"`);
+  const result = await runRepoCommandJson<ToolResult<SectionInfo[]> | { file?: { sections?: GraphqlSection[] | null } | null }>(`section list --file "${filePath}"`);
   log("[getSectionListForFile] result:", result ? "received" : "null", result ? JSON.stringify(result).substring(0, 200) : "");
   const sections = extractSections(result);
   log("[getSectionListForFile] extracted sections count:", sections.length);
@@ -974,6 +1001,7 @@ function pinDiagnosticPreview(editor?: vscode.TextEditor): void {
 
 let repoDiagnosticCollection: vscode.DiagnosticCollection;
 const fileViolationsMap = new Map<string, Violation[]>();
+const gitIgnoreCache = new Map<string, boolean>();
 
 function extractFilePathFromScope(scope: string): string | undefined {
   let cleanScope = scope;
@@ -1001,14 +1029,78 @@ function shouldAnalyzeFile(document: vscode.TextDocument): boolean {
   return supportedLanguages.includes(document.languageId);
 }
 
-async function analyzeFile(document: vscode.TextDocument): Promise<void> {
-  if (!shouldAnalyzeFile(document)) return;
-  if (document.uri.scheme !== "file") return;
+function isRepoMetaPath(relativePath: string): boolean {
+  if (relativePath === ".semio-repo" || relativePath.startsWith(".semio-repo/")) {
+    return true;
+  }
+  if (relativePath === "assets/repo" || relativePath.startsWith("assets/repo/")) {
+    return true;
+  }
+  return false;
+}
+
+async function isGitIgnoredPath(root: string, relativePath: string): Promise<boolean> {
+  const cacheKey = `${root}:${relativePath}`;
+  if (gitIgnoreCache.has(cacheKey)) {
+    return gitIgnoreCache.get(cacheKey) ?? false;
+  }
+  try {
+    const { stdout } = await execFileAsync("git", ["check-ignore", relativePath], { cwd: root });
+    const ignored = stdout.trim().length > 0;
+    gitIgnoreCache.set(cacheKey, ignored);
+    return ignored;
+  } catch (error) {
+    if (typeof error === "object" && error !== null && "code" in error) {
+      const code = (error as { code?: number }).code;
+      if (code === 1) {
+        gitIgnoreCache.set(cacheKey, false);
+        return false;
+      }
+    }
+    return false;
+  }
+}
+
+async function shouldAnalyzeDocument(document: vscode.TextDocument): Promise<boolean> {
+  if (!shouldAnalyzeFile(document)) {
+    return false;
+  }
+  if (document.uri.scheme !== "file") {
+    return false;
+  }
   const root = getWorkspaceRoot();
-  if (!root) return;
+  if (!root) {
+    return false;
+  }
+  const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
+  if (relativePath.startsWith("..")) {
+    return false;
+  }
+  if (isRepoMetaPath(relativePath)) {
+    return false;
+  }
+  if (await isGitIgnoredPath(root, relativePath)) {
+    return false;
+  }
+  return true;
+}
+
+async function analyzeFile(document: vscode.TextDocument): Promise<void> {
+  if (!(await shouldAnalyzeDocument(document))) {
+    return;
+  }
+  const root = getWorkspaceRoot();
+  if (!root) {
+    return;
+  }
 
   const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
-  if (relativePath.startsWith("..")) return;
+  if (relativePath.startsWith("..")) {
+    return;
+  }
+  if (isRepoMetaPath(relativePath)) {
+    return;
+  }
   const fileUri = vscode.Uri.file(path.join(root, relativePath));
   const processKey = `analyze:${relativePath}`;
 
@@ -1054,6 +1146,9 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
   for (const violation of violations) {
     const filePath = extractFilePathFromScope(violation.scope);
     if (!filePath) continue;
+    if (isRepoMetaPath(filePath)) {
+      continue;
+    }
     const absPath = path.join(root, filePath);
     const fileUri = vscode.Uri.file(absPath);
     const uriKey = fileUri.toString();
@@ -1622,43 +1717,24 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
     log("[TicketsProvider.getChildren] cachedTickets.length:", this.cachedTickets.length);
 
     if (this.cachedTickets.length === 0) {
-      log("[TicketsProvider.getChildren] cache empty, fetching tickets...");
-      const codebase = await getCodebase();
-      if (codebase?.tickets) {
-        this.cachedTickets = codebase.tickets.map((t) => ({
-          year: t.year,
-          month: t.month,
-          day: t.day,
-          slug: t.slug,
-          folderPath: t.path.replace(/[/\\]ticket\.md$/, ""),
-          filePath: t.path,
-          frontmatter: {
-            status: t.status.toLowerCase() as TicketStatus,
-            prompt: t.prompt,
-            summary: t.summary ?? undefined,
-            author: t.author?.github,
-            commit: t.commit ?? undefined,
-          },
-        }));
-      } else {
-        const tickets = await fetchTicketsViaGraphQL();
-        log("[TicketsProvider.getChildren] GraphQL tickets:", tickets.length);
-        this.cachedTickets = tickets.map((t) => ({
-          year: t.year,
-          month: t.month,
-          day: t.day,
-          slug: t.slug,
-          folderPath: t.path.replace(/[/\\]ticket\.md$/, ""),
-          filePath: t.path,
-          frontmatter: {
-            status: t.status.toLowerCase(),
-            prompt: t.prompt,
-            summary: t.summary ?? undefined,
-            author: t.author?.github,
-            commit: t.commit ?? undefined,
-          },
-        }));
-      }
+      log("[TicketsProvider.getChildren] cache empty, fetching tickets via GraphQL...");
+      const tickets = await fetchTicketsViaGraphQL();
+      log("[TicketsProvider.getChildren] GraphQL tickets:", tickets.length);
+      this.cachedTickets = tickets.map((t) => ({
+        year: t.year,
+        month: t.month,
+        day: t.day,
+        slug: t.slug,
+        folderPath: t.path.replace(/[/\\]ticket\.md$/, ""),
+        filePath: t.path,
+        frontmatter: {
+          status: t.status.toLowerCase(),
+          prompt: t.prompt,
+          summary: t.summary ?? undefined,
+          author: t.author?.github,
+          commit: t.commit ?? undefined,
+        },
+      }));
       log("[TicketsProvider.getChildren] cachedTickets.length after fetch:", this.cachedTickets.length);
     }
 
@@ -1825,27 +1901,16 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
   async getChildren(element?: PolicyTreeItem): Promise<PolicyTreeItem[]> {
     if (!element) {
       if (this.cachedPolicies.length === 0) {
-        const codebase = await getCodebase();
-        if (codebase?.policies) {
-          this.cachedPolicies = codebase.policies.map((p) => ({
-            id: p.id,
-            name: p.name,
-            description: p.description ?? "",
-          }));
-          for (const policy of codebase.policies) {
-            this.cachedViolationKinds.set(policy.id, policy.violationKinds.map((vk) => vk.id));
-          }
-        } else {
-          const policies = await fetchPoliciesViaGraphQL();
-          log("[PoliciesProvider.getChildren] GraphQL policies:", policies.length);
-          this.cachedPolicies = policies.map((p) => ({
-            id: p.id,
-            name: p.name,
-            description: p.description ?? "",
-          }));
-          for (const policy of policies) {
-            this.cachedViolationKinds.set(policy.id, policy.violationKinds.map((vk) => vk.id));
-          }
+        log("[PoliciesProvider.getChildren] cache empty, fetching policies via GraphQL...");
+        const policies = await fetchPoliciesViaGraphQL();
+        log("[PoliciesProvider.getChildren] GraphQL policies:", policies.length);
+        this.cachedPolicies = policies.map((p) => ({
+          id: p.id,
+          name: p.name,
+          description: p.description ?? "",
+        }));
+        for (const policy of policies) {
+          this.cachedViolationKinds.set(policy.id, policy.violationKinds.map((vk) => vk.id));
         }
       }
       if (!globalSearchQuery) {
@@ -2196,42 +2261,26 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
   async getChildren(element?: ContributorTreeItem): Promise<ContributorTreeItem[]> {
     if (!element) {
       if (this.cachedContributors.length === 0) {
-        const codebase = await getCodebase();
-        if (codebase?.contributors) {
-          this.cachedContributors = codebase.contributors.map((c) => ({
-            github: c.github,
-            name: c.name ?? undefined,
-            emails: c.emails,
-            links: c.links?.reduce((acc: Record<string, string>, l) => ({ ...acc, [l.name]: l.url }), {}),
-            contributions: {
-              bundles: [],
-              files: [],
-              tickets: [],
-              commits: [],
-              lines: { added: 0, removed: 0 },
-            },
-          }));
-        } else {
-          const contributors = await fetchContributorsViaGraphQL();
-          log("[ContributorsProvider.getChildren] GraphQL contributors:", contributors.length);
-          this.cachedContributors = contributors.map((c) => ({
-            github: c.github,
-            name: c.name ?? undefined,
-            emails: c.emails,
-            links: c.links?.reduce((acc: Record<string, string>, l) => ({ ...acc, [l.name]: l.url }), {}),
-            contributions: {
-              bundles: [],
-              files: [],
-              tickets: [],
-              commits: [],
-              lines: { added: 0, removed: 0 },
-            },
-          }));
-        }
+        log("[ContributorsProvider.getChildren] cache empty, fetching contributors via GraphQL...");
+        const contributors = await fetchContributorsViaGraphQL();
+        log("[ContributorsProvider.getChildren] GraphQL contributors:", contributors.length);
+        this.cachedContributors = contributors.map((c) => ({
+          github: c.github,
+          name: c.name ?? undefined,
+          emails: c.emails,
+          links: c.links?.reduce((acc: Record<string, string>, l) => ({ ...acc, [l.name]: l.url }), {}),
+          contributions: {
+            bundles: [],
+            files: [],
+            tickets: [],
+            commits: [],
+            lines: { added: 0, removed: 0 },
+          },
+        }));
       }
       const root = getWorkspaceRoot();
       return this.cachedContributors.filter((c) => this.matchesSearch(c)).map((contributor) => {
-        const avatarPath = root ? path.join(root, "contributors", contributor.github, "avatar-round-90x90.png") : undefined;
+        const avatarPath = root ? path.join(root, ".semio-repo", "contributors", contributor.github, "avatar-round-90x90.png") : undefined;
         return new ContributorItem(contributor, avatarPath);
       });
     }
@@ -2536,11 +2585,12 @@ class CodebaseBundleItem extends vscode.TreeItem {
     public readonly bundle: CodebaseBundle,
     public readonly childNodes: TreeNodeMap,
   ) {
-    super(bundle.id, vscode.TreeItemCollapsibleState.Collapsed);
+    // Use bundle.name instead of bundle.id to avoid "bundle:" prefix
+    super(bundle.name, vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon("package");
     this.contextValue = "codebaseBundle";
     this.description = bundle.projectType || "";
-    this.tooltip = bundle.id;
+    this.tooltip = `${bundle.name} (${bundle.root})`;
     this.command = { command: "semio.navigateToBundle", title: "Navigate to Bundle", arguments: [bundle.root] };
   }
 }
@@ -2604,9 +2654,12 @@ class CodebaseDefinitionItem extends vscode.TreeItem {
 class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<CodebaseTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private cachedBundles: Bundle[] | null = null;
 
   refresh(): void {
+    this.cachedBundles = null;
     refreshCodebase();
+    resetUrqlClient();
     this._onDidChangeTreeData.fire();
   }
 
@@ -2615,114 +2668,112 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
   }
 
   async getChildren(element?: CodebaseTreeItem): Promise<CodebaseTreeItem[]> {
-    const codebase = await getCodebase();
-    if (!codebase) return [];
-
+    // Root level: fetch only bundles (lazy loading)
     if (!element) {
-      // Direct bundles
-      return this.buildChildrenFromTree(codebase, codebase.tree);
+      log("[CodebaseProvider] Fetching bundles for root level...");
+      if (!this.cachedBundles) {
+        this.cachedBundles = await fetchBundlesViaGraphQL();
+      }
+      if (!this.cachedBundles || this.cachedBundles.length === 0) {
+        log("[CodebaseProvider] No bundles found");
+        return [];
+      }
+      log(`[CodebaseProvider] Found ${this.cachedBundles.length} bundles`);
+      // Sort bundles by name
+      const sortedBundles = [...this.cachedBundles].sort((a, b) => a.name.localeCompare(b.name));
+      return sortedBundles.map((bundle) => new CodebaseBundleItem(bundle, {}));
     }
 
     if (element instanceof CodebaseRepoItem) {
-      return this.buildChildrenFromTree(codebase, element.treeChildren);
+      // Legacy support - shouldn't be needed with new lazy loading
+      return [];
     }
 
+    // Bundle expanded: fetch folder content
     if (element instanceof CodebaseBundleItem) {
-      await this.ensureBundleLoaded(codebase, element.bundle);
-      const node = codebase.tree[element.bundle.id];
-      if (node && node.children) {
-        return this.buildChildrenFromTree(codebase, node.children);
+      log(`[CodebaseProvider] Fetching content for bundle: ${element.bundle.root}`);
+      const content = await fetchFolderContent(element.bundle.root);
+      if (content) {
+        return this.buildChildrenFromContent(content);
       }
       return [];
     }
 
+    // Folder expanded: fetch folder content
     if (element instanceof CodebaseFolderItem) {
-      return this.buildChildrenFromTree(codebase, element.childNodes);
+      log(`[CodebaseProvider] Fetching content for folder: ${element.folderPath}`);
+      const content = await fetchFolderContent(element.folderPath);
+      if (content) {
+        return this.buildChildrenFromContent(content);
+      }
+      return [];
     }
 
+    // File expanded: fetch file content via CLI
     if (element instanceof CodebaseFileItem) {
-      await this.ensureFileLoaded(codebase, element.file);
-      return this.buildFileChildren(codebase, element.file);
+      log(`[CodebaseProvider] Fetching content for file: ${element.file.path}`);
+      await this.loadFileContent(element.file);
+      return this.buildFileChildren(element.file);
     }
 
+    // Section expanded: show child sections and definitions
     if (element instanceof CodebaseSectionItem) {
-      return this.buildSectionChildren(codebase, element.section, element.file);
+      return this.buildSectionChildren(element.section, element.file);
     }
 
     return [];
   }
 
-  private async ensureBundleLoaded(codebase: Codebase, bundle: Bundle): Promise<void> {
-    const bundleNode = codebase.tree[bundle.id];
-    if (bundleNode && bundleNode.children && Object.keys(bundleNode.children).length > 0) return;
+  private buildChildrenFromContent(content: NonNullable<DocumentType<typeof FolderContentDocument>["folder"]>): CodebaseTreeItem[] {
+    const items: CodebaseTreeItem[] = [];
 
-    try {
-      // Fix scope syntax: if bundle.id is "@semio/js", scope is "@semio/js"
-      const scope = bundle.id.startsWith("@") ? bundle.id : `@${bundle.id}`;
-      const result = await runRepoCommandJson<ToolResult<string[]>>(`file list "${scope}"`);
-      const files = result?.data;
-      if (files && Array.isArray(files)) {
-        if (!bundleNode.children) bundleNode.children = {};
-
-        const root = getWorkspaceRoot();
-        for (const filePath of files) {
-          let file = codebase.files.find((f) => f.path === filePath);
-          if (!file) {
-            const newFile = {
-              id: filePath,
-              path: filePath,
-              uri: root ? vscode.Uri.file(path.join(root, filePath)).toString() : "",
-              sections: [],
-              definitions: [],
-            } as any;
-            codebase.files.push(newFile);
-            file = newFile;
-          }
-
-          let relativePath = filePath;
-          if (filePath.startsWith(bundle.root)) {
-            relativePath = filePath.substring(bundle.root.length);
-            if (relativePath.startsWith("/") || relativePath.startsWith("\\")) relativePath = relativePath.substring(1);
-          }
-          const parts = relativePath.split("/");
-          let currentMap = bundleNode.children!;
-          for (let i = 0; i < parts.length; i++) {
-            const part = parts[i];
-            const isFile = i === parts.length - 1;
-            if (!currentMap[part]) {
-              currentMap[part] = { kind: isFile ? "file" : "folder", children: isFile ? undefined : {}, filePath: isFile ? filePath : undefined };
-            }
-            if (!isFile) currentMap = currentMap[part].children!;
-          }
-        }
-      }
-    } catch (e) {
-      logError("ensureBundleLoaded error", e);
+    for (const folder of content.children) {
+      items.push(new CodebaseFolderItem(folder.path, folder.name, {}));
     }
+
+    for (const file of content.files) {
+      const fileObj: CodebaseFile = {
+        id: file.path,
+        path: file.path,
+        uri: file.uri,
+        sections: [],
+        definitions: [],
+      } as any;
+      // We assume it might have sections/definitions, so we allow expansion
+      items.push(new CodebaseFileItem(fileObj, file.name, true));
+    }
+
+    // Sort items: folders first, then files
+    items.sort((a, b) => {
+      if (a instanceof CodebaseFolderItem && b instanceof CodebaseFileItem) return -1;
+      if (a instanceof CodebaseFileItem && b instanceof CodebaseFolderItem) return 1;
+      return (a.label as string).localeCompare(b.label as string);
+    });
+
+    return items;
   }
 
-  private async ensureFileLoaded(codebase: Codebase, file: CodebaseFile): Promise<void> {
+  private async loadFileContent(file: CodebaseFile): Promise<void> {
     if (file.sections && file.sections.length > 0) return;
 
     try {
       // Load sections
-      const secResult = await runRepoCommandJson<ToolResult<SectionInfo[]>>(`section list "${file.path}"`);
+      const secResult = await runRepoCommandJson<ToolResult<SectionInfo[]>>(`section list --file "${file.path}"`);
       const sections = extractSections(secResult);
       file.sections = this.flattenSections(sections, file.path) as any;
 
       // Load definitions
-      const defResult = await runRepoCommandJson<ToolResult<DefinitionInfo[]>>(`definition list "${file.path}"`);
+      const defResult = await runRepoCommandJson<ToolResult<DefinitionInfo[]>>(`definition list --file "${file.path}"`);
       if (defResult && defResult.data) {
         file.definitions = defResult.data.map((d) => ({
           id: file.path + "§" + d.name,
           name: d.name,
           kind: d.kind,
-          // Range is strictly lines now (integers)
           range: { start: d.startLine, end: d.endLine },
         })) as any;
       }
     } catch (e) {
-      logError("ensureFileLoaded error", e);
+      logError("loadFileContent error", e);
     }
   }
 
@@ -2734,9 +2785,7 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
         id: myPath,
         name: s.name,
         path: myPath,
-        // Range is strictly lines now
         range: { start: s.startLine, end: s.endLine },
-        children: null,
       };
       result.push(gqlS);
       result = result.concat(this.flattenSections(s.children, myPath));
@@ -2744,62 +2793,24 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     return result;
   }
 
-  private buildChildrenFromTree(codebase: Codebase, nodes: TreeNodeMap): CodebaseTreeItem[] {
+  private buildFileChildren(file: CodebaseFile): CodebaseTreeItem[] {
     const items: CodebaseTreeItem[] = [];
 
-    for (const [name, entry] of Object.entries(nodes)) {
-      switch (entry.kind) {
-        case "bundle": {
-          const bundle = codebase.bundles.find((b) => b.id === name);
-          if (bundle) {
-            items.push(new CodebaseBundleItem(bundle, entry.children || {}));
-          }
-          break;
-        }
-        case "folder": {
-          items.push(new CodebaseFolderItem(name, name.split("/").pop() || name, entry.children || {}));
-          break;
-        }
-        case "file": {
-          const file = codebase.files.find((f) => f.path === entry.filePath || f.path === name || f.id === name);
-          if (file) {
-            items.push(new CodebaseFileItem(file, file.path.split("/").pop() || file.path, true));
-          }
-          break;
-        }
-      }
-    }
-
-    return items;
-  }
-
-  private buildFileChildren(_codebase: Codebase, file: CodebaseFile): CodebaseTreeItem[] {
-    const items: CodebaseTreeItem[] = [];
-
-    // Filter root sections (depth Check?)
-    // My `flattenSections` produces IDs `file#Section`.
-    // Root sections have 2 parts (file, section).
+    // Root sections (depth 1 - file#section)
     const rootSections = file.sections.filter((s) => {
       const parts = s.path.split("#");
       return parts.length === 2;
     });
 
     for (const section of rootSections) {
-      const sectionName = section.name;
-      // Check children: sub-sections OR matching definitions
       const hasSubSections = file.sections.some(s => s.path.startsWith(section.path + "#") && s.path !== section.path);
       const hasDefinitions = this.getDefinitionsForSection(file, section).length > 0;
-
-      items.push(new CodebaseSectionItem(section, file, sectionName, hasSubSections || hasDefinitions));
+      items.push(new CodebaseSectionItem(section, file, section.name, hasSubSections || hasDefinitions));
     }
 
+    // File-level definitions (not in any section)
     const fileDefinitions = file.definitions.filter((d) => {
-      // Definitions at file root (not inside any section)
-      // Range check: does it fall into any root section?
-      // If yes, it belongs to that section.
-      // If no, it is root.
-      const inSection = rootSections.some(s => this.isDefinitionInSection(d, s));
-      return !inSection;
+      return !rootSections.some(s => this.isDefinitionInSection(d, s));
     });
     for (const def of fileDefinitions) {
       items.push(new CodebaseDefinitionItem(def, file.uri));
@@ -2808,7 +2819,7 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     return items;
   }
 
-  private buildSectionChildren(_codebase: Codebase, section: CodebaseSection, file: CodebaseFile): CodebaseTreeItem[] {
+  private buildSectionChildren(section: CodebaseSection, file: CodebaseFile): CodebaseTreeItem[] {
     const items: CodebaseTreeItem[] = [];
     const sectionPathWithHash = section.path + "#";
 
@@ -2834,7 +2845,6 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
 
   private isDefinitionInSection(def: CodebaseDefinition, section: CodebaseSection): boolean {
     if (!def.range || !section.range) return false;
-    // Range is lines (integers)
     const dStart = def.range.start as unknown as number;
     const sStart = section.range.start as unknown as number;
     const sEnd = section.range.end as unknown as number;
@@ -3806,7 +3816,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      runRepoCommand(`section list ${relativePath}`);
+      runRepoCommand(`section list --file "${relativePath}"`);
     }),
     vscode.commands.registerCommand("semio.definitionTree", async () => {
       const editor = vscode.window.activeTextEditor;
@@ -3819,7 +3829,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-      runRepoCommand(`definition tree ${relativePath}`);
+      runRepoCommand(`definition list --file "${relativePath}"`);
     }),
     vscode.commands.registerCommand("semio.projectTree", async () => {
       if (!hasRepoAccess()) {
@@ -3898,8 +3908,8 @@ export function activate(context: vscode.ExtensionContext) {
     pinDiagnosticPreview(vscode.window.activeTextEditor);
 
     context.subscriptions.push(
-      vscode.workspace.onDidOpenTextDocument((document) => {
-        if (shouldAnalyzeFile(document)) {
+      vscode.workspace.onDidOpenTextDocument(async (document) => {
+        if (await shouldAnalyzeDocument(document)) {
           analyzeFile(document);
         }
         if (isKitDocument(document)) {
@@ -3911,8 +3921,8 @@ export function activate(context: vscode.ExtensionContext) {
           validateKitDocument(e.document);
         }
       }),
-      vscode.workspace.onDidSaveTextDocument((document) => {
-        if (shouldAnalyzeFile(document)) {
+      vscode.workspace.onDidSaveTextDocument(async (document) => {
+        if (await shouldAnalyzeDocument(document)) {
           analyzeFile(document);
         }
         if (isKitDocument(document)) {
@@ -3942,9 +3952,11 @@ export function activate(context: vscode.ExtensionContext) {
     setTimeout(() => {
       log("[ACTIVATION] Starting initial diagnostics background task...");
       vscode.workspace.textDocuments.forEach((document) => {
-        if (shouldAnalyzeFile(document)) {
-          analyzeFile(document);
-        }
+        void shouldAnalyzeDocument(document).then((shouldAnalyze) => {
+          if (shouldAnalyze) {
+            analyzeFile(document);
+          }
+        });
         if (isKitDocument(document)) {
           validateKitDocument(document);
         }

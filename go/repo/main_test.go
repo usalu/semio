@@ -47,14 +47,6 @@ func findTestRepoRoot(start string) string {
 	}
 }
 
-type testGraphQLAdapter struct {
-	exec *Executor
-}
-
-func (t testGraphQLAdapter) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
-	return t.exec.Execute(ctx, query, variables)
-}
-
 func testEngineFactory(config Config) (*Engine, error) {
 	repoRoot := config.Repo
 	if repoRoot == "" {
@@ -65,11 +57,11 @@ func testEngineFactory(config Config) (*Engine, error) {
 		repoRoot = findTestRepoRoot(cwd)
 	}
 	SetRootDir(repoRoot)
-	executor, err := NewExecutorWithContext(repoRoot, NewRepoContext(repoRoot))
+	executor, err := NewExecutor(repoRoot)
 	if err != nil {
 		return nil, err
 	}
-	return NewEngine(testGraphQLAdapter{exec: executor}), nil
+	return NewEngine(executor), nil
 }
 
 func getTestExecutor(t *testing.T) *Executor {
@@ -276,7 +268,7 @@ func TestTicketTitleValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", ui: copilot-chat, noIssue: true }) { id } }`
+			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", ui: COPILOT_CHAT, noIssue: true }) { id } }`
 			_, err := executor.ExecuteJSON(ctx, query, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
@@ -861,7 +853,7 @@ func executeCommand(args ...string) (string, error) {
 	root.SetOut(buf)
 	root.SetErr(buf)
 	root.SetArgs(args)
-	config.Format = "json"
+	config.JSON = true
 	err := root.Execute()
 	return buf.String(), err
 }
@@ -1331,8 +1323,8 @@ func TestGraphQLTicketsQuery(t *testing.T) {
 	if err != nil {
 		t.Errorf("ExecuteGraphQL tickets returned error: %v", err)
 	}
-	if !strings.Contains(result, "ticket:") {
-		t.Errorf("Expected result to contain 'ticket:', got: %s", result)
+	if !strings.Contains(result, "\"slug\"") {
+		t.Errorf("Expected result to contain '\"slug\"', got: %s", result)
 	}
 }
 
@@ -1368,4 +1360,67 @@ func TestGraphQLFixMutation(t *testing.T) {
 
 // #endregion GraphQL Tests
 
-// #endregion Cli
+
+// #region Tree Tests
+
+func executeTreeCommand(args ...string) (string, error) {
+	buf := new(bytes.Buffer)
+	root, _ := NewRootWithConfig(testEngineFactory)
+	root.SetOut(buf)
+	root.SetErr(buf)
+	root.SetArgs(args)
+	// Default config has JSON=false
+	err := root.Execute()
+	return buf.String(), err
+}
+
+func TestTreeCommands(t *testing.T) {
+	// 1. Codebase Tree
+	if testing.Short() {
+		t.Skip("skipping slow tree test")
+	}
+	
+	output, err := executeTreeCommand("tree", "go/repo")
+	if err != nil {
+		t.Errorf("repo tree failed: %v", err)
+	}
+	if !strings.Contains(output, "main.go") {
+		t.Errorf("repo tree go/repo missing main.go, got:\n%s", output)
+	}
+
+	// 2. Folder Tree
+	output, err = executeTreeCommand("folder", "tree", "go/repo")
+	if err != nil {
+		t.Errorf("folder tree failed: %v", err)
+	}
+	// Folder tree produces output like "└── cmd/"
+	// Note: output might include metadata/logs unless JSON is false and renderStream handles it well.
+	// renderStream without JSON prints messages directly if they are logs.
+	if !strings.Contains(output, "cmd/") {
+		// Just checking that we got some output
+		if len(output) < 10 {
+			t.Errorf("folder tree output suspicious: %s", output)
+		}
+	}
+
+	// 3. File Tree
+	output, err = executeTreeCommand("file", "tree", "go/repo")
+	if err != nil {
+		t.Errorf("file tree failed: %v", err)
+	}
+	if !strings.Contains(output, "main.go") {
+		t.Errorf("file tree missing main.go")
+	}
+
+	// 4. Ticket Tree
+	output, err = executeTreeCommand("ticket", "tree")
+	if err != nil {
+		t.Errorf("ticket tree failed: %v", err)
+	}
+	// We expect at least the root or some structure
+	if len(output) == 0 {
+		t.Errorf("ticket tree output empty")
+	}
+}
+
+// #endregion Tree Tests

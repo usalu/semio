@@ -39,12 +39,10 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"runtime"
 	"sort"
 	"strconv"
 	"strings"
 	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/bmatcuk/doublestar/v4"
@@ -66,7 +64,6 @@ const (
 	KindStart    Kind = "start"
 	KindLog      Kind = "log"
 	KindProgress Kind = "progress"
-	KindItem     Kind = "item"
 	KindResult   Kind = "result"
 	KindArtifact Kind = "artifact"
 	KindError    Kind = "error"
@@ -81,7 +78,6 @@ type Event struct {
 	Level    string          `json:"level,omitempty"`
 	Progress *Progress       `json:"progress,omitempty"`
 	Data     json.RawMessage `json:"data,omitempty"`
-	Meta     json.RawMessage `json:"meta,omitempty"`
 	Artifact *Artifact       `json:"artifact,omitempty"`
 	Error    *ErrPayload     `json:"error,omitempty"`
 	Done     *DonePayload    `json:"done,omitempty"`
@@ -108,10 +104,8 @@ type ErrPayload struct {
 }
 
 type DonePayload struct {
-	ExitCode int             `json:"exit_code"`
-	Status   string          `json:"status"`
-	Summary  json.RawMessage `json:"summary,omitempty"`
-	Counters map[string]int  `json:"counters,omitempty"`
+	ExitCode int    `json:"exit_code"`
+	Status   string `json:"status"`
 }
 
 // #endregion Engine Events
@@ -136,7 +130,6 @@ type Command string
 
 const (
 	CmdGraphQL Command = "graphql"
-	CmdInvoke  Command = "invoke"
 	CmdAnalyze Command = "analyze"
 	CmdFix     Command = "fix"
 	CmdPolicy  Command = "policy"
@@ -160,11 +153,6 @@ type GraphQLArgs struct {
 	Variables map[string]any `json:"variables,omitempty"`
 }
 
-type InvokeArgs struct {
-	ID    string          `json:"id"`
-	Input json.RawMessage `json:"input,omitempty"`
-}
-
 // #endregion Engine Requests
 
 // #region Engine
@@ -174,8 +162,7 @@ type GraphQLExecutor interface {
 }
 
 type Engine struct {
-	GraphQL  GraphQLExecutor
-	Registry *Registry
+	GraphQL GraphQLExecutor
 }
 
 func NewEngine(graphql GraphQLExecutor) *Engine {
@@ -202,45 +189,14 @@ func (e *Engine) Run(ctx context.Context, req Request) <-chan Event {
 		}
 
 		switch req.Command {
-		case CmdGraphQL:
+		case CmdGraphQL, CmdAnalyze, CmdFix, CmdPolicy, CmdTicket, CmdBundle, CmdFolder, CmdFile, CmdSection, CmdDef:
 			e.runGraphQL(ctx, req, out)
-		case CmdInvoke:
-			e.runRegistry(ctx, req, out)
 		default:
 			e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: "unsupported command", Fatal: true})
 			e.emitDone(out, exitCodeError, "error")
 		}
 	}()
 	return out
-}
-
-func (e *Engine) runRegistry(ctx context.Context, req Request, out chan<- Event) {
-	if e.Registry == nil {
-		e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: "registry missing", Fatal: true})
-		e.emitDone(out, exitCodeError, "error")
-		return
-	}
-	var args InvokeArgs
-	if err := json.Unmarshal(req.Args, &args); err != nil {
-		e.emitError(out, req, ErrPayload{Code: string(ErrParse), Message: "invalid arguments", Detail: err.Error(), Fatal: true})
-		e.emitDone(out, exitCodeUsage, "error")
-		return
-	}
-	if args.ID == "" {
-		e.emitError(out, req, ErrPayload{Code: string(ErrParse), Message: "missing command id", Fatal: true})
-		e.emitDone(out, exitCodeUsage, "error")
-		return
-	}
-	deps, err := NewDeps(Config{Repo: req.RepoRoot, Verbose: req.Verbose})
-	if err != nil {
-		e.emitError(out, req, ErrPayload{Code: string(ErrInternal), Message: "failed to initialize deps", Detail: err.Error(), Fatal: true})
-		e.emitDone(out, exitCodeError, "error")
-		return
-	}
-	stream := e.Registry.Run(ctx, deps, CommandID(args.ID), args.Input)
-	for event := range stream {
-		out <- event
-	}
 }
 
 func (e *Engine) runGraphQL(ctx context.Context, req Request, out chan<- Event) {
@@ -290,1145 +246,12 @@ const (
 	exitCodeCanceled = 130
 )
 
-// #region Stream
-
-type Emitter struct {
-	ctx    context.Context
-	out    chan Event
-	cmd    string
-	closed bool
-	mu     sync.Mutex
-}
-
-func NewEmitter(ctx context.Context, command string, buffer int) *Emitter {
-	if buffer <= 0 {
-		buffer = 256
-	}
-	return &Emitter{ctx: ctx, out: make(chan Event, buffer), cmd: command}
-}
-
-func (e *Emitter) Out() <-chan Event {
-	return e.out
-}
-
-func (e *Emitter) CloseWithPanicRecovery() {
-	if recovered := recover(); recovered != nil {
-		e.Error(fmt.Errorf("%v", recovered), "internal error", fmt.Sprintf("%v", recovered), true)
-		e.Done(exitCodeError, map[string]any{"status": "error"})
-	}
-}
-
-func (e *Emitter) send(event Event) {
-	select {
-	case <-e.ctx.Done():
-		return
-	case e.out <- event:
-	}
-}
-
-func (e *Emitter) Log(message string) {
-	e.send(Event{Kind: KindLog, Command: e.cmd, Message: message})
-}
-
-func (e *Emitter) Progress(current, total int, unit string) {
-	step := unit
-	if step == "" {
-		step = "items"
-	}
-	percent := 0
-	if total > 0 {
-		percent = int(math.Round(float64(current) / float64(total) * 100))
-	}
-	e.send(Event{Kind: KindProgress, Command: e.cmd, Progress: &Progress{Current: current, Total: total, Percent: percent, Step: step}})
-}
-
-func (e *Emitter) Error(err error, message string, detail string, fatal bool) {
-	msg := message
-	if msg == "" && err != nil {
-		msg = err.Error()
-	}
-	if detail == "" && err != nil {
-		detail = err.Error()
-	}
-	payload := ErrPayload{Code: string(ErrInternal), Message: msg, Detail: detail, Fatal: fatal}
-	e.send(Event{Kind: KindError, Command: e.cmd, Error: &payload})
-}
-
-func (e *Emitter) Item(kind string, value any) {
-	data, err := json.Marshal(value)
-	if err != nil {
-		e.Error(err, "failed to encode item", err.Error(), false)
-		return
-	}
-	meta := map[string]string{"stream": "items", "kind": kind}
-	metaBytes, _ := json.Marshal(meta)
-	e.send(Event{Kind: KindItem, Command: e.cmd, Data: data, Meta: metaBytes})
-}
-
-func (e *Emitter) Done(exitCode int, summary any) {
-	e.mu.Lock()
-	if e.closed {
-		e.mu.Unlock()
-		return
-	}
-	e.closed = true
-	e.mu.Unlock()
-	var summaryBytes json.RawMessage
-	if summary != nil {
-		if data, err := json.Marshal(summary); err == nil {
-			summaryBytes = data
-		}
-	}
-	status := "ok"
-	if exitCode != 0 {
-		status = "error"
-	}
-	e.send(Event{Kind: KindDone, Command: e.cmd, Done: &DonePayload{ExitCode: exitCode, Status: status, Summary: summaryBytes}})
-	close(e.out)
-}
-
-// #endregion Stream
-
-// #region Concurrency
-
-type Semaphore struct {
-	ch chan struct{}
-}
-
-func NewSemaphore(limit int) *Semaphore {
-	if limit <= 0 {
-		limit = 1
-	}
-	return &Semaphore{ch: make(chan struct{}, limit)}
-}
-
-func (s *Semaphore) Acquire(ctx context.Context) bool {
-	select {
-	case <-ctx.Done():
-		return false
-	case s.ch <- struct{}{}:
-		return true
-	}
-}
-
-func (s *Semaphore) Release() {
-	select {
-	case <-s.ch:
-	default:
-	}
-}
-
-func ForEachConcurrent[T any](ctx context.Context, items []T, limit int, fn func(context.Context, T) error) error {
-	if len(items) == 0 {
-		return nil
-	}
-	sem := NewSemaphore(limit)
-	errCh := make(chan error, len(items))
-	var wg sync.WaitGroup
-	for _, item := range items {
-		if !sem.Acquire(ctx) {
-			break
-		}
-		wg.Add(1)
-		current := item
-		go func() {
-			defer wg.Done()
-			defer sem.Release()
-			if err := fn(ctx, current); err != nil {
-				errCh <- err
-			}
-		}()
-	}
-	wg.Wait()
-	select {
-	case err := <-errCh:
-		return err
-	default:
-		return nil
-	}
-}
-
-// #endregion Concurrency
-
-// #region Deps
-
-type Deps struct {
-	RootDir     string
-	RepoCtx     RepoContext
-	CodebaseCtx *CodebaseContext
-	Bundles     []Bundle
-	Concurrency int
-}
-
-func NewDeps(config Config) (*Deps, error) {
-	repoRoot := config.Repo
-	if repoRoot == "" {
-		cwd, err := os.Getwd()
-		if err != nil {
-			return nil, err
-		}
-		repoRoot = findRepoRoot(cwd)
-	}
-	SetRootDir(repoRoot)
-	ctx := NewRepoContext(repoRoot)
-	codebase := NewCodebaseContext()
-	codebase.LoadBundles()
-	bundles := GetProjects()
-	concurrency := runtime.NumCPU() * 4
-	if concurrency < 4 {
-		concurrency = 4
-	}
-	if concurrency > 16 {
-		concurrency = 16
-	}
-	return &Deps{RootDir: repoRoot, RepoCtx: ctx, CodebaseCtx: codebase, Bundles: bundles, Concurrency: concurrency}, nil
-}
-
-// #endregion Deps
-
-// #region Command Registry
-
-type CommandID string
-
-type CommandDefinition struct {
-	ID    CommandID
-	Title string
-	Run   func(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int
-}
-
-type Registry struct {
-	cmds map[CommandID]CommandDefinition
-}
-
-func NewRegistry() *Registry {
-	return &Registry{cmds: make(map[CommandID]CommandDefinition)}
-}
-
-func (r *Registry) Register(cmd CommandDefinition) {
-	if cmd.ID == "" {
-		return
-	}
-	r.cmds[cmd.ID] = cmd
-}
-
-func (r *Registry) Run(ctx context.Context, deps *Deps, id CommandID, input json.RawMessage) <-chan Event {
-	command := r.cmds[id]
-	emit := NewEmitter(ctx, string(id), 256)
-	go func() {
-		defer emit.CloseWithPanicRecovery()
-		if command.Run == nil {
-			emit.Error(fmt.Errorf("unknown command"), "unsupported command", "", true)
-			emit.Done(exitCodeUsage, map[string]any{"status": "unsupported"})
-			return
-		}
-		exitCode := command.Run(ctx, deps, input, emit)
-		if exitCode == 0 {
-			emit.Done(exitCodeOK, map[string]any{"status": "ok"})
-			return
-		}
-		emit.Done(exitCode, map[string]any{"status": "error"})
-	}()
-	return emit.Out()
-}
-
-// #endregion Command Registry
-
-// #region Core Commands
-
-func BuildRegistry() *Registry {
-	registry := NewRegistry()
-	registry.Register(CommandDefinition{ID: "internal.ping", Title: "Ping", Run: runInternalPing})
-	registry.Register(CommandDefinition{ID: "bundle.list", Title: "List Bundles", Run: runBundleList})
-	registry.Register(CommandDefinition{ID: "bundle.tree", Title: "Bundle Tree", Run: runBundleTree})
-	registry.Register(CommandDefinition{ID: "folder.list", Title: "List Folders", Run: runFolderList})
-	registry.Register(CommandDefinition{ID: "folder.tree", Title: "Folder Tree", Run: runFolderTree})
-	registry.Register(CommandDefinition{ID: "folder.create", Title: "Create Folder", Run: runFolderCreate})
-	registry.Register(CommandDefinition{ID: "folder.move", Title: "Move Folder", Run: runFolderMove})
-	registry.Register(CommandDefinition{ID: "folder.delete", Title: "Delete Folder", Run: runFolderDelete})
-	registry.Register(CommandDefinition{ID: "file.list", Title: "List Files", Run: runFileList})
-	registry.Register(CommandDefinition{ID: "file.tree", Title: "File Tree", Run: runFileTree})
-	registry.Register(CommandDefinition{ID: "file.create", Title: "Create File", Run: runFileCreate})
-	registry.Register(CommandDefinition{ID: "file.move", Title: "Move File", Run: runFileMove})
-	registry.Register(CommandDefinition{ID: "file.delete", Title: "Delete File", Run: runFileDelete})
-	registry.Register(CommandDefinition{ID: "section.list", Title: "List Sections", Run: runSectionList})
-	registry.Register(CommandDefinition{ID: "section.tree", Title: "Section Tree", Run: runSectionTree})
-	registry.Register(CommandDefinition{ID: "section.create", Title: "Create Section", Run: runSectionCreate})
-	registry.Register(CommandDefinition{ID: "section.move", Title: "Move Section", Run: runSectionMove})
-	registry.Register(CommandDefinition{ID: "section.delete", Title: "Delete Section", Run: runSectionDelete})
-	registry.Register(CommandDefinition{ID: "section.integrate", Title: "Integrate Section", Run: runSectionIntegrate})
-	registry.Register(CommandDefinition{ID: "definition.list", Title: "List Definitions", Run: runDefinitionList})
-	registry.Register(CommandDefinition{ID: "policy.list", Title: "List Policies", Run: runPolicyList})
-	registry.Register(CommandDefinition{ID: "policy.check", Title: "Check Policy", Run: runPolicyCheck})
-	registry.Register(CommandDefinition{ID: "ticket.open", Title: "Open Ticket", Run: runTicketOpen})
-	registry.Register(CommandDefinition{ID: "ticket.list", Title: "List Tickets", Run: runTicketList})
-	registry.Register(CommandDefinition{ID: "ticket.read", Title: "Read Ticket", Run: runTicketRead})
-	registry.Register(CommandDefinition{ID: "ticket.close", Title: "Close Ticket", Run: runTicketClose})
-	registry.Register(CommandDefinition{ID: "ticket.reopen", Title: "Reopen Ticket", Run: runTicketReopen})
-	registry.Register(CommandDefinition{ID: "contributor.add", Title: "Add Contributor", Run: runContributorAdd})
-	registry.Register(CommandDefinition{ID: "contributor.list", Title: "List Contributors", Run: runContributorList})
-	registry.Register(CommandDefinition{ID: "contributor.remove", Title: "Remove Contributor", Run: runContributorRemove})
-	registry.Register(CommandDefinition{ID: "analyze", Title: "Analyze", Run: runAnalyze})
-	registry.Register(CommandDefinition{ID: "fix", Title: "Fix", Run: runFix})
-	registry.Register(CommandDefinition{ID: "export", Title: "Export", Run: runExport})
-	return registry
-}
-
-func runInternalPing(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	_ = ctx
-	_ = deps
-	_ = input
-	emit.Log("ping")
-	emit.Item("ping", map[string]any{"ok": true})
-	emit.Done(exitCodeOK, map[string]any{"ok": true})
-	return exitCodeOK
-}
-
-func runBundleList(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	_ = ctx
-	_ = input
-	bundles := GetProjects()
-	for _, bundle := range bundles {
-		bundle := bundle
-		emit.Item("bundle", bundle)
-	}
-	emit.Done(exitCodeOK, map[string]any{"count": len(bundles)})
-	return exitCodeOK
-}
-
-func runBundleTree(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	_ = ctx
-	_ = input
-	bundles := GetProjects()
-	for _, bundle := range bundles {
-		bundle := bundle
-		emit.Item("bundle", bundle)
-	}
-	emit.Done(exitCodeOK, map[string]any{"count": len(bundles)})
-	return exitCodeOK
-}
-
-func runFolderList(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	path := getString(args, "path")
-	if path == "" {
-		path = "."
-	}
-	absPath := filepath.Join(deps.RootDir, strings.TrimSuffix(path, "/"))
-	if !FileExists(absPath) {
-		emit.Error(fmt.Errorf("folder not found"), "folder not found", absPath, true)
-		return exitCodeUsage
-	}
-	entries, err := ListDirEntries(absPath, true)
-	if err != nil {
-		emit.Error(err, "failed to list folders", err.Error(), true)
-		return exitCodeError
-	}
-	var relPaths []string
-	for _, f := range entries {
-		relPaths = append(relPaths, NormalizePath(filepath.Join(path, f)))
-	}
-	ignored := GetGitIgnoredSet(relPaths)
-	count := 0
-	for _, f := range entries {
-		relPath := NormalizePath(filepath.Join(path, f))
-		if ignored[relPath] || ignored[relPath+"/"] {
-			continue
-		}
-		folderPath := normalizeRepoPath(relPath)
-		folder := buildFolderItem(folderPath, deps.Bundles, deps.RootDir)
-		emit.Item("folder", folder)
-		count++
-	}
-	emit.Done(exitCodeOK, map[string]any{"count": count})
-	return exitCodeOK
-}
-
-func runFolderTree(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	path := getString(args, "path")
-	if path == "" {
-		path = "."
-	}
-	absPath := filepath.Join(deps.RootDir, strings.TrimSuffix(path, "/"))
-	if !FileExists(absPath) {
-		emit.Error(fmt.Errorf("path not found"), "path not found", absPath, true)
-		return exitCodeUsage
-	}
-	lines := buildTreeLines(absPath, "")
-	for _, line := range lines {
-		emit.Item("treeLine", map[string]any{"text": line})
-	}
-	emit.Done(exitCodeOK, map[string]any{"count": len(lines)})
-	return exitCodeOK
-}
-
-func runFolderCreate(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	path := getString(args, "path")
-	if path == "" {
-		emit.Error(fmt.Errorf("missing path"), "missing path", "", true)
-		return exitCodeUsage
-	}
-	result := ToolFolderCreate(path)
-	return emitToolResult(emit, result, "folder")
-}
-
-func runFolderMove(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	source := getString(args, "source")
-	target := getString(args, "target")
-	if source == "" || target == "" {
-		emit.Error(fmt.Errorf("missing source or target"), "missing source or target", "", true)
-		return exitCodeUsage
-	}
-	result := ToolFolderMove(source, target)
-	return emitToolResult(emit, result, "folder")
-}
-
-func runFolderDelete(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	path := getString(args, "path")
-	if path == "" {
-		emit.Error(fmt.Errorf("missing path"), "missing path", "", true)
-		return exitCodeUsage
-	}
-	result := ToolFolderDelete(path)
-	return emitToolResult(emit, result, "folder")
-}
-
-func runFileList(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	scopeRaw := getString(args, "scope")
-	if scopeRaw == "" {
-		scopeRaw = "@semio"
-	}
-	scope := ParseScope(scopeRaw)
-	files, err := ScopeToFiles(scope, deps.Bundles)
-	if err != nil {
-		emit.Error(err, "failed to resolve files", err.Error(), true)
-		return exitCodeError
-	}
-	count := 0
-	for _, file := range files {
-		normalized := normalizeRepoPath(file)
-		item := buildFileItem(normalized, deps.Bundles, deps.RootDir)
-		emit.Item("file", item)
-		count++
-	}
-	emit.Done(exitCodeOK, map[string]any{"count": count})
-	return exitCodeOK
-}
-
-func runFileTree(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	path := getString(args, "path")
-	if path == "" {
-		path = "."
-	}
-	absPath := filepath.Join(deps.RootDir, strings.TrimSuffix(path, "/"))
-	if !FileExists(absPath) {
-		emit.Error(fmt.Errorf("path not found"), "path not found", absPath, true)
-		return exitCodeUsage
-	}
-	lines := buildTreeLines(absPath, "")
-	for _, line := range lines {
-		emit.Item("treeLine", map[string]any{"text": line})
-	}
-	emit.Done(exitCodeOK, map[string]any{"count": len(lines)})
-	return exitCodeOK
-}
-
-func runFileCreate(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	path := getString(args, "path")
-	if path == "" {
-		emit.Error(fmt.Errorf("missing path"), "missing path", "", true)
-		return exitCodeUsage
-	}
-	result := ToolFileCreate(path)
-	return emitToolResult(emit, result, "file")
-}
-
-func runFileMove(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	source := getString(args, "source")
-	target := getString(args, "target")
-	if source == "" || target == "" {
-		emit.Error(fmt.Errorf("missing source or target"), "missing source or target", "", true)
-		return exitCodeUsage
-	}
-	result := ToolFileMove(source, target)
-	return emitToolResult(emit, result, "file")
-}
-
-func runFileDelete(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	path := getString(args, "path")
-	if path == "" {
-		emit.Error(fmt.Errorf("missing path"), "missing path", "", true)
-		return exitCodeUsage
-	}
-	result := ToolFileDelete(path)
-	return emitToolResult(emit, result, "file")
-}
-
-func runSectionList(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	filePath := getString(args, "file")
-	if filePath == "" {
-		emit.Error(fmt.Errorf("missing file"), "missing file", "", true)
-		return exitCodeUsage
-	}
-	result := ToolSectionList(filePath)
-	return emitToolDataItems(emit, result, "section")
-}
-
-func runSectionTree(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	return runSectionList(ctx, deps, input, emit)
-}
-
-func runSectionCreate(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	filePath := getString(args, "file")
-	name := getString(args, "name")
-	parent := getString(args, "parent")
-	if filePath == "" || name == "" {
-		emit.Error(fmt.Errorf("missing file or name"), "missing file or name", "", true)
-		return exitCodeUsage
-	}
-	sectionPath := name
-	if parent != "" {
-		sectionPath = parent + "/" + name
-	}
-	result := ToolSectionCreate(filePath, sectionPath)
-	return emitToolResult(emit, result, "section")
-}
-
-func runSectionMove(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	filePath := getString(args, "file")
-	oldName := getString(args, "old")
-	newName := getString(args, "new")
-	if filePath == "" || oldName == "" || newName == "" {
-		emit.Error(fmt.Errorf("missing file or names"), "missing file or names", "", true)
-		return exitCodeUsage
-	}
-	result := ToolSectionMove(filePath, oldName, newName)
-	return emitToolResult(emit, result, "section")
-}
-
-func runSectionDelete(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	filePath := getString(args, "file")
-	name := getString(args, "name")
-	if filePath == "" || name == "" {
-		emit.Error(fmt.Errorf("missing file or name"), "missing file or name", "", true)
-		return exitCodeUsage
-	}
-	result := ToolSectionDelete(filePath, name)
-	return emitToolResult(emit, result, "section")
-}
-
-func runSectionIntegrate(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	source := getString(args, "source")
-	targetSection := getString(args, "targetSection")
-	targetFile := getString(args, "targetFile")
-	targetParent := getString(args, "targetParent")
-	if source == "" || targetSection == "" || targetFile == "" {
-		emit.Error(fmt.Errorf("missing source or target"), "missing source or target", "", true)
-		return exitCodeUsage
-	}
-	result := ToolIntegrate(source, targetSection, targetFile, targetParent)
-	return emitToolResult(emit, result, "file")
-}
-
-func runDefinitionList(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	filePath := getString(args, "file")
-	if filePath == "" {
-		emit.Error(fmt.Errorf("missing file"), "missing file", "", true)
-		return exitCodeUsage
-	}
-	result := ToolDefinitionList(filePath)
-	return emitToolDataItems(emit, result, "definition")
-}
-
-func runPolicyList(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	_ = ctx
-	_ = input
-	policies := GetRegisteredPolicies()
-	for _, policy := range policies {
-		policy := policy
-		emit.Item("policy", policy)
-	}
-	emit.Done(exitCodeOK, map[string]any{"count": len(policies)})
-	return exitCodeOK
-}
-
-func runPolicyCheck(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	policyID := getString(args, "id")
-	if policyID == "" {
-		emit.Error(fmt.Errorf("missing policy id"), "missing policy id", "", true)
-		return exitCodeUsage
-	}
-	scopeRaw := getString(args, "scope")
-	if scopeRaw == "" {
-		scopeRaw = "@semio"
-	}
-	violations, err := CheckPolicies(ParseScope(scopeRaw), deps.Bundles, []string{policyID})
-	if err != nil {
-		emit.Error(err, "failed to check policy", err.Error(), true)
-		return exitCodeError
-	}
-	for _, violation := range violations {
-		v := violation
-		emit.Item("violation", v)
-	}
-	emit.Done(exitCodeOK, map[string]any{"count": len(violations)})
-	return exitCodeOK
-}
-
-func runTicketOpen(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	title := getString(args, "title")
-	if title == "" {
-		emit.Error(fmt.Errorf("missing title"), "missing title", "", true)
-		return exitCodeUsage
-	}
-	prompt := getString(args, "prompt")
-	if prompt == "" {
-		prompt = title
-	}
-	llm := getString(args, "llm")
-	ui := getString(args, "ui")
-	if llm == "" || ui == "" {
-		emit.Error(fmt.Errorf("missing llm or ui"), "missing llm or ui", "", true)
-		return exitCodeUsage
-	}
-	resolvedLLM, err := ResolveAllowedLLM(llm)
-	if err != nil {
-		emit.Error(err, "invalid llm", err.Error(), true)
-		return exitCodeUsage
-	}
-	resolvedUI, err := ResolveAllowedUI(ui)
-	if err != nil {
-		emit.Error(err, "invalid ui", err.Error(), true)
-		return exitCodeUsage
-	}
-	planPath := getString(args, "planPath")
-	noIssue := getBool(args, "noIssue")
-	ticket, err := deps.RepoCtx.TicketOpen(TicketOpenInput{Title: title, Prompt: prompt, LLM: resolvedLLM, UI: resolvedUI, PlanPath: planPath, NoIssue: noIssue})
-	if err != nil {
-		emit.Error(err, "failed to open ticket", err.Error(), true)
-		return exitCodeError
-	}
-	emit.Item("ticket", ticket)
-	emit.Done(exitCodeOK, map[string]any{"status": "open"})
-	return exitCodeOK
-}
-
-func runTicketList(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	year, yearOk := getInt(args, "year")
-	month, monthOk := getInt(args, "month")
-	day, dayOk := getInt(args, "day")
-	var yearPtr *int
-	var monthPtr *int
-	var dayPtr *int
-	if yearOk {
-		yearPtr = &year
-	}
-	if monthOk {
-		monthPtr = &month
-	}
-	if dayOk {
-		dayPtr = &day
-	}
-	result := ToolTicketList(yearPtr, monthPtr, dayPtr)
-	return emitToolDataItems(emit, result, "ticket")
-}
-
-func runTicketRead(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	year, yearOk := getInt(args, "year")
-	month, monthOk := getInt(args, "month")
-	day, dayOk := getInt(args, "day")
-	slug := getString(args, "slug")
-	if !yearOk || !monthOk || !dayOk || slug == "" {
-		emit.Error(fmt.Errorf("missing ticket path"), "missing ticket path", "", true)
-		return exitCodeUsage
-	}
-	result := ToolTicketRead(year, month, day, slug)
-	if result.Error != "" {
-		emit.Error(errors.New(result.Error), "ticket read failed", result.Error, true)
-		return exitCodeError
-	}
-	if ticket, ok := result.Data.(*Ticket); ok {
-		emit.Item("ticket", ticket)
-		if ticket.Data != nil {
-			for _, iteration := range ticket.Data.Iterations {
-				iteration := iteration
-				emit.Item("ticketIteration", iteration)
-			}
-		}
-		emit.Done(exitCodeOK, map[string]any{"status": "ok"})
-		return exitCodeOK
-	}
-	if ticket, ok := result.Data.(Ticket); ok {
-		emit.Item("ticket", ticket)
-		if ticket.Data != nil {
-			for _, iteration := range ticket.Data.Iterations {
-				iteration := iteration
-				emit.Item("ticketIteration", iteration)
-			}
-		}
-		emit.Done(exitCodeOK, map[string]any{"status": "ok"})
-		return exitCodeOK
-	}
-	emit.Done(exitCodeOK, map[string]any{"status": "ok"})
-	return exitCodeOK
-}
-
-func runTicketClose(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	year, yearOk := getInt(args, "year")
-	month, monthOk := getInt(args, "month")
-	day, dayOk := getInt(args, "day")
-	slug := getString(args, "slug")
-	summary := getString(args, "summary")
-	files := getStringSlice(args, "files")
-	if !yearOk || !monthOk || !dayOk || slug == "" {
-		emit.Error(fmt.Errorf("missing ticket path"), "missing ticket path", "", true)
-		return exitCodeUsage
-	}
-	if summary == "" || len(files) == 0 {
-		emit.Error(fmt.Errorf("missing summary or files"), "missing summary or files", "", true)
-		return exitCodeUsage
-	}
-	inputData := TicketCloseInput{Year: year, Month: month, Day: day, Slug: slug, Summary: summary, Files: files}
-	if title := getString(args, "title"); title != "" {
-		inputData.Title = &title
-	}
-	ticket, err := deps.RepoCtx.TicketClose(inputData)
-	if err != nil {
-		emit.Error(err, "failed to close ticket", err.Error(), true)
-		return exitCodeError
-	}
-	emit.Item("ticket", ticket)
-	emit.Done(exitCodeOK, map[string]any{"status": "closed"})
-	return exitCodeOK
-}
-
-func runTicketReopen(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	year, yearOk := getInt(args, "year")
-	month, monthOk := getInt(args, "month")
-	day, dayOk := getInt(args, "day")
-	slug := getString(args, "slug")
-	prompt := getString(args, "prompt")
-	llm := getString(args, "llm")
-	if !yearOk || !monthOk || !dayOk || slug == "" || prompt == "" || llm == "" {
-		emit.Error(fmt.Errorf("missing reopen fields"), "missing reopen fields", "", true)
-		return exitCodeUsage
-	}
-	resolvedLLM, err := ResolveAllowedLLM(llm)
-	if err != nil {
-		emit.Error(err, "invalid llm", err.Error(), true)
-		return exitCodeUsage
-	}
-	inputData := TicketReopenInput{Year: year, Month: month, Day: day, Slug: slug, Prompt: prompt, LLM: resolvedLLM}
-	if title := getString(args, "title"); title != "" {
-		inputData.Title = &title
-	}
-	ticket, err := deps.RepoCtx.TicketReopen(inputData)
-	if err != nil {
-		emit.Error(err, "failed to reopen ticket", err.Error(), true)
-		return exitCodeError
-	}
-	emit.Item("ticket", ticket)
-	emit.Done(exitCodeOK, map[string]any{"status": "open"})
-	return exitCodeOK
-}
-
-func runContributorAdd(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	github := getString(args, "github")
-	if github == "" {
-		emit.Error(fmt.Errorf("missing github"), "missing github", "", true)
-		return exitCodeUsage
-	}
-	result := ToolContributorAdd(github)
-	return emitToolResult(emit, result, "contributor")
-}
-
-func runContributorList(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	result := ToolContributorList()
-	return emitToolDataItems(emit, result, "contributor")
-}
-
-func runContributorRemove(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	github := getString(args, "github")
-	if github == "" {
-		emit.Error(fmt.Errorf("missing github"), "missing github", "", true)
-		return exitCodeUsage
-	}
-	result := ToolContributorRemove(github)
-	return emitToolResult(emit, result, "contributor")
-}
-
-func runAnalyze(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	scopeRaw := getString(args, "scope")
-	if scopeRaw == "" {
-		scopeRaw = "@semio"
-		codebaseCtx := NewCodebaseContext()
-		codebaseCtx.LoadBundles()
-		if err := codebaseCtx.LoadFiles(); err != nil {
-			emit.Error(err, "failed to load files", err.Error(), true)
-			return exitCodeError
-		}
-		if err := codebaseCtx.LoadViolations(); err != nil {
-			emit.Error(err, "failed to load violations", err.Error(), true)
-			return exitCodeError
-		}
-		if err := codebaseCtx.LoadTickets(); err != nil {
-			emit.Error(err, "failed to load tickets", err.Error(), true)
-			return exitCodeError
-		}
-		codebaseCtx.LoadPolicies()
-		codebase := BuildCodebase(codebaseCtx)
-		reportPath := filepath.Join(GetRepoMetaDir(), "reports", "codebase.json")
-		if err := WriteJSONFile(reportPath, codebase); err != nil {
-			emit.Error(err, "failed to write codebase snapshot", err.Error(), true)
-			return exitCodeError
-		}
-		emit.Log("wrote codebase snapshot to " + reportPath)
-	}
-	scope := ParseScope(scopeRaw)
-	files, err := ScopeToFiles(scope, deps.Bundles)
-	if err != nil {
-		emit.Error(err, "failed to resolve files", err.Error(), true)
-		return exitCodeError
-	}
-	if len(files) == 0 {
-		emit.Done(exitCodeOK, map[string]any{"count": 0})
-		return exitCodeOK
-	}
-	var processed int64
-	countByPriority := map[string]int{}
-	var countMu sync.Mutex
-	var violationsCount int
-	limit := deps.Concurrency
-	err = ForEachConcurrent(ctx, files, limit, func(ctx context.Context, file string) error {
-		violations, err := AnalyzeFile(file, deps.Bundles)
-		if err != nil {
-			emit.Error(err, "analyze failed", err.Error(), false)
-		} else {
-			for _, violation := range violations {
-				v := violation
-				emit.Item("violation", v)
-				countMu.Lock()
-				violationsCount++
-				countByPriority[string(v.Priority())]++
-				countMu.Unlock()
-			}
-		}
-		current := int(atomic.AddInt64(&processed, 1))
-		emit.Progress(current, len(files), "files")
-		return nil
-	})
-	if err != nil {
-		emit.Error(err, "analyze failed", err.Error(), true)
-		return exitCodeError
-	}
-	summary := map[string]any{"total": violationsCount, "byPriority": countByPriority}
-	emit.Done(exitCodeOK, summary)
-	return exitCodeOK
-}
-
-func runFix(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	scopeRaw := getString(args, "scope")
-	if scopeRaw == "" {
-		scopeRaw = "@semio"
-	}
-	result := ToolFix(scopeRaw)
-	if result.Error != "" {
-		emit.Error(errors.New(result.Error), "fix failed", result.Error, true)
-		return exitCodeError
-	}
-	if fixResult, ok := result.Data.(*FixResult); ok {
-		for _, v := range fixResult.Violations {
-			emit.Item("violation", v)
-		}
-		emit.Item("fix", fixResult)
-		emit.Done(exitCodeOK, map[string]any{"fixed": fixResult.Fixed, "remaining": fixResult.Remaining})
-		return exitCodeOK
-	}
-	if fixResult, ok := result.Data.(FixResult); ok {
-		for _, v := range fixResult.Violations {
-			emit.Item("violation", v)
-		}
-		emit.Item("fix", fixResult)
-		emit.Done(exitCodeOK, map[string]any{"fixed": fixResult.Fixed, "remaining": fixResult.Remaining})
-		return exitCodeOK
-	}
-	emit.Done(exitCodeOK, map[string]any{"status": "ok"})
-	return exitCodeOK
-}
-
-func runExport(ctx context.Context, deps *Deps, input json.RawMessage, emit *Emitter) int {
-	args := decodeInput(input)
-	outputPath := getString(args, "output")
-	result := ToolExport(outputPath)
-	if result.Error != "" {
-		emit.Error(errors.New(result.Error), "export failed", result.Error, true)
-		return exitCodeError
-	}
-	emitToolOutput(emit, result)
-	emit.Item("export", result.Data)
-	emit.Done(exitCodeOK, map[string]any{"status": "ok"})
-	return exitCodeOK
-}
-
-func decodeInput(input json.RawMessage) map[string]interface{} {
-	if len(input) == 0 {
-		return map[string]interface{}{}
-	}
-	var parsed map[string]interface{}
-	if err := json.Unmarshal(input, &parsed); err != nil {
-		return map[string]interface{}{}
-	}
-	return parsed
-}
-
-func getString(input map[string]interface{}, key string) string {
-	if value, ok := input[key]; ok {
-		if s, ok := value.(string); ok {
-			return s
-		}
-	}
-	return ""
-}
-
-func getBool(input map[string]interface{}, key string) bool {
-	if value, ok := input[key]; ok {
-		if b, ok := value.(bool); ok {
-			return b
-		}
-	}
-	return false
-}
-
-func getInt(input map[string]interface{}, key string) (int, bool) {
-	if value, ok := input[key]; ok {
-		switch v := value.(type) {
-		case int:
-			return v, true
-		case float64:
-			return int(v), true
-		case json.Number:
-			if i, err := v.Int64(); err == nil {
-				return int(i), true
-			}
-		}
-	}
-	return 0, false
-}
-
-func getStringSlice(input map[string]interface{}, key string) []string {
-	value, ok := input[key]
-	if !ok {
-		return nil
-	}
-	var result []string
-	switch v := value.(type) {
-	case []string:
-		return v
-	case []interface{}:
-		for _, item := range v {
-			if s, ok := item.(string); ok {
-				result = append(result, s)
-			}
-		}
-	}
-	return result
-}
-
-func emitToolOutput(emit *Emitter, result ToolResult) {
-	for _, line := range result.Output.Lines {
-		emit.Log(line.Text)
-	}
-}
-
-func emitToolResult(emit *Emitter, result ToolResult, kind string) int {
-	if result.Error != "" {
-		emit.Error(errors.New(result.Error), "command failed", result.Error, true)
-		return exitCodeError
-	}
-	emitToolOutput(emit, result)
-	if result.Data != nil {
-		emit.Item(kind, result.Data)
-	}
-	emit.Done(exitCodeOK, map[string]any{"status": "ok"})
-	return exitCodeOK
-}
-
-func emitToolDataItems(emit *Emitter, result ToolResult, kind string) int {
-	if result.Error != "" {
-		emit.Error(errors.New(result.Error), "command failed", result.Error, true)
-		return exitCodeError
-	}
-	emitToolOutput(emit, result)
-	switch data := result.Data.(type) {
-	case []Bundle:
-		for _, item := range data {
-			item := item
-			emit.Item(kind, item)
-		}
-	case []Folder:
-		for _, item := range data {
-			item := item
-			emit.Item(kind, item)
-		}
-	case []*Ticket:
-		for _, item := range data {
-			item := item
-			emit.Item(kind, item)
-		}
-	case []Ticket:
-		for _, item := range data {
-			item := item
-			emit.Item(kind, item)
-		}
-	case []Section:
-		for _, item := range data {
-			item := item
-			emit.Item(kind, item)
-		}
-	case []Definition:
-		for _, item := range data {
-			item := item
-			emit.Item(kind, item)
-		}
-	case []Contributor:
-		for _, item := range data {
-			item := item
-			emit.Item(kind, item)
-		}
-	case []*Contributor:
-		for _, item := range data {
-			item := item
-			emit.Item(kind, item)
-		}
-	case []string:
-		for _, item := range data {
-			emit.Item(kind, map[string]any{"value": item})
-		}
-	default:
-		if result.Data != nil {
-			emit.Item(kind, result.Data)
-		}
-	}
-	emit.Done(exitCodeOK, map[string]any{"status": "ok"})
-	return exitCodeOK
-}
-
-func normalizeRepoPath(path string) string {
-	if filepath.IsAbs(path) {
-		return NormalizePath(GetRelativePath(path))
-	}
-	return NormalizePath(path)
-}
-
-func buildFolderItem(path string, bundles []Bundle, root string) Folder {
-	name := filepath.Base(path)
-	bundleName := ResolveBundleForPath(path, bundles)
-	var bundleID *string
-	if bundleName != "" {
-		id := normalizeBundleID(bundleName)
-		bundleID = &id
-	}
-	return Folder{ID: buildFolderID(path, bundleID), Path: path, URI: fmt.Sprintf("file://%s/%s", root, path), Name: name, BundleID: bundleID}
-}
-
-func buildFileItem(path string, bundles []Bundle, root string) File {
-	name := filepath.Base(path)
-	ext := filepath.Ext(name)
-	folderPath := filepath.Dir(path)
-	bundleName := ResolveBundleForPath(path, bundles)
-	var bundleID *string
-	if bundleName != "" {
-		id := normalizeBundleID(bundleName)
-		bundleID = &id
-	}
-	var folderID *string
-	if folderPath != "." {
-		id := buildFolderID(folderPath, bundleID)
-		folderID = &id
-	}
-	return File{ID: buildFileID(path, bundleID), Path: path, URI: fmt.Sprintf("file://%s/%s", root, path), Name: name, Extension: ext, FolderID: folderID, BundleID: bundleID}
-}
-
-func buildTreeLines(absPath string, prefix string) []string {
-	entries, err := os.ReadDir(absPath)
-	if err != nil {
-		return nil
-	}
-	var items []os.DirEntry
-	for _, e := range entries {
-		if !strings.HasPrefix(e.Name(), ".") {
-			items = append(items, e)
-		}
-	}
-	var relPaths []string
-	for _, e := range items {
-		relPaths = append(relPaths, GetRelativePath(filepath.Join(absPath, e.Name())))
-	}
-	ignored := GetGitIgnoredSet(relPaths)
-	var filtered []os.DirEntry
-	for _, e := range items {
-		relPath := GetRelativePath(filepath.Join(absPath, e.Name()))
-		if !ignored[relPath] && !ignored[relPath+"/"] {
-			filtered = append(filtered, e)
-		}
-	}
-	var lines []string
-	for i, e := range filtered {
-		isLast := i == len(filtered)-1
-		connector := "├── "
-		if isLast {
-			connector = "└── "
-		}
-		suffix := ""
-		if e.IsDir() {
-			suffix = "/"
-		}
-		line := fmt.Sprintf("%s%s%s%s", prefix, connector, e.Name(), suffix)
-		lines = append(lines, line)
-		if e.IsDir() {
-			newPrefix := prefix + "│   "
-			if isLast {
-				newPrefix = prefix + "    "
-			}
-			childLines := buildTreeLines(filepath.Join(absPath, e.Name()), newPrefix)
-			lines = append(lines, childLines...)
-		}
-	}
-	return lines
-}
-
-// #endregion Core Commands
-
 // #endregion Engine
 
 // #region Cli Adapter
 
 type Config struct {
-	Format  string
+	JSON    bool
 	Verbose bool
 	Repo    string
 	Timeout time.Duration
@@ -1450,19 +273,17 @@ func NewRoot(factory EngineFactory) *cobra.Command {
 }
 
 func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
-	config := Config{Format: "compact"}
+	config := Config{}
 	root := &cobra.Command{
 		Use:   "repo",
 		Short: "Monorepo CLI for Semio",
 	}
-	root.PersistentFlags().StringVar(&config.Format, "format", "compact", "Output format: compact|jsonl|json")
+	root.PersistentFlags().BoolVar(&config.JSON, "json", false, "Output NDJSON")
 	root.PersistentFlags().BoolVar(&config.Verbose, "verbose", false, "Verbose output")
 	root.PersistentFlags().StringVar(&config.Repo, "repo", "", "Repo root path")
 	root.PersistentFlags().DurationVar(&config.Timeout, "timeout", 0, "Timeout for command execution")
 	root.AddCommand(mcpCommand(factory, &config))
 	root.AddCommand(graphqlCommand(factory, &config))
-	root.AddCommand(vscodeCommand(factory, &config))
-	root.AddCommand(internalCommand(factory, &config))
 	root.AddCommand(analyzeCommand(factory, &config))
 	root.AddCommand(fixCommand(factory, &config))
 	root.AddCommand(policyCommand(factory, &config))
@@ -1473,44 +294,12 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(fileCommand(factory, &config))
 	root.AddCommand(sectionCommand(factory, &config))
 	root.AddCommand(definitionCommand(factory, &config))
+	root.AddCommand(treeCommand(factory, &config))
 	root.AddCommand(exportCommand(factory, &config))
 	root.AddCommand(benchmarkCmd)
 	root.AddCommand(preflightCmd)
 	root.AddCommand(updateCmd)
 	return root, &config
-}
-
-func internalCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "internal", Short: "Internal commands"}
-	pingCmd := &cobra.Command{
-		Use:   "ping",
-		Short: "Ping the streaming engine",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			return runInvoke(cmd, factory, config, "internal.ping", nil)
-		},
-	}
-	root.AddCommand(pingCmd)
-	return root
-}
-
-func vscodeCommand(factory EngineFactory, config *Config) *cobra.Command {
-	return &cobra.Command{
-		Use:   "vscode-stdio",
-		Short: "Run VS Code streaming adapter over stdio",
-		RunE: func(cmd *cobra.Command, args []string) error {
-			engine, err := factory(*config)
-			if err != nil {
-				return err
-			}
-			ctx := context.Background()
-			if config.Timeout > 0 {
-				ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
-				defer cancel()
-				ctx = ctxWithTimeout
-			}
-			return serveVSCode(ctx, engine)
-		},
-	}
 }
 
 func Execute(factory EngineFactory) error {
@@ -1531,9 +320,7 @@ func defaultEngineFactory(config Config) (*Engine, error) {
 	if err != nil {
 		return nil, err
 	}
-	engine := NewEngine(exec)
-	engine.Registry = BuildRegistry()
-	return engine, nil
+	return NewEngine(exec), nil
 }
 
 func main() {
@@ -1564,8 +351,8 @@ func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 func serveMcp(ctx context.Context, engine *Engine) error {
-	mcpEngine = engine
-	mcpBaseCtx = ctx
+	_ = ctx
+	_ = engine
 	return runMcpServer(nil, nil)
 }
 
@@ -1619,11 +406,25 @@ func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "analyze",
 		Short: "Analyze codebase for policy violations",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			input := map[string]interface{}{}
+			variables := map[string]interface{}{}
 			if scope != "" {
-				input["scope"] = scope
+				variables["scope"] = scope
 			}
-			return runInvoke(cmd, factory, config, "analyze", input)
+			query := `query Analyze($scope: String) {
+				analyze(scope: $scope) {
+					violations {
+						id
+						summary
+						scope
+						line
+						column
+						excerpt
+						kind { id priority autofixable reason solution }
+					}
+					metrics { total autofixable byPriority { high medium low } }
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	cmd.Flags().StringVar(&scope, "scope", "", "Scope to analyze")
@@ -1636,14 +437,190 @@ func fixCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "fix",
 		Short: "Apply autofixes for violations",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			input := map[string]interface{}{}
+			variables := map[string]interface{}{}
 			if scope != "" {
-				input["scope"] = scope
+				variables["scope"] = scope
 			}
-			return runInvoke(cmd, factory, config, "fix", input)
+			query := `mutation Fix($scope: String) {
+				fix(scope: $scope) {
+					fixed
+					remaining
+					violations { id summary scope excerpt line }
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	cmd.Flags().StringVar(&scope, "scope", "", "Scope to fix")
+	return cmd
+}
+
+func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
+	var maxDepth int
+	cmd := &cobra.Command{
+		Use:   "tree [scope]",
+		Short: "Show codebase tree",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			scope := ""
+			if len(args) > 0 {
+				scope = args[0]
+			}
+			ctx := cmd.Context()
+			
+			folders := []Folder{}
+			files := []File{}
+			
+			folderCh := make(chan Folder)
+			fileCh := make(chan File)
+			errCh := make(chan error, 2)
+			var wg sync.WaitGroup
+			
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				if err := StreamFolders(ctx, scope, folderCh); err != nil {
+					errCh <- err
+				}
+			}()
+
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				if err := StreamFiles(ctx, scope, fileCh); err != nil {
+					errCh <- err
+				}
+			}()
+			
+			var wgCollect sync.WaitGroup
+			wgCollect.Add(2)
+			
+			go func() {
+				defer wgCollect.Done()
+				for f := range folderCh {
+					folders = append(folders, f)
+				}
+			}()
+			go func() {
+				defer wgCollect.Done()
+				for f := range fileCh {
+					files = append(files, f)
+				}
+			}()
+			
+			wg.Wait()
+			wgCollect.Wait()
+			close(errCh)
+			
+			for err := range errCh {
+				if err != nil {
+					return err
+				}
+			}
+
+			type node struct {
+				name     string
+				path     string
+				children []*node
+				isFile   bool
+			}
+
+			nodeMap := make(map[string]*node)
+			
+			// Resolve root path to absolute to match StreamFiles/StreamFolders output
+			rootPath := scope
+			rootDir := GetRootDir()
+			if strings.HasPrefix(scope, "@semio/") {
+				bundleName := strings.TrimPrefix(scope, "@semio/")
+				bundles := GetProjects()
+				for _, b := range bundles {
+					if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
+						rootPath = filepath.Join(rootDir, b.Root)
+						break
+					}
+				}
+			} else if scope != "" && scope != "@semio" {
+				if filepath.IsAbs(scope) {
+					rootPath = scope
+				} else {
+					rootPath = filepath.Join(rootDir, scope)
+				}
+			} else {
+				rootPath = rootDir
+			}
+			rootPath = filepath.Clean(rootPath)
+
+			root := &node{name: scope, path: rootPath, children: []*node{}} // Keep name as scope for display?
+			// If scope is empty, display root dir name or "."?
+			if scope == "" {
+				root.name = filepath.Base(rootPath)
+			}
+			
+			nodeMap[rootPath] = root
+
+			for _, f := range folders {
+				cleanPath := filepath.Clean(f.Path)
+				if _, ok := nodeMap[cleanPath]; !ok {
+					nodeMap[cleanPath] = &node{name: filepath.Base(cleanPath), path: cleanPath, children: []*node{}}
+				}
+			}
+			for _, f := range files {
+				cleanPath := filepath.Clean(f.Path)
+				nodeMap[cleanPath] = &node{name: filepath.Base(cleanPath), path: cleanPath, children: []*node{}, isFile: true}
+			}
+
+			for path, n := range nodeMap {
+				if n == root {
+					continue
+				}
+				if path == rootPath || path == "." {
+					continue
+				}
+				
+				parentPath := filepath.Dir(path)
+				if p, ok := nodeMap[parentPath]; ok {
+					p.children = append(p.children, n)
+				}
+			}
+
+			var sortChildren func(*node)
+			sortChildren = func(n *node) {
+				sort.Slice(n.children, func(i, j int) bool {
+					return n.children[i].name < n.children[j].name
+				})
+				for _, c := range n.children {
+					sortChildren(c)
+				}
+			}
+			sortChildren(root)
+
+			var walk func([]*node, string, int)
+			walk = func(nodes []*node, prefix string, depth int) {
+				if maxDepth > 0 && depth >= maxDepth {
+					return
+				}
+				for i, node := range nodes {
+					isLast := i == len(nodes)-1
+					connector := "├── "
+					if isLast {
+						connector = "└── "
+					}
+					fmt.Fprintf(cmd.OutOrStdout(), "%s%s%s\n", prefix, connector, node.name)
+					
+					newPrefix := prefix + "│   "
+					if isLast {
+						newPrefix = prefix + "    "
+					}
+					walk(node.children, newPrefix, depth+1)
+				}
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), root.path)
+			walk(root.children, "", 0)
+
+			return nil
+		},
+	}
+	cmd.Flags().IntVarP(&maxDepth, "depth", "d", 0, "Max depth")
 	return cmd
 }
 
@@ -1654,11 +631,25 @@ func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Long:  `Export all repo data (bundles, folders, files, sections, contributors, tickets, policies, violations) to a SQLite database file.`,
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			input := map[string]interface{}{}
+			outputPath := ""
 			if len(args) > 0 {
-				input["output"] = args[0]
+				outputPath = args[0]
 			}
-			return runInvoke(cmd, factory, config, "export", input)
+			repoRoot := config.Repo
+			if repoRoot == "" {
+				repoRoot = findRepoRoot(".")
+			}
+			ctx := NewRepoContext(repoRoot)
+			result, err := ExportToSQLite(outputPath, ctx)
+			if err != nil {
+				return err
+			}
+			jsonBytes, err := json.MarshalIndent(result, "", "  ")
+			if err != nil {
+				return err
+			}
+			cmd.Println(string(jsonBytes))
+			return nil
 		},
 	}
 }
@@ -1669,7 +660,18 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "list",
 		Short: "List all registered policies",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runInvoke(cmd, factory, config, "policy.list", nil)
+			query := `query Policies {
+				repo {
+					policies {
+						id
+						name
+						description
+						scopes
+						violationKinds { id priority autofixable reason solution }
+					}
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, nil)
 		},
 	}
 	checkCmd := &cobra.Command{
@@ -1687,11 +689,27 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			input := map[string]interface{}{"id": policyID}
+			variables := map[string]interface{}{"id": policyID}
 			if scope != "" {
-				input["scope"] = scope
+				variables["scope"] = scope
 			}
-			return runInvoke(cmd, factory, config, "policy.check", input)
+			query := `query PolicyCheck($id: String!, $scope: String) {
+				policy(id: $id) {
+					id
+					name
+					description
+					scopes
+					violationKinds { id priority autofixable reason solution }
+				}
+				violations(scope: $scope) {
+					id
+					summary
+					scope
+					excerpt
+					kind { id priority autofixable reason solution }
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	checkCmd.Flags().String("id", "", "Policy id")
@@ -1729,13 +747,23 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"title":   title,
 				"prompt":  prompt,
 				"llm":     llm,
-				"ui":      ui,
+				"ui":      strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
 				"noIssue": noIssue,
 			}
 			if planPath != "" {
 				input["planPath"] = planPath
 			}
-			return runInvoke(cmd, factory, config, "ticket.open", input)
+			variables := map[string]interface{}{"input": input}
+			query := `mutation TicketOpen($input: TicketOpenInput!) {
+				ticketOpen(input: $input) {
+					id
+					slug
+					status
+					path
+					uri
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	openCmd.Flags().String("title", "", "Ticket title")
@@ -1748,20 +776,64 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "list",
 		Short: "List tickets",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			year, _ := cmd.Flags().GetInt("year")
-			month, _ := cmd.Flags().GetInt("month")
-			day, _ := cmd.Flags().GetInt("day")
-			input := map[string]interface{}{}
-			if year != 0 {
-				input["year"] = year
-			}
-			if month != 0 {
-				input["month"] = month
-			}
-			if day != 0 {
-				input["day"] = day
-			}
-			return runInvoke(cmd, factory, config, "ticket.list", input)
+			yearVal, _ := cmd.Flags().GetInt("year")
+			monthVal, _ := cmd.Flags().GetInt("month")
+			dayVal, _ := cmd.Flags().GetInt("day")
+
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "ticket list"}
+
+				var year, month, day *int
+				if yearVal != 0 {
+					year = &yearVal
+				}
+				if monthVal != 0 {
+					month = &monthVal
+				}
+				if dayVal != 0 {
+					day = &dayVal
+				}
+
+				ticketChan := make(chan Ticket)
+				go func() {
+					StreamTickets(context.Background(), year, month, day, ticketChan)
+				}()
+
+				for t := range ticketChan {
+					// Flatten for viewer expectation (Case 6b)
+					flat := map[string]interface{}{
+						"slug":  t.Slug,
+						"year":  t.Year,
+						"month": t.Month,
+						"day":   t.Day,
+					}
+					if t.Data != nil {
+						flat["title"] = t.Data.Title
+						flat["status"] = t.Data.Status
+						
+						created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", t.Year, t.Month, t.Day)
+						dates := map[string]interface{}{
+							"created": created,
+						}
+						// Closed date if present
+						if t.Data.Dates.Closed != nil {
+							dates["finished"] = t.Data.Dates.Closed.Format(time.RFC3339)
+						}
+						flat["date"] = dates
+					}
+
+					data, err := json.Marshal(map[string]interface{}{"ticket": flat})
+					if err != nil {
+						continue
+					}
+					stream <- Event{Kind: KindResult, Command: "ticket list", Data: data}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+
+			return renderStream(cmd, config, stream)
 		},
 	}
 	listCmd.Flags().Int("year", 0, "Filter by year")
@@ -1798,7 +870,16 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if title != "" {
 				input["title"] = title
 			}
-			return runInvoke(cmd, factory, config, "ticket.close", input)
+			variables := map[string]interface{}{"input": input}
+			query := `mutation TicketClose($input: TicketCloseInput!) {
+				ticketClose(input: $input) {
+					id
+					slug
+					status
+					date { created finished }
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	closeCmd.Flags().Int("year", 0, "Ticket year")
@@ -1819,6 +900,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			prompt, _ := cmd.Flags().GetString("prompt")
 			llm, _ := cmd.Flags().GetString("llm")
 			title, _ := cmd.Flags().GetString("title")
+			planPath, _ := cmd.Flags().GetString("plan-path")
 			if year == 0 || month == 0 || day == 0 || slug == "" {
 				return fmt.Errorf("missing ticket path")
 			}
@@ -1836,7 +918,18 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if title != "" {
 				input["title"] = title
 			}
-			return runInvoke(cmd, factory, config, "ticket.reopen", input)
+			if planPath != "" {
+				input["planPath"] = planPath
+			}
+			variables := map[string]interface{}{"input": input}
+			query := `mutation TicketReopen($input: TicketReopenInput!) {
+				ticketReopen(input: $input) {
+					id
+					slug
+					status
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	reopenCmd.Flags().Int("year", 0, "Ticket year")
@@ -1846,12 +939,119 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	reopenCmd.Flags().String("prompt", "", "Prompt")
 	reopenCmd.Flags().String("llm", "", "LLM")
 	reopenCmd.Flags().String("title", "", "Title")
-	root.AddCommand(openCmd)
-	root.AddCommand(listCmd)
-	root.AddCommand(closeCmd)
-	root.AddCommand(reopenCmd)
-	return root
-}
+	reopenCmd.Flags().String("plan-path", "", "Path to plan file")
+		
+		treeCmd := &cobra.Command{
+			Use:   "tree",
+			Short: "Show ticket tree",
+			RunE: func(cmd *cobra.Command, args []string) error {
+				yearVal, _ := cmd.Flags().GetInt("year")
+				monthVal, _ := cmd.Flags().GetInt("month")
+				dayVal, _ := cmd.Flags().GetInt("day")
+				
+				stream := make(chan Event)
+				go func() {
+					defer close(stream)
+					stream <- Event{Kind: KindStart, Command: "ticket tree"}
+					
+					var year, month, day *int
+					if yearVal != 0 {
+						year = &yearVal
+					}
+					if monthVal != 0 {
+						month = &monthVal
+					}
+					if dayVal != 0 {
+						day = &dayVal
+					}
+					
+					ticketChan := make(chan Ticket)
+					go func() {
+						StreamTickets(context.Background(), year, month, day, ticketChan)
+					}()
+					
+					var tickets []Ticket
+					for t := range ticketChan {
+						tickets = append(tickets, t)
+					}
+					
+					type node struct {
+						name     string
+						children map[string]*node
+						isTicket bool
+						ticket   *Ticket
+					}
+					root := &node{children: make(map[string]*node)}
+					
+					for _, t := range tickets {
+						path := fmt.Sprintf("%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
+						parts := strings.Split(path, "/")
+						curr := root
+						for i, part := range parts {
+							if _, ok := curr.children[part]; !ok {
+								curr.children[part] = &node{name: part, children: make(map[string]*node)}
+							}
+							curr = curr.children[part]
+							if i == len(parts)-1 {
+								curr.isTicket = true
+								tCopy := t
+								curr.ticket = &tCopy
+							}
+						}
+					}
+					
+					var printNode func(*node, string)
+					printNode = func(n *node, prefix string) {
+						keys := make([]string, 0, len(n.children))
+						for k := range n.children {
+							keys = append(keys, k)
+						}
+						sort.Strings(keys)
+						
+						for i, k := range keys {
+							child := n.children[k]
+							isLast := i == len(keys)-1
+							connector := "├── "
+							if isLast {
+								connector = "└── "
+							}
+							childPrefix := prefix + "│   "
+							if isLast {
+								childPrefix = prefix + "    "
+							}
+							
+							display := child.name
+							if child.isTicket && child.ticket != nil && child.ticket.Data != nil {
+								// Optional: add title?
+								// display += " (" + child.ticket.Data.Title + ")" 
+							}
+							if !child.isTicket {
+								display += "/"
+							}
+							
+							stream <- Event{Kind: KindLog, Level: "info", Command: "ticket tree", Message: prefix + connector + display}
+							printNode(child, childPrefix)
+						}
+					}
+					
+					printNode(root, "")
+					stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+				}()
+				return renderStream(cmd, config, stream)
+			},
+		}
+		treeCmd.Flags().Int("year", 0, "Filter by year")
+		treeCmd.Flags().Int("month", 0, "Filter by month")
+		treeCmd.Flags().Int("day", 0, "Filter by day")
+
+		root.AddCommand(openCmd)
+		root.AddCommand(listCmd)
+		root.AddCommand(closeCmd)
+		root.AddCommand(reopenCmd)
+		root.AddCommand(treeCmd)
+
+		return root
+	}
 
 func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "contributor", Short: "Contributor management commands"}
@@ -1859,7 +1059,20 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "list",
 		Short: "List contributors",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runInvoke(cmd, factory, config, "contributor.list", nil)
+			query := `query Contributors {
+				repo {
+					contributors {
+						id
+						github
+						name
+						emails
+						icons { avatar avatarRound github }
+						links { name url }
+						metrics { commits tickets bundles folders files sections definitions lines }
+					}
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, nil)
 		},
 	}
 	addCmd := &cobra.Command{
@@ -1879,7 +1092,11 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if len(emails) > 0 {
 				input["emails"] = emails
 			}
-			return runInvoke(cmd, factory, config, "contributor.add", input)
+			variables := map[string]interface{}{"input": input}
+			query := `mutation ContributorAdd($input: ContributorAddInput!) {
+				contributorAdd(input: $input) { id github name emails }
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	addCmd.Flags().String("github", "", "GitHub username")
@@ -1893,8 +1110,9 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if github == "" {
 				return fmt.Errorf("missing github")
 			}
-			input := map[string]interface{}{"github": github}
-			return runInvoke(cmd, factory, config, "contributor.remove", input)
+			variables := map[string]interface{}{"github": github}
+			query := `mutation ContributorRemove($github: String!) { contributorRemove(github: $github) }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	removeCmd.Flags().String("github", "", "GitHub username")
@@ -1910,10 +1128,70 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "list",
 		Short: "List bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runInvoke(cmd, factory, config, "bundle.list", nil)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "bundle list"}
+
+				bundleChan := make(chan Bundle)
+				go func() {
+					StreamBundles(context.Background(), bundleChan)
+				}()
+
+				for b := range bundleChan {
+					// Bundle struct tags match Case 6c expectations when wrapped in "bundle"
+					data, err := json.Marshal(map[string]interface{}{"bundle": b})
+					if err != nil {
+						continue
+					}
+					stream <- Event{Kind: KindResult, Command: "bundle list", Data: data}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+
+			return renderStream(cmd, config, stream)
 		},
 	}
+	
+	treeCmd := &cobra.Command{
+		Use:   "tree",
+		Short: "Show bundle tree",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "bundle tree"}
+
+				bundleChan := make(chan Bundle)
+				go func() {
+					StreamBundles(context.Background(), bundleChan)
+				}()
+
+				var bundles []Bundle
+				for b := range bundleChan {
+					bundles = append(bundles, b)
+				}
+				
+				sort.Slice(bundles, func(i, j int) bool {
+					return bundles[i].Name < bundles[j].Name
+				})
+
+				stream <- Event{Kind: KindLog, Level: "info", Command: "bundle tree", Message: "."}
+				for i, b := range bundles {
+					connector := "├── "
+					if i == len(bundles)-1 {
+						connector = "└── "
+					}
+					stream <- Event{Kind: KindLog, Level: "info", Command: "bundle tree", Message: connector + b.Name}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
+		},
+	}
+	
 	root.AddCommand(listCmd)
+	root.AddCommand(treeCmd)
 	return root
 }
 
@@ -1927,8 +1205,9 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if path == "" {
 				return fmt.Errorf("missing path")
 			}
-			input := map[string]interface{}{"path": path}
-			return runInvoke(cmd, factory, config, "folder.create", input)
+			variables := map[string]interface{}{"path": path}
+			query := `mutation FolderCreate($path: String!) { folderCreate(path: $path) { id path name uri } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	createCmd.Flags().String("path", "", "Folder path")
@@ -1941,8 +1220,9 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if src == "" || dst == "" {
 				return fmt.Errorf("missing source or target")
 			}
-			input := map[string]interface{}{"source": src, "target": dst}
-			return runInvoke(cmd, factory, config, "folder.move", input)
+			variables := map[string]interface{}{"src": src, "dst": dst}
+			query := `mutation FolderMove($src: String!, $dst: String!) { folderMove(src: $src, dst: $dst) { id path name uri } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	moveCmd.Flags().String("source", "", "Source path")
@@ -1955,37 +1235,120 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if path == "" {
 				return fmt.Errorf("missing path")
 			}
-			input := map[string]interface{}{"path": path}
-			return runInvoke(cmd, factory, config, "folder.delete", input)
+			variables := map[string]interface{}{"path": path}
+			query := `mutation FolderDelete($path: String!) { folderDelete(path: $path) }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	deleteCmd.Flags().String("path", "", "Folder path")
+
 	listCmd := &cobra.Command{
-		Use:   "list",
+		Use:   "list [scope]",
 		Short: "List folders",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path, _ := cmd.Flags().GetString("path")
-			input := map[string]interface{}{}
-			if path != "" {
-				input["path"] = path
+			scope := ""
+			if len(args) > 0 {
+				scope = args[0]
 			}
-			return runInvoke(cmd, factory, config, "folder.list", input)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "folder list"}
+
+				folderChan := make(chan Folder)
+				go func() {
+					StreamFolders(context.Background(), scope, folderChan)
+				}()
+
+				for f := range folderChan {
+					data, err := json.Marshal(map[string]interface{}{"folder": f})
+					if err != nil {
+						continue
+					}
+					stream <- Event{Kind: KindResult, Command: "folder list", Data: data}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
-	listCmd.Flags().String("path", ".", "Folder path")
+	
 	treeCmd := &cobra.Command{
-		Use:   "tree",
+		Use:   "tree [scope]",
 		Short: "Show folder tree",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path, _ := cmd.Flags().GetString("path")
-			input := map[string]interface{}{}
-			if path != "" {
-				input["path"] = path
+			scope := ""
+			if len(args) > 0 {
+				scope = args[0]
 			}
-			return runInvoke(cmd, factory, config, "folder.tree", input)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "folder tree"}
+				
+				folderChan := make(chan Folder)
+				go func() {
+					StreamFolders(context.Background(), scope, folderChan)
+				}()
+				
+				var folders []Folder
+				for f := range folderChan {
+					folders = append(folders, f)
+				}
+				
+				type node struct {
+					name     string
+					children map[string]*node
+					isFolder bool
+				}
+				root := &node{children: make(map[string]*node)}
+				
+				for _, f := range folders {
+					parts := strings.Split(f.Path, "/")
+					curr := root
+					for i, part := range parts {
+						if _, ok := curr.children[part]; !ok {
+							curr.children[part] = &node{name: part, children: make(map[string]*node)}
+						}
+						curr = curr.children[part]
+						if i == len(parts)-1 {
+							curr.isFolder = true
+						}
+					}
+				}
+				
+				var printNode func(*node, string)
+				printNode = func(n *node, prefix string) {
+					keys := make([]string, 0, len(n.children))
+					for k := range n.children {
+						keys = append(keys, k)
+					}
+					sort.Strings(keys)
+					
+					for i, k := range keys {
+						child := n.children[k]
+						isLast := i == len(keys)-1
+						connector := "├── "
+						if isLast {
+							connector = "└── "
+						}
+						childPrefix := prefix + "│   "
+						if isLast {
+							childPrefix = prefix + "    "
+						}
+						
+						stream <- Event{Kind: KindLog, Level: "info", Command: "folder tree", Message: prefix + connector + child.name + "/"}
+						printNode(child, childPrefix)
+					}
+				}
+				
+				printNode(root, "")
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
-	treeCmd.Flags().String("path", ".", "Folder path")
+
 	root.AddCommand(createCmd)
 	root.AddCommand(moveCmd)
 	root.AddCommand(deleteCmd)
@@ -2004,8 +1367,9 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if path == "" {
 				return fmt.Errorf("missing path")
 			}
-			input := map[string]interface{}{"path": path}
-			return runInvoke(cmd, factory, config, "file.create", input)
+			variables := map[string]interface{}{"path": path}
+			query := `mutation FileCreate($path: String!) { fileCreate(path: $path) { id path name uri } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	createCmd.Flags().String("path", "", "File path")
@@ -2018,8 +1382,9 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if src == "" || dst == "" {
 				return fmt.Errorf("missing source or target")
 			}
-			input := map[string]interface{}{"source": src, "target": dst}
-			return runInvoke(cmd, factory, config, "file.move", input)
+			variables := map[string]interface{}{"src": src, "dst": dst}
+			query := `mutation FileMove($src: String!, $dst: String!) { fileMove(src: $src, dst: $dst) { id path name uri } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	moveCmd.Flags().String("source", "", "Source path")
@@ -2032,37 +1397,124 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if path == "" {
 				return fmt.Errorf("missing path")
 			}
-			input := map[string]interface{}{"path": path}
-			return runInvoke(cmd, factory, config, "file.delete", input)
+			variables := map[string]interface{}{"path": path}
+			query := `mutation FileDelete($path: String!) { fileDelete(path: $path) }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	deleteCmd.Flags().String("path", "", "File path")
+	
 	listCmd := &cobra.Command{
-		Use:   "list",
+		Use:   "list [scope]",
 		Short: "List files",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			scope, _ := cmd.Flags().GetString("scope")
-			input := map[string]interface{}{}
-			if scope != "" {
-				input["scope"] = scope
+			scope := ""
+			if len(args) > 0 {
+				scope = args[0]
 			}
-			return runInvoke(cmd, factory, config, "file.list", input)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "file list"}
+
+				fileChan := make(chan File)
+				go func() {
+					StreamFiles(context.Background(), scope, fileChan)
+				}()
+
+				for f := range fileChan {
+					data, err := json.Marshal(map[string]interface{}{"file": f})
+					if err != nil {
+						continue
+					}
+					stream <- Event{Kind: KindResult, Command: "file list", Data: data}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
-	listCmd.Flags().String("scope", "@semio", "Scope to list")
+
 	treeCmd := &cobra.Command{
-		Use:   "tree",
+		Use:   "tree [scope]",
 		Short: "Show file tree",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			path, _ := cmd.Flags().GetString("path")
-			input := map[string]interface{}{}
-			if path != "" {
-				input["path"] = path
+			scope := ""
+			if len(args) > 0 {
+				scope = args[0]
 			}
-			return runInvoke(cmd, factory, config, "file.tree", input)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "file tree"}
+
+				fileChan := make(chan File)
+				go func() {
+					StreamFiles(context.Background(), scope, fileChan)
+				}()
+
+				var files []File
+				for f := range fileChan {
+					files = append(files, f)
+				}
+
+				type node struct {
+					name     string
+					children map[string]*node
+					isFile   bool
+				}
+				root := &node{children: make(map[string]*node)}
+
+				for _, f := range files {
+					parts := strings.Split(f.Path, "/")
+					curr := root
+					for i, part := range parts {
+						if _, ok := curr.children[part]; !ok {
+							curr.children[part] = &node{name: part, children: make(map[string]*node)}
+						}
+						curr = curr.children[part]
+						if i == len(parts)-1 {
+							curr.isFile = true
+						}
+					}
+				}
+
+				var printNode func(*node, string)
+				printNode = func(n *node, prefix string) {
+					keys := make([]string, 0, len(n.children))
+					for k := range n.children {
+						keys = append(keys, k)
+					}
+					sort.Strings(keys)
+
+					for i, k := range keys {
+						child := n.children[k]
+						isLast := i == len(keys)-1
+						connector := "├── "
+						if isLast {
+							connector = "└── "
+						}
+						childPrefix := prefix + "│   "
+						if isLast {
+							childPrefix = prefix + "    "
+						}
+
+						display := child.name
+						if !child.isFile {
+							display += "/"
+						}
+						stream <- Event{Kind: KindLog, Level: "info", Command: "file tree", Message: prefix + connector + display}
+						printNode(child, childPrefix)
+					}
+				}
+
+				printNode(root, "")
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
-	treeCmd.Flags().String("path", ".", "File path")
+
 	root.AddCommand(createCmd)
 	root.AddCommand(moveCmd)
 	root.AddCommand(deleteCmd)
@@ -2083,11 +1535,12 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if file == "" || name == "" {
 				return fmt.Errorf("missing file or name")
 			}
-			input := map[string]interface{}{"file": file, "name": name}
+			variables := map[string]interface{}{"file": file, "name": name}
 			if parent != "" {
-				input["parent"] = parent
+				variables["parent"] = parent
 			}
-			return runInvoke(cmd, factory, config, "section.create", input)
+			query := `mutation SectionCreate($file: String!, $name: String!, $parent: String) { sectionCreate(file: $file, name: $name, parent: $parent) { id name range { start { line column } end { line column } } } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	createCmd.Flags().String("file", "", "File path")
@@ -2103,8 +1556,9 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if file == "" || oldName == "" || newName == "" {
 				return fmt.Errorf("missing file or names")
 			}
-			input := map[string]interface{}{"file": file, "old": oldName, "new": newName}
-			return runInvoke(cmd, factory, config, "section.move", input)
+			variables := map[string]interface{}{"file": file, "oldName": oldName, "newName": newName}
+			query := `mutation SectionMove($file: String!, $oldName: String!, $newName: String!) { sectionMove(file: $file, oldName: $oldName, newName: $newName) { id name range { start { line column } end { line column } } } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	moveCmd.Flags().String("file", "", "File path")
@@ -2119,22 +1573,25 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if file == "" || name == "" {
 				return fmt.Errorf("missing file or name")
 			}
-			input := map[string]interface{}{"file": file, "name": name}
-			return runInvoke(cmd, factory, config, "section.delete", input)
+			variables := map[string]interface{}{"file": file, "name": name}
+			query := `mutation SectionDelete($file: String!, $name: String!) { sectionDelete(file: $file, name: $name) }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	deleteCmd.Flags().String("file", "", "File path")
 	deleteCmd.Flags().String("name", "", "Section name")
 	listCmd := &cobra.Command{
-		Use:   "list",
-		Short: "List sections",
+		Use:     "list",
+		Aliases: []string{"tree"},
+		Short:   "List sections",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			file, _ := cmd.Flags().GetString("file")
 			if file == "" {
 				return fmt.Errorf("missing file")
 			}
-			input := map[string]interface{}{"file": file}
-			return runInvoke(cmd, factory, config, "section.list", input)
+			variables := map[string]interface{}{"path": file}
+			query := `query SectionList($path: String!) { file(path: $path) { sections { id name range { start { line column } end { line column } } children { id name range { start { line column } end { line column } } children { id name range { start { line column } end { line column } } children { id name range { start { line column } end { line column } } } } } } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	listCmd.Flags().String("file", "", "File path")
@@ -2157,7 +1614,9 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if targetParent != "" {
 				input["targetParent"] = targetParent
 			}
-			return runInvoke(cmd, factory, config, "section.integrate", input)
+			variables := map[string]interface{}{"input": input}
+			query := `mutation Integrate($input: IntegrateInput!) { integrate(input: $input) { success } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	integrateCmd.Flags().String("source", "", "Source file path")
@@ -2182,8 +1641,9 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if path == "" {
 				return fmt.Errorf("missing file")
 			}
-			input := map[string]interface{}{"file": path}
-			return runInvoke(cmd, factory, config, "definition.list", input)
+			variables := map[string]interface{}{"path": path}
+			query := `query DefinitionList($path: String!) { file(path: $path) { definitions { id name kind range { start { line column } end { line column } } } } }`
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	listCmd.Flags().String("file", "", "File path")
@@ -2191,9 +1651,20 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-func RenderJSONL(out io.Writer, stream <-chan Event) (int, error) {
+// #region CLI Renderers
+
+type StreamRenderer interface {
+	Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error)
+}
+
+type NDJSONRenderer struct{}
+
+func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	encoder := json.NewEncoder(out)
 	encoder.SetEscapeHTML(false)
+	// In strict NDJSON mode, everything goes to stdout as JSON events
+	// but we respect the out writer passed in (which is usually stdout)
+	
 	exitCode := 0
 	for event := range stream {
 		if event.Kind == KindDone && event.Done != nil {
@@ -2202,99 +1673,449 @@ func RenderJSONL(out io.Writer, stream <-chan Event) (int, error) {
 		if err := encoder.Encode(event); err != nil {
 			return exitCode, err
 		}
-	}
-	return exitCode, nil
-}
-
-func RenderJSON(out io.Writer, stream <-chan Event) (int, error) {
-	items := make([]Event, 0)
-	exitCode := 0
-	for event := range stream {
-		if event.Kind == KindDone && event.Done != nil {
-			exitCode = event.Done.ExitCode
+		// Flush if possible to ensure streaming
+		if f, ok := out.(interface{ Flush() error }); ok {
+			f.Flush()
 		}
-		items = append(items, event)
-	}
-	encoder := json.NewEncoder(out)
-	encoder.SetEscapeHTML(false)
-	if err := encoder.Encode(items); err != nil {
-		return exitCode, err
 	}
 	return exitCode, nil
 }
 
-func RenderCompact(out io.Writer, errOut io.Writer, stream <-chan Event, verbose bool) (int, error) {
+// #region ANSI
+
+const (
+	ColorReset  = "\033[0m"
+	ColorRed    = "\033[31m"
+	ColorGreen  = "\033[32m"
+	ColorYellow = "\033[33m"
+	ColorBlue   = "\033[34m"
+	ColorDim    = "\033[2m"
+	ColorBold   = "\033[1m"
+)
+
+func colorize(s string, color string, enabled bool) string {
+	if !enabled {
+		return s
+	}
+	return color + s + ColorReset
+}
+
+// #endregion ANSI
+
+type HumanRenderer struct {
+	Verbose bool
+}
+
+func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
+	isTTY := false 
+	if f, ok := out.(*os.File); ok {
+		stat, _ := f.Stat()
+		if (stat.Mode() & os.ModeCharDevice) != 0 {
+			isTTY = true
+		}
+	}
+	// Also check env var NO_COLOR
+	if os.Getenv("NO_COLOR") != "" {
+		isTTY = false
+	}
+	
+	startTime := time.Now()
+
 	for event := range stream {
 		if event.Kind == KindDone && event.Done != nil {
 			exitCode = event.Done.ExitCode
+			duration := time.Since(startTime).Round(time.Millisecond)
+			
+			statusIcon := "✓"
+			color := ColorGreen
+			if exitCode != 0 {
+				statusIcon = "✗"
+				color = ColorRed
+			}
+			
+			summary := fmt.Sprintf("%s done  %s  %s", statusIcon, event.Command, duration)
+			if exitCode != 0 {
+				summary = fmt.Sprintf("%s failed %s  %s (exit: %d)", statusIcon, event.Command, duration, exitCode)
+			}
+
+			if isTTY {
+				fmt.Fprint(out, "\r\033[K") // Clear line
+				fmt.Fprintln(out, colorize(summary, color, true))
+			} else {
+				fmt.Fprintln(out, summary)
+			}
 			continue
 		}
 		if event.Kind == KindError && event.Error != nil {
-			if event.Error.Detail != "" && verbose {
-				if _, err := errOut.Write([]byte(event.Error.Detail + "\n")); err != nil {
-					return exitCode, err
-				}
+			if isTTY {
+				fmt.Fprint(out, "\r\033[K")
 			}
-			if event.Error.Message != "" {
-				if _, err := errOut.Write([]byte(event.Error.Message + "\n")); err != nil {
-					return exitCode, err
-				}
+			fmt.Fprintf(errOut, "%s error: %s\n", colorize("✗", ColorRed, isTTY), event.Error.Message)
+			if r.Verbose && event.Error.Detail != "" {
+				fmt.Fprintf(errOut, "%s\n", event.Error.Detail)
 			}
 			continue
 		}
 		if event.Kind == KindLog && event.Message != "" {
-			if _, err := errOut.Write([]byte(event.Message + "\n")); err != nil {
-				return exitCode, err
+			if isTTY {
+				fmt.Fprint(out, "\r\033[K")
 			}
+			prefix := colorize("•", ColorDim, isTTY)
+			fmt.Fprintf(errOut, "%s %s\n", prefix, event.Message)
 			continue
 		}
-		if (event.Kind == KindResult || event.Kind == KindItem) && len(event.Data) > 0 {
-			formatted := event.Data
-			var decoded interface{}
-			if err := json.Unmarshal(event.Data, &decoded); err == nil {
-				if pretty, err := json.MarshalIndent(decoded, "", "  "); err == nil {
-					formatted = pretty
-				}
+		if event.Kind == KindResult && len(event.Data) > 0 {
+			if isTTY {
+				fmt.Fprint(out, "\r\033[K")
 			}
-			if _, err := out.Write(append(formatted, '\n')); err != nil {
-				return exitCode, err
+			fmt.Fprint(out, formatResult(event.Command, event.Data, isTTY))
+		}
+		if event.Kind == KindProgress && event.Progress != nil {
+			if isTTY {
+				fmt.Fprintf(out, "\r%s %d%% (%d/%d) %s", colorize("↻", ColorBlue, true), event.Progress.Percent, event.Progress.Current, event.Progress.Total, event.Progress.Step)
+			} else {
+				// Avoid spamming non-TTY logs
+				if event.Progress.Percent%10 == 0 && event.Progress.Percent > 0 {
+					fmt.Fprintf(out, "progress: %d%% %s\n", event.Progress.Percent, event.Progress.Step)
+				}
 			}
 		}
 	}
 	return exitCode, nil
 }
 
-func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
-	switch config.Format {
-	case "jsonl":
-		exitCode, err := RenderJSONL(cmd.OutOrStdout(), stream)
-		if err != nil {
-			return err
-		}
-		if exitCode != 0 {
-			return ExitError{Code: exitCode}
-		}
-		return nil
-	case "json":
-		exitCode, err := RenderJSON(cmd.OutOrStdout(), stream)
-		if err != nil {
-			return err
-		}
-		if exitCode != 0 {
-			return ExitError{Code: exitCode}
-		}
-		return nil
-	default:
-		exitCode, err := RenderCompact(cmd.OutOrStdout(), cmd.ErrOrStderr(), stream, config.Verbose)
-		if err != nil {
-			return err
-		}
-		if exitCode != 0 {
-			return ExitError{Code: exitCode}
-		}
-		return nil
+func formatResult(command string, data json.RawMessage, isTTY bool) string {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Sprintf("→ %s\n", string(data))
 	}
+	
+	// Helper to handle GraphQL response wrappers
+	// The engine wraps the graphql result in "data".
+	var payload map[string]interface{} = raw
+	if len(raw) == 1 {
+		if d, ok := raw["data"].(map[string]interface{}); ok {
+			payload = d
+		}
+	}
+
+	var sb strings.Builder
+	prefix := colorize("→", ColorBlue, isTTY)
+	
+	// Case 1: Analyze result
+	if analyze, ok := payload["analyze"].(map[string]interface{}); ok {
+		// metrics
+		if metrics, ok := analyze["metrics"].(map[string]interface{}); ok {
+			total := metrics["total"]
+			autofixable := metrics["autofixable"]
+			
+			summaryText := fmt.Sprintf("found %v violations", total)
+			if autofixable != nil {
+				summaryText += fmt.Sprintf(" (%v autofixable)", autofixable)
+			}
+			sb.WriteString(fmt.Sprintf("%s %s\n", prefix, summaryText))
+		}
+		
+		// violations
+		if violations, ok := analyze["violations"].([]interface{}); ok {
+			for _, v := range violations {
+				if vio, ok := v.(map[string]interface{}); ok {
+					kind := ""
+					if k, ok := vio["kind"].(map[string]interface{}); ok {
+						kind = fmt.Sprintf("%v", k["id"])
+					} else if kStr, ok := vio["kind"].(string); ok {
+						kind = kStr
+					}
+					
+					scope := fmt.Sprintf("%v", vio["scope"])
+					line := fmt.Sprintf("%v", vio["line"])
+					summary := fmt.Sprintf("%v", vio["summary"])
+					
+					loc := fmt.Sprintf("%s:%s", scope, line)
+					
+					// Indented violation line
+					lineStr := fmt.Sprintf("  %s %s %s %s\n", 
+						colorize("violation", ColorRed, isTTY), 
+						kind, 
+						colorize(loc, ColorDim, isTTY), 
+						summary)
+					sb.WriteString(lineStr)
+				}
+			}
+		}
+		if sb.Len() > 0 {
+			return sb.String()
+		}
+	}
+	
+	// Case 2: Fix result
+	if fix, ok := payload["fix"].(map[string]interface{}); ok {
+		fixed := fix["fixed"]
+		remaining := fix["remaining"]
+		sb.WriteString(fmt.Sprintf("%s fixed %v violations (%v remaining)\n", prefix, fixed, remaining))
+		return sb.String()
+	}
+
+	// Case 3: Ticket operations
+	for k, v := range payload {
+		if strings.HasPrefix(k, "ticket") || k == "ticket" {
+			if tMap, ok := v.(map[string]interface{}); ok {
+				if slug, ok := tMap["slug"].(string); ok {
+					status, _ := tMap["status"].(string)
+					statusColor := ColorGreen
+					if status == "open" { statusColor = ColorBlue }
+					
+					// Check for rich details (Title, Date) for list view
+					if title, ok := tMap["title"].(string); ok {
+						statusIcon := "◯"
+						if status == "finished" || status == "closed" {
+							statusIcon = "✓"
+							statusColor = ColorGreen
+						} else {
+							statusColor = ColorBlue
+						}
+						
+						dateDisplay := ""
+						if dates, ok := tMap["date"].(map[string]interface{}); ok {
+							if created, ok := dates["created"].(string); ok {
+								dateDisplay = created
+								if tParsed, err := time.Parse(time.RFC3339, created); err == nil {
+									dateDisplay = tParsed.Format("2006-01-02")
+								}
+							}
+						}
+						
+						sb.WriteString(fmt.Sprintf("  %s %s %s %s\n", 
+							colorize(statusIcon, statusColor, isTTY),
+							colorize(title, ColorBold, isTTY),
+							colorize("("+slug+")", ColorDim, isTTY),
+							colorize("("+dateDisplay+")", ColorDim, isTTY)))
+						return sb.String()
+					}
+
+					sb.WriteString(fmt.Sprintf("%s ticket %s is %s\n", prefix, colorize(slug, ColorBold, isTTY), colorize(status, statusColor, isTTY)))
+					return sb.String()
+				}
+			}
+		}
+	}
+
+	// Case 4: Direct ticket object
+	if slug, ok := payload["slug"].(string); ok {
+		status, _ := payload["status"].(string)
+		path, _ := payload["path"].(string)
+		sb.WriteString(fmt.Sprintf("%s ticket %s (%s) %s\n", prefix, colorize(slug, ColorBold, isTTY), status, path))
+		return sb.String()
+	}
+	
+	// Case 5: Generic ID/Path
+	if id, ok := payload["id"].(string); ok {
+		if path, ok := payload["path"].(string); ok {
+			return fmt.Sprintf("%s %s %s\n", prefix, id, path)
+		}
+		return fmt.Sprintf("%s item %s\n", prefix, id)
+	}
+
+	// Case 6: Repo result
+	if repo, ok := payload["repo"].(map[string]interface{}); ok {
+		// Tickets
+		if tickets, ok := repo["tickets"].([]interface{}); ok {
+			sb.WriteString(fmt.Sprintf("%s found %d tickets\n", prefix, len(tickets)))
+			for _, t := range tickets {
+				if ticket, ok := t.(map[string]interface{}); ok {
+					slug, _ := ticket["slug"].(string)
+					status, _ := ticket["status"].(string)
+					title, _ := ticket["title"].(string)
+					dates, _ := ticket["date"].(map[string]interface{})
+					createdStr, _ := dates["created"].(string)
+					
+					// Simple date parsing to YYYY-MM-DD
+					dateDisplay := createdStr
+					if tParsed, err := time.Parse(time.RFC3339, createdStr); err == nil {
+						dateDisplay = tParsed.Format("2006-01-02")
+					}
+
+					statusIcon := "◯" 
+					statusColor := ColorBlue
+					if status == "finished" || status == "closed" { 
+						statusIcon = "✓" 
+						statusColor = ColorGreen
+					}
+					
+					// Compact line: Icon Title (SLUG) (Date)
+					line := fmt.Sprintf("  %s %s %s %s", 
+						colorize(statusIcon, statusColor, isTTY),
+						colorize(title, ColorBold, isTTY),
+						colorize("("+slug+")", ColorDim, isTTY),
+						colorize("("+dateDisplay+")", ColorDim, isTTY))
+					
+					sb.WriteString(line + "\n")
+				}
+			}
+			return sb.String()
+		}
+
+		// Bundles
+		if bundles, ok := repo["bundles"].([]interface{}); ok {
+			sb.WriteString(fmt.Sprintf("%s found %d bundles\n", prefix, len(bundles)))
+			for _, b := range bundles {
+				if bundle, ok := b.(map[string]interface{}); ok {
+					name, _ := bundle["name"].(string)
+					root, _ := bundle["root"].(string)
+					ptype, _ := bundle["projectType"].(string)
+					if ptype == "" {
+						ptype, _ = bundle["type"].(string)
+					}
+					
+					// Compact line: 📦 NAME (root: ROOT, type: PROJECTTYPE)
+					line := fmt.Sprintf("  %s %s (root: %s, type: %s)", 
+						colorize("📦", ColorBlue, isTTY),
+						colorize(name, ColorBold, isTTY),
+						root,
+						ptype)
+					sb.WriteString(line + "\n")
+				}
+			}
+			return sb.String()
+		}
+	}
+
+	// Case 6b: Single Ticket Stream Item
+	if ticket, ok := payload["ticket"].(map[string]interface{}); ok {
+		slug, _ := ticket["slug"].(string)
+		status, _ := ticket["status"].(string)
+		title, _ := ticket["title"].(string)
+		dates, _ := ticket["date"].(map[string]interface{})
+		createdStr, _ := dates["created"].(string)
+		
+		// Simple date parsing to YYYY-MM-DD
+		dateDisplay := createdStr
+		if tParsed, err := time.Parse(time.RFC3339, createdStr); err == nil {
+			dateDisplay = tParsed.Format("2006-01-02")
+		}
+
+		statusIcon := "◯" 
+		statusColor := ColorBlue
+		if status == "finished" || status == "closed" { 
+			statusIcon = "✓" 
+			statusColor = ColorGreen
+		}
+		
+		// Compact line: Icon Title (SLUG) (Date)
+		return fmt.Sprintf("  %s %s %s %s\n", 
+			colorize(statusIcon, statusColor, isTTY),
+			colorize(title, ColorBold, isTTY),
+			colorize("("+slug+")", ColorDim, isTTY),
+			colorize("("+dateDisplay+")", ColorDim, isTTY))
+	}
+
+	// Case 6c: Single Bundle Stream Item
+	if bundle, ok := payload["bundle"].(map[string]interface{}); ok {
+		name, _ := bundle["name"].(string)
+		root, _ := bundle["root"].(string)
+		ptype, _ := bundle["projectType"].(string)
+		if ptype == "" {
+			ptype, _ = bundle["type"].(string)
+		}
+		
+		// Compact line: 📦 NAME (root: ROOT, type: PROJECTTYPE)
+		return fmt.Sprintf("  %s %s (root: %s, type: %s)\n", 
+			colorize("📦", ColorBlue, isTTY),
+			colorize(name, ColorBold, isTTY),
+			root,
+			ptype)
+	}
+
+	// Case 7: File result
+	if file, ok := payload["file"].(map[string]interface{}); ok {
+		// Sections
+		if sections, ok := file["sections"].([]interface{}); ok {
+			sb.WriteString(fmt.Sprintf("%s found %d top-level sections\n", prefix, len(sections)))
+			
+			var printSections func(items []interface{}, indent string)
+			printSections = func(items []interface{}, indent string) {
+				for _, item := range items {
+					if sec, ok := item.(map[string]interface{}); ok {
+						name, _ := sec["name"].(string)
+						rng, _ := sec["range"].(map[string]interface{})
+						start := 0
+						end := 0
+						if rng != nil {
+							start = int(rng["start"].(float64))
+							end = int(rng["end"].(float64))
+						}
+						
+						line := fmt.Sprintf("%s%s %s %s", 
+							indent,
+							colorize("§", ColorYellow, isTTY),
+							colorize(name, ColorBold, isTTY),
+							colorize(fmt.Sprintf("(%d-%d)", start, end), ColorDim, isTTY))
+						sb.WriteString(line + "\n")
+						
+						if children, ok := sec["children"].([]interface{}); ok && len(children) > 0 {
+							printSections(children, indent+"  ")
+						}
+					}
+				}
+			}
+			printSections(sections, "  ")
+			return sb.String()
+		}
+
+		// Definitions
+		if definitions, ok := file["definitions"].([]interface{}); ok {
+			sb.WriteString(fmt.Sprintf("%s found %d definitions\n", prefix, len(definitions)))
+			for _, d := range definitions {
+				if def, ok := d.(map[string]interface{}); ok {
+					name, _ := def["name"].(string)
+					kind, _ := def["kind"].(string)
+					rng, _ := def["range"].(map[string]interface{})
+					start := 0
+					end := 0
+					if rng != nil {
+						start = int(rng["start"].(float64))
+						end = int(rng["end"].(float64))
+					}
+					
+					// Compact line: ƒ NAME (kind: KIND, L:START-END)
+					line := fmt.Sprintf("  %s %s (kind: %s, L:%d-%d)", 
+						colorize("ƒ", ColorGreen, isTTY),
+						colorize(name, ColorBold, isTTY),
+						kind,
+						start, end)
+					sb.WriteString(line + "\n")
+				}
+			}
+			return sb.String()
+		}
+	}
+
+    // Default: JSON dump
+	jsonBytes, _ := json.Marshal(payload) // Remove whitespace
+	jsonStr := string(jsonBytes)
+	if len(jsonStr) > 120 {
+		jsonStr = jsonStr[:117] + "..."
+	}
+	return fmt.Sprintf("%s %s\n", prefix, jsonStr)
+}
+
+func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
+	var renderer StreamRenderer
+	if config.JSON {
+		renderer = NDJSONRenderer{}
+	} else {
+		renderer = HumanRenderer{Verbose: config.Verbose}
+	}
+
+	exitCode, err := renderer.Render(cmd.Context(), cmd.OutOrStdout(), cmd.ErrOrStderr(), stream)
+	if err != nil {
+		return err
+	}
+	if exitCode != 0 {
+		return ExitError{Code: exitCode}
+	}
+	return nil
 }
 
 func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query string, variables map[string]interface{}) error {
@@ -2316,103 +2137,6 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 	request := Request{Command: CmdGraphQL, Args: payloadBytes, RepoRoot: config.Repo, Verbose: config.Verbose}
 	stream := engine.Run(ctx, request)
 	return renderStream(cmd, config, stream)
-}
-
-func runInvoke(cmd *cobra.Command, factory EngineFactory, config *Config, id string, input map[string]interface{}) error {
-	inputBytes := json.RawMessage(nil)
-	if input != nil {
-		payload, err := json.Marshal(input)
-		if err != nil {
-			return err
-		}
-		inputBytes = payload
-	}
-	argsPayload := InvokeArgs{ID: id, Input: inputBytes}
-	payloadBytes, err := json.Marshal(argsPayload)
-	if err != nil {
-		return err
-	}
-	engine, err := factory(*config)
-	if err != nil {
-		return err
-	}
-	ctx := context.Background()
-	if config.Timeout > 0 {
-		ctxWithTimeout, cancel := context.WithTimeout(ctx, config.Timeout)
-		defer cancel()
-		ctx = ctxWithTimeout
-	}
-	request := Request{Command: CmdInvoke, Args: payloadBytes, RepoRoot: config.Repo, Verbose: config.Verbose}
-	stream := engine.Run(ctx, request)
-	return renderStream(cmd, config, stream)
-}
-
-func serveVSCode(ctx context.Context, engine *Engine) error {
-	reader := bufio.NewReader(os.Stdin)
-	encoder := json.NewEncoder(os.Stdout)
-	encoder.SetEscapeHTML(false)
-	var mu sync.Mutex
-	ctxMap := map[string]context.CancelFunc{}
-	for {
-		line, err := reader.ReadBytes('\n')
-		if err != nil {
-			if errors.Is(err, io.EOF) {
-				return nil
-			}
-			return err
-		}
-		trimmed := strings.TrimSpace(string(line))
-		if trimmed == "" {
-			continue
-		}
-		var request struct {
-			ID      string          `json:"id"`
-			Command string          `json:"command"`
-			Input   json.RawMessage `json:"input"`
-			Cancel  bool            `json:"cancel"`
-		}
-		if err := json.Unmarshal([]byte(trimmed), &request); err != nil {
-			mu.Lock()
-			_ = encoder.Encode(map[string]any{"event": Event{Kind: KindError, Error: &ErrPayload{Code: string(ErrParse), Message: "invalid request", Detail: err.Error(), Fatal: false}}})
-			mu.Unlock()
-			continue
-		}
-		if request.ID == "" {
-			continue
-		}
-		if request.Cancel {
-			if cancel, ok := ctxMap[request.ID]; ok {
-				cancel()
-				delete(ctxMap, request.ID)
-			}
-			continue
-		}
-		cmdID := request.Command
-		if cmdID == "" {
-			cmdID = "internal.ping"
-		}
-		invoke := InvokeArgs{ID: cmdID, Input: request.Input}
-		payload, err := json.Marshal(invoke)
-		if err != nil {
-			mu.Lock()
-			_ = encoder.Encode(map[string]any{"id": request.ID, "event": Event{Kind: KindError, Error: &ErrPayload{Code: string(ErrParse), Message: "invalid input", Detail: err.Error(), Fatal: false}}})
-			mu.Unlock()
-			continue
-		}
-		childCtx, cancel := context.WithCancel(ctx)
-		ctxMap[request.ID] = cancel
-		stream := engine.Run(childCtx, Request{Command: CmdInvoke, Args: payload, RepoRoot: GetRootDir()})
-		go func(id string, events <-chan Event) {
-			for event := range events {
-				mu.Lock()
-				_ = encoder.Encode(map[string]any{"id": id, "event": event})
-				mu.Unlock()
-			}
-			mu.Lock()
-			delete(ctxMap, id)
-			mu.Unlock()
-		}(request.ID, stream)
-	}
 }
 
 // #endregion Cli Adapter
@@ -2552,9 +2276,14 @@ func ResolveAllowedUI(ui string) (string, error) {
 	return bestMatch, nil
 }
 
+type Position struct {
+	Line   int `json:"line"`
+	Column int `json:"column"`
+}
+
 type Range struct {
-	Start int `json:"start"`
-	End   int `json:"end"`
+	Start Position `json:"start"`
+	End   Position `json:"end"`
 }
 
 type LineMetrics struct {
@@ -2650,7 +2379,7 @@ func normalizeBundleLabel(name string) string {
 }
 
 func normalizeBundleID(name string) string {
-	return normalizeBundleLabel(name)
+	return "bundle:" + normalizeBundleLabel(name)
 }
 
 func bundlePathPrefix(name string) string {
@@ -2768,7 +2497,7 @@ type Ticket struct {
 
 func (t *Ticket) IsNode() {}
 func (t *Ticket) GetID() string {
-	return fmt.Sprintf("ticket:%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
+	return fmt.Sprintf("@semio/tickets/%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
 }
 
 func (t *Ticket) GetTitle() string {
@@ -3454,13 +3183,14 @@ type TicketCloseInput struct {
 }
 
 type TicketReopenInput struct {
-	Year   int     `json:"year"`
-	Month  int     `json:"month"`
-	Day    int     `json:"day"`
-	Slug   string  `json:"slug"`
-	Prompt string  `json:"prompt"`
-	LLM    string  `json:"llm"`
-	Title  *string `json:"title,omitempty"`
+	Year     int     `json:"year"`
+	Month    int     `json:"month"`
+	Day      int     `json:"day"`
+	Slug     string  `json:"slug"`
+	Prompt   string  `json:"prompt"`
+	LLM      string  `json:"llm"`
+	Title    *string `json:"title,omitempty"`
+	PlanPath string  `json:"planPath,omitempty"`
 }
 
 type ContributorAddInput struct {
@@ -5454,6 +5184,16 @@ func isGitIgnored(filePath string) bool {
 		if matched, _ := doublestar.Match(pattern, relPath); matched {
 			return true
 		}
+		parent := relPath
+		for {
+			parent = filepath.Dir(parent)
+			if parent == "." || parent == "/" {
+				break
+			}
+			if matched, _ := doublestar.Match(pattern, NormalizePath(parent)); matched {
+				return true
+			}
+		}
 	}
 	return false
 }
@@ -6899,12 +6639,6 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 		sections := ctx.Sections(file)
 		var checkSection func(s Section)
 		checkSection = func(s Section) {
-			if strings.EqualFold(s.Name, "Header") {
-				for _, child := range s.Children {
-					checkSection(child)
-				}
-				return
-			}
 			sectionContent := content[s.StartIndex:s.EndIndex]
 			sectionLines := strings.Split(sectionContent, "\n")
 			nonEmpty := 0
@@ -6914,7 +6648,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					nonEmpty++
 				}
 			}
-			if nonEmpty == 0 && len(s.Children) == 0 {
+			if nonEmpty == 0 && len(s.Children) == 0 && s.Name != "Header" {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
 					ViolationCodeSectionEmpty,
@@ -7015,7 +6749,6 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 			defRanges = append(defRanges, defRange{name: def.Name, start: def.Start, end: def.End})
 			defExcerpts[def.Name] = def.Excerpt
 		}
-		hasOrphanCommentBlock := make(map[string]bool)
 		var orphanInfos []orphanRangeInfo
 		for _, orphanRange := range orphanRanges {
 			firstLine := ""
@@ -7032,19 +6765,17 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					isCommentBlock = false
 				}
 			}
-			if isCommentBlock {
-				name := fmt.Sprintf("comment-block-%d", orphanRange.start)
-				hasOrphanCommentBlock[name] = true
-				defRanges = append(defRanges, defRange{name: name, start: orphanRange.start, end: orphanRange.end})
-				defExcerpts[name] = firstLine
-				continue
-			}
 			orphanInfos = append(orphanInfos, orphanRangeInfo{
 				start:          orphanRange.start,
 				end:            orphanRange.end,
 				firstLine:      firstLine,
 				isCommentBlock: isCommentBlock,
 			})
+			if isCommentBlock {
+				name := fmt.Sprintf("comment-block-%d", orphanRange.start)
+				defRanges = append(defRanges, defRange{name: name, start: orphanRange.start, end: orphanRange.end})
+				defExcerpts[name] = firstLine
+			}
 		}
 		reportedDefs := make(map[string]bool)
 		for _, orphanRange := range orphanInfos {
@@ -7071,9 +6802,6 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				continue
 			}
 			name := fmt.Sprintf("orphan-block-%d", orphanRange.start)
-			if hasOrphanCommentBlock[name] {
-				continue
-			}
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Orphan definition outside sections at %s:%d", file, orphanRange.start),
 				ViolationCodeSectionOrphanDefinition,
@@ -8337,51 +8065,11 @@ func ToolCodebase() ToolResult {
 // #region Tickets
 
 func GetTicketsDir() string {
-	defaultDir := filepath.Join(GetRepoMetaDir(), "tickets")
-	if FileExists(defaultDir) {
-		return defaultDir
-	}
-	legacyDir := filepath.Join(rootDir, "tickets")
-	if FileExists(legacyDir) {
-		return legacyDir
-	}
-	return defaultDir
-}
-
-func GetTicketsDirForRead() string {
-	legacyDir := filepath.Join(rootDir, "tickets")
-	defaultDir := filepath.Join(GetRepoMetaDir(), "tickets")
-	if FileExists(defaultDir) {
-		return defaultDir
-	}
-	return legacyDir
+	return filepath.Join(GetRepoMetaDir(), "tickets")
 }
 
 func GetTicketPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketsDir(), strconv.Itoa(year), PadNumber(month, 2), PadNumber(day, 2), slug)
-}
-
-func ticketPathFromBase(baseDir string, year, month, day int, slug string) string {
-	return filepath.Join(baseDir, strconv.Itoa(year), PadNumber(month, 2), PadNumber(day, 2), slug)
-}
-
-func resolveTicketPathsForRead(year, month, day int, slug string) (string, string, string, string) {
-	defaultDir := filepath.Join(GetRepoMetaDir(), "tickets")
-	legacyDir := filepath.Join(rootDir, "tickets")
-	paths := []string{defaultDir, legacyDir}
-	for _, base := range paths {
-		if !FileExists(base) {
-			continue
-		}
-		folderPath := ticketPathFromBase(base, year, month, day, slug)
-		jsonPath := filepath.Join(folderPath, "ticket.json")
-		if FileExists(jsonPath) {
-			planPath := filepath.Join(folderPath, "plan.md")
-			ticketPath := filepath.Join(folderPath, "ticket.md")
-			return folderPath, jsonPath, planPath, ticketPath
-		}
-	}
-	return "", "", "", ""
 }
 
 func GetTicketFilePath(year, month, day int, slug string) string {
@@ -8392,8 +8080,12 @@ func GetTicketJsonPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.json")
 }
 
+func GetTicketPlanPathForIteration(year, month, day int, slug string, iteration int) string {
+	return filepath.Join(GetTicketPath(year, month, day, slug), fmt.Sprintf("plan_%d.md", iteration))
+}
+
 func GetTicketPlanPath(year, month, day int, slug string) string {
-	return filepath.Join(GetTicketPath(year, month, day, slug), "plan.md")
+	return GetTicketPlanPathForIteration(year, month, day, slug, 1)
 }
 
 func normalizeTicketKeyword(value string) string {
@@ -8448,7 +8140,7 @@ func OpenTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticket,
 			return nil, err
 		}
 		if latest.GetStatus() == TicketStatusClosed {
-			return latest, ReopenTicket(latest, prompt, llm)
+			return latest, ReopenTicket(latest, prompt, llm, planPath)
 		}
 		return latest, nil
 	}
@@ -8538,8 +8230,8 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 		if err != nil {
 			return nil, fmt.Errorf("failed to read plan file: %w", err)
 		}
-		if err := WriteTextFile(planFilePath, planContent); err != nil {
-			return nil, fmt.Errorf("failed to write plan file: %w", err)
+		if err := os.Rename(planPath, planFilePath); err != nil {
+			return nil, fmt.Errorf("failed to move plan file: %w", err)
 		}
 	} else {
 		if err := WriteTextFile(planFilePath, ""); err != nil {
@@ -8821,9 +8513,12 @@ func SaveTicket(ticket *Ticket) error {
 }
 
 func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
-	folderPath, jsonPath, planPath, ticketPath := resolveTicketPathsForRead(year, month, day, slug)
-	if jsonPath == "" || !FileExists(jsonPath) {
-		return nil, fmt.Errorf("ticket not found: %s", GetTicketJsonPath(year, month, day, slug))
+	folderPath := GetTicketPath(year, month, day, slug)
+	jsonPath := GetTicketJsonPath(year, month, day, slug)
+	planPath := GetTicketPlanPath(year, month, day, slug)
+	ticketPath := GetTicketFilePath(year, month, day, slug)
+	if !FileExists(jsonPath) {
+		return nil, fmt.Errorf("ticket not found: %s", jsonPath)
 	}
 	raw, err := ReadTextFile(jsonPath)
 	if err != nil {
@@ -8847,90 +8542,83 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 }
 
 func ListTickets(year, month, day *int) ([]Ticket, error) {
-	readDirs := []string{filepath.Join(GetRepoMetaDir(), "tickets"), filepath.Join(rootDir, "tickets")}
-	seen := make(map[string]struct{})
+	ticketsDir := GetTicketsDir()
+	if !FileExists(ticketsDir) {
+		return nil, nil
+	}
 	var tickets []Ticket
-	for _, ticketsDir := range readDirs {
-		if !FileExists(ticketsDir) {
+	var years []string
+	if year != nil {
+		years = []string{strconv.Itoa(*year)}
+	} else {
+		entries, err := os.ReadDir(ticketsDir)
+		if err != nil {
+			return nil, err
+		}
+		for _, e := range entries {
+			if e.IsDir() {
+				years = append(years, e.Name())
+			}
+		}
+	}
+	for _, y := range years {
+		yearPath := filepath.Join(ticketsDir, y)
+		if !FileExists(yearPath) {
 			continue
 		}
-		var years []string
-		if year != nil {
-			years = []string{strconv.Itoa(*year)}
+		var months []string
+		if month != nil {
+			months = []string{PadNumber(*month, 2)}
 		} else {
-			entries, err := os.ReadDir(ticketsDir)
+			entries, err := os.ReadDir(yearPath)
 			if err != nil {
 				continue
 			}
 			for _, e := range entries {
 				if e.IsDir() {
-					years = append(years, e.Name())
+					months = append(months, e.Name())
 				}
 			}
 		}
-		for _, y := range years {
-			yearPath := filepath.Join(ticketsDir, y)
-			if !FileExists(yearPath) {
+		for _, m := range months {
+			monthPath := filepath.Join(yearPath, m)
+			if !FileExists(monthPath) {
 				continue
 			}
-			var months []string
-			if month != nil {
-				months = []string{PadNumber(*month, 2)}
+			var days []string
+			if day != nil {
+				days = []string{PadNumber(*day, 2)}
 			} else {
-				entries, err := os.ReadDir(yearPath)
+				entries, err := os.ReadDir(monthPath)
 				if err != nil {
 					continue
 				}
 				for _, e := range entries {
 					if e.IsDir() {
-						months = append(months, e.Name())
+						days = append(days, e.Name())
 					}
 				}
 			}
-			for _, m := range months {
-				monthPath := filepath.Join(yearPath, m)
-				if !FileExists(monthPath) {
+			for _, d := range days {
+				dayPath := filepath.Join(monthPath, d)
+				if !FileExists(dayPath) {
 					continue
 				}
-				var days []string
-				if day != nil {
-					days = []string{PadNumber(*day, 2)}
-				} else {
-					entries, err := os.ReadDir(monthPath)
-					if err != nil {
-						continue
-					}
-					for _, e := range entries {
-						if e.IsDir() {
-							days = append(days, e.Name())
-						}
-					}
+				entries, err := os.ReadDir(dayPath)
+				if err != nil {
+					continue
 				}
-				for _, d := range days {
-					dayPath := filepath.Join(monthPath, d)
-					if !FileExists(dayPath) {
-						continue
-					}
-					entries, err := os.ReadDir(dayPath)
-					if err != nil {
-						continue
-					}
-					for _, e := range entries {
-						if e.IsDir() {
-							slug := e.Name()
-							key := fmt.Sprintf("%s/%s/%s/%s", y, m, d, slug)
-							if _, ok := seen[key]; ok {
-								continue
-							}
-							yearInt, _ := strconv.Atoi(y)
-							monthInt, _ := strconv.Atoi(m)
-							dayInt, _ := strconv.Atoi(d)
-							if _, jsonPath, _, _ := resolveTicketPathsForRead(yearInt, monthInt, dayInt, slug); jsonPath != "" {
-								ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
-								if err == nil {
-									seen[key] = struct{}{}
-									tickets = append(tickets, *ticket)
-								}
+				for _, e := range entries {
+					if e.IsDir() {
+						slug := e.Name()
+						yearInt, _ := strconv.Atoi(y)
+						monthInt, _ := strconv.Atoi(m)
+						dayInt, _ := strconv.Atoi(d)
+						ticketJsonPath := GetTicketJsonPath(yearInt, monthInt, dayInt, slug)
+						if FileExists(ticketJsonPath) {
+							ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
+							if err == nil {
+								tickets = append(tickets, *ticket)
 							}
 						}
 					}
@@ -8941,19 +8629,105 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-func normalizeGraphQLEnums(query string) string {
-	replacements := map[string]string{
-		"ui: copilot-chat": "ui: COPILOT_CHAT",
-		"ui: claude-code":  "ui: CLAUDE_CODE",
-		"ui: antigravity":  "ui: ANTIGRAVITY",
-		"ui: cursor":       "ui: CURSOR",
-		"ui: codex":        "ui: CODEX",
-		"ui: droid":        "ui: DROID",
+func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket) error {
+	defer close(out)
+	
+	ticketsDir := GetTicketsDir()
+	if !FileExists(ticketsDir) {
+		return nil
 	}
-	for oldValue, newValue := range replacements {
-		query = strings.ReplaceAll(query, oldValue, newValue)
+	var years []string
+	if year != nil {
+		years = []string{strconv.Itoa(*year)}
+	} else {
+		entries, err := os.ReadDir(ticketsDir)
+		if err != nil {
+			return err
+		}
+		for _, e := range entries {
+			if e.IsDir() {
+				years = append(years, e.Name())
+			}
+		}
 	}
-	return query
+	// Sort years descending? ListTickets doesn't explicit sort but os.ReadDir returns sorted by name.
+	// We proceed.
+
+	for _, y := range years {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+		}
+
+		yearPath := filepath.Join(ticketsDir, y)
+		if !FileExists(yearPath) {
+			continue
+		}
+		var months []string
+		if month != nil {
+			months = []string{PadNumber(*month, 2)}
+		} else {
+			entries, err := os.ReadDir(yearPath)
+			if err != nil {
+				continue
+			}
+			for _, e := range entries {
+				if e.IsDir() {
+					months = append(months, e.Name())
+				}
+			}
+		}
+		for _, m := range months {
+			monthPath := filepath.Join(yearPath, m)
+			if !FileExists(monthPath) {
+				continue
+			}
+			var days []string
+			if day != nil {
+				days = []string{PadNumber(*day, 2)}
+			} else {
+				entries, err := os.ReadDir(monthPath)
+				if err != nil {
+					continue
+				}
+				for _, e := range entries {
+					if e.IsDir() {
+						days = append(days, e.Name())
+					}
+				}
+			}
+			for _, d := range days {
+				dayPath := filepath.Join(monthPath, d)
+				if !FileExists(dayPath) {
+					continue
+				}
+				entries, err := os.ReadDir(dayPath)
+				if err != nil {
+					continue
+				}
+				for _, e := range entries {
+					select {
+					case <-ctx.Done():
+						return ctx.Err()
+					default:
+					}
+
+					if e.IsDir() {
+						slug := e.Name()
+						yearInt, _ := strconv.Atoi(y)
+						monthInt, _ := strconv.Atoi(m)
+						dayInt, _ := strconv.Atoi(d)
+						ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
+						if err == nil {
+							out <- *ticket
+						}
+					}
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func LoadBundles() []Bundle {
@@ -8971,9 +8745,12 @@ func LoadBundles() []Bundle {
 		if !entry.IsDir() {
 			continue
 		}
-		projectJsonPath := filepath.Join(projectsDir, entry.Name(), "project.json")
-		if FileExists(projectJsonPath) {
-			content, err := ReadTextFile(projectJsonPath)
+		configPath := filepath.Join(projectsDir, entry.Name(), "project.json")
+		if !FileExists(configPath) {
+			configPath = filepath.Join(projectsDir, entry.Name(), "package.json")
+		}
+		if FileExists(configPath) {
+			content, err := ReadTextFile(configPath)
 			if err != nil {
 				continue
 			}
@@ -9017,9 +8794,12 @@ func LoadBundles() []Bundle {
 			if !entry.IsDir() {
 				continue
 			}
-			projectJsonPath := filepath.Join(subPath, entry.Name(), "project.json")
-			if FileExists(projectJsonPath) {
-				content, err := ReadTextFile(projectJsonPath)
+			configPath := filepath.Join(subPath, entry.Name(), "project.json")
+			if !FileExists(configPath) {
+				configPath = filepath.Join(subPath, entry.Name(), "package.json")
+			}
+			if FileExists(configPath) {
+				content, err := ReadTextFile(configPath)
 				if err != nil {
 					continue
 				}
@@ -9051,6 +8831,214 @@ func LoadBundles() []Bundle {
 	}
 
 	return bundles
+}
+
+func StreamBundles(ctx context.Context, out chan<- Bundle) error {
+	defer close(out)
+	bundles := LoadBundles()
+	for _, b := range bundles {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			out <- b
+		}
+	}
+	return nil
+}
+
+func isIgnored(path string) bool {
+	base := filepath.Base(path)
+	if strings.HasPrefix(base, ".") {
+		return true
+	}
+	if base == "node_modules" || base == "dist" || base == "build" || base == "coverage" || base == "__pycache__" {
+		return true
+	}
+	if isRepoExcludedPath(path) {
+		return true
+	}
+	return false
+}
+
+func StreamFolders(ctx context.Context, scope string, out chan<- Folder) error {
+	defer close(out)
+	
+	root := rootDir
+	if strings.HasPrefix(scope, "@semio/") {
+		bundleName := strings.TrimPrefix(scope, "@semio/")
+		bundles := GetProjects()
+		for _, b := range bundles {
+			if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
+				root = filepath.Join(rootDir, b.Root)
+				break
+			}
+		}
+	} else if scope != "" && scope != "@semio" {
+		root = filepath.Join(rootDir, scope)
+	}
+
+	var folders []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if !info.IsDir() {
+			return nil
+		}
+		rel, _ := filepath.Rel(root, path)
+		if rel == "." {
+			return nil
+		}
+		if isIgnored(path) {
+			return filepath.SkipDir
+		}
+		folders = append(folders, path)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	folders = filterConsideredFiles(folders)
+	folders = filterGitIgnored(folders)
+	for _, folderPath := range folders {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			out <- Folder{
+				ID: folderPath,
+				Path: folderPath,
+				Name: filepath.Base(folderPath),
+			}
+		}
+	}
+	return err
+}
+
+func StreamFiles(ctx context.Context, scope string, out chan<- File) error {
+	defer close(out)
+	
+	root := rootDir
+	if strings.HasPrefix(scope, "@semio/") {
+		bundleName := strings.TrimPrefix(scope, "@semio/")
+		bundles := GetProjects()
+		for _, b := range bundles {
+			if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
+				root = filepath.Join(rootDir, b.Root)
+				break
+			}
+		}
+	} else if scope != "" && scope != "@semio" {
+		if filepath.IsAbs(scope) {
+			root = scope
+		} else {
+			root = filepath.Join(rootDir, scope)
+		}
+	}
+
+	var files []string
+	err := filepath.Walk(root, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return nil
+		}
+		if info.IsDir() {
+			rel, _ := filepath.Rel(root, path)
+			if rel != "." && isIgnored(path) {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if isIgnored(path) {
+			return nil
+		}
+		files = append(files, path)
+		return nil
+	})
+	if err != nil {
+		return err
+	}
+	files = filterConsideredFiles(files)
+	files = filterGitIgnored(files)
+	for _, filePath := range files {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			out <- File{
+				ID: filePath,
+				Path: filePath,
+				Name: filepath.Base(filePath),
+				Extension: filepath.Ext(filePath),
+			}
+		}
+	}
+	return err
+}
+
+func StreamSections(ctx context.Context, scope string, out chan<- Section) error {
+	defer close(out)
+	// Iterate files, parse sections
+	fileChan := make(chan File)
+	go func() {
+		StreamFiles(ctx, scope, fileChan)
+	}()
+	
+	for f := range fileChan {
+		content, err := ReadTextFile(f.Path)
+		if err != nil {
+			continue
+		}
+		sections := ParseSections(content, f.Path)
+		for _, s := range sections {
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				out <- s
+			}
+		}
+	}
+	return nil
+}
+
+func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition) error {
+	defer close(out)
+	// Iterate files, parse definitions
+	fileChan := make(chan File)
+	go func() {
+		StreamFiles(ctx, scope, fileChan)
+	}()
+	
+	for f := range fileChan {
+		content, err := ReadTextFile(f.Path)
+		if err != nil {
+			continue
+		}
+		lang := GetLanguage(f.Path)
+		if lang == nil {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		defs := lang.ParseDefinitions(content, lines)
+		for _, d := range defs {
+			// Convert DefinitionRange to Definition
+			def := Definition{
+				Name: d.Name,
+				Kind: DefinitionKind("definition"),
+				FilePath: f.Path,
+				StartLine: d.Start,
+				EndLine: d.End,
+			}
+			select {
+			case <-ctx.Done():
+				return ctx.Err()
+			default:
+				out <- def
+			}
+		}
+	}
+	return nil
 }
 
 func GetProjects() []Bundle {
@@ -9399,7 +9387,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 	return SaveTicket(ticket)
 }
 
-func ReopenTicket(ticket *Ticket, prompt, llm string) error {
+func ReopenTicket(ticket *Ticket, prompt, llm, planPath string) error {
 	if ticket.Data == nil {
 		return fmt.Errorf("ticket data is nil")
 	}
@@ -9429,6 +9417,20 @@ func ReopenTicket(ticket *Ticket, prompt, llm string) error {
 	ticket.Data.Iterations = append(ticket.Data.Iterations, iteration)
 	ticket.Data.Status = TicketStatusOpen
 	ticket.Data.Dates.Closed = nil
+
+	// Handle plan file for this iteration
+	iterationIndex := len(ticket.Data.Iterations)
+	planFilePath := GetTicketPlanPathForIteration(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, iterationIndex)
+	if planPath != "" && FileExists(planPath) {
+		if err := os.Rename(planPath, planFilePath); err != nil {
+			return fmt.Errorf("failed to move plan file: %w", err)
+		}
+	} else {
+		if err := WriteTextFile(planFilePath, ""); err != nil {
+			return fmt.Errorf("failed to write plan file: %w", err)
+		}
+	}
+	ticket.PlanPath = planFilePath
 
 	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
 		issueURL := ticket.Data.GitHub.Issue
@@ -9549,14 +9551,14 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string)
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketReopen(year, month, day int, slug, prompt, llm string) ToolResult {
+func ToolTicketReopen(year, month, day int, slug, prompt, llm, planPath string) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := ReopenTicket(ticket, prompt, llm); err != nil {
+	if err := ReopenTicket(ticket, prompt, llm, planPath); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
@@ -10099,7 +10101,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 		return ToolResult{Output: *output, Error: "unsupported target file type"}
 	}
 
-	output.Info("Splitting headers...")
+	output.Info(fmt.Sprintf("Splitting headers..."))
 
 	// 4. Split Headers
 	sourceHeader, sourceBody := SplitHeader(sourceContent, targetLanguage)
@@ -11187,7 +11189,7 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 			}
 		}
 	}
-	if err := ReopenTicket(ticket, input.Prompt, input.LLM); err != nil {
+	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.PlanPath); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -11431,7 +11433,6 @@ func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) 
 }
 
 func (e *Executor) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
-	query = normalizeGraphQLEnums(query)
 	result := graphql.Do(graphql.Params{
 		Context:        ctx,
 		Schema:         e.schema,
@@ -11490,16 +11491,8 @@ func (e *Executor) GetOperationType(query string) (string, error) {
 
 func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	repoResolverInstance = resolver
-	/* positionType := graphql.NewObject(graphql.ObjectConfig{
+	positionType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Position",
-		Fields: graphql.Fields{
-			"line":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"character": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-		},
-	}) */
-
-	rangePositionType := graphql.NewObject(graphql.ObjectConfig{
-		Name: "RangePosition",
 		Fields: graphql.Fields{
 			"line":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 			"column": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
@@ -11509,8 +11502,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	rangeType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Range",
 		Fields: graphql.Fields{
-			"start": &graphql.Field{Type: graphql.NewNonNull(rangePositionType)},
-			"end":   &graphql.Field{Type: graphql.NewNonNull(rangePositionType)},
+			"start": &graphql.Field{Type: graphql.NewNonNull(positionType)},
+			"end":   &graphql.Field{Type: graphql.NewNonNull(positionType)},
 		},
 	})
 
@@ -11653,13 +11646,21 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"children": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Folder{}, nil
+						folder, ok := p.Source.(*Folder)
+						if !ok {
+							return []*Folder{}, nil
+						}
+						return GetFolderChildren(folder.Path, folder.BundleID)
 					},
 				},
 				"files": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(fileType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*File{}, nil
+						folder, ok := p.Source.(*Folder)
+						if !ok {
+							return []*File{}, nil
+						}
+						return GetFolderFiles(folder.Path, folder.BundleID)
 					},
 				},
 				"bundle": &graphql.Field{Type: bundleType},
@@ -11819,9 +11820,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: rangeType,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						section := p.Source.(*Section)
-						return &FileRange{
-							Start: RangePosition{Line: section.StartLine, Column: 0},
-							End:   RangePosition{Line: section.EndLine, Column: 0},
+						return &Range{
+							Start: Position{Line: section.StartLine, Column: 1},
+							End:   Position{Line: section.EndLine, Column: 1},
 						}, nil
 					},
 				},
@@ -11854,9 +11855,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Type: graphql.NewNonNull(rangeType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						definition := p.Source.(*Definition)
-						return &FileRange{
-							Start: RangePosition{Line: definition.StartLine, Column: 0},
-							End:   RangePosition{Line: definition.EndLine, Column: 0},
+						return &Range{
+							Start: Position{Line: definition.StartLine, Column: 1},
+							End:   Position{Line: definition.EndLine, Column: 1},
 						}, nil
 					},
 				},
@@ -12030,6 +12031,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						}
 						absPath := filepath.Join(rootDir, path)
 						return "file://" + strings.ReplaceAll(absPath, "\\", "/"), nil
+					},
+				},
+				"title": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						return ticket.GetTitle(), nil
 					},
 				},
 				"prompt": &graphql.Field{
@@ -12569,13 +12577,14 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	ticketReopenInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "TicketReopenInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"year":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"month":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"day":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"slug":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"prompt": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"llm":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"title":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"year":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"planPath": &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
@@ -12672,6 +12681,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					}
 					if t, ok := inputMap["title"].(string); ok {
 						input.Title = &t
+					}
+					if p, ok := inputMap["planPath"].(string); ok {
+						input.PlanPath = p
 					}
 					return mutationResolverInstance.TicketReopen(p.Context, input)
 				},
@@ -12860,20 +12872,6 @@ type queryResolver struct{ *Resolver }
 func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 	parts := strings.SplitN(id, ":", 2)
 	if len(parts) != 2 {
-		if strings.HasPrefix(id, "@semio/") {
-			return r.Bundle(ctx, id)
-		}
-		if strings.HasPrefix(id, "@semio/tickets/") {
-			trimmed := strings.TrimPrefix(id, "@semio/tickets/")
-			parts := strings.Split(trimmed, "/")
-			if len(parts) >= 4 {
-				year, _ := strconv.Atoi(parts[0])
-				month, _ := strconv.Atoi(parts[1])
-				day, _ := strconv.Atoi(parts[2])
-				slug := strings.Join(parts[3:], "/")
-				return r.Ticket(ctx, year, month, day, slug)
-			}
-		}
 		return nil, fmt.Errorf("invalid node id format: %s", id)
 	}
 	kind, nodeID := parts[0], parts[1]
@@ -13416,110 +13414,6 @@ type RepoResolver interface {
 
 // #region Mcp
 
-var mcpEngine *Engine
-var mcpBaseCtx context.Context
-
-func mcpInvokeTool(ctx context.Context, id string, input map[string]interface{}, args map[string]interface{}) (*mcp.CallToolResult, error) {
-	if mcpEngine == nil {
-		return nil, fmt.Errorf("mcp engine not initialized")
-	}
-	if ctx == nil {
-		ctx = mcpBaseCtx
-	}
-	cursor, limit, err := mcpCursorLimit(args)
-	if err != nil {
-		return nil, err
-	}
-	inputBytes := json.RawMessage(nil)
-	if input != nil {
-		payload, err := json.Marshal(input)
-		if err != nil {
-			return nil, err
-		}
-		inputBytes = payload
-	}
-	invoke := InvokeArgs{ID: id, Input: inputBytes}
-	payload, err := json.Marshal(invoke)
-	if err != nil {
-		return nil, err
-	}
-	stream := mcpEngine.Run(ctx, Request{Command: CmdInvoke, Args: payload, RepoRoot: GetRootDir()})
-	var items []map[string]any
-	var logs []string
-	var errs []ErrPayload
-	var done *DonePayload
-	count := 0
-	emitted := 0
-	for event := range stream {
-		switch event.Kind {
-		case KindItem:
-			count++
-			if count <= cursor {
-				continue
-			}
-			if limit > 0 && emitted >= limit {
-				continue
-			}
-			var data any
-			if len(event.Data) > 0 {
-				_ = json.Unmarshal(event.Data, &data)
-			}
-			meta := map[string]any{}
-			if len(event.Meta) > 0 {
-				_ = json.Unmarshal(event.Meta, &meta)
-			}
-			items = append(items, map[string]any{"meta": meta, "data": data})
-			emitted++
-		case KindLog:
-			if event.Message != "" {
-				logs = append(logs, event.Message)
-			}
-		case KindError:
-			if event.Error != nil {
-				errs = append(errs, *event.Error)
-			}
-		case KindDone:
-			if event.Done != nil {
-				done = event.Done
-			}
-		}
-	}
-	nextCursor := 0
-	if limit > 0 && count > cursor+emitted {
-		nextCursor = cursor + emitted
-	}
-	response := map[string]any{"items": items, "cursor": nextCursor, "count": count, "logs": logs, "errors": errs}
-	if done != nil {
-		response["done"] = done
-	}
-	bytes, err := json.Marshal(response)
-	if err != nil {
-		return nil, err
-	}
-	return mcp.NewToolResultText(string(bytes)), nil
-}
-
-func mcpCursorLimit(args map[string]interface{}) (int, int, error) {
-	cursor, cursorOk, err := getIntArg(args, "cursor")
-	if err != nil {
-		return 0, 0, err
-	}
-	limit, limitOk, err := getIntArg(args, "limit")
-	if err != nil {
-		return 0, 0, err
-	}
-	if !cursorOk {
-		cursor = 0
-	}
-	if !limitOk {
-		limit = 200
-	}
-	if cursor < 0 || limit < 0 {
-		return 0, 0, fmt.Errorf("invalid cursor or limit")
-	}
-	return cursor, limit, nil
-}
-
 func runMcpServer(cmd *cobra.Command, args []string) error {
 	s := server.NewMCPServer(
 		"semio-repo",
@@ -13608,6 +13502,7 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("New prompt/description for the ticket")),
 			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM used for this ticket")),
 			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
+			mcp.WithString("planPath", mcp.Description("Optional plan file path to seed ticket plan")),
 		),
 		ticketReopen,
 	)
@@ -13945,11 +13840,40 @@ func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRes
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{}
-	if ok {
-		input["scope"] = scope
+	if !ok {
+		scope = "@semio"
 	}
-	return mcpInvokeTool(ctx, "analyze", input, args)
+	query := `query Analyze($scope: String) {
+		analyze(scope: $scope) {
+			violations {
+				id
+				kindId
+				kind {
+					id
+					priority
+					autofixable
+					reason
+					solution
+				}
+				scope
+				excerpt
+			}
+			metrics {
+				total
+				byPriority {
+					high
+					medium
+					low
+				}
+				autofixable
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -13958,16 +13882,45 @@ func fix(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult,
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{}
-	if ok {
-		input["scope"] = scope
+	if !ok {
+		scope = "@semio"
 	}
-	return mcpInvokeTool(ctx, "fix", input, args)
+	query := `mutation Fix($scope: String) {
+		fix(scope: $scope) {
+			fixed
+			remaining
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func policyList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	return mcpInvokeTool(ctx, "policy.list", nil, args)
+	query := `query Policies {
+		repo {
+			policies {
+				id
+				name
+				description
+				scopes
+				violationKinds {
+					id
+					priority
+					autofixable
+					reason
+					solution
+				}
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -13980,11 +13933,40 @@ func policyCheck(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"id": id}
-	if ok {
-		input["scope"] = scope
+	if !ok {
+		scope = "@semio"
 	}
-	return mcpInvokeTool(ctx, "policy.check", input, args)
+	query := `query PolicyCheck($id: String!, $scope: String) {
+		policy(id: $id) {
+			id
+			name
+			description
+			scopes
+			violationKinds {
+				id
+				priority
+				autofixable
+				reason
+				solution
+			}
+		}
+		analyze(scope: $scope) {
+			violations {
+				id
+				kindId
+				scope
+				excerpt
+			}
+			metrics {
+				total
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"id": id, "scope": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14005,25 +13987,31 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	noIssue, _, err := getBoolArg(args, "no_issue")
-	if err != nil {
-		return nil, err
-	}
-	planPath, _, err := getStringArg(args, "plan_path")
-	if err != nil {
-		return nil, err
-	}
 	input := map[string]interface{}{
-		"title":   title,
-		"prompt":  prompt,
-		"llm":     llm,
-		"ui":      ui,
-		"noIssue": noIssue,
+		"title":  title,
+		"prompt": prompt,
+		"llm":    llm,
+		"ui":     ui,
 	}
-	if planPath != "" {
+	if planPath, ok, _ := getStringArg(args, "planPath"); ok && planPath != "" {
 		input["planPath"] = planPath
 	}
-	return mcpInvokeTool(ctx, "ticket.open", input, args)
+	if noIssue, ok, _ := getBoolArg(args, "noIssue"); ok {
+		input["noIssue"] = noIssue
+	}
+	query := `mutation TicketOpen($input: TicketOpenInput!) {
+		ticketOpen(input: $input) {
+			id
+			slug
+			prompt
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"input": input})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14040,17 +14028,42 @@ func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{}
+	if monthOk && !yearOk {
+		return nil, fmt.Errorf("missing year")
+	}
+	if dayOk && !monthOk {
+		return nil, fmt.Errorf("missing month")
+	}
+	variables := make(map[string]interface{})
 	if yearOk {
-		input["year"] = year
+		variables["year"] = year
 	}
 	if monthOk {
-		input["month"] = month
+		variables["month"] = month
 	}
 	if dayOk {
-		input["day"] = day
+		variables["day"] = day
 	}
-	return mcpInvokeTool(ctx, "ticket.list", input, args)
+	query := `query Tickets($year: Int, $month: Int, $day: Int) {
+		repo {
+			tickets(year: $year, month: $month, day: $day) {
+				id
+				year
+				month
+				day
+				slug
+				prompt
+				summary
+				status
+				llm
+			}
+		}
+	}`
+	result, err := gql(query, variables)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14071,8 +14084,31 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"year": year, "month": month, "day": day, "slug": slug}
-	return mcpInvokeTool(ctx, "ticket.read", input, args)
+	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) {
+		ticket(year: $year, month: $month, day: $day, slug: $slug) {
+			id
+			year
+			month
+			day
+			slug
+			prompt
+			summary
+			status
+			llm
+			commit
+			date {
+				created
+				finished
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"year": year, "month": month, "day": day, "slug": slug,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14097,12 +14133,17 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err != nil {
 		return nil, err
 	}
-	files, ok, err := getStringSliceArg(args, "files")
+	files, _, err := getStringSliceArg(args, "files")
 	if err != nil {
 		return nil, err
 	}
-	if !ok {
-		return nil, fmt.Errorf("missing files")
+	if len(files) == 0 {
+		return nil, fmt.Errorf("at least one file is required")
+	}
+	for _, file := range files {
+		if err := requireFilePath(file); err != nil {
+			return nil, err
+		}
 	}
 	input := map[string]interface{}{
 		"year":    year,
@@ -14112,7 +14153,22 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 		"summary": summary,
 		"files":   files,
 	}
-	return mcpInvokeTool(ctx, "ticket.close", input, args)
+	// Add optional title if provided
+	if title, ok, _ := getStringArg(args, "title"); ok && title != "" {
+		input["title"] = title
+	}
+	query := `mutation TicketClose($input: TicketCloseInput!) {
+		ticketClose(input: $input) {
+			id
+			slug
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"input": input})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14149,7 +14205,26 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 		"prompt": prompt,
 		"llm":    llm,
 	}
-	return mcpInvokeTool(ctx, "ticket.reopen", input, args)
+	// Add optional title if provided
+	if title, ok, _ := getStringArg(args, "title"); ok && title != "" {
+		input["title"] = title
+	}
+	// Add optional planPath if provided
+	if planPath, ok, _ := getStringArg(args, "planPath"); ok && planPath != "" {
+		input["planPath"] = planPath
+	}
+	query := `mutation TicketReopen($input: TicketReopenInput!) {
+		ticketReopen(input: $input) {
+			id
+			slug
+			status
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"input": input})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14158,19 +14233,39 @@ func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"github": github}
-	if name, ok, _ := getStringArg(args, "name"); ok {
-		input["name"] = name
+	query := `mutation ContributorAdd($input: ContributorAddInput!) {
+		contributorAdd(input: $input) {
+			id
+			github
+			name
+			emails
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"github": github},
+	})
+	if err != nil {
+		return nil, err
 	}
-	if emails, ok, _ := getStringSliceArg(args, "emails"); ok {
-		input["emails"] = emails
-	}
-	return mcpInvokeTool(ctx, "contributor.add", input, args)
+	return textResult(result), nil
 }
 
 func contributorList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	return mcpInvokeTool(ctx, "contributor.list", nil, args)
+	query := `query Contributors {
+		repo {
+			contributors {
+				id
+				github
+				name
+				emails
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14179,18 +14274,55 @@ func contributorRemove(ctx context.Context, request mcp.CallToolRequest) (*mcp.C
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"github": github}
-	return mcpInvokeTool(ctx, "contributor.remove", input, args)
+	query := `mutation ContributorRemove($input: ContributorRemoveInput!) {
+		contributorRemove(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"github": github},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func projectList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	return mcpInvokeTool(ctx, "bundle.list", nil, args)
+	query := `query Bundles {
+		repo {
+			bundles {
+				id
+				name
+				root
+				projectType
+				tags
+				uri
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func projectTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
-	args := getArgs(request)
-	return mcpInvokeTool(ctx, "bundle.tree", nil, args)
+	query := `query Bundles {
+		repo {
+			bundles {
+				id
+				name
+				root
+			}
+		}
+	}`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14202,8 +14334,19 @@ func folderCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err := requireFolderTargetPath(path); err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"path": path}
-	return mcpInvokeTool(ctx, "folder.create", input, args)
+	query := `mutation FolderCreate($input: FolderCreateInput!) {
+		folderCreate(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14216,11 +14359,25 @@ func folderMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
+	if err := requireFolderPath(source); err != nil {
+		return nil, err
+	}
 	if err := requireFolderTargetPath(target); err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"source": source, "target": target}
-	return mcpInvokeTool(ctx, "folder.move", input, args)
+	query := `mutation FolderMove($input: FolderMoveInput!) {
+		folderMove(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"source": source, "target": target},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14229,8 +14386,21 @@ func folderDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"path": path}
-	return mcpInvokeTool(ctx, "folder.delete", input, args)
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	query := `mutation FolderDelete($input: FolderDeleteInput!) {
+		folderDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14239,11 +14409,24 @@ func folderList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{}
-	if ok {
-		input["path"] = path
+	if !ok {
+		path = "."
 	}
-	return mcpInvokeTool(ctx, "folder.list", input, args)
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14252,11 +14435,24 @@ func folderTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{}
-	if ok {
-		input["path"] = path
+	if !ok {
+		path = "."
 	}
-	return mcpInvokeTool(ctx, "folder.tree", input, args)
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14268,8 +14464,19 @@ func fileCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err := requireFileTargetPath(path); err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"path": path}
-	return mcpInvokeTool(ctx, "file.create", input, args)
+	query := `mutation FileCreate($input: FileCreateInput!) {
+		fileCreate(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14282,11 +14489,25 @@ func fileMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err != nil {
 		return nil, err
 	}
+	if err := requireFilePath(source); err != nil {
+		return nil, err
+	}
 	if err := requireFileTargetPath(target); err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"source": source, "target": target}
-	return mcpInvokeTool(ctx, "file.move", input, args)
+	query := `mutation FileMove($input: FileMoveInput!) {
+		fileMove(input: $input) {
+			id
+			path
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"source": source, "target": target},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14295,8 +14516,21 @@ func fileDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"path": path}
-	return mcpInvokeTool(ctx, "file.delete", input, args)
+	if err := requireFilePath(path); err != nil {
+		return nil, err
+	}
+	query := `mutation FileDelete($input: FileDeleteInput!) {
+		fileDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"path": path},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14305,11 +14539,21 @@ func fileList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{}
-	if ok {
-		input["scope"] = scope
+	if !ok {
+		scope = "@semio"
 	}
-	return mcpInvokeTool(ctx, "file.list", input, args)
+	query := `query Bundle($name: String!) {
+		bundle(name: $name) {
+			id
+			name
+			root
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"name": scope})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14318,11 +14562,24 @@ func fileTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{}
-	if ok {
-		input["path"] = path
+	if !ok {
+		path = "."
 	}
-	return mcpInvokeTool(ctx, "file.tree", input, args)
+	if err := requireFolderPath(path); err != nil {
+		return nil, err
+	}
+	query := `query Folder($path: String!) {
+		folder(path: $path) {
+			id
+			path
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14335,8 +14592,22 @@ func sectionCreate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"file": file, "name": section}
-	return mcpInvokeTool(ctx, "section.create", input, args)
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `mutation SectionCreate($input: SectionCreateInput!) {
+		sectionCreate(input: $input) {
+			id
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "name": section},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14353,8 +14624,22 @@ func sectionMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"file": file, "old": oldName, "new": newName}
-	return mcpInvokeTool(ctx, "section.move", input, args)
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `mutation SectionMove($input: SectionMoveInput!) {
+		sectionMove(input: $input) {
+			id
+			name
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "oldName": oldName, "newName": newName},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14367,8 +14652,21 @@ func sectionDelete(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallT
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"file": file, "name": section}
-	return mcpInvokeTool(ctx, "section.delete", input, args)
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `mutation SectionDelete($input: SectionDeleteInput!) {
+		sectionDelete(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{"file": file, "name": section},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14377,8 +14675,25 @@ func sectionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"file": file}
-	return mcpInvokeTool(ctx, "section.list", input, args)
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			sections {
+				id
+				name
+				range { start { line column } end { line column } }
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14387,8 +14702,25 @@ func sectionTree(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"file": file}
-	return mcpInvokeTool(ctx, "section.tree", input, args)
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			sections {
+				id
+				name
+				range { start { line column } end { line column } }
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func sectionIntegrate(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14405,19 +14737,35 @@ func sectionIntegrate(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 	if err != nil {
 		return nil, err
 	}
-	targetParent, _, err := getStringArg(args, "target_parent_section")
+	targetParentSection, _, err := getStringArg(args, "target_parent_section")
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{
-		"source":        source,
-		"targetSection": targetSection,
-		"targetFile":    targetFile,
+
+	if err := requireFilePath(source); err != nil {
+		return nil, err
 	}
-	if targetParent != "" {
-		input["targetParent"] = targetParent
+	if err := requireFilePath(targetFile); err != nil {
+		return nil, err
 	}
-	return mcpInvokeTool(ctx, "section.integrate", input, args)
+
+	query := `mutation Integrate($input: IntegrateInput!) {
+		integrate(input: $input) {
+			success
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{
+		"input": map[string]interface{}{
+			"sourcePath":              source,
+			"targetSectionName":       targetSection,
+			"targetFilePath":          targetFile,
+			"targetParentSectionName": targetParentSection,
+		},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14426,8 +14774,26 @@ func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.Call
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{"file": file}
-	return mcpInvokeTool(ctx, "definition.list", input, args)
+	if err := requireFilePath(file); err != nil {
+		return nil, err
+	}
+	query := `query File($path: String!) {
+		file(path: $path) {
+			id
+			path
+			definitions {
+				id
+				name
+				kind
+				range { start { line column } end { line column } }
+			}
+		}
+	}`
+	result, err := gql(query, map[string]interface{}{"path": file})
+	if err != nil {
+		return nil, err
+	}
+	return textResult(result), nil
 }
 
 func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14596,21 +14962,36 @@ func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	return files, nil
 }
 
+func normalizeRepoPath(path string) string {
+	normalized := NormalizePath(path)
+	if filepath.IsAbs(path) {
+		normalized = GetRelativePath(path)
+	}
+	normalized = strings.TrimPrefix(normalized, "./")
+	return normalized
+}
+
+func isRepoExcludedPath(path string) bool {
+	normalized := normalizeRepoPath(path)
+	if normalized == "" {
+		return false
+	}
+	if normalized == ".semio-repo" || strings.HasPrefix(normalized, ".semio-repo/") {
+		return true
+	}
+	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") {
+		return true
+	}
+	return false
+}
+
 func filterConsideredFiles(files []string) []string {
 	if len(files) == 0 {
 		return files
 	}
 	filtered := make([]string, 0, len(files))
 	for _, filePath := range files {
-		normalized := NormalizePath(filePath)
-		if filepath.IsAbs(filePath) {
-			normalized = GetRelativePath(filePath)
-		}
-		normalized = strings.TrimPrefix(normalized, "./")
-		if normalized == ".semio-repo" || strings.HasPrefix(normalized, ".semio-repo/") {
-			continue
-		}
-		if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") {
+		if isRepoExcludedPath(filePath) {
 			continue
 		}
 		filtered = append(filtered, filePath)
@@ -14881,7 +15262,7 @@ func computeAffectedSections(filePath string, sections []Section, defs []Definit
 
 			result = append(result, TicketSection{
 				Name:        sectionPath,
-				Range:       &Range{Start: section.StartLine, End: section.EndLine},
+				Range:       &Range{Start: Position{Line: section.StartLine, Column: 1}, End: Position{Line: section.EndLine, Column: 1}},
 				Definitions: uniqueStrings(affectedDefs),
 				Lines:       &LineMetrics{Added: len(exclusiveAddedLines), Removed: len(exclusiveRemovedLines)},
 			})
@@ -15024,6 +15405,73 @@ func GetGitDiffStatus(baseCommit, headCommit string, paths []string) ([]GitDiffS
 	return results, nil
 }
 
+func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
+	absPath := filepath.Join(rootDir, folderPath)
+	entries, err := os.ReadDir(absPath)
+	if err != nil {
+		return []*Folder{}, nil
+	}
+	var children []*Folder
+	for _, entry := range entries {
+		if entry.IsDir() {
+			if strings.HasPrefix(entry.Name(), ".") && entry.Name() != ".semio-repo" {
+				continue
+			}
+			if entry.Name() == "node_modules" || entry.Name() == "bin" || entry.Name() == "obj" {
+				continue
+			}
+			relPath := filepath.Join(folderPath, entry.Name())
+			child := &Folder{
+				ID:       buildFolderID(relPath, bundleID),
+				Path:     relPath,
+				URI:      fmt.Sprintf("file://%s/%s", rootDir, relPath),
+				Name:     entry.Name(),
+				BundleID: bundleID,
+			}
+			children = append(children, child)
+		}
+	}
+	return children, nil
+}
+
+func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
+	absPath := filepath.Join(rootDir, folderPath)
+	entries, err := os.ReadDir(absPath)
+	if err != nil {
+		return []*File{}, nil
+	}
+	var filePaths []string
+	for _, entry := range entries {
+		if !entry.IsDir() {
+			if strings.HasPrefix(entry.Name(), ".") {
+				continue
+			}
+			relPath := filepath.Join(folderPath, entry.Name())
+			filePaths = append(filePaths, relPath)
+		}
+	}
+	filePaths = filterConsideredFiles(filePaths)
+	filePaths = filterGitIgnored(filePaths)
+	var files []*File
+	var folderID *string
+	if folderPath != "." {
+		id := buildFolderID(folderPath, bundleID)
+		folderID = &id
+	}
+	for _, relPath := range filePaths {
+		files = append(files, &File{
+			ID:        buildFileID(relPath, bundleID),
+			Path:      relPath,
+			URI:       fmt.Sprintf("file://%s/%s", rootDir, relPath),
+			Name:      filepath.Base(relPath),
+			Extension: filepath.Ext(relPath),
+			FolderID:  folderID,
+			BundleID:  bundleID,
+		})
+	}
+	return files, nil
+}
+
 // #endregion Missing Utilities
 
 func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
@@ -15087,9 +15535,6 @@ func ListContributors() ([]Contributor, error) {
 		}
 		result = append(result, c)
 	}
-	if len(result) == 0 {
-		return []Contributor{{Github: "unknown", Name: "Unknown"}}, nil
-	}
 	return result, nil
 }
 
@@ -15135,21 +15580,12 @@ func filterGitIgnored(files []string) []string {
 	}
 	relPaths := make([]string, len(files))
 	for i, filePath := range files {
-		normalized := NormalizePath(filePath)
-		if filepath.IsAbs(filePath) {
-			normalized = GetRelativePath(filePath)
-		}
-		normalized = strings.TrimPrefix(normalized, "./")
-		relPaths[i] = normalized
+		relPaths[i] = normalizeRepoPath(filePath)
 	}
 	ignored := GetGitIgnoredSet(relPaths)
 	filtered := make([]string, 0, len(files))
 	for i, filePath := range files {
-		normalized := NormalizePath(filePath)
-		if filepath.IsAbs(filePath) {
-			normalized = GetRelativePath(filePath)
-		}
-		normalized = strings.TrimPrefix(normalized, "./")
+		normalized := normalizeRepoPath(filePath)
 		if normalized != "" && ignored[relPaths[i]] {
 			continue
 		}

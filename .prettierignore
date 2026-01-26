@@ -1,2 +1,2 @@
 node_modules
-prompts/*.md
+\.semio-repo/**/*.md

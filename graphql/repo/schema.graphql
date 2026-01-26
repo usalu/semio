@@ -114,6 +114,7 @@ input TicketReopenInput {
   prompt: String!
   llm: String!
   title: String
+  planPath: String
 }
 
 input ContributorAddInput {

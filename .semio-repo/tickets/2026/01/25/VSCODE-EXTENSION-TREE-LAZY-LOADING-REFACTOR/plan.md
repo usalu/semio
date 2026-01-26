@@ -1,0 +1,3 @@
+- Locate the GraphQL section list query and confirm the Position fields selection causing the repo CLI error.
+- Update the GraphQL query to include start/end subfields (line/column) and align any parsing if needed.
+- Verify section list flow for the VS Code extension, then document changes in README.md and AGENTS.md.

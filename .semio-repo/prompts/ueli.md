@@ -1,21 +1,67 @@
-# Prompting 
+# Prompting
 
 ## Templates
 
-Implement the following plan: 
+Implement the following plan:
 Continue.
 
-Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear. 
+Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
 Make sure to open and close a ticket. Dont forget to add the plan.md, to track everything (todos, changes, summary, etc) in ticket.md
 
-Make a refactor plan that cleanly achieves this. 
+Make a refactor plan that cleanly achieves this.
 Dont keep any legacy api or backwards compatiblity.
 
 The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
+
+The ticket mechanism should change:
+When a plan is provided by the user, then move the original plan file (keep the file name) to the ticket folder and add the plan to the `ticket.json`. Dont create the `plan_ITERATION.md` files anymore. Everything else should be now part of `ticket.md`
+{
+"iterations":[
+{
+"plan": "some-exisiting-filename.md"
+}
+]
+}
+
+The Sections section of the vscode extension explorer sidebar view is not showing any sections. E.g. When opening Design.tsx I get:
+
+When clicking on a bundle tree item in side view in vscode it should not open the folder but the package.json file.
+
+The repo binary and vscode extension should additionally ignore LICENSE.md files and empty folders.
+
+Make sure the repo binary and vscode extension are properly ignoring all files and folders that are either gitignored or in the `.semio-repo` folder. E.g. I get in vscode: [analyzeFile] result for .venv/lib/python3.14/site-packages/jupyterlab/tests/mock_packages/interop/consumer/package.json : data: present
+[analyzeFile] no violations found or result format unexpected
+Or I can see @semio-repo/go/repo.exe file
+
+- Remove bundle: prefix in vscode tree view.
+- The codebase tree should be sorted (both in repo binary and vscode side view)
+- Unfolding on a file tree item doestn work in codebase side view:
+
+Make sure that the repo binary and vscode work like this:
+The codebase consists of only of bundles. The bundles consist of folders and files. The files consist of sections. Sections can contain other sections. Sections can contain definitions. Definitions can contain other definitions.
+Folders and files which are not part of a bundle are part of the `@semio-repo/repo` bundle.
+Every folder has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE` e.g. `@semio-repo/repo/.devcontainer`, `@semio/js/sketchpad`, etc.
+Every file has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME` e.g. `@semio-repo/repo/README.md`, `@semio/js/sketchpad/Design.tsx`, etc.
+Every ticket has the id `@semio-repo/tickets/YYYY/MM/DD/SLUG` e.g. `@semio-repo/tickets/2024/01/01/SOME-TASK`.
+Every section has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME#SECTIONNAME#SUBSECTIONNAME` e.g. `@semio/js/sketchpad/Design.tsx#State Managment#Store`, etc.
+Every definition has the id `BUNDLE/RELATIVEPATHINSIDEBUNDLE/FILENAME#SECTIONNAME#SUBSECTIONNAM§DEFINITIONNAME§SUBDEFINITIONNAME` e.g. `@semio/js/sketchpad/Design.tsx#State Managment#Store$KitStore§addDesign`, etc.
+
+The vscode extension is outdated and should be refactored.
+It should not fetch all tree information at once. Make sure that e.g. the codebase tree is first fetching bundles, then fetching when expanded incrementally fetching folders, then files, then sections, then definitions. Always when the tree is unfolded fetch all the children of the current node.
+Further no codebase, ticket, policy or contributor is loading.
+Extend all the extension tests and make sure to only stop once all of them pass.
+
+Add a codebase tree command that returns one unified tree of bundles, folders, files, sections and definitions. Add flags for no defitions, no sections, no files, no folders, no bundles.
+Make sure that all tree commands return properly rendered as trees (with `├─`and `└─`, etc).
+
+Add list and tree command to ticket, file, bundle, folder, section and definition. For list stream items. For tree create a proper sorted and rendered tree.
+Extend repo go, vscode extension, etc.
+
+All cli commands should not be json and instead return human and llm consice visual colored cli output. Make sure that the streaming is streaming into the console. Use the --json flag to return pure ndjson.
 
 A new system is implemented: a design `assistance` which uses automated compliance checking.
 There is one source `design` and many `targets` which are used to validated the design. The `design` is modeled within an authoring software that provides an mcp tool. For each `target` there is a `translator` with a corresponding `validator`.

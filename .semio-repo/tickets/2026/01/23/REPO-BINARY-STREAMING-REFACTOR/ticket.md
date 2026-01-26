@@ -22,6 +22,10 @@ Implement the plan in /workspaces/semio/plans/repo_binary_streaming_refactor_pla
 - User confirmed to run everything; execution still blocked by no-build/no-run policy without explicit override request.
 - Attempted repo preflight command; CLI reported unknown command; inspecting available commands next.
 - Multiple repo preflight test runs were canceled; continuing with rebuilt binary and full test suite.
+- Attempted ticket reopen per workflow; repo reported ticket already open.
+- Received new user message; continuing test execution and VS Code extension restoration.
+- Preflight test command canceled again; will proceed once command execution is allowed to complete.
+- Latest preflight test attempt was canceled; cannot advance to VS Code extension tests until it completes.
 
 ## Summary
 
