@@ -7,17 +7,16 @@ WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 echo "🔄 Starting semio development environment..."
 #endregion Startup
 #region Ownership
-echo "🔐 Fixing ownership for persisted volume mounts..."
+echo "🔐 Fixing ownership for workspace and persisted volume mounts..."
+sudo chown -R vscode:vscode "$WORKSPACE" 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.cache 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codex 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.config/gh 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.config/cursor 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.config/antigravity 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.config/openai 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.config 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codeium 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.windsurf-server 2>/dev/null || true
+sudo chown -R vscode:vscode "$WORKSPACE/node_modules" 2>/dev/null || true
 #endregion Ownership
 #region ClaudeAuth
 echo "🔐 Normalizing Claude Code auth storage..."

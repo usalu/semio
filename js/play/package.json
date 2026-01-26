@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
+  "type": "module",
   "name": "@semio/play",
   "version": "0.1.0",
   "description": "semio ⋅ playground",

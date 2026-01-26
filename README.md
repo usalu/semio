@@ -733,6 +733,7 @@ The recommended way to develop is using the devcontainer which provides a consis
 
 The devcontainer includes:
 
+- Zero-touch setup: Permission issues common with Docker volume mounts are automatically resolved via recursive ownership enforcement, and the semio VS Code extension is built and installed on every attach.
 - Node.js 22.x, Go 1.24, Python 3.13, .NET SDK 7.0/8.0, Rust
 - All required VS Code extensions
 - Pre-configured development environment
@@ -1152,11 +1153,11 @@ Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo
 Repo analyze only inspects considered files by honoring `.gitignore`, excluding `.semio-repo/`, and skipping `assets/repo/` fixtures.
 Repo file/folder listing and VS Code diagnostics skip `.semio-repo/` and gitignored paths so trees and per-file analysis ignore ignored artifacts.
 
-## 🧱 Devcontainer Persistence [↑](#-bundles-)
+## � Devcontainer Disk Hygiene [↑](#-bundles-)
 
-Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`) and editor servers (`~/.vscode-server`, `~/.windsurf-server`).
-Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
-Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
+Docker Desktop environments can encounter 'No space left on device' errors when builder caches, unused images, or large volumes accumulate.
+If the Docker VM enters a corrupted state (reporting input/output errors), pruning the system and volumes is necessary to restore stability.
+Optimizing image layers by combining installation steps and cleaning temporary artifacts keeps the final devcontainer footprint manageable.
 
 ## 🛰️ Repo Dev Server [↑](#-bundles-)
 
@@ -1520,6 +1521,8 @@ Currently not implemented in this repo (planned component) 🧩
 ## 🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
+
+Apps are built using EcmaScript Modules (ESM) to ensure the fastest possible development experience and seamless integration with modern libraries.
 
 ## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)
 
