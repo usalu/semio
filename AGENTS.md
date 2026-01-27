@@ -1520,6 +1520,7 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── Docs.tsx # documentation app
 │ │ │ ├── Home.tsx # home app
 │ │ │ ├── Kit.tsx # kit app
+│ │ │ ├── kit-tutorial.md # beginner-friendly deep dive into the architecture and logic of the Kit application
 │ │ │ ├── Quality.tsx # quality app
 │ │ │ ├── Type.tsx # type app
 │ │ │ ├── Tutorials.tsx # consolidated tutorial system
@@ -2100,6 +2101,12 @@ Landing page for kit management. Extends `AppStore` (no kit modifications).
 ###### Kit App (Kit.tsx)
 
 Kit artifact management with multi-window layout. Extends `KitDiffAppStore` (modifies kit data).
+
+**Architecture:**
+- **Store**: `KitStore` extends `KitDiffAppStore` and wraps a Y.js document for distributed collaboration.
+- **Collaboration**: Uses `Y.Array` and `Y.Map` for conflict-free multi-user synchronization.
+- **Logic**: All kit modifications (Types, Designs, etc.) are executed via `semio.kitApp.*` commands with transactional support.
+- **UI State**: Local state (filters, sorting, panel visibility) is decoupled from collaborative data and managed via the Sketchpad XState machine.
 
 **Window Kinds (`KitAppWindowKind`):**
 
@@ -3827,7 +3834,7 @@ Home app hover state is stored in the Sketchpad state machine and updated via ho
 
 ## 📄 js/semio/sketchpad/Kit.tsx
 
-Kit app hover state covers all artifact kinds and is updated via table and diagram hover dispatch.
+Kit app provides artifact management with tabular and force-directed diagram views. The diagram uses custom FloatingEdge and KitArtifactNode components with robust rectangular intersection math for relationship line alignment. Interaction supports right-click panning to avoid conflict with node dragging. Visual styles synchronize with the design app, using red rings for selection and teal strokes for relationships.
 
 ## 📄 js/semio/sketchpad/Sketchpad.tsx
 

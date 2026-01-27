@@ -62,7 +62,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
-import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, Kit, KitDiff, Port, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
+import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, ICON_WIDTH, Kit, KitDiff, Port, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
 import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
   AppWindowConfig,
@@ -4963,14 +4963,28 @@ const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data, selected }
 
   return (
     <div
-      className={`flex items-center justify-center cursor-grab active:cursor-grabbing transition-colors w-[220px] h-[140px] pointer-events-none ${isSelected ? "ring-2 ring-active-base" : isHovered ? "ring-2 ring-hover-base" : ""}`}
+      data-kit-node="v3"
+      style={{ 
+        width: NODE_WIDTH, 
+        height: NODE_HEIGHT, 
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "transparent", 
+        border: "0",
+        outline: "0",
+        boxShadow: "none",
+        pointerEvents: "auto",
+        padding: 0,
+        margin: 0
+      }}
       title={data.name || data.guid.substring(0, 8)}
     >
       <Handle type="target" position={Position.Top} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
       <Handle type="source" position={Position.Bottom} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
       <Handle type="target" position={Position.Left} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
       <Handle type="source" position={Position.Right} className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" />
-      <TableAvatar name={data.name} icon={data.icon} className={isSelected ? "bg-active-base" : isHovered ? "bg-hover-base" : ""} />
+      <TableAvatar className="size-full" name={data.name} icon={data.icon} isSelected={isSelected} isHovered={isHovered} />
     </div>
   );
 };
@@ -4980,28 +4994,33 @@ const kitNodeTypes = {
 };
 
 const edgeStyle = {
-  "part-of": { stroke: "var(--foreground)", strokeWidth: 2 },
+  "part-of": { stroke: "var(--accent-secondary)", strokeWidth: 3 },
   reference: { stroke: "var(--foreground)", strokeWidth: 1, strokeDasharray: "5,5" },
 };
 
-const NODE_RADIUS = 20;
+const NODE_SCALE = 2;
+const NODE_WIDTH = ICON_WIDTH * NODE_SCALE;
+const NODE_HEIGHT = ICON_WIDTH * NODE_SCALE;
 
 function getNodeIntersection(intersectionNode: Node, targetNode: Node): { x: number; y: number } {
-  const x = intersectionNode.position.x;
-  const y = intersectionNode.position.y;
+  const x = intersectionNode.position.x + NODE_WIDTH / 2;
+  const y = intersectionNode.position.y + NODE_HEIGHT / 2;
 
-  const dx = targetNode.position.x - x;
-  const dy = targetNode.position.y - y;
+  const tx = targetNode.position.x + NODE_WIDTH / 2;
+  const ty = targetNode.position.y + NODE_HEIGHT / 2;
+
+  const dx = tx - x;
+  const dy = ty - y;
   const distance = Math.sqrt(dx * dx + dy * dy);
 
   if (distance === 0) {
     return { x, y };
   }
 
-  const ratio = NODE_RADIUS / distance;
+  const radius = NODE_WIDTH / 2;
   return {
-    x: x + dx * ratio,
-    y: y + dy * ratio,
+    x: x + (radius * dx) / distance,
+    y: y + (radius * dy) / distance,
   };
 }
 
@@ -5035,7 +5054,7 @@ function getEdgeParams(source: Node, target: Node) {
   };
 }
 
-const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style }) => {
+const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style, selected, data }) => {
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
 
@@ -5046,8 +5065,8 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style }) =
   const sourcePos = sourceNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
   const targetPos = targetNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
 
-  const sourceNodeForCalc = { position: { x: sourcePos.x + NODE_RADIUS, y: sourcePos.y + NODE_RADIUS } } as Node;
-  const targetNodeForCalc = { position: { x: targetPos.x + NODE_RADIUS, y: targetPos.y + NODE_RADIUS } } as Node;
+  const sourceNodeForCalc = { position: sourcePos } as Node;
+  const targetNodeForCalc = { position: targetPos } as Node;
 
   const { sx, sy, tx, ty, sourcePos: sPos, targetPos: tPos } = getEdgeParams(sourceNodeForCalc, targetNodeForCalc);
 
@@ -5060,7 +5079,33 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style }) =
     targetPosition: tPos,
   });
 
-  return <BaseEdge id={id} path={edgePath} markerEnd={markerEnd} style={style} />;
+  const relationship = data?.relationship as "part-of" | "reference";
+  let stroke = relationship === "part-of" ? "var(--accent-secondary)" : "var(--foreground)";
+  let strokeWidth = relationship === "reference" ? 1 : 3;
+  let dasharray = relationship === "reference" ? "5 5" : undefined;
+  let opacity = 1;
+
+  if (selected) {
+    stroke = "var(--active-base)";
+    strokeWidth = Math.max(strokeWidth, 3);
+    dasharray = undefined;
+    opacity = 1;
+  }
+
+  return (
+    <BaseEdge
+      id={id}
+      path={edgePath}
+      style={{
+        ...style,
+        stroke,
+        strokeWidth,
+        strokeDasharray: dasharray,
+        opacity,
+      }}
+      className="transition-colors duration-200"
+    />
+  );
 };
 
 const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY, toX, toY }) => {
@@ -5073,7 +5118,7 @@ const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY
     targetPosition: Position.Top,
   })[0];
 
-  return <BaseEdge path={edgePath} style={{ stroke: "var(--foreground)", strokeWidth: 2 }} />;
+  return <BaseEdge path={edgePath} style={{ stroke: "var(--active-base)", strokeWidth: 3 }} />;
 };
 
 const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: Edge[] } => {
@@ -5399,9 +5444,9 @@ const KitDiagramInner: FC = () => {
         "link",
         forceLink<ForceNode, ForceLink>(linksCopy)
           .id((d) => d.id)
-          .distance(diagramForce.linkDistance),
+          .distance(Math.max(diagramForce.linkDistance, NODE_WIDTH * 2.2)),
       )
-      .force("collide", forceCollide().radius(diagramForce.collideRadius))
+      .force("collide", forceCollide().radius(Math.max(diagramForce.collideRadius, NODE_WIDTH * 0.9)))
       .force("center", forceCenter(0, 0).strength(diagramForce.centerStrength))
       .stop();
 
@@ -5416,7 +5461,7 @@ const KitDiagramInner: FC = () => {
         type: "artifact",
         position: { x: n.x ?? 0, y: n.y ?? 0 },
         data: n.data,
-        style: { width: 220, height: 140 },
+        style: { width: NODE_WIDTH, height: NODE_HEIGHT },
       })),
     );
 
@@ -5525,6 +5570,33 @@ const KitDiagramInner: FC = () => {
 
   return (
     <div ref={reactFlowWrapper} className="w-full h-full" data-testid="kit-diagram">
+      <style>{`
+        [data-kit-node] {
+          background: transparent !important;
+          border: 0 !important;
+          outline: 0 !important;
+          box-shadow: none !important;
+          padding: 0 !important;
+          margin: 0 !important;
+        }
+        .react-flow__node,
+        .react-flow__node-artifact {
+          background: transparent !important;
+          border: 0 !important;
+          outline: 0 !important;
+          box-shadow: none !important;
+        }
+        .react-flow__node.selected,
+        .react-flow__node:hover {
+          background: transparent !important;
+          border: 0 !important;
+          outline: 0 !important;
+          box-shadow: none !important;
+        }
+        .react-flow__nodesselection-rect {
+          display: none !important;
+        }
+      `}</style>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -5534,11 +5606,12 @@ const KitDiagramInner: FC = () => {
         minZoom={0.1}
         maxZoom={4}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-        panOnDrag={false}
+        panOnDrag={[1, 2]}
         panOnScroll={false}
-        zoomOnScroll={false}
-        zoomOnPinch={false}
-        zoomOnDoubleClick={false}
+        zoomOnScroll={true}
+        zoomOnPinch={true}
+        zoomOnDoubleClick={true}
+        selectionOnDrag={false}
         onPaneClick={handlePaneClick}
         onNodeClick={handleNodeClick}
         onNodeMouseEnter={handleNodeMouseEnter}

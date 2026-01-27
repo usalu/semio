@@ -1371,6 +1371,8 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 ### Sketchpad
 
+- [Kit App Manual](js/semio/sketchpad/kit-tutorial.md) - A beginner-friendly deep dive into the architecture and logic of the Kit application.
+
 #### Sketchpad transactions
 
 - `js/semio/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
@@ -1392,6 +1394,12 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 - Window chrome controls are rendered as Action UI elements and forwarded to the underlying layout system when needed.
 - Window surfaces paint the only filled background surface; surrounding UI and overlays remain transparent and rely on borders/blur.
 - Each app registers its supported window kinds and provides a default layout; per-app `windowLayout` is persisted as a JSON string.
+
+#### Kit App Architecture
+
+- **Notepad vs. Rulebook**: Collaborative kit data is stored in the `KitStore` using Y.js for seamless conflict-free multi-user sync ("The Notepad"). Local UI state, such as selection, filtering, and panel visibility, is managed by the Sketchpad state machine via XState ("The Rulebook").
+- **Transactional Commands**: All kit modifications utilize the command pattern with transactional support. Complex multi-step operations are grouped into transactions that participate in a unified undo/redo system.
+- **Triadic Hooks**: Components interact with the Kit App using the triadic hook pattern `[value, setter, canSet]`, ensuring UI elements can reactively adapt their state based on permissions and application context.
 
 #### Kit app artifact creation
 

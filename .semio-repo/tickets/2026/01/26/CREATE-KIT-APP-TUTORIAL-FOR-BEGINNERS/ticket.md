@@ -23,4 +23,4 @@ Act as a senior software engineer and mentor explaining Kit.tsx to a brand-new t
 
 ## Summary
 
-Created a comprehensive tutorial for `js/semio/sketchpad/Kit.tsx` designed for absolute beginners. The guide explains the "Big Picture" of the Kit App as a toolbox manager, details its architectural relationships with Y.js and XState, and provides a step-by-step walkthrough of the code's responsibilities, imports, and execution flow.
+Created a beginner-friendly tutorial for Kit.tsx in plans/kit-tutorial.md.

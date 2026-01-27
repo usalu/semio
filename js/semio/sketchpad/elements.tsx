@@ -841,9 +841,11 @@ export interface TableAvatarProps {
   icon?: string | React.ReactNode;
   name?: string;
   className?: string;
+  isSelected?: boolean;
+  isHovered?: boolean;
 }
 
-export const TableAvatar: React.FC<TableAvatarProps> = ({ icon, name, className }) => {
+export const TableAvatar: React.FC<TableAvatarProps> = ({ icon, name, className, isSelected, isHovered }) => {
   const nameStr = typeof name === "string" ? name : String(name ?? "");
   const normalizedName = nameStr.trim();
   const initials = normalizedName
@@ -858,9 +860,11 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ icon, name, className 
   const isImageIcon = typeof icon === "string";
   const isReactIcon = icon && !isImageIcon;
   return (
-    <Avatar className={cn("shrink-0", className)}>
+    <Avatar className={cn("shrink-0", className, isSelected && "ring-1 ring-[color:var(--active-base)]", isHovered && "ring-1 ring-[color:var(--hover-base)]")}>
       {isImageIcon ? <AvatarImage src={icon} alt={normalizedName} /> : null}
-      <AvatarFallback className="text-xs">{isReactIcon ? icon : initials}</AvatarFallback>
+      <AvatarFallback className={cn("text-xs", isSelected ? "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]" : isHovered ? "bg-[color:var(--hover-base)]" : "")}>
+        {isReactIcon ? icon : initials}
+      </AvatarFallback>
     </Avatar>
   );
 };
