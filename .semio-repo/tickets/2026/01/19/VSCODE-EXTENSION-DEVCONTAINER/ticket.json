@@ -4,14 +4,14 @@
     {
       "prompt": "Get the vscode extension running (it is partially outdated) and make sure it is added to the devcontainer. Use go/repo/main.go as single-source of truth.",
       "llm": "gpt-5-2",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T13:52:36.589950707Z",
       "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
     },
     {
       "prompt": "Fix vsce packaging failure from invalid extension name; align extension manifest with VS Code requirements and update docs.",
       "llm": "gpt-5-2",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T14:08:10.996322137Z",
       "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
     }

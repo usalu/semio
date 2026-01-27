@@ -288,6 +288,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(fixCommand(factory, &config))
 	root.AddCommand(policyCommand(factory, &config))
 	root.AddCommand(ticketCommand(factory, &config))
+	root.AddCommand(goalCommand(factory, &config))
 	root.AddCommand(contributorCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
 	root.AddCommand(folderCommand(factory, &config))
@@ -727,18 +728,122 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
+// extractLLMFromArgs extracts LLM from flags or positional args
+func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
+	// First check named --llm flag
+	if llm, _ := cmd.Flags().GetString("llm"); llm != "" {
+		return llm, args
+	}
+	// Then check boolean flags for each allowed LLM
+	for _, allowed := range AllowedLLMs {
+		flagName := allowed
+		if val, _ := cmd.Flags().GetBool(flagName); val {
+			return allowed, args
+		}
+	}
+	// Then check positional args
+	remaining := []string{}
+	foundLLM := ""
+	for _, arg := range args {
+		if foundLLM != "" {
+			remaining = append(remaining, arg)
+			continue
+		}
+		normalized := NormalizeLLMSlug(arg)
+		matched := false
+		for _, allowed := range AllowedLLMs {
+			if strings.HasPrefix(normalized, allowed) {
+				foundLLM = allowed
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			remaining = append(remaining, arg)
+		}
+	}
+	return foundLLM, remaining
+}
+
+// extractUIFromArgs extracts UI from flags or positional args
+func extractUIFromArgs(cmd *cobra.Command, args []string) (string, []string) {
+	// First check named --ui flag
+	if ui, _ := cmd.Flags().GetString("ui"); ui != "" {
+		return ui, args
+	}
+	// Then check boolean flags for each allowed UI
+	for _, allowed := range AllowedUIs {
+		flagName := allowed
+		if val, _ := cmd.Flags().GetBool(flagName); val {
+			return allowed, args
+		}
+	}
+	// Then check positional args
+	remaining := []string{}
+	foundUI := ""
+	for _, arg := range args {
+		if foundUI != "" {
+			remaining = append(remaining, arg)
+			continue
+		}
+		normalized := NormalizeUISlug(arg)
+		matched := false
+		for _, allowed := range AllowedUIs {
+			if strings.HasPrefix(normalized, allowed) {
+				foundUI = allowed
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			remaining = append(remaining, arg)
+		}
+	}
+	return foundUI, remaining
+}
+
+// addLLMFlags adds boolean flags for each allowed LLM
+func addLLMFlags(cmd *cobra.Command) {
+	for _, llm := range AllowedLLMs {
+		cmd.Flags().Bool(llm, false, fmt.Sprintf("Use %s as LLM", llm))
+	}
+}
+
+// addUIFlags adds boolean flags for each allowed UI
+func addUIFlags(cmd *cobra.Command) {
+	for _, ui := range AllowedUIs {
+		cmd.Flags().Bool(ui, false, fmt.Sprintf("Use %s as UI", ui))
+	}
+}
+
 func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "ticket", Short: "Ticket management commands"}
 	openCmd := &cobra.Command{
-		Use:   "open",
+		Use:   "open [title] [prompt] [llm] [ui]",
 		Short: "Open a new ticket",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title, _ := cmd.Flags().GetString("title")
 			prompt, _ := cmd.Flags().GetString("prompt")
-			llm, _ := cmd.Flags().GetString("llm")
-			ui, _ := cmd.Flags().GetString("ui")
 			noIssue, _ := cmd.Flags().GetBool("no-issue")
 			planPath, _ := cmd.Flags().GetString("plan-path")
+			goal, _ := cmd.Flags().GetString("goal")
+			parent, _ := cmd.Flags().GetString("parent")
+
+			// Process positional args for title and prompt first
+			remainingArgs := args
+			if title == "" && len(remainingArgs) > 0 {
+				title = remainingArgs[0]
+				remainingArgs = remainingArgs[1:]
+			}
+			if prompt == "" && len(remainingArgs) > 0 {
+				prompt = remainingArgs[0]
+				remainingArgs = remainingArgs[1:]
+			}
+
+			// Extract LLM and UI from flags or remaining positional args
+			llm, remainingArgs := extractLLMFromArgs(cmd, remainingArgs)
+			ui, _ := extractUIFromArgs(cmd, remainingArgs)
+
 			if title == "" {
 				return fmt.Errorf("missing title")
 			}
@@ -746,10 +851,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				prompt = title
 			}
 			if llm == "" {
-				return fmt.Errorf("missing llm")
+				return fmt.Errorf("missing llm. Use --llm <value>, --<llm-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedLLMs, ", "))
 			}
 			if ui == "" {
-				return fmt.Errorf("missing ui")
+				return fmt.Errorf("missing ui. Use --ui <value>, --<ui-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedUIs, ", "))
 			}
 			input := map[string]interface{}{
 				"title":   title,
@@ -760,6 +865,12 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 			if planPath != "" {
 				input["planPath"] = planPath
+			}
+			if goal != "" {
+				input["goal"] = goal
+			}
+			if parent != "" {
+				input["parent"] = parent
 			}
 			variables := map[string]interface{}{"input": input}
 			query := `mutation TicketOpen($input: TicketOpenInput!) {
@@ -780,6 +891,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("ui", "", "UI")
 	openCmd.Flags().Bool("no-issue", false, "Skip GitHub issue")
 	openCmd.Flags().String("plan-path", "", "Plan file path")
+	openCmd.Flags().String("goal", "", "Goal ID")
+	openCmd.Flags().String("parent", "", "Parent ticket slug")
+	addLLMFlags(openCmd)
+	addUIFlags(openCmd)
 	listCmd := &cobra.Command{
 		Use:   "list",
 		Short: "List tickets",
@@ -898,7 +1013,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	closeCmd.Flags().StringSlice("files", nil, "Files")
 	closeCmd.Flags().String("title", "", "Title")
 	reopenCmd := &cobra.Command{
-		Use:   "reopen",
+		Use:   "reopen [prompt] [llm]",
 		Short: "Reopen a ticket",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			year, _ := cmd.Flags().GetInt("year")
@@ -906,14 +1021,27 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			day, _ := cmd.Flags().GetInt("day")
 			slug, _ := cmd.Flags().GetString("slug")
 			prompt, _ := cmd.Flags().GetString("prompt")
-			llm, _ := cmd.Flags().GetString("llm")
 			title, _ := cmd.Flags().GetString("title")
 			planPath, _ := cmd.Flags().GetString("plan-path")
+
+			// Process positional args for prompt
+			remainingArgs := args
+			if prompt == "" && len(remainingArgs) > 0 {
+				prompt = remainingArgs[0]
+				remainingArgs = remainingArgs[1:]
+			}
+
+			// Extract LLM from flags or remaining positional args
+			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
+
 			if year == 0 || month == 0 || day == 0 || slug == "" {
 				return fmt.Errorf("missing ticket path")
 			}
-			if prompt == "" || llm == "" {
-				return fmt.Errorf("missing prompt or llm")
+			if prompt == "" {
+				return fmt.Errorf("missing prompt")
+			}
+			if llm == "" {
+				return fmt.Errorf("missing llm. Use --llm <value>, --<llm-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedLLMs, ", "))
 			}
 			input := map[string]interface{}{
 				"year":   year,
@@ -948,6 +1076,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	reopenCmd.Flags().String("llm", "", "LLM")
 	reopenCmd.Flags().String("title", "", "Title")
 	reopenCmd.Flags().String("plan-path", "", "Path to plan file")
+	addLLMFlags(reopenCmd)
 		
 		treeCmd := &cobra.Command{
 			Use:   "tree",
@@ -1060,6 +1189,122 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 		return root
 	}
+
+func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "goal", Short: "Goal management commands"}
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List goals",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := `query Goals {
+				repo {
+					goals {
+						id
+						title
+						description
+						milestone
+						status
+					}
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, nil)
+		},
+	}
+	createCmd := &cobra.Command{
+		Use:   "create",
+		Short: "Create a goal",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			title, _ := cmd.Flags().GetString("title")
+			description, _ := cmd.Flags().GetString("description")
+			if title == "" {
+				return fmt.Errorf("missing title")
+			}
+			input := map[string]interface{}{
+				"title":       title,
+				"description": description,
+			}
+			variables := map[string]interface{}{"input": input}
+			query := `mutation GoalCreate($input: GoalCreateInput!) {
+				goalCreate(input: $input) {
+					id
+					title
+					description
+					milestone
+					status
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	createCmd.Flags().String("title", "", "Goal title")
+	createCmd.Flags().String("description", "", "Goal description")
+
+	updateCmd := &cobra.Command{
+		Use:   "update",
+		Short: "Update a goal",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, _ := cmd.Flags().GetString("id")
+			title, _ := cmd.Flags().GetString("title")
+			description, _ := cmd.Flags().GetString("description")
+			status, _ := cmd.Flags().GetString("status")
+			if id == "" {
+				return fmt.Errorf("missing id")
+			}
+			input := map[string]interface{}{
+				"id": id,
+			}
+			if title != "" {
+				input["title"] = title
+			}
+			if description != "" {
+				input["description"] = description
+			}
+			if status != "" {
+				input["status"] = status
+			}
+
+			variables := map[string]interface{}{"input": input}
+			query := `mutation GoalUpdate($input: GoalUpdateInput!) {
+				goalUpdate(input: $input) {
+					id
+					title
+					description
+					milestone
+					status
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	updateCmd.Flags().String("id", "", "Goal id")
+	updateCmd.Flags().String("title", "", "Goal title")
+	updateCmd.Flags().String("description", "", "Goal description")
+	updateCmd.Flags().String("status", "", "Goal status")
+
+	deleteCmd := &cobra.Command{
+		Use:   "delete",
+		Short: "Delete a goal",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, _ := cmd.Flags().GetString("id")
+			if id == "" {
+				return fmt.Errorf("missing id")
+			}
+			input := map[string]interface{}{"id": id}
+			variables := map[string]interface{}{"input": input}
+			query := `mutation GoalDelete($input: GoalDeleteInput!) {
+				goalDelete(input: $input)
+			}`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	deleteCmd.Flags().String("id", "", "Goal id")
+
+	root.AddCommand(listCmd)
+	root.AddCommand(createCmd)
+	root.AddCommand(updateCmd)
+	root.AddCommand(deleteCmd)
+	return root
+}
 
 func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "contributor", Short: "Contributor management commands"}
@@ -2508,6 +2753,36 @@ type Contributor struct {
 	Contributions ContributorContributionsStorage `yaml:"contributions,omitempty" json:"contributions,omitempty"`
 }
 
+type ContributorContributionsTree struct {
+	Commits []*Commit
+	Tickets []*Ticket
+	Bundles []*ContributorBundle
+}
+
+type ContributorBundle struct {
+	Name    string
+	Folders []*ContributorFolder
+}
+
+type ContributorFolder struct {
+	Name  string
+	Files []*ContributorFile
+}
+
+type ContributorFile struct {
+	Name     string
+	Sections []*ContributorSection
+}
+
+type ContributorSection struct {
+	Name        string
+	Definitions []*ContributorDefinition
+}
+
+type ContributorDefinition struct {
+	Name string
+}
+
 func (c *Contributor) IsNode()       {}
 func (c *Contributor) GetID() string { return "@semio-repo/contributor/" + c.Github }
 
@@ -3235,12 +3510,37 @@ type FileListInput struct {
 }
 
 type TicketOpenInput struct {
-	Title    string `json:"title"`
-	Prompt   string `json:"prompt"`
-	LLM      string `json:"llm"`
-	UI       string `json:"ui"`
-	NoIssue  bool   `json:"noIssue,omitempty"`
-	PlanPath string `json:"planPath,omitempty"`
+Title    string `json:"title"`
+Prompt   string `json:"prompt"`
+LLM      string `json:"llm"`
+UI       string `json:"ui"`
+NoIssue  bool   `json:"noIssue,omitempty"`
+PlanPath string `json:"planPath,omitempty"`
+Goal     string `json:"goal,omitempty"`
+Parent   string `json:"parent,omitempty"`
+}
+
+type GoalCreateInput struct {
+	Title       string `json:"title"`
+	Description string `json:"description"`
+}
+
+type GoalUpdateInput struct {
+	ID          string `json:"id"`
+	Title       string `json:"title,omitempty"`
+	Description string `json:"description,omitempty"`
+	Status      string `json:"status,omitempty"`
+}
+
+type GoalDeleteInput struct {
+	ID string `json:"id"`
+}
+
+type TicketDeleteInput struct {
+	Year  int    `json:"year"`
+	Month int    `json:"month"`
+	Day   int    `json:"day"`
+	Slug  string `json:"slug"`
 }
 
 type TicketCloseInput struct {
@@ -4526,7 +4826,20 @@ type TicketData struct {
 	Dates      TicketDates       `json:"dates"`
 	Summary    string            `json:"summary,omitempty"`
 	GitHub     *TicketGithubData `json:"github,omitempty"`
+	Goal       string            `json:"goal,omitempty"`
+	Parent     string            `json:"parent,omitempty"`
 }
+
+type Goal struct {
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Milestone   int    `json:"milestone"`
+	Status      string `json:"status"`
+}
+
+func (g *Goal) IsNode()       {}
+func (g *Goal) GetID() string { return g.ID }
 
 type TicketDates struct {
 	Closed *time.Time `json:"closed,omitempty"`
@@ -5557,7 +5870,6 @@ func GetGitAuthor() string {
 }
 
 func GetGitAuthorGithub() string {
-	contributorsDir := filepath.Join(GetRepoMetaDir(), "contributors")
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	name = strings.TrimSpace(name)
 	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
@@ -5568,40 +5880,20 @@ func GetGitAuthorGithub() string {
 		fallback = fmt.Sprintf("%s <%s>", name, email)
 	}
 
-	entries, err := os.ReadDir(contributorsDir)
-	if err != nil {
-		return fallback
-	}
-
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
-		}
-		github := entry.Name()
-		configPath := filepath.Join(contributorsDir, github, "config.json")
-		if !FileExists(configPath) {
-			continue
-		}
-		raw, err := ReadTextFile(configPath)
-		if err != nil {
-			continue
-		}
-		var config struct {
-			Name   string   `json:"name"`
-			Emails []string `json:"emails"`
-		}
-		if err := json.Unmarshal([]byte(raw), &config); err != nil {
-			continue
-		}
-		if email != "" {
-			for _, e := range config.Emails {
-				if strings.EqualFold(e, email) {
-					return github
+	// Try to find a matching contributor by email
+	if email != "" {
+		contributors, err := ListContributors()
+		if err == nil {
+			for _, c := range contributors {
+				for _, e := range c.Emails {
+					if strings.EqualFold(e, email) {
+						return c.Github
+					}
 				}
 			}
 		}
-		// Name check removed as per requirement to prioritize email matching
 	}
+
 	return fallback
 }
 
@@ -8239,14 +8531,6 @@ func GetTicketJsonPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.json")
 }
 
-func GetTicketPlanPathForIteration(year, month, day int, slug string, iteration int) string {
-	return filepath.Join(GetTicketPath(year, month, day, slug), fmt.Sprintf("plan_%d.md", iteration))
-}
-
-func GetTicketPlanPath(year, month, day int, slug string) string {
-	return GetTicketPlanPathForIteration(year, month, day, slug, 1)
-}
-
 func normalizeTicketKeyword(value string) string {
 	return strings.ToUpper(strings.TrimSpace(value))
 }
@@ -8286,7 +8570,7 @@ func shouldSkipTicket(prompt string) bool {
 	return hasTicketKeyword(prompt, "NOTICKET")
 }
 
-func OpenTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticket, error) {
+func OpenTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
 	}
@@ -8303,7 +8587,7 @@ func OpenTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticket,
 		}
 		return latest, nil
 	}
-	return CreateTicket(title, prompt, llm, ui, planPath, noIssue)
+	return CreateTicket(title, prompt, llm, ui, planPath, noIssue, goal, parent)
 }
 
 func UpdateTicketTitle(ticket *Ticket, title string) error {
@@ -8340,12 +8624,23 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	ticket.Slug = slug
 	ticket.FolderPath = newFolderPath
 	ticket.JsonPath = GetTicketJsonPath(ticket.Year, ticket.Month, ticket.Day, slug)
-	ticket.PlanPath = GetTicketPlanPath(ticket.Year, ticket.Month, ticket.Day, slug)
+	
+	planFilename := "plan.md"
+	if len(ticket.Data.Iterations) > 0 {
+		for i := len(ticket.Data.Iterations) - 1; i >= 0; i-- {
+			if ticket.Data.Iterations[i].Plan != "" {
+				planFilename = ticket.Data.Iterations[i].Plan
+				break
+			}
+		}
+	}
+	ticket.PlanPath = filepath.Join(newFolderPath, planFilename)
+
 	ticket.TicketPath = GetTicketFilePath(ticket.Year, ticket.Month, ticket.Day, slug)
 	return nil
 }
 
-func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticket, error) {
+func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	slug := Slugify(title)
 	if title == slug {
@@ -8372,7 +8667,7 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 		return nil, err
 	}
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
-	// planFilePath := GetTicketPlanPath(year, month, day, slug) // Removed as per new logic
+
 	ticketFilePath := GetTicketFilePath(year, month, day, slug)
 	gitAuthor := GetGitAuthorGithub()
 	gitCommit := GetGitCommit()
@@ -8387,17 +8682,12 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 		}
 		finalPlanFilename = filepath.Base(planPath)
 		planFilePath = filepath.Join(ticketDir, finalPlanFilename)
-		if err := os.Rename(planPath, planFilePath); err != nil {
+		if err := MoveFile(planPath, planFilePath); err != nil {
 			return nil, fmt.Errorf("failed to move plan file: %w", err)
 		}
-	} else {
-		finalPlanFilename = "plan.md"
-		planFilePath = filepath.Join(ticketDir, finalPlanFilename)
-		if err := WriteTextFile(planFilePath, ""); err != nil {
-			return nil, fmt.Errorf("failed to write plan file: %w", err)
-		}
 	}
-	if err := WriteTextFile(ticketFilePath, buildTicketMarkdown(planContent)); err != nil {
+	// When no plan is provided, finalPlanFilename and planFilePath remain empty
+	if err := WriteTextFile(ticketFilePath, buildTicketMarkdown("")); err != nil {
 		return nil, fmt.Errorf("failed to write ticket file: %w", err)
 	}
 
@@ -8413,7 +8703,9 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 			Date:   now,
 			Commit: gitCommit,
 		}},
-		Dates: TicketDates{},
+		Dates:  TicketDates{},
+		Goal:   goal,
+		Parent: parent,
 	}
 
 	skipIssue := noIssue || strings.Contains(prompt, "NOISSUE")
@@ -8423,7 +8715,21 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 			issueBody = planContent
 		}
 		issueBody = formatPromptHeading(issueBody)
-		issueURL, err := ghCreateIssue(title, issueBody)
+		
+		var milestone *int
+		if goal != "" {
+			goals, err := ListGoals()
+			if err == nil {
+				for _, g := range goals {
+					if g.ID == goal {
+						milestone = &g.Milestone
+						break
+					}
+				}
+			}
+		}
+
+		issueURL, err := ghCreateIssue(title, issueBody, milestone)
 		if err == nil && issueURL != "" {
 			ticketData.GitHub = &TicketGithubData{Issue: issueURL}
 		} else if err != nil {
@@ -8449,8 +8755,11 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool) (*Ticke
 	return ticket, nil
 }
 
-func ghCreateIssue(title, body string) (string, error) {
+func ghCreateIssue(title, body string, milestone *int) (string, error) {
 	args := []string{"issue", "create", "--title", title, "--body", body, "--label", "ticket"}
+	if milestone != nil {
+		args = append(args, "--milestone", fmt.Sprintf("%d", *milestone))
+	}
 	stdout, stderr, exitCode := ExecCommand("gh", args, "")
 	if exitCode != 0 {
 		return "", fmt.Errorf("gh issue create failed: %s", strings.TrimSpace(stderr))
@@ -8675,7 +8984,6 @@ func SaveTicket(ticket *Ticket) error {
 func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	folderPath := GetTicketPath(year, month, day, slug)
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
-	planPath := GetTicketPlanPath(year, month, day, slug)
 	ticketPath := GetTicketFilePath(year, month, day, slug)
 	if !FileExists(jsonPath) {
 		return nil, fmt.Errorf("ticket not found: %s", jsonPath)
@@ -8688,6 +8996,18 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	if err := json.Unmarshal([]byte(raw), &data); err != nil {
 		return nil, err
 	}
+
+	planFilename := "plan.md"
+	if len(data.Iterations) > 0 {
+		for i := len(data.Iterations) - 1; i >= 0; i-- {
+			if data.Iterations[i].Plan != "" {
+				planFilename = data.Iterations[i].Plan
+				break
+			}
+		}
+	}
+	planPath := filepath.Join(folderPath, planFilename)
+
 	return &Ticket{
 		Year:       year,
 		Month:      month,
@@ -9578,7 +9898,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, planPath string) error {
 	if planPath != "" && FileExists(planPath) {
 		planFilename := filepath.Base(planPath)
 		destPath := filepath.Join(ticket.FolderPath, planFilename)
-		if err := os.Rename(planPath, destPath); err != nil {
+		if err := MoveFile(planPath, destPath); err != nil {
 			return fmt.Errorf("failed to move plan file: %w", err)
 		}
 		ticket.PlanPath = destPath
@@ -9604,13 +9924,13 @@ func ReopenTicket(ticket *Ticket, prompt, llm, planPath string) error {
 	return SaveTicket(ticket)
 }
 
-func ToolTicketOpen(title, prompt, llm, ui, planPath string, noIssue bool) ToolResult {
+func ToolTicketOpen(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string) ToolResult {
 	output := NewOutput()
 	resolvedPrompt := prompt
 	if resolvedPrompt == "" {
 		resolvedPrompt = title
 	}
-	ticket, err := OpenTicket(title, prompt, llm, ui, planPath, noIssue)
+	ticket, err := OpenTicket(title, prompt, llm, ui, planPath, noIssue, goal, parent)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
@@ -11046,14 +11366,19 @@ type RepoContext interface {
 	GetSections() []*Section
 	GetDefinitions() []*Definition
 	GetContributors() ([]*Contributor, error)
+	GetGoals() ([]Goal, error)
 	GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error)
 	GetPolicies() []*Policy
 	GetViolationKinds() []*ViolationKindMeta
 	Analyze(scope *string) (*AnalyzeResult, error)
 	Fix(scope *string) (*FixResult, error)
+	GoalCreate(input GoalCreateInput) (*Goal, error)
+	GoalUpdate(input GoalUpdateInput) (*Goal, error)
+	GoalDelete(input GoalDeleteInput) (bool, error)
 	TicketOpen(input TicketOpenInput) (*Ticket, error)
 	TicketClose(input TicketCloseInput) (*Ticket, error)
 	TicketReopen(input TicketReopenInput) (*Ticket, error)
+	TicketDelete(input TicketDeleteInput) (bool, error)
 	FolderCreate(path string) (*Folder, error)
 	FolderMove(src, dst string) (*Folder, error)
 	FolderDelete(path string) error
@@ -11286,6 +11611,139 @@ func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([
 	return result, nil
 }
 
+func (c *repoContext) GetGoals() ([]Goal, error) {
+	return ListGoals()
+}
+
+func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
+	goals, err := ListGoals()
+	if err != nil && goals == nil {
+		goals = []Goal{}
+	} else if err != nil {
+		return nil, err
+	}
+	id := fmt.Sprintf("%x", time.Now().UnixNano())
+	milestone, err := ghCreateMilestone(input.Title, input.Description)
+	if err != nil {
+		return nil, err
+	}
+	goal := Goal{
+		ID:          id,
+		Title:       input.Title,
+		Description: input.Description,
+		Milestone:   milestone,
+		Status:      "open",
+	}
+	goals = append(goals, goal)
+	if err := SaveGoals(goals); err != nil {
+		return nil, err
+	}
+	return &goal, nil
+}
+
+func (c *repoContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) {
+	goals, err := ListGoals()
+	if err != nil {
+		return nil, err
+	}
+	var goal *Goal
+	index := -1
+	for i := range goals {
+		if goals[i].ID == input.ID {
+			goal = &goals[i]
+			index = i
+			if input.Title != "" {
+				goal.Title = input.Title
+			}
+			if input.Description != "" {
+				goal.Description = input.Description
+			}
+			if input.Status != "" {
+				goal.Status = input.Status
+			}
+			break
+		}
+	}
+	if goal == nil {
+		return nil, fmt.Errorf("goal not found")
+	}
+
+	if err := ghUpdateMilestone(goal.Milestone, input.Title, input.Description, input.Status); err != nil {
+		return nil, err
+	}
+
+	goals[index] = *goal
+
+	if err := SaveGoals(goals); err != nil {
+		return nil, err
+	}
+	return goal, nil
+}
+
+func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
+	goals, err := ListGoals()
+	if err != nil {
+		return false, err
+	}
+	var newGoals []Goal
+	var found bool
+	var number int
+	for _, g := range goals {
+		if g.ID == input.ID {
+			found = true
+			number = g.Milestone
+			continue
+		}
+		newGoals = append(newGoals, g)
+	}
+	if !found {
+		return false, fmt.Errorf("goal not found")
+	}
+
+	if err := ghDeleteMilestone(number); err != nil {
+		return false, err
+	}
+
+	if err := SaveGoals(newGoals); err != nil {
+		return false, err
+	}
+	return true, nil
+}
+
+func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
+	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
+	if err != nil {
+		return false, err
+	}
+
+	if ticket.Data != nil && ticket.Data.GitHub != nil {
+		if ticket.Data.GitHub.Issue != "" {
+			parts := strings.Split(ticket.Data.GitHub.Issue, "/")
+			number := parts[len(parts)-1]
+			if err := ghDeleteIssue(number); err != nil {
+				return false, err
+			}
+		}
+	}
+
+	path := ticket.FolderPath
+	if path == "" {
+		base := filepath.Join(GetRepoMetaDir(), "tickets", fmt.Sprintf("%d", input.Year), fmt.Sprintf("%02d", input.Month), fmt.Sprintf("%02d", input.Day), input.Slug)
+		path = base
+	}
+
+	if err := os.RemoveAll(path); err != nil {
+		return false, err
+	}
+
+	legacyPath := filepath.Join("tickets", fmt.Sprintf("%d", input.Year), fmt.Sprintf("%02d", input.Month), fmt.Sprintf("%02d", input.Day), input.Slug)
+	if FileExists(legacyPath) {
+		_ = os.RemoveAll(legacyPath)
+	}
+
+	return true, nil
+}
+
 func (c *repoContext) GetPolicies() []*Policy {
 	policies := GetRegisteredPolicies()
 	result := make([]*Policy, len(policies))
@@ -11295,11 +11753,18 @@ func (c *repoContext) GetPolicies() []*Policy {
 			d := policies[i].Description
 			descPtr = &d
 		}
+		var violationKinds []*ViolationKindMeta
+		for _, kind := range policies[i].Kinds {
+			meta := kind.Info()
+			meta.PolicyID = policies[i].ID
+			violationKinds = append(violationKinds, &meta)
+		}
 		result[i] = &Policy{
-			ID:          policies[i].ID,
-			Name:        policies[i].Name,
-			Description: descPtr,
-			Scopes:      policies[i].Scopes,
+			ID:             policies[i].ID,
+			Name:           policies[i].Name,
+			Description:    descPtr,
+			Scopes:         policies[i].Scopes,
+			ViolationKinds: violationKinds,
 		}
 	}
 	return result
@@ -11335,7 +11800,7 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 }
 
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
-	return OpenTicket(input.Title, input.Prompt, input.LLM, input.UI, input.PlanPath, input.NoIssue)
+	return OpenTicket(input.Title, input.Prompt, input.LLM, input.UI, input.PlanPath, input.NoIssue, input.Goal, input.Parent)
 }
 
 func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
@@ -11567,6 +12032,16 @@ func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor
 
 func (c *defaultContext) ContributorRemove(github string) error { return nil }
 
+func (c *defaultContext) GetGoals() ([]Goal, error) { return []Goal{}, nil }
+
+func (c *defaultContext) GoalCreate(input GoalCreateInput) (*Goal, error) { return nil, nil }
+
+func (c *defaultContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) { return nil, nil }
+
+func (c *defaultContext) GoalDelete(input GoalDeleteInput) (bool, error) { return false, nil }
+
+func (c *defaultContext) TicketDelete(input TicketDeleteInput) (bool, error) { return false, nil }
+
 var _ RepoContext = (*defaultContext)(nil)
 
 // #endregion Default Context
@@ -11782,8 +12257,20 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	var violationKindType *graphql.Object
 	var policyType *graphql.Object
 	var ticketType *graphql.Object
+	var goalType *graphql.Object
 	var contributorType *graphql.Object
 	var repoType *graphql.Object
+
+	var contributorContributionsType *graphql.Object
+	var ticketYearType *graphql.Object
+	var ticketMonthType *graphql.Object
+	var ticketDayType *graphql.Object
+	var contributorBundleType *graphql.Object
+	var contributorFolderType *graphql.Object
+	var contributorFileType *graphql.Object
+	var contributorSectionType *graphql.Object
+	var contributorDefinitionType *graphql.Object
+	var commitType *graphql.Object
 
 	bundleType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Bundle",
@@ -12160,6 +12647,17 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
+	goalType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Goal",
+		Fields: graphql.Fields{
+			"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+			"title":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"description": &graphql.Field{Type: graphql.String},
+			"milestone":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"status":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
 	ticketType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Ticket",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
@@ -12319,6 +12817,176 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
+	contributorDefinitionType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorDefinition",
+		Fields: graphql.Fields{
+			"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	contributorSectionType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorSection",
+		Fields: graphql.Fields{
+			"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorDefinitionType)))},
+		},
+	})
+
+	contributorFileType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorFile",
+		Fields: graphql.Fields{
+			"name":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"sections": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorSectionType)))},
+		},
+	})
+
+	contributorFolderType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorFolder",
+		Fields: graphql.Fields{
+			"name":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"files": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorFileType)))},
+		},
+	})
+
+	contributorBundleType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorBundle",
+		Fields: graphql.Fields{
+			"name":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"folders": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorFolderType)))},
+		},
+	})
+
+	ticketDayType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketDay",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"day":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketType)))},
+			}
+		}),
+	})
+
+	ticketMonthType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketMonth",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"month": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"days":  &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketDayType)))},
+			}
+		}),
+	})
+
+	ticketYearType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketYear",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"year":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"months": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketMonthType)))},
+			}
+		}),
+	})
+
+	contributorContributionsType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorContributions",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"commits": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(commitType)))},
+				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketYearType)))},
+				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorBundleType)))},
+			}
+		}),
+	})
+
+	commitType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Commit",
+		Fields: graphql.Fields{
+			"id":    &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+			"sha":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"title": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"date":  &graphql.Field{Type: graphql.NewNonNull(graphql.DateTime)},
+		},
+	})
+
+	contributorDefinitionType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorDefinition",
+		Fields: graphql.Fields{
+			"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	contributorSectionType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorSection",
+		Fields: graphql.Fields{
+			"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"definitions": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorDefinitionType)))},
+		},
+	})
+
+	contributorFileType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorFile",
+		Fields: graphql.Fields{
+			"name":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"sections": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorSectionType)))},
+		},
+	})
+
+	contributorFolderType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorFolder",
+		Fields: graphql.Fields{
+			"name":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"files": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorFileType)))},
+		},
+	})
+
+	contributorBundleType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorBundle",
+		Fields: graphql.Fields{
+			"name":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"folders": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorFolderType)))},
+		},
+	})
+
+	ticketDayType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketDay",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"day":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketType)))},
+			}
+		}),
+	})
+
+	ticketMonthType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketMonth",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"month": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"days":  &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketDayType)))},
+			}
+		}),
+	})
+
+	ticketYearType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "TicketYear",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"year":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+				"months": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketMonthType)))},
+			}
+		}),
+	})
+
+	contributorContributionsType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ContributorContributions",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"commits": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(commitType)))},
+				"tickets": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(ticketYearType)))},
+				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorBundleType)))},
+			}
+		}),
+	})
+
 	contributorLinkType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "ContributorLink",
 		Fields: graphql.Fields{
@@ -12349,7 +13017,37 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						for name, url := range contributor.Links {
 							links = append(links, ContributorLink{Name: name, URL: url})
 						}
+						// Sort links by name for consistency
+						sort.Slice(links, func(i, j int) bool {
+							return links[i].Name < links[j].Name
+						})
 						return links, nil
+					},
+				},
+				"contributions": &graphql.Field{
+					Type: contributorContributionsType,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						contributor := p.Source.(*Contributor)
+						// Fetch all tickets
+						tickets, err := repoResolverInstance.Ctx.GetTickets(nil, nil, nil, nil)
+						if err != nil {
+							return nil, err
+						}
+						
+						// Filter tickets by author
+						userTickets := []*Ticket{}
+						for _, t := range tickets {
+							if strings.EqualFold(t.GetAuthor(), contributor.Github) {
+								userTickets = append(userTickets, t)
+							}
+						}
+						
+						// Sort filtered tickets by date (descending)
+						sort.Slice(userTickets, func(i, j int) bool {
+							return userTickets[i].GetDateCreated().After(userTickets[j].GetDateCreated())
+						})
+
+						return ResolveContributorContributions(userTickets), nil
 					},
 				},
 				"icons":   &graphql.Field{Type: contributorIconsType},
@@ -12407,6 +13105,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						_ = p.Source.(*Repo)
 						return repoResolverInstance.Ctx.GetContributors()
+					},
+				},
+				"goals": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(goalType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						_ = p.Source.(*Repo)
+						return repoResolverInstance.Ctx.GetGoals()
 					},
 				},
 				"tickets": &graphql.Field{
@@ -13881,6 +14586,18 @@ func textResult(text string) *mcp.CallToolResult {
 	return mcp.NewToolResultText(text)
 }
 
+// toolResultToMCP converts a ToolResult to an MCP CallToolResult with CLI-style text output
+func toolResultToMCP(result ToolResult) (*mcp.CallToolResult, error) {
+	if result.Error != "" {
+		return nil, fmt.Errorf("%s", result.Error)
+	}
+	var lines []string
+	for _, line := range result.Output.Lines {
+		lines = append(lines, line.Text)
+	}
+	return mcp.NewToolResultText(strings.Join(lines, "\n")), nil
+}
+
 // #region Args
 func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	if args, ok := request.Params.Arguments.(map[string]interface{}); ok {
@@ -14184,31 +14901,13 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{
-		"title":  title,
-		"prompt": prompt,
-		"llm":    llm,
-		"ui":     ui,
-	}
-	if planPath, ok, _ := getStringArg(args, "planPath"); ok && planPath != "" {
-		input["planPath"] = planPath
-	}
-	if noIssue, ok, _ := getBoolArg(args, "noIssue"); ok {
-		input["noIssue"] = noIssue
-	}
-	query := `mutation TicketOpen($input: TicketOpenInput!) {
-		ticketOpen(input: $input) {
-			id
-			slug
-			prompt
-			status
-		}
-	}`
-	result, err := gql(query, map[string]interface{}{"input": input})
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	planPath, _, _ := getStringArg(args, "planPath")
+	noIssue, _, _ := getBoolArg(args, "noIssue")
+	goal, _, _ := getStringArg(args, "goal")
+	parent, _, _ := getStringArg(args, "parent")
+
+	result := ToolTicketOpen(title, prompt, llm, ui, planPath, noIssue, goal, parent)
+	return toolResultToMCP(result)
 }
 
 func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14231,36 +14930,20 @@ func ticketList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if dayOk && !monthOk {
 		return nil, fmt.Errorf("missing month")
 	}
-	variables := make(map[string]interface{})
+
+	var yearPtr, monthPtr, dayPtr *int
 	if yearOk {
-		variables["year"] = year
+		yearPtr = &year
 	}
 	if monthOk {
-		variables["month"] = month
+		monthPtr = &month
 	}
 	if dayOk {
-		variables["day"] = day
+		dayPtr = &day
 	}
-	query := `query Tickets($year: Int, $month: Int, $day: Int) {
-		repo {
-			tickets(year: $year, month: $month, day: $day) {
-				id
-				year
-				month
-				day
-				slug
-				prompt
-				summary
-				status
-				llm
-			}
-		}
-	}`
-	result, err := gql(query, variables)
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+
+	result := ToolTicketList(yearPtr, monthPtr, dayPtr)
+	return toolResultToMCP(result)
 }
 
 func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14281,31 +14964,9 @@ func ticketRead(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) {
-		ticket(year: $year, month: $month, day: $day, slug: $slug) {
-			id
-			year
-			month
-			day
-			slug
-			prompt
-			summary
-			status
-			llm
-			commit
-			date {
-				created
-				finished
-			}
-		}
-	}`
-	result, err := gql(query, map[string]interface{}{
-		"year": year, "month": month, "day": day, "slug": slug,
-	})
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+
+	result := ToolTicketRead(year, month, day, slug)
+	return toolResultToMCP(result)
 }
 
 func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14342,30 +15003,9 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 			return nil, err
 		}
 	}
-	input := map[string]interface{}{
-		"year":    year,
-		"month":   month,
-		"day":     day,
-		"slug":    slug,
-		"summary": summary,
-		"files":   files,
-	}
-	// Add optional title if provided
-	if title, ok, _ := getStringArg(args, "title"); ok && title != "" {
-		input["title"] = title
-	}
-	query := `mutation TicketClose($input: TicketCloseInput!) {
-		ticketClose(input: $input) {
-			id
-			slug
-			status
-		}
-	}`
-	result, err := gql(query, map[string]interface{}{"input": input})
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+
+	result := ToolTicketClose(year, month, day, slug, summary, files)
+	return toolResultToMCP(result)
 }
 
 func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -14394,34 +15034,10 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	input := map[string]interface{}{
-		"year":   year,
-		"month":  month,
-		"day":    day,
-		"slug":   slug,
-		"prompt": prompt,
-		"llm":    llm,
-	}
-	// Add optional title if provided
-	if title, ok, _ := getStringArg(args, "title"); ok && title != "" {
-		input["title"] = title
-	}
-	// Add optional planPath if provided
-	if planPath, ok, _ := getStringArg(args, "planPath"); ok && planPath != "" {
-		input["planPath"] = planPath
-	}
-	query := `mutation TicketReopen($input: TicketReopenInput!) {
-		ticketReopen(input: $input) {
-			id
-			slug
-			status
-		}
-	}`
-	result, err := gql(query, map[string]interface{}{"input": input})
-	if err != nil {
-		return nil, err
-	}
-	return textResult(result), nil
+	planPath, _, _ := getStringArg(args, "planPath")
+
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, planPath)
+	return toolResultToMCP(result)
 }
 
 func contributorAdd(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -16557,3 +17173,330 @@ func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 }
 
 // #endregion Update Command
+
+// #region File Utilities
+
+func MoveFile(sourcePath, destPath string) error {
+inputFile, err := os.Open(sourcePath)
+if err != nil {
+return fmt.Errorf("couldn't open source file: %v", err)
+}
+outputFile, err := os.Create(destPath)
+if err != nil {
+inputFile.Close()
+return fmt.Errorf("couldn't open dest file: %v", err)
+}
+defer outputFile.Close()
+_, err = io.Copy(outputFile, inputFile)
+inputFile.Close()
+if err != nil {
+return fmt.Errorf("writing to output file failed: %v", err)
+}
+// The copy was successful, so now delete the original file
+err = os.Remove(sourcePath)
+if err != nil {
+return fmt.Errorf("failed removing original file: %v", err)
+}
+return nil
+}
+
+func CopyFile(sourcePath, destPath string) error {
+inputFile, err := os.Open(sourcePath)
+if err != nil {
+return fmt.Errorf("couldn't open source file: %v", err)
+}
+defer inputFile.Close()
+outputFile, err := os.Create(destPath)
+if err != nil {
+return fmt.Errorf("couldn't open dest file: %v", err)
+}
+defer outputFile.Close()
+_, err = io.Copy(outputFile, inputFile)
+if err != nil {
+return fmt.Errorf("writing to output file failed: %v", err)
+}
+return nil
+}
+
+// #endregion File Utilities
+
+// #region Goals
+
+type RepoGoals struct {
+	Goals []Goal `json:"goals"`
+}
+
+func GetRepoGoalsPath() string {
+	return filepath.Join(GetRepoMetaDir(), "goals.json")
+}
+
+func ListGoals() ([]Goal, error) {
+	path := GetRepoGoalsPath()
+	if !FileExists(path) {
+		return nil, nil
+	}
+	content, err := ReadTextFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var repoGoals RepoGoals
+	if err := json.Unmarshal([]byte(content), &repoGoals); err != nil {
+		return nil, err
+	}
+	return repoGoals.Goals, nil
+}
+
+func SaveGoals(goals []Goal) error {
+	path := GetRepoGoalsPath()
+	repoGoals := RepoGoals{Goals: goals}
+	data, err := json.MarshalIndent(repoGoals, "", "  ")
+	if err != nil {
+		return err
+	}
+	return WriteTextFile(path, string(data))
+}
+
+func ghCreateMilestone(title, description string) (int, error) {
+	args := []string{"api", "repos/:owner/:repo/milestones", "-f", fmt.Sprintf("title=%s", title), "-f", fmt.Sprintf("description=%s", description), "--jq", ".number"}
+	stdout, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return 0, fmt.Errorf("gh api milestone create failed: %s", stderr)
+	}
+	num, _ := strconv.Atoi(strings.TrimSpace(stdout))
+	return num, nil
+}
+
+func ghUpdateMilestone(number int, title, description, state string) error {
+	args := []string{"api", fmt.Sprintf("repos/:owner/:repo/milestones/%d", number), "-X", "PATCH"}
+	if title != "" {
+		args = append(args, "-f", fmt.Sprintf("title=%s", title))
+	}
+	if description != "" {
+		args = append(args, "-f", fmt.Sprintf("description=%s", description))
+	}
+	if state != "" {
+		args = append(args, "-f", fmt.Sprintf("state=%s", state))
+	}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh api milestone update failed: %s", stderr)
+	}
+	return nil
+}
+
+func ghDeleteMilestone(number int) error {
+	args := []string{"api", fmt.Sprintf("repos/:owner/:repo/milestones/%d", number), "-X", "DELETE"}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh api milestone delete failed: %s", stderr)
+	}
+	return nil
+}
+
+func ghLinkParent(childIssueURL, parentIssueURL string) error {
+	// Not implemented yet
+	return nil
+}
+
+// #endregion Goals
+
+func ghDeleteIssue(issueURLOrNumber string) error {
+args := []string{"issue", "delete", issueURLOrNumber, "--yes"}
+_, stderr, exitCode := ExecCommand("gh", args, "")
+if exitCode != 0 {
+return fmt.Errorf("gh issue delete failed: %s", stderr)
+}
+return nil
+}
+func ResolveContributorContributions(tickets []*Ticket) *ContributorContributionsTree {
+	commitsMap := map[string]*Commit{}
+
+	var allBundles []*Bundle
+	if repoResolverInstance != nil && repoResolverInstance.Ctx != nil {
+		allBundles = repoResolverInstance.Ctx.GetBundles()
+	}
+
+	GetBundleNameForPath := func(path string) string {
+		for _, b := range allBundles {
+			if strings.HasPrefix(path, b.Root) {
+				return b.Name
+			}
+		}
+		return "other"
+	}
+
+	for _, t := range tickets {
+		sha := t.GetCommit()
+		if sha != "" {
+			if _, exists := commitsMap[sha]; !exists {
+				commitsMap[sha] = &Commit{
+					ID:    "@semio-repo/commit/" + sha,
+					SHA:   sha,
+					Title: t.GetTitle(),
+					Date:  t.GetDateCreated(),
+				}
+			}
+		}
+	}
+
+	commits := []*Commit{}
+	for _, c := range commitsMap {
+		commits = append(commits, c)
+	}
+	sort.Slice(commits, func(i, j int) bool {
+		return commits[i].Date.After(commits[j].Date)
+	})
+
+	// Maps for Tree Construction
+	type DefNode struct {
+		Name string
+	}
+	type SecNode struct {
+		Name string
+		Defs map[string]*DefNode
+	}
+	type FileNode struct {
+		Name string
+		Secs map[string]*SecNode
+	}
+	type FolderNode struct {
+		Name  string
+		Files map[string]*FileNode
+	}
+	type BundleNode struct {
+		Name    string
+		Folders map[string]*FolderNode
+	}
+
+	bundlesMap := map[string]*BundleNode{}
+
+	getBundle := func(name string) *BundleNode {
+		if _, ok := bundlesMap[name]; !ok {
+			bundlesMap[name] = &BundleNode{Name: name, Folders: make(map[string]*FolderNode)}
+		}
+		return bundlesMap[name]
+	}
+	getFolder := func(b *BundleNode, path string) *FolderNode {
+		if _, ok := b.Folders[path]; !ok {
+			b.Folders[path] = &FolderNode{Name: filepath.Base(path), Files: make(map[string]*FileNode)}
+		}
+		return b.Folders[path]
+	}
+	getFile := func(f *FolderNode, name string) *FileNode {
+		if _, ok := f.Files[name]; !ok {
+			f.Files[name] = &FileNode{Name: name, Secs: make(map[string]*SecNode)}
+		}
+		return f.Files[name]
+	}
+	getSec := func(f *FileNode, name string) *SecNode {
+		if _, ok := f.Secs[name]; !ok {
+			f.Secs[name] = &SecNode{Name: name, Defs: make(map[string]*DefNode)}
+		}
+		return f.Secs[name]
+	}
+	getDef := func(s *SecNode, name string) *DefNode {
+		if _, ok := s.Defs[name]; !ok {
+			s.Defs[name] = &DefNode{Name: name}
+		}
+		return s.Defs[name]
+	}
+
+	processPath := func(fullPath string, bundleName string) {
+		if bundleName == "" {
+			bundleName = "other"
+		}
+
+		parts := strings.Split(fullPath, "#")
+		filePath := parts[0]
+		regionName := ""
+        defName := ""
+
+        if len(parts) > 1 {
+            regionAndDef := parts[1]
+            subParts := strings.Split(regionAndDef, "§")
+            regionName = subParts[0]
+            if len(subParts) > 1 {
+                defName = subParts[1]
+            }
+        } else {
+             subParts := strings.Split(fullPath, "§")
+             if len(subParts) > 1 {
+                 filePath = subParts[0]
+                 defName = subParts[1]
+             }
+        }
+
+		dir := filepath.Dir(filePath)
+		file := filepath.Base(filePath)
+
+		b := getBundle(bundleName)
+		f := getFolder(b, dir)
+		fi := getFile(f, file)
+
+		if regionName != "" {
+			s := getSec(fi, regionName)
+			if defName != "" {
+				getDef(s, defName)
+			}
+		} else if defName != "" {
+			s := getSec(fi, "Global")
+			getDef(s, defName)
+		}
+	}
+
+	for _, t := range tickets {
+		diffs := t.GetFiles()
+		if diffs == nil {
+			continue
+		}
+		iter := func(set TicketDiffSet) {
+			for _, f := range set.Added {
+				bn := GetBundleNameForPath(f.Path)
+				processPath(f.Path, bn)
+			}
+			for _, f := range set.Modified {
+				bn := GetBundleNameForPath(f.Path)
+				processPath(f.Path, bn)
+			}
+			for _, f := range set.Renamed {
+				bn := GetBundleNameForPath(f.To)
+				processPath(f.To, bn)
+			}
+		}
+		iter(diffs.Files)
+		iter(diffs.Sections)
+		iter(diffs.Definitions)
+	}
+
+	resBundles := []*ContributorBundle{}
+	for _, b := range bundlesMap {
+		cb := &ContributorBundle{Name: b.Name, Folders: []*ContributorFolder{}}
+		for _, f := range b.Folders {
+			cf := &ContributorFolder{Name: f.Name, Files: []*ContributorFile{}}
+			for _, fi := range f.Files {
+				cfi := &ContributorFile{Name: fi.Name, Sections: []*ContributorSection{}}
+				for _, s := range fi.Secs {
+					cs := &ContributorSection{Name: s.Name, Definitions: []*ContributorDefinition{}}
+					for _, d := range s.Defs {
+						cs.Definitions = append(cs.Definitions, &ContributorDefinition{Name: d.Name})
+					}
+                    sort.Slice(cs.Definitions, func(i, j int) bool { return cs.Definitions[i].Name < cs.Definitions[j].Name })
+					cfi.Sections = append(cfi.Sections, cs)
+				}
+                sort.Slice(cfi.Sections, func(i, j int) bool { return cfi.Sections[i].Name < cfi.Sections[j].Name })
+				cf.Files = append(cf.Files, cfi)
+			}
+            sort.Slice(cf.Files, func(i, j int) bool { return cf.Files[i].Name < cf.Files[j].Name })
+			cb.Folders = append(cb.Folders, cf)
+		}
+        sort.Slice(cb.Folders, func(i, j int) bool { return cb.Folders[i].Name < cb.Folders[j].Name })
+		resBundles = append(resBundles, cb)
+	}
+    sort.Slice(resBundles, func(i, j int) bool { return resBundles[i].Name < resBundles[j].Name })
+
+	return &ContributorContributionsTree{
+		Commits: commits,
+		Tickets: tickets,
+		Bundles: resBundles,
+	}
+}

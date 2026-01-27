@@ -305,6 +305,34 @@ const ContributorsDocument = graphql(`
         id github name emails
         links { name url }
         icons { avatar avatarRound github }
+        contributions {
+          commits {
+            id sha title
+          }
+          tickets {
+            slug year month day title summary status
+          }
+          bundles {
+            name
+            lines { added removed }
+            folders {
+              name
+              lines { added removed }
+              files {
+                name
+                lines { added removed }
+                sections {
+                  name
+                  lines { added removed }
+                  definitions {
+                    name
+                    lines { added removed }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }
@@ -711,6 +739,11 @@ function extractSections(result: any): SectionInfo[] {
         log("[extractSections] found", data.sections.length, "sections in data.sections");
         return normalizeSectionTree(data.sections);
       }
+      // Handle result.data.file.sections structure
+      if ("file" in data && data.file?.sections) {
+        log("[extractSections] found", data.file.sections.length, "sections in data.file.sections");
+        return normalizeSectionTree(data.file.sections);
+      }
     }
   }
   if ("file" in result) {
@@ -718,6 +751,26 @@ function extractSections(result: any): SectionInfo[] {
     return normalizeSectionTree(result.file?.sections ?? []);
   }
   log("[extractSections] no sections found, returning empty array");
+  return [];
+}
+
+function extractDefinitions(result: any): DefinitionInfo[] {
+  if (!result) return [];
+  if ("data" in result) {
+    const data = result.data;
+    if (Array.isArray(data)) return data;
+    if (data && typeof data === "object") {
+      if ("definitions" in data && Array.isArray(data.definitions)) {
+        return data.definitions;
+      }
+      if ("file" in data && data.file?.definitions) {
+        return data.file.definitions;
+      }
+    }
+  }
+  if ("file" in result && result.file?.definitions) {
+    return result.file.definitions;
+  }
   return [];
 }
 
@@ -1065,6 +1118,38 @@ function extractFilePathFromScope(scope: string): string | undefined {
   return undefined;
 }
 
+// Directories that should never be analyzed (matching repo binary behavior)
+const ignoredDirectories = new Set([
+  "node_modules",
+  "venv",
+  "dist",
+  "build",
+  "out",
+  "__pycache__",
+  "coverage",
+  "site-packages",
+  "eggs",
+  "wheels",
+  "htmlcov",
+  "target",
+  "artifacts",
+  "vendor",
+]);
+
+// Dot-prefixed directories that ARE allowed for analysis
+const allowedDotDirectories = new Set([".github", ".devcontainer", ".semio-repo"]);
+
+function isInIgnoredDirectory(relativePath: string): boolean {
+  const segments = relativePath.split("/");
+  return segments.some((segment) => {
+    // Check explicit ignore list
+    if (ignoredDirectories.has(segment)) return true;
+    // Skip dot-prefixed directories unless explicitly allowed (matches repo binary behavior)
+    if (segment.startsWith(".") && !allowedDotDirectories.has(segment)) return true;
+    return false;
+  });
+}
+
 function shouldAnalyzeFile(document: vscode.TextDocument): boolean {
   const supportedLanguages = ["typescript", "javascript", "typescriptreact", "javascriptreact", "json", "python", "csharp", "go", "shellscript"];
   return supportedLanguages.includes(document.languageId);
@@ -1083,6 +1168,7 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
 
   const relativePath = path.relative(root, document.uri.fsPath).replace(/\\/g, "/");
   if (relativePath.startsWith("..")) return;
+  if (isInIgnoredDirectory(relativePath)) return;
   const fileUri = vscode.Uri.file(path.join(root, relativePath));
   const processKey = `analyze:${relativePath}`;
 
@@ -1926,15 +2012,38 @@ interface ContributorData {
   emails?: string[];
   links?: Record<string, string>;
   contributions?: {
-    bundles?: string[];
-    folders?: string[];
-    files?: string[];
-    regions?: string[];
-    definitions?: string[];
-    commits?: ContributorCommitData[];
-    tickets?: ContributorTicketData[];
-    lines?: ContributorLineMetrics;
+    commits: ContributorCommitData[];
+    tickets: ContributorTicketData[];
+    bundles: ContributorBundleData[];
   };
+}
+
+interface ContributorBundleData {
+  name: string;
+  lines: ContributorLineMetrics;
+  folders: ContributorFolderData[];
+}
+interface ContributorFolderData {
+  name: string;
+  lines: ContributorLineMetrics;
+  files: ContributorFileData[];
+}
+
+interface ContributorFileData {
+  name: string;
+  lines: ContributorLineMetrics;
+  sections: ContributorSectionData[];
+}
+
+interface ContributorSectionData {
+  name: string;
+  lines: ContributorLineMetrics;
+  definitions: ContributorDefinitionData[];
+}
+
+interface ContributorDefinitionData {
+  name: string;
+  lines: ContributorLineMetrics;
 }
 
 interface ContributorTicketData {
@@ -1943,6 +2052,8 @@ interface ContributorTicketData {
   day: number;
   slug: string;
   status: string;
+  title: string;
+  summary: string;
   folderPath?: string;
   filePath?: string;
 }
@@ -1965,18 +2076,16 @@ type ContributorTreeItem =
   | ContributorLinkItem
   | ContributorContributionsItem
   | ContributorProjectsItem
-  | ContributorProjectItem
+  | ContributorBundleItem
+  | ContributorFolderItem
+  | ContributorFileItem
+  | ContributorSectionItem
+  | ContributorDefinitionItem
   | ContributorTicketsItem
   | ContributorTicketYearItem
   | ContributorTicketMonthItem
   | ContributorTicketDayItem
   | ContributorTicketItem
-  | ContributorCodebaseItem
-  | ContributorCodebaseBundleItem
-  | ContributorCodebaseFolderItem
-  | ContributorCodebaseFileItem
-  | ContributorCodebaseSectionItem
-  | ContributorCodebaseDefinitionItem
   | ContributorCommitsItem
   | ContributorCommitItem;
 
@@ -1987,7 +2096,7 @@ class ContributorItem extends vscode.TreeItem {
   ) {
     const displayName = contributor.name ? `${contributor.name} - ${contributor.github}` : contributor.github;
     super(displayName, vscode.TreeItemCollapsibleState.Collapsed);
-    this.tooltip = `${contributor.github}${contributor.contributions?.tickets ? `\nTickets: ${contributor.contributions.tickets.length}` : ""}${contributor.contributions?.bundles ? `\nProjects: ${contributor.contributions.bundles.join(", ")}` : ""}`;
+    this.tooltip = `${contributor.github}${contributor.contributions?.tickets ? `\nTickets: ${contributor.contributions.tickets.length}` : ""}${contributor.contributions?.bundles ? `\nProjects: ${contributor.contributions.bundles.map((b) => b.name).join(", ")}` : ""}`;
     if (avatarPath && fs.existsSync(avatarPath)) {
       this.iconPath = vscode.Uri.file(avatarPath);
     } else {
@@ -2041,9 +2150,6 @@ class ContributorContributionsItem extends vscode.TreeItem {
     super("contributions", vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon("git-commit");
     this.contextValue = "contributorContributions";
-    if (contributor.contributions?.lines) {
-      this.description = `+${contributor.contributions.lines.added} -${contributor.contributions.lines.removed}`;
-    }
   }
 }
 
@@ -2056,13 +2162,49 @@ class ContributorProjectsItem extends vscode.TreeItem {
   }
 }
 
-class ContributorProjectItem extends vscode.TreeItem {
-  constructor(public readonly bundle: string) {
-    super(bundle, vscode.TreeItemCollapsibleState.None);
+class ContributorBundleItem extends vscode.TreeItem {
+  constructor(public readonly bundle: ContributorBundleData) {
+    super(bundle.name, vscode.TreeItemCollapsibleState.Collapsed);
     this.iconPath = new vscode.ThemeIcon("package");
-    this.contextValue = "contributorProject";
-    this.command = { command: "semio.openProject", title: "Open Bundle", arguments: [bundle] };
+    this.contextValue = "contributorBundle";
+    this.description = `(${bundle.folders.length}) +${bundle.lines.added} -${bundle.lines.removed}`;
   }
+}
+
+class ContributorFolderItem extends vscode.TreeItem {
+    constructor(public readonly folder: ContributorFolderData) {
+      super(folder.name, vscode.TreeItemCollapsibleState.Collapsed);
+      this.iconPath = new vscode.ThemeIcon("folder");
+      this.contextValue = "contributorFolder";
+      this.description = `(${folder.files.length}) +${folder.lines.added} -${folder.lines.removed}`;
+    }
+}
+
+class ContributorFileItem extends vscode.TreeItem {
+    constructor(public readonly file: ContributorFileData) {
+      super(file.name, vscode.TreeItemCollapsibleState.Collapsed);
+      this.iconPath = new vscode.ThemeIcon("file");
+      this.contextValue = "contributorFile";
+      this.description = `(${file.sections.length}) +${file.lines.added} -${file.lines.removed}`;
+    }
+}
+
+class ContributorSectionItem extends vscode.TreeItem {
+    constructor(public readonly section: ContributorSectionData) {
+      super(section.name, vscode.TreeItemCollapsibleState.Collapsed);
+      this.iconPath = new vscode.ThemeIcon("symbol-class");
+      this.contextValue = "contributorSection";
+      this.description = `(${section.definitions.length}) +${section.lines.added} -${section.lines.removed}`;
+    }
+}
+
+class ContributorDefinitionItem extends vscode.TreeItem {
+    constructor(public readonly definition: ContributorDefinitionData) {
+      super(definition.name, vscode.TreeItemCollapsibleState.None);
+      this.iconPath = new vscode.ThemeIcon("symbol-method");
+      this.contextValue = "contributorDefinition";
+      this.description = `+${definition.lines.added} -${definition.lines.removed}`;
+    }
 }
 
 class ContributorTicketsItem extends vscode.TreeItem {
@@ -2109,87 +2251,6 @@ class ContributorTicketItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon(ticket.status === "open" ? "issue-opened" : "issue-closed");
     this.contextValue = ticket.status === "open" ? "ticketOpen" : "ticketClosed";
     this.command = { command: "semio.openTicket", title: "Open Ticket", arguments: [ticket] };
-  }
-}
-
-class ContributorCodebaseItem extends vscode.TreeItem {
-  constructor(public readonly contributor: ContributorData, count: number) {
-    super("codebase", vscode.TreeItemCollapsibleState.Collapsed);
-    this.iconPath = new vscode.ThemeIcon("code");
-    this.contextValue = "contributorCodebase";
-    this.description = String(count);
-  }
-}
-
-class ContributorCodebaseBundleItem extends vscode.TreeItem {
-  constructor(
-    public readonly bundle: string,
-    public readonly files: string[],
-    public readonly contributor: ContributorData,
-  ) {
-    super(bundle, vscode.TreeItemCollapsibleState.Collapsed);
-    this.iconPath = new vscode.ThemeIcon("package");
-    this.contextValue = "contributorCodebaseBundle";
-    this.command = { command: "semio.openProject", title: "Open Bundle", arguments: [bundle] };
-  }
-}
-
-class ContributorCodebaseFolderItem extends vscode.TreeItem {
-  constructor(
-    public readonly folder: string,
-    public readonly displayName: string,
-    public readonly files: string[],
-    public readonly contributor: ContributorData,
-  ) {
-    super(displayName, vscode.TreeItemCollapsibleState.Collapsed);
-    this.iconPath = new vscode.ThemeIcon("folder");
-    this.contextValue = "contributorCodebaseFolder";
-    this.command = { command: "semio.openFolder", title: "Open Folder", arguments: [folder] };
-  }
-}
-
-class ContributorCodebaseFileItem extends vscode.TreeItem {
-  constructor(
-    public readonly filePath: string,
-    public readonly relativePath: string,
-    public readonly uri: vscode.Uri,
-    public readonly sections: string[],
-    public readonly definitions: string[],
-  ) {
-    const hasChildren = sections.length > 0;
-    super(relativePath.split("/").pop() || relativePath, hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-    this.description = relativePath.includes("/") ? relativePath.slice(0, relativePath.lastIndexOf("/")) : "";
-    this.iconPath = new vscode.ThemeIcon("file-code");
-    this.contextValue = "contributorCodebaseFile";
-    this.command = { command: "vscode.open", title: "Open File", arguments: [uri] };
-  }
-}
-
-class ContributorCodebaseSectionItem extends vscode.TreeItem {
-  constructor(
-    public readonly filePath: string,
-    public readonly sectionPath: string,
-    public readonly uri: vscode.Uri,
-    public readonly childDefinitions: string[],
-  ) {
-    const hasChildren = childDefinitions.length > 0;
-    super(sectionPath.split("/").pop() || sectionPath, hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-    this.iconPath = new vscode.ThemeIcon("symbol-namespace");
-    this.contextValue = "contributorCodebaseSection";
-    this.command = { command: "semio.openSection", title: "Open Section", arguments: [filePath, sectionPath] };
-  }
-}
-
-class ContributorCodebaseDefinitionItem extends vscode.TreeItem {
-  constructor(
-    public readonly filePath: string,
-    public readonly definitionName: string,
-    public readonly uri: vscode.Uri,
-  ) {
-    super(definitionName, vscode.TreeItemCollapsibleState.None);
-    this.iconPath = new vscode.ThemeIcon("symbol-function");
-    this.contextValue = "contributorCodebaseDefinition";
-    this.command = { command: "semio.openDefinition", title: "Open Definition", arguments: [filePath, definitionName] };
   }
 }
 
@@ -2249,11 +2310,40 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
           emails: c.emails,
           links: c.links?.reduce((acc: Record<string, string>, l) => ({ ...acc, [l.name]: l.url }), {}),
           contributions: {
-            bundles: [],
-            files: [],
-            tickets: [],
-            commits: [],
-            lines: { added: 0, removed: 0 },
+            commits: (c.contributions.commits || []).map((commit) => ({
+              id: commit.id,
+              sha: commit.sha,
+              title: commit.title,
+            })),
+            tickets: (c.contributions.tickets || []).map((ticket) => ({
+              slug: ticket.slug,
+              year: ticket.year,
+              month: ticket.month,
+              day: ticket.day,
+              title: ticket.title ?? "Untitled",
+              summary: ticket.summary ?? "",
+              status: ticket.status.toLowerCase(),
+            })),
+            bundles: (c.contributions.bundles || []).map((bundle) => ({
+              name: bundle.name,
+              lines: bundle.lines,
+              folders: (bundle.folders || []).map((folder) => ({
+                name: folder.name,
+                lines: folder.lines,
+                files: (folder.files || []).map((file) => ({
+                    name: file.name,
+                    lines: file.lines,
+                    sections: (file.sections || []).map((section) => ({
+                        name: section.name,
+                        lines: section.lines,
+                        definitions: (section.definitions || []).map((definition) => ({
+                            name: definition.name,
+                            lines: definition.lines,
+                        })),
+                    })),
+                })),
+              })), 
+            })),
           },
         }));
       }
@@ -2271,17 +2361,8 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
 
       // Flattened contributions
       if (c.contributions?.commits?.length) children.push(new ContributorCommitsItem(c, c.contributions.commits.length));
-      if (c.contributions?.bundles?.length) children.push(new ContributorProjectsItem(c, c.contributions.bundles.length));
       if (c.contributions?.tickets?.length) children.push(new ContributorTicketsItem(c, c.contributions.tickets.length));
-      // Files remains separate or could be flattened too? Keeping Files separate for now as it wasn't explicitly requested to be flattened into root
-      if (c.contributions?.files?.length || c.contributions?.lines) {
-        children.push(new ContributorContributionsItem(c)); // Keep this for files/lines details? 
-        // User asked to show commits, tickets, bundles as child tree items. 
-        // "The contributions tree should show commits, tickets, bundles as child tree items"
-        // I'll assume they displace the wrapper.
-        // But I have Codebase Item inside ContributionsItem too.
-        children.push(new ContributorCodebaseItem(c, c.contributions.files?.length || 0));
-      }
+      if (c.contributions?.bundles?.length) children.push(new ContributorProjectsItem(c, c.contributions.bundles.length));
 
       return children;
     }
@@ -2291,17 +2372,24 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
     if (element instanceof ContributorLinksItem) {
       return Object.entries(element.contributor.links || {}).map(([kind, url]) => new ContributorLinkItem(kind, url));
     }
-    if (element instanceof ContributorContributionsItem) {
-      const children: ContributorTreeItem[] = [];
-      const c = element.contributor.contributions;
-      if (c?.commits?.length) children.push(new ContributorCommitsItem(element.contributor, c.commits.length));
-      if (c?.bundles?.length) children.push(new ContributorProjectsItem(element.contributor, c.bundles.length));
-      if (c?.tickets?.length) children.push(new ContributorTicketsItem(element.contributor, c.tickets.length));
-      if (c?.files?.length) children.push(new ContributorCodebaseItem(element.contributor, c.files.length));
-      return children;
-    }
+
     if (element instanceof ContributorProjectsItem) {
-      return (element.contributor.contributions?.bundles || []).map((p) => new ContributorProjectItem(p));
+      return (element.contributor.contributions?.bundles || []).map((p) => new ContributorBundleItem(p));
+    }
+    if (element instanceof ContributorBundleItem) {
+        return (element.bundle.folders || []).map((f) => new ContributorFolderItem(f));
+    }
+    if (element instanceof ContributorFolderItem) {
+        return (element.folder.files || []).map((f) => new ContributorFileItem(f));
+    }
+    if (element instanceof ContributorFileItem) {
+        return (element.file.sections || []).map((s) => new ContributorSectionItem(s));
+    }
+    if (element instanceof ContributorSectionItem) {
+        return (element.section.definitions || []).map((d) => new ContributorDefinitionItem(d));
+    }
+    if (element instanceof ContributorCommitsItem) {
+      return (element.contributor.contributions?.commits || []).map((c) => new ContributorCommitItem(c.title, c.sha));
     }
     if (element instanceof ContributorTicketsItem) {
       const tickets = element.contributor.contributions?.tickets || [];
@@ -2321,128 +2409,6 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
         .filter((t) => t.year === element.year && t.month === element.month && t.day === element.day)
         .sort((a, b) => a.slug.localeCompare(b.slug))
         .map((t) => new ContributorTicketItem(t));
-    }
-    if (element instanceof ContributorCodebaseItem) {
-      const files = element.contributor.contributions?.files || [];
-      const projects = await getProjectList();
-      const projectRoots = projects
-        .filter((p) => p.root)
-        .map((p) => ({ name: p.name, root: p.root }))
-        .sort((a, b) => b.root.length - a.root.length);
-      const bundleFilesMap = new Map<string, string[]>();
-      for (const file of files) {
-        let bundleName = "@semio";
-        for (const bundle of projectRoots) {
-          if (file.startsWith(bundle.root + "/") || file === bundle.root) {
-            bundleName = bundle.name;
-            break;
-          }
-        }
-        if (!bundleFilesMap.has(bundleName)) bundleFilesMap.set(bundleName, []);
-        bundleFilesMap.get(bundleName)!.push(file);
-      }
-      return [...bundleFilesMap.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([bundle, bundleFiles]) => new ContributorCodebaseBundleItem(bundle, bundleFiles.sort((a, b) => a.localeCompare(b)), element.contributor));
-    }
-    if (element instanceof ContributorCodebaseBundleItem) {
-      const files = element.files;
-      const contributor = element.contributor;
-      const regions = contributor.contributions?.regions || [];
-      const definitions = contributor.contributions?.definitions || [];
-      const projects = await getProjectList();
-      const bundle = projects.find((p) => p.name === element.bundle);
-      const bundleRoot = bundle?.root || "";
-      const folderFilesMap = new Map<string, string[]>();
-      for (const file of files) {
-        const relativePath = bundleRoot && file.startsWith(bundleRoot + "/") ? file.slice(bundleRoot.length + 1) : file;
-        const folderPart = relativePath.includes("/") ? relativePath.slice(0, relativePath.indexOf("/")) : "";
-        const folderPath = folderPart ? (bundleRoot ? bundleRoot + "/" + folderPart : folderPart) : "";
-        if (!folderFilesMap.has(folderPath)) folderFilesMap.set(folderPath, []);
-        folderFilesMap.get(folderPath)!.push(file);
-      }
-      const directFiles = folderFilesMap.get("") || [];
-      const folders = [...folderFilesMap.entries()].filter(([folder]) => folder !== "");
-      const children: ContributorTreeItem[] = [];
-      for (const [folder, folderFiles] of folders.sort(([a], [b]) => a.localeCompare(b))) {
-        const displayName = bundleRoot && folder.startsWith(bundleRoot + "/") ? folder.slice(bundleRoot.length + 1) : folder;
-        children.push(new ContributorCodebaseFolderItem(folder, displayName, folderFiles.sort((a, b) => a.localeCompare(b)), contributor));
-      }
-      const root = getWorkspaceRoot();
-      for (const file of directFiles.sort((a, b) => a.localeCompare(b))) {
-        const relativePath = bundleRoot && file.startsWith(bundleRoot + "/") ? file.slice(bundleRoot.length + 1) : file;
-        const fileSections = regions.filter((r) => r.startsWith(file + "#")).map((r) => r.split("#")[1]);
-        const fileDefs = definitions.filter((d) => d.startsWith(file + "#") || d.startsWith(file + "§"));
-        const uri = root ? vscode.Uri.file(path.join(root, file)) : vscode.Uri.file(file);
-        children.push(new ContributorCodebaseFileItem(file, relativePath, uri, fileSections, fileDefs));
-      }
-      return children;
-    }
-    if (element instanceof ContributorCodebaseFolderItem) {
-      const files = element.files;
-      const folder = element.folder;
-      const contributor = element.contributor;
-      const regions = contributor.contributions?.regions || [];
-      const definitions = contributor.contributions?.definitions || [];
-      const subFolderFilesMap = new Map<string, string[]>();
-      for (const file of files) {
-        const relativePath = file.startsWith(folder + "/") ? file.slice(folder.length + 1) : file;
-        const subFolderPart = relativePath.includes("/") ? relativePath.slice(0, relativePath.indexOf("/")) : "";
-        const subFolderPath = subFolderPart ? folder + "/" + subFolderPart : "";
-        if (!subFolderFilesMap.has(subFolderPath)) subFolderFilesMap.set(subFolderPath, []);
-        subFolderFilesMap.get(subFolderPath)!.push(file);
-      }
-      const directFiles = subFolderFilesMap.get("") || [];
-      const subFolders = [...subFolderFilesMap.entries()].filter(([sf]) => sf !== "");
-      const children: ContributorTreeItem[] = [];
-      for (const [subFolder, subFolderFiles] of subFolders.sort(([a], [b]) => a.localeCompare(b))) {
-        const displayName = subFolder.startsWith(folder + "/") ? subFolder.slice(folder.length + 1) : subFolder;
-        children.push(new ContributorCodebaseFolderItem(subFolder, displayName, subFolderFiles.sort((a, b) => a.localeCompare(b)), contributor));
-      }
-      const root = getWorkspaceRoot();
-      for (const file of directFiles.sort((a, b) => a.localeCompare(b))) {
-        const relativePath = file.split("/").pop() || file;
-        const fileSections = regions.filter((r) => r.startsWith(file + "#")).map((r) => r.split("#")[1]);
-        const fileDefs = definitions.filter((d) => d.startsWith(file + "#") || d.startsWith(file + "§"));
-        const uri = root ? vscode.Uri.file(path.join(root, file)) : vscode.Uri.file(file);
-        children.push(new ContributorCodebaseFileItem(file, relativePath, uri, fileSections, fileDefs));
-      }
-      return children;
-    }
-    if (element instanceof ContributorCodebaseFileItem) {
-      const children: ContributorTreeItem[] = [];
-      const root = getWorkspaceRoot();
-      const definitions = element.definitions;
-      for (const section of element.sections) {
-        const sectionDefs = definitions
-          .filter((d) => {
-            const match = d.match(/^[^#]*#(.+)§(.+)$/);
-            if (match) {
-              const defSectionPath = match[1];
-              return defSectionPath === section || defSectionPath.startsWith(section + "/");
-            }
-            return false;
-          })
-          .map((d) => {
-            const match = d.match(/§(.+)$/);
-            return match ? match[1] : d;
-          });
-        const uri = root ? vscode.Uri.file(path.join(root, element.filePath)) : vscode.Uri.file(element.filePath);
-        children.push(new ContributorCodebaseSectionItem(element.filePath, section, uri, sectionDefs));
-      }
-      return children;
-    }
-    if (element instanceof ContributorCodebaseSectionItem) {
-      const children: ContributorTreeItem[] = [];
-      const root = getWorkspaceRoot();
-      for (const def of element.childDefinitions) {
-        const uri = root ? vscode.Uri.file(path.join(root, element.filePath)) : vscode.Uri.file(element.filePath);
-        children.push(new ContributorCodebaseDefinitionItem(element.filePath, def, uri));
-      }
-      return children;
-    }
-    if (element instanceof ContributorCommitsItem) {
-      return (element.contributor.contributions?.commits || []).map((c) => new ContributorCommitItem(c.title, c.sha));
     }
     return [];
   }
@@ -2743,8 +2709,9 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
 
       // Load definitions
       const defResult = await runRepoCommandJson<ToolResult<DefinitionInfo[]>>(`definition list --file "${file.path}"`);
-      if (defResult && defResult.data) {
-        file.definitions = defResult.data.map((d) => ({
+      const definitions = extractDefinitions(defResult);
+      if (definitions.length > 0) {
+        file.definitions = definitions.map((d) => ({
           id: file.path + "§" + d.name,
           name: d.name,
           kind: d.kind,
@@ -3025,6 +2992,31 @@ function registerCommands(context: vscode.ExtensionContext): void {
       const root = getWorkspaceRoot();
       const resolvedPath = path.isAbsolute(filePath) ? filePath : root ? path.join(root, filePath) : filePath;
       const uri = vscode.Uri.file(resolvedPath);
+      await vscode.commands.executeCommand("markdown.showPreview", uri);
+    }),
+    vscode.commands.registerCommand("semio.openTicketPlan", async (ticket: TicketData | ContributorTicketData | { ticket: TicketData | ContributorTicketData }) => {
+      const resolvedTicket = resolveTicketData(ticket);
+      if (!resolvedTicket) return;
+      const root = getWorkspaceRoot();
+      if (!root) return;
+      
+      const relPath = path.join(String(resolvedTicket.year), String(resolvedTicket.month).padStart(2, "0"), String(resolvedTicket.day).padStart(2, "0"), resolvedTicket.slug, "plan.md");
+      const metaPath = path.join(root, ".semio-repo", "tickets", relPath);
+      let filePath = metaPath;
+      // Fallback to old location or repo/tickets location if needed, 
+      // but logic says we stick to .semio-repo or tickets/
+      if (!fs.existsSync(metaPath)) {
+         filePath = path.join(root, "tickets", relPath);
+      }
+      
+      if (!fs.existsSync(filePath)) {
+          // Try without plan.md to see if folder exists? 
+          // Assuming plan.md is the name.
+          vscode.window.showErrorMessage(`Plan file not found: ${filePath}`);
+          return;
+      }
+
+      const uri = vscode.Uri.file(filePath);
       await vscode.window.showTextDocument(uri);
     }),
     vscode.commands.registerCommand("semio.openPolicy", async (policy: PolicyData, lineNumber?: number) => {

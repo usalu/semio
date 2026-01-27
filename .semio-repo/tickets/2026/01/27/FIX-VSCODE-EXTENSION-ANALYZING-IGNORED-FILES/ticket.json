@@ -1,0 +1,1343 @@
+{
+  "title": "Fix Vscode Extension Analyzing Ignored Files",
+  "iterations": [
+    {
+      "prompt": "The VS Code extension still analyzes many files that should be ignored, such as files in .venv directory.\n\nExample log:\n```\n[runRepoCommandJson] executing: \"/workspaces/semio/go/repo/repo\" --json analyze \".venv/lib/python3.14/site-packages/jupyterlab/static/package.json\" cwd: /workspaces/semio\n[analyzeFile] result for .venv/lib/python3.14/site-packages/jupyterlab/static/package.json : data: present\n```\n\nThe extension should respect gitignore or have its own ignore patterns for directories like .venv, node_modules, etc.",
+      "llm": "opus-4-5",
+      "ui": "claude-code",
+      "author": "usalu",
+      "date": "2026-01-27T10:55:44.189829659Z",
+      "commit": "50fee306d5950f68a11bcce4c811399db543ae80",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/semio-repo",
+              "lines": {
+                "added": 0,
+                "removed": 34
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/semio-repo/extension.ts",
+              "lines": {
+                "added": 218,
+                "removed": 252
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#GraphQL Documents",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views",
+              "lines": {
+                "added": 132,
+                "removed": 252
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseBundleItem",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseDefinitionItem",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseFileItem",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseFolderItem",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseSectionItem",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§bundleName",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§bundleRoot",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributor",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§defSectionPath",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§definitions",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§fileDefs",
+              "lines": {
+                "added": 0,
+                "removed": 37
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§fileSections",
+              "lines": {
+                "added": 0,
+                "removed": 38
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§files",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folder",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folderPart",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folderPath",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folders",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§projectRoots",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§projects",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§regions",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§subFolderPart",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§subFolderPath",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§subFolders",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§uri",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            }
+          ],
+          "renamed": [
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§directFiles",
+              "to": "@semio/semio-repo/extension.ts#Commands§metaPath",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§bundleFilesMap",
+              "to": "@semio/semio-repo/extension.ts#File Analysis§allowedDotDirectories",
+              "lines": {
+                "added": 12,
+                "removed": 12
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§bundle",
+              "to": "@semio/semio-repo/extension.ts#File Analysis§isInIgnoredDirectory",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§folderFilesMap",
+              "to": "@semio/semio-repo/extension.ts#File Analysis§segments",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§hasChildren",
+              "to": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorBundleData",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseItem",
+              "to": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorBundleItem",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorProjectItem",
+              "to": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorFileItem",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§match",
+              "to": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorSectionData",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§subFolderFilesMap",
+              "to": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorSectionItem",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§filePath",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§filePath",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§metaPath",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§relPath",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§resolvedPath",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§resolvedTicket",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§resolvedTicket",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§root",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§root",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§uri",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§uri",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis§allowedDotDirectories",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis§analyzeFile",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis§ignoredDirectories",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis§isInIgnoredDirectory",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis§relativePath",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis§segments",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis§supportedLanguages",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#GraphQL Documents§ContributorsDocument",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorBundleData",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorBundleItem",
+              "lines": {
+                "added": 5,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseBundleItem",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseDefinitionItem",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseFileItem",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseFolderItem",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseItem",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCodebaseSectionItem",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorCommitItem",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorContributionsItem",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorContributionsItem",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorData",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorData",
+              "lines": {
+                "added": 3,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorDefinitionData",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorDefinitionItem",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorFileData",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorFileItem",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorFolderData",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorFolderItem",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorItem",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorItem",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorLineMetrics",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorLinkItem",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorProjectItem",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorProjectsItem",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorSectionData",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorSectionItem",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorTicketData",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorTicketYearItem",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorTicketsItem",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorTreeItem",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorTreeItem",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorsProvider",
+              "lines": {
+                "added": 52,
+                "removed": 88
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 147
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§PoliciesProvider",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§SectionItem",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§SectionStatusItem",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§SectionTreeItem",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§SectionsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 33
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§avatarPath",
+              "lines": {
+                "added": 1,
+                "removed": 17
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§avatarPath",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§bundle",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§bundleFilesMap",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§bundleName",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§bundleRoot",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§c",
+              "lines": {
+                "added": 1,
+                "removed": 14
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§c",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§c",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 1,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributor",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributor",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributors",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributors",
+              "lines": {
+                "added": 34,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§days",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§defSectionPath",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§definitions",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§definitions",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§definitions",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§directFiles",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§directFiles",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§displayName",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§displayName",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§editor",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§fileDefs",
+              "lines": {
+                "added": 0,
+                "removed": 29
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§fileDefs",
+              "lines": {
+                "added": 0,
+                "removed": 37
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§fileSections",
+              "lines": {
+                "added": 0,
+                "removed": 38
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§fileSections",
+              "lines": {
+                "added": 0,
+                "removed": 30
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§files",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§files",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§files",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§filtered",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folder",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folderFilesMap",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folderPart",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folderPath",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§folders",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§hasChildren",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§hasChildren",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§items",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§kinds",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§match",
+              "lines": {
+                "added": 0,
+                "removed": 17
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§match",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§matchingPolicies",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§months",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§projectRoots",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§projects",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§projects",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§regions",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§regions",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§relativePath",
+              "lines": {
+                "added": 0,
+                "removed": 39
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§relativePath",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§relativePath",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§relativePath",
+              "lines": {
+                "added": 0,
+                "removed": 31
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§relativePath",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§root",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§root",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§root",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§root",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§root",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§searchable",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§sectionDefs",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§subFolderFilesMap",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§subFolderPart",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§subFolderPath",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§subFolders",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§tickets",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§uri",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§uri",
+              "lines": {
+                "added": 0,
+                "removed": 36
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§uri",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§uri",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§years",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§relPath",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#File Analysis§ignoredDirectories",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorDefinitionData",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorDefinitionItem",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorFileData",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorFolderData",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ContributorFolderItem",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-27T11:00:00.434820784Z"
+  },
+  "summary": "Added ignore patterns to VS Code extension matching repo binary behavior - skips dot-prefixed directories and common dependency/build folders",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/221"
+  }
+}

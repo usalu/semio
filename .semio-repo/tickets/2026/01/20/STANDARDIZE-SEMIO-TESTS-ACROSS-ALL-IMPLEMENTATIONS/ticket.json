@@ -5,7 +5,7 @@
       "prompt": "Refactor all semio tests across TypeScript, Python, C#, Go, and Rust to be identical. Use semio.ts tests as blueprint. Remove all other tests. Tests to implement: Roundtrip/Json/Metabolism, Roundtrip/Zip/Metabolism, Flatten/Nakagin Capsule Tower (and variants), Flatten/Capsule Dream, Diff/Metabolism, Validation/Invalid, Validation/Metabolism. Make all tests pass across all implementations.",
       "llm": "claude-opus-4",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T19:03:40.784877372Z",
       "commit": "e3f8dfdfb8e2879a9e31963e8c7a69c7a16782aa"
     },
@@ -13,7 +13,7 @@
       "prompt": "Continue fixing all test implementations to ensure they pass. Fix Go compilation issues, Python flatten/zip issues, TypeScript validation issue, and verify C#/Rust tests work.",
       "llm": "claude-opus-4",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T19:20:51.421531135Z",
       "commit": "e3f8dfdfb8e2879a9e31963e8c7a69c7a16782aa"
     }

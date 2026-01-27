@@ -5,7 +5,7 @@
       "prompt": "Refactor CLI output",
       "llm": "gemini-3-pro",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-24T14:59:14.782477898Z",
       "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5",
       "diff": {

@@ -7656,24 +7656,24 @@ defaultConstraints = [
 
 // #region Validation serialization
 
-export interface ValidationFix {
+export interface SerializableValidationFix {
   title: string;
   diff: KitDiff;
 }
 
-export interface Problem {
+export interface SerializableProblem {
   constraintId: string;
   message: string;
   entityKind: string;
   entityGuid: string;
-  fixes: ValidationFix[];
+  fixes: SerializableValidationFix[];
 }
 
-export interface ValidationResult {
-  problems: Problem[];
+export interface SerializableValidationResult {
+  problems: SerializableProblem[];
 }
 
-export const toValidationResult = (result: ValidationResult): ValidationResult => ({
+export const toValidationResult = (result: ValidationResult): SerializableValidationResult => ({
   problems: result.problems.map((problem) => ({
     constraintId: problem.constraintId,
     message: problem.message,
@@ -7693,7 +7693,7 @@ export const serializeValidationResult = (result: ValidationResult): string => {
   return JSON.stringify(serializable, null, 2);
 };
 
-export const parseValidationResult = (json: string): ValidationResult => JSON.parse(json);
+export const parseValidationResult = (json: string): SerializableValidationResult => JSON.parse(json);
 
 const isGuid = (s: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
@@ -7713,15 +7713,17 @@ export const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolea
 };
 
 export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResult): boolean => {
-  if (a.problems.length !== b.problems.length) return false;
-  const sortProblems = (problems: Problem[]) =>
+  const serializableA = toValidationResult(a);
+  const serializableB = toValidationResult(b);
+  if (serializableA.problems.length !== serializableB.problems.length) return false;
+  const sortProblems = (problems: SerializableProblem[]) =>
     [...problems].sort((x, y) => {
       const constraintCompare = x.constraintId.localeCompare(y.constraintId);
       if (constraintCompare !== 0) return constraintCompare;
       return x.entityGuid.localeCompare(y.entityGuid);
     });
-  const sortedA = sortProblems(a.problems);
-  const sortedB = sortProblems(b.problems);
+  const sortedA = sortProblems(serializableA.problems);
+  const sortedB = sortProblems(serializableB.problems);
   return sortedA.every((problemA, i) => {
     const problemB = sortedB[i];
     if (problemA.constraintId !== problemB.constraintId || problemA.message !== problemB.message || problemA.entityKind !== problemB.entityKind || problemA.entityGuid !== problemB.entityGuid) return false;

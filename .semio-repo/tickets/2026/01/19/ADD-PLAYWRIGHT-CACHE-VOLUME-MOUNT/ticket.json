@@ -5,7 +5,7 @@
       "prompt": "Make sure playwright is cached same as node modules in devcontainer.json",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T23:32:35.779626245Z",
       "commit": "be1df4ab0cd1ec53cbceb8dabeca66cc6a01a1a5"
     },
@@ -13,7 +13,7 @@
       "prompt": "Continue previous ticket: playwright is not properly cached. After reload window  installs again.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T12:14:02.422832681Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     }

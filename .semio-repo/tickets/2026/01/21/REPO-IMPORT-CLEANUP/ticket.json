@@ -5,7 +5,7 @@
       "prompt": "Ensure go/repo/main.go includes import for github.com/usalu/semio/go/repo only once",
       "llm": "gpt-5-2-codex",
       "ui": "cursor",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-21T19:28:47.250837461Z",
       "commit": "4fba9e1af7edf642c1644a7f9fe4f505e5b6328e"
     }

@@ -1,0 +1,21 @@
+{
+    "title": "r26.02",
+    "description": "All features that exist now but without bugs.",
+    "status": "open",
+    "dates": {
+        "due": "2026-02-28"
+    },
+    "github": {
+        "milestone": "https://github.com/usalu/semio/milestone/9"
+    },
+    "iterations": [
+        {
+            "prompt": "Prepare and finalize the r26.02 release, ensuring all features, documentation, and tests are complete and up to date for deployment.",
+            "llm": "opus-4-5",
+            "ui": "claude-code",
+            "author": "usalu",
+            "date": "2026-01-27T11:11:27.820861688Z",
+            "commit": "50fee306d5950f68a11bcce4c811399db543ae80",
+        }
+    ]
+}

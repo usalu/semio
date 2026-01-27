@@ -5,7 +5,7 @@
       "prompt": "The repo binary creates tickets in the wrong place (go/repo/tickets instead of tickets/). Also, the documentation in AGENTS.md for using the repo binary is outdated and needs to include every flag with the right syntax.",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T10:34:57.633312917Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -13,7 +13,7 @@
       "prompt": "UI values should not be in caps. The llm and ui should be accepted as flags like --opus-4-5 --claude-code instead of positional arguments.",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T10:40:20.236253703Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -21,7 +21,7 @@
       "prompt": "Add explicit flag syntax: --title, --prompt, --llm, --ui with string values. Ensure MCP server works.",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T10:46:14.366521215Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -29,7 +29,7 @@
       "prompt": "Support both positional args and explicit flags for ticket open command",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T10:57:29.383044028Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -37,7 +37,7 @@
       "prompt": "Add gpt-5-2-codex to list of valid LLMs",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T10:59:27.521727608Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -45,7 +45,7 @@
       "prompt": "Add gpt-5-2-codex everywhere - GraphQL, VSCode, etc.",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:02:36.150449954Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -53,7 +53,7 @@
       "prompt": "Add optional --title flag to ticket reopen and close commands to allow renaming tickets and updating GitHub issue titles",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:04:34.761102025Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -61,7 +61,7 @@
       "prompt": "Refactor GitHub integration: prepend '# 🤖 Prompt' to ticket descriptions and reopen comments, prepend '# 🔍 Summary' to summaries",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:12:21.27121224Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -69,7 +69,7 @@
       "prompt": "The github integration of tickets should be changed/refactored/extended:\n- Prepend # 🤖 Prompt to the ticket description on ticket create\n- When it is reopened, create a comment with # 🤖 Prompt same as on create\n- Prepend #🔍 Summary to the summary of the ticket on ticket close",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:43:05.355379853Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -77,7 +77,7 @@
       "prompt": "Make sure ticket metrics use full file line counts for added/deleted files and diff added/removed for modified files, per summary format example.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:47:11.142023717Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -85,7 +85,7 @@
       "prompt": "Exclude ticket workspace files (plan/log/summary) from ticket close file lists and extend tests.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:55:34.016216142Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -93,7 +93,7 @@
       "prompt": "Investigate missing prompt header on reopen and missing summary/metrics header plus ticket files still included in GitHub close comment; fix and update docs/tests.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T12:01:19.691136541Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -101,7 +101,7 @@
       "prompt": "Automatically link every ticket GitHub issue with the project https://github.com/users/usalu/projects/2.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T13:05:23.692793339Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     }

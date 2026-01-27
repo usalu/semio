@@ -5,7 +5,7 @@
       "prompt": "The vscode extension is outdated and should be refactored. It should not fetch all tree information at once. Make sure that the codebase tree first fetches bundles, then incrementally fetches folders when expanded, then files, then sections, then definitions. Always when the tree is unfolded fetch all the children of the current node. Further no codebase, ticket, policy or contributor is loading.",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-25T23:12:37.449991791Z",
       "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5",
       "diff": {
@@ -809,7 +809,7 @@
       "prompt": "Fixed runRepoCommandJson to also use --json flag and parse JSONL output",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-25T23:31:33.794664055Z",
       "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5",
       "diff": {
@@ -1726,7 +1726,7 @@
       "prompt": "Continue the ticket to fix the vscode extension: Sections section not showing; repo section list fails with graphql Position start/end selection error.",
       "llm": "gpt-5-2-codex",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-26T00:08:04.513120383Z",
       "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5",
       "diff": {
@@ -10325,7 +10325,7 @@
       "prompt": "Still no sections found; repo section list still errors about Position start/end selection.",
       "llm": "gpt-5-2-codex",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-26T08:42:06.143425557Z",
       "commit": "eeb8272d91c5437d9c455971d216c6c538261f87",
       "diff": {

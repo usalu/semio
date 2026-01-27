@@ -4,7 +4,7 @@
     {
       "prompt": "Fix @types/vscode version being greater than engines.vscode version causing vsce package to fail",
       "llm": "opus-4-5",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T14:50:04.616073089Z",
       "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
     }

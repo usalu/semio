@@ -1,0 +1,19 @@
+{
+  "title": "Derive Contributions From Tickets",
+  "iterations": [
+    {
+      "prompt": "The repo binary should derive contributions (commits, tickets, bundles, folders, files, sections, definitions) from the tickets. The vscode extension is outdated. The contributor tree should be lazy loaded and show a specific hierarchy.",
+      "plan": "plan.md",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": "usalu",
+      "date": "2026-01-26T22:45:43.732063399Z",
+      "commit": "50fee306d5950f68a11bcce4c811399db543ae80"
+    }
+  ],
+  "status": "open",
+  "dates": {},
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/220"
+  }
+}

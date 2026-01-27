@@ -5,7 +5,7 @@
       "prompt": "Fix diagnostics, autofixes, and tree views in VS Code extension, aligning with repo binary as source of truth.",
       "llm": "gemini-3-pro",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T10:27:08.108949344Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -13,7 +13,7 @@
       "prompt": "Continue fixing VS Code extension issues: extension not showing up despite post-attach command success logs.",
       "llm": "gemini-3-flash",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T14:42:25.847902888Z",
       "commit": "65c71dfafa028a2d86c6999d3ac4426a3924e4df"
     },
@@ -21,7 +21,7 @@
       "prompt": "Infinite loading in VS Code tree views. Error: 'There is no data provider registered that can provide view data.'",
       "llm": "gemini-3-flash",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T15:05:12.658184643Z",
       "commit": "65c71dfafa028a2d86c6999d3ac4426a3924e4df"
     }

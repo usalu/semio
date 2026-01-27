@@ -5,7 +5,7 @@
       "prompt": "Fix three issues: 1) Remove bundle: prefix in vscode tree view. 2) Sort the codebase tree. 3) Fix file unfolding - CLI expects --file flag not positional argument.",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-25T23:40:50.39666124Z",
       "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5",
       "diff": {

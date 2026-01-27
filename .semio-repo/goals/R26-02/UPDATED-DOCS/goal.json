@@ -1,0 +1,21 @@
+{
+    "title": "Updated Docs",
+    "description": "All user docs (js/semio/docs/**.md) and dev docs (README.md, AGENTS.md) need to be up to date with the latest specs and implementation.",
+    "status": "open",
+    "dates": {
+        "due": "2026-02-28"
+    },
+    "github": {
+        "milestone": "https://github.com/usalu/semio/milestone/8"
+    },
+    "iterations": [
+        {
+            "prompt": "Update all user and developer documentation to reflect the latest specifications and implementations. Ensure clarity, accuracy, and completeness in all docs located in js/semio/docs/**.md as well as README.md and AGENTS.md.",
+            "llm": "opus-4-5",
+            "ui": "claude-code",
+            "author": "usalu",
+            "date": "2026-01-27T11:11:27.820861688Z",
+            "commit": "50fee306d5950f68a11bcce4c811399db543ae80"
+        }
+    ]
+}

@@ -5,7 +5,7 @@
       "prompt": "Ensure repo binary and vscode extension properly ignore gitignored files and .semio-repo folder. Currently .venv files are being analyzed and .semio-repo files appear in tree.",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-25T23:53:15.129004224Z",
       "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5",
       "diff": {
@@ -9901,7 +9901,7 @@
       "prompt": "This should not happen on vscode level. vscode has no semio-repo business logic. Remove all business logic from the extension; handle ignore rules in repo binary only.",
       "llm": "gpt-5-2-codex",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-26T00:22:14.74353206Z",
       "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5",
       "diff": {
@@ -19532,7 +19532,7 @@
       "prompt": "Not all gitignored files are ignored by the repo binary (e.g. go/server/server). Fix repo ignore handling so gitignored paths are fully excluded.",
       "llm": "gpt-5-2-codex",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-26T09:09:48.243682899Z",
       "commit": "eeb8272d91c5437d9c455971d216c6c538261f87",
       "diff": {

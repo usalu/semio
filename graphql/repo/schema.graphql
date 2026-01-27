@@ -249,42 +249,38 @@ type ContributorIcons {
 }
 
 type ContributorContributions {
-  bundles: [ContributionBundle!]!
-  folders: [ContributionFolder!]!
-  files: [ContributionFile!]!
-  sections: [ContributionSection!]!
-  definitions: [ContributionDefinition!]!
+  commits: [Commit!]!
+  tickets: [Ticket!]!
+  bundles: [ContributorBundle!]!
 }
 
-type ContributionBundle {
-  bundle: Bundle!
-  metrics: CountMetrics!
+type ContributorBundle {
+    name: String!
+    lines: LineMetrics!
+    folders: [ContributorFolder!]!
 }
 
-type ContributionFolder {
-  folder: Folder!
-  metrics: CountMetrics!
+type ContributorFolder {
+    name: String!
+    lines: LineMetrics!
+    files: [ContributorFile!]!
 }
 
-type ContributionFile {
-  file: File!
-  metrics: LineMetrics!
+type ContributorFile {
+    name: String!
+    lines: LineMetrics!
+    sections: [ContributorSection!]!
 }
 
-type ContributionSection {
-  section: Section!
-  metrics: LineMetrics!
+type ContributorSection {
+    name: String!
+    lines: LineMetrics!
+    definitions: [ContributorDefinition!]!
 }
 
-type ContributionDefinition {
-  definition: Definition!
-  metrics: LineMetrics!
-}
-
-type CountMetrics {
-  added: Int!
-  updated: Int!
-  removed: Int!
+type ContributorDefinition {
+    name: String!
+    lines: LineMetrics!
 }
 
 type LineMetrics {

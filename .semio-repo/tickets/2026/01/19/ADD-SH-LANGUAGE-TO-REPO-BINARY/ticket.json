@@ -4,7 +4,7 @@
     {
       "prompt": "Add .sh Language to repo binary.",
       "llm": "gpt-5-mini",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T22:51:46.672445359Z",
       "commit": "be1df4ab0cd1ec53cbceb8dabeca66cc6a01a1a5"
     }

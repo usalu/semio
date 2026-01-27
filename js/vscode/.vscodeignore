@@ -29,6 +29,7 @@ reports/**
 plans/**
 tickets/**
 *.md
+!LICENSE.md
 *.json
 !package.json
 !out/**

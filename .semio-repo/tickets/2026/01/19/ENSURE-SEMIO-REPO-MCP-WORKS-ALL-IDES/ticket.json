@@ -4,7 +4,7 @@
     {
       "prompt": "Make sure that semio-repo mcp tool is working in vscode, windsurf, claude code, codex and cursor. Change/refactor/extend whatever is necessary to get it working.",
       "llm": "opus-4-5",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T17:37:54.640812755Z",
       "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
     }

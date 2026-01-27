@@ -5,7 +5,7 @@
       "prompt": "Refactor ticket title validation, author resolution, plan handling, and ignore logic.",
       "llm": "gemini-3-pro",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-26T09:58:35.409671604Z",
       "commit": "eeb8272d91c5437d9c455971d216c6c538261f87"
     }

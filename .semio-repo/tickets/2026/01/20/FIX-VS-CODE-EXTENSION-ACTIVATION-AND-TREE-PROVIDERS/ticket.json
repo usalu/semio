@@ -5,7 +5,7 @@
       "prompt": "Fix infinite loading and unregistered provider errors in VS Code extension by ensuring early registration, robust GraphQL fetching, and correct binary path resolution.",
       "llm": "gemini-3-flash",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T15:29:49.303494897Z",
       "commit": "65c71dfafa028a2d86c6999d3ac4426a3924e4df"
     },
@@ -13,7 +13,7 @@
       "prompt": "Fix vscode extension that shows 'No sections found' for all kind of files. Make sure it works and is tested for all supported languages.",
       "llm": "opus-4-5",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T18:53:37.761661647Z",
       "commit": "e3f8dfdfb8e2879a9e31963e8c7a69c7a16782aa"
     }

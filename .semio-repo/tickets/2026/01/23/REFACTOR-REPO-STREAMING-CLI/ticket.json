@@ -5,7 +5,7 @@
       "prompt": "Fix streaming registry wiring for CLI, MCP, and VS Code adapters, plus update docs.",
       "llm": "gpt-5-2-codex",
       "ui": "cursor",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-23T14:43:59.038615788Z",
       "commit": "f32fb38f994a3d9b9183172112063a202a53fd22"
     }

@@ -5,7 +5,7 @@
       "prompt": "Fix devcontainer configs to persist Claude Code and Codex authentication and chat history across rebuilds",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T14:42:27.094006783Z",
       "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
     },
@@ -13,7 +13,7 @@
       "prompt": "Also need to persist Windsurf configs across devcontainer rebuilds",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T16:54:33.466295888Z",
       "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
     },
@@ -21,7 +21,7 @@
       "prompt": "Continue persistence across devcontainer rebuilds for Codex and Claude Code auth and chat history.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T14:39:40.635710719Z",
       "commit": "65c71dfafa028a2d86c6999d3ac4426a3924e4df"
     }

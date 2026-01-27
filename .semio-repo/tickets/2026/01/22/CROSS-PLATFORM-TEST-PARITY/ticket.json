@@ -5,7 +5,7 @@
       "prompt": "Make all semio tests pass identically across TypeScript, Python, C#, Go, and Rust implementations. Fix any remaining issues including the Zip SQLite foreign key issue and implement Rust tests.",
       "llm": "claude-opus-4-5",
       "ui": "copilot-chat",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-22T12:50:19.739497906Z",
       "commit": "f32fb38f994a3d9b9183172112063a202a53fd22"
     }

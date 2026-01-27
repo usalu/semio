@@ -4,7 +4,7 @@
     {
       "prompt": "The navbar in sketchpad is not showing the three toggles: left panel, middle panel, and right panel.",
       "llm": "gemini-3-pro",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-19T22:39:38.330513856Z",
       "commit": "be1df4ab0cd1ec53cbceb8dabeca66cc6a01a1a5"
     }

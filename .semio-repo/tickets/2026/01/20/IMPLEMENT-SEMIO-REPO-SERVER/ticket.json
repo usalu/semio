@@ -5,7 +5,7 @@
       "prompt": "IMPLEMENT the semio repo server in go. /workspaces/semio/plans/semio-dev-server-plan.md",
       "llm": "gpt-5-mini",
       "ui": "cursor",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T13:14:14.835238738Z",
       "commit": "65c71dfafa028a2d86c6999d3ac4426a3924e4df"
     },
@@ -13,7 +13,7 @@
       "prompt": "User follow-up message received; logging only.",
       "llm": "gpt-5-mini",
       "ui": "cursor",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T13:43:47.278465753Z",
       "commit": "65c71dfafa028a2d86c6999d3ac4426a3924e4df"
     }

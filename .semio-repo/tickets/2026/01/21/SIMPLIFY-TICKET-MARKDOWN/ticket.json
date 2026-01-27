@@ -5,7 +5,7 @@
       "prompt": "Simplify the ticket system to use a single ticket.md file instead of log.md and summary.md. Update all related code and dev docs.",
       "llm": "gpt-5-2",
       "ui": "codex",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-21T08:36:08.728762913Z",
       "commit": "e3f8dfdfb8e2879a9e31963e8c7a69c7a16782aa"
     }

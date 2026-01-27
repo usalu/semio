@@ -17,6 +17,54 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+The repo mcp should not use the json api but the same output format as the cli.
+
+Keep on with zero touch devcontainer ticket.
+Currently only in vscode the semio-repo extension is installed. It should also work for cursor, windsurf and antigravity.
+
+The policies are fetched but no violation kinds appear as children in the tree item.
+
+All tests for tickets are not cleaning up the tickets afterwards.
+
+The repo binary should derive contributions (commits, tickets, bundles, folders, files, sections, definitions) from the tickets. 
+
+The vscode extension is outdated. The contributor tree should be lazy loaded. Instead it should show this contributor tree item:
+├─ contributors
+│ └─ NAME - GITHUBUSERNAME
+│ │ ├─ emails
+│ │ │ └─ EMAIL # open the email in the default mail client
+│ │ ├─ links
+│ │ │ └─ KIND # Navigate to link
+│ │ └─ contributions
+│ │ │ ├─ commits
+│ │ │ │ └─ Message - SHA # Navigate to commit
+│ │ │ ├─ tickets
+│ │ │ │ └─ YEAR
+│ │ │ │ │ └─ MONTH
+│ │ │ │ │ │ └─ DAY
+│ │ │ │ │ │ │ └─ SLUG # Navigate to ticket
+│ │ │ ├─ bundles
+│ │ │ │ │ └─ BUNDLENAME
+│ │ │ │ │ │ └─ FOLDERNAME # Navigate to folder
+│ │ │ │ │ │ │ └─ FILENAME # Navigate to file
+│ │ │ │ │ │ │ │ └─ SECTIONNAME # Navigate to section
+│ │ │ │ │ │ │ │ │ └─ DEFINITIONNAME # Navigate to definition 
+
+Make sure the ticket cli api supports all kinds of calls
+All ui and llm values should be both passable as positional arguments such as `gemini-3-pro copilot-chat`, as flags such as `--gemini-3-pro --copilot-chat` or as named values such as `--llm "gemini-3-pro" --ui "copilot-chat"`. In general support mixtures of positional, flags and named values.
+e.g.
+```bash
+go/repo/repo ticket open "Integrate Global IDs in Graph" "The ticket mechanism should change in repo go file: When a plan is provided by the user, then move the original plan file (keep the file name) to the ticket folder and add the plan to the ticket.json. Dont create the plan_ITERATION.md files anymore. Everything else should be now part of ticket.md." --gemini-3-pro --copilot-chat
+```
+```bash
+go/repo/repo ticket open "Integrate Global IDs in Graph" --prompt "The ticket mechanism should change in repo go file: When a plan is provided by the user, then move the original plan file (keep the file name) to the ticket folder and add the plan to the ticket.json. Dont create the plan_ITERATION.md files anymore. Everything else should be now part of ticket.md." --llm gemini-3-pro --copilot-chat
+```
+
+The ticket mechanism should be extended:
+- Introduce goals (in github they are milestones). A goal has a title and a description. Every ticket can optionally be assigned to a goal. Synchronize goals with github milestones (create, edit, close, delete)
+- Every ticket can have optional a parent ticket (in github it becomes a subissue).
+- Introduce ticket delete. Delete also the github issue.
+
 Here a list of changes to made to repo go file and vscode extension file along with the tests for each of them:
 
 Create ticket shouldnt throw an error on a title like this: "Refactor Resource ID System to Bundle-Based Hierarchy". Only throw if the title is equal to the lower or uppercase slug of it: "refactor-resource-id-system-to-bundle-based-hierarchy" or "REFACTOR-RESOURCE-ID-SYSTEM-TO-BUNDLE-BASED-HIERARCHY". Extend test. Make sure that all tests cleanup the created tickets and that no github issue is created.

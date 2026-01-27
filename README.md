@@ -1147,7 +1147,7 @@ Range selections always request start/end line/column subfields so Position obje
 Section list queries fetch nested children alongside ranges so tree views can render full section hierarchies.
 Ticket listing reads from the active `.semio-repo/tickets` workspace and falls back to legacy root `tickets/` directories when needed.
 VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
-Devcontainer attach builds and installs the local extension automatically, keeping the workspace ready without manual steps.
+Devcontainer attach builds and installs the local extension automatically using IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity) and installs into every detected IDE so the extension appears regardless of which editor opened the terminal.
 VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.
 Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo/` so workflow state stays centralized and out of product bundles.
 Repo analyze only inspects considered files by honoring `.gitignore`, excluding `.semio-repo/`, and skipping `assets/repo/` fixtures.
@@ -1158,6 +1158,7 @@ Repo file/folder listing and diagnostics apply `.gitignore` patterns directly (i
 Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`) and editor servers (`~/.vscode-server`, `~/.windsurf-server`).
 Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
 Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
+Post-attach runs the local extension installer through IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity) and installs into all detected editors to avoid mismatches between the terminal and editor session.
 
 ## 🛰️ Repo Dev Server [↑](#-bundles-)
 

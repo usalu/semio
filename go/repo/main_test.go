@@ -1261,7 +1261,7 @@ func TestTicketListCommand(t *testing.T) {
 }
 
 func TestTicketOpenNoticketKeyword(t *testing.T) {
-	result := ToolTicketOpen("Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true)
+	result := ToolTicketOpen("Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -1271,7 +1271,7 @@ func TestTicketOpenNoticketKeyword(t *testing.T) {
 }
 
 func TestTicketOpenContinueKeyword(t *testing.T) {
-	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true)
+	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "", "")
 	if first.Error != "" {
 		t.Fatalf("failed to seed ticket: %s", first.Error)
 	}
@@ -1279,7 +1279,14 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	if !ok || seed == nil {
 		t.Fatalf("expected seeded ticket data")
 	}
-	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true)
+	// Cleanup the created ticket after test
+	defer func() {
+		if seed != nil && seed.FolderPath != "" {
+			os.RemoveAll(seed.FolderPath)
+		}
+	}()
+
+	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "", "")
 	if second.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
 	}

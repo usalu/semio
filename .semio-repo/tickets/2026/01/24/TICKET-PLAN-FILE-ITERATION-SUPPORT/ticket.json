@@ -5,7 +5,7 @@
       "prompt": "Extend the ticket mechanism to support plan file iterations:\n1. When a plan is provided on ticket create, the original markdown file should be moved to the ticket folder as plan_1.md\n2. Reopen can also receive a plan and the markdown file should be moved to the ticket folder as plan_ITERATION.md (incrementing)\n3. Update folder structure to use plan_ITERATION.md naming convention",
       "llm": "opus-4-5",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-24T18:02:23.457735075Z",
       "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5",
       "diff": {

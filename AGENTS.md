@@ -1,6 +1,8 @@
 <!-- IMPORTANT -->
 
-ALWAYS open a ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/repo ticket open "<title>" "<prompt>" --<llm> --<ui>` when no mcp tool is available) for every task you are working on. The title MUST be titleized (e.g. "Some Title on Something") and NOT a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`. Available UIs are: `claude-code`, `cursor`, `copilot-chat`, `antigravity`, `codex`, `droid`. This creates a `tickets/YYYY/MM/DD/TICKETSLUG` folder along with `plan.md` and `ticket.md`. NEVER answer directly in the chat and ALWAYS just add the message to `ticket.md`. ALWAYS start by writing the plan into `plan.md` and NEVER send it as message. ALWAYS end by writing the summary into the `## Summary` section of `ticket.md` and NEVER send it as message. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG "<summary>" <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG "<prompt>" --<llm> --<ui>` when no mcp tool is available).
+ALWAYS work inside a ticket. Create a new ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/repo ticket open "<title>" "<prompt>" "<llm>" "<ui>" "<goal>" "<parent-ticket>"`). If the task is For larger tasks where the current task is only part of it, create a goal first with semio-repo mcp tool `goal_open` (or use `./go/repo/repo goal open "<title>" "<prompt>" "<due-date>" "<llm>" "<ui>"`).
+
+The title MUST be titleized (e.g. "Some Title on Something") and NOT a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`. Available UIs are: `claude-code`, `cursor`, `copilot-chat`, `antigravity`, `codex`, `droid`. This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md`. NEVER answer directly in the chat and ALWAYS document everything (plan, todos, changes, summary, etc) in `ticket.md`. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG "<summary>" <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG "<prompt>" --<llm> --<ui>` when no mcp tool is available).
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -54,6 +56,7 @@ Code analysis problems MUST include reason and solution text.
 ### Devcontainer
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
+Devcontainer post-attach MUST install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity via IDE IPC hook CLIs and apply installs to every detected editor.
 Playwright browser caches MUST use the workspace `node_modules` volume path so `npx playwright install` stays cached across reloads.
 Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
 Claude Code auth files MUST live in the persisted Claude volume and be linked into `$HOME`.
@@ -87,7 +90,9 @@ A ticket MUST store a summary when finished.
 
 A ticket MUST store semantic diffs for bundles, folders, files, sections, and definitions with line stats when finished.
 
-Ticket workspaces MUST store a single ticket.md that captures todos, changes, log entries, and the summary alongside plan.md.
+Ticket workspaces MUST store a single ticket.md that captures todos, changes, log entries, and the summary.
+Ticket workspaces MUST store the original plan file (keeping the filename) or plan.md if no plan was provided.
+The plan file content MUST NOT be duplicated in ticket.md.
 
 Tickets can be reopened to return to **open** status.
 
@@ -435,7 +440,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, JSON keys surface as sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
 - The Sections view resolves the active file's section tree with line ranges so navigation and section actions match the current editor content.
 - Ticket tooling treats temporary artifacts as part of the active ticket workspace.
-- Devcontainer setup installs the workspace VS Code extension automatically on attach without manual installation actions.
+- Devcontainer setup installs the workspace extension for VS Code, Cursor, Windsurf, and Antigravity on attach without manual installation actions, applying installs to every detected editor IPC hook CLI.
 
 # Monorepo
 
@@ -1645,35 +1650,18 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 ├── CLAUDE.md # Claude specific
 ├── go
 │ ├── go.work # Go workspace file
-│ ├── mcp # MCP server exposing repo tools to LLMs
-│ │ ├── go.mod
-│ │ └── main.go # MCP tool schema, argument validation, path validation, repo command handlers
 │ ├── server # Repo dev server
 │ │ ├── go.mod
 │ │ ├── go.sum
 │ │ └── main.go # Repo dev server (config, SQLite schema, event bus, diff ingestion, indexing, claims, warnings, HTTP API)
 │ └── repo # Go CLI binary
 │ ├── go.mod
-│ ├── cmd
-│ │ └── repo
-│ │ │ └── main.go # Repo CLI entrypoint
-│ ├── internal
-│ │ ├── adapters
-│ │ │ ├── cli # Cobra CLI adapter + renderers
-│ │ │ └── mcp # MCP adapter
-│ │ ├── core # Streaming engine + requests
-│ │ └── events # Streaming event schema
-│ ├── cmd_benchmark.go
-│ ├── cmd_preflight.go
-│ ├── cmd_update.go
-│ └── main.go # Repo domain and GraphQL schema
+│ └── main.go # Repo binary
 ├── .venv # Centralized Python virtual environment
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup
 ├── pyproject.toml # Python workspace setup
-├── repo.tsx # TypeScript fallback CLI (Ink + TypeScript)
-├── update.ts # All-in-one dependency update script (reads .github/dependabot.yml)
 ├── uv.lock # Python lock file
 ├── README.md # GFM dev docs
 
@@ -1697,7 +1685,7 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 
 ## 📄 .devcontainer/post-attach.sh
 
-Devcontainer post-attach script that builds and installs the local semio VS Code extension.
+Devcontainer post-attach script that builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs and applies installs to all detected IDEs.
 
 ## 📁 js/
 

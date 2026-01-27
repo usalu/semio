@@ -5,7 +5,7 @@
       "prompt": "Continue ticket: update GitHub integration to add # 🤖 Prompt heading on reopen comments and # 🔍 Summary on close summaries; update README.md and AGENTS.md accordingly.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:17:35.78198615Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -13,7 +13,7 @@
       "prompt": "User pinged after ticket close; reopened to continue conversation.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:22:58.63261656Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     },
@@ -21,7 +21,7 @@
       "prompt": "User follow-up message received; reopening ticket to continue.",
       "llm": "gpt-5-2",
       "ui": "claude-code",
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "usalu",
       "date": "2026-01-20T11:26:04.62645279Z",
       "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
     }

@@ -34,7 +34,7 @@
         {
           "id": "semio-repo",
           "title": "semio-repo",
-          "icon": "../../assets/icons/semio_codeicon.svg"
+          "icon": "./semio_codeicon.svg"
         }
       ]
     },
@@ -289,6 +289,11 @@
         "title": "Open Ticket"
       },
       {
+        "command": "semio.openTicketPlan",
+        "title": "Open Plan",
+        "icon": "$(book)"
+      },
+      {
         "command": "semio.checkPolicy",
         "title": "Check Policy"
       },
@@ -385,6 +390,11 @@
         }
       ],
       "view/item/context": [
+        {
+          "command": "semio.openTicketPlan",
+          "when": "view == semio.tickets && (viewItem == ticketOpen || viewItem == ticketClosed)",
+          "group": "inline"
+        },
         {
           "command": "semio.ticketClose",
           "when": "view == semio.tickets && viewItem == ticketOpen",
