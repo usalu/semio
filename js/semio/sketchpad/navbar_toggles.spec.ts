@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("Navbar Panel Toggles", () => {
   test.beforeEach(async ({ page }) => {
     page.on("console", (msg) => console.log(`[BROWSER] ${msg.text()}`));
-    await page.goto("http://localhost:3000");
+    await page.goto("http://localhost:5173");
     await page.waitForLoadState("networkidle");
   });
 
@@ -19,7 +19,7 @@ test.describe("Navbar Panel Toggles", () => {
 
   test("should show all toggles in Design app", async ({ page }) => {
     // Navigate to a design
-    await page.goto("http://localhost:3000/kits/00000000-0000-0000-0000-000000000000/designs/00000000-0000-0000-0000-000000000000");
+    await page.goto("http://localhost:5173/kits/00000000-0000-0000-0000-000000000000/designs/00000000-0000-0000-0000-000000000000");
     await page.waitForLoadState("networkidle");
 
     // Check for toggles

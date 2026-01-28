@@ -69,12 +69,28 @@ import {
   TriangleAlertIcon,
   TutorialIcon,
 } from "@semio/assets";
-import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance } from "@xyflow/react";
-import { applyNodeChanges, Background, BackgroundVariant, BaseEdge, ConnectionMode, getBezierPath, Handle, MiniMap, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow, ViewportPortal } from "@xyflow/react";
+import type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, OnSelectionChangeParams, ReactFlowInstance } from "@xyflow/react";
+import {
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  ConnectionMode,
+  getBezierPath,
+  Handle,
+  MiniMap,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  SelectionMode,
+  useInternalNode,
+  useReactFlow,
+  ViewportPortal,
+} from "@xyflow/react";
 import "@xyflow/react/dist/style.css";
 import { cva, type VariantProps } from "class-variance-authority";
 import { Command as CommandPrimitive } from "cmdk";
-import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
+import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
 import * as dagre from "dagre";
 import * as React from "react";
 import { createPortal } from "react-dom";
@@ -1134,7 +1150,7 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 // #region ActionGroup
 
 const actionGroupItemVariants = cva(
-  "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:!size-[tiny] [&_svg]:!max-w-tiny [&_svg]:!max-h-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single",
+  "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single",
   {
     variants: {
       level: {
@@ -2574,10 +2590,10 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
     return (
       <ToggleGroup
         showLabel={showLabel}
-        kind="single"
-        value={value}
-        defaultValue={pressed === undefined && defaultPressed ? "on" : undefined}
-        onValueChange={(val: string) => onPressedChange?.(val === "on")}
+        kind="multiple"
+        value={value ? [value] : []}
+        defaultValue={pressed === undefined && defaultPressed ? ["on"] : []}
+        onValueChange={(val: string[]) => onPressedChange?.(val.includes("on"))}
         className={className}
         items={[
           {
@@ -4643,7 +4659,7 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 
 // #region Diagram
 
-export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow, ViewportPortal };
+export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow, ViewportPortal };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
 export const DIAGRAM_UNIT = 48;
@@ -4707,6 +4723,15 @@ export const defaultDiagramForceConfig: DiagramForceConfig = {
   updateIntervalMs: 50,
 };
 
+interface ForceNode extends SimulationNodeDatum {
+  id: string;
+  data: any;
+}
+
+interface ForceLink extends SimulationLinkDatum<ForceNode> {
+  id: string;
+}
+
 export interface DiagramProps {
   nodeTypes: NodeTypes;
   edgeTypes?: EdgeTypes;
@@ -4761,6 +4786,12 @@ export interface DiagramProps {
   miniMapNodeComponent?: any;
   focusedItemId?: string;
   onFocusComplete?: () => void;
+  forceConfig?: Partial<DiagramForceConfig>;
+  selectionMode?: SelectionMode;
+  panOnScroll?: boolean;
+  proOptions?: { hideAttribution: boolean };
+  onSelectionChange?: (selection: OnSelectionChangeParams) => void;
+  defaultViewport?: { x: number; y: number; zoom: number };
 }
 
 const DiagramInner: React.FC<DiagramProps> = ({
@@ -4779,9 +4810,9 @@ const DiagramInner: React.FC<DiagramProps> = ({
   onNodeDoubleClick,
   onNodeMouseEnter,
   onNodeMouseLeave,
-  onNodeDragStart,
-  onNodeDrag,
-  onNodeDragStop,
+  onNodeDragStart: onNodeDragStartProp,
+  onNodeDrag: onNodeDragProp,
+  onNodeDragStop: onNodeDragStopProp,
   onEdgeClick,
   onEdgeMouseEnter,
   onEdgeMouseLeave,
@@ -4813,7 +4844,16 @@ const DiagramInner: React.FC<DiagramProps> = ({
   miniMapNodeComponent,
   focusedItemId,
   onFocusComplete,
+  forceConfig: forceConfigProp,
+  selectionMode = SelectionMode.Partial,
+  panOnScroll = false,
+  proOptions = { hideAttribution: true },
+  onSelectionChange,
+  defaultViewport,
 }) => {
+  const forceConfig = useMemo(() => ({ ...defaultDiagramForceConfig, ...forceConfigProp }), [forceConfigProp]);
+  const simulationRef = React.useRef<Simulation<any, any> | null>(null);
+  const draggingNodeRef = React.useRef<string | null>(null);
   const isControlled = controlledNodes !== undefined && controlledEdges !== undefined;
 
   const [internalNodes, setInternalNodes] = React.useState<Node[]>(initialNodes);
@@ -4863,6 +4903,160 @@ const DiagramInner: React.FC<DiagramProps> = ({
     },
     [reactFlowInstanceRef, onInitProp],
   );
+
+  const handleNodeDragStart = React.useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      draggingNodeRef.current = node.id;
+      if (forceConfig.enabled && simulationRef.current) {
+        const currentPositions = new Map(finalNodes.map((n) => [n.id, n.position]));
+        for (const simNode of simulationRef.current.nodes()) {
+          const pos = currentPositions.get(simNode.id);
+          if (pos) {
+            simNode.x = pos.x;
+            simNode.y = pos.y;
+          }
+        }
+        const simNode = simulationRef.current.nodes().find((n) => n.id === node.id);
+        if (simNode) {
+          simNode.fx = node.position.x;
+          simNode.fy = node.position.y;
+          simulationRef.current.alphaTarget(0.3).restart();
+        }
+      }
+      onNodeDragStartProp?.(event, node);
+    },
+    [forceConfig.enabled, finalNodes, onNodeDragStartProp],
+  );
+
+  const handleNodeDrag = React.useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      if (draggingNodeRef.current !== node.id) return;
+      if (forceConfig.enabled && simulationRef.current) {
+        const selectedNodes = finalNodes.filter((n) => n.selected);
+        if (selectedNodes.length > 1 && node.selected) {
+          const currentPositions = new Map(finalNodes.map((n) => [n.id, n.position]));
+          for (const simNode of simulationRef.current.nodes()) {
+            const pos = currentPositions.get(simNode.id);
+            if (pos && selectedNodes.find((sn) => sn.id === simNode.id)) {
+              simNode.fx = pos.x;
+              simNode.fy = pos.y;
+            }
+          }
+        } else {
+          const simNode = simulationRef.current.nodes().find((n) => n.id === node.id);
+          if (simNode) {
+            simNode.fx = node.position.x;
+            simNode.fy = node.position.y;
+          }
+        }
+      }
+      onNodeDragProp?.(event, node);
+    },
+    [forceConfig.enabled, finalNodes, onNodeDragProp],
+  );
+
+  const handleNodeDragStop = React.useCallback(
+    (event: React.MouseEvent, node: Node) => {
+      if (forceConfig.enabled && simulationRef.current) {
+        simulationRef.current.alphaTarget(0);
+        for (const simNode of simulationRef.current.nodes()) {
+          simNode.fx = null;
+          simNode.fy = null;
+        }
+      }
+      draggingNodeRef.current = null;
+      onNodeDragStopProp?.(event, node);
+    },
+    [forceConfig.enabled, onNodeDragStopProp],
+  );
+
+  React.useEffect(() => {
+    if (!forceConfig.enabled || finalNodes.length === 0) {
+      simulationRef.current = null;
+      return;
+    }
+
+    const nodesCopy: ForceNode[] = finalNodes.map((n) => ({
+      id: n.id,
+      x: n.position.x,
+      y: n.position.y,
+      data: n.data,
+    }));
+
+    const linksCopy: ForceLink[] = finalEdges.map((e) => ({
+      id: e.id,
+      source: e.source,
+      target: e.target,
+    }));
+
+    const simulation = forceSimulation<ForceNode, ForceLink>(nodesCopy)
+      .force("charge", forceManyBody().strength(forceConfig.chargeStrength ?? -100))
+      .force(
+        "link",
+        forceLink<ForceNode, ForceLink>(linksCopy)
+          .id((d) => d.id)
+          .distance(forceConfig.linkDistance ?? 100),
+      )
+      .force("collide", forceCollide().radius(forceConfig.collideRadius ?? 50))
+      .force("x", forceX(0).strength(forceConfig.centerStrength ?? 0.1))
+      .force("y", forceY(0).strength(forceConfig.centerStrength ?? 0.1))
+      .stop();
+
+    // Run simulation synchronously to completion once
+    const numTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
+    for (let i = 0; i < numTicks; i++) {
+      simulation.tick();
+    }
+
+    // Set final positions once
+    const positionedNodes = finalNodes.map((node) => {
+      const simNode = simulation.nodes().find((n) => n.id === node.id);
+      return {
+        ...node,
+        position: { x: simNode?.x ?? 0, y: simNode?.y ?? 0 },
+      };
+    });
+
+    if (!isControlled) {
+      setInternalNodes(positionedNodes);
+    } else if (onNodesChangeProp) {
+      onNodesChangeProp(positionedNodes);
+    }
+
+    simulation.on("tick", () => {
+      if (!isControlled) {
+        setInternalNodes((nds) =>
+          nds.map((node) => {
+            const simNode = simulation.nodes().find((n) => n.id === node.id);
+            if (simNode) {
+              return {
+                ...node,
+                position: { x: simNode.x ?? 0, y: simNode.y ?? 0 },
+              };
+            }
+            return node;
+          }),
+        );
+      } else if (onNodesChangeProp) {
+        onNodesChangeProp(
+          simulation.nodes().map((n) => {
+            const original = finalNodes.find((fn) => fn.id === n.id)!;
+            return {
+              ...original,
+              position: { x: n.x ?? 0, y: n.y ?? 0 },
+            };
+          }),
+        );
+      }
+    });
+
+    simulationRef.current = simulation;
+
+    return () => {
+      simulation.stop();
+      simulationRef.current = null;
+    };
+  }, [forceConfig.enabled, forceConfig.chargeStrength, forceConfig.linkDistance, forceConfig.collideRadius, forceConfig.centerStrength, finalNodes.length, finalEdges.length, isControlled, onNodesChangeProp]);
 
   React.useEffect(() => {
     if (focusedItemId && reactFlowInstanceRef?.current) {
@@ -4926,9 +5120,9 @@ const DiagramInner: React.FC<DiagramProps> = ({
         onNodeDoubleClick={onNodeDoubleClick}
         onNodeMouseEnter={onNodeMouseEnter}
         onNodeMouseLeave={onNodeMouseLeave}
-        onNodeDragStart={onNodeDragStart}
-        onNodeDrag={onNodeDrag}
-        onNodeDragStop={onNodeDragStop}
+        onNodeDragStart={handleNodeDragStart}
+        onNodeDrag={handleNodeDrag}
+        onNodeDragStop={handleNodeDragStop}
         onEdgeClick={onEdgeClick}
         onEdgeMouseEnter={onEdgeMouseEnter}
         onEdgeMouseLeave={onEdgeMouseLeave}
@@ -4936,16 +5130,20 @@ const DiagramInner: React.FC<DiagramProps> = ({
         onDoubleClick={onPaneDoubleClick}
         onMoveStart={onMoveStart}
         onMoveEnd={onMoveEnd}
+        onSelectionChange={onSelectionChange}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         connectionLineComponent={connectionLineComponent}
         fitView={fitView}
         minZoom={minZoom}
         maxZoom={maxZoom}
+        defaultViewport={defaultViewport}
         connectionMode={connectionMode === "loose" ? ConnectionMode.Loose : ConnectionMode.Strict}
         deleteKeyCode={deleteKeyCode}
         panOnDrag={panOnDrag}
+        panOnScroll={panOnScroll}
         selectionOnDrag={selectionOnDrag}
+        selectionMode={selectionMode}
         zoomOnScroll={zoomOnScroll}
         zoomOnPinch={zoomOnPinch}
         zoomOnDoubleClick={zoomOnDoubleClick}
@@ -4953,7 +5151,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         nodesFocusable={nodesFocusable}
         edgesFocusable={edgesFocusable}
         nodesDraggable={nodesDraggable}
-        proOptions={{ hideAttribution: true }}
+        proOptions={proOptions}
         className="bg-background"
       >
         {showMinimap && <MiniMap className="border border-element" maskColor="var(--accent)" bgColor="var(--background)" nodeStrokeWidth={3} zoomable pannable nodeComponent={miniMapNodeComponent} />}
@@ -4963,13 +5161,26 @@ const DiagramInner: React.FC<DiagramProps> = ({
   );
 };
 
-export const Diagram: React.FC<DiagramProps> = (props) => {
+const Diagram: React.FC<DiagramProps> = (props) => {
   return (
     <ReactFlowProvider>
       <DiagramInner {...props} />
     </ReactFlowProvider>
   );
 };
+
+export {
+  Diagram,
+  SelectionMode,
+  Position,
+  Background,
+  BaseEdge,
+  Handle,
+  ReactFlow,
+  ReactFlowProvider,
+  applyNodeChanges,
+};
+export type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, OnSelectionChangeParams };
 
 export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], layoutOptions?: DiagramLayoutOptions): { nodes: Node[]; edges: Edge[] } {
   return React.useMemo(() => {

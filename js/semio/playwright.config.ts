@@ -2,34 +2,31 @@ import { defineConfig, devices } from "@playwright/test";
 
 // https://playwright.dev/docs/test-configuration.
 export default defineConfig({
-  testMatch: "**/sketchpad.test.ts",
-  fullyParallel: true,
+  testMatch: ["**/*.spec.ts", "**/sketchpad.test.ts"],
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: [["list"], ["json", { outputFile: "../../reports/playwright.json" }]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:5173",
     trace: "on-first-retry",
   },
   projects: [
     {
-      name: "chromium",
-      use: {
-        ...devices["Desktop Chrome"],
-        launchOptions: {
-          args: [
-            // "--headless=new",
-            "--enable-gpu",
-            "--disable-software-rasterizer",
-          ],
-        },
-      },
+      name: "firefox",
+      use: { ...devices["Desktop Firefox"], headless: true },
     },
 
     // {
-    //   name: "firefox",
-    //   use: { ...devices["Desktop Firefox"] },
+    //   name: "chromium",
+    //   use: {
+    //     ...devices["Desktop Chrome"],
+    //     headless: true,
+    //     launchOptions: {
+    //       args: ["--disable-gpu", "--no-sandbox", "--disable-setuid-sandbox"],
+    //     },
+    //   },
     // },
 
     // {

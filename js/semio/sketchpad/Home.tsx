@@ -1275,6 +1275,8 @@ const HomeTableContent: FC = () => {
               return (
                 <div
                   key={row.id}
+                  data-testid={`home-kit-row-${row.id}`}
+                  data-loading={isLoadingRow ? "true" : "false"}
                   className={`border-b border-element p-single cursor-selectable h-medium ${isLoadingRow ? "opacity-50 pointer-events-none" : ""} ${isSelected ? "bg-active-base text-active-foreground" : isHovered ? "bg-hover-base" : "hover:bg-hover-base"}`}
                   role="button"
                   tabIndex={isLoadingRow ? -1 : 0}

@@ -1,7 +1,8 @@
 {
   "recommendations": [
     "ms-vscode-remote.remote-containers",
-    "vscode-icons-team.vscode-icons"
+    "vscode-icons-team.vscode-icons",
+    "ms-playwright.playwright"
   ],
   "unwantedRecommendations": []
 }

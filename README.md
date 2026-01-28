@@ -733,7 +733,6 @@ The recommended way to develop is using the devcontainer which provides a consis
 
 The devcontainer includes:
 
-- Zero-touch setup: Permission issues common with Docker volume mounts are automatically resolved via recursive ownership enforcement, and the semio VS Code extension is built and installed on every attach.
 - Node.js 22.x, Go 1.24, Python 3.13, .NET SDK 7.0/8.0, Rust
 - All required VS Code extensions
 - Pre-configured development environment
@@ -1166,6 +1165,14 @@ The CLI sends unified diffs or file snapshots; the server parses them, reindexes
 HTTP endpoints cover ticket lifecycle commands, diff ingestion, precommit checks, indexing, and read-only queries for warnings, violations, and scopes.
 Webhook receivers enrich GitHub issue events, and Discord notifications format prompt/summary headings to match ticket workflow conventions.
 
+## 🧭 Kit Diagram Simulation Sync [↑](#-bundles-)
+
+The Kit diagram keeps D3 in charge of layout while React Flow handles rendering and interaction.
+When no drag is active, simulation ticks push positions into React Flow every frame; during drag, React Flow owns the dragged node and D3 follows by pinning fx/fy to the drag position.
+Drag starts always reheat the simulation with alphaTarget(0.3).restart(), drag ends always cool it with alphaTarget(0), and pointer-leave/blur fallbacks prevent the simulation from staying hot or dead after interrupted drags.
+Edge endpoints are calculated from absolute node positions and measured node sizes so the intersection math lines up with the rendered avatar.
+Debug instrumentation is gated behind the `KIT_DIAGRAM_DEBUG` flag and can log alpha state plus render tiny endpoint markers for alignment verification without polluting normal output.
+
 ## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
 
 Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every iteration records the toolchain context.
@@ -1208,6 +1215,25 @@ semio includes a **domain-pure validation system** built entirely in `semio.ts` 
 - **Sketchpad UI** - In-app validation panel (planned)
 - **CLI** - Command-line validation tool (planned)
 - **Backend** - API validation endpoint (planned)
+
+## �️ Shared Infrastructure [↑](#-bundles-)
+
+The Sketchpad infrastructure modularizes complex interaction models into reusable primitives.
+
+### 🌐 Cross-App Diagram Physics
+
+The diagram infrastructure centralizes D3 force-directed simulation logic to enable consistent physics-based layouts across different app contexts.
+Force configurations are exposed via `DiagramForceConfig` props so apps can tune charge, link strength, and centering forces independently.
+The underlying simulation is managed through a mutable reference that automatically restarts or "reheats" when the node/edge topology changes or during manual drag interactions.
+Coordinate mappings are standardized around `DIAGRAM_UNIT` (48px) to align diagram nodes with standard action UI scales.
+
+## �🎨 Kit Editor Visualization [↑](#-bundles-)
+
+The Kit Editor uses a multi-layered filtering and physics-based visualization system for kit artifacts.
+The diagram integrates a D3 force-directed simulation with React Flow while preserving node state (hover, selection, dragging) across simulation ticks by updating node positions via functional state updates without re-triggering full react-flow internal reconciliations.
+Edge intersections use a 24px radius to match the standard small-avatar UI elements, ensuring clean visual landings for centered connections.
+Filtering logic is powered by multi-value URL parameters (`?kind=...`) that allow simultaneous display of multiple artifact types; both the table rows and diagram nodes are synchronized via a unified visibility check that enforces kind-based filtering and ancestor expansion state.
+Multi-node dragging and rectangular selection in the diagram feed back into the physics engine by freezing active nodes in their current coordinate space during the drag interaction, maintaining layout stability while enabling bulk manipulation.
 
 **Usage:**
 
@@ -1282,6 +1308,8 @@ The view refreshes on editor focus and text changes so the tree stays aligned wi
 JSON files surface object keys as section entries so structured config files are navigable in the same tree.
 
 ## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)
+
+The kit diagram supports standard multi-selection UX, including Shift+Click to toggle items in a selection and rectangular selection to choose multiple artifacts at once. Items can be dragged while selected, and clicking on the canvas background clears the selection.
 
 ### Borders
 
@@ -1371,8 +1399,6 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 ### Sketchpad
 
-- [Kit App Manual](js/semio/sketchpad/kit-tutorial.md) - A beginner-friendly deep dive into the architecture and logic of the Kit application.
-
 #### Sketchpad transactions
 
 - `js/semio/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
@@ -1394,12 +1420,6 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 - Window chrome controls are rendered as Action UI elements and forwarded to the underlying layout system when needed.
 - Window surfaces paint the only filled background surface; surrounding UI and overlays remain transparent and rely on borders/blur.
 - Each app registers its supported window kinds and provides a default layout; per-app `windowLayout` is persisted as a JSON string.
-
-#### Kit App Architecture
-
-- **Notepad vs. Rulebook**: Collaborative kit data is stored in the `KitStore` using Y.js for seamless conflict-free multi-user sync ("The Notepad"). Local UI state, such as selection, filtering, and panel visibility, is managed by the Sketchpad state machine via XState ("The Rulebook").
-- **Transactional Commands**: All kit modifications utilize the command pattern with transactional support. Complex multi-step operations are grouped into transactions that participate in a unified undo/redo system.
-- **Triadic Hooks**: Components interact with the Kit App using the triadic hook pattern `[value, setter, canSet]`, ensuring UI elements can reactively adapt their state based on permissions and application context.
 
 #### Kit app artifact creation
 
@@ -1529,8 +1549,6 @@ Currently not implemented in this repo (planned component) 🧩
 ## 🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
-
-Apps are built using EcmaScript Modules (ESM) to ensure the fastest possible development experience and seamless integration with modern libraries.
 
 ## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)
 

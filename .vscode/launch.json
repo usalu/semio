@@ -423,6 +423,39 @@
       "console": "integratedTerminal"
     },
     {
+      "name": "@semio/js test:e2e:headed",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "playwright",
+        "test",
+        "--headed",
+        "--project=firefox"
+      ],
+      "cwd": "${workspaceFolder}/js/semio",
+      "console": "integratedTerminal",
+      "env": {
+        "DISPLAY": ":0",
+        "HEADED": "1"
+      }
+    },
+    {
+      "name": "@semio/js test:e2e:ui",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "playwright",
+        "test",
+        "--ui",
+        "--ui-host=0.0.0.0",
+        "--project=firefox"
+      ],
+      "cwd": "${workspaceFolder}/js/semio",
+      "console": "integratedTerminal"
+    },
+    {
       "name": "@semio/js test:coverage",
       "type": "node",
       "request": "launch",

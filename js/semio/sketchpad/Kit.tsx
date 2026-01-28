@@ -2,6 +2,8 @@
 
 // js/semio/sketchpad/Kit.tsx
 
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // This program is free software: you can redistribute it and/or modify
@@ -122,13 +124,18 @@ import {
   forceLink,
   forceManyBody,
   forceSimulation,
+  forceX,
+  forceY,
   getBezierPath,
   Handle,
   Input,
+  applyNodeChanges,
+  Diagram,
   NotFound,
   Position,
   ReactFlow,
   ReactFlowProvider,
+  SelectionMode,
   Scrollable,
   Select,
   SelectContent,
@@ -194,6 +201,12 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
 };
 
 // #endregion Design Family Helpers
+
+// #region Constants
+
+const artifactKinds = ["designs", "types", "qualities", "ports", "tags", "concepts", "files", "folders", "authors"];
+
+// #endregion Constants
 
 // #region Internal State Management
 
@@ -293,10 +306,10 @@ export interface DiagramForceSettings {
 }
 
 export const defaultDiagramForceSettings: DiagramForceSettings = {
-  chargeStrength: -80,
-  linkDistance: 60,
-  collideRadius: 30,
-  centerStrength: 0.15,
+  chargeStrength: -15000,
+  linkDistance: 400,
+  collideRadius: 150,
+  centerStrength: 0.1,
 };
 
 export interface KitAppDiff {
@@ -2410,23 +2423,31 @@ const KitToolbarFilters: FC = () => {
   const kitCommands = useKitCommands();
   const sketchpadCommands = useSketchpadCommands();
 
-  const selectedKind = searchParams.get("kind") as ArtifactKind | null;
+  const selectedKindsFromUrl = useMemo(() => searchParams.getAll("kind") as ArtifactKind[], [searchParams]);
+  const selectedKinds = useMemo(() => new Set(selectedKindsFromUrl.length > 0 ? selectedKindsFromUrl : artifactKinds), [selectedKindsFromUrl]);
   const defaultDesignName = useLabel("semio.sketchpad.app.kit.defaultDesignName");
   const defaultTypeName = useLabel("semio.sketchpad.app.kit.defaultTypeName");
 
   const toggleKind = (kind: ArtifactKind) => {
     const newParams = new URLSearchParams(searchParams);
-    if (selectedKind === kind) {
+    const kinds = newParams.getAll("kind") as ArtifactKind[];
+
+    // If nothing selected (all shown), clicking one should select only that one (solo)
+    // UNLESS it's already only that one, then it should go back to all? No, that's what toggle does.
+    if (kinds.length === 0) {
+      newParams.append("kind", kind);
+    } else if (kinds.includes(kind)) {
+      const remaining = kinds.filter((k) => k !== kind);
       newParams.delete("kind");
-      newParams.delete("name");
-      newParams.delete("variant");
-      newParams.delete("view");
+      // If we removed the last one, it will go back to showing all
+      remaining.forEach((k) => newParams.append("kind", k));
     } else {
-      newParams.set("kind", kind);
-      newParams.delete("name");
-      newParams.delete("variant");
-      newParams.delete("view");
+      newParams.append("kind", kind);
     }
+
+    newParams.delete("name");
+    newParams.delete("variant");
+    newParams.delete("view");
     setSearchParams(newParams);
   };
 
@@ -2435,7 +2456,7 @@ const KitToolbarFilters: FC = () => {
     switch (kind) {
       case "designs": {
         const existingNames = (kit.designs || []).map((d: Design) => d.name);
-        const uniqueName = generateUniqueName(defaultDesignName, existingNames);
+        const uniqueName = generateUniqueName(defaultDesignName || "", existingNames);
         const newDesign: Design = { guid: guid(), name: uniqueName, pieces: [], connections: [] };
         kitCommands.createDesign(newDesign);
         sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
@@ -2443,7 +2464,7 @@ const KitToolbarFilters: FC = () => {
       }
       case "types": {
         const existingNames = (kit.types || []).map((t: Type) => t.name);
-        const uniqueName = generateUniqueName(defaultTypeName, existingNames);
+        const uniqueName = generateUniqueName(defaultTypeName || "", existingNames);
         const newType: Type = { guid: guid(), name: uniqueName, connectors: [] };
         kitCommands.createType(newType);
         sketchpadCommands.navigateToType(kit.guid, newType.guid);
@@ -2458,7 +2479,7 @@ const KitToolbarFilters: FC = () => {
     <div className="flex items-center gap-single">
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "designs"}
+        pressed={selectedKinds.has("designs")}
         onPressedChange={() => toggleKind("designs")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("designs")}
@@ -2468,7 +2489,7 @@ const KitToolbarFilters: FC = () => {
       />
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "types"}
+        pressed={selectedKinds.has("types")}
         onPressedChange={() => toggleKind("types")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("types")}
@@ -2478,7 +2499,7 @@ const KitToolbarFilters: FC = () => {
       />
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "qualities"}
+        pressed={selectedKinds.has("qualities")}
         onPressedChange={() => toggleKind("qualities")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("qualities")}
@@ -2488,7 +2509,7 @@ const KitToolbarFilters: FC = () => {
       />
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "ports"}
+        pressed={selectedKinds.has("ports")}
         onPressedChange={() => toggleKind("ports")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("ports")}
@@ -2498,7 +2519,7 @@ const KitToolbarFilters: FC = () => {
       />
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "tags"}
+        pressed={selectedKinds.has("tags")}
         onPressedChange={() => toggleKind("tags")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("tags")}
@@ -2508,7 +2529,7 @@ const KitToolbarFilters: FC = () => {
       />
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "concepts"}
+        pressed={selectedKinds.has("concepts")}
         onPressedChange={() => toggleKind("concepts")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("concepts")}
@@ -2518,7 +2539,7 @@ const KitToolbarFilters: FC = () => {
       />
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "files"}
+        pressed={selectedKinds.has("files")}
         onPressedChange={() => toggleKind("files")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("files")}
@@ -2528,7 +2549,7 @@ const KitToolbarFilters: FC = () => {
       />
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "folders"}
+        pressed={selectedKinds.has("folders")}
         onPressedChange={() => toggleKind("folders")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("folders")}
@@ -2538,7 +2559,7 @@ const KitToolbarFilters: FC = () => {
       />
       <Toggle
         kind="withAction"
-        pressed={selectedKind === "authors"}
+        pressed={selectedKinds.has("authors")}
         onPressedChange={() => toggleKind("authors")}
         actionIcon={<AddIcon />}
         onActionClick={() => handleCreateArtifact("authors")}
@@ -2766,7 +2787,7 @@ const AppContent: FC = () => {
   const labelUpdatedAt = useLabel("semio.sketchpad.app.kit.canvas.table.header.updatedAt");
   const labelCreatedAt = useLabel("semio.sketchpad.app.kit.canvas.table.header.createdAt");
 
-  const selectedKind = searchParams.get("kind") as ArtifactKind | null;
+  const selectedKinds = useMemo(() => new Set(searchParams.getAll("kind") as ArtifactKind[]), [searchParams]);
   const selectedName = searchParams.get("name");
 
   const selectedConcepts = searchParams.getAll("c");
@@ -2856,15 +2877,15 @@ const AppContent: FC = () => {
       }
     };
 
-    if (!selectedKind || selectedKind === "designs") {
+    if (selectedKinds.size === 0 || selectedKinds.has("designs")) {
       collectVisibleNames(kitDesigns);
     }
-    if (!selectedKind || selectedKind === "types") {
+    if (selectedKinds.size === 0 || selectedKinds.has("types")) {
       collectVisibleNames(kitTypes);
     }
 
     return Array.from(nameSet).sort();
-  }, [kitDesignsKey, kitTypesKey, selectedKind, selectedName]);
+  }, [kitDesignsKey, kitTypesKey, selectedKinds, selectedName]);
 
   useEffect(() => {
     if (appType !== "kit") {
@@ -3086,7 +3107,7 @@ const AppContent: FC = () => {
   useEffect(() => {
     if (!selectParam) return;
 
-    if (selectedKind === "designs") {
+    if (selectedKinds.has("designs")) {
       const design = kitDesigns?.find((d: Design) => d.guid === selectParam);
       if (design && selectDesignAction) {
         selectDesignAction(selectParam);
@@ -3094,7 +3115,7 @@ const AppContent: FC = () => {
         newParams.delete("select");
         setSearchParams(newParams, { replace: true });
       }
-    } else if (selectedKind === "types") {
+    } else if (selectedKinds.has("types")) {
       const type = kitTypes?.find((t: Type) => t.guid === selectParam);
       if (type && selectTypeAction) {
         selectTypeAction(selectParam);
@@ -3103,7 +3124,7 @@ const AppContent: FC = () => {
         setSearchParams(newParams, { replace: true });
       }
     }
-  }, [selectParam, selectedKind, kitDesigns, kitTypes, selectDesignAction, selectTypeAction, searchParams, setSearchParams]);
+  }, [selectParam, selectedKinds, kitDesigns, kitTypes, selectDesignAction, selectTypeAction, searchParams, setSearchParams]);
 
   const allRows = useMemo<TableRow[]>(() => {
     const result: TableRow[] = [];
@@ -3163,7 +3184,7 @@ const AppContent: FC = () => {
       }
     });
 
-    if (!selectedKind || selectedKind === "designs") {
+    if (selectedKinds.size === 0 || selectedKinds.has("designs")) {
       const designGroups = new Map<string, Design[]>();
       kitDesigns?.forEach((design: Design) => {
         const key = design.name;
@@ -3179,7 +3200,7 @@ const AppContent: FC = () => {
           if (selectedConcepts.length > 0 && !design.concepts?.some((c) => selectedConcepts.includes(c.guid))) return;
           if (searchQuery && !design.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-          if (!selectedKind && parentGuid === undefined && design.folder) return;
+          if (selectedKinds.size === 0 && parentGuid === undefined && design.folder) return;
 
           const rowId = `design-${design.guid}`;
           const children = designsByParent.get(design.guid) || [];
@@ -3230,7 +3251,7 @@ const AppContent: FC = () => {
       }
     }
 
-    if (!selectedKind || selectedKind === "types") {
+    if (selectedKinds.size === 0 || selectedKinds.has("types")) {
       const buildTypeHierarchy = (types: Type[], parentGuid: string | undefined, level: number, parentRowId?: string): void => {
         const childTypes = typesByParent.get(parentGuid) || [];
 
@@ -3238,7 +3259,7 @@ const AppContent: FC = () => {
           if (!types.includes(type)) return;
           if (searchQuery && !type.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-          if (!selectedKind && parentGuid === undefined && type.folder) return;
+          if (selectedKinds.size === 0 && parentGuid === undefined && type.folder) return;
 
           const rowId = `type-${type.guid}`;
           const children = typesByParent.get(type.guid) || [];
@@ -3286,11 +3307,11 @@ const AppContent: FC = () => {
       }
     }
 
-    if (!selectedKind || selectedKind === "qualities") {
+    if (selectedKinds.size === 0 || selectedKinds.has("qualities")) {
       kitQualities?.forEach((quality: Quality) => {
         if (searchQuery && !quality.name.toLowerCase().includes(searchQuery.toLowerCase()) && !quality.key.toLowerCase().includes(searchQuery.toLowerCase())) return;
 
-        if (!selectedKind && quality.folder) return;
+        if (selectedKinds.size === 0 && quality.folder) return;
         result.push({
           id: `quality-${quality.guid}`,
           kind: "qualities",
@@ -3306,7 +3327,7 @@ const AppContent: FC = () => {
       });
     }
 
-    if (!selectedKind || selectedKind === "ports") {
+    if (selectedKinds.size === 0 || selectedKinds.has("ports")) {
       kitPorts?.forEach((iface: Port) => {
         if (searchQuery && !iface.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
@@ -3324,7 +3345,7 @@ const AppContent: FC = () => {
       });
     }
 
-    if (!selectedKind || selectedKind === "tags") {
+    if (selectedKinds.size === 0 || selectedKinds.has("tags")) {
       kitTags?.forEach((tag: Tag) => {
         if (searchQuery && !tag.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
@@ -3342,7 +3363,7 @@ const AppContent: FC = () => {
       });
     }
 
-    if (!selectedKind || selectedKind === "concepts") {
+    if (selectedKinds.size === 0 || selectedKinds.has("concepts")) {
       kitConcepts?.forEach((concept: Concept) => {
         if (searchQuery && !concept.name.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
@@ -3360,7 +3381,7 @@ const AppContent: FC = () => {
       });
     }
 
-    if (selectedKind === "files") {
+    if (selectedKinds.size === 0 || selectedKinds.has("files")) {
       const fileTree = buildFileTree(kitFolders || [], kitFiles || []);
       const flatTree = flattenFileTree(fileTree, 0, expandedRows);
 
@@ -3383,7 +3404,7 @@ const AppContent: FC = () => {
       });
     }
 
-    if (!selectedKind || selectedKind === "folders") {
+    if (selectedKinds.size === 0 || selectedKinds.has("folders")) {
       const buildFolderHierarchy = (parentFolder: Folder | null, level: number, parentRowId?: string): void => {
         const parentGuid = parentFolder?.guid;
         const childFolders = foldersByParent.get(parentGuid) || [];
@@ -3565,7 +3586,7 @@ const AppContent: FC = () => {
       buildFolderHierarchy(null, 0);
     }
 
-    if (!selectedKind || selectedKind === "authors") {
+    if (selectedKinds.size === 0 || selectedKinds.has("authors")) {
       kitAuthors?.forEach((author: Author) => {
         if (searchQuery && !author.name.toLowerCase().includes(searchQuery.toLowerCase()) && !author.email.toLowerCase().includes(searchQuery.toLowerCase())) return;
         result.push({
@@ -3683,7 +3704,7 @@ const AppContent: FC = () => {
     kitFilesKey,
     kitFoldersKey,
     kitAuthorsKey,
-    selectedKind,
+    selectedKinds,
     selectedName,
     selectedConcepts,
     searchQuery,
@@ -4008,7 +4029,7 @@ const AppContent: FC = () => {
     switch (kind) {
       case "designs": {
         const existingNames = (kit.designs || []).map((d: Design) => d.name);
-        const uniqueName = generateUniqueName(defaultDesignName, existingNames);
+        const uniqueName = generateUniqueName(defaultDesignName || "", existingNames);
         const newDesign: Design = {
           guid: guid(),
           name: uniqueName,
@@ -4021,7 +4042,7 @@ const AppContent: FC = () => {
       }
       case "types": {
         const existingNames = (kit.types || []).map((t: Type) => t.name);
-        const uniqueName = generateUniqueName(defaultTypeName, existingNames);
+        const uniqueName = generateUniqueName(defaultTypeName || "", existingNames);
         const newType: Type = {
           guid: guid(),
           name: uniqueName,
@@ -4033,7 +4054,7 @@ const AppContent: FC = () => {
       }
       case "qualities": {
         const existingNames = (kit.qualities || []).map((q: Quality) => q.name || "");
-        const uniqueName = generateUniqueName(defaultQualityName, existingNames);
+        const uniqueName = generateUniqueName(defaultQualityName || "", existingNames);
         const existingKeys = (kit.qualities || []).map((q: Quality) => q.key);
         const uniqueKey = generateUniqueName("new.quality", existingKeys, ".");
         const newQuality: Quality = {
@@ -4047,7 +4068,7 @@ const AppContent: FC = () => {
       }
       case "ports": {
         const existingNames = (kit.ports || []).map((i: Port) => i.name);
-        const uniqueName = generateUniqueName(defaultPortName, existingNames);
+        const uniqueName = generateUniqueName(defaultPortName || "", existingNames);
         const newPort: Port = {
           guid: guid(),
           name: uniqueName,
@@ -4059,7 +4080,7 @@ const AppContent: FC = () => {
       }
       case "tags": {
         const existingNames = (kit.tags || []).map((t: Tag) => t.name);
-        const uniqueName = generateUniqueName(defaultTagName, existingNames);
+        const uniqueName = generateUniqueName(defaultTagName || "", existingNames);
         const newTag: Tag = {
           guid: guid(),
           name: uniqueName,
@@ -4071,7 +4092,7 @@ const AppContent: FC = () => {
       }
       case "concepts": {
         const existingNames = (kit.concepts || []).map((c: Concept) => c.name);
-        const uniqueName = generateUniqueName(defaultConceptName, existingNames);
+        const uniqueName = generateUniqueName(defaultConceptName || "", existingNames);
         const newConcept: Concept = {
           guid: guid(),
           name: uniqueName,
@@ -4087,7 +4108,7 @@ const AppContent: FC = () => {
       }
       case "folders": {
         const existingNames = (kit.folders || []).map((f: Folder) => f.name);
-        const uniqueName = generateUniqueName(defaultFolderName, existingNames);
+        const uniqueName = generateUniqueName(defaultFolderName || "", existingNames);
         const newFolder: Folder = {
           guid: guid(),
           name: uniqueName,
@@ -4135,13 +4156,16 @@ const AppContent: FC = () => {
 
   const toggleKind = (kind: ArtifactKind) => {
     const newParams = new URLSearchParams(searchParams);
-    if (selectedKind === kind) {
+    const kinds = newParams.getAll("kind");
+    if (kinds.includes(kind)) {
+      const remaining = kinds.filter((k) => k !== kind);
       newParams.delete("kind");
+      remaining.forEach((k) => newParams.append("kind", k));
       newParams.delete("name");
       newParams.delete("variant");
       newParams.delete("view");
     } else {
-      newParams.set("kind", kind);
+      newParams.append("kind", kind);
       newParams.delete("name");
       newParams.delete("variant");
       newParams.delete("view");
@@ -4469,8 +4493,8 @@ const AppContent: FC = () => {
                 </div>
               ),
               accessor: (row: TableRow) => (
-                <div className="flex items-center gap-single w-full">
-                  <div className="flex items-center gap-single flex-1 min-w-0" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
+                <div className="flex items-center gap-single w-full h-full">
+                  <div className="flex items-center gap-single flex-1 min-w-0 h-full" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
                     {row.hasChildren ? (
                       <Action
                         onClick={(e) => {
@@ -4482,7 +4506,7 @@ const AppContent: FC = () => {
                     ) : (
                       <span className="size-small shrink-0" />
                     )}
-                    <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
+                    <TableAvatar className="size-small" name={row.artifact} icon={getRowIcon(row)} />
                     <span className="text-left min-w-0 truncate">{row.artifact}</span>
                   </div>
                   {row.concepts && row.concepts.length > 0 && (
@@ -4574,7 +4598,7 @@ const AppContent: FC = () => {
         )}
         <Table
           columns={[
-            ...(!selectedKind
+            ...(selectedKinds.size !== 1
               ? [
                   {
                     id: "kind",
@@ -4637,8 +4661,8 @@ const AppContent: FC = () => {
                 </div>
               ),
               accessor: (row: TableRow) => (
-                <div className="flex items-center gap-single w-full">
-                  <div className="flex items-center gap-single flex-1 min-w-0" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
+                <div className="flex items-center gap-single w-full h-full">
+                  <div className="flex items-center gap-single flex-1 min-w-0 h-full" style={{ paddingLeft: `calc(${row.level} * var(--size-small))` }}>
                     {row.hasChildren ? (
                       <Action
                         onClick={(e) => {
@@ -4650,7 +4674,7 @@ const AppContent: FC = () => {
                     ) : (
                       <span className="size-small shrink-0" />
                     )}
-                    <TableAvatar name={row.artifact} icon={getRowIcon(row)} />
+                    <TableAvatar className="size-small" name={row.artifact} icon={getRowIcon(row)} />
                     <span className="text-left min-w-0 truncate">{row.artifact}</span>
                   </div>
                   {row.concepts && row.concepts.length > 0 && (
@@ -5001,13 +5025,19 @@ const edgeStyle = {
 const NODE_SCALE = 2;
 const NODE_WIDTH = ICON_WIDTH * NODE_SCALE;
 const NODE_HEIGHT = ICON_WIDTH * NODE_SCALE;
+const KIT_DIAGRAM_DEBUG = false;
+const KIT_DIAGRAM_DEBUG_INTERVAL_MS = 400;
 
 function getNodeIntersection(intersectionNode: Node, targetNode: Node): { x: number; y: number } {
-  const x = intersectionNode.position.x + NODE_WIDTH / 2;
-  const y = intersectionNode.position.y + NODE_HEIGHT / 2;
+  const intersectionWidth = intersectionNode.width ?? NODE_WIDTH;
+  const intersectionHeight = intersectionNode.height ?? NODE_HEIGHT;
+  const targetWidth = targetNode.width ?? NODE_WIDTH;
+  const targetHeight = targetNode.height ?? NODE_HEIGHT;
+  const x = intersectionNode.position.x + intersectionWidth / 2;
+  const y = intersectionNode.position.y + intersectionHeight / 2;
 
-  const tx = targetNode.position.x + NODE_WIDTH / 2;
-  const ty = targetNode.position.y + NODE_HEIGHT / 2;
+  const tx = targetNode.position.x + targetWidth / 2;
+  const ty = targetNode.position.y + targetHeight / 2;
 
   const dx = tx - x;
   const dy = ty - y;
@@ -5017,7 +5047,7 @@ function getNodeIntersection(intersectionNode: Node, targetNode: Node): { x: num
     return { x, y };
   }
 
-  const radius = NODE_WIDTH / 2;
+  const radius = Math.min(intersectionWidth, intersectionHeight) / 2;
   return {
     x: x + (radius * dx) / distance,
     y: y + (radius * dy) / distance,
@@ -5057,16 +5087,17 @@ function getEdgeParams(source: Node, target: Node) {
 const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style, selected, data }) => {
   const sourceNode = useInternalNode(source);
   const targetNode = useInternalNode(target);
+  const debugLogRef = useRef(0);
 
   if (!sourceNode || !targetNode) {
     return null;
   }
 
-  const sourcePos = sourceNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
-  const targetPos = targetNode.internals?.positionAbsolute ?? { x: 0, y: 0 };
+  const sourcePos = sourceNode.internals?.positionAbsolute ?? sourceNode.positionAbsolute ?? sourceNode.position ?? { x: 0, y: 0 };
+  const targetPos = targetNode.internals?.positionAbsolute ?? targetNode.positionAbsolute ?? targetNode.position ?? { x: 0, y: 0 };
 
-  const sourceNodeForCalc = { position: sourcePos } as Node;
-  const targetNodeForCalc = { position: targetPos } as Node;
+  const sourceNodeForCalc = { position: sourcePos, width: sourceNode.width, height: sourceNode.height } as Node;
+  const targetNodeForCalc = { position: targetPos, width: targetNode.width, height: targetNode.height } as Node;
 
   const { sx, sy, tx, ty, sourcePos: sPos, targetPos: tPos } = getEdgeParams(sourceNodeForCalc, targetNodeForCalc);
 
@@ -5092,19 +5123,44 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style, sel
     opacity = 1;
   }
 
+  if (KIT_DIAGRAM_DEBUG) {
+    const now = Date.now();
+    if (now - debugLogRef.current > KIT_DIAGRAM_DEBUG_INTERVAL_MS) {
+      debugLogRef.current = now;
+      console.debug("[DEBUG] KitDiagram edge", {
+        id,
+        source,
+        target,
+        sourcePosition: sourceNode.position,
+        sourcePositionAbsolute: sourceNode.internals?.positionAbsolute,
+        sourceWidth: sourceNode.width,
+        sourceHeight: sourceNode.height,
+        targetPosition: targetNode.position,
+        targetPositionAbsolute: targetNode.internals?.positionAbsolute,
+        targetWidth: targetNode.width,
+        targetHeight: targetNode.height,
+        endpoints: { sx, sy, tx, ty },
+      });
+    }
+  }
+
   return (
-    <BaseEdge
-      id={id}
-      path={edgePath}
-      style={{
-        ...style,
-        stroke,
-        strokeWidth,
-        strokeDasharray: dasharray,
-        opacity,
-      }}
-      className="transition-colors duration-200"
-    />
+    <g>
+      <BaseEdge
+        id={id}
+        path={edgePath}
+        style={{
+          ...style,
+          stroke,
+          strokeWidth,
+          strokeDasharray: dasharray,
+          opacity,
+        }}
+        className="transition-colors duration-200"
+      />
+      {KIT_DIAGRAM_DEBUG ? <circle cx={sx} cy={sy} r={3} fill="var(--accent-secondary)" stroke="none" pointerEvents="none" /> : null}
+      {KIT_DIAGRAM_DEBUG ? <circle cx={tx} cy={ty} r={3} fill="var(--foreground)" stroke="none" pointerEvents="none" /> : null}
+    </g>
   );
 };
 
@@ -5121,14 +5177,14 @@ const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY
   return <BaseEdge path={edgePath} style={{ stroke: "var(--active-base)", strokeWidth: 3 }} />;
 };
 
-const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: Edge[] } => {
+const buildKitDiagramData = (kit: Kit): {  nodes: Node<KitDiagramNode>[]; edges: Edge[]} => {
   const nodes: Node<KitDiagramNode>[] = [];
   const edges: Edge[] = [];
 
   const kindGroups: DiagramNodeKind[] = ["type", "design", "quality", "port", "tag", "concept", "file", "folder", "author"];
 
   for (const kind of kindGroups) {
-    let items: Array<{ guid: string; name: string; icon?: string; parentGuid?: string; concepts?: string[] }> = [];
+    let items: Array<{ guid: string; name: string; icon?: any; parentGuid?: string; concepts?: string[] }> = [];
 
     switch (kind) {
       case "type":
@@ -5162,19 +5218,20 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
         items = (kit.concepts ?? []).map((c) => ({ guid: c.guid, name: c.name, icon: c.icon }));
         break;
       case "file":
-        items = (kit.files ?? []).map((f) => ({ guid: f.guid, name: f.name, parentGuid: f.folder?.guid }));
+        items = (kit.files ?? []).map((f) => ({ guid: f.guid, name: f.name, icon: getFileIcon(f.name), parentGuid: f.folder?.guid }));
         break;
       case "folder":
-        items = (kit.folders ?? []).map((f) => ({ guid: f.guid, name: f.name, parentGuid: f.parent?.guid }));
+        items = (kit.folders ?? []).map((f) => ({ guid: f.guid, name: f.name, icon: "📁", parentGuid: f.parent?.guid }));
         break;
       case "author":
-        items = (kit.authors ?? []).map((a) => ({ guid: a.guid, name: a.name }));
+        items = (kit.authors ?? []).map((a) => ({ guid: a.guid, name: a.name, icon: "👤" }));
         break;
     }
 
     for (const item of items) {
+      const nodeId = `${kind}:${item.guid}`;
       nodes.push({
-        id: item.guid,
+        id: nodeId,
         type: "artifact",
         position: { x: 0, y: 0 },
         data: {
@@ -5188,10 +5245,12 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
       });
 
       if (item.parentGuid) {
+        let parentKind = kind;
+        if (kind === "file") parentKind = "folder";
         edges.push({
-          id: `${item.parentGuid}-${item.guid}`,
-          source: item.parentGuid,
-          target: item.guid,
+          id: `${kind}-${item.parentGuid}-${item.guid}`,
+          source: `${parentKind}:${item.parentGuid}`,
+          target: nodeId,
           type: "floating",
           style: edgeStyle["part-of"],
           data: { relationship: "part-of" },
@@ -5204,12 +5263,14 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
     for (const piece of design.pieces ?? []) {
       if (piece.type?.guid) {
         const typeGuid = piece.type.guid;
-        const edgeId = `ref-${design.guid}-${typeGuid}`;
+        const sourceId = `type:${typeGuid}`;
+        const targetId = `design:${design.guid}`;
+        const edgeId = `ref-${sourceId}-${targetId}`;
         if (!edges.some((e) => e.id === edgeId)) {
           edges.push({
             id: edgeId,
-            source: typeGuid,
-            target: design.guid,
+            source: sourceId,
+            target: targetId,
             type: "floating",
             style: edgeStyle["reference"],
             data: { relationship: "reference" },
@@ -5218,12 +5279,14 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
       }
       if (piece.design?.guid) {
         const nestedDesignGuid = piece.design.guid;
-        const edgeId = `ref-${design.guid}-${nestedDesignGuid}`;
+        const sourceId = `design:${nestedDesignGuid}`;
+        const targetId = `design:${design.guid}`;
+        const edgeId = `ref-${sourceId}-${targetId}`;
         if (!edges.some((e) => e.id === edgeId)) {
           edges.push({
             id: edgeId,
-            source: nestedDesignGuid,
-            target: design.guid,
+            source: sourceId,
+            target: targetId,
             type: "floating",
             style: edgeStyle["reference"],
             data: { relationship: "reference" },
@@ -5252,19 +5315,23 @@ const KitDiagramInner: FC = () => {
   const kit = useKit() as Kit | undefined;
   const reactFlowWrapper = useRef<HTMLDivElement>(null);
   const kitCommands = useKitAppCommands();
+  const [selection] = useKitAppSelection();
   const [setHover] = useKitAppSetHover();
   const [clearHover] = useKitAppClearHover();
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
   const actor = useSketchpadActor();
   const [diagramForce] = useKitAppDiagramForce();
+  const [diagramNodes, setDiagramNodes] = useState<Node<KitDiagramNode>[]>([]);
+  const [diagramEdges, setDiagramEdges] = useState<Edge[]>([]);
+  const diagramNodesRef = useRef<Node<KitDiagramNode>[]>([]);
+  const diagramEdgesRef = useRef<Edge[]>([]);
   const simulationRef = useRef<Simulation<ForceNode, ForceLink> | null>(null);
-  const [nodes, setNodes] = useState<Node<KitDiagramNode>[]>([]);
-  const [edges, setEdges] = useState<Edge[]>([]);
-  const [isSimulating, setIsSimulating] = useState(true);
-  const draggingNodeRef = useRef<string | null>(null);
-  const hasFittedRef = useRef(false);
-  const { fitView } = useReactFlow();
+  const draggingNodeIdRef = useRef<string | null>(null);
+  const pinnedNodeIdsRef = useRef<Set<string>>(new Set());
+  const isDragReheatActiveRef = useRef(false);
+  const debugTickRef = useRef(0);
+  const diagramForceConfig = useMemo(() => ({ ...defaultDiagramForceSettings, ...diagramForce }), [diagramForce]);
 
   const filterSearchSelector = useMemo(() => createKitFilterSearchSelector(kitGuid), [kitGuid]);
   const expandedRowsSelector = useMemo(() => createKitExpandedRowsSelector(kitGuid), [kitGuid]);
@@ -5273,6 +5340,9 @@ const KitDiagramInner: FC = () => {
   const expandedRowsArray = useMemo(() => (expandedRowsSet ? Array.from(expandedRowsSet) : []), [expandedRowsSet]);
   const expandedRowsKey = expandedRowsArray.join(",");
   const expandedRows = useMemo(() => new Set(expandedRowsArray), [expandedRowsKey]);
+
+  const [searchParams] = useSearchParams();
+  const selectedKinds = useMemo(() => new Set(searchParams.getAll("kind") as ArtifactKind[]), [searchParams]);
 
   const visibleGuids = useMemo(() => {
     if (!kit) return new Set<string>();
@@ -5315,8 +5385,9 @@ const KitDiagramInner: FC = () => {
       return true;
     };
 
-    const isRowVisible = (rowId: string, parentRowId: string | undefined, name: string): boolean => {
+    const isRowVisible = (rowId: string, parentRowId: string | undefined, name: string, kind: ArtifactKind): boolean => {
       if (searchLower && !name.toLowerCase().includes(searchLower)) return false;
+      if (selectedKinds.size > 0 && !selectedKinds.has(kind)) return false;
       return isAncestorChainExpanded(rowId, parentRowId);
     };
 
@@ -5328,7 +5399,7 @@ const KitDiagramInner: FC = () => {
       } else if (d.folder) {
         parentRowId = `folder-${d.folder}`;
       }
-      if (isRowVisible(rowId, parentRowId, d.name)) {
+      if (isRowVisible(rowId, parentRowId, d.name, "designs")) {
         guids.add(d.guid);
       }
     });
@@ -5341,7 +5412,7 @@ const KitDiagramInner: FC = () => {
       } else if (t.folder) {
         parentRowId = `folder-${t.folder}`;
       }
-      if (isRowVisible(rowId, parentRowId, t.name)) {
+      if (isRowVisible(rowId, parentRowId, t.name, "types")) {
         guids.add(t.guid);
       }
     });
@@ -5349,25 +5420,25 @@ const KitDiagramInner: FC = () => {
     (kit.qualities ?? []).forEach((q) => {
       const rowId = `quality-${q.guid}`;
       const parentRowId = q.folder ? `folder-${q.folder}` : undefined;
-      if (isRowVisible(rowId, parentRowId, q.name)) {
+      if (isRowVisible(rowId, parentRowId, q.name, "qualities")) {
         guids.add(q.guid);
       }
     });
 
     (kit.ports ?? []).forEach((i) => {
-      if (!searchLower || i.name.toLowerCase().includes(searchLower)) {
+      if ((!searchLower || i.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("ports"))) {
         guids.add(i.guid);
       }
     });
 
     (kit.tags ?? []).forEach((t) => {
-      if (!searchLower || t.name.toLowerCase().includes(searchLower)) {
+      if ((!searchLower || t.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("tags"))) {
         guids.add(t.guid);
       }
     });
 
     (kit.concepts ?? []).forEach((c) => {
-      if (!searchLower || c.name.toLowerCase().includes(searchLower)) {
+      if ((!searchLower || c.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("concepts"))) {
         guids.add(c.guid);
       }
     });
@@ -5375,7 +5446,7 @@ const KitDiagramInner: FC = () => {
     (kit.files ?? []).forEach((f) => {
       const rowId = `file-${f.guid}`;
       const parentRowId = f.folder?.guid ? `folder-${f.folder.guid}` : undefined;
-      if (isRowVisible(rowId, parentRowId, f.name)) {
+      if (isRowVisible(rowId, parentRowId, f.name, "files")) {
         guids.add(f.guid);
       }
     });
@@ -5383,163 +5454,386 @@ const KitDiagramInner: FC = () => {
     (kit.folders ?? []).forEach((f) => {
       const rowId = `folder-${f.guid}`;
       const parentRowId = f.parent?.guid ? `folder-${f.parent.guid}` : undefined;
-      if (isRowVisible(rowId, parentRowId, f.name)) {
+      if (isRowVisible(rowId, parentRowId, f.name, "folders")) {
         guids.add(f.guid);
       }
     });
 
     (kit.authors ?? []).forEach((a) => {
-      if (!searchLower || a.name.toLowerCase().includes(searchLower)) {
+      if ((!searchLower || a.name.toLowerCase().includes(searchLower)) && (selectedKinds.size === 0 || selectedKinds.has("authors"))) {
         guids.add(a.guid);
       }
     });
 
     return guids;
-  }, [kit, filterSearch, expandedRows]);
+  }, [kit, filterSearch, expandedRows, selectedKinds]);
 
-  const { initialEdges, forceNodes, forceLinks } = useMemo(() => {
-    if (!kit) return { initialEdges: [], forceNodes: [], forceLinks: [] };
+  const { nodes: baseNodes, edges: baseEdges } = useMemo(() => {
+    if (!kit) return { nodes: [], edges: [] };
     const { nodes: rfNodes, edges: rfEdges } = buildKitDiagramData(kit);
 
-    const filteredNodes = rfNodes.filter((n) => visibleGuids.has(n.id));
+    const filteredNodes = rfNodes.filter((n) => visibleGuids.has(n.data.guid)).map((node) => {
+      const [kind, guid] = node.id.split(":");
+      let isSelected = false;
+      if (kind === "type") isSelected = selection?.types?.includes(guid) ?? false;
+      else if (kind === "design") isSelected = selection?.designs?.includes(guid) ?? false;
+      else if (kind === "quality") isSelected = selection?.qualities?.includes(guid) ?? false;
+      else if (kind === "port") isSelected = selection?.ports?.includes(guid) ?? false;
+      else if (kind === "tag") isSelected = selection?.tags?.includes(guid) ?? false;
+      else if (kind === "concept") isSelected = selection?.concepts?.includes(guid) ?? false;
+      else if (kind === "file") isSelected = selection?.files?.includes(guid) ?? false;
+      else if (kind === "folder") isSelected = selection?.folders?.includes(guid) ?? false;
+      else if (kind === "author") isSelected = selection?.authors?.includes(guid) ?? false;
+
+      return {
+        ...node,
+        selected: isSelected,
+        style: { ...node.style, width: NODE_WIDTH, height: NODE_HEIGHT },
+      };
+    });
+
     const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
     const filteredEdges = rfEdges.filter((e) => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
 
-    const spread = Math.min(500, Math.max(100, Math.sqrt(filteredNodes.length) * 30));
-    const fNodes: ForceNode[] = filteredNodes.map((n, i) => {
-      const angle = (i / filteredNodes.length) * Math.PI * 2;
-      const radius = spread * 0.3 + Math.random() * spread * 0.2;
-      return {
-        id: n.id,
-        x: Math.cos(angle) * radius,
-        y: Math.sin(angle) * radius,
-        data: n.data,
-      };
+    return { nodes: filteredNodes, edges: filteredEdges };
+  }, [kit, visibleGuids, selection]);
+  const baseNodeIdsKey = useMemo(() => baseNodes.map((node) => node.id).join("|"), [baseNodes]);
+  const baseEdgeIdsKey = useMemo(() => baseEdges.map((edge) => edge.id).join("|"), [baseEdges]);
+
+  const commitDiagramNodes = useCallback(
+    (nextNodes: Node<KitDiagramNode>[]) => {
+      diagramNodesRef.current = nextNodes;
+      setDiagramNodes(nextNodes);
+    },
+    [],
+  );
+
+  const syncSimulationPositions = useCallback((positions: Map<string, Node["position"]>) => {
+    const simulation = simulationRef.current;
+    if (!simulation) return;
+    for (const simNode of simulation.nodes()) {
+      const pos = positions.get(simNode.id);
+      if (pos) {
+        simNode.x = pos.x;
+        simNode.y = pos.y;
+      }
+    }
+  }, []);
+
+  const setPinnedPositions = useCallback((positions: Map<string, Node["position"]>) => {
+    pinnedNodeIdsRef.current = new Set(positions.keys());
+    const simulation = simulationRef.current;
+    if (!simulation) return;
+    for (const simNode of simulation.nodes()) {
+      const pos = positions.get(simNode.id);
+      if (pos) {
+        simNode.fx = pos.x;
+        simNode.fy = pos.y;
+      }
+    }
+  }, []);
+
+  const clearPinnedPositions = useCallback(() => {
+    pinnedNodeIdsRef.current = new Set();
+    const simulation = simulationRef.current;
+    if (!simulation) return;
+    for (const simNode of simulation.nodes()) {
+      simNode.fx = null;
+      simNode.fy = null;
+    }
+  }, []);
+
+  const logSimulationState = useCallback(
+    (label: string, node?: Node) => {
+      if (!KIT_DIAGRAM_DEBUG) return;
+      const simulation = simulationRef.current;
+      if (!simulation) return;
+      const draggingNodeId = draggingNodeIdRef.current;
+      const simNode = draggingNodeId ? simulation.nodes().find((n) => n.id === draggingNodeId) : undefined;
+      console.debug("[DEBUG] KitDiagram simulation", {
+        label,
+        alpha: simulation.alpha(),
+        alphaTarget: simulation.alphaTarget(),
+        draggingNodeId,
+        fx: simNode?.fx,
+        fy: simNode?.fy,
+        nodePosition: node?.position,
+      });
+    },
+    [],
+  );
+
+  const startDragReheat = useCallback(() => {
+    const simulation = simulationRef.current;
+    if (!simulation) return;
+    if (!isDragReheatActiveRef.current) {
+      isDragReheatActiveRef.current = true;
+    }
+    simulation.alphaTarget(0.3).restart();
+  }, []);
+
+  const stopDragReheat = useCallback(() => {
+    const simulation = simulationRef.current;
+    if (simulation) {
+      simulation.alphaTarget(0);
+    }
+    isDragReheatActiveRef.current = false;
+    clearPinnedPositions();
+    draggingNodeIdRef.current = null;
+    logSimulationState("drag-end");
+  }, [clearPinnedPositions, logSimulationState]);
+
+  const updateNodesFromSimulation = useCallback(() => {
+    const simulation = simulationRef.current;
+    if (!simulation) return;
+    const pinnedNodeIds = pinnedNodeIdsRef.current;
+    const simNodeById = new Map(simulation.nodes().map((node) => [node.id, node]));
+    const nextNodes = diagramNodesRef.current.map((node) => {
+      if (pinnedNodeIds.has(node.id)) {
+        return node;
+      }
+      const simNode = simNodeById.get(node.id);
+      if (!simNode) return node;
+      return { ...node, position: { x: simNode.x ?? 0, y: simNode.y ?? 0 } };
     });
-    const fLinks: ForceLink[] = filteredEdges.map((e) => ({
-      id: e.id,
-      source: e.source,
-      target: e.target,
-      relationship: (e.data?.relationship as "part-of" | "reference") ?? "part-of",
-    }));
-    return { initialEdges: filteredEdges, forceNodes: fNodes, forceLinks: fLinks };
-  }, [kit, visibleGuids]);
+    commitDiagramNodes(nextNodes);
+    if (KIT_DIAGRAM_DEBUG) {
+      const now = Date.now();
+      if (now - debugTickRef.current > KIT_DIAGRAM_DEBUG_INTERVAL_MS) {
+        debugTickRef.current = now;
+        console.debug("[DEBUG] KitDiagram tick", {
+          alpha: simulation.alpha(),
+          alphaTarget: simulation.alphaTarget(),
+          draggingNodeId: draggingNodeIdRef.current,
+          pinned: Array.from(pinnedNodeIds),
+          nodes: baseNodeIdsKey,
+          edges: baseEdgeIdsKey,
+        });
+      }
+    }
+  }, [commitDiagramNodes, baseEdgeIdsKey, baseNodeIdsKey]);
 
   useEffect(() => {
-    hasFittedRef.current = false;
-  }, [kit, visibleGuids]);
+    const previousPositions = new Map(diagramNodesRef.current.map((node) => [node.id, node.position]));
+    const nextNodes = baseNodes.map((node) => {
+      const previousPosition = previousPositions.get(node.id);
+      return previousPosition ? { ...node, position: previousPosition } : node;
+    });
+    commitDiagramNodes(nextNodes);
+    diagramEdgesRef.current = baseEdges;
+    setDiagramEdges(baseEdges);
+  }, [baseNodes, baseEdges, commitDiagramNodes]);
 
   useEffect(() => {
-    if (forceNodes.length === 0) {
-      setNodes([]);
-      setEdges([]);
+    if (diagramNodesRef.current.length === 0) {
+      if (simulationRef.current) {
+        simulationRef.current.alphaTarget(0);
+        simulationRef.current.stop();
+        simulationRef.current = null;
+      }
       return;
     }
-    setEdges(initialEdges);
-    const nodesCopy = forceNodes.map((n) => ({ ...n }));
-    const linksCopy = forceLinks.map((l) => ({ ...l }));
+    const nodesSnapshot = diagramNodesRef.current;
+    const edgesSnapshot = diagramEdgesRef.current;
+    const nodesCopy: ForceNode[] = nodesSnapshot.map((node) => ({
+      id: node.id,
+      x: node.position.x,
+      y: node.position.y,
+      data: node.data,
+    }));
+    const linksCopy: ForceLink[] = edgesSnapshot.map((edge) => ({
+      id: edge.id,
+      source: edge.source,
+      target: edge.target,
+      relationship: (edge.data?.relationship as "part-of" | "reference") ?? "reference",
+    }));
     const simulation = forceSimulation<ForceNode, ForceLink>(nodesCopy)
-      .force("charge", forceManyBody().strength(diagramForce.chargeStrength))
+      .force("charge", forceManyBody().strength(diagramForceConfig.chargeStrength))
       .force(
         "link",
         forceLink<ForceNode, ForceLink>(linksCopy)
           .id((d) => d.id)
-          .distance(Math.max(diagramForce.linkDistance, NODE_WIDTH * 2.2)),
+          .distance(diagramForceConfig.linkDistance),
       )
-      .force("collide", forceCollide().radius(Math.max(diagramForce.collideRadius, NODE_WIDTH * 0.9)))
-      .force("center", forceCenter(0, 0).strength(diagramForce.centerStrength))
-      .stop();
-
-    setIsSimulating(true);
-    for (let i = 0; i < 120; i++) {
+      .force("collide", forceCollide().radius(diagramForceConfig.collideRadius))
+      .force("x", forceX(0).strength(diagramForceConfig.centerStrength))
+      .force("y", forceY(0).strength(diagramForceConfig.centerStrength));
+    simulationRef.current = simulation;
+    const snapshotPositions = new Map(nodesSnapshot.map((node) => [node.id, node.position]));
+    syncSimulationPositions(snapshotPositions);
+    const numTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
+    for (let i = 0; i < numTicks; i += 1) {
       simulation.tick();
     }
-
-    setNodes(
-      nodesCopy.map((n) => ({
-        id: n.id,
-        type: "artifact",
-        position: { x: n.x ?? 0, y: n.y ?? 0 },
-        data: n.data,
-        style: { width: NODE_WIDTH, height: NODE_HEIGHT },
-      })),
-    );
-
-    setIsSimulating(false);
-    simulationRef.current = null;
-
-    if (!hasFittedRef.current) {
-      hasFittedRef.current = true;
-      setTimeout(() => fitView({ padding: 0.3, duration: 200, minZoom: 1, maxZoom: 1 }), 50);
+    updateNodesFromSimulation();
+    simulation.on("tick", updateNodesFromSimulation);
+    if (KIT_DIAGRAM_DEBUG) {
+      console.debug("[DEBUG] KitDiagram simulation start", {
+        nodes: baseNodeIdsKey,
+        edges: baseEdgeIdsKey,
+        ticks: numTicks,
+      });
     }
+    simulation.alpha(1).restart();
     return () => {
+      stopDragReheat();
+      simulation.alphaTarget(0);
       simulation.stop();
       simulationRef.current = null;
     };
-  }, [forceNodes, forceLinks, initialEdges, diagramForce, fitView]);
+  }, [
+    baseEdgeIdsKey,
+    baseNodeIdsKey,
+    diagramForceConfig.centerStrength,
+    diagramForceConfig.chargeStrength,
+    diagramForceConfig.collideRadius,
+    diagramForceConfig.linkDistance,
+    stopDragReheat,
+    syncSimulationPositions,
+    updateNodesFromSimulation,
+  ]);
 
-  const handleNodeDragStart = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
-    draggingNodeRef.current = node.id;
-  }, []);
+  const handleNodesChange = useCallback(
+    (changes: any[]) => {
+      const updatedNodes = applyNodeChanges(changes, diagramNodesRef.current);
+      const draggingNodeId = draggingNodeIdRef.current;
+      if (draggingNodeId && simulationRef.current) {
+        const selectedNodes = updatedNodes.filter((node) => node.selected);
+        const selectedPositions = new Map(selectedNodes.map((node) => [node.id, node.position]));
+        if (selectedPositions.size > 1 && selectedPositions.has(draggingNodeId)) {
+          setPinnedPositions(selectedPositions);
+        } else {
+          const draggedNode = updatedNodes.find((node) => node.id === draggingNodeId);
+          if (draggedNode) {
+            setPinnedPositions(new Map([[draggedNode.id, draggedNode.position]]));
+          }
+        }
+      }
+      commitDiagramNodes(updatedNodes);
+    },
+    [commitDiagramNodes, setPinnedPositions],
+  );
 
-  const handleNodeDrag = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
-    if (draggingNodeRef.current !== node.id) return;
-    setNodes((prev) => prev.map((n) => (n.id === node.id ? { ...n, position: node.position } : n)));
-  }, []);
+  const handleNodeDragStart = useCallback(
+    (_: any, node: Node) => {
+      draggingNodeIdRef.current = node.id;
+      const currentPositions = new Map(diagramNodesRef.current.map((item) => [item.id, item.position]));
+      currentPositions.set(node.id, node.position);
+      syncSimulationPositions(currentPositions);
+      const selectedNodes = diagramNodesRef.current.filter((item) => item.selected);
+      const selectedPositions = new Map(selectedNodes.map((item) => [item.id, item.position]));
+      if (node.selected) {
+        selectedPositions.set(node.id, node.position);
+      }
+      if (selectedPositions.size > 1 && node.selected) {
+        setPinnedPositions(selectedPositions);
+      } else {
+        setPinnedPositions(new Map([[node.id, node.position]]));
+      }
+      startDragReheat();
+      logSimulationState("drag-start", node);
+    },
+    [logSimulationState, setPinnedPositions, startDragReheat, syncSimulationPositions],
+  );
 
-  const handleNodeDragStop = useCallback((_: React.MouseEvent, node: Node<KitDiagramNode>) => {
-    draggingNodeRef.current = null;
-    setNodes((prev) => prev.map((n) => (n.id === node.id ? { ...n, position: node.position } : n)));
-  }, []);
+  const handleNodeDrag = useCallback(
+    (_: any, node: Node) => {
+      if (draggingNodeIdRef.current !== node.id) return;
+      const selectedNodes = diagramNodesRef.current.filter((item) => item.selected);
+      const selectedPositions = new Map(selectedNodes.map((item) => [item.id, item.position]));
+      if (node.selected) {
+        selectedPositions.set(node.id, node.position);
+      }
+      if (selectedPositions.size > 1 && node.selected) {
+        setPinnedPositions(selectedPositions);
+      } else {
+        setPinnedPositions(new Map([[node.id, node.position]]));
+      }
+      startDragReheat();
+      logSimulationState("drag", node);
+    },
+    [logSimulationState, setPinnedPositions, startDragReheat],
+  );
+
+  const handleNodeDragStop = useCallback(
+    (_: any, _node: Node) => {
+      stopDragReheat();
+    },
+    [stopDragReheat],
+  );
+
+  const handleDragEndFallback = useCallback(() => {
+    if (!draggingNodeIdRef.current && !isDragReheatActiveRef.current) return;
+    stopDragReheat();
+  }, [stopDragReheat]);
+
+  useEffect(() => {
+    const wrapper = reactFlowWrapper.current;
+    window.addEventListener("pointerup", handleDragEndFallback);
+    window.addEventListener("pointercancel", handleDragEndFallback);
+    window.addEventListener("blur", handleDragEndFallback);
+    if (wrapper) {
+      wrapper.addEventListener("pointerleave", handleDragEndFallback);
+    }
+    return () => {
+      window.removeEventListener("pointerup", handleDragEndFallback);
+      window.removeEventListener("pointercancel", handleDragEndFallback);
+      window.removeEventListener("blur", handleDragEndFallback);
+      if (wrapper) {
+        wrapper.removeEventListener("pointerleave", handleDragEndFallback);
+      }
+    };
+  }, [handleDragEndFallback]);
+
+  const onSelectionChange = useCallback(
+    ({ nodes: selectedNodes }: any) => {
+      const newSelection: KitAppSelection = {};
+      selectedNodes.forEach((node: any) => {
+        const [kind, guid] = node.id.split(":");
+        if (kind === "type") {
+          if (!newSelection.types) newSelection.types = [];
+          newSelection.types.push(guid);
+        } else if (kind === "design") {
+          if (!newSelection.designs) newSelection.designs = [];
+          newSelection.designs.push(guid);
+        } else if (kind === "quality") {
+          if (!newSelection.qualities) newSelection.qualities = [];
+          newSelection.qualities.push(guid);
+        } else if (kind === "port") {
+          if (!newSelection.ports) newSelection.ports = [];
+          newSelection.ports.push(guid);
+        } else if (kind === "tag") {
+          if (!newSelection.tags) newSelection.tags = [];
+          newSelection.tags.push(guid);
+        } else if (kind === "concept") {
+          if (!newSelection.concepts) newSelection.concepts = [];
+          newSelection.concepts.push(guid);
+        } else if (kind === "file") {
+          if (!newSelection.files) newSelection.files = [];
+          newSelection.files.push(guid);
+        } else if (kind === "folder") {
+          if (!newSelection.folders) newSelection.folders = [];
+          newSelection.folders.push(guid);
+        } else if (kind === "author") {
+          if (!newSelection.authors) newSelection.authors = [];
+          newSelection.authors.push(guid);
+        }
+      });
+
+      actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection: newSelection });
+    },
+    [actor, kitGuid],
+  );
 
   const handlePaneClick = useCallback(() => {
     kitCommands.deselectAll?.();
   }, [kitCommands]);
 
-  const handleNodeClick = useCallback(
-    (e: React.MouseEvent, node: Node<KitDiagramNode>) => {
-      e.stopPropagation();
-      const kind = node.data?.kind;
-      const guid = node.data?.guid;
-      if (!kind || !guid) return;
-      const eventTypeMap: Record<DiagramNodeKind, string> = {
-        type: "KIT.SELECT_TYPE",
-        design: "KIT.SELECT_DESIGN",
-        quality: "KIT.SELECT_QUALITY",
-        port: "KIT.SELECT_INTERFACE",
-        tag: "KIT.SELECT_TAG",
-        concept: "KIT.SELECT_CONCEPT",
-        file: "KIT.SELECT_FILE",
-        folder: "KIT.SELECT_FOLDER",
-        author: "KIT.SELECT_AUTHOR",
-      };
-      const guidFieldMap: Record<DiagramNodeKind, string> = {
-        type: "typeGuid",
-        design: "designGuid",
-        quality: "qualityGuid",
-        port: "portGuid",
-        tag: "tagGuid",
-        concept: "conceptGuid",
-        file: "fileGuid",
-        folder: "folderGuid",
-        author: "authorGuid",
-      };
-      const eventType = eventTypeMap[kind];
-      const guidField = guidFieldMap[kind];
-      if (!eventType || !guidField) return;
-      actor.send({
-        type: eventType,
-        kitGuid,
-        [guidField]: guid,
-      } as any);
-    },
-    [actor, kitGuid],
-  );
-
   const handleNodeMouseEnter = useCallback(
-    (_: any, node: Node<KitDiagramNode>) => {
-      const kind = node.data?.kind;
-      const guid = node.data?.guid;
+    (_: any, node: any) => {
+      const data = node.data as KitDiagramNode;
+      const kind = data?.kind;
+      const guid = data?.guid;
       if (!kind || !guid) return;
       if (!setHover) return;
       if (kind === "type") setHover({ type: guid });
@@ -5561,69 +5855,28 @@ const KitDiagramInner: FC = () => {
 
   if (!kit) return null;
 
-  const edgeTypes = useMemo(
-    () => ({
-      floating: FloatingEdge,
-    }),
-    [],
-  );
-
   return (
     <div ref={reactFlowWrapper} className="w-full h-full" data-testid="kit-diagram">
-      <style>{`
-        [data-kit-node] {
-          background: transparent !important;
-          border: 0 !important;
-          outline: 0 !important;
-          box-shadow: none !important;
-          padding: 0 !important;
-          margin: 0 !important;
-        }
-        .react-flow__node,
-        .react-flow__node-artifact {
-          background: transparent !important;
-          border: 0 !important;
-          outline: 0 !important;
-          box-shadow: none !important;
-        }
-        .react-flow__node.selected,
-        .react-flow__node:hover {
-          background: transparent !important;
-          border: 0 !important;
-          outline: 0 !important;
-          box-shadow: none !important;
-        }
-        .react-flow__nodesselection-rect {
-          display: none !important;
-        }
-      `}</style>
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
+      <Diagram
+        nodes={diagramNodes}
+        edges={diagramEdges}
         nodeTypes={kitNodeTypes}
-        edgeTypes={edgeTypes}
-        connectionLineComponent={FloatingConnectionLine}
-        minZoom={0.1}
-        maxZoom={4}
-        defaultViewport={{ x: 0, y: 0, zoom: 1 }}
-        panOnDrag={[1, 2]}
-        panOnScroll={false}
-        zoomOnScroll={true}
-        zoomOnPinch={true}
-        zoomOnDoubleClick={true}
-        selectionOnDrag={false}
-        onPaneClick={handlePaneClick}
-        onNodeClick={handleNodeClick}
+        edgeTypes={{ floating: FloatingEdge }}
+        forceConfig={{ enabled: false }}
+        onSelectionChange={onSelectionChange}
+        onNodesChangeReactFlow={handleNodesChange}
         onNodeMouseEnter={handleNodeMouseEnter}
         onNodeMouseLeave={handleNodeMouseLeave}
         onNodeDragStart={handleNodeDragStart}
         onNodeDrag={handleNodeDrag}
         onNodeDragStop={handleNodeDragStop}
-        nodesDraggable={true}
+        onPaneClick={handlePaneClick}
+        selectionMode={SelectionMode.Partial}
+        panOnScroll={false}
+        panOnDrag={[1, 2]}
+        selectionOnDrag={true}
         proOptions={{ hideAttribution: true }}
-      >
-        <Background gap={20} size={1} />
-      </ReactFlow>
+      />
     </div>
   );
 };

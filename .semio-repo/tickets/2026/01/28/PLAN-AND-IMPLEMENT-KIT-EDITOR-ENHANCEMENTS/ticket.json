@@ -1,0 +1,3480 @@
+{
+  "title": "Plan and Implement Kit Editor Enhancements",
+  "iterations": [
+    {
+      "prompt": "i want to either implement new feastures or fix excisting bus. write md prompts to plan the next steps :Kit Editor plan:\n\nFeatures : \n\nallow multiple filters at once\n\nortimize d3 force parameters\n\nintroduce multiple select of multiple nodes through pressing shift or rectangular selection\n\nBugs:\n\nDiagram automatically selects multiple nodes as if i was clicked on shift\n\nThe tables left and right arent aligned (Hierachie table doesnt match with Diagram window)\n\nNodes and edges arent aligned",
+      "llm": "gemini-3-flash",
+      "ui": "copilot-chat",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "date": "2026-01-28T13:54:46.686901713Z",
+      "commit": "0e45db5aec012fab2128f478cbb2e3e2a104281d",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/js",
+              "lines": {
+                "added": 253,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "AGENTS.md",
+              "lines": {
+                "added": 29,
+                "removed": 13
+              }
+            },
+            {
+              "path": "README.md",
+              "lines": {
+                "added": 29,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx",
+              "lines": {
+                "added": 528,
+                "removed": 275
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": [
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Kit App Architecture",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "AGENTS.md#Codebase",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Sketchpad Apps#Kit App (Kit.tsx)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📄 .devcontainer/post-attach.sh",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📄 .devcontainer/post-create.sh",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📄 .devcontainer/post-start.sh",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📄 js/semio/sketchpad/Kit.tsx",
+              "lines": {
+                "added": 3,
+                "removed": 1
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📄 js/semio/sketchpad/Sketchpad.tsx",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📄 js/semio/sketchpad/elements.tsx",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Devcontainer",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Diagrams",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#Sketchpad#Kit Editor",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�️ Shared Infrastructure [↑](#-bundles-)",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�️ Shared Infrastructure [↑](#-bundles-)#🌐 Cross-App Diagram Physics",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�🎨 Kit Editor Visualization [↑](#-bundles-)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Kit App Architecture",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🧭 Kit Diagram Simulation Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#🧑‍💻 Development [↑](#-overview)#🐳 Devcontainer (Recommended) [↑](#-development)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram",
+              "lines": {
+                "added": 444,
+                "removed": 215
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table",
+              "lines": {
+                "added": 67,
+                "removed": 56
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Constants",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Header",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Imports",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Internal State Management",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Diagrams",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#Sketchpad#Kit Editor",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�️ Shared Infrastructure [↑](#-bundles-)",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�️ Shared Infrastructure [↑](#-bundles-)#🌐 Cross-App Diagram Physics",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�🎨 Kit Editor Visualization [↑](#-bundles-)",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🧭 Kit Diagram Simulation Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Constants",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeClick",
+              "lines": {
+                "added": 0,
+                "removed": 37
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§spread",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§selectedKind",
+              "lines": {
+                "added": 0,
+                "removed": 39
+              }
+            }
+          ],
+          "renamed": [
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggingNodeRef",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§KIT_DIAGRAM_DEBUG_INTERVAL_MS",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§eventType",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§currentPositions",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§fLinks",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§data",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§hasFittedRef",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§debugTickRef",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§guidFieldMap",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggingNodeId",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§fNodes",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§parentKind",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgeTypes",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedPositions",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§eventTypeMap",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§syncSimulationPositions",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "from": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§guidField",
+              "to": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§wrapper",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§KIT_DIAGRAM_DEBUG",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§KIT_DIAGRAM_DEBUG_INTERVAL_MS",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§KitDiagramInner",
+              "lines": {
+                "added": 0,
+                "removed": 179
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§KitDiagramInner",
+              "lines": {
+                "added": 369,
+                "removed": 173
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§NODE_HEIGHT",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§NODE_SCALE",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§NODE_WIDTH",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§absAngle",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§actor",
+              "lines": {
+                "added": 9,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§actor",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§angle",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§angle",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§baseEdgeIdsKey",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§baseNodeIdsKey",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§buildKitDiagramData",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§buildKitDiagramData",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§clearPinnedPositions",
+              "lines": {
+                "added": 9,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§commitDiagramNodes",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§currentPositions",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§dasharray",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§data",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§debugLogRef",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§debugTickRef",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§designByGuid",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§diagramEdgesRef",
+              "lines": {
+                "added": 6,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§diagramForceConfig",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§diagramNodesRef",
+              "lines": {
+                "added": 7,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggedNode",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggingNodeId",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggingNodeId",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggingNodeIdRef",
+              "lines": {
+                "added": 5,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggingNodeRef",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§dx",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§dy",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgeId",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgeId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgeId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgeId",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgePath",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgeStyle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgeTypes",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edges",
+              "lines": {
+                "added": 11,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edges",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgesSnapshot",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§eventType",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§eventTypeMap",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRows",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRows",
+              "lines": {
+                "added": 15,
+                "removed": 59
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRowsArray",
+              "lines": {
+                "added": 15,
+                "removed": 59
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRowsArray",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRowsKey",
+              "lines": {
+                "added": 15,
+                "removed": 59
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRowsKey",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRowsSelector",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRowsSelector",
+              "lines": {
+                "added": 15,
+                "removed": 59
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRowsSet",
+              "lines": {
+                "added": 15,
+                "removed": 59
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§expandedRowsSet",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§fLinks",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§fNodes",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filterSearch",
+              "lines": {
+                "added": 15,
+                "removed": 59
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filterSearch",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filterSearchSelector",
+              "lines": {
+                "added": 15,
+                "removed": 59
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filterSearchSelector",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filteredEdges",
+              "lines": {
+                "added": 3,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filteredEdges",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filteredNodeIds",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filteredNodeIds",
+              "lines": {
+                "added": 4,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filteredNodes",
+              "lines": {
+                "added": 15,
+                "removed": 12
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§filteredNodes",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§folderByGuid",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§guid",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§guid",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§guid",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§guidField",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§guidFieldMap",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§guids",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleDragEndFallback",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeClick",
+              "lines": {
+                "added": 0,
+                "removed": 36
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeDrag",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeDrag",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeDragStart",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeDragStart",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeDragStop",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeDragStop",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeMouseEnter",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodeMouseEnter",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodesChange",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handlePaneClick",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handlePaneClick",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§hasFittedRef",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§intersectionHeight",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§intersectionWidth",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§isAncestorChainExpanded",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§isDragReheatActiveRef",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§isRowVisible",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§isRowVisible",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§isSelected",
+              "lines": {
+                "added": 13,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§items",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§items",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kind",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kind",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kind",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kindGroups",
+              "lines": {
+                "added": 11,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kindGroups",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kit",
+              "lines": {
+                "added": 10,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kit",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kitCommands",
+              "lines": {
+                "added": 10,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kitCommands",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kitGuid",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kitGuid",
+              "lines": {
+                "added": 9,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kitScope",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§kitScope",
+              "lines": {
+                "added": 9,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§linksCopy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§linksCopy",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§logSimulationState",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nestedDesignGuid",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nestedDesignGuid",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§newSelection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nextNodes",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nextNodes",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nodeId",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nodes",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nodes",
+              "lines": {
+                "added": 11,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nodesCopy",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nodesCopy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nodesSnapshot",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§now",
+              "lines": {
+                "added": 18,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§now",
+              "lines": {
+                "added": 12,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§numTicks",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§onSelectionChange",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§opacity",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§parentDesign",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§parentKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§parentRowId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§parentRowId",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§parentRowId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§pinnedNodeIds",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§pinnedNodeIdsRef",
+              "lines": {
+                "added": 4,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§pos",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§pos",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§previousPosition",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§previousPositions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§radius",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§radius",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§radius",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§reactFlowWrapper",
+              "lines": {
+                "added": 10,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§reactFlowWrapper",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§relationship",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§rowId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§rowId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§rowId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§searchLower",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedKinds",
+              "lines": {
+                "added": 14,
+                "removed": 58
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedNodes",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedNodes",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedNodes",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedPositions",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedPositions",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedPositions",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§setPinnedPositions",
+              "lines": {
+                "added": 12,
+                "removed": 12
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simNode",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simNode",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simNodeById",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 6,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 5,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 12,
+                "removed": 12
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulation",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulationRef",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simulationRef",
+              "lines": {
+                "added": 5,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§snapshotPositions",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§sourceId",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§sourceId",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§sourceNode",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§sourceNodeForCalc",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§sourceNodeForCalc",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§sourcePos",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§sourcePos",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§spread",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§startDragReheat",
+              "lines": {
+                "added": 8,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§stopDragReheat",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§stroke",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§strokeWidth",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§syncSimulationPositions",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetHeight",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetId",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetId",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetNode",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetNodeForCalc",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetNodeForCalc",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetPos",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetPos",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetWidth",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§tx",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§tx",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§ty",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§ty",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§typeByGuid",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§typeGuid",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§typeGuid",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§updateNodesFromSimulation",
+              "lines": {
+                "added": 29,
+                "removed": 28
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§updatedNodes",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§visibleGuids",
+              "lines": {
+                "added": 12,
+                "removed": 58
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§visibleGuids",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§wrapper",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§x",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§x",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§y",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§y",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§AppContent",
+              "lines": {
+                "added": 0,
+                "removed": 36
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§AppContent",
+              "lines": {
+                "added": 39,
+                "removed": 36
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§ArtifactKind",
+              "lines": {
+                "added": 28,
+                "removed": 19
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§ArtifactKind",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§KitToolbarFilters",
+              "lines": {
+                "added": 28,
+                "removed": 18
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§KitToolbarFilters",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§addSection",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§addSection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§allConcepts",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§allDesignsArray",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§allRows",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§allRows",
+              "lines": {
+                "added": 12,
+                "removed": 13
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§allTypesArray",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§appType",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§appType",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§buildDesignHierarchy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§buildDesignHierarchy",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§buildFolderHierarchy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§buildTypeHierarchy",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§buildTypeHierarchy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§childDesigns",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§childDesigns",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§childFolders",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§childTypes",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§childTypes",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§children",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§children",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§children",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§clickTimerRef",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§collectDescendants",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§collectDescendants",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§concept",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§concept",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultConceptName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultConceptName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultDesignName",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultDesignName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultDesignName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultDesignName",
+              "lines": {
+                "added": 15,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultFolderName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultFolderName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultPortName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultPortName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultQualityName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultQualityName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultTagName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultTagName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultTypeName",
+              "lines": {
+                "added": 15,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultTypeName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultTypeName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§defaultTypeName",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§design",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingKeys",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§existingNames",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§file",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§fileTree",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§flatTree",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§folder",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§handleCreateArtifact",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§handleCreateArtifact",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§handleCreateArtifact",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§handleCreateArtifact",
+              "lines": {
+                "added": 7,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§handleCreateChildForRow",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§handleDragEnd",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§hasKit",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§includeGuids",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§includeGuids",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§isMobile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§key",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§key",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kinds",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kinds",
+              "lines": {
+                "added": 7,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kit",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kit",
+              "lines": {
+                "added": 17,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kit",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kitApp",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kitAppCommands",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kitCommands",
+              "lines": {
+                "added": 17,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kitCommands",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kitCommands",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kitLoadingLabel",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kitLoadingLabel",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kitScope",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelArtifact",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelArtifact",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelCreatedAt",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelCreatedAt",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelKind",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelSearch",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelSearch",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelUpdatedAt",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§labelUpdatedAt",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§lastClickedIndexRef",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§lastDoubleClickRef",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§matchingDesignGuids",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§matchingTypeGuids",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§navigate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§navigation",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newDesign",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newDesign",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newParams",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newParams",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newParams",
+              "lines": {
+                "added": 7,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newParams",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newPort",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newQuality",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§newType",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§orchestrator",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§params",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§parentGuid",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§remaining",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§remaining",
+              "lines": {
+                "added": 4,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§removeSection",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§removeSection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§selectedKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§selectedKind",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§selectedKinds",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§selectedKinds",
+              "lines": {
+                "added": 16,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§selectedKindsFromUrl",
+              "lines": {
+                "added": 17,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§sketchpadCommands",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§sketchpadCommands",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§sketchpadCommands",
+              "lines": {
+                "added": 17,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§toggleKind",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§toggleKind",
+              "lines": {
+                "added": 15,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§toggleKind",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§toggleKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§type",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueKey",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueName",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueNames",
+              "lines": {
+                "added": 3,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§uniqueNames",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Internal State Management§KitAppPresenceOther",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Internal State Management§KitAppSortColumn",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Internal State Management§KitAppSortDirection",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Internal State Management§defaultDiagramForceSettings",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Internal State Management§defaultDiagramForceSettings",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx§artifactKinds",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx§children",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§KIT_DIAGRAM_DEBUG",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§baseEdgeIdsKey",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§baseNodeIdsKey",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§clearPinnedPositions",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§commitDiagramNodes",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§debugLogRef",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§diagramEdgesRef",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§diagramForceConfig",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§diagramNodesRef",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggedNode",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§draggingNodeIdRef",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§edgesSnapshot",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleDragEndFallback",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§handleNodesChange",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§intersectionHeight",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§intersectionWidth",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§isDragReheatActiveRef",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§logSimulationState",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§newSelection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nextNodes",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nodeId",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§nodesSnapshot",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§now",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§numTicks",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§onSelectionChange",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§pinnedNodeIds",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§pinnedNodeIdsRef",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§pos",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§previousPosition",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§previousPositions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedKinds",
+              "lines": {
+                "added": 125,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§selectedNodes",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§setPinnedPositions",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simNode",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§simNodeById",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§snapshotPositions",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§sourceId",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§startDragReheat",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§stopDragReheat",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetHeight",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetId",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§targetWidth",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§updateNodesFromSimulation",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Diagram§updatedNodes",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§kinds",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§remaining",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§selectedKinds",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx#Canvas#Windows#Table§selectedKindsFromUrl",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad/Kit.tsx§artifactKinds",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-28T16:57:13.346360116Z"
+  },
+  "summary": "Implemented Kit diagram D3/React Flow sync with drag pinning, alphaTarget reheating/cooldown, and edge alignment diagnostics; updated README/AGENTS.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/243"
+  }
+}

@@ -58,9 +58,7 @@ Playwright browser caches MUST use the workspace `node_modules` volume path so `
 Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
 Claude Code auth files MUST live in the persisted Claude volume and be linked into `$HOME`.
 Devcontainer named volume mount points MUST be pre-created in the Dockerfile with correct user ownership.
-Devcontainer lifecycle scripts MUST recursively enforce workspace ownership to current user to resolve volume permission conflicts.
 Devcontainer disk hygiene MUST be maintained by purging unused images, volumes, and builder caches when available space is low.
-Frontend applications MUST use EcmaScript Modules (ESM) to optimize development performance and ensure modern ecosystem compatibility.
 
 ### Sections
 
@@ -76,6 +74,17 @@ Engine startup MUST support a pure stdio MCP server mode.
 ### State Management
 
 App hover and selection state MUST be managed by the Sketchpad state machine.
+
+### Diagrams
+
+Diagrams MUST integrate D3 force-directed simulations with React Flow.
+Diagram node positions MUST be updated via functional state updates to preserve interaction states (hover, selection, dragging) across simulation cycles.
+Diagram simulations MUST automatically restart or "reheat" upon topology changes (node/edge count) or manual drag events.
+Diagram coordinate systems MUST align with `DIAGRAM_UNIT` (48px) constants.
+Diagram edge intersections MUST target node centers based on standard UI element radii.
+Diagram drag interactions MUST pin dragged (and multi-selected) nodes via fx/fy and skip pinned nodes during simulation-driven position writes.
+Diagram drag lifecycle MUST reheat alphaTarget on drag start and reset alphaTarget to 0 on drag end, including pointer-leave/blur fallback cleanup.
+Diagram edge intersection math MUST use absolute node positions and measured node dimensions.
 
 ### Ticket
 
@@ -378,6 +387,16 @@ Stats provide computed or measured performance data for entire designs using the
 ## UI/UX
 
 ### Sketchpad
+
+#### Kit Editor
+
+- Kit artifact filtering MUST support multiple simultaneous artifact kinds.
+- Artifact visibility in the diagram MUST synchronize with table filtering and ancestor expansion state.
+- Physics-based diagram layouts MUST preserve node interaction states (hover, selection, dragging) across simulation cycles.
+- Node connection intersections MUST align with standard small-avatar UI element centers.
+- Diagram dragging MUST keep edges aligned and avoid jitter by pinning dragged nodes while the simulation updates the remaining layout.
+- Kit artifact multi-selection MUST support Shift+Click for additive/subtractive selection and rectangular selection to select multiple nodes simultaneously.
+- Diagram selection MUST synchronize with the application state machine to ensure consistency across all views.
 
 ### Ticket UX
 
@@ -1520,7 +1539,6 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ │ ├── Docs.tsx # documentation app
 │ │ │ ├── Home.tsx # home app
 │ │ │ ├── Kit.tsx # kit app
-│ │ │ ├── kit-tutorial.md # beginner-friendly deep dive into the architecture and logic of the Kit application
 │ │ │ ├── Quality.tsx # quality app
 │ │ │ ├── Type.tsx # type app
 │ │ │ ├── Tutorials.tsx # consolidated tutorial system
@@ -1692,15 +1710,15 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## 📄 .devcontainer/post-create.sh
 
-Devcontainer provisioning steps for dependency installs, including Playwright browser install into the shared cache path. Enforces recursive workspace ownership to resolve volume permission issues.
+Devcontainer provisioning steps for dependency installs, including Playwright browser install into the shared cache path.
 
 ## 📄 .devcontainer/post-start.sh
 
-Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, and activates the Python virtual environment. Enforces recursive ownership of root-owned volume mounts.
+Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, and activates the Python virtual environment.
 
 ## 📄 .devcontainer/post-attach.sh
 
-Devcontainer post-attach script that builds and installs the local semio VS Code extension. Automatically runs on every editor attach.
+Devcontainer post-attach script that builds and installs the local semio VS Code extension.
 
 ## 📁 js/
 
@@ -2101,12 +2119,6 @@ Landing page for kit management. Extends `AppStore` (no kit modifications).
 ###### Kit App (Kit.tsx)
 
 Kit artifact management with multi-window layout. Extends `KitDiffAppStore` (modifies kit data).
-
-**Architecture:**
-- **Store**: `KitStore` extends `KitDiffAppStore` and wraps a Y.js document for distributed collaboration.
-- **Collaboration**: Uses `Y.Array` and `Y.Map` for conflict-free multi-user synchronization.
-- **Logic**: All kit modifications (Types, Designs, etc.) are executed via `semio.kitApp.*` commands with transactional support.
-- **UI State**: Local state (filters, sorting, panel visibility) is decoupled from collaborative data and managed via the Sketchpad XState machine.
 
 **Window Kinds (`KitAppWindowKind`):**
 
@@ -3827,6 +3839,7 @@ Sketchpad app modules, state machine wiring, and shared app surfaces for Home, K
 ## 📄 js/semio/sketchpad/elements.tsx
 
 `Table` supports row-level hover callbacks for app hover state dispatch.
+`Diagram` provides a generalized React Flow wrapper with an internal D3 force-directed simulation, exposing selection changes and simulation "reheating" on node interaction.
 
 ## 📄 js/semio/sketchpad/Home.tsx
 
@@ -3834,11 +3847,14 @@ Home app hover state is stored in the Sketchpad state machine and updated via ho
 
 ## 📄 js/semio/sketchpad/Kit.tsx
 
-Kit app provides artifact management with tabular and force-directed diagram views. The diagram uses custom FloatingEdge and KitArtifactNode components with robust rectangular intersection math for relationship line alignment. Interaction supports right-click panning to avoid conflict with node dragging. Visual styles synchronize with the design app, using red rings for selection and teal strokes for relationships.
+Kit app hover state covers all artifact kinds and is updated via table and diagram hover dispatch.
+Kit diagram maintains a local D3 force simulation with React Flow as a controlled renderer, pinning dragged selections via fx/fy and skipping pinned nodes during tick sync.
+Edge endpoint calculations rely on internal positionAbsolute coordinates plus measured node dimensions, with optional KIT_DIAGRAM_DEBUG diagnostics and endpoint markers.
 
 ## 📄 js/semio/sketchpad/Sketchpad.tsx
 
 Home command hooks forward hover events, including clear, into the Sketchpad state machine.
+The machine orchestrates global navigation and app-scoped event dispatch via the registry, including simulation state resets for shared diagram components.
 
 ## 📁 js/vscode/
 

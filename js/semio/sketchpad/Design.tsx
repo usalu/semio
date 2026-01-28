@@ -5077,27 +5077,27 @@ const HelperLines: React.FC<{
   );
 };
 
-const pieceToNode = (piece: Piece, type: Type, center: Coord, index: number): PieceNode => ({
+const pieceToNode = (piece: Piece, type: Type, center: Coord, index: number, selected: boolean = false): PieceNode => ({
   type: "piece",
   id: `piece-${index}-${piece.guid}`,
   position: {
     x: center.u * ICON_WIDTH || 0,
     y: -center.v * ICON_WIDTH || 0,
   },
-  selected: false,
+  selected,
   draggable: true,
   data: { piece, type },
   className: "",
 });
 
-const designToNode = (piece: Piece, externalConnections: SemioConnection[], center: Coord, index: number): DesignNode => ({
+const designToNode = (piece: Piece, externalConnections: SemioConnection[], center: Coord, index: number, selected: boolean = false): DesignNode => ({
   type: "design",
   id: `piece-${index}-${piece.guid}`,
   position: {
     x: center.u * ICON_WIDTH || 0,
     y: -center.v * ICON_WIDTH || 0,
   },
-  selected: false,
+  selected,
   draggable: true,
   data: { piece, externalConnections },
   className: "",
@@ -5182,8 +5182,11 @@ const connectionToEdge = (
   };
 };
 
-const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetadata>, kit: any) => {
+const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetadata>, kit: any, selection?: DesignAppSelection) => {
   if (!design) return null;
+
+  const selectedPieces = new Set(selection?.pieces ?? []);
+  const selectedConnections = new Set(selection?.connections ?? []);
 
   const centerMap = new Map<string, Coord>();
   metadata.forEach((meta, pieceGuid) => {
@@ -5196,6 +5199,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
     design.pieces
       ?.map((piece, i) => {
         const center = centerMap.get(piece.guid) || piece.center || { u: 0, v: 0 };
+        const selected = selectedPieces.has(piece.guid);
 
         if (piece.design) {
           const design = kit.designs?.find((d: Design) => d.guid === piece.design?.guid);
@@ -5208,7 +5212,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
               connectors: [],
               models: [],
             };
-            return pieceToNode(piece, fallbackType, center, i);
+            return pieceToNode(piece, fallbackType, center, i, selected);
           }
           const designAsType: Type = {
             guid: design.guid,
@@ -5218,7 +5222,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
             connectors: [],
             models: [],
           };
-          return pieceToNode(piece, designAsType, center, i);
+          return pieceToNode(piece, designAsType, center, i, selected);
         }
 
         if (!piece.type) {
@@ -5235,15 +5239,16 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
             connectors: [],
             models: [],
           };
-          return pieceToNode(piece, fallbackType, center, i);
+          return pieceToNode(piece, fallbackType, center, i, selected);
         }
-        return pieceToNode(piece, type, center, i);
+        return pieceToNode(piece, type, center, i, selected);
       })
       .filter((node): node is PieceNode => node !== null) ?? [];
 
   const includedDesigns = getIncludedDesigns(design);
 
   const designNodes = includedDesigns.map((includedDesign, i) => {
+    const selected = selectedPieces.has(includedDesign.guid);
     if (includedDesign.type === "connected") {
       let calculatedCenter: Coord = { u: 0, v: 0 };
       if (includedDesign.externalConnections && includedDesign.externalConnections.length > 0) {
@@ -5282,7 +5287,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
         description: `Clustered design: ${includedDesign.designGuid}`,
       };
 
-      return designToNode(designPiece, includedDesign.externalConnections || [], calculatedCenter, design.pieces!.length + i);
+      return designToNode(designPiece, includedDesign.externalConnections || [], calculatedCenter, design.pieces!.length + i, selected);
     } else {
       const displayCenter = includedDesign.center || { u: 0, v: 0 };
 
@@ -5294,7 +5299,7 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
         description: `Fixed design: ${includedDesign.designGuid}`,
       };
 
-      return designToNode(designPiece, [], displayCenter, design.pieces!.length + i);
+      return designToNode(designPiece, [], displayCenter, design.pieces!.length + i, selected);
     }
   });
 
@@ -5322,7 +5327,8 @@ const designToNodesAndEdges = (design: Design, metadata: Map<string, PieceMetada
 
   const connectionEdges =
     design.connections?.map((SemioConnection, connectionIndex) => {
-      return connectionToEdge(SemioConnection, false, false, pieceIndexMap, connectionIndex, design.pieces, design.connections);
+      const selected = selectedConnections.has(SemioConnection.guid);
+      return connectionToEdge(SemioConnection, selected, false, pieceIndexMap, connectionIndex, design.pieces, design.connections);
     }) ?? [];
   return { nodes: [...pieceNodes, ...designNodes], edges: connectionEdges };
 };
@@ -5361,7 +5367,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const kit = useKit() as Kit;
   const [activeTool] = useDesignAppActiveTool();
 
-  const [selection] = useDesignAppSelection();
+  const [selection, setSelection] = useDesignAppSelection();
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
   const [fullscreenWindow] = useDesignAppFullscreen();
@@ -5452,9 +5458,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const { baseNodes, edges } = useMemo(() => {
     if (!design) return { baseNodes: [], edges: [] };
     const minimalKit = { types: kitTypes, designs: kitDesigns } as Kit;
-    const result = designToNodesAndEdges(design, metadata, minimalKit) ?? { nodes: [], edges: [] };
+    const result = designToNodesAndEdges(design, metadata, minimalKit, selection) ?? { nodes: [], edges: [] };
     return { baseNodes: result.nodes, edges: result.edges };
-  }, [design, metadata, kitTypes, kitDesigns]);
+  }, [design, metadata, kitTypes, kitDesigns, selection]);
 
   const [nodes, setNodes] = useState<typeof baseNodes>(baseNodes);
 
@@ -5471,6 +5477,37 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       setNodes((nds) => applyNodeChanges(positionChanges, nds) as typeof nds);
     },
     [isDraggingNodeRef, isPanningRef],
+  );
+
+  const onSelectionChange = useCallback(
+    ({ nodes, edges }: { nodes: Array<Node>; edges: Array<Edge> }) => {
+      if (isDraggingNodeRef.current || isPanningRef.current) return;
+
+      const selectedPieceGuids = nodes.filter((n) => n.id.startsWith("piece-")).map((n) => n.id.split("-").pop() as string);
+
+      const selectedConnectionGuids = edges
+        .filter((e) => e.type === "SemioConnection" || e.id.startsWith("connection-") || (e as any).data?.SemioConnection)
+        .map((e) => (e as any).data?.SemioConnection?.guid || e.id.split("-").pop())
+        .filter((guid): guid is string => !!guid);
+
+      const currentSelection = selectionRef.current || {};
+      const currentPieces = currentSelection.pieces || [];
+      const currentConnections = currentSelection.connections || [];
+
+      const piecesChanged = selectedPieceGuids.length !== currentPieces.length || selectedPieceGuids.some((id) => !currentPieces.includes(id));
+      const connectionsChanged = selectedConnectionGuids.length !== currentConnections.length || selectedConnectionGuids.some((id) => !currentConnections.includes(id));
+
+      if (piecesChanged || connectionsChanged) {
+        if (setSelection) {
+          setSelection({
+            ...currentSelection,
+            pieces: selectedPieceGuids,
+            connections: selectedConnectionGuids,
+          });
+        }
+      }
+    },
+    [setSelection, isDraggingNodeRef, isPanningRef],
   );
 
   const focusContext = useFocusSafe();
@@ -5720,21 +5757,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onNodeClick = useCallback(
     (e: React.MouseEvent, node: DiagramNode) => {
-      e.stopPropagation();
-      const pieceId = getPieceIdFromNode(node);
-      if (e.ctrlKey || e.metaKey) {
-        if (removePieceFromSelection) removePieceFromSelection(pieceId);
-      } else if (e.shiftKey) {
-        if (addPieceToSelection) addPieceToSelection(pieceId);
-      } else if (activeToolRef.current === ToolKind.SELECTION_ADDITIVE) {
-        if (addPieceToSelection) addPieceToSelection(pieceId);
-      } else if (activeToolRef.current === ToolKind.SELECTION_SUBTRACTIVE) {
-        if (removePieceFromSelection) removePieceFromSelection(pieceId);
-      } else {
-        if (selectPiece) selectPiece(pieceId);
-      }
+      // React Flow handles selection through elementsSelectable={true} and onSelectionChange
     },
-    [removePieceFromSelection, addPieceToSelection, selectPiece],
+    [],
   );
 
   const kitRef = useRef(kit);
@@ -5754,31 +5779,16 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const onEdgeClick = useCallback(
     (e: React.MouseEvent, edge: DiagramEdge) => {
-      e.stopPropagation();
-      const connectionId = edge.data!.SemioConnection.guid;
-      if (e.ctrlKey || e.metaKey) {
-        if (removeConnectionFromSelection) removeConnectionFromSelection(connectionId);
-      } else if (e.shiftKey) {
-        if (addConnectionToSelection) addConnectionToSelection(connectionId);
-      } else if (activeToolRef.current === ToolKind.SELECTION_ADDITIVE) {
-        if (addConnectionToSelection) addConnectionToSelection(connectionId);
-      } else if (activeToolRef.current === ToolKind.SELECTION_SUBTRACTIVE) {
-        if (removeConnectionFromSelection) removeConnectionFromSelection(connectionId);
-      } else {
-        if (selectConnection) selectConnection(connectionId);
-      }
+      // React Flow handles selection through elementsSelectable={true} and onSelectionChange
     },
-    [removeConnectionFromSelection, addConnectionToSelection, selectConnection],
+    [],
   );
 
   const onPaneClick = useCallback(
     (e: React.MouseEvent) => {
-      e.stopPropagation();
-      if (!(e.ctrlKey || e.metaKey) && !e.shiftKey) {
-        if (deselectAll) deselectAll();
-      }
+      // React Flow handles deselection on pane click through elementsSelectable={true} and onSelectionChange
     },
-    [deselectAll],
+    [],
   );
 
   const onDoubleClick = useCallback(
@@ -6575,16 +6585,18 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             edgeTypes={edgeComponents as EdgeTypes}
             connectionMode="loose"
             connectionLineComponent={ConnectionConnectionLine}
-            elementsSelectable={false}
-            nodesFocusable={false}
-            edgesFocusable={false}
+            elementsSelectable={true}
+            nodesFocusable={true}
+            edgesFocusable={true}
             nodesDraggable={true}
             minZoom={0.1}
             defaultZoom={1}
             maxZoom={12}
             fitView={false}
-            panOnDrag={[0]}
+            panOnDrag={[1, 2]}
+            selectionOnDrag={true}
             zoomOnDoubleClick={false}
+            onSelectionChange={onSelectionChange}
             onNodeClick={onNodeClick as any}
             onNodeDoubleClick={onNodeDoubleClick as any}
             onNodeMouseEnter={onNodeMouseEnter as any}

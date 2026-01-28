@@ -1,0 +1,1792 @@
+{
+  "title": "Fix Sketchpad App Tests",
+  "iterations": [
+    {
+      "prompt": "Get all sketchpad app tests complying. Change/refactor/extend whatever is necessary to get it working. Don't remove any functionality from the tests.",
+      "llm": "opus-4-5",
+      "ui": "copilot-chat",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "date": "2026-01-28T17:07:10.951021567Z",
+      "commit": "0e45db5aec012fab2128f478cbb2e3e2a104281d",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/js",
+              "lines": {
+                "added": 131,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "js/semio/playwright.config.ts",
+              "lines": {
+                "added": 14,
+                "removed": 17
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts",
+              "lines": {
+                "added": 285,
+                "removed": 151
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram All Artifact Types",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Edges",
+              "lines": {
+                "added": 4,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Filter Sync",
+              "lines": {
+                "added": 4,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Hover Sync",
+              "lines": {
+                "added": 4,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection",
+              "lines": {
+                "added": 22,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence",
+              "lines": {
+                "added": 32,
+                "removed": 27
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "js/semio/sketchpad.test.ts§allRows",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§connectorToolButton",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§lassoButtonExists",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§rowCount",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§selectionButtonExists",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§selectionToolButton",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            }
+          ],
+          "renamed": [
+            {
+              "from": "js/semio/sketchpad.test.ts§lassoToolButton",
+              "to": "js/semio/sketchpad.test.ts§currentMap",
+              "lines": {
+                "added": 15,
+                "removed": 15
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§isCellVisible",
+              "to": "js/semio/sketchpad.test.ts§hasTambour",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§loadingIndicator",
+              "to": "js/semio/sketchpad.test.ts§isTableRowVisible",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§designsUrl",
+              "to": "js/semio/sketchpad.test.ts§metabolismText",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§metabolismRow",
+              "to": "js/semio/sketchpad.test.ts§positions",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§metabolismCell",
+              "to": "js/semio/sketchpad.test.ts§startTime",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§isLoading",
+              "to": "js/semio/sketchpad.test.ts§style",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§isDesignVisible",
+              "to": "js/semio/sketchpad.test.ts§tableRow",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§isRowVisible",
+              "to": "js/semio/sketchpad.test.ts§tambourElement",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "from": "js/semio/sketchpad.test.ts§isLassoActive",
+              "to": "js/semio/sketchpad.test.ts§typeRowIds",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection§diagramContainerForClick",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection§firstNodeClick",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection§firstNodeClick",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection§isDiagramVisibleForClick",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection§windowCount",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Dragging§diagramNodesDrag",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Dragging§nodeCountDrag",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Icons§diagramContainerIcons",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Icons§hasDiagramIcons",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Table Selection Sync§actor",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Table Selection Sync§selectionStateSync",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§independent",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§independent",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§isNowVisible",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§isNowVisible",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§isVisible",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§isVisible",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§otherNowVisible",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§otherNowVisible",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§otherPanel",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§otherPanel",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§otherPanel",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§otherPanel",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§otherPanelStates",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§otherPanelStates",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§panel",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§panel",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§toggle",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§toggle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§toggled",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§toggled",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§wasVisible",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Panel Toggle Independence§wasVisible",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§afterClickState",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§afterClickState",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§allRowIds",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§allRowIds",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§allRows",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§ariaChecked",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§ariaChecked",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§ariaPressed",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§ariaPressed",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§buttons",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§canvasBox",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§canvasBoxForPort",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§canvasForPort",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§centerX",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§centerX",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§centerY",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§centerY",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§computedPiecesMetadata",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§connectorToolButton",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§connectorX",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§connectorX",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§connectorY",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§connectorY",
+              "lines": {
+                "added": 3,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§contentCount",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§contentCount",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§contentCount",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§count",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§currentMap",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§currentPositions",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§currentUrl",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dataRowIds",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dataState",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dataState",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dblClickedDesign",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dblClickedDesign",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dblClickedType",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dblClickedType",
+              "lines": {
+                "added": 9,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§design",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§design",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§designElement",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§designRowIds",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§designsUrl",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§event",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§event",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§event",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§event",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§existingPieces",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§existingPieces",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§fileInput",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§finalUrl",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§finalUrl",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§firstNodeDrag",
+              "lines": {
+                "added": 38,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§firstNodeDrag",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§firstPiece",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§getPanelContentCount",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§hasDesign",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§hasNameInput",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§hasTambour",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§hoverTimes",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§id",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initDesign",
+              "lines": {
+                "added": 0,
+                "removed": 23
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initDesign",
+              "lines": {
+                "added": 44,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initDocs",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initHome",
+              "lines": {
+                "added": 0,
+                "removed": 36
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initHome",
+              "lines": {
+                "added": 22,
+                "removed": 42
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initKit",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initType",
+              "lines": {
+                "added": 48,
+                "removed": 13
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initType",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initialBoxDrag",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initialBoxDrag",
+              "lines": {
+                "added": 38,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initialState",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§initialState",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§inputs",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isActive",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isActive",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isCellVisible",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isDesignVisible",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isLassoActive",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isLoading",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isPortToolActive",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isPortToolActive",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isRowVisible",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isSelectionActive",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isSelectionActive",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isSelectionActive",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isTableRowVisible",
+              "lines": {
+                "added": 5,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isVisible",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isVisible",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§kit",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§kitGuids",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§kitStore",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§lassoButtonExists",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§lassoToolButton",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§lastPos",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§lastPositions",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§listItems",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§loadingIndicator",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§match",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§metabolismCell",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§metabolismElement",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§metabolismRow",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§metabolismText",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§nameInput",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§nameInputGlobal",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§navbar",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§nodes",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§page",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§pageText",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§pan1Duration",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§pan1Start",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§pan2Start",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§panel",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§panel",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§panelVisible",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§panelVisible",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§parent",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§pieceBox",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§pieceCount",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§pieceCount",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§piecesMetadataFn",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§positions",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§row",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§row",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§row",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§row",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§row",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§row",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§rowCount",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§rows",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§rows",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§sceneBox",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§selectionButtonExists",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§selectionToolButton",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§selectionToolButton",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§selectionToolButton",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§selectionTypes",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§stable",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§start",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§startTime",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§stateChanged",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§stateChanged",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§store",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§style",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§tableRow",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§tambourElement",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§toggle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§toggle",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§transform",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§treeItems",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§treeItems",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§typeRowIds",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§unhoverDuration",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§unhoverStart",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§verifyToggleWorks",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§verifyToggleWorks",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§via",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§via",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§via",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§viewport",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§viewport",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§viewportBox",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§viewportBox",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§waitForDiagramStabilization",
+              "lines": {
+                "added": 43,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§zipPath",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection§diagramContainerForClick",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection§isDiagramVisibleForClick",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts#Diagram Node Click Selection§windowCount",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§allRowIds",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§ariaChecked",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§ariaPressed",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§currentPositions",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dataRowIds",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§dataState",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§designElement",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§designRowIds",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§finalUrl",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§hasDesign",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§isActive",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§lastPos",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§lastPositions",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§match",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§metabolismElement",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§nodes",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§page",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§rows",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§stable",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§transform",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "js/semio/sketchpad.test.ts§waitForDiagramStabilization",
+              "lines": {
+                "added": 43,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-28T17:45:19.801401536Z"
+  },
+  "summary": "Fixed all 6 sketchpad app tests. Two issues resolved: 1) Disabled parallel test execution by setting workers=1 and fullyParallel=false in playwright.config.ts to prevent race conditions. 2) Added waitForDiagramStabilization helper to wait for D3 force simulation to settle before clicking diagram nodes, preventing DOM detachment errors. All 6 tests (Home, Kit, Type, Design, Docs, Feedback) now pass in 7.6 minutes.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/253"
+  }
+}
