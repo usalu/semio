@@ -891,7 +891,7 @@ function resolveTicketPath(ticket: TicketData | ContributorTicketData): string |
   if (ticket.filePath) return ticket.filePath;
   const root = getWorkspaceRoot();
   if (!root) return undefined;
-  
+
   const relPath = path.join(String(ticket.year), String(ticket.month).padStart(2, "0"), String(ticket.day).padStart(2, "0"), ticket.slug, "ticket.md");
   const metaPath = path.join(root, ".semio-repo", "tickets", relPath);
   if (fs.existsSync(metaPath)) {
@@ -1084,9 +1084,9 @@ function extractFilePathFromScope(scope: string): string | undefined {
         bestBundle = b;
       }
     } else if (cleanScope === b.id) {
-        if (!bestBundle || b.id.length > bestBundle.id.length) {
-          bestBundle = b;
-        }
+      if (!bestBundle || b.id.length > bestBundle.id.length) {
+        bestBundle = b;
+      }
     }
   }
 
@@ -1096,7 +1096,7 @@ function extractFilePathFromScope(scope: string): string | undefined {
     const fileName = parts[0];
     const root = bestBundle.root === "." ? "" : (bestBundle.root.endsWith("/") ? bestBundle.root : bestBundle.root + "/");
     const filePath = root + fileName;
-    
+
     // Clean up trailing slash if it was just the root
     return filePath.endsWith("/") ? filePath.slice(0, -1) : filePath;
   }
@@ -2172,39 +2172,39 @@ class ContributorBundleItem extends vscode.TreeItem {
 }
 
 class ContributorFolderItem extends vscode.TreeItem {
-    constructor(public readonly folder: ContributorFolderData) {
-      super(folder.name, vscode.TreeItemCollapsibleState.Collapsed);
-      this.iconPath = new vscode.ThemeIcon("folder");
-      this.contextValue = "contributorFolder";
-      this.description = `(${folder.files.length}) +${folder.lines.added} -${folder.lines.removed}`;
-    }
+  constructor(public readonly folder: ContributorFolderData) {
+    super(folder.name, vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("folder");
+    this.contextValue = "contributorFolder";
+    this.description = `(${folder.files.length}) +${folder.lines.added} -${folder.lines.removed}`;
+  }
 }
 
 class ContributorFileItem extends vscode.TreeItem {
-    constructor(public readonly file: ContributorFileData) {
-      super(file.name, vscode.TreeItemCollapsibleState.Collapsed);
-      this.iconPath = new vscode.ThemeIcon("file");
-      this.contextValue = "contributorFile";
-      this.description = `(${file.sections.length}) +${file.lines.added} -${file.lines.removed}`;
-    }
+  constructor(public readonly file: ContributorFileData) {
+    super(file.name, vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("file");
+    this.contextValue = "contributorFile";
+    this.description = `(${file.sections.length}) +${file.lines.added} -${file.lines.removed}`;
+  }
 }
 
 class ContributorSectionItem extends vscode.TreeItem {
-    constructor(public readonly section: ContributorSectionData) {
-      super(section.name, vscode.TreeItemCollapsibleState.Collapsed);
-      this.iconPath = new vscode.ThemeIcon("symbol-class");
-      this.contextValue = "contributorSection";
-      this.description = `(${section.definitions.length}) +${section.lines.added} -${section.lines.removed}`;
-    }
+  constructor(public readonly section: ContributorSectionData) {
+    super(section.name, vscode.TreeItemCollapsibleState.Collapsed);
+    this.iconPath = new vscode.ThemeIcon("symbol-class");
+    this.contextValue = "contributorSection";
+    this.description = `(${section.definitions.length}) +${section.lines.added} -${section.lines.removed}`;
+  }
 }
 
 class ContributorDefinitionItem extends vscode.TreeItem {
-    constructor(public readonly definition: ContributorDefinitionData) {
-      super(definition.name, vscode.TreeItemCollapsibleState.None);
-      this.iconPath = new vscode.ThemeIcon("symbol-method");
-      this.contextValue = "contributorDefinition";
-      this.description = `+${definition.lines.added} -${definition.lines.removed}`;
-    }
+  constructor(public readonly definition: ContributorDefinitionData) {
+    super(definition.name, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon("symbol-method");
+    this.contextValue = "contributorDefinition";
+    this.description = `+${definition.lines.added} -${definition.lines.removed}`;
+  }
 }
 
 class ContributorTicketsItem extends vscode.TreeItem {
@@ -2331,18 +2331,18 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
                 name: folder.name,
                 lines: folder.lines,
                 files: (folder.files || []).map((file) => ({
-                    name: file.name,
-                    lines: file.lines,
-                    sections: (file.sections || []).map((section) => ({
-                        name: section.name,
-                        lines: section.lines,
-                        definitions: (section.definitions || []).map((definition) => ({
-                            name: definition.name,
-                            lines: definition.lines,
-                        })),
+                  name: file.name,
+                  lines: file.lines,
+                  sections: (file.sections || []).map((section) => ({
+                    name: section.name,
+                    lines: section.lines,
+                    definitions: (section.definitions || []).map((definition) => ({
+                      name: definition.name,
+                      lines: definition.lines,
                     })),
+                  })),
                 })),
-              })), 
+              })),
             })),
           },
         }));
@@ -2377,16 +2377,16 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
       return (element.contributor.contributions?.bundles || []).map((p) => new ContributorBundleItem(p));
     }
     if (element instanceof ContributorBundleItem) {
-        return (element.bundle.folders || []).map((f) => new ContributorFolderItem(f));
+      return (element.bundle.folders || []).map((f) => new ContributorFolderItem(f));
     }
     if (element instanceof ContributorFolderItem) {
-        return (element.folder.files || []).map((f) => new ContributorFileItem(f));
+      return (element.folder.files || []).map((f) => new ContributorFileItem(f));
     }
     if (element instanceof ContributorFileItem) {
-        return (element.file.sections || []).map((s) => new ContributorSectionItem(s));
+      return (element.file.sections || []).map((s) => new ContributorSectionItem(s));
     }
     if (element instanceof ContributorSectionItem) {
-        return (element.section.definitions || []).map((d) => new ContributorDefinitionItem(d));
+      return (element.section.definitions || []).map((d) => new ContributorDefinitionItem(d));
     }
     if (element instanceof ContributorCommitsItem) {
       return (element.contributor.contributions?.commits || []).map((c) => new ContributorCommitItem(c.title, c.sha));
@@ -2999,21 +2999,21 @@ function registerCommands(context: vscode.ExtensionContext): void {
       if (!resolvedTicket) return;
       const root = getWorkspaceRoot();
       if (!root) return;
-      
+
       const relPath = path.join(String(resolvedTicket.year), String(resolvedTicket.month).padStart(2, "0"), String(resolvedTicket.day).padStart(2, "0"), resolvedTicket.slug, "plan.md");
       const metaPath = path.join(root, ".semio-repo", "tickets", relPath);
       let filePath = metaPath;
       // Fallback to old location or repo/tickets location if needed, 
       // but logic says we stick to .semio-repo or tickets/
       if (!fs.existsSync(metaPath)) {
-         filePath = path.join(root, "tickets", relPath);
+        filePath = path.join(root, "tickets", relPath);
       }
-      
+
       if (!fs.existsSync(filePath)) {
-          // Try without plan.md to see if folder exists? 
-          // Assuming plan.md is the name.
-          vscode.window.showErrorMessage(`Plan file not found: ${filePath}`);
-          return;
+        // Try without plan.md to see if folder exists? 
+        // Assuming plan.md is the name.
+        vscode.window.showErrorMessage(`Plan file not found: ${filePath}`);
+        return;
       }
 
       const uri = vscode.Uri.file(filePath);
@@ -3288,15 +3288,63 @@ function registerCommands(context: vscode.ExtensionContext): void {
       });
       if (!prompt) return;
 
-      const llm = await vscode.window.showQuickPick(LLM_OPTIONS, {
-        placeHolder: "Select LLM",
-      });
-      if (!llm) return;
       const ui = await vscode.window.showQuickPick(UI_OPTIONS, {
         placeHolder: "Select UI",
       });
       if (!ui) return;
-      runRepoCommand(`ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${llm}" "${ui}"`);
+
+      const llm = await vscode.window.showQuickPick(["(None)", ...LLM_OPTIONS], {
+        placeHolder: "Select LLM (Optional)",
+      });
+      if (!llm) return;
+      const actualLlm = llm === "(None)" ? "" : llm;
+
+      const cmd = actualLlm 
+          ? `ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${ui}" "${actualLlm}"`
+          : `ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${ui}"`;
+      runRepoCommand(cmd);
+    }),
+    vscode.commands.registerCommand("semio.goalOpen", async () => {
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
+        return;
+      }
+      const title = await vscode.window.showInputBox({
+        prompt: "Enter goal title",
+        placeHolder: "Goal Title",
+      });
+      if (!title) return;
+
+      const description = await vscode.window.showInputBox({
+        prompt: "Enter goal description",
+        placeHolder: "Goal Description",
+      });
+      if (!description) return;
+
+      const prompt = await vscode.window.showInputBox({
+        prompt: "Enter goal prompt",
+        placeHolder: "Goal Prompt",
+      });
+      if (!prompt) return;
+
+      const dueDate = await vscode.window.showInputBox({
+        prompt: "Enter goal due date (YYYY-MM-DD)",
+        placeHolder: "2026-02-15",
+      });
+      if (!dueDate) return;
+
+      const ui = await vscode.window.showQuickPick(UI_OPTIONS, {
+        placeHolder: "Select UI",
+      });
+      if (!ui) return;
+
+      const llm = await vscode.window.showQuickPick(LLM_OPTIONS, {
+        placeHolder: "Select LLM",
+      });
+      if (!llm) return;
+
+      const cmd = `goal open "${title.replace(/"/g, '\\"')}" "${description.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${dueDate.replace(/"/g, '\\"')}" "${ui}" "${llm}"`;
+      runRepoCommand(cmd);
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
       if (!hasRepoAccess()) {
@@ -3347,13 +3395,22 @@ function registerCommands(context: vscode.ExtensionContext): void {
         value: ("frontmatter" in resolvedTicket ? resolvedTicket.frontmatter.prompt : undefined) ?? resolvedTicket.slug,
       });
       if (!prompt) return;
-      const llm = await vscode.window.showQuickPick(LLM_OPTIONS, {
-        placeHolder: "Select LLM",
+
+      const ui = await vscode.window.showQuickPick(UI_OPTIONS, {
+        placeHolder: "Select UI",
+      });
+      if (!ui) return;
+
+      const llm = await vscode.window.showQuickPick(["(None)", ...LLM_OPTIONS], {
+        placeHolder: "Select LLM (Optional)",
       });
       if (!llm) return;
-      runRepoCommand(
-        `ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" "${llm}"`
-      );
+      const actualLlm = llm === "(None)" ? "" : llm;
+
+      const cmd = actualLlm
+        ? `ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" "${ui}" "${actualLlm}"`
+        : `ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" "${ui}"`;
+      runRepoCommand(cmd);
     }),
     vscode.commands.registerCommand("semio.ticketRead", async () => {
       if (!hasRepoAccess()) {

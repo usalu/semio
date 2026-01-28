@@ -1,0 +1,18 @@
+{
+  "title": "Add No-Github Flag And Tests",
+  "iterations": [
+    {
+      "prompt": "Add --no-github flag and comprehensive CLI tests",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-27T18:27:21.466976032Z",
+      "commit": "0e79162e48ba1c50c004cfa6dd88f38d251cc80a"
+    }
+  ],
+  "status": "open",
+  "dates": {},
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/228"
+  }
+}

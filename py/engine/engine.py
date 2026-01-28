@@ -63,9 +63,6 @@ import jinja2
 import lark
 import openai
 import pydantic
-import PySide6.QtCore
-import PySide6.QtGui
-import PySide6.QtWidgets
 import requests
 import sqlalchemy
 import sqlalchemy.orm
@@ -1618,6 +1615,8 @@ def start_engine():
 
 
 def restart_engine():
+    import PySide6.QtWidgets
+
     ui_instance = PySide6.QtWidgets.QApplication.instance()
     engine_process = ui_instance.engine_process
     if engine_process.is_alive():
@@ -1651,6 +1650,10 @@ def run(dev_mode: bool | None = None):
     if args.mcp_stdio:
         mcp.run()
         return
+
+    import PySide6.QtCore
+    import PySide6.QtGui
+    import PySide6.QtWidgets
 
     ui = PySide6.QtWidgets.QApplication(sys.argv)
     ui.setQuitOnLastWindowClosed(False)

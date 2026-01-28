@@ -8,7 +8,7 @@
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {
-    "vscode": "^1.106.0"
+    "vscode": "^1.105.0"
   },
   "repository": {
     "type": "git",
@@ -76,164 +76,164 @@
     "commands": [
       {
         "command": "semio.analyze",
-        "title": "semio: Analyze Codebase"
+        "title": "semio-repo: Analyze Codebase"
       },
       {
         "command": "semio.analyzeFile",
-        "title": "semio: Analyze Current File"
+        "title": "semio-repo: Analyze Current File"
       },
       {
         "command": "semio.fix",
-        "title": "semio: Fix Codebase Problems"
+        "title": "semio-repo: Fix Codebase Problems"
       },
       {
         "command": "semio.fixFile",
-        "title": "semio: Fix Current File Problems"
+        "title": "semio-repo: Fix Current File Problems"
       },
       {
         "command": "semio.policyList",
-        "title": "semio: List Policies"
+        "title": "semio-repo: List Policies"
       },
       {
         "command": "semio.policyCheck",
-        "title": "semio: Check Policy"
+        "title": "semio-repo: Check Policy"
       },
       {
         "command": "semio.ticketOpen",
-        "title": "semio: Create Ticket"
+        "title": "semio-repo: Create Ticket"
       },
       {
         "command": "semio.ticketList",
-        "title": "semio: List Tickets"
+        "title": "semio-repo: List Tickets"
       },
       {
         "command": "semio.ticketClose",
-        "title": "semio: Finish Ticket",
+        "title": "semio-repo: Finish Ticket",
         "icon": "$(issue-closed)"
       },
       {
         "command": "semio.ticketReopen",
-        "title": "semio: Reopen Ticket",
+        "title": "semio-repo: Reopen Ticket",
         "icon": "$(issue-reopened)"
       },
       {
         "command": "semio.ticketRead",
-        "title": "semio: Read Ticket"
+        "title": "semio-repo: Read Ticket"
       },
       {
         "command": "semio.projectList",
-        "title": "semio: List Bundles"
+        "title": "semio-repo: List Bundles"
       },
       {
         "command": "semio.projectTree",
-        "title": "semio: Show Bundle Tree"
+        "title": "semio-repo: Show Bundle Tree"
       },
       {
         "command": "semio.contributorAdd",
-        "title": "semio: Add Contributor"
+        "title": "semio-repo: Add Contributor"
       },
       {
         "command": "semio.contributorList",
-        "title": "semio: List Contributors"
+        "title": "semio-repo: List Contributors"
       },
       {
         "command": "semio.contributorRemove",
-        "title": "semio: Remove Contributor"
+        "title": "semio-repo: Remove Contributor"
       },
       {
         "command": "semio.folderTree",
-        "title": "semio: Show Folder Tree"
+        "title": "semio-repo: Show Folder Tree"
       },
       {
         "command": "semio.folderCreate",
-        "title": "semio: Create Folder"
+        "title": "semio-repo: Create Folder"
       },
       {
         "command": "semio.folderMove",
-        "title": "semio: Move Folder"
+        "title": "semio-repo: Move Folder"
       },
       {
         "command": "semio.folderDelete",
-        "title": "semio: Delete Folder"
+        "title": "semio-repo: Delete Folder"
       },
       {
         "command": "semio.folderList",
-        "title": "semio: List Folders"
+        "title": "semio-repo: List Folders"
       },
       {
         "command": "semio.fileCreate",
-        "title": "semio: Create File"
+        "title": "semio-repo: Create File"
       },
       {
         "command": "semio.fileMove",
-        "title": "semio: Move File"
+        "title": "semio-repo: Move File"
       },
       {
         "command": "semio.fileDelete",
-        "title": "semio: Delete File"
+        "title": "semio-repo: Delete File"
       },
       {
         "command": "semio.fileList",
-        "title": "semio: List Files"
+        "title": "semio-repo: List Files"
       },
       {
         "command": "semio.fileTree",
-        "title": "semio: Show File Tree"
+        "title": "semio-repo: Show File Tree"
       },
       {
         "command": "semio.sectionTree",
-        "title": "semio: Show Section Tree"
+        "title": "semio-repo: Show Section Tree"
       },
       {
         "command": "semio.sectionCreate",
-        "title": "semio: Create Section"
+        "title": "semio-repo: Create Section"
       },
       {
         "command": "semio.sectionMove",
-        "title": "semio: Move Section"
+        "title": "semio-repo: Move Section"
       },
       {
         "command": "semio.sectionDelete",
-        "title": "semio: Delete Section"
+        "title": "semio-repo: Delete Section"
       },
       {
         "command": "semio.sectionList",
-        "title": "semio: List Sections"
+        "title": "semio-repo: List Sections"
       },
       {
         "command": "semio.sectionOpen",
-        "title": "semio: Open Section"
+        "title": "semio-repo: Open Section"
       },
       {
         "command": "semio.sectionRename",
-        "title": "semio: Rename Section",
+        "title": "semio-repo: Rename Section",
         "icon": "$(edit)"
       },
       {
         "command": "semio.sectionCreateChild",
-        "title": "semio: Create Section Child",
+        "title": "semio-repo: Create Section Child",
         "icon": "$(add)"
       },
       {
         "command": "semio.sectionRemove",
-        "title": "semio: Delete Section",
+        "title": "semio-repo: Delete Section",
         "icon": "$(trash)"
       },
       {
         "command": "semio.sectionIntegrate",
-        "title": "semio: Integrate Source Into Section"
+        "title": "semio-repo: Integrate Source Into Section"
       },
       {
         "command": "semio.definitionList",
-        "title": "semio: List Definitions"
+        "title": "semio-repo: List Definitions"
       },
       {
         "command": "semio.definitionTree",
-        "title": "semio: Show Definition Tree"
+        "title": "semio-repo: Show Definition Tree"
       },
       {
         "command": "semio.refreshDiagnostics",
-        "title": "semio: Refresh Diagnostics"
+        "title": "semio-repo: Refresh Diagnostics"
       },
       {
         "command": "semio.navigateToRepo",

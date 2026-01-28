@@ -1,0 +1,18 @@
+{
+  "title": "Implement Goal Open Command with Required Arguments",
+  "iterations": [
+    {
+      "prompt": "repo, vscode and graphql: Goals must have a title, a description, prompt, due date, ui and llm. Throw if the arguments are not provided. Allow same as the other command positional ( \u003ctitle\u003e \u003cdescription\u003e \u003cprompt\u003e \u003cdue-date\u003e \u003cui\u003e \u003cllm\u003e), flagged such as (--\u003cdate\u003e --\u003cui\u003e --\u003cllm\u003e) or named flaggs such as: --title \u003ctitle\u003e --description \u003cdescription\u003e --prompt \u003cprompt\u003e --due-date \u003cdue-date\u003e --ui \u003cui\u003e --llm \u003cllm\u003e. Test everything. Never interact with github on tests and cleanup afterwards. Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear. Dont ask in between, no confirmations, no matter the issue. Figure it out. Be sure that it works everywhere before stopping. Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in ticket.md Dont keep any legacy api or backwards compatiblity.",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-27T23:30:23.604605254Z",
+      "commit": "0e79162e48ba1c50c004cfa6dd88f38d251cc80a"
+    }
+  ],
+  "status": "open",
+  "dates": {},
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/234"
+  }
+}

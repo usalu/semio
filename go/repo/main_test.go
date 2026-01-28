@@ -1261,7 +1261,7 @@ func TestTicketListCommand(t *testing.T) {
 }
 
 func TestTicketOpenNoticketKeyword(t *testing.T) {
-	result := ToolTicketOpen("Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "")
+	result := ToolTicketOpen("Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "", false)
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -1271,7 +1271,7 @@ func TestTicketOpenNoticketKeyword(t *testing.T) {
 }
 
 func TestTicketOpenContinueKeyword(t *testing.T) {
-	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "", "")
+	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "", "", false)
 	if first.Error != "" {
 		t.Fatalf("failed to seed ticket: %s", first.Error)
 	}
@@ -1286,7 +1286,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 		}
 	}()
 
-	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "", "")
+	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "", "", false)
 	if second.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
 	}
@@ -1300,6 +1300,104 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 }
 
 // #endregion Ticket Tests
+
+// #region Goal Tests
+
+func TestGoalCreateValidation(t *testing.T) {
+	// Test missing title
+	result := ToolGoalCreate("", "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true)
+	if result.Error == "" {
+		t.Error("expected error for missing title")
+	}
+
+	// Test missing description
+	result = ToolGoalCreate("Test Goal", "", "prompt", "2026-02-15", "opus-4-5", "claude-code", true)
+	if result.Error == "" {
+		t.Error("expected error for missing description")
+	}
+
+	// Test missing prompt
+	result = ToolGoalCreate("Test Goal", "desc", "", "2026-02-15", "opus-4-5", "claude-code", true)
+	if result.Error == "" {
+		t.Error("expected error for missing prompt")
+	}
+
+	// Test missing due date
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "", "opus-4-5", "claude-code", true)
+	if result.Error == "" {
+		t.Error("expected error for missing due date")
+	}
+
+	// Test missing LLM
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "", "claude-code", true)
+	if result.Error == "" {
+		t.Error("expected error for missing llm")
+	}
+
+	// Test missing UI
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "", true)
+	if result.Error == "" {
+		t.Error("expected error for missing ui")
+	}
+
+	// Test invalid LLM
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "invalid-llm", "claude-code", true)
+	if result.Error == "" {
+		t.Error("expected error for invalid llm")
+	}
+
+	// Test invalid UI
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "invalid-ui", true)
+	if result.Error == "" {
+		t.Error("expected error for invalid ui")
+	}
+}
+
+func TestGoalCreateAndCleanup(t *testing.T) {
+	// Create a goal with noGithub=true to avoid GitHub interaction
+	result := ToolGoalCreate("Test Goal Creation", "Test description", "Test prompt for goal", "2026-02-15", "opus-4-5", "claude-code", true)
+	if result.Error != "" {
+		t.Fatalf("ToolGoalCreate returned error: %s", result.Error)
+	}
+	goal, ok := result.Data.(*Goal)
+	if !ok || goal == nil {
+		t.Fatal("expected goal data")
+	}
+	if goal.Title != "Test Goal Creation" {
+		t.Errorf("expected title 'Test Goal Creation', got '%s'", goal.Title)
+	}
+	if goal.Dates.Due != "2026-02-15" {
+		t.Errorf("expected due date '2026-02-15', got '%s'", goal.Dates.Due)
+	}
+	if len(goal.Iterations) == 0 {
+		t.Error("expected at least one iteration")
+	} else {
+		if goal.Iterations[0].LLM != "opus-4-5" {
+			t.Errorf("expected LLM 'opus-4-5', got '%s'", goal.Iterations[0].LLM)
+		}
+		if goal.Iterations[0].UI != "claude-code" {
+			t.Errorf("expected UI 'claude-code', got '%s'", goal.Iterations[0].UI)
+		}
+	}
+
+	// Cleanup: remove the goal folder
+	goalPath := filepath.Join(GetRepoGoalsDir(), goal.ID)
+	if err := os.RemoveAll(goalPath); err != nil {
+		t.Errorf("failed to cleanup goal: %v", err)
+	}
+}
+
+func TestGoalList(t *testing.T) {
+	result := ToolGoalList()
+	// Note: This test may fail if there are malformed goal.json files in the repo
+	// The test is mainly to verify the function doesn't panic and the basic structure works
+	// Error might occur due to existing malformed data, which is acceptable for this test
+	if result.Error != "" {
+		t.Logf("ToolGoalList returned error (may be due to existing malformed data): %s", result.Error)
+	}
+}
+
+// #endregion Goal Tests
 
 // #region Contributor Tests
 

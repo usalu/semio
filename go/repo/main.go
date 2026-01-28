@@ -32,6 +32,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"math"
 	"math/rand"
@@ -819,7 +820,7 @@ func addUIFlags(cmd *cobra.Command) {
 func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "ticket", Short: "Ticket management commands"}
 	openCmd := &cobra.Command{
-		Use:   "open [title] [prompt] [llm] [ui]",
+		Use:   "open [title] [prompt] [ui] [llm]",
 		Short: "Open a new ticket",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title, _ := cmd.Flags().GetString("title")
@@ -828,6 +829,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			planPath, _ := cmd.Flags().GetString("plan-path")
 			goal, _ := cmd.Flags().GetString("goal")
 			parent, _ := cmd.Flags().GetString("parent")
+			noGithub, _ := cmd.Flags().GetBool("no-github")
 
 			// Process positional args for title and prompt first
 			remainingArgs := args
@@ -840,9 +842,9 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				remainingArgs = remainingArgs[1:]
 			}
 
-			// Extract LLM and UI from flags or remaining positional args
-			llm, remainingArgs := extractLLMFromArgs(cmd, remainingArgs)
-			ui, _ := extractUIFromArgs(cmd, remainingArgs)
+			// Extract UI and LLM from flags or remaining positional args
+			ui, remainingArgs := extractUIFromArgs(cmd, remainingArgs)
+			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
 
 			if title == "" {
 				return fmt.Errorf("missing title")
@@ -850,18 +852,18 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if prompt == "" {
 				prompt = title
 			}
-			if llm == "" {
-				return fmt.Errorf("missing llm. Use --llm <value>, --<llm-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedLLMs, ", "))
-			}
 			if ui == "" {
 				return fmt.Errorf("missing ui. Use --ui <value>, --<ui-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedUIs, ", "))
 			}
 			input := map[string]interface{}{
-				"title":   title,
-				"prompt":  prompt,
-				"llm":     llm,
-				"ui":      strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
-				"noIssue": noIssue,
+				"title":    title,
+				"prompt":   prompt,
+				"ui":       strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
+				"noIssue":  noIssue,
+				"noGithub": noGithub,
+			}
+			if llm != "" {
+				input["llm"] = llm
 			}
 			if planPath != "" {
 				input["planPath"] = planPath
@@ -892,6 +894,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().Bool("no-issue", false, "Skip GitHub issue")
 	openCmd.Flags().String("plan-path", "", "Plan file path")
 	openCmd.Flags().String("goal", "", "Goal ID")
+	openCmd.Flags().Bool("no-github", false, "Skip GitHub operations")
 	openCmd.Flags().String("parent", "", "Parent ticket slug")
 	addLLMFlags(openCmd)
 	addUIFlags(openCmd)
@@ -963,7 +966,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	listCmd.Flags().Int("month", 0, "Filter by month")
 	listCmd.Flags().Int("day", 0, "Filter by day")
 	closeCmd := &cobra.Command{
-		Use:   "close",
+		Use:   "close [path] [summary] [files...]",
 		Short: "Close a ticket",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			year, _ := cmd.Flags().GetInt("year")
@@ -971,10 +974,35 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			day, _ := cmd.Flags().GetInt("day")
 			slug, _ := cmd.Flags().GetString("slug")
 			summary, _ := cmd.Flags().GetString("summary")
+			noGithub, _ := cmd.Flags().GetBool("no-github")
 			files, _ := cmd.Flags().GetStringSlice("files")
 			title, _ := cmd.Flags().GetString("title")
+
+			if len(args) > 0 && (year == 0 || month == 0 || day == 0 || slug == "") {
+				parts := strings.Split(args[0], "/")
+				if len(parts) == 4 {
+					if y, err := strconv.Atoi(parts[0]); err == nil {
+						year = y
+					}
+					if m, err := strconv.Atoi(parts[1]); err == nil {
+						month = m
+					}
+					if d, err := strconv.Atoi(parts[2]); err == nil {
+						day = d
+					}
+					slug = parts[3]
+				}
+			}
+
+			if summary == "" && len(args) > 1 {
+				summary = args[1]
+			}
+			if len(files) == 0 && len(args) > 2 {
+				files = args[2:]
+			}
+
 			if year == 0 || month == 0 || day == 0 || slug == "" {
-				return fmt.Errorf("missing ticket path")
+				return fmt.Errorf("missing ticket path (use YYYY/MM/DD/SLUG or flags)")
 			}
 			if summary == "" {
 				return fmt.Errorf("missing summary")
@@ -987,6 +1015,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"month":   month,
 				"day":     day,
 				"slug":    slug,
+				"noGithub": noGithub,
 				"summary": summary,
 				"files":   files,
 			}
@@ -1009,16 +1038,18 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	closeCmd.Flags().Int("month", 0, "Ticket month")
 	closeCmd.Flags().Int("day", 0, "Ticket day")
 	closeCmd.Flags().String("slug", "", "Ticket slug")
+	closeCmd.Flags().Bool("no-github", false, "Skip GitHub operations")
 	closeCmd.Flags().String("summary", "", "Summary")
 	closeCmd.Flags().StringSlice("files", nil, "Files")
 	closeCmd.Flags().String("title", "", "Title")
 	reopenCmd := &cobra.Command{
-		Use:   "reopen [prompt] [llm]",
+		Use:   "reopen [prompt] [ui] [llm]",
 		Short: "Reopen a ticket",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			year, _ := cmd.Flags().GetInt("year")
 			month, _ := cmd.Flags().GetInt("month")
 			day, _ := cmd.Flags().GetInt("day")
+			noGithub, _ := cmd.Flags().GetBool("no-github")
 			slug, _ := cmd.Flags().GetString("slug")
 			prompt, _ := cmd.Flags().GetString("prompt")
 			title, _ := cmd.Flags().GetString("title")
@@ -1031,7 +1062,8 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				remainingArgs = remainingArgs[1:]
 			}
 
-			// Extract LLM from flags or remaining positional args
+			// Extract UI and LLM from flags or remaining positional args
+			ui, remainingArgs := extractUIFromArgs(cmd, remainingArgs)
 			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
 
 			if year == 0 || month == 0 || day == 0 || slug == "" {
@@ -1040,16 +1072,20 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if prompt == "" {
 				return fmt.Errorf("missing prompt")
 			}
-			if llm == "" {
-				return fmt.Errorf("missing llm. Use --llm <value>, --<llm-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedLLMs, ", "))
+			if ui == "" {
+				return fmt.Errorf("missing ui. Use --ui <value>, --<ui-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedUIs, ", "))
 			}
 			input := map[string]interface{}{
-				"year":   year,
-				"month":  month,
-				"day":    day,
-				"slug":   slug,
-				"prompt": prompt,
-				"llm":    llm,
+				"year":     year,
+				"month":    month,
+				"noGithub": noGithub,
+				"day":      day,
+				"slug":     slug,
+				"prompt":   prompt,
+				"ui":       strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
+			}
+			if llm != "" {
+				input["llm"] = llm
 			}
 			if title != "" {
 				input["title"] = title
@@ -1068,15 +1104,18 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
+	reopenCmd.Flags().Bool("no-github", false, "Skip GitHub operations")
 	reopenCmd.Flags().Int("year", 0, "Ticket year")
 	reopenCmd.Flags().Int("month", 0, "Ticket month")
 	reopenCmd.Flags().Int("day", 0, "Ticket day")
 	reopenCmd.Flags().String("slug", "", "Ticket slug")
 	reopenCmd.Flags().String("prompt", "", "Prompt")
 	reopenCmd.Flags().String("llm", "", "LLM")
+	reopenCmd.Flags().String("ui", "", "UI")
 	reopenCmd.Flags().String("title", "", "Title")
 	reopenCmd.Flags().String("plan-path", "", "Path to plan file")
 	addLLMFlags(reopenCmd)
+	addUIFlags(reopenCmd)
 		
 		treeCmd := &cobra.Command{
 			Use:   "tree",
@@ -1202,107 +1241,193 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 						id
 						title
 						description
-						milestone
+						prompt
+						dueDate
+						ui
+						llm
 						status
+						milestone
 					}
 				}
 			}`
 			return runGraphQL(cmd, factory, config, query, nil)
 		},
 	}
-	createCmd := &cobra.Command{
-		Use:   "create",
-		Short: "Create a goal",
+	openCmd := &cobra.Command{
+		Use:   "open [title] [description] [prompt] [due-date] [ui] [llm]",
+		Short: "Open a new goal",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			title, _ := cmd.Flags().GetString("title")
 			description, _ := cmd.Flags().GetString("description")
+			prompt, _ := cmd.Flags().GetString("prompt")
+			dueDate, _ := cmd.Flags().GetString("due-date")
+			noGithub, _ := cmd.Flags().GetBool("no-github")
+
+			// Process positional args
+			remainingArgs := args
+			if title == "" && len(remainingArgs) > 0 {
+				title = remainingArgs[0]
+				remainingArgs = remainingArgs[1:]
+			}
+			if description == "" && len(remainingArgs) > 0 {
+				description = remainingArgs[0]
+				remainingArgs = remainingArgs[1:]
+			}
+			if prompt == "" && len(remainingArgs) > 0 {
+				prompt = remainingArgs[0]
+				remainingArgs = remainingArgs[1:]
+			}
+			if dueDate == "" && len(remainingArgs) > 0 {
+				dueDate = remainingArgs[0]
+				remainingArgs = remainingArgs[1:]
+			}
+
+			// Extract UI and LLM from flags or remaining positional args
+			ui, remainingArgs := extractUIFromArgs(cmd, remainingArgs)
+			llm, _ := extractLLMFromArgs(cmd, remainingArgs)
+
 			if title == "" {
 				return fmt.Errorf("missing title")
 			}
+			if description == "" {
+				return fmt.Errorf("missing description")
+			}
+			if prompt == "" {
+				return fmt.Errorf("missing prompt")
+			}
+			if dueDate == "" {
+				return fmt.Errorf("missing due-date")
+			}
+			if ui == "" {
+				return fmt.Errorf("missing ui. Use --ui <value>, --<ui-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedUIs, ", "))
+			}
+			if llm == "" {
+				return fmt.Errorf("missing llm. Use --llm <value>, --<llm-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedLLMs, ", "))
+			}
+
 			input := map[string]interface{}{
 				"title":       title,
 				"description": description,
+				"prompt":      prompt,
+				"dueDate":     dueDate,
+				"llm":         llm,
+				"ui":          ui,
+				"noGithub":    noGithub,
 			}
 			variables := map[string]interface{}{"input": input}
 			query := `mutation GoalCreate($input: GoalCreateInput!) {
 				goalCreate(input: $input) {
 					id
 					title
-					description
-					milestone
 					status
+					prompt
+					dueDate
+					ui
+					llm
 				}
 			}`
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
-	createCmd.Flags().String("title", "", "Goal title")
-	createCmd.Flags().String("description", "", "Goal description")
+	openCmd.Flags().String("title", "", "Goal title")
+	openCmd.Flags().String("description", "", "Goal description")
+	openCmd.Flags().String("prompt", "", "Goal prompt")
+	openCmd.Flags().String("due-date", "", "Goal due date (e.g., 2026-02-15)")
+	openCmd.Flags().String("llm", "", "LLM")
+	openCmd.Flags().String("ui", "", "UI")
+	openCmd.Flags().Bool("no-github", false, "Skip GitHub synchronization")
+	addLLMFlags(openCmd)
+	addUIFlags(openCmd)
 
-	updateCmd := &cobra.Command{
-		Use:   "update",
-		Short: "Update a goal",
+	closeCmd := &cobra.Command{
+		Use:   "close [id]",
+		Short: "Close a goal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, _ := cmd.Flags().GetString("id")
-			title, _ := cmd.Flags().GetString("title")
-			description, _ := cmd.Flags().GetString("description")
-			status, _ := cmd.Flags().GetString("status")
+			id := ""
+			if len(args) > 0 {
+				id = args[0]
+			}
 			if id == "" {
-				return fmt.Errorf("missing id")
+				return fmt.Errorf("missing goal id")
 			}
+			noGithub, _ := cmd.Flags().GetBool("no-github")
 			input := map[string]interface{}{
-				"id": id,
+				"id":       id,
+				"status":   "closed",
+				"noGithub": noGithub,
 			}
-			if title != "" {
-				input["title"] = title
-			}
-			if description != "" {
-				input["description"] = description
-			}
-			if status != "" {
-				input["status"] = status
-			}
-
 			variables := map[string]interface{}{"input": input}
 			query := `mutation GoalUpdate($input: GoalUpdateInput!) {
 				goalUpdate(input: $input) {
 					id
-					title
-					description
-					milestone
 					status
 				}
 			}`
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
-	updateCmd.Flags().String("id", "", "Goal id")
-	updateCmd.Flags().String("title", "", "Goal title")
-	updateCmd.Flags().String("description", "", "Goal description")
-	updateCmd.Flags().String("status", "", "Goal status")
+	closeCmd.Flags().Bool("no-github", false, "Skip GitHub synchronization")
 
-	deleteCmd := &cobra.Command{
-		Use:   "delete",
-		Short: "Delete a goal",
+	reopenCmd := &cobra.Command{
+		Use:   "reopen [id]",
+		Short: "Reopen a goal",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			id, _ := cmd.Flags().GetString("id")
-			if id == "" {
-				return fmt.Errorf("missing id")
+			id := ""
+			if len(args) > 0 {
+				id = args[0]
 			}
-			input := map[string]interface{}{"id": id}
+			if id == "" {
+				return fmt.Errorf("missing goal id")
+			}
+			noGithub, _ := cmd.Flags().GetBool("no-github")
+			input := map[string]interface{}{
+				"id":       id,
+				"status":   "open",
+				"noGithub": noGithub,
+			}
 			variables := map[string]interface{}{"input": input}
-			query := `mutation GoalDelete($input: GoalDeleteInput!) {
-				goalDelete(input: $input)
+			query := `mutation GoalUpdate($input: GoalUpdateInput!) {
+				goalUpdate(input: $input) {
+					id
+					status
+				}
 			}`
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
-	deleteCmd.Flags().String("id", "", "Goal id")
+	reopenCmd.Flags().Bool("no-github", false, "Skip GitHub synchronization")
+	
+	treeCmd := &cobra.Command{
+		Use:   "tree",
+		Short: "Show goal and ticket tree",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := `query GoalTree {
+				repo {
+					goals {
+						id
+						title
+						status
+					}
+					tickets {
+						id
+						slug
+						status
+						data {
+							goal
+							parent
+						}
+					}
+				}
+			}`
+			return runGraphQL(cmd, factory, config, query, nil)
+		},
+	}
 
 	root.AddCommand(listCmd)
-	root.AddCommand(createCmd)
-	root.AddCommand(updateCmd)
-	root.AddCommand(deleteCmd)
+	root.AddCommand(openCmd)
+	root.AddCommand(closeCmd)
+	root.AddCommand(reopenCmd)
+	root.AddCommand(treeCmd)
 	return root
 }
 
@@ -2133,7 +2258,16 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		return sb.String()
 	}
 
-	// Case 3: Ticket operations
+	// Case 3: Goal Tree
+	if repo, ok := payload["repo"].(map[string]interface{}); ok {
+		goals, goalsOk := repo["goals"].([]interface{})
+		tickets, ticketsOk := repo["tickets"].([]interface{})
+		if goalsOk && ticketsOk {
+			return formatGoalTree(goals, tickets, isTTY)
+		}
+	}
+
+	// Case 4: Ticket operations
 	for k, v := range payload {
 		if strings.HasPrefix(k, "ticket") || k == "ticket" {
 			if tMap, ok := v.(map[string]interface{}); ok {
@@ -2376,6 +2510,142 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	return fmt.Sprintf("%s %s\n", prefix, jsonStr)
 }
 
+func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool) string {
+	var sb strings.Builder
+
+	// Define Types
+	type TicketNode struct {
+		ID, Slug, Status string
+		GoalID, ParentID string
+		Children         []*TicketNode
+	}
+
+	type GoalNode struct {
+		ID, Title, Status string
+		Tickets           []*TicketNode
+	}
+
+	// Parse Goals
+	goalMap := make(map[string]*GoalNode)
+	var orderedGoals []*GoalNode
+
+	for _, g := range goalsRaw {
+		if gm, ok := g.(map[string]interface{}); ok {
+			id, _ := gm["id"].(string)
+			title, _ := gm["title"].(string)
+			status, _ := gm["status"].(string)
+			node := &GoalNode{ID: id, Title: title, Status: status}
+			goalMap[id] = node
+			orderedGoals = append(orderedGoals, node)
+		}
+	}
+
+	// Parse Tickets
+	ticketMap := make(map[string]*TicketNode)
+	var allTickets []*TicketNode
+
+	for _, t := range ticketsRaw {
+		if tm, ok := t.(map[string]interface{}); ok {
+			id, _ := tm["id"].(string)
+			slug, _ := tm["slug"].(string)
+			status, _ := tm["status"].(string)
+
+			var goalID, parentID string
+			if data, ok := tm["data"].(map[string]interface{}); ok {
+				goalID, _ = data["goal"].(string)
+				parentID, _ = data["parent"].(string)
+			}
+
+			node := &TicketNode{ID: id, Slug: slug, Status: status, GoalID: goalID, ParentID: parentID}
+			ticketMap[id] = node
+			allTickets = append(allTickets, node)
+		}
+	}
+
+	// Build Hierarchy
+	var noGoalTickets []*TicketNode
+
+	for _, t := range allTickets {
+		// Assign to Goal
+		if t.GoalID != "" {
+			if g, ok := goalMap[t.GoalID]; ok {
+				g.Tickets = append(g.Tickets, t)
+			} else {
+				noGoalTickets = append(noGoalTickets, t)
+			}
+		} else {
+			noGoalTickets = append(noGoalTickets, t)
+		}
+	}
+
+	// Helper to nest tickets
+	nestTickets := func(nodes []*TicketNode) []*TicketNode {
+		var roots []*TicketNode
+		lookup := make(map[string]*TicketNode)
+		for _, n := range nodes {
+			lookup[n.ID] = n
+		}
+		for _, n := range nodes {
+			if n.ParentID != "" && lookup[n.ParentID] != nil {
+				parent := lookup[n.ParentID]
+				parent.Children = append(parent.Children, n)
+			} else {
+				roots = append(roots, n)
+			}
+		}
+		return roots
+	}
+
+	for _, g := range orderedGoals {
+		g.Tickets = nestTickets(g.Tickets)
+	}
+	noGoalTickets = nestTickets(noGoalTickets)
+
+	var printTickets func(nodes []*TicketNode, prefix string)
+	printTickets = func(nodes []*TicketNode, prefix string) {
+		for i, t := range nodes {
+			isLast := i == len(nodes)-1
+			marker := "├──"
+			newPrefix := prefix + "│  "
+			if isLast {
+				marker = "└──"
+				newPrefix = prefix + "   "
+			}
+
+			statusColor := ColorBlue
+			if t.Status == "finished" || t.Status == "closed" {
+				statusColor = ColorGreen
+			}
+
+			statusIcon := "◯"
+			if t.Status == "finished" || t.Status == "closed" {
+				statusIcon = "✓"
+			}
+
+			line := fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize(statusIcon, statusColor, isTTY), colorize(t.Slug, ColorBold, isTTY))
+			sb.WriteString(line)
+
+			printTickets(t.Children, newPrefix)
+		}
+	}
+
+	for _, g := range orderedGoals {
+		statusColor := ColorBlue
+		if g.Status == "closed" {
+			statusColor = ColorGreen
+		}
+		sb.WriteString(fmt.Sprintf("%s %s\n", colorize("■", statusColor, isTTY), colorize(g.Title, ColorBold, isTTY)))
+		printTickets(g.Tickets, "")
+	}
+
+	if len(noGoalTickets) > 0 {
+		sb.WriteString(fmt.Sprintf("%s %s\n", colorize("?", ColorDim, isTTY), colorize("No Goal", ColorDim, isTTY)))
+		printTickets(noGoalTickets, "")
+	}
+
+	return sb.String()
+}
+
 func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
 	var renderer StreamRenderer
 	if config.JSON {
@@ -2506,7 +2776,10 @@ var AllowedLLMs = []string{
 var AllowedUIs = []string{
 	"copilot-chat",
 	"antigravity",
+	"antigravity-chat",
 	"cursor",
+	"cursor-chat",
+	"vscode",
 	"claude-code",
 	"codex",
 	"droid",
@@ -3512,17 +3785,23 @@ type FileListInput struct {
 type TicketOpenInput struct {
 Title    string `json:"title"`
 Prompt   string `json:"prompt"`
-LLM      string `json:"llm"`
+LLM      string `json:"llm,omitempty"`
 UI       string `json:"ui"`
 NoIssue  bool   `json:"noIssue,omitempty"`
 PlanPath string `json:"planPath,omitempty"`
 Goal     string `json:"goal,omitempty"`
 Parent   string `json:"parent,omitempty"`
+	NoGithub bool   `json:"noGithub,omitempty"`
 }
 
 type GoalCreateInput struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
+	Prompt      string `json:"prompt"`
+	DueDate     string `json:"dueDate"`
+	LLM         string `json:"llm"`
+	UI          string `json:"ui"`
+	NoGithub    bool   `json:"noGithub,omitempty"`
 }
 
 type GoalUpdateInput struct {
@@ -3530,6 +3809,7 @@ type GoalUpdateInput struct {
 	Title       string `json:"title,omitempty"`
 	Description string `json:"description,omitempty"`
 	Status      string `json:"status,omitempty"`
+	NoGithub    bool   `json:"noGithub,omitempty"`
 }
 
 type GoalDeleteInput struct {
@@ -3544,13 +3824,14 @@ type TicketDeleteInput struct {
 }
 
 type TicketCloseInput struct {
-	Year    int      `json:"year"`
-	Month   int      `json:"month"`
-	Day     int      `json:"day"`
-	Slug    string   `json:"slug"`
-	Summary string   `json:"summary"`
-	Files   []string `json:"files"`
-	Title   *string  `json:"title,omitempty"`
+	Year     int      `json:"year"`
+	Month    int      `json:"month"`
+	Day      int      `json:"day"`
+	Slug     string   `json:"slug"`
+	Summary  string   `json:"summary"`
+	Files    []string `json:"files"`
+	Title    *string  `json:"title,omitempty"`
+	NoGithub bool     `json:"noGithub,omitempty"`
 }
 
 type TicketReopenInput struct {
@@ -3559,9 +3840,11 @@ type TicketReopenInput struct {
 	Day      int     `json:"day"`
 	Slug     string  `json:"slug"`
 	Prompt   string  `json:"prompt"`
-	LLM      string  `json:"llm"`
+	LLM      string  `json:"llm,omitempty"`
+	UI       string  `json:"ui"`
 	Title    *string `json:"title,omitempty"`
 	PlanPath string  `json:"planPath,omitempty"`
+	NoGithub bool    `json:"noGithub,omitempty"`
 }
 
 type ContributorAddInput struct {
@@ -4831,15 +5114,31 @@ type TicketData struct {
 }
 
 type Goal struct {
-	ID          string `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Milestone   int    `json:"milestone"`
-	Status      string `json:"status"`
+	Title       string             `json:"title"`
+	Description string             `json:"description"`
+	Prompt      string             `json:"prompt"`
+	Status      string             `json:"status"`
+	Dates       GoalDates          `json:"dates"`
+	UI          string             `json:"ui"`
+	LLM         string             `json:"llm"`
+	GitHub      *GoalGithubData    `json:"github,omitempty"`
+	Iterations  []TicketIteration  `json:"iterations"`
+	// Derived fields
+	ID   string `json:"-"`
+	Path string `json:"-"`
 }
 
 func (g *Goal) IsNode()       {}
-func (g *Goal) GetID() string { return g.ID }
+func (g *Goal) GetID() string { return "@semio-repo/goal/" + g.ID }
+
+type GoalDates struct {
+	Due    string     `json:"due,omitempty"`
+	Closed *time.Time `json:"closed,omitempty"`
+}
+
+type GoalGithubData struct {
+	Milestone string `json:"milestone,omitempty"`
+}
 
 type TicketDates struct {
 	Closed *time.Time `json:"closed,omitempty"`
@@ -8570,7 +8869,7 @@ func shouldSkipTicket(prompt string) bool {
 	return hasTicketKeyword(prompt, "NOTICKET")
 }
 
-func OpenTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string) (*Ticket, error) {
+func OpenTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string, noGithub bool) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
 	}
@@ -8583,12 +8882,27 @@ func OpenTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal stri
 			return nil, err
 		}
 		if latest.GetStatus() == TicketStatusClosed {
-			return latest, ReopenTicket(latest, prompt, llm, planPath)
+			return latest, ReopenTicket(latest, prompt, llm, ui, planPath, noGithub)
 		}
 		return latest, nil
 	}
-	return CreateTicket(title, prompt, llm, ui, planPath, noIssue, goal, parent)
+	return CreateTicket(title, prompt, llm, ui, planPath, noIssue, goal, parent, noGithub)
 }
+
+func OpenGoal(title, description, prompt, dueDate, ui, llm string, noGithub bool) (*Goal, error) {
+	ctx := NewRepoContext(rootDir)
+	input := GoalCreateInput{
+		Title:       title,
+		Description: description,
+		Prompt:      prompt,
+		DueDate:     dueDate,
+		UI:          ui,
+		LLM:         llm,
+		NoGithub:    noGithub,
+	}
+	return ctx.GoalCreate(input)
+}
+
 
 func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if ticket == nil {
@@ -8640,7 +8954,7 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	return nil
 }
 
-func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string) (*Ticket, error) {
+func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string, noGithub bool) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	slug := Slugify(title)
 	if title == slug {
@@ -8653,9 +8967,13 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal st
 	now := time.Now()
 	year, month, day := FormatDate(now)
 
-	llmSlug, err := ResolveAllowedLLM(llm)
-	if err != nil {
-		return nil, err
+	var llmSlug string
+	var err error
+	if llm != "" {
+		llmSlug, err = ResolveAllowedLLM(llm)
+		if err != nil {
+			return nil, err
+		}
 	}
 	uiSlug, err := ResolveAllowedUI(ui)
 	if err != nil {
@@ -8687,7 +9005,7 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal st
 		}
 	}
 	// When no plan is provided, finalPlanFilename and planFilePath remain empty
-	if err := WriteTextFile(ticketFilePath, buildTicketMarkdown("")); err != nil {
+	if err := WriteTextFile(ticketFilePath, buildTicketMarkdown(goal, parent)); err != nil {
 		return nil, fmt.Errorf("failed to write ticket file: %w", err)
 	}
 
@@ -8708,7 +9026,7 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal st
 		Parent: parent,
 	}
 
-	skipIssue := noIssue || strings.Contains(prompt, "NOISSUE")
+	skipIssue := noIssue || noGithub || strings.Contains(prompt, "NOISSUE")
 	if !skipIssue {
 		issueBody := prompt
 		if planContent != "" {
@@ -8722,7 +9040,11 @@ func CreateTicket(title, prompt, llm, ui, planPath string, noIssue bool, goal st
 			if err == nil {
 				for _, g := range goals {
 					if g.ID == goal {
-						milestone = &g.Milestone
+						if g.GitHub != nil && g.GitHub.Milestone != "" {
+							if n, err := parseMilestoneNumber(g.GitHub.Milestone); err == nil {
+								milestone = &n
+							}
+						}
 						break
 					}
 				}
@@ -8854,13 +9176,19 @@ func formatSummaryHeading(body string) string {
 	return "# 🔍 Summary\n\n" + body
 }
 
-func buildTicketMarkdown(planContent string) string {
+func buildTicketMarkdown(goal, parent string) string {
 	var builder strings.Builder
-	builder.WriteString("# Ticket\n\n## Todos\n\n")
-	if planContent != "" {
-		builder.WriteString(strings.TrimSpace(planContent))
-		builder.WriteString("\n\n")
+	if goal != "" || parent != "" {
+		builder.WriteString("---\n")
+		if goal != "" {
+			builder.WriteString(fmt.Sprintf("goal: %s\n", goal))
+		}
+		if parent != "" {
+			builder.WriteString(fmt.Sprintf("parent: %s\n", parent))
+		}
+		builder.WriteString("---\n\n")
 	}
+	builder.WriteString("# Ticket\n\n## Todos\n\n")
 	builder.WriteString("## Changes\n\n")
 	builder.WriteString("## Log\n\n")
 	builder.WriteString("## Summary\n")
@@ -9781,7 +10109,7 @@ func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
 	return strings.Join(lines, "\n")
 }
 
-func FinishTicket(ticket *Ticket, summary string, files []string) error {
+func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool) error {
 	if ticket.Data == nil {
 		return fmt.Errorf("ticket data is nil")
 	}
@@ -9796,7 +10124,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 		return err
 	}
 
-	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" && !noGithub {
 		issueURL := ticket.Data.GitHub.Issue
 
 		// 1. Add comment with summary and metrics
@@ -9867,7 +10195,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string) error {
 	return SaveTicket(ticket)
 }
 
-func ReopenTicket(ticket *Ticket, prompt, llm, planPath string) error {
+func ReopenTicket(ticket *Ticket, prompt, llm, ui, planPath string, noGithub bool) error {
 	if ticket.Data == nil {
 		return fmt.Errorf("ticket data is nil")
 	}
@@ -9876,13 +10204,22 @@ func ReopenTicket(ticket *Ticket, prompt, llm, planPath string) error {
 	}
 	gitAuthor := GetGitAuthorGithub()
 	gitCommit := GetGitCommit()
-	llmSlug, err := ResolveAllowedLLM(llm)
-	if err != nil {
-		return err
+	var llmSlug string
+	var uiSlug string
+	var err error
+	if llm != "" {
+		llmSlug, err = ResolveAllowedLLM(llm)
+		if err != nil {
+			return err
+		}
 	}
-	uiSlug, err := ResolveAllowedUI(ticket.GetUI())
-	if err != nil {
-		return err
+	if ui != "" {
+		uiSlug, err = ResolveAllowedUI(ui)
+		if err != nil {
+			return err
+		}
+	} else {
+		return fmt.Errorf("ui is required")
 	}
 
 	iteration := TicketIteration{
@@ -9909,7 +10246,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, planPath string) error {
 	ticket.Data.Status = TicketStatusOpen
 	ticket.Data.Dates.Closed = nil
 
-	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+	if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" && !noGithub {
 		issueURL := ticket.Data.GitHub.Issue
 		if err := ghReopenIssue(issueURL); err != nil {
 			fmt.Printf("Warning: Failed to reopen GitHub issue: %v\n", err)
@@ -9924,13 +10261,13 @@ func ReopenTicket(ticket *Ticket, prompt, llm, planPath string) error {
 	return SaveTicket(ticket)
 }
 
-func ToolTicketOpen(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string) ToolResult {
+func ToolTicketOpen(title, prompt, llm, ui, planPath string, noIssue bool, goal string, parent string, noGithub bool) ToolResult {
 	output := NewOutput()
 	resolvedPrompt := prompt
 	if resolvedPrompt == "" {
 		resolvedPrompt = title
 	}
-	ticket, err := OpenTicket(title, prompt, llm, ui, planPath, noIssue, goal, parent)
+	ticket, err := OpenTicket(title, prompt, llm, ui, planPath, noIssue, goal, parent, noGithub)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
@@ -10000,14 +10337,14 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketClose(year, month, day int, slug, summary string, files []string) ToolResult {
+func ToolTicketClose(year, month, day int, slug, summary string, files []string, noGithub bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := FinishTicket(ticket, summary, files); err != nil {
+	if err := FinishTicket(ticket, summary, files, noGithub); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
@@ -10028,19 +10365,66 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string)
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketReopen(year, month, day int, slug, prompt, llm, planPath string) ToolResult {
+func ToolTicketReopen(year, month, day int, slug, prompt, llm, ui, planPath string, noGithub bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	if err := ReopenTicket(ticket, prompt, llm, planPath); err != nil {
+	if err := ReopenTicket(ticket, prompt, llm, ui, planPath, noGithub); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	output.Success(fmt.Sprintf("\n🔓 Ticket reopened: %s", ticket.Slug))
 	return ToolResult{Output: *output, Data: ticket}
+}
+
+func ToolGoalCreate(title, description, prompt, dueDate, llm, ui string, noGithub bool) ToolResult {
+	output := NewOutput()
+	ctx := NewRepoContext(rootDir)
+	goal, err := ctx.GoalCreate(GoalCreateInput{
+		Title:       title,
+		Description: description,
+		Prompt:      prompt,
+		DueDate:     dueDate,
+		LLM:         llm,
+		UI:          ui,
+		NoGithub:    noGithub,
+	})
+	if err != nil {
+		output.Error(fmt.Sprintf("Error: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	output.Success(fmt.Sprintf("\n🎯 Created goal: %s", goal.ID))
+	output.Info(fmt.Sprintf("   Title: %s", goal.Title))
+	output.Info(fmt.Sprintf("   Due: %s", goal.Dates.Due))
+	if goal.GitHub != nil && goal.GitHub.Milestone != "" {
+		output.Info(fmt.Sprintf("   Milestone: %s", goal.GitHub.Milestone))
+	}
+	return ToolResult{Output: *output, Data: goal}
+}
+
+func ToolGoalList() ToolResult {
+	output := NewOutput()
+	goals, err := ListGoals()
+	if err != nil {
+		output.Error(fmt.Sprintf("Error: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	output.Info(fmt.Sprintf("\n🎯 Found %d goals:\n", len(goals)))
+	for _, g := range goals {
+		status := "🟢"
+		if g.Status == "closed" {
+			status = "✅"
+		}
+		output.Plain(fmt.Sprintf("   %s %s", status, g.ID))
+		output.Plain(fmt.Sprintf("      %s", g.Title))
+		if g.Dates.Due != "" {
+			output.Plain(fmt.Sprintf("      Due: %s", g.Dates.Due))
+		}
+	}
+	return ToolResult{Output: *output, Data: goals}
 }
 
 func ToolContributorAdd(github string) ToolResult {
@@ -11616,95 +12000,169 @@ func (c *repoContext) GetGoals() ([]Goal, error) {
 }
 
 func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
-	goals, err := ListGoals()
-	if err != nil && goals == nil {
-		goals = []Goal{}
-	} else if err != nil {
-		return nil, err
+	// Validate required fields
+	if input.Title == "" {
+		return nil, fmt.Errorf("missing title")
 	}
-	id := fmt.Sprintf("%x", time.Now().UnixNano())
-	milestone, err := ghCreateMilestone(input.Title, input.Description)
+	if input.Description == "" {
+		return nil, fmt.Errorf("missing description")
+	}
+	if input.Prompt == "" {
+		return nil, fmt.Errorf("missing prompt")
+	}
+	if input.DueDate == "" {
+		return nil, fmt.Errorf("missing due date")
+	}
+	if input.LLM == "" {
+		return nil, fmt.Errorf("missing llm")
+	}
+	if input.UI == "" {
+		return nil, fmt.Errorf("missing ui")
+	}
+
+	// Validate LLM and UI
+	llmSlug, err := ResolveAllowedLLM(input.LLM)
 	if err != nil {
 		return nil, err
 	}
+	uiSlug, err := ResolveAllowedUI(input.UI)
+	if err != nil {
+		return nil, err
+	}
+
+	id := Slugify(input.Title)
+	dir := GetRepoGoalsDir()
+	path := filepath.Join(dir, id, "goal.json")
+	if FileExists(path) {
+		return nil, fmt.Errorf("goal with id %s already exists", id)
+	}
+
+	var milestoneNumber int
+	if !input.NoGithub {
+		milestoneNumber, err = ghCreateMilestone(input.Title, input.Description)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	var milestoneUrl string
+	if !input.NoGithub {
+		repoUrl, _ := getGhRepoUrl()
+		milestoneUrl = fmt.Sprintf("%s/milestone/%d", repoUrl, milestoneNumber)
+	}
+
+	gitAuthor := GetGitAuthorGithub()
+
 	goal := Goal{
 		ID:          id,
 		Title:       input.Title,
 		Description: input.Description,
-		Milestone:   milestone,
+		Prompt:      input.Prompt,
 		Status:      "open",
+		Dates:       GoalDates{Due: input.DueDate},
+		UI:          uiSlug,
+		LLM:         llmSlug,
+		Iterations: []TicketIteration{{
+			Prompt: input.Prompt,
+			LLM:    llmSlug,
+			UI:     uiSlug,
+			Author: gitAuthor,
+			Date:   time.Now(),
+		}},
 	}
-	goals = append(goals, goal)
-	if err := SaveGoals(goals); err != nil {
+	if !input.NoGithub {
+		goal.GitHub = &GoalGithubData{
+			Milestone: milestoneUrl,
+		}
+	}
+
+	if err := SaveGoal(goal); err != nil {
 		return nil, err
 	}
 	return &goal, nil
 }
 
+func getGhRepoUrl() (string, error) {
+	out, err := exec.Command("gh", "repo", "view", "--json", "url", "--jq", ".url").Output()
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(string(out)), nil
+}
+
+func parseMilestoneNumber(milestone string) (int, error) {
+	if n, err := strconv.Atoi(milestone); err == nil {
+		return n, nil
+	}
+	parts := strings.Split(milestone, "/")
+	if len(parts) > 0 {
+		if n, err := strconv.Atoi(parts[len(parts)-1]); err == nil {
+			return n, nil
+		}
+	}
+	return 0, fmt.Errorf("could not parse milestone number from %s", milestone)
+}
+
 func (c *repoContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) {
-	goals, err := ListGoals()
+	dir := GetRepoGoalsDir()
+	path := filepath.Join(dir, input.ID, "goal.json")
+	content, err := ReadTextFile(path)
 	if err != nil {
 		return nil, err
 	}
-	var goal *Goal
-	index := -1
-	for i := range goals {
-		if goals[i].ID == input.ID {
-			goal = &goals[i]
-			index = i
-			if input.Title != "" {
-				goal.Title = input.Title
+	var goal Goal
+	if err := json.Unmarshal([]byte(content), &goal); err != nil {
+		return nil, err
+	}
+	goal.ID = input.ID // Ensure ID is set
+
+	if input.Title != "" {
+		goal.Title = input.Title
+	}
+	if input.Description != "" {
+		goal.Description = input.Description
+	}
+	if input.Status != "" {
+		goal.Status = input.Status
+	}
+
+	if goal.GitHub != nil && !input.NoGithub {
+		number, err := parseMilestoneNumber(goal.GitHub.Milestone)
+		if err == nil {
+			if err := ghUpdateMilestone(number, goal.Title, goal.Description, goal.Status); err != nil {
+				return nil, err
 			}
-			if input.Description != "" {
-				goal.Description = input.Description
-			}
-			if input.Status != "" {
-				goal.Status = input.Status
-			}
-			break
 		}
 	}
-	if goal == nil {
-		return nil, fmt.Errorf("goal not found")
-	}
 
-	if err := ghUpdateMilestone(goal.Milestone, input.Title, input.Description, input.Status); err != nil {
+	if err := SaveGoal(goal); err != nil {
 		return nil, err
 	}
-
-	goals[index] = *goal
-
-	if err := SaveGoals(goals); err != nil {
-		return nil, err
-	}
-	return goal, nil
+	return &goal, nil
 }
 
 func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
-	goals, err := ListGoals()
+	dir := GetRepoGoalsDir()
+	path := filepath.Join(dir, input.ID, "goal.json")
+	content, err := ReadTextFile(path)
 	if err != nil {
 		return false, err
 	}
-	var newGoals []Goal
-	var found bool
-	var number int
-	for _, g := range goals {
-		if g.ID == input.ID {
-			found = true
-			number = g.Milestone
-			continue
-		}
-		newGoals = append(newGoals, g)
-	}
-	if !found {
-		return false, fmt.Errorf("goal not found")
-	}
-
-	if err := ghDeleteMilestone(number); err != nil {
+	var goal Goal
+	if err := json.Unmarshal([]byte(content), &goal); err != nil {
 		return false, err
 	}
 
-	if err := SaveGoals(newGoals); err != nil {
+	if goal.GitHub != nil {
+		number, err := parseMilestoneNumber(goal.GitHub.Milestone)
+		if err == nil {
+			if err := ghDeleteMilestone(number); err != nil {
+				return false, err
+			}
+		}
+	}
+
+	if err := os.RemoveAll(filepath.Dir(path)); err != nil {
 		return false, err
 	}
 	return true, nil
@@ -11800,7 +12258,7 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 }
 
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
-	return OpenTicket(input.Title, input.Prompt, input.LLM, input.UI, input.PlanPath, input.NoIssue, input.Goal, input.Parent)
+	return OpenTicket(input.Title, input.Prompt, input.LLM, input.UI, input.PlanPath, input.NoIssue, input.Goal, input.Parent, input.NoGithub)
 }
 
 func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
@@ -11814,13 +12272,13 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 			return nil, err
 		}
 		// Update GitHub issue title if exists
-		if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+		if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" && !input.NoGithub {
 			if err := ghUpdateIssueTitle(ticket.Data.GitHub.Issue, *input.Title); err != nil {
 				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
 			}
 		}
 	}
-	if err := FinishTicket(ticket, input.Summary, input.Files); err != nil {
+	if err := FinishTicket(ticket, input.Summary, input.Files, input.NoGithub); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -11837,13 +12295,13 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 			return nil, err
 		}
 		// Update GitHub issue title if exists
-		if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" {
+		if ticket.Data.GitHub != nil && ticket.Data.GitHub.Issue != "" && !input.NoGithub {
 			if err := ghUpdateIssueTitle(ticket.Data.GitHub.Issue, *input.Title); err != nil {
 				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
 			}
 		}
 	}
-	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.PlanPath); err != nil {
+	if err := ReopenTicket(ticket, input.Prompt, input.LLM, input.UI, input.PlanPath, input.NoGithub); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -12230,12 +12688,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	ticketUIEnum := graphql.NewEnum(graphql.EnumConfig{
 		Name: "TicketUI",
 		Values: graphql.EnumValueConfigMap{
-			"COPILOT_CHAT": &graphql.EnumValueConfig{Value: "copilot_chat"},
-			"ANTIGRAVITY":  &graphql.EnumValueConfig{Value: "antigravity"},
-			"CURSOR":       &graphql.EnumValueConfig{Value: "cursor"},
-			"CLAUDE_CODE":  &graphql.EnumValueConfig{Value: "claude_code"},
-			"CODEX":        &graphql.EnumValueConfig{Value: "codex"},
-			"DROID":        &graphql.EnumValueConfig{Value: "droid"},
+			"COPILOT_CHAT":     &graphql.EnumValueConfig{Value: "copilot_chat"},
+			"ANTIGRAVITY":      &graphql.EnumValueConfig{Value: "antigravity"},
+			"ANTIGRAVITY_CHAT": &graphql.EnumValueConfig{Value: "antigravity-chat"},
+			"CURSOR":           &graphql.EnumValueConfig{Value: "cursor"},
+			"CURSOR_CHAT":      &graphql.EnumValueConfig{Value: "cursor-chat"},
+			"VSCODE":           &graphql.EnumValueConfig{Value: "vscode"},
+			"CLAUDE_CODE":      &graphql.EnumValueConfig{Value: "claude_code"},
+			"CODEX":            &graphql.EnumValueConfig{Value: "codex"},
+			"DROID":            &graphql.EnumValueConfig{Value: "droid"},
 		},
 	})
 
@@ -12653,8 +13114,27 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
 			"title":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 			"description": &graphql.Field{Type: graphql.String},
-			"milestone":   &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"status":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"prompt":      &graphql.Field{Type: graphql.String},
+			"dueDate": &graphql.Field{
+				Type: graphql.String,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					goal := p.Source.(*Goal)
+					return goal.Dates.Due, nil
+				},
+			},
+			"ui":        &graphql.Field{Type: graphql.String},
+			"llm":       &graphql.Field{Type: graphql.String},
+			"status":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"milestone": &graphql.Field{
+				Type: graphql.Int,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					goal := p.Source.(*Goal)
+					if goal.GitHub == nil {
+						return nil, nil
+					}
+					return parseMilestoneNumber(goal.GitHub.Milestone)
+				},
+			},
 		},
 	})
 
@@ -13456,23 +13936,27 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.InputObjectConfigFieldMap{
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"ui":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
 			"noIssue":  &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"planPath": &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
 	ticketCloseInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "TicketCloseInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"year":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"month":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"day":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"slug":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"summary": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"files":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
-			"title":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"year":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"month":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"day":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
+			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"summary":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"files":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -13484,9 +13968,35 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"day":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
 			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"ui":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
+			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"planPath": &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+		},
+	})
+
+	goalCreateInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "GoalCreateInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"title":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"description": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"prompt":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"llm":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"ui":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"noGithub":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+		},
+	})
+
+	goalUpdateInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "GoalUpdateInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"id":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"status":      &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"title":       &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"noGithub":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -13494,7 +14004,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "ContributorAddInput",
 		Fields: graphql.InputObjectConfigFieldMap{
 			"github": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"name":   &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"name":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"emails": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
 		},
 	})
@@ -13502,6 +14012,48 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	mutationType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Mutation",
 		Fields: graphql.Fields{
+			"goalCreate": &graphql.Field{
+				Type: goalType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(goalCreateInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := GoalCreateInput{
+						Title:       inputMap["title"].(string),
+						Description: inputMap["description"].(string),
+					}
+					if inputMap["noGithub"] != nil {
+						input.NoGithub = inputMap["noGithub"].(bool)
+					}
+					return mutationResolverInstance.GoalCreate(p.Context, input)
+				},
+			},
+			"goalUpdate": &graphql.Field{
+				Type: goalType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(goalUpdateInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := GoalUpdateInput{
+						ID: inputMap["id"].(string),
+					}
+					if s, ok := inputMap["title"].(string); ok {
+						input.Title = s
+					}
+					if s, ok := inputMap["description"].(string); ok {
+						input.Description = s
+					}
+					if s, ok := inputMap["status"].(string); ok {
+						input.Status = s
+					}
+					if inputMap["noGithub"] != nil {
+						input.NoGithub = inputMap["noGithub"].(bool)
+					}
+					return mutationResolverInstance.GoalUpdate(p.Context, input)
+				},
+			},
 			"fix": &graphql.Field{
 				Type: graphql.NewNonNull(fixResultType),
 				Args: graphql.FieldConfigArgument{
@@ -13525,14 +14077,25 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					input := TicketOpenInput{
 						Title:  inputMap["title"].(string),
 						Prompt: inputMap["prompt"].(string),
-						LLM:    inputMap["llm"].(string),
 						UI:     inputMap["ui"].(string),
+					}
+					if inputMap["llm"] != nil {
+						input.LLM = inputMap["llm"].(string)
 					}
 					if inputMap["noIssue"] != nil {
 						input.NoIssue = inputMap["noIssue"].(bool)
 					}
+					if inputMap["noGithub"] != nil {
+						input.NoGithub = inputMap["noGithub"].(bool)
+					}
 					if inputMap["planPath"] != nil {
 						input.PlanPath = inputMap["planPath"].(string)
+					}
+					if inputMap["goal"] != nil {
+						input.Goal = inputMap["goal"].(string)
+					}
+					if inputMap["parent"] != nil {
+						input.Parent = inputMap["parent"].(string)
 					}
 					return mutationResolverInstance.TicketOpen(p.Context, input)
 				},
@@ -13560,6 +14123,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						Summary: inputMap["summary"].(string),
 						Files:   files,
 					}
+					if inputMap["noGithub"] != nil {
+						input.NoGithub = inputMap["noGithub"].(bool)
+					}
 					if t, ok := inputMap["title"].(string); ok {
 						input.Title = &t
 					}
@@ -13579,7 +14145,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						Day:    inputMap["day"].(int),
 						Slug:   inputMap["slug"].(string),
 						Prompt: inputMap["prompt"].(string),
-						LLM:    inputMap["llm"].(string),
+						UI:     inputMap["ui"].(string),
+					}
+					if inputMap["llm"] != nil {
+						input.LLM = inputMap["llm"].(string)
+					}
+					if inputMap["noGithub"] != nil {
+						input.NoGithub = inputMap["noGithub"].(bool)
 					}
 					if t, ok := inputMap["title"].(string); ok {
 						input.Title = &t
@@ -14081,6 +14653,34 @@ func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenI
 		return r.Ctx.TicketReopen(input)
 	}
 	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput) (*Goal, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GoalCreate(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) GoalUpdate(ctx context.Context, input GoalUpdateInput) (*Goal, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GoalUpdate(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput) (bool, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GoalDelete(input)
+	}
+	return false, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteInput) (bool, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TicketDelete(input)
+	}
+	return false, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) ContributorAdd(ctx context.Context, input ContributorAddInput) (*Contributor, error) {
@@ -14893,20 +15493,18 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	llm, err := requireStringArg(args, "llm")
-	if err != nil {
-		return nil, err
-	}
 	ui, err := requireStringArg(args, "ui")
 	if err != nil {
 		return nil, err
 	}
+	llm, _, _ := getStringArg(args, "llm")
 	planPath, _, _ := getStringArg(args, "planPath")
 	noIssue, _, _ := getBoolArg(args, "noIssue")
 	goal, _, _ := getStringArg(args, "goal")
 	parent, _, _ := getStringArg(args, "parent")
+	noGithub, _, _ := getBoolArg(args, "noGithub")
 
-	result := ToolTicketOpen(title, prompt, llm, ui, planPath, noIssue, goal, parent)
+	result := ToolTicketOpen(title, prompt, llm, ui, planPath, noIssue, goal, parent, noGithub)
 	return toolResultToMCP(result)
 }
 
@@ -15003,8 +15601,9 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 			return nil, err
 		}
 	}
+	noGithub, _, _ := getBoolArg(args, "noGithub")
 
-	result := ToolTicketClose(year, month, day, slug, summary, files)
+	result := ToolTicketClose(year, month, day, slug, summary, files, noGithub)
 	return toolResultToMCP(result)
 }
 
@@ -15030,13 +15629,15 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	llm, err := requireStringArg(args, "llm")
+	ui, err := requireStringArg(args, "ui")
 	if err != nil {
 		return nil, err
 	}
+	llm, _, _ := getStringArg(args, "llm")
 	planPath, _, _ := getStringArg(args, "planPath")
+	noGithub, _, _ := getBoolArg(args, "noGithub")
 
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, planPath)
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, ui, planPath, noGithub)
 	return toolResultToMCP(result)
 }
 
@@ -17222,39 +17823,53 @@ return nil
 
 // #region Goals
 
-type RepoGoals struct {
-	Goals []Goal `json:"goals"`
-}
-
-func GetRepoGoalsPath() string {
-	return filepath.Join(GetRepoMetaDir(), "goals.json")
+func GetRepoGoalsDir() string {
+	return filepath.Join(GetRepoMetaDir(), "goals")
 }
 
 func ListGoals() ([]Goal, error) {
-	path := GetRepoGoalsPath()
-	if !FileExists(path) {
-		return nil, nil
+	dir := GetRepoGoalsDir()
+	var goals []Goal
+	if !FileExists(dir) {
+		return goals, nil
 	}
-	content, err := ReadTextFile(path)
-	if err != nil {
-		return nil, err
-	}
-	var repoGoals RepoGoals
-	if err := json.Unmarshal([]byte(content), &repoGoals); err != nil {
-		return nil, err
-	}
-	return repoGoals.Goals, nil
+	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if !d.IsDir() && d.Name() == "goal.json" {
+			content, err := ReadTextFile(path)
+			if err != nil {
+				return err
+			}
+			var goal Goal
+			if err := json.Unmarshal([]byte(content), &goal); err != nil {
+				return err
+			}
+			relPath, _ := filepath.Rel(dir, path)
+			goal.ID = filepath.Dir(relPath)
+			goal.Path = path
+			goals = append(goals, goal)
+		}
+		return nil
+	})
+	return goals, err
 }
 
-func SaveGoals(goals []Goal) error {
-	path := GetRepoGoalsPath()
-	repoGoals := RepoGoals{Goals: goals}
-	data, err := json.MarshalIndent(repoGoals, "", "  ")
+func SaveGoal(goal Goal) error {
+	dir := GetRepoGoalsDir()
+	path := filepath.Join(dir, goal.ID, "goal.json")
+	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+		return err
+	}
+	data, err := json.MarshalIndent(goal, "", "  ")
 	if err != nil {
 		return err
 	}
 	return WriteTextFile(path, string(data))
 }
+
+
 
 func ghCreateMilestone(title, description string) (int, error) {
 	args := []string{"api", "repos/:owner/:repo/milestones", "-f", fmt.Sprintf("title=%s", title), "-f", fmt.Sprintf("description=%s", description), "--jq", ".number"}

@@ -4,6 +4,12 @@
 set -e
 echo "🔌 Running post-attach setup..."
 VSIX_PATH="js/vscode/semio.vsix"
+EXTENSION_PUBLISHER=""
+EXTENSION_NAME=""
+EXTENSION_ID=""
+EXTENSION_VERSION=""
+EXTENSION_DIR_NAME=""
+WSL_ERROR="Command is only available in WSL or inside a Visual Studio Code terminal."
 
 #region DetectIDE
 find_working_clis() {
@@ -122,15 +128,92 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     (cd js/vscode && npm run package)
   fi
   if [ -f "$VSIX_PATH" ]; then
+    if [ -f "js/vscode/package.json" ]; then
+      EXTENSION_PUBLISHER=$(node -p "require('./js/vscode/package.json').publisher")
+      EXTENSION_NAME=$(node -p "require('./js/vscode/package.json').name")
+      EXTENSION_VERSION=$(node -p "require('./js/vscode/package.json').version")
+    fi
+    if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
+      EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"
+    fi
+    if [ -n "$EXTENSION_ID" ] && [ -n "$EXTENSION_VERSION" ]; then
+      EXTENSION_DIR_NAME="${EXTENSION_ID}-${EXTENSION_VERSION}"
+    fi
     installed_any=""
     for ide_cli in "${IDE_CLIS[@]}"; do
-      if "$ide_cli" --install-extension "$VSIX_PATH" --force; then
+      install_output="$("$ide_cli" --install-extension "$VSIX_PATH" --force 2>&1)"
+      install_status=$?
+      if echo "$install_output" | grep -Fq "$WSL_ERROR"; then
+        echo "❌ Failed to install extension via $ide_cli"
+        echo "$install_output"
+        continue
+      fi
+      if [ "$install_status" -ne 0 ]; then
+        echo "❌ Failed to install extension via $ide_cli"
+        echo "$install_output"
+        continue
+      fi
+      if [ -n "$EXTENSION_ID" ]; then
+        list_output="$("$ide_cli" --list-extensions 2>&1)"
+        list_status=$?
+        if echo "$list_output" | grep -Fq "$WSL_ERROR"; then
+          echo "❌ Failed to verify extension via $ide_cli"
+          echo "$list_output"
+          continue
+        fi
+        if [ "$list_status" -ne 0 ]; then
+          echo "❌ Failed to verify extension via $ide_cli"
+          echo "$list_output"
+          continue
+        fi
+        if echo "$list_output" | grep -Fqx "$EXTENSION_ID"; then
+          echo "✅ Extension installed via $ide_cli"
+          installed_any="1"
+        else
+          echo "❌ Extension not visible via $ide_cli"
+          echo "$list_output"
+        fi
+      else
         echo "✅ Extension installed via $ide_cli"
         installed_any="1"
-      else
-        echo "❌ Failed to install extension via $ide_cli"
       fi
     done
+    if [ -n "$EXTENSION_DIR_NAME" ]; then
+      extensions_dirs=()
+      if [ -d "/home/vscode/.vscode-server/extensions" ]; then
+        extensions_dirs+=("/home/vscode/.vscode-server/extensions")
+      fi
+      if [ -d "/home/vscode/.cursor-server/extensions" ]; then
+        extensions_dirs+=("/home/vscode/.cursor-server/extensions")
+      fi
+      if [ -d "/home/vscode/.windsurf-server/extensions" ]; then
+        extensions_dirs+=("/home/vscode/.windsurf-server/extensions")
+      fi
+      if [ -d "/home/vscode/.antigravity-server/extensions" ]; then
+        extensions_dirs+=("/home/vscode/.antigravity-server/extensions")
+      fi
+      if [ "${#extensions_dirs[@]}" -gt 0 ]; then
+        temp_dir="$(mktemp -d)"
+        unzip -q "$VSIX_PATH" -d "$temp_dir"
+        for extensions_dir in "${extensions_dirs[@]}"; do
+          target_dir="${extensions_dir}/${EXTENSION_DIR_NAME}"
+          if [ -d "$target_dir" ]; then
+            rm -rf "$target_dir"
+          fi
+          if [ -d "$temp_dir/extension" ]; then
+            mkdir -p "$extensions_dir"
+            cp -R "$temp_dir/extension" "$target_dir"
+            if [ -d "$target_dir" ]; then
+              extensions_json="${extensions_dir}/extensions.json"
+              node -e "const fs=require('fs');const id=process.argv[1];const version=process.argv[2];const dir=process.argv[3];const rel=process.argv[4];const file=process.argv[5];const list=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):[];const exists=list.some(e=>e&&e.identifier&&e.identifier.id===id&&e.version===version);if(!exists){list.push({identifier:{id},version,location:{'$mid':1,path:dir,scheme:'file'},relativeLocation:rel,metadata:{isApplicationScoped:true,isMachineScoped:false,isBuiltin:false,installedTimestamp:Date.now(),source:'vsix',private:true}});}fs.writeFileSync(file,JSON.stringify(list));" "$EXTENSION_ID" "$EXTENSION_VERSION" "$target_dir" "$EXTENSION_DIR_NAME" "$extensions_json"
+              echo "✅ Extension installed via $extensions_dir"
+              installed_any="1"
+            fi
+          fi
+        done
+        rm -rf "$temp_dir"
+      fi
+    fi
     if [ -z "$installed_any" ]; then
       exit 1
     fi

@@ -1407,12 +1407,18 @@
           ]
         }
       }
+    },
+    {
+      "prompt": "Still not working - need to debug why extractSections doesn't find sections even with the fix",
+      "llm": "opus-4-5",
+      "ui": "claude-code",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-27T21:27:20.378347567Z",
+      "commit": "0e79162e48ba1c50c004cfa6dd88f38d251cc80a"
     }
   ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-27T11:13:37.747111713Z"
-  },
+  "status": "open",
+  "dates": {},
   "summary": "Fixed extractSections and added extractDefinitions to handle nested data.file structure from repo binary",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/222"

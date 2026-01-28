@@ -17,6 +17,16 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+Goals must have a title, a description, prompt, due date, ui and llm. Throw if the arguments are not provided.  Allow same as the other command positional ( <title> <description> <prompt> <due-date> <ui> <llm>), flagged such as (--<date> --<ui> --<llm>) or named flaggs such as: --title <title> --description <description> --prompt <prompt> --due-date <due-date> --ui <ui> --llm <llm>. Test everything. Never interact with github on tests and cleanup afterwards.
+
+Change the positional arguments from <llm> <ui> to <ui> <llm?> for all commands. llm is optional. Extend ui to antigravity, antigravity-chat, cursor, cursor-chat, vscode, copilot-chat, codex, droid.
+
+Ticket reopen needs to have ui flag either positional or over "--ui <ui>" or "--<ui>".
+
+Some commands show semio: and some show semio-repo: prefix in vscode. The output panel of vscode logs also shows semio instead of semio-repo. All should be semio-repo.
+
+Add a new command: timeline that prints a timeline of the commits, tickets, bundles, folders, files.
+
 The repo mcp should not use the json api but the same output format as the cli.
 
 Keep on with zero touch devcontainer ticket.
@@ -60,10 +70,9 @@ go/repo/repo ticket open "Integrate Global IDs in Graph" "The ticket mechanism s
 go/repo/repo ticket open "Integrate Global IDs in Graph" --prompt "The ticket mechanism should change in repo go file: When a plan is provided by the user, then move the original plan file (keep the file name) to the ticket folder and add the plan to the ticket.json. Dont create the plan_ITERATION.md files anymore. Everything else should be now part of ticket.md." --llm gemini-3-pro --copilot-chat
 ```
 
-The ticket mechanism should be extended:
-- Introduce goals (in github they are milestones). A goal has a title and a description. Every ticket can optionally be assigned to a goal. Synchronize goals with github milestones (create, edit, close, delete)
+The ticket mechanism should be refactored/extended/changed:
+- Introduce goals (in github they are milestones). A goal has a title, a description, a due date, a status (open, closed) and iterations (same as tickets). Every ticket can optionally be assigned to a goal. The commands are goal open, goal close, goal reopen, goal list, goal tree (also showing ticket tree beneath each goal). Synchronize goals with github milestones (create, edit, close, delete). Goals are stored different to tickets not according creation date but reflect directly the hierarchy of the goals. E.g. `@semio-repo/goals/GOALTITLE/SUBGOALTITLE` goal id has file `.semio-repo/goals/GOALTITLE/SUBGOALTITLE/goal.json` with the goal data. 
 - Every ticket can have optional a parent ticket (in github it becomes a subissue).
-- Introduce ticket delete. Delete also the github issue.
 
 Here a list of changes to made to repo go file and vscode extension file along with the tests for each of them:
 
@@ -174,7 +183,7 @@ publish
 
 Currently every ticket tracks one codebase diff. Make sure that every iteration has its own `"diff":{…}` and remove it from the ticket level.
 
-Fix all semio tests.
+Fix all semio tests for javascript, python, go, rust. Dont alter the tests and work on the implementations.
 
 Continue ticket to fix vscode extension:
 - The vscode extension shows `No sections found` for all kind of files. Make sure this works and it is tested for all supported languages.

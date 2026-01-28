@@ -5378,12 +5378,18 @@
           ]
         }
       }
+    },
+    {
+      "prompt": "Goals must have a title, description, prompt, due date, UI and LLM. Throw if arguments are not provided. Allow same flexible argument parsing as ticket commands: positional, flagged (--\u003cui\u003e --\u003cllm\u003e), or named flags. Test everything, never interact with GitHub on tests, and cleanup afterwards.",
+      "llm": "opus-4-5",
+      "ui": "copilot-chat",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-27T21:50:17.523645488Z",
+      "commit": "0e79162e48ba1c50c004cfa6dd88f38d251cc80a"
     }
   ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-27T10:20:00.428600726Z"
-  },
+  "status": "open",
+  "dates": {},
   "summary": "Refactored the ticket mechanism: (1) No longer creates empty plan.md files when no plan is provided. (2) Fixed author lookup to correctly use ListContributors() and match by email. (3) Added test cleanup. (4) Verified title validation. (5) Added flexible CLI argument parsing. (6) Changed MCP to use CLI-style output instead of JSON.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/213"

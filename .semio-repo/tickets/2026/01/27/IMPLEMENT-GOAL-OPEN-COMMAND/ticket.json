@@ -1,0 +1,18 @@
+{
+  "title": "Implement Goal Open Command",
+  "iterations": [
+    {
+      "prompt": "Goals must have a title, a description, prompt, due date, ui and llm. Throw if the arguments are not provided. Allow same as the other command positional (...) or named flags. Test everything.",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-27T23:51:29.002490843Z",
+      "commit": "0e79162e48ba1c50c004cfa6dd88f38d251cc80a"
+    }
+  ],
+  "status": "open",
+  "dates": {},
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/235"
+  }
+}

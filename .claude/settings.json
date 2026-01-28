@@ -26,10 +26,7 @@
       "Read(./.env)",
       "Read(./.env.*)",
       "Read(./secrets/**)",
-      "Bash(git checkout)",
-      "Bash(npm run dev)",
-      "Bash(npm run build)",
-      "Bash(npx nx)"
+      "Bash(git checkout)"
     ],
     "ask": []
   }

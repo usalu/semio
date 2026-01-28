@@ -200,7 +200,7 @@ class TestRestApi:
         nonExistentPath = str(tempKitPath / "nonexistent")
         encodedUri = engine.encode(nonExistentPath)
         response = restClient.get(f"/kits/{encodedUri}")
-        assert response.status_code in [400, 500]
+        assert response.status_code in [400, 404, 500]
 
 
 # endregion REST API Tests

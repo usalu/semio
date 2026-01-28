@@ -66,6 +66,7 @@ type Query {
 
 type Mutation {
   fix(scope: String): FixResult!
+  goalCreate(input: GoalCreateInput!): Goal
   ticketOpen(input: TicketOpenInput!): Ticket
   ticketClose(input: TicketCloseInput!): Ticket
   ticketReopen(input: TicketReopenInput!): Ticket
@@ -86,6 +87,16 @@ type Mutation {
 # #endregion Mutation
 
 # #region Inputs
+
+input GoalCreateInput {
+  title: String!
+  description: String!
+  prompt: String!
+  dueDate: String!
+  ui: String!
+  llm: String!
+  noGithub: Boolean
+}
 
 input TicketOpenInput {
   title: String!
@@ -137,6 +148,7 @@ type Repo implements Node {
   sections: [Section!]!
   definitions: [Definition!]!
   contributors: [Contributor!]!
+  goals: [Goal!]!
   tickets(year: Int, month: Int, day: Int, status: TicketStatus): [Ticket!]!
   policies: [Policy!]!
   violationKinds: [ViolationKind!]!
@@ -296,6 +308,18 @@ type Commit implements Node {
   date: DateTime!
   bundles: [Bundle!]!
   files: [File!]!
+}
+
+type Goal implements Node {
+  id: ID!
+  title: String!
+  description: String
+  prompt: String
+  dueDate: String
+  ui: String
+  llm: String
+  milestone: Int
+  status: String!
 }
 
 type Ticket implements Node {

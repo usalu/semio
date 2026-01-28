@@ -1,8 +1,9 @@
 <!-- IMPORTANT -->
 
-ALWAYS work inside a ticket. Create a new ticket with semio-repo mcp tool `ticket_open` (or use `./go/repo/repo ticket open "<title>" "<prompt>" "<llm>" "<ui>" "<goal>" "<parent-ticket>"`). If the task is For larger tasks where the current task is only part of it, create a goal first with semio-repo mcp tool `goal_open` (or use `./go/repo/repo goal open "<title>" "<prompt>" "<due-date>" "<llm>" "<ui>"`).
+ALWAYS work inside a ticket. Create a new ticket with semio-repo mcp tool `ticket_open` (or `./go/repo/repo ticket open "<title>" "<prompt>" "<ui>" "<llm?>"` --goal "<goal?>" --parent "<parent-ticket?>"`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md`. NEVER answer directly in the chat and ALWAYS document everything (plan, todos, changes, summary, etc) in `ticket.md`. ALWAYS use the semio-repo mcp tool `ticket_close` (or `./go/repo/repo ticket close "YYYY/MM/DD/TICKETSLUG" "<summary>" <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG "<prompt>" "<ui>" "<llm?>" "<new-title?>"`).
+Create a goal with semio-repo mcp tool `goal_open` (or `./go/repo/repo goal open "<title>" "<description>" "<prompt>" "<due-date>" "<ui>" "<llm?>"`).
 
-The title MUST be titleized (e.g. "Some Title on Something") and NOT a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`. Available UIs are: `claude-code`, `cursor`, `copilot-chat`, `antigravity`, `codex`, `droid`. This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md`. NEVER answer directly in the chat and ALWAYS document everything (plan, todos, changes, summary, etc) in `ticket.md`. ALWAYS use the semio-repo mcp tool `ticket_close` (or use `./go/repo/repo ticket close YYYY/MM/DD/TICKETSLUG "<summary>" <files...>` when no mcp tool is available) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or use `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG "<prompt>" --<llm> --<ui>` when no mcp tool is available).
+The title MUST be titleized (e.g. "Some Title on Something") and NOT a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`. Available UIs are: `claude-code`, `cursor`, `copilot-chat`, `antigravity`, `codex`, `droid`.
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -56,7 +57,8 @@ Code analysis problems MUST include reason and solution text.
 ### Devcontainer
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
-Devcontainer post-attach MUST install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity via IDE IPC hook CLIs and apply installs to every detected editor.
+Devcontainer post-attach MUST install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity via IDE IPC hook CLIs, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates when CLIs report WSL-only usage.
+Semio VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
 Playwright browser caches MUST use the workspace `node_modules` volume path so `npx playwright install` stays cached across reloads.
 Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
 Claude Code auth files MUST live in the persisted Claude volume and be linked into `$HOME`.
@@ -110,6 +112,22 @@ Temporary task artifacts MUST be stored inside the active ticket workspace.
 Ticket finish MUST derive semantic diffs across bundles, folders, files, sections, and definitions via git diff between the ticket base commit and the current commit, scoped to the files declared on the ticket.
 Ticket line metrics MUST map added lines to current scopes and removed lines to base-commit scopes for semantic diffs.
 
+### Goal
+
+A `goal` is a high-level grouping for `tickets`.
+
+A `goal` has a `status` of **open** or **closed**.
+
+A `goal` is stored in `.semio-repo/goals/SLUG/goal.json`.
+
+Goals reflect the hierarchy of goals.
+
+Tickets can optionally be assigned to a `goal`.
+
+Tickets can optionally be assigned to a `parent-ticket` for hierarchy.
+
+GitHub milestones are used to sync `goals`.
+
 ### Repo Dev Server
 
 The repo dev server MUST persist ticket state, scopes, claims, warnings, violations, and event history in a local database.
@@ -128,7 +146,7 @@ The repo CLI binary MUST be consolidated into a single `go/repo/main.go` source 
 Legacy repo CLI adapter packages MUST NOT exist outside `go/repo/main.go`.
 Repo operational commands (benchmark, preflight, update) MUST live in the single-file repo entrypoint.
 Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifiers.
-Ticket reopen MUST require `prompt` and `llm` values.
+Ticket reopen MUST require `prompt` and `ui` values. `llm` is optional.
 GraphQL TicketUI inputs MUST accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) for UI selection.
 GraphQL section/definition ranges MUST expose line and column positions for start and end.
 GraphQL range selections MUST request Position subfields (line, column) for start and end.
@@ -440,7 +458,8 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, JSON keys surface as sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
 - The Sections view resolves the active file's section tree with line ranges so navigation and section actions match the current editor content.
 - Ticket tooling treats temporary artifacts as part of the active ticket workspace.
-- Devcontainer setup installs the workspace extension for VS Code, Cursor, Windsurf, and Antigravity on attach without manual installation actions, applying installs to every detected editor IPC hook CLI.
+- Devcontainer setup installs the workspace extension for VS Code, Cursor, Windsurf, and Antigravity on attach without manual installation actions, validating installs per detected editor IPC hook CLI and falling back to extensions directories with extensions.json registration on WSL-only CLI responses.
+- Extension engine compatibility targets the lowest supported editor version so Cursor accepts the packaged VSIX.
 
 # Monorepo
 
@@ -1685,7 +1704,7 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 
 ## 📄 .devcontainer/post-attach.sh
 
-Devcontainer post-attach script that builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs and applies installs to all detected IDEs.
+Devcontainer post-attach script that builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration on WSL-only CLI responses.
 
 ## 📁 js/
 
@@ -3869,7 +3888,7 @@ Extension activation, repo CLI command execution helpers, GraphQL client piping 
 
 ## 📄 js/vscode/package.json
 
-VS Code extension manifest with unscoped name for vsce packaging, command contributions, scripts, and engine compatibility.
+VS Code extension manifest with unscoped name for vsce packaging, command contributions, scripts, and engine compatibility for Cursor support.
 
 ## 📁 js/vscode/generated/
 
