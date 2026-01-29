@@ -765,7 +765,7 @@ Then you can run `npm run build` from the root to build all packages, or run `ts
 Contributor workflows use tickets to track each task across iterations.
 A ticket iteration records a prompt, author, and is bounded by `{started, finished}` timestamps.
 Ticket workflows record file touch lists and per-file line diffs so work is auditable and easy to continue.
-Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and summary sections so all task context stays in one place.
+Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and summary sections so all task context stays in one place, and an `important.md` file for compulsory actions that must be completed before the ticket can be finished.
 
 ## 🧰 Violations [↑](#-development)
 

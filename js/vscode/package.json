@@ -20,7 +20,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:semio.codebase",
+    "onView:semio.filter",
     "onView:semio.tickets",
     "onView:semio.policies",
     "onView:semio.commands",
@@ -46,8 +46,8 @@
           "type": "webview"
         },
         {
-          "id": "semio.codebase",
-          "name": "Codebase"
+          "id": "semio.filter",
+          "name": "Filter"
         },
         {
           "id": "semio.tickets",
@@ -358,7 +358,7 @@
       "view/title": [
         {
           "command": "semio.refreshCodebase",
-          "when": "view == semio.codebase",
+          "when": "view == semio.filter",
           "group": "navigation@1"
         },
         {
@@ -459,6 +459,38 @@
           "group": "inline"
         }
       ]
+    },
+    "configuration": {
+      "title": "semio-repo",
+      "properties": {
+        "semio.repo.showIgnored": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show ignored folders and files in the codebase view"
+        },
+        "semio.repo.showGenerated": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show generated folders and files in the codebase view"
+        },
+        "semio.repo.excludeKinds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "code",
+              "script",
+              "config",
+              "test",
+              "docs",
+              "resource",
+              "license"
+            ]
+          },
+          "default": [],
+          "description": "Exclude specific kinds of files from the codebase view"
+        }
+      }
     }
   },
   "scripts": {

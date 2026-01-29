@@ -98,6 +98,8 @@ Ticket workspaces MUST store a single ticket.md that captures todos, changes, lo
 Ticket workspaces MUST store the content of the draft if provided.
 The draft content MUST NOT be duplicated in ticket.md.
 
+Ticket workspaces MUST store an `important.md` file for remaining compulsory actions. Ticket finish MUST throw an error if `important.md` is not empty.
+
 Tickets can be reopened to return to **open** status.
 
 Ticket close and reopen actions invoked from the ticket list MUST apply to the selected ticket without additional selection.

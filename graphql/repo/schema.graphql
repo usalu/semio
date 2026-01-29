@@ -82,6 +82,7 @@ type Mutation {
   sectionMove(file: String!, oldName: String!, newName: String!): Section
   sectionDelete(file: String!, name: String!): Boolean!
   integrate(source: String!, targetSection: String!, targetFile: String!, targetParent: String): File
+  extract(sourceFile: String!, sourceSection: String!, targetFile: String!): File
 }
 
 # #endregion Mutation

@@ -1,0 +1,349 @@
+{
+  "title": "Fix Vscode Tree Item Click Navigation",
+  "status": "closed",
+  "prompt": "When clicking on a section tree item or definition tree item in the VS Code extension, it should jump to the right line where it starts. Both don't currently work.",
+  "summary": "Fixed three issues with tree item click navigation in the VS Code extension:\n\n1. **Codebase tree section items** (`navigateToSection`): Previously only opened the file without jumping to the line. Now passes `section.range.start` (line number) as argument and navigates to the correct position.\n\n2. **Codebase tree definition items** (`navigateToDefinition`): Same issue - only opened file. Also had a regex mismatch (`§` vs `#` separator). Now passes `definition.range.start` as argument and navigates correctly.\n\n3. **Section tree items** (`sectionOpen`): Added `revealRange` with `InCenter` reveal type to ensure the editor scrolls to show the target line.\n\nAll three navigation commands now open the file, set the cursor position, and scroll to center the target line in the editor.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/263"
+  },
+  "started": "2026-01-29T09:55:09.911254896Z",
+  "finished": "2026-01-29T10:00:30.700814525Z",
+  "iterations": [
+    {
+      "prompt": "When clicking on a section tree item or definition tree item in the VS Code extension, it should jump to the right line where it starts. Both don't currently work.",
+      "llm": "opus-4-5",
+      "ui": "claude-code",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-29T09:55:09.911254896Z",
+      "finished": "2026-01-29T10:00:30.700814525Z",
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/semio-repo",
+              "lines": {
+                "added": 106,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/semio-repo/extension.ts",
+              "lines": {
+                "added": 130,
+                "removed": 24
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands",
+              "lines": {
+                "added": 22,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views",
+              "lines": {
+                "added": 99,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Types",
+              "lines": {
+                "added": 4,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities",
+              "lines": {
+                "added": 3,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#urql Client",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio/semio-repo/extension.ts#Imports§RepoEvent",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Imports§execAsync",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Imports§execFileAsync",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseDefinitionItem",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseDefinitionItem",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseDragAndDropController",
+              "lines": {
+                "added": 92,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseSectionItem",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseSectionItem",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§SectionItem",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§SectionItem",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§codebaseProvider",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§codebaseProvider",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§commandsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§commandsProvider",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributorsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributorsProvider",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§policiesProvider",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§policiesProvider",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§registerSidebarViews",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§registerSidebarViews",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§sectionsProvider",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§sectionsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ticketsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ticketsProvider",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Types§GraphqlSection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Types§GraphqlSectionRange",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Types§GraphqlSectionRange",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Types§SectionInfo",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities§normalizeSectionTree",
+              "lines": {
+                "added": 3,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities§normalizeSectionTree",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#urql Client§extractRepoResult",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#urql Client§extractRepoResult",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseDragAndDropController",
+              "lines": {
+                "added": 92,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

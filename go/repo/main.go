@@ -1802,6 +1802,7 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "list",
 		Short: "List bundles",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
@@ -1809,7 +1810,7 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 				bundleChan := make(chan Bundle)
 				go func() {
-					StreamBundles(context.Background(), bundleChan)
+					StreamBundles(context.Background(), bundleChan, opts)
 				}()
 
 				for b := range bundleChan {
@@ -1826,11 +1827,13 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(listCmd)
 
 	treeCmd := &cobra.Command{
 		Use:   "tree",
 		Short: "Show bundle tree",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
@@ -1838,7 +1841,7 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 				bundleChan := make(chan Bundle)
 				go func() {
-					StreamBundles(context.Background(), bundleChan)
+					StreamBundles(context.Background(), bundleChan, opts)
 				}()
 
 				var bundles []Bundle
@@ -1863,6 +1866,7 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(treeCmd)
 
 	root.AddCommand(listCmd)
 	root.AddCommand(treeCmd)
@@ -1941,6 +1945,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if len(args) > 0 {
 				scope = args[0]
 			}
+			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
@@ -1948,7 +1953,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 				folderChan := make(chan Folder)
 				go func() {
-					StreamFolders(context.Background(), scope, folderChan)
+					StreamFolders(context.Background(), scope, folderChan, opts)
 				}()
 
 				for f := range folderChan {
@@ -1963,6 +1968,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(listCmd)
 
 	treeCmd := &cobra.Command{
 		Use:   "tree [scope]",
@@ -1972,6 +1978,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if len(args) > 0 {
 				scope = args[0]
 			}
+			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
@@ -1979,7 +1986,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 				folderChan := make(chan Folder)
 				go func() {
-					StreamFolders(context.Background(), scope, folderChan)
+					StreamFolders(context.Background(), scope, folderChan, opts)
 				}()
 
 				var folders []Folder
@@ -2028,7 +2035,8 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 							childPrefix = prefix + "    "
 						}
 
-						stream <- Event{Kind: KindLog, Level: "info", Command: "folder tree", Message: prefix + connector + child.name + "/"}
+						display := child.name + "/"
+						stream <- Event{Kind: KindLog, Level: "info", Command: "folder tree", Message: prefix + connector + display}
 						printNode(child, childPrefix)
 					}
 				}
@@ -2039,6 +2047,7 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(treeCmd)
 
 	root.AddCommand(createCmd)
 	root.AddCommand(moveCmd)
@@ -2046,6 +2055,98 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(listCmd)
 	root.AddCommand(treeCmd)
 	return root
+}
+
+func bindStreamFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("show-ignored", false, "Show ignored folders and files")
+	cmd.Flags().Bool("show-generated", false, "Show generated folders and files")
+	cmd.Flags().Bool("no-code", false, "Exclude code files")
+	cmd.Flags().Bool("no-script", false, "Exclude script files")
+	cmd.Flags().Bool("no-config", false, "Exclude config files")
+	cmd.Flags().Bool("no-test", false, "Exclude test files")
+	cmd.Flags().Bool("no-docs", false, "Exclude docs files")
+	cmd.Flags().Bool("no-resource", false, "Exclude resource files")
+	cmd.Flags().Bool("no-license", false, "Exclude license files")
+
+	cmd.Flags().Bool("only-code", false, "Only show code files")
+	cmd.Flags().Bool("only-script", false, "Only show script files")
+	cmd.Flags().Bool("only-config", false, "Only show config files")
+	cmd.Flags().Bool("only-test", false, "Only show test files")
+	cmd.Flags().Bool("only-docs", false, "Only show docs files")
+	cmd.Flags().Bool("only-resource", false, "Only show resource files")
+	cmd.Flags().Bool("only-license", false, "Only show license files")
+
+	cmd.Flags().String("filter", "", "Filter string")
+	cmd.Flags().Bool("regex", false, "Use regex for filter")
+	cmd.Flags().Bool("match-case", false, "Match case for filter")
+	cmd.Flags().Bool("match-whole-word", false, "Match whole word for filter")
+}
+
+func getStreamOptions(cmd *cobra.Command) StreamOptions {
+	showIgnored, _ := cmd.Flags().GetBool("show-ignored")
+	showGenerated, _ := cmd.Flags().GetBool("show-generated")
+
+	var excludeKinds []string
+	if v, _ := cmd.Flags().GetBool("no-code"); v {
+		excludeKinds = append(excludeKinds, FileKindCode)
+	}
+	if v, _ := cmd.Flags().GetBool("no-script"); v {
+		excludeKinds = append(excludeKinds, FileKindScript)
+	}
+	if v, _ := cmd.Flags().GetBool("no-config"); v {
+		excludeKinds = append(excludeKinds, FileKindConfig)
+	}
+	if v, _ := cmd.Flags().GetBool("no-test"); v {
+		excludeKinds = append(excludeKinds, FileKindTest)
+	}
+	if v, _ := cmd.Flags().GetBool("no-docs"); v {
+		excludeKinds = append(excludeKinds, FileKindDocs)
+	}
+	if v, _ := cmd.Flags().GetBool("no-resource"); v {
+		excludeKinds = append(excludeKinds, FileKindResource)
+	}
+	if v, _ := cmd.Flags().GetBool("no-license"); v {
+		excludeKinds = append(excludeKinds, FileKindLicense)
+	}
+
+	var includeKinds []string
+	if v, _ := cmd.Flags().GetBool("only-code"); v {
+		includeKinds = append(includeKinds, FileKindCode)
+	}
+	if v, _ := cmd.Flags().GetBool("only-script"); v {
+		includeKinds = append(includeKinds, FileKindScript)
+	}
+	if v, _ := cmd.Flags().GetBool("only-config"); v {
+		includeKinds = append(includeKinds, FileKindConfig)
+	}
+	if v, _ := cmd.Flags().GetBool("only-test"); v {
+		includeKinds = append(includeKinds, FileKindTest)
+	}
+	if v, _ := cmd.Flags().GetBool("only-docs"); v {
+		includeKinds = append(includeKinds, FileKindDocs)
+	}
+	if v, _ := cmd.Flags().GetBool("only-resource"); v {
+		includeKinds = append(includeKinds, FileKindResource)
+	}
+	if v, _ := cmd.Flags().GetBool("only-license"); v {
+		includeKinds = append(includeKinds, FileKindLicense)
+	}
+
+	filter, _ := cmd.Flags().GetString("filter")
+	regex, _ := cmd.Flags().GetBool("regex")
+	matchCase, _ := cmd.Flags().GetBool("match-case")
+	matchWholeWord, _ := cmd.Flags().GetBool("match-whole-word")
+
+	return StreamOptions{
+		ShowIgnored:    showIgnored,
+		ShowGenerated:  showGenerated,
+		ExcludeKinds:   excludeKinds,
+		IncludeKinds:   includeKinds,
+		Filter:         filter,
+		Regex:          regex,
+		MatchCase:      matchCase,
+		MatchWholeWord: matchWholeWord,
+	}
 }
 
 func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -2120,6 +2221,7 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if len(args) > 0 {
 				scope = args[0]
 			}
+			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
@@ -2127,7 +2229,7 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 				fileChan := make(chan File)
 				go func() {
-					StreamFiles(context.Background(), scope, fileChan)
+					StreamFiles(context.Background(), scope, fileChan, opts)
 				}()
 
 				for f := range fileChan {
@@ -2142,6 +2244,7 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(listCmd)
 
 	treeCmd := &cobra.Command{
 		Use:   "tree [scope]",
@@ -2151,6 +2254,7 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if len(args) > 0 {
 				scope = args[0]
 			}
+			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
@@ -2158,7 +2262,7 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 				fileChan := make(chan File)
 				go func() {
-					StreamFiles(context.Background(), scope, fileChan)
+					StreamFiles(context.Background(), scope, fileChan, opts)
 				}()
 
 				var files []File
@@ -2215,13 +2319,13 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 						printNode(child, childPrefix)
 					}
 				}
-
 				printNode(root, "")
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
 			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(treeCmd)
 
 	root.AddCommand(createCmd)
 	root.AddCommand(moveCmd)
@@ -2328,35 +2432,33 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if file == "" {
 				return fmt.Errorf("missing file")
 			}
-			variables := map[string]interface{}{"path": file}
-			query := `query SectionList($path: String!) {
-				file(path: $path) {
-					sections {
-						id
-						name
-						range { start { line column } end { line column } }
-						children {
-							id
-							name
-							range { start { line column } end { line column } }
-							children {
-								id
-								name
-								range { start { line column } end { line column } }
-								children {
-									id
-									name
-									range { start { line column } end { line column } }
-								}
-							}
-						}
+
+			opts := getStreamOptions(cmd)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "section list"}
+
+				sectionChan := make(chan Section)
+				go func() {
+					StreamSections(context.Background(), file, sectionChan, opts)
+				}()
+
+				for s := range sectionChan {
+					data, err := json.Marshal(map[string]interface{}{"section": s})
+					if err != nil {
+						continue
 					}
+					stream <- Event{Kind: KindResult, Command: "section list", Data: data}
 				}
-			}`
-			return runGraphQL(cmd, factory, config, query, variables)
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+
+			return renderStream(cmd, config, stream)
 		},
 	}
 	listCmd.Flags().String("file", "", "File path")
+	bindStreamFlags(listCmd)
 	integrateCmd := &cobra.Command{
 		Use:   "integrate",
 		Short: "Integrate source code into a target file section",
@@ -2398,11 +2500,49 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	integrateCmd.Flags().String("target-section", "", "Target section name")
 	integrateCmd.Flags().String("target-file", "", "Target file path")
 	integrateCmd.Flags().String("target-parent", "", "Target parent section name")
+
+	extractCmd := &cobra.Command{
+		Use:   "extract",
+		Short: "Extract a section from a source file into a target file",
+		Args:  cobra.MaximumNArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sourceFile, _ := cmd.Flags().GetString("source-file")
+			sourceSection, _ := cmd.Flags().GetString("source-section")
+			targetFile, _ := cmd.Flags().GetString("target-file")
+
+			if sourceFile == "" && len(args) > 0 {
+				sourceFile = args[0]
+			}
+			if sourceSection == "" && len(args) > 1 {
+				sourceSection = args[1]
+			}
+			if targetFile == "" && len(args) > 2 {
+				targetFile = args[2]
+			}
+
+			if sourceFile == "" || sourceSection == "" || targetFile == "" {
+				return fmt.Errorf("missing source file, source section, or target file")
+			}
+
+			variables := map[string]interface{}{
+				"sourceFile":    sourceFile,
+				"sourceSection": sourceSection,
+				"targetFile":    targetFile,
+			}
+			query := `mutation Extract($sourceFile: String!, $sourceSection: String!, $targetFile: String!) { extract(sourceFile: $sourceFile, sourceSection: $sourceSection, targetFile: $targetFile) { success } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	extractCmd.Flags().String("source-file", "", "Source file path")
+	extractCmd.Flags().String("source-section", "", "Source section name")
+	extractCmd.Flags().String("target-file", "", "Target file path")
+
 	root.AddCommand(createCmd)
 	root.AddCommand(moveCmd)
 	root.AddCommand(deleteCmd)
 	root.AddCommand(listCmd)
 	root.AddCommand(integrateCmd)
+	root.AddCommand(extractCmd)
 	return root
 }
 
@@ -2412,7 +2552,7 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:     "list",
 		Aliases: []string{"tree"},
 		Short:   "List definitions",
-		Args:  cobra.MaximumNArgs(1),
+		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path, _ := cmd.Flags().GetString("file")
 			if path == "" && len(args) > 0 {
@@ -2421,12 +2561,33 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if path == "" {
 				return fmt.Errorf("missing file")
 			}
-			variables := map[string]interface{}{"path": path}
-			query := `query DefinitionList($path: String!) { file(path: $path) { definitions { id name kind range { start { line column } end { line column } } } } }`
-			return runGraphQL(cmd, factory, config, query, variables)
+
+			opts := getStreamOptions(cmd)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "definition list"}
+
+				defChan := make(chan Definition)
+				go func() {
+					StreamDefinitions(context.Background(), path, defChan, opts)
+				}()
+
+				for d := range defChan {
+					data, err := json.Marshal(map[string]interface{}{"definition": d})
+					if err != nil {
+						continue
+					}
+					stream <- Event{Kind: KindResult, Command: "definition list", Data: data}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+
+			return renderStream(cmd, config, stream)
 		},
 	}
 	listCmd.Flags().String("file", "", "File path")
+	bindStreamFlags(listCmd)
 	root.AddCommand(listCmd)
 	return root
 }
@@ -2833,8 +2994,16 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 						start := 0
 						end := 0
 						if rng != nil {
-							start = int(rng["start"].(float64))
-							end = int(rng["end"].(float64))
+							if s, ok := rng["start"].(map[string]interface{}); ok {
+								start = int(s["line"].(float64))
+							} else if s, ok := rng["start"].(float64); ok {
+								start = int(s)
+							}
+							if e, ok := rng["end"].(map[string]interface{}); ok {
+								end = int(e["line"].(float64))
+							} else if e, ok := rng["end"].(float64); ok {
+								end = int(e)
+							}
 						}
 
 						line := fmt.Sprintf("%s%s %s %s",
@@ -3328,12 +3497,14 @@ func bundlePathPrefix(name string) string {
 }
 
 type Folder struct {
-	ID       string  `json:"id"`
-	Path     string  `json:"path"`
-	URI      string  `json:"uri"`
-	Name     string  `json:"name"`
-	ParentID *string `json:"parentId,omitempty"`
-	BundleID *string `json:"bundleId,omitempty"`
+	ID        string  `json:"id"`
+	Path      string  `json:"path"`
+	URI       string  `json:"uri"`
+	Name      string  `json:"name"`
+	ParentID  *string `json:"parentId,omitempty"`
+	BundleID  *string `json:"bundleId,omitempty"`
+	Ignored   bool    `json:"ignored"`
+	Generated bool    `json:"generated"`
 }
 
 func (f *Folder) IsNode()       {}
@@ -3347,9 +3518,101 @@ type File struct {
 	Extension string  `json:"extension"`
 	FolderID  *string `json:"folderId,omitempty"`
 	BundleID  *string `json:"bundleId,omitempty"`
+	Kind      string  `json:"kind"`
+	Ignored   bool    `json:"ignored"`
+	Generated bool    `json:"generated"`
+}
+
+const (
+	FileKindCode     = "code"
+	FileKindScript   = "script"
+	FileKindConfig   = "config"
+	FileKindTest     = "test"
+	FileKindDocs     = "docs"
+	FileKindResource = "resource"
+	FileKindLicense  = "license"
+)
+
+func DeriveFileKind(name string) string {
+	ext := strings.ToLower(filepath.Ext(name))
+	nameLower := strings.ToLower(name)
+
+	if strings.Contains(nameLower, "license") {
+		return FileKindLicense
+	}
+
+	if nameLower == "package-lock.json" || nameLower == "yarn.lock" || nameLower == "pnpm-lock.yaml" || nameLower == "go.sum" || nameLower == "uv.lock" {
+		return FileKindConfig // Or Generated? Kind is usually about content type.
+	}
+
+	if strings.HasSuffix(nameLower, ".test.ts") || strings.HasSuffix(nameLower, "_test.go") || strings.HasSuffix(nameLower, ".spec.ts") || strings.HasPrefix(nameLower, "test_") {
+		return FileKindTest
+	}
+
+	switch ext {
+	case ".sh", ".bat", ".ps1":
+		return FileKindScript
+	case ".json", ".yaml", ".yml", ".toml", ".xml", ".ini", ".conf", ".config", ".gitignore", ".dockerignore", ".env":
+		return FileKindConfig
+	case ".md", ".txt", ".rst", ".adoc":
+		return FileKindDocs
+	case ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".ttf", ".woff", ".woff2", ".eot":
+		return FileKindResource
+	case ".ts", ".tsx", ".js", ".jsx", ".py", ".cs", ".go", ".c", ".cpp", ".h", ".hpp", ".rs", ".java", ".kt", ".swift":
+		return FileKindCode
+	case ".css", ".scss", ".less", ".sass", ".html", ".htm":
+		return FileKindCode 
+	case ".sql", ".graphql", ".gql":
+		return FileKindCode // Schema code
+	}
+
+	if strings.HasPrefix(nameLower, "dockerfile") || nameLower == "makefile" || nameLower == "justfile" || nameLower == "rakefile" {
+		return FileKindConfig
+	}
+
+	return FileKindResource
 }
 
 func (f *File) IsNode()       {}
+
+
+func IsGenerated(path string) bool {
+	base := strings.ToLower(filepath.Base(path))
+	if base == "package-lock.json" || base == "yarn.lock" || base == "pnpm-lock.yaml" || base == "go.sum" || base == "uv.lock" {
+		return true
+	}
+	if base == "ticket.json" || base == "goal.json" {
+		return true
+	}
+	if strings.HasSuffix(base, ".generated.go") || strings.HasSuffix(base, ".pb.go") {
+		return true
+	}
+    // "assets/semio/validation.json" is generated? 
+    if strings.Contains(path, "generated") { // risky
+        // return true
+    }
+	return false
+}
+
+func IsSemanticallyIgnored(path string) bool {
+    base := filepath.Base(path)
+    if strings.HasPrefix(base, ".") && base != ".gitignore" && base != ".env" {
+        // Dotfiles generally ignored, except specific configs
+        return true
+    }
+    // "Currently some folders and files are just ignored (e.g. ... LICENSE.md files, json files, etc)."
+    // User wants these NOT ignored/excluded, but maybe marked Ignored=true?
+    // No, "Files kinds: ... license". Vscode has "codebase shortcuts" toggles.
+    // I think LICENSE.md should NOT be ignored.
+    // JSON files? Config.
+    // So what IS ignored?
+    // Maybe things like "dist", "build", "coverage", "__pycache__" if they show up (even if not gitignored).
+    if base == "dist" || base == "build" || base == "coverage" || base == "__pycache__" || base == "node_modules" {
+        return true
+    }
+    return false
+}
+
 func (f *File) GetID() string { return f.ID }
 
 type Section struct {
@@ -3362,6 +3625,7 @@ type Section struct {
 	StartIndex int       `json:"startIndex"`
 	EndIndex   int       `json:"endIndex"`
 	Children   []Section `json:"children,omitempty"`
+	Definitions []Definition `json:"definitions,omitempty"`
 }
 
 func (s *Section) IsNode() {}
@@ -4537,9 +4801,11 @@ func (l *BaseLanguage) ParseSections(content string) []Section {
 	var roots []Section
 	charIndex := 0
 	for i, line := range lines {
+		// fmt.Printf("Line %d: %s\n", i+1, line)
 		lineStart := charIndex
 		lineNum := i + 1
 		if match := l.sectionStart.FindStringSubmatch(line); match != nil {
+			// fmt.Printf("Found section start: %v\n", match)
 			name := strings.TrimSpace(match[1])
 			section := &Section{
 				Name:       name,
@@ -4682,7 +4948,7 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 			extensions:         []string{".ts", ".tsx", ".js", ".jsx"},
 			sectionStart:       regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
 			sectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
-			definitionRegexp:   regexp.MustCompile(`(?:^|\s)(?:export\s+)?(?:const|let|var|function|class|interface|type|enum)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+			definitionRegexp:   regexp.MustCompile(`^(?:export\s+)?(?:const|let|var|function|class|interface|type|enum)\s+([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "//",
 			sectionStartFmt:    "// #region %s",
 			sectionEndFmt:      "// #endregion %s",
@@ -7130,6 +7396,66 @@ func ParseSections(content string, filePath string) []Section {
 		return nil
 	}
 	return language.ParseSections(content)
+}
+
+func ParseDefinitions(content string, filePath string) []Definition {
+	language := GetLanguage(filePath)
+	if language == nil {
+		return nil
+	}
+	if !language.SupportsDefinitions() {
+		return nil
+	}
+	lines := strings.Split(content, "\n")
+	ranges := language.ParseDefinitions(content, lines)
+	definitions := make([]Definition, len(ranges))
+	for i, r := range ranges {
+		definitions[i] = Definition{
+			Name:       r.Name,
+			Kind:       DefinitionKindFunction,
+			StartLine:  r.Start,
+			EndLine:    r.End,
+			FilePath:   filePath,
+		}
+	}
+	return definitions
+}
+
+func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition) []Section {
+	if len(sections) == 0 {
+		return sections
+	}
+	newSections := make([]Section, len(sections))
+	for i := range sections {
+		newSections[i] = sections[i]
+		start := newSections[i].StartLine
+		end := newSections[i].EndLine
+
+		var subset []Definition
+		for _, def := range definitions {
+			if def.StartLine >= start && def.EndLine <= end {
+				subset = append(subset, def)
+			}
+		}
+
+		newSections[i].Children = HydrateSectionsWithDefinitions(newSections[i].Children, subset)
+
+		var myDefs []Definition
+		for _, def := range subset {
+			inChild := false
+			for _, child := range newSections[i].Children {
+				if def.StartLine >= child.StartLine && def.EndLine <= child.EndLine {
+					inChild = true
+					break
+				}
+			}
+			if !inChild {
+				myDefs = append(myDefs, def)
+			}
+		}
+		newSections[i].Definitions = myDefs
+	}
+	return newSections
 }
 
 func NormalizeSectionPath(sectionPath string) []string {
@@ -10004,8 +10330,13 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
-func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket) error {
+func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket, opts ...StreamOptions) error {
 	defer close(out)
+
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
 
 	ticketsDir := GetTicketsDir()
 	if !FileExists(ticketsDir) {
@@ -10095,6 +10426,16 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 						dayInt, _ := strconv.Atoi(d)
 						ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
 						if err == nil {
+							// Filter ID/Slug/Title
+							if !matchesFilter(ticket.GetID(), options) && !matchesFilter(ticket.Slug, options) && !matchesFilter(ticket.Title, options) {
+								continue
+							}
+
+							// Filter Kinds
+							if !ticketMatchesKinds(ticket, options) {
+								continue
+							}
+
 							out <- *ticket
 						}
 					}
@@ -10103,6 +10444,73 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 		}
 	}
 	return nil
+}
+
+func ticketMatchesKinds(t *Ticket, opts StreamOptions) bool {
+	if len(opts.IncludeKinds) == 0 && len(opts.ExcludeKinds) == 0 {
+		return true
+	}
+
+	diffs := t.GetFiles()
+	allFiles := map[string]bool{}
+	for _, f := range diffs.Files.Added {
+		allFiles[f.Path] = true
+	}
+	for _, f := range diffs.Files.Modified {
+		allFiles[f.Path] = true
+	}
+	for _, f := range diffs.Files.Deleted {
+		allFiles[f.Path] = true
+	}
+	for _, f := range diffs.Files.Renamed {
+		allFiles[f.To] = true
+	}
+
+	if len(allFiles) == 0 {
+		// If filtering by kind is active, valid matches must have files of that kind.
+		// If only-code is set, and no files, return false.
+		if len(opts.IncludeKinds) > 0 {
+			return false
+		}
+		// If no-code is set, and no files, return true (ignoring kinds logic for empty set usually passes exclusions)
+		return true
+	}
+
+	hasIncluded := false
+	hasExcluded := false
+
+	// If inclusions are specified, we start with false. If none, we start with true (everything matches unless excluded)
+	if len(opts.IncludeKinds) == 0 {
+		hasIncluded = true
+	}
+
+	for f := range allFiles {
+		kind := DeriveFileKind(filepath.Base(f))
+
+		if len(opts.IncludeKinds) > 0 {
+			for _, k := range opts.IncludeKinds {
+				if k == kind {
+					hasIncluded = true
+				}
+			}
+		}
+
+		for _, k := range opts.ExcludeKinds {
+			if k == kind {
+				hasExcluded = true
+			}
+		}
+	}
+
+	if len(opts.IncludeKinds) > 0 && !hasIncluded {
+		return false
+	}
+
+	if len(opts.ExcludeKinds) > 0 && hasExcluded {
+		return false
+	}
+
+	return true
 }
 
 func LoadBundles() []Bundle {
@@ -10208,10 +10616,19 @@ func LoadBundles() []Bundle {
 	return bundles
 }
 
-func StreamBundles(ctx context.Context, out chan<- Bundle) error {
+func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions) error {
 	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
 	bundles := LoadBundles()
 	for _, b := range bundles {
+		if !matchesFilter(b.Name, options) {
+			continue
+		}
+
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -10222,22 +10639,81 @@ func StreamBundles(ctx context.Context, out chan<- Bundle) error {
 	return nil
 }
 
-func isIgnored(path string) bool {
-	base := filepath.Base(path)
-	if strings.HasPrefix(base, ".") {
-		return true
-	}
-	if base == "node_modules" || base == "dist" || base == "build" || base == "coverage" || base == "__pycache__" {
-		return true
-	}
-	if isRepoExcludedPath(path) {
-		return true
-	}
-	return false
+type StreamOptions struct {
+	ShowIgnored    bool
+	ShowGenerated  bool
+	ExcludeKinds   []string
+	IncludeKinds   []string
+	Filter         string
+	Regex          bool
+	MatchCase      bool
+	MatchWholeWord bool
 }
 
-func StreamFolders(ctx context.Context, scope string, out chan<- Folder) error {
+func matchesFilter(name string, opts StreamOptions) bool {
+	if opts.Filter == "" {
+		return true
+	}
+
+	target := name
+	pattern := opts.Filter
+
+	if !opts.MatchCase && !opts.Regex {
+		target = strings.ToLower(target)
+		pattern = strings.ToLower(pattern)
+	}
+
+	if opts.Regex {
+		re, err := regexp.Compile(opts.Filter)
+		if err != nil {
+			return false
+		}
+		return re.MatchString(name)
+	}
+
+	if opts.MatchWholeWord {
+		words := strings.FieldsFunc(target, func(r rune) bool {
+			return !((r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r == '_')
+		})
+		for _, w := range words {
+			if w == pattern {
+				return true
+			}
+		}
+		return false
+	}
+
+	return strings.Contains(target, pattern)
+}
+
+func shouldIncludeKind(kind string, opts StreamOptions) bool {
+	if len(opts.IncludeKinds) > 0 {
+		found := false
+		for _, k := range opts.IncludeKinds {
+			if k == kind {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	for _, k := range opts.ExcludeKinds {
+		if k == kind {
+			return false
+		}
+	}
+	return true
+}
+
+func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ...StreamOptions) error {
 	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
 
 	root := rootDir
 	if strings.HasPrefix(scope, "@semio/") {
@@ -10250,7 +10726,11 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder) error {
 			}
 		}
 	} else if scope != "" && scope != "@semio" {
-		root = filepath.Join(rootDir, scope)
+		if filepath.IsAbs(scope) {
+			root = scope
+		} else {
+			root = filepath.Join(rootDir, scope)
+		}
 	}
 
 	var folders []string
@@ -10265,7 +10745,10 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder) error {
 		if rel == "." {
 			return nil
 		}
-		if isIgnored(path) {
+		if isRepoExcludedPath(path) {
+			return filepath.SkipDir
+		}
+		if isGitIgnored(path) && !options.ShowIgnored {
 			return filepath.SkipDir
 		}
 		folders = append(folders, path)
@@ -10274,25 +10757,61 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder) error {
 	if err != nil {
 		return err
 	}
-	folders = filterConsideredFiles(folders)
-	folders = filterGitIgnored(folders)
+
 	for _, folderPath := range folders {
+		ignored := isGitIgnored(folderPath)
+		generated := IsGenerated(folderPath)
+
+		if ignored && !options.ShowIgnored {
+			continue
+		}
+		if generated && !options.ShowGenerated {
+			continue
+		}
+
+		if !matchesFilter(filepath.Base(folderPath), options) {
+			continue
+		}
+
+		relPath, _ := filepath.Rel(rootDir, folderPath)
+		var bundleID *string
+		if b := GetBundleByPath(relPath); b != nil {
+			id := b.GetID()
+			bundleID = &id
+		}
+
+		parentPath := filepath.Dir(relPath)
+		var parentID *string
+		if parentPath != "." {
+			id := buildFolderID(parentPath, bundleID)
+			parentID = &id
+		}
+
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 			out <- Folder{
-				ID:   folderPath,
-				Path: folderPath,
-				Name: filepath.Base(folderPath),
+				ID:        buildFolderID(relPath, bundleID),
+				Path:      relPath,
+				URI:       fmt.Sprintf("file://%s/%s", rootDir, relPath),
+				Name:      filepath.Base(relPath),
+				ParentID:  parentID,
+				BundleID:  bundleID,
+				Ignored:   ignored,
+				Generated: generated,
 			}
 		}
 	}
-	return err
+	return nil
 }
 
-func StreamFiles(ctx context.Context, scope string, out chan<- File) error {
+func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...StreamOptions) error {
 	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
 
 	root := rootDir
 	if strings.HasPrefix(scope, "@semio/") {
@@ -10319,12 +10838,20 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File) error {
 		}
 		if info.IsDir() {
 			rel, _ := filepath.Rel(root, path)
-			if rel != "." && isIgnored(path) {
-				return filepath.SkipDir
+			if rel != "." {
+				if isRepoExcludedPath(path) {
+					return filepath.SkipDir
+				}
+				if isGitIgnored(path) && !options.ShowIgnored {
+					return filepath.SkipDir
+				}
 			}
 			return nil
 		}
-		if isIgnored(path) {
+		if isRepoExcludedPath(path) {
+			return nil
+		}
+		if isGitIgnored(path) && !options.ShowIgnored {
 			return nil
 		}
 		files = append(files, path)
@@ -10333,30 +10860,78 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File) error {
 	if err != nil {
 		return err
 	}
-	files = filterConsideredFiles(files)
-	files = filterGitIgnored(files)
+	
 	for _, filePath := range files {
+		ignored := isGitIgnored(filePath)
+		generated := IsGenerated(filePath)
+		kind := DeriveFileKind(filepath.Base(filePath))
+
+		if ignored && !options.ShowIgnored {
+			continue
+		}
+		if generated && !options.ShowGenerated {
+			continue
+		}
+
+		if !shouldIncludeKind(kind, options) {
+			continue
+		}
+
+		name := filepath.Base(filePath)
+		if !matchesFilter(name, options) {
+			continue
+		}
+
+		relPath, _ := filepath.Rel(rootDir, filePath)
+		var bundleID *string
+		if b := GetBundleByPath(relPath); b != nil {
+			id := b.GetID()
+			bundleID = &id
+		}
+		
+		folderPath := filepath.Dir(relPath)
+		var folderID *string
+		if folderPath != "." {
+			id := buildFolderID(folderPath, bundleID)
+			folderID = &id
+		}
+
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
 		default:
 			out <- File{
-				ID:        filePath,
-				Path:      filePath,
-				Name:      filepath.Base(filePath),
-				Extension: filepath.Ext(filePath),
+				ID:        buildFileID(relPath, bundleID),
+				Path:      relPath,
+				URI:       fmt.Sprintf("file://%s/%s", rootDir, relPath),
+				Name:      filepath.Base(relPath),
+				Extension: filepath.Ext(relPath),
+				FolderID:  folderID,
+				BundleID:  bundleID,
+				Kind:      kind,
+				Ignored:   ignored,
+				Generated: generated,
 			}
 		}
 	}
-	return err
+	return nil
 }
 
-func StreamSections(ctx context.Context, scope string, out chan<- Section) error {
+func StreamSections(ctx context.Context, scope string, out chan<- Section, opts ...StreamOptions) error {
 	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
+	filesOpts := options
+	filesOpts.Filter = ""
+	filesOpts.Regex = false
+
 	// Iterate files, parse sections
 	fileChan := make(chan File)
 	go func() {
-		StreamFiles(ctx, scope, fileChan)
+		StreamFiles(ctx, scope, fileChan, filesOpts)
 	}()
 
 	for f := range fileChan {
@@ -10366,6 +10941,10 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section) error
 		}
 		sections := ParseSections(content, f.Path)
 		for _, s := range sections {
+			if !matchesFilter(s.Name, options) {
+				continue
+			}
+
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
@@ -10377,12 +10956,21 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section) error
 	return nil
 }
 
-func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition) error {
+func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition, opts ...StreamOptions) error {
 	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
+	filesOpts := options
+	filesOpts.Filter = ""
+	filesOpts.Regex = false
+
 	// Iterate files, parse definitions
 	fileChan := make(chan File)
 	go func() {
-		StreamFiles(ctx, scope, fileChan)
+		StreamFiles(ctx, scope, fileChan, filesOpts)
 	}()
 
 	for f := range fileChan {
@@ -10405,6 +10993,11 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition)
 				StartLine: d.Start,
 				EndLine:   d.End,
 			}
+
+			if !matchesFilter(def.Name, options) {
+				continue
+			}
+
 			select {
 			case <-ctx.Done():
 				return ctx.Err()
@@ -10959,12 +11552,23 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketClose(year, month, day int, slug, summary string, files []string, noGithub bool) ToolResult {
+func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noGithub bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	if title != "" {
+		if err := UpdateTicketTitle(ticket, title); err != nil {
+			output.Error(fmt.Sprintf("Error: %v", err))
+			return ToolResult{Output: *output, Error: err.Error()}
+		}
+		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
+			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, title); err != nil {
+				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+			}
+		}
 	}
 	if err := FinishTicket(ticket, summary, files, noGithub); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
@@ -10987,12 +11591,23 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 	return ToolResult{Output: *output, Data: ticket}
 }
 
-func ToolTicketReopen(year, month, day int, slug, prompt, llm, ui, draft string, goal string, parent string, noGithub bool) ToolResult {
+func ToolTicketReopen(year, month, day int, slug, prompt, llm, ui, draft string, title string, goal string, parent string, noGithub bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	if title != "" {
+		if err := UpdateTicketTitle(ticket, title); err != nil {
+			output.Error(fmt.Sprintf("Error: %v", err))
+			return ToolResult{Output: *output, Error: err.Error()}
+		}
+		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
+			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, title); err != nil {
+				fmt.Printf("Warning: Failed to update GitHub issue title: %v\n", err)
+			}
+		}
 	}
 	if err := ReopenTicket(ticket, prompt, llm, ui, draft, goal, parent, noGithub); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
@@ -11761,6 +12376,119 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 	return ToolResult{Output: *output}
 }
 
+func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolResult {
+	output := NewOutput()
+
+	// 1. Read source content
+	absSourcePath := filepath.Join(rootDir, sourceFilePath)
+	if !FileExists(absSourcePath) {
+		output.Error(fmt.Sprintf("Error: Source file not found: %s", sourceFilePath))
+		return ToolResult{Output: *output, Error: "source file not found"}
+	}
+	sourceContent, err := ReadTextFile(absSourcePath)
+	if err != nil {
+		output.Error(fmt.Sprintf("Error reading source file: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+
+	// 2. Language
+	sourceLanguage := GetLanguage(sourceFilePath)
+	if sourceLanguage == nil || !sourceLanguage.SupportsSections() {
+		output.Error("Error: Source file type does not support sections")
+		return ToolResult{Output: *output, Error: "unsupported source file type"}
+	}
+
+	// 3. Parse and Find Section
+	sections := sourceLanguage.ParseSections(sourceContent)
+	section := FindSection(sections, sourceSectionName)
+	if section == nil {
+		output.Error(fmt.Sprintf("Error: Section not found: %s", sourceSectionName))
+		return ToolResult{Output: *output, Error: "section not found"}
+	}
+
+	// 4. Extract Content
+	lines := strings.Split(sourceContent, "\n")
+	if section.StartLine > len(lines) || section.EndLine > len(lines) {
+		output.Error("Error: Section range invalid")
+		return ToolResult{Output: *output, Error: "invalid section range"}
+	}
+
+	// Extract lines inside markers (StartLine+1 to EndLine-1 in 1-based logic)
+	// Indices: StartLine (inclusive) to EndLine-1 (exclusive)
+	var extractedLines []string
+	if section.EndLine > section.StartLine {
+		extractedLines = lines[section.StartLine : section.EndLine-1]
+	}
+	extractedBody := strings.Join(extractedLines, "\n")
+
+	// 5. Build Target Content
+	header, sourceBody := SplitHeader(sourceContent, sourceLanguage)
+	_, sourceBodyNoPkg := sourceLanguage.ExtractPackage(sourceBody)
+	imports, _ := sourceLanguage.ExtractImports(sourceBodyNoPkg)
+
+	targetContent := ""
+	if header != "" {
+		targetContent += header + "\n\n"
+	}
+	// Try to get package from source (simple heuristic)
+	pkgDecl, _ := sourceLanguage.ExtractPackage(sourceBody)
+	if pkgDecl != "" {
+		targetContent += pkgDecl + "\n\n"
+	} else if len(imports) > 0 {
+		// If no package but imports, ensure space? Header usually has space.
+	}
+
+	if len(imports) > 0 {
+		formattedImports := sourceLanguage.FormatImports(imports)
+		if formattedImports != "" {
+			targetContent += formattedImports + "\n\n"
+		}
+	}
+
+	targetContent += extractedBody
+	if !strings.HasSuffix(targetContent, "\n") {
+		targetContent += "\n"
+	}
+
+	// 6. Write Target File
+	absTargetFilePath := filepath.Join(rootDir, targetFilePath)
+	if err := os.MkdirAll(filepath.Dir(absTargetFilePath), 0755); err != nil {
+		output.Error(fmt.Sprintf("Error creating target directory: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+	if err := WriteTextFile(absTargetFilePath, targetContent); err != nil {
+		output.Error(fmt.Sprintf("Error writing target file: %v", err))
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+
+	// 7. Remove Section from Source
+	// Lines to keep: 0 to StartLine-2 (index StartLine-1 is splice point) -> 0 to StartLine-1 exclusive
+	// And: EndLine to end.
+	// Index: StartLine-1 (inclusive) is first line to remove.
+	// Index: EndLine (inclusive) is first line to keep after. (Because EndLine 1-based is end marker line).
+	// Wait, EndLine index is EndLine-1. We remove that too. So we keep from EndLine index.
+	// Go slice [low:high] -> low inclusive, high exclusive.
+	// Keep lines[:StartLine-1] (indexes 0 to StartLine-2)
+	// Keep lines[EndLine:] (indexes EndLine to ...)
+	var newSourceLines []string
+	if section.StartLine > 0 {
+		newSourceLines = append(newSourceLines, lines[:section.StartLine-1]...)
+	}
+	if section.EndLine < len(lines) {
+		newSourceLines = append(newSourceLines, lines[section.EndLine:]...)
+	}
+	newSourceContent := strings.Join(newSourceLines, "\n")
+
+	if err := WriteTextFile(absSourcePath, newSourceContent); err != nil {
+		output.Error(fmt.Sprintf("Error updating source file: %v", err))
+		// Note: Target file was already written. Partial state?
+		return ToolResult{Output: *output, Error: err.Error()}
+	}
+
+	output.Success(fmt.Sprintf("\n🧩 Extracted %s from %s to %s", sourceSectionName, sourceFilePath, targetFilePath))
+	return ToolResult{Output: *output}
+}
+
 func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 	sections := lang.ParseSections(content)
 	for _, s := range sections {
@@ -12484,6 +13212,7 @@ type RepoContext interface {
 	SectionMove(file, oldName, newName string) (*Section, error)
 	SectionDelete(file, name string) error
 	Integrate(source, targetSection, targetFile, targetParent *string) (*File, error)
+	Extract(sourceFile, sourceSection, targetFile *string) (*File, error)
 	ContributorAdd(input ContributorAddInput) (*Contributor, error)
 	ContributorRemove(github string) error
 }
@@ -12814,6 +13543,34 @@ func parseMilestoneNumber(milestone string) (int, error) {
 	return 0, fmt.Errorf("could not parse milestone number from %s", milestone)
 }
 
+func UpdateGoalTitle(goal *Goal, title string) error {
+	title = strings.TrimSpace(title)
+	if title == "" {
+		return fmt.Errorf("goal title is required")
+	}
+	newSlug := Slugify(title)
+	if title == newSlug {
+		return fmt.Errorf("goal title must be titleized (e.g. \"Some Title on Something\") and NOT an all-caps slug")
+	}
+	if title == strings.ToLower(newSlug) {
+		return fmt.Errorf("goal title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
+	}
+	if newSlug != goal.ID {
+		dir := GetRepoGoalsDir()
+		oldPath := filepath.Join(dir, goal.ID)
+		newPath := filepath.Join(dir, newSlug)
+		if FileExists(newPath) {
+			return fmt.Errorf("goal folder already exists: %s", newPath)
+		}
+		if err := os.Rename(oldPath, newPath); err != nil {
+			return err
+		}
+		goal.ID = newSlug
+	}
+	goal.Title = title
+	return nil
+}
+
 func (c *repoContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -12828,7 +13585,9 @@ func (c *repoContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) {
 	goal.ID = input.ID // Ensure ID is set
 
 	if input.Title != "" {
-		goal.Title = input.Title
+		if err := UpdateGoalTitle(&goal, input.Title); err != nil {
+			return nil, err
+		}
 	}
 	if input.Description != "" {
 		goal.Description = input.Description
@@ -12907,7 +13666,9 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	goal.Status = "open"
 
 	if input.Title != nil {
-		goal.Title = *input.Title
+		if err := UpdateGoalTitle(&goal, *input.Title); err != nil {
+			return nil, err
+		}
 	}
 	if input.Description != nil {
 		goal.Description = *input.Description
@@ -13298,6 +14059,27 @@ func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent 
 	return &File{ID: c.GetFileID(tf), Path: tf, Name: filepath.Base(tf)}, nil
 }
 
+func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
+	s := ""
+	if sourceFile != nil {
+		s = *sourceFile
+	}
+	ss := ""
+	if sourceSection != nil {
+		ss = *sourceSection
+	}
+	tf := ""
+	if targetFile != nil {
+		tf = *targetFile
+	}
+
+	result := ToolExtract(s, ss, tf)
+	if result.Error != "" {
+		return nil, errors.New(result.Error)
+	}
+	return &File{ID: c.GetFileID(tf), Path: tf, Name: filepath.Base(tf)}, nil
+}
+
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	return nil, nil
 }
@@ -13379,6 +14161,10 @@ func (c *defaultContext) SectionMove(file, oldName, newName string) (*Section, e
 func (c *defaultContext) SectionDelete(file, name string) error { return nil }
 
 func (c *defaultContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
+	return nil, nil
+}
+
+func (c *defaultContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	return nil, nil
 }
 
@@ -13619,6 +14405,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	var folderType *graphql.Object
 	var fileType *graphql.Object
 	var sectionType *graphql.Object
+	var sectionItemInterface *graphql.Interface
 	var definitionType *graphql.Object
 	var violationType *graphql.Object
 	var violationKindType *graphql.Object
@@ -13714,7 +14501,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return GetFolderFiles(folder.Path, folder.BundleID)
 					},
 				},
-				"bundle": &graphql.Field{Type: bundleType},
+				"ignored":   &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
+				"generated": &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
+				"bundle":    &graphql.Field{Type: bundleType},
 				"violations": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -13735,6 +14524,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"name":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"extension": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"folder":    &graphql.Field{Type: folderType},
+				"kind":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"ignored":   &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
+				"generated": &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
 				"bundle":    &graphql.Field{Type: bundleType},
 				"sections": &graphql.Field{
 					Type: graphql.NewList(sectionType),
@@ -13749,11 +14541,16 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 							return nil, err
 						}
 						sections := ParseSections(content, file.Path)
+						definitions := ParseDefinitions(content, file.Path)
+						sections = HydrateSectionsWithDefinitions(sections, definitions)
 						result := make([]*Section, len(sections))
 						stack := make([]*Section, 0, len(sections))
 						for i := range sections {
 							sections[i].FilePath = file.Path
 							sections[i].Path = sections[i].Name
+							for j := range sections[i].Definitions {
+								sections[i].Definitions[j].SectionPath = sections[i].Path
+							}
 							result[i] = &sections[i]
 							if len(sections[i].Children) > 0 {
 								stack = append(stack, result[i])
@@ -13769,6 +14566,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 									child.Path = child.Name
 								} else {
 									child.Path = section.Path + "#" + child.Name
+								}
+								for j := range child.Definitions {
+									child.Definitions[j].SectionPath = child.Path
 								}
 								if len(child.Children) > 0 {
 									stack = append(stack, child)
@@ -13801,8 +14601,27 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		}),
 	})
 
+	sectionItemInterface = graphql.NewInterface(graphql.InterfaceConfig{
+		Name: "SectionItem",
+		Fields: graphql.Fields{
+			"id":    &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+			"name":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"range": &graphql.Field{Type: rangeType},
+		},
+		ResolveType: func(p graphql.ResolveTypeParams) *graphql.Object {
+			if _, ok := p.Value.(*Section); ok {
+				return sectionType
+			}
+			if _, ok := p.Value.(*Definition); ok {
+				return definitionType
+			}
+			return nil
+		},
+	})
+
 	sectionType = graphql.NewObject(graphql.ObjectConfig{
-		Name: "Section",
+		Name:       "Section",
+		Interfaces: []*graphql.Interface{sectionItemInterface},
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
 				"id": &graphql.Field{
@@ -13843,23 +14662,64 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				},
 				"parent": &graphql.Field{Type: sectionType},
 				"children": &graphql.Field{
-					Type: graphql.NewList(sectionType),
+					Type: graphql.NewList(sectionItemInterface),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						section := p.Source.(*Section)
-						if len(section.Children) == 0 {
-							return []*Section{}, nil
+						count := len(section.Children) + len(section.Definitions)
+						if count == 0 {
+							return []interface{}{}, nil
 						}
-						children := make([]*Section, len(section.Children))
+
+						items := make([]interface{}, 0, count)
 						for i := range section.Children {
-							children[i] = &section.Children[i]
+							items = append(items, &section.Children[i])
 						}
-						return children, nil
+						for i := range section.Definitions {
+							items = append(items, &section.Definitions[i])
+						}
+
+						sort.Slice(items, func(i, j int) bool {
+							var startI, indexI int
+							switch v := items[i].(type) {
+							case *Section:
+								startI = v.StartLine
+								indexI = v.StartIndex
+							case *Definition:
+								startI = v.StartLine
+								indexI = v.StartIndex
+							}
+
+							var startJ, indexJ int
+							switch v := items[j].(type) {
+							case *Section:
+								startJ = v.StartLine
+								indexJ = v.StartIndex
+							case *Definition:
+								startJ = v.StartLine
+								indexJ = v.StartIndex
+							}
+
+							if startI != startJ {
+								return startI < startJ
+							}
+							return indexI < indexJ
+						})
+
+						return items, nil
 					},
 				},
 				"definitions": &graphql.Field{
 					Type: graphql.NewList(definitionType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Definition{}, nil
+						section := p.Source.(*Section)
+						if len(section.Definitions) == 0 {
+							return []*Definition{}, nil
+						}
+						definitions := make([]*Definition, len(section.Definitions))
+						for i := range section.Definitions {
+							definitions[i] = &section.Definitions[i]
+						}
+						return definitions, nil
 					},
 				},
 				"violations": &graphql.Field{
@@ -13869,7 +14729,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					},
 				},
 				"range": &graphql.Field{
-					Type: rangeType,
+					Type: graphql.NewNonNull(rangeType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						section := p.Source.(*Section)
 						return &Range{
@@ -13883,7 +14743,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	})
 
 	definitionType = graphql.NewObject(graphql.ObjectConfig{
-		Name: "Definition",
+		Name:       "Definition",
+		Interfaces: []*graphql.Interface{sectionItemInterface},
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
 				"id": &graphql.Field{
@@ -15497,6 +16358,20 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return mutationResolverInstance.Integrate(p.Context, &source, &targetSection, &targetFile, targetParent)
 				},
 			},
+			"extract": &graphql.Field{
+				Type: fileType,
+				Args: graphql.FieldConfigArgument{
+					"sourceFile":    &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"sourceSection": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+					"targetFile":    &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					sourceFile := p.Args["sourceFile"].(string)
+					sourceSection := p.Args["sourceSection"].(string)
+					targetFile := p.Args["targetFile"].(string)
+					return mutationResolverInstance.Extract(p.Context, &sourceFile, &sourceSection, &targetFile)
+				},
+			},
 		},
 	})
 
@@ -16021,6 +16896,13 @@ func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name 
 func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Integrate(source, targetSection, targetFile, targetParent)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSection, targetFile *string) (*File, error) {
+	if r.Ctx != nil {
+		return r.Ctx.Extract(sourceFile, sourceSection, targetFile)
 	}
 	return nil, fmt.Errorf("not implemented")
 }
@@ -16926,9 +17808,10 @@ func ticketClose(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToo
 			return nil, err
 		}
 	}
+	title, _, _ := getStringArg(args, "title")
 	noGithub, _, _ := getBoolArg(args, "noGithub")
 
-	result := ToolTicketClose(year, month, day, slug, summary, files, noGithub)
+	result := ToolTicketClose(year, month, day, slug, summary, files, title, noGithub)
 	return toolResultToMCP(result)
 }
 
@@ -16959,12 +17842,13 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 		return nil, err
 	}
 	llm, _, _ := getStringArg(args, "llm")
+	title, _, _ := getStringArg(args, "title")
 	draft, _, _ := getStringArg(args, "draft")
 	goal, _, _ := getStringArg(args, "goal")
 	parent, _, _ := getStringArg(args, "parent")
 	noGithub, _, _ := getBoolArg(args, "noGithub")
 
-	result := ToolTicketReopen(year, month, day, slug, prompt, llm, ui, draft, goal, parent, noGithub)
+	result := ToolTicketReopen(year, month, day, slug, prompt, llm, ui, draft, title, goal, parent, noGithub)
 	return toolResultToMCP(result)
 }
 
@@ -17999,6 +18883,24 @@ func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	return len(reasons) == 0, reasons
 }
 
+func GetBundleByPath(path string) *Bundle {
+	bundles := GetProjects()
+	normalizedPath := NormalizePath(path)
+	var bestMatch *Bundle
+	var matchedLen int
+	for i := range bundles {
+		bundle := &bundles[i]
+		root := NormalizePath(bundle.Root)
+		if strings.HasPrefix(normalizedPath, root+"/") || normalizedPath == root {
+			if len(root) > matchedLen {
+				bestMatch = bundle
+				matchedLen = len(root)
+			}
+		}
+	}
+	return bestMatch
+}
+
 func findBundleInfo(path string) (name, root string, ok bool) {
 	bundles := GetProjects()
 	normalizedPath := NormalizePath(path)
@@ -18304,7 +19206,12 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 	if err != nil {
 		return []*Folder{}, nil
 	}
-	var children []*Folder
+	type candidate struct {
+		name    string
+		relPath string
+	}
+	var candidates []candidate
+	var relPaths []string
 	for _, entry := range entries {
 		if entry.IsDir() {
 			if strings.HasPrefix(entry.Name(), ".") && entry.Name() != ".semio-repo" {
@@ -18313,16 +19220,25 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 			if entry.Name() == "node_modules" || entry.Name() == "bin" || entry.Name() == "obj" {
 				continue
 			}
-			relPath := filepath.Join(folderPath, entry.Name())
-			child := &Folder{
-				ID:       buildFolderID(relPath, bundleID),
-				Path:     relPath,
-				URI:      fmt.Sprintf("file://%s/%s", rootDir, relPath),
-				Name:     entry.Name(),
-				BundleID: bundleID,
-			}
-			children = append(children, child)
+			relPath := NormalizePath(filepath.Join(folderPath, entry.Name()))
+			candidates = append(candidates, candidate{name: entry.Name(), relPath: relPath})
+			relPaths = append(relPaths, relPath)
 		}
+	}
+	ignored := GetGitIgnoredSet(relPaths)
+	var children []*Folder
+	for _, c := range candidates {
+		if ignored[c.relPath] || ignored[c.relPath+"/"] {
+			continue
+		}
+		child := &Folder{
+			ID:       buildFolderID(c.relPath, bundleID),
+			Path:     c.relPath,
+			URI:      fmt.Sprintf("file://%s/%s", rootDir, c.relPath),
+			Name:     c.name,
+			BundleID: bundleID,
+		}
+		children = append(children, child)
 	}
 	return children, nil
 }

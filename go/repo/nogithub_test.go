@@ -94,7 +94,7 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 
 	// 3. Reopen Ticket
 	// Provide valid UI (e.g. "copilot-chat")
-	err = ReopenTicket(ticket, "Reopen Prompt", "gemini-3-pro", "copilot-chat", "", true)
+	err = ReopenTicket(ticket, "Reopen Prompt", "gemini-3-pro", "copilot-chat", "", "", "", true)
 	if err != nil {
 		t.Fatalf("ReopenTicket failed: %v", err)
 	}

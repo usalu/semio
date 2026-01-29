@@ -20,6 +20,75 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+Repo metrics:
+- Average, max  | tree: repo, per bundle, per folder, per file, per section, per definition | tree: contributor 
+- Lines of code [total, added, removed]
+- Goals [total, open, closed]
+- Tickets [total, open, closed] (iteration[count, duration])
+- Contributors [total]
+- Policies
+
+
+The file tree items should have different codeicons according the file kind (code, script, config, test, docs, resource, license).
+
+The sections section along with all tree items of the explorer side view in vscode should be the same as the file tree item in codebase section in the semio-repo side view. 100% the same (same behaviour such as drag and drop, same action toggles, same icons, same order, same children, etc).
+
+repo binary, vscode extension, graphql:
+For every --no-<kind> flag, there should be a --only-<kind> flag to show only the kind.
+
+Add to every list and tree command --filter <filter-string>, --regex, --match-case, --match-whole-word. The filter string is a string that is used to filter the list and tree results. When a filter string is provided, regex, match-case and match-whole-word can be additionally toggled. The filter string is used to filter the list and tree results to only include items with ids that match the filter string.
+
+The filter flags for file kinds (--no-<kind>, --only-<kind>) should work for every single list and tree command (even if not file related). e.g. --only-code should only show bundles that have code files, show tickets that have diffs on code files, show policies that affect code files, show commands that affect code files, show contributors that have contributed to code files.
+
+Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles. Use the search field with the search toggles as a filter string with the filter options
+
+vscode extension: When clicking on a section tree item or definition tree item it should jump to the right line where it starts. Both dont currently work.
+
+The folder and file mechanism of the repo binary should be refactored/extended/changed:
+Currently some folders and files are just ignored (e.g. gitignored folders and files, LICENSE.md files, json files, etc). From now on only gitignored folders and files are ignored.
+Every folder and file now has an ignored flag and a generated flag (e.g. lock files, `ticket.json`, `goal.json`, etc). By default all tree and list commands ignore ignored folders and files.
+File kinds: code, script, config, test, docs, resource, license
+Make sure to derive the file kinds properly for every file in the repo.
+Extend all list and tree commands to receive filter flags such as --no-<kind>. (e.g. --no-config, --no-test, --no-docs, --no-resource, --no-license) and --show-ignored flag to show ignored folders and files, and --show-generated flag to show generated folders and files.
+The codebase section in the side view of the vscode extension should have toggles for: code (default true), test (default true), script (default false), config (default false), docs (default false). The codebase section always hides licenses, resources, generated and ignored folders and files.
+
+The repo binary is not properly ignoring folders. e.g. js/storybook-static is gitignored but still shows up as folder.
+
+Whenever a title of a goal or ticket is changed, also change the folder name of the goal or ticket to match the new title.
+
+- go files dont show definitions under the sections.
+- definition tree items should have different icon to section
+- In typescript: Definition are only toplevel. They always start on a newline. E.g. a const inside a function is not considered as a definition.
+
+The violations dont show in the vscode extension as diagnostics. Make sure to test this and fix it until you get violations showing up. e.g. semio.ts has violations but they dont show up.
+
+The `ticket.json` and `goal.json` should change:
+- Change the author from:
+```json
+ "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+```
+to:
+```json
+ "author": "usalu",
+```
+use the the git config and try to find a contributor from the contributors list. If no match is found, use the git config "NAME <EMAIL>" format.
+- Rename goal title to name.
+- Remove prompt from goal (not from iterations).
+
+
+repo binary, vscode extension, graphql:
+- Add a new command: extract <source-file> <-source-section-id> <target-file>
+It should extract the section from the source file and create a target file with the section.
+Remove the section from the source file.
+It is the inverse of the integrate command.
+When removing the file, also change the dev docs (AGENTS.md and README.md) to reflect the changes.
+- Make sure to implement drag and drop of file tree items and section tree items in the codebase section in the side view of the vscode extension. When a file is dropped onto a section, then integrate the file into the section. When a section is dropped out of a file to a folder, then extract the section from the file and name the new file as the section with the same file extension as the parent file (e.g. `State Managment` gets `state-managment.tsx`) and move it to the folder.
+
+The section tree items are not showing the child definitions. Maje sure the children are both sections and definitions, both in the same order as in the source code.
+
 Extend the repo mechanism to introduce: drafts
 Drafts replace plans. A draft is created before a ticket is started. A draft has only a name (the name of the folder in `.semio-repo/drafts/`). There is no `draft.json` file. When a ticket is opened, all files from the draft are moved to the ticket folder. If a file already exists in the ticket folder e.g. `plan.md` then append a number such as `plan_2.md`, `plan_3.md`, etc. Ticket open and reopen dont accept a plan-id but a draft-id. The draft id is the folder name of the draft.
 Add draft create, draft delete, draft list commands.
@@ -31,7 +100,7 @@ Add draft create, draft delete, draft list commands.
 - Remove ticket progress command. Only open, close and reopen.
 - There is a lot of duplicate information in the ticket.json (remove year, month, day, ticket path, slug, etc) which is implicit in the file/folder structure. Never store information twice.
 
-Make sure there is a complete pairity between repo cli commands, mcp tools and vscode extension commands. Currently not all commands are available in all clients.
+Make sure there is a complete pairity between repo cli commands, mcp tools and vscode extension commands. Currently not all commands are available in all clients (e.g. drafts are missing).
 Add a policy `Repo` that targets all @semio-repo code (repo binary, vscode extension, grapqhl and sql ) that produces e.g. violation kinds for missing-command.
 
 Make sure to extend/change/refactor the repo binary, vscode extension and graphql to support the following commands:

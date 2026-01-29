@@ -62,6 +62,37 @@ async function waitForDiagnostics(uri: vscode.Uri, timeout = 5000): Promise<vsco
   return vscode.languages.getDiagnostics(uri).filter((d) => d.source === "semio");
 }
 
+type RepoEvent = {
+  kind: string;
+  data?: unknown;
+  result?: unknown;
+  error?: { message?: string; fatal?: boolean };
+  done?: { exit_code?: number };
+};
+
+function parseRepoEvents(output: string): RepoEvent[] {
+  const lines = output.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+  return lines.map((line) => JSON.parse(line) as RepoEvent);
+}
+
+function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
+  let lastResult: unknown = null;
+  for (const event of events) {
+    if (event.kind === "error" && event.error?.fatal) {
+      throw new Error(event.error.message ?? "Repo command failed");
+    }
+    if (event.kind === "result") {
+      lastResult = event.result ?? event.data ?? null;
+    }
+  }
+  if (lastResult && typeof lastResult === "object" && !Array.isArray(lastResult)) {
+    if ("data" in (lastResult as Record<string, unknown>)) {
+      return lastResult as Record<string, unknown>;
+    }
+  }
+  return { data: lastResult };
+}
+
 // #endregion Utilities
 
 // #region Extension Activation
@@ -73,6 +104,85 @@ suiteSetup(async function () {
 });
 
 // #endregion Extension Activation
+
+// #region RepoEvent Parsing Tests
+
+suite("RepoEvent Parsing Test Suite", () => {
+  test("parseRepoEvents handles result field correctly", () => {
+    const output = '{"kind":"result","result":{"data":{"violations":[{"id":"v1"}]}}}';
+    const events = parseRepoEvents(output);
+    assert.strictEqual(events.length, 1);
+    assert.strictEqual(events[0].kind, "result");
+    assert.ok(events[0].result);
+    const result = events[0].result as any;
+    assert.ok(result.data);
+    assert.ok(result.data.violations);
+    assert.strictEqual(result.data.violations.length, 1);
+  });
+
+  test("extractRepoResult extracts data from result field", () => {
+    const events: RepoEvent[] = [
+      { kind: "result", result: { data: { violations: [{ id: "v1" }] } } }
+    ];
+    const extracted = extractRepoResult(events);
+    assert.ok(extracted.data);
+    const data = extracted.data as any;
+    assert.ok(data.violations);
+    assert.strictEqual(data.violations.length, 1);
+    assert.strictEqual(data.violations[0].id, "v1");
+  });
+
+  test("extractRepoResult falls back to data field if result is missing", () => {
+    const events: RepoEvent[] = [
+      { kind: "result", data: { violations: [{ id: "v2" }] } }
+    ];
+    const extracted = extractRepoResult(events);
+    assert.ok(extracted.data);
+    const data = extracted.data as any;
+    assert.ok(data.violations);
+    assert.strictEqual(data.violations.length, 1);
+    assert.strictEqual(data.violations[0].id, "v2");
+  });
+
+  test("extractRepoResult prefers result over data field", () => {
+    const events: RepoEvent[] = [
+      { kind: "result", result: { data: { violations: [{ id: "from-result" }] } }, data: { violations: [{ id: "from-data" }] } }
+    ];
+    const extracted = extractRepoResult(events);
+    assert.ok(extracted.data);
+    const data = extracted.data as any;
+    assert.ok(data.violations);
+    assert.strictEqual(data.violations[0].id, "from-result");
+  });
+
+  test("extractRepoResult handles fatal errors", () => {
+    const events: RepoEvent[] = [
+      { kind: "error", error: { message: "Fatal error occurred", fatal: true } }
+    ];
+    assert.throws(() => extractRepoResult(events), /Fatal error occurred/);
+  });
+
+  test("extractRepoResult ignores non-fatal errors", () => {
+    const events: RepoEvent[] = [
+      { kind: "error", error: { message: "Non-fatal warning", fatal: false } },
+      { kind: "result", result: { data: { violations: [] } } }
+    ];
+    const extracted = extractRepoResult(events);
+    assert.ok(extracted.data);
+  });
+
+  test("extractRepoResult uses last result when multiple result events", () => {
+    const events: RepoEvent[] = [
+      { kind: "result", result: { data: { violations: [{ id: "first" }] } } },
+      { kind: "result", result: { data: { violations: [{ id: "last" }] } } }
+    ];
+    const extracted = extractRepoResult(events);
+    const data = extracted.data as any;
+    assert.strictEqual(data.violations[0].id, "last");
+  });
+});
+
+// #endregion RepoEvent Parsing Tests
 
 // #region Command Registration Tests
 
@@ -277,7 +387,7 @@ suite("Sidebar View Test Suite", function () {
       await extension.activate();
     }
     assert.ok(extension.isActive, "Extension should be active");
-    
+
     // Verify views are contributed in package.json (static check)
     const packageJSON = extension.packageJSON;
     const views = packageJSON.contributes.views;

@@ -1,0 +1,22 @@
+{
+  "title": "Refactor Repo File Handling and Filtering",
+  "status": "open",
+  "prompt": "Refactor file kinds, ignored/generated flags, and filtering in CLI and VS Code",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/262"
+  },
+  "started": "2026-01-29T09:49:05.588584487Z",
+  "iterations": [
+    {
+      "prompt": "Refactor file kinds, ignored/generated flags, and filtering in CLI and VS Code",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-29T09:49:05.588584487Z",
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3"
+    }
+  ]
+}

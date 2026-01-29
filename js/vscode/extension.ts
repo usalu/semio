@@ -38,6 +38,7 @@ const execFileAsync = promisify(execFile);
 type RepoEvent = {
   kind: string;
   data?: unknown;
+  result?: unknown;
   error?: { message?: string; fatal?: boolean };
   done?: { exit_code?: number };
 };
@@ -60,7 +61,7 @@ function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
       throw new Error(event.error.message ?? "Repo command failed");
     }
     if (event.kind === "result") {
-      lastResult = event.data ?? null;
+      lastResult = event.result ?? event.data ?? null;
     }
   }
   if (lastResult && typeof lastResult === "object" && !Array.isArray(lastResult)) {
@@ -605,6 +606,7 @@ interface AnalyzeReport {
 
 interface SectionInfo {
   name: string;
+  kind: string;
   startLine: number;
   endLine: number;
   startIndex: number;
@@ -622,12 +624,13 @@ interface DefinitionInfo {
 }
 
 interface GraphqlSectionRange {
-  start?: number;
-  end?: number;
+  start?: { line: number; column: number };
+  end?: { line: number; column: number };
 }
 
 interface GraphqlSection {
   name: string;
+  __typename?: string;
   range?: GraphqlSectionRange | null;
   children?: GraphqlSection[] | null;
 }
@@ -721,8 +724,9 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
 function normalizeSectionTree(sections: GraphqlSection[]): SectionInfo[] {
   return sections.map((section) => ({
     name: section.name,
-    startLine: section.range?.start ?? 0,
-    endLine: section.range?.end ?? 0,
+    kind: section.__typename ?? "Section",
+    startLine: section.range?.start?.line ?? 0,
+    endLine: section.range?.end?.line ?? 0,
     startIndex: 0,
     endIndex: 0,
     children: normalizeSectionTree(section.children ?? []),
@@ -2481,7 +2485,7 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
   }
 }
 
-type SectionTreeItem = SectionItem | SectionStatusItem;
+type SectionTreeItem = SectionItem | SectionDefinitionItem | SectionStatusItem;
 
 class SectionStatusItem extends vscode.TreeItem {
   constructor(label: string) {
@@ -2494,20 +2498,45 @@ class SectionItem extends vscode.TreeItem {
   constructor(
     public readonly section: SectionInfo,
     public readonly sectionPath: string,
+    public readonly hasChildren: boolean,
+    public readonly filePath: string,
+    public readonly fileUri: string,
   ) {
-    super(section.name, section.children.length > 0 ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
-    this.description = `${section.startLine}-${section.endLine}`;
+    super(section.name, hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None);
     this.contextValue = "section";
+    this.tooltip = section.name;
     this.iconPath = new vscode.ThemeIcon("symbol-namespace");
     this.command = { command: "semio.sectionOpen", title: "Open Section", arguments: [this] };
+  }
+}
+
+class SectionDefinitionItem extends vscode.TreeItem {
+  constructor(
+    public readonly definition: DefinitionInfo,
+    public readonly fileUri: string,
+  ) {
+    const name = definition.name;
+    super(name, vscode.TreeItemCollapsibleState.None);
+    this.iconPath = new vscode.ThemeIcon("symbol-function");
+    this.contextValue = "sectionDefinition";
+    this.tooltip = definition.name;
+    this.command = { command: "semio.navigateToDefinition", title: "Navigate to Definition", arguments: [fileUri, definition.startLine] };
   }
 }
 
 class SectionsProvider implements vscode.TreeDataProvider<SectionTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<SectionTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private cachedSections: SectionInfo[] = [];
+  private cachedDefinitions: DefinitionInfo[] = [];
+  private cachedFilePath: string = "";
+  private cachedFileUri: string = "";
 
   refresh(): void {
+    this.cachedSections = [];
+    this.cachedDefinitions = [];
+    this.cachedFilePath = "";
+    this.cachedFileUri = "";
     this._onDidChangeTreeData.fire();
   }
 
@@ -2515,16 +2544,84 @@ class SectionsProvider implements vscode.TreeDataProvider<SectionTreeItem> {
     return element;
   }
 
-  private buildSectionItems(sections: SectionInfo[], parentPath: string | null): SectionItem[] {
-    return sections.map((section) => new SectionItem(section, parentPath ? `${parentPath}/${section.name}` : section.name));
+  private isDefinitionInSection(def: DefinitionInfo, section: SectionInfo): boolean {
+    return def.startLine >= section.startLine && def.startLine <= section.endLine;
+  }
+
+  private getDefinitionsForSection(section: SectionInfo): DefinitionInfo[] {
+    return this.cachedDefinitions.filter((d) => this.isDefinitionInSection(d, section));
+  }
+
+  private sectionHasChildren(section: SectionInfo): boolean {
+    return section.children.length > 0 || this.getDefinitionsForSection(section).length > 0;
+  }
+
+  private buildFileChildren(): SectionTreeItem[] {
+    const items: SectionTreeItem[] = [];
+
+    // Root sections
+    for (const section of this.cachedSections) {
+      items.push(new SectionItem(section, section.name, this.sectionHasChildren(section), this.cachedFilePath, this.cachedFileUri));
+    }
+
+    // File-level definitions (not inside any root section)
+    const fileDefs = this.cachedDefinitions.filter((d) => {
+      return !this.cachedSections.some((s) => this.isDefinitionInSection(d, s));
+    });
+    for (const def of fileDefs) {
+      items.push(new SectionDefinitionItem(def, this.cachedFileUri));
+    }
+
+    return this.sortItemsByLine(items);
+  }
+
+  private buildSectionChildren(section: SectionInfo, parentPath: string): SectionTreeItem[] {
+    const items: SectionTreeItem[] = [];
+
+    // Child sections
+    for (const child of section.children) {
+      const childPath = `${parentPath}/${child.name}`;
+      items.push(new SectionItem(child, childPath, this.sectionHasChildren(child), this.cachedFilePath, this.cachedFileUri));
+    }
+
+    // Definitions directly in this section but NOT in any child section
+    const allDefs = this.getDefinitionsForSection(section);
+    const directDefs = allDefs.filter((d) => {
+      return !section.children.some((child) => this.isDefinitionInSection(d, child));
+    });
+    for (const def of directDefs) {
+      items.push(new SectionDefinitionItem(def, this.cachedFileUri));
+    }
+
+    return this.sortItemsByLine(items);
+  }
+
+  private sortItemsByLine(items: SectionTreeItem[]): SectionTreeItem[] {
+    return items.sort((a, b) => {
+      const lineA = this.getItemStartLine(a);
+      const lineB = this.getItemStartLine(b);
+      return lineA - lineB;
+    });
+  }
+
+  private getItemStartLine(item: SectionTreeItem): number {
+    if (item instanceof SectionItem) return item.section.startLine || 0;
+    if (item instanceof SectionDefinitionItem) return item.definition.startLine || 0;
+    return 0;
   }
 
   async getChildren(element?: SectionTreeItem): Promise<SectionTreeItem[]> {
     log("[SectionsProvider.getChildren] called, element:", element?.constructor.name ?? "root");
+
     if (element instanceof SectionItem) {
       log("[SectionsProvider.getChildren] returning children of section:", element.sectionPath);
-      return element.section.children.map((child) => new SectionItem(child, `${element.sectionPath}/${child.name}`));
+      return this.buildSectionChildren(element.section, element.sectionPath);
     }
+
+    if (element instanceof SectionDefinitionItem || element instanceof SectionStatusItem) {
+      return [];
+    }
+
     const editor = vscode.window.activeTextEditor;
     if (!editor) {
       log("[SectionsProvider.getChildren] no active editor");
@@ -2534,30 +2631,53 @@ class SectionsProvider implements vscode.TreeDataProvider<SectionTreeItem> {
       log("[SectionsProvider.getChildren] no repo access");
       return [];
     }
+
     const relativePath = vscode.workspace.asRelativePath(editor.document.uri);
-    log("[SectionsProvider.getChildren] fetching sections for:", relativePath);
+    const fileUri = editor.document.uri.toString();
+    log("[SectionsProvider.getChildren] fetching sections and definitions for:", relativePath);
+
+    // Fetch sections
     const sections = await getSectionListForFile(relativePath);
     log("[SectionsProvider.getChildren] got sections:", sections.length);
-    if (sections.length === 0) {
+
+    // Fetch definitions
+    let definitions: DefinitionInfo[] = [];
+    try {
+      const defResult = await runRepoCommandJson<ToolResult<DefinitionInfo[]>>(`definition list --file "${relativePath}"`);
+      definitions = extractDefinitions(defResult);
+      log("[SectionsProvider.getChildren] got definitions:", definitions.length);
+    } catch (e) {
+      logError("[SectionsProvider.getChildren] failed to fetch definitions", e);
+    }
+
+    if (sections.length === 0 && definitions.length === 0) {
       log("[SectionsProvider.getChildren] returning empty status");
       return [new SectionStatusItem(getUiString("sectionsEmpty"))];
     }
-    log("[SectionsProvider.getChildren] returning", sections.length, "section items");
-    return this.buildSectionItems(sections, null);
+
+    // Cache for child lookups
+    this.cachedSections = sections;
+    this.cachedDefinitions = definitions;
+    this.cachedFilePath = relativePath;
+    this.cachedFileUri = fileUri;
+
+    return this.buildFileChildren();
   }
 }
 
-class SectionsDragAndDropController implements vscode.TreeDragAndDropController<SectionItem> {
+class SectionsDragAndDropController implements vscode.TreeDragAndDropController<SectionTreeItem> {
   readonly dragMimeTypes = ["application/vnd.semio.section"];
   readonly dropMimeTypes = ["application/vnd.semio.section"];
 
-  handleDrag(source: readonly SectionItem[], dataTransfer: vscode.DataTransfer): void {
+  handleDrag(source: readonly SectionTreeItem[], dataTransfer: vscode.DataTransfer): void {
     if (source.length === 0) return;
-    dataTransfer.set("application/vnd.semio.section", new vscode.DataTransferItem(JSON.stringify(source.map((item) => ({ path: item.sectionPath, name: item.section.name })))));
+    const items = source.filter((s): s is SectionItem => s instanceof SectionItem);
+    if (items.length === 0) return;
+    dataTransfer.set("application/vnd.semio.section", new vscode.DataTransferItem(JSON.stringify(items.map((item) => ({ path: item.sectionPath, name: item.section.name })))));
   }
 
-  async handleDrop(target: SectionItem | undefined, dataTransfer: vscode.DataTransfer): Promise<void> {
-    if (!target) return;
+  async handleDrop(target: SectionTreeItem | undefined, dataTransfer: vscode.DataTransfer): Promise<void> {
+    if (!target || !(target instanceof SectionItem)) return;
     if (!hasRepoAccess()) return;
     const editor = vscode.window.activeTextEditor;
     if (!editor) return;
@@ -2645,7 +2765,7 @@ class CodebaseSectionItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon("symbol-namespace");
     this.contextValue = "codebaseSection";
     this.tooltip = section.name;
-    this.command = { command: "semio.navigateToSection", title: "Navigate to Section", arguments: [file.uri + "#" + section.name] };
+    this.command = { command: "semio.navigateToSection", title: "Navigate to Section", arguments: [file.uri, section.range?.start] };
   }
 }
 
@@ -2659,7 +2779,7 @@ class CodebaseDefinitionItem extends vscode.TreeItem {
     this.iconPath = new vscode.ThemeIcon("symbol-function");
     this.contextValue = "codebaseDefinition";
     this.tooltip = definition.name;
-    this.command = { command: "semio.navigateToDefinition", title: "Navigate to Definition", arguments: [fileUri + "#" + definition.name] };
+    this.command = { command: "semio.navigateToDefinition", title: "Navigate to Definition", arguments: [fileUri, definition.range?.start] };
   }
 }
 
@@ -3010,6 +3130,100 @@ class CommandsProvider implements vscode.TreeDataProvider<CommandTreeItem> {
   }
 }
 
+
+class CodebaseDragAndDropController implements vscode.TreeDragAndDropController<CodebaseTreeItem> {
+  dropMimeTypes = ["application/vnd.code.tree.semio.codebase"];
+  dragMimeTypes = ["application/vnd.code.tree.semio.codebase"];
+
+  handleDrag(source: readonly CodebaseTreeItem[], dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): void | Thenable<void> {
+    dataTransfer.set("application/vnd.code.tree.semio.codebase", new vscode.DataTransferItem(source));
+    // Also support dragging sections as text for other views if needed, but primary use case is internal.
+  }
+
+  async handleDrop(target: CodebaseTreeItem | undefined, dataTransfer: vscode.DataTransfer, token: vscode.CancellationToken): Promise<void> {
+    const transferItem = dataTransfer.get("application/vnd.code.tree.semio.codebase");
+    if (!transferItem) return;
+
+    const sources = transferItem.value as CodebaseTreeItem[];
+    if (sources.length === 0) return;
+    const source = sources[0];
+
+    // Case 1: Integrate (File -> Section)
+    if (source instanceof CodebaseFileItem && target instanceof CodebaseSectionItem) {
+      const sourcePath = source.file.path;
+      const targetFile = target.file.path;
+      const targetSectionName = target.section.name;
+      
+      try {
+        log(`[CodebaseDragAndDrop] Integrating ${sourcePath} into ${targetFile} section ${targetSectionName}`);
+        await executeGraphQL(`
+          mutation Integrate($source: String!, $targetSection: String!, $targetFile: String!) {
+            integrate(source: $source, targetSection: $targetSection, targetFile: $targetFile) {
+              id
+            }
+          }
+        `, {
+          source: sourcePath,
+          targetSection: targetSectionName,
+          targetFile: targetFile
+        });
+        vscode.window.showInformationMessage(`Integrated ${path.basename(sourcePath)} into ${targetSectionName}`);
+        codebaseProvider.refresh();
+      } catch (e) {
+        logError("Integrate failed", e);
+        vscode.window.showErrorMessage("Integrate failed: " + (e instanceof Error ? e.message : String(e)));
+      }
+      return;
+    }
+
+    // Case 2: Extract (Section -> Folder/Bundle)
+    if (source instanceof CodebaseSectionItem && (target instanceof CodebaseFolderItem || target instanceof CodebaseBundleItem)) {
+      const sourceFile = source.file.path;
+      const sourceSection = source.section.name;
+      
+      let targetDir = "";
+      if (target instanceof CodebaseFolderItem) targetDir = target.folderPath;
+      if (target instanceof CodebaseBundleItem) targetDir = target.bundle.root;
+
+      // Suggest filename based on section name + extension of source file
+      const originalExt = path.extname(sourceFile);
+      const defaultName = sourceSection + originalExt;
+
+      const filename = await vscode.window.showInputBox({
+        title: "Extract Section",
+        prompt: `Enter filename for extracted section "${sourceSection}"`,
+        value: defaultName,
+        placeHolder: "filename.ext"
+      });
+
+      if (!filename) return;
+
+      const targetFile = path.join(targetDir, filename);
+
+      try {
+        log(`[CodebaseDragAndDrop] Extracting ${sourceSection} from ${sourceFile} to ${targetFile}`);
+        await executeGraphQL(`
+          mutation Extract($sourceFile: String!, $sourceSection: String!, $targetFile: String!) {
+            extract(sourceFile: $sourceFile, sourceSection: $sourceSection, targetFile: $targetFile) {
+              id
+            }
+          }
+        `, {
+            sourceFile: sourceFile,
+            sourceSection: sourceSection,
+            targetFile: targetFile
+        });
+        vscode.window.showInformationMessage(`Extracted ${sourceSection} to ${filename}`);
+        codebaseProvider.refresh();
+      } catch (e) {
+        logError("Extract failed", e);
+        vscode.window.showErrorMessage("Extract failed: " + (e instanceof Error ? e.message : String(e)));
+      }
+      return;
+    }
+  }
+}
+
 let ticketsProvider: TicketsProvider;
 let contributorsProvider: ContributorsProvider;
 let policiesProvider: PoliciesProvider;
@@ -3032,7 +3246,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     context.subscriptions.push(vscode.window.registerWebviewViewProvider(SearchViewProvider.viewType, searchProvider));
 
     log("[registerSidebarViews] Creating semio.codebase tree view...");
-    context.subscriptions.push(vscode.window.createTreeView("semio.codebase", { treeDataProvider: codebaseProvider, showCollapseAll: true }));
+    context.subscriptions.push(vscode.window.createTreeView("semio.codebase", { treeDataProvider: codebaseProvider, showCollapseAll: true, dragAndDropController: new CodebaseDragAndDropController() }));
 
     log("[registerSidebarViews] Creating semio.tickets tree view...");
     context.subscriptions.push(vscode.window.createTreeView("semio.tickets", { treeDataProvider: ticketsProvider, showCollapseAll: true }));
@@ -3441,21 +3655,27 @@ function registerCommands(context: vscode.ExtensionContext): void {
       const uri = vscode.Uri.file(path.join(root, filePath));
       await vscode.window.showTextDocument(uri);
     }),
-    vscode.commands.registerCommand("semio.navigateToSection", async (sectionUri: string) => {
-      if (!sectionUri) return;
-      const uriMatch = sectionUri.match(/^file:\/\/(.+?)#(.+)$/);
-      if (!uriMatch) return;
-      const filePath = uriMatch[1];
-      const uri = vscode.Uri.file(filePath);
-      await vscode.window.showTextDocument(uri);
+    vscode.commands.registerCommand("semio.navigateToSection", async (fileUri: string, startLine?: number) => {
+      if (!fileUri) return;
+      const uri = vscode.Uri.parse(fileUri);
+      const doc = await vscode.workspace.openTextDocument(uri);
+      const editor = await vscode.window.showTextDocument(doc);
+      if (startLine != null && startLine > 0) {
+        const position = new vscode.Position(startLine - 1, 0);
+        editor.selection = new vscode.Selection(position, position);
+        editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+      }
     }),
-    vscode.commands.registerCommand("semio.navigateToDefinition", async (definitionUri: string) => {
-      if (!definitionUri) return;
-      const uriMatch = definitionUri.match(/^file:\/\/(.+?)§(.+)$/);
-      if (!uriMatch) return;
-      const filePath = uriMatch[1];
-      const uri = vscode.Uri.file(filePath);
-      await vscode.window.showTextDocument(uri);
+    vscode.commands.registerCommand("semio.navigateToDefinition", async (fileUri: string, startLine?: number) => {
+      if (!fileUri) return;
+      const uri = vscode.Uri.parse(fileUri);
+      const doc = await vscode.workspace.openTextDocument(uri);
+      const editor = await vscode.window.showTextDocument(doc);
+      if (startLine != null && startLine > 0) {
+        const position = new vscode.Position(startLine - 1, 0);
+        editor.selection = new vscode.Selection(position, position);
+        editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+      }
     }),
     vscode.commands.registerCommand("semio.fixViolation", fixViolation),
     vscode.commands.registerCommand("semio.analyze", async () => {
@@ -3758,7 +3978,8 @@ function registerCommands(context: vscode.ExtensionContext): void {
         return;
       }
       const position = new vscode.Position(Math.max(0, item.section.startLine - 1), 0);
-      await vscode.window.showTextDocument(editor.document, { selection: new vscode.Range(position, position) });
+      const shownEditor = await vscode.window.showTextDocument(editor.document, { selection: new vscode.Range(position, position) });
+      shownEditor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
     }),
     vscode.commands.registerCommand("semio.sectionRename", async (item?: SectionItem) => {
       const editor = vscode.window.activeTextEditor;
