@@ -1,0 +1,2101 @@
+{
+  "title": "Update Ticket Iteration Dates to Started and Finished",
+  "iterations": [
+    {
+      "prompt": "A ticket iteration should not have one date but instead dates: {started, finished}. Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear. Dont ask in between, no confirmations, no matter the issue. Figure it out. Be sure that it works everywhere before stopping. Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in .semio-repo/tickets/YYYY/MM/DD/TICKETSLUG/ticket.md. Dont keep any legacy api or backwards compatiblity.",
+      "llm": "",
+      "ui": "antigravity",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-28T09:55:17.947961929Z",
+      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/go",
+              "lines": {
+                "added": 55,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo",
+              "lines": {
+                "added": 262,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/go/main.go",
+              "lines": {
+                "added": 535,
+                "removed": 481
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql",
+              "lines": {
+                "added": 28,
+                "removed": 16
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts",
+              "lines": {
+                "added": 282,
+                "removed": 20
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types",
+              "lines": {
+                "added": 28,
+                "removed": 16
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands",
+              "lines": {
+                "added": 20,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards",
+              "lines": {
+                "added": 138,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#GraphQL Documents",
+              "lines": {
+                "added": 29,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views",
+              "lines": {
+                "added": 81,
+                "removed": 14
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "js/vscode/extension.ts#Commands#Smart Wizards",
+              "lines": {
+                "added": 138,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "@semio-repo/go/main.go§GetDateCreated",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            }
+          ],
+          "renamed": [
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§hasDefs",
+              "to": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§getChildren",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Sidebar Views§sectionDefs",
+              "to": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§monthPick",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "@semio/semio-repo/extension.ts#Commands§ticket",
+              "to": "@semio/semio-repo/extension.ts#Sidebar Views§directDefs",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "@semio-repo/go/main.go§BuildCodebaseTickets",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§BuildCodebaseTickets",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CanCloseTicket",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CanCloseTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ComputeTicketFiles",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ComputeTicketFiles",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CopyFile",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CopyFile",
+              "lines": {
+                "added": 15,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CreateTicket",
+              "lines": {
+                "added": 0,
+                "removed": 27
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CreateTicket",
+              "lines": {
+                "added": 24,
+                "removed": 27
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§FinishTicket",
+              "lines": {
+                "added": 11,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§FinishTicket",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetAuthor",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetAuthor",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetCommit",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetCommit",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetDateCreated",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetDateFinished",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetDateFinished",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetDateStarted",
+              "lines": {
+                "added": 2,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetDefinitions",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetFiles",
+              "lines": {
+                "added": 1,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetFiles",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetGitDiffLines",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetGoals",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetGoals",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetGoals",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetGoals",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetLLM",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetLLM",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetLatestPrompt",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetLatestPrompt",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetPrompt",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetPrompt",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetSections",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetSections",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetStatus",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetStatus",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetSummary",
+              "lines": {
+                "added": 1,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetSummary",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetTickets",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetTitle",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetTitle",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetUI",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetUI",
+              "lines": {
+                "added": 2,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GitAuthor",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Goal",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Goal",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GoalCreate",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GoalCreateInput",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GoalDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Integrate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsNode",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§LatestTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§LatestTicket",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ListGoals",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ListGoals",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ListTickets",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§MoveFile",
+              "lines": {
+                "added": 21,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§MoveFile",
+              "lines": {
+                "added": 0,
+                "removed": 21
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§OpenGoal",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§OpenTicket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ReadTicket",
+              "lines": {
+                "added": 16,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ReadTicket",
+              "lines": {
+                "added": 0,
+                "removed": 17
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Render",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Render",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Render",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Render",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ReopenTicket",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ReopenTicket",
+              "lines": {
+                "added": 12,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§RepoContext",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§RepoContext",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ResolveContributorContributions",
+              "lines": {
+                "added": 0,
+                "removed": 23
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ResolveContributorContributions",
+              "lines": {
+                "added": 23,
+                "removed": 22
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§SaveGoal",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§SaveTicket",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§SaveTicket",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ScopeToFiles",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamDefinitions",
+              "lines": {
+                "added": 5,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamFiles",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamFiles",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamFolders",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamFolders",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamSections",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamSections",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamTickets",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamTickets",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§String",
+              "lines": {
+                "added": 6,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Ticket",
+              "lines": {
+                "added": 18,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Ticket",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketClose",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketClose",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketData",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketDelete",
+              "lines": {
+                "added": 3,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketDelete",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketDiffs",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketIteration",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketIteration",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketOpenInput",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketOpenInput",
+              "lines": {
+                "added": 8,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketReopen",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketReopen",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ToolTicketOpen",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ToolTicketOpen",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ToolTicketRead",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ToolTicketRead",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§UpdateTicketTitle",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§UpdateTicketTitle",
+              "lines": {
+                "added": 7,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§buildSchema",
+              "lines": {
+                "added": 67,
+                "removed": 19
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§bundleCommand",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§bundleCommand",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§exportTickets",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§exportTickets",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§fileCommand",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§fileCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§folderCommand",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§folderCommand",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§formatResult",
+              "lines": {
+                "added": 0,
+                "removed": 42
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§formatResult",
+              "lines": {
+                "added": 44,
+                "removed": 42
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§generateMetricsComment",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ghDeleteIssue",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ghDeleteIssue",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ghReopenIssue",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ghUpdateIssueTitle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ghUpdateMilestone",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§goalCommand",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§goalCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§isIgnored",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§parseGitAuthor",
+              "lines": {
+                "added": 11,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ticketCommand",
+              "lines": {
+                "added": 0,
+                "removed": 126
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ticketCommand",
+              "lines": {
+                "added": 124,
+                "removed": 125
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§treeCommand",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§updateDotNet",
+              "lines": {
+                "added": 0,
+                "removed": 35
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§updateGo",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorBundle",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorBundle",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorDefinition",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorDefinition",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorFile",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorFile",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorFolder",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorFolder",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorSection",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§ContributorSection",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§Iteration",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§Ticket",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§Ticket",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§TicketDate",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§TicketDate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§TicketStatus",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§CONFIRM",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§GoalItem",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§UP",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§children",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§client",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§client",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§currentParentId",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§getChildren",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§goals",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§grandChildren",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§items",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§monthPick",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§monthTickets",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§months",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§parts",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§pickGoal",
+              "lines": {
+                "added": 81,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§pickTicketGql",
+              "lines": {
+                "added": 46,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§result",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§result",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selectedGoal",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selectedMonth",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selectedYear",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selection",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selection",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§specialItems",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§t",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§ticketItems",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§tickets",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§yearPick",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§years",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§actualLlm",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§actualLlm",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§baseUrl",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§cmd",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§cmd",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§extensionPath",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§goal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§root",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§sha",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§ticket",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§uri",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#GraphQL Documents§GoalsDocument",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#GraphQL Documents§TicketsDocument",
+              "lines": {
+                "added": 11,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#GraphQL Documents§TicketsDocument",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseProvider",
+              "lines": {
+                "added": 26,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseProvider",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§SearchViewProvider",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketDateItem",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketFilter",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketFilter",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketIterationItem",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketTreeItem",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketTreeItem",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketsProvider",
+              "lines": {
+                "added": 37,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§allSectionDefs",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§children",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§commits",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§commits",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§dayTickets",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§dayTickets",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§directDefs",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§hasChildDefs",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§hasDefs",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§hasGrand",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§hasGrand",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§items",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§lineA",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§lineB",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§remainder",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§remainder",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§searchable",
+              "lines": {
+                "added": 37,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§searchable",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§sectionDefs",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§tickets",
+              "lines": {
+                "added": 12,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities§TicketBundles",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities§TicketData",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities§TicketFrontmatter",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities§TicketIteration",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "@semio-repo/go/main.go§GetDateStarted",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GitAuthor",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§parseGitAuthor",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§Iteration",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§CONFIRM",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§GoalItem",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§UP",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§children",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§client",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§currentParentId",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§goals",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§grandChildren",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§items",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§monthTickets",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§months",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§parts",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§pickGoal",
+              "lines": {
+                "added": 81,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§pickTicketGql",
+              "lines": {
+                "added": 46,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§result",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selectedGoal",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selectedMonth",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selectedYear",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§selection",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§specialItems",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§t",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§ticketItems",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§tickets",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§yearPick",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands#Smart Wizards§years",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands§goal",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#GraphQL Documents§GoalsDocument",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketDateItem",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§TicketIterationItem",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§allSectionDefs",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§hasChildDefs",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§lineA",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§lineB",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Utilities§TicketIteration",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "status": "closed",
+  "dates": {
+    "closed": "2026-01-28T10:00:50.418350818Z"
+  },
+  "summary": "Renamed 'date' to 'dates' in Ticket GraphQL object and schema to align with the new naming convention where iterations and tickets have started/finished dates. Updated VS Code extension to use the renamed field. Go structs already supported started/finished dates for both tickets and iterations.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/240"
+  }
+}

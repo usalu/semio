@@ -11,9 +11,9 @@
   ```
 
 - Root cause identified:
-  1. `postAttachCommand` runs: `bash -lc "cd js/vscode\ncode --install-extension semio.vsix --force"`
+  1. `postAttachCommand` runs: `bash -lc "cd js/vscode\ncode --install-extension semio-repo.vsix --force"`
   2. The `code` CLI is only available when VS Code attaches, not in CLI/headless environments
-  3. The `semio.vsix` file doesn't exist in the `js/vscode/` directory
+  3. The `semio-repo.vsix` file doesn't exist in the `js/vscode/` directory
 
 ### Solution Design
 

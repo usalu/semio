@@ -1301,7 +1301,7 @@ status: open
 author: John Doe <john@example.com>
 date:
   created: 2026-01-12T10:30:00Z
-model: claude-opus-4
+model: opus-4
 commit: abc123def456 # Git commit when ticket opened
 bundles: {} # Will be filled on close
 ---

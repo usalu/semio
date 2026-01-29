@@ -25,8 +25,10 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -45,6 +47,132 @@ func findTestRepoRoot(start string) string {
 		}
 		dir = parent
 	}
+}
+
+func findFirstResultData(output string) (json.RawMessage, bool) {
+	parsed, err := parseJSONOutput(output)
+	if err != nil {
+		return nil, false
+	}
+	for _, e := range parsed {
+		if e.Kind == KindResult {
+			return e.Data, true
+		}
+	}
+	return nil, false
+}
+
+func mustHaveExitCode(t *testing.T, output string, code int) {
+	t.Helper()
+	if !hasExitCode(output, code) {
+		t.Fatalf("expected exit code %d, got output: %s", code, output)
+	}
+}
+
+func parseTicketOpenResult(t *testing.T, output string) (int, int, int, string) {
+	t.Helper()
+	data, ok := findFirstResultData(output)
+	if !ok {
+		t.Fatalf("no result event in output: %s", output)
+	}
+	var envelope struct {
+		Data struct {
+			TicketOpen struct {
+				Slug string `json:"slug"`
+				Path string `json:"path"`
+			} `json:"ticketOpen"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(data, &envelope); err == nil {
+		if envelope.Data.TicketOpen.Path != "" {
+			parts := strings.Split(strings.TrimPrefix(envelope.Data.TicketOpen.Path, "/"), "/")
+			for i := 0; i+3 < len(parts); i++ {
+				if parts[i] == "tickets" {
+					y, _ := strconv.Atoi(parts[i+1])
+					m, _ := strconv.Atoi(parts[i+2])
+					d, _ := strconv.Atoi(parts[i+3])
+					return y, m, d, envelope.Data.TicketOpen.Slug
+				}
+			}
+		}
+	}
+
+	var resp struct {
+		TicketOpen struct {
+			Slug  string `json:"slug"`
+			Year  int    `json:"year"`
+			Month int    `json:"month"`
+			Day   int    `json:"day"`
+		} `json:"ticketOpen"`
+	}
+	if err := json.Unmarshal([]byte(output), &resp); err == nil {
+		if resp.TicketOpen.Slug != "" && resp.TicketOpen.Year != 0 {
+			return resp.TicketOpen.Year, resp.TicketOpen.Month, resp.TicketOpen.Day, resp.TicketOpen.Slug
+		}
+	}
+
+	t.Fatalf("unable to parse ticket open response: %s", output)
+	return 0, 0, 0, ""
+}
+
+func parseGoalCreateID(t *testing.T, output string) string {
+	t.Helper()
+	data, ok := findFirstResultData(output)
+	if !ok {
+		t.Fatalf("no result event in output: %s", output)
+	}
+	var envelope struct {
+		Data struct {
+			GoalCreate struct {
+				ID string `json:"id"`
+			} `json:"goalCreate"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		t.Fatalf("failed to parse goalCreate: %v\nOutput: %s", err, output)
+	}
+	if envelope.Data.GoalCreate.ID == "" {
+		t.Fatalf("missing goal id in output: %s", output)
+	}
+	return envelope.Data.GoalCreate.ID
+}
+
+func parseTicketCloseStatus(t *testing.T, output string) string {
+	t.Helper()
+	data, ok := findFirstResultData(output)
+	if !ok {
+		t.Fatalf("no result event in output: %s", output)
+	}
+	var envelope struct {
+		Data struct {
+			TicketClose struct {
+				Status string `json:"status"`
+			} `json:"ticketClose"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		t.Fatalf("failed to parse ticketClose: %v\nOutput: %s", err, output)
+	}
+	return strings.ToLower(envelope.Data.TicketClose.Status)
+}
+
+func parseTicketReopenStatus(t *testing.T, output string) string {
+	t.Helper()
+	data, ok := findFirstResultData(output)
+	if !ok {
+		t.Fatalf("no result event in output: %s", output)
+	}
+	var envelope struct {
+		Data struct {
+			TicketReopen struct {
+				Status string `json:"status"`
+			} `json:"ticketReopen"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		t.Fatalf("failed to parse ticketReopen: %v\nOutput: %s", err, output)
+	}
+	return strings.ToLower(envelope.Data.TicketReopen.Status)
 }
 
 func testEngineFactory(config Config) (*Engine, error) {
@@ -269,31 +397,31 @@ func TestTicketTitleValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "claude-opus-4", ui: COPILOT_CHAT, noIssue: true }) { id slug year month day } }`
+			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "opus-4", ui: COPILOT_CHAT, noIssue: true }) { id slug year month day } }`
 			result, err := executor.ExecuteJSON(ctx, query, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			
+
 			// Cleanup
 			if err == nil {
-			    // Parse result to get path
-			    // But result is JSON string of map.
-			    // Basic cleanup: title matches slug derived.
-			    // We need date.
-			    // The mutation returns year/month/day.
-			    var resp struct {
-			        TicketOpen struct {
-			            Slug string `json:"slug"`
-			            Year int    `json:"year"`
-			            Month int   `json:"month"`
-			            Day int     `json:"day"`
-			        } `json:"ticketOpen"`
-			    }
-			    if json.Unmarshal([]byte(result), &resp) == nil {
-			        path := GetTicketPath(resp.TicketOpen.Year, resp.TicketOpen.Month, resp.TicketOpen.Day, resp.TicketOpen.Slug)
-			        os.RemoveAll(path)
-			    }
+				// Parse result to get path
+				// But result is JSON string of map.
+				// Basic cleanup: title matches slug derived.
+				// We need date.
+				// The mutation returns year/month/day.
+				var resp struct {
+					TicketOpen struct {
+						Slug  string `json:"slug"`
+						Year  int    `json:"year"`
+						Month int    `json:"month"`
+						Day   int    `json:"day"`
+					} `json:"ticketOpen"`
+				}
+				if json.Unmarshal([]byte(result), &resp) == nil {
+					path := GetTicketPath(resp.TicketOpen.Year, resp.TicketOpen.Month, resp.TicketOpen.Day, resp.TicketOpen.Slug)
+					os.RemoveAll(path)
+				}
 			}
 		})
 	}
@@ -882,8 +1010,22 @@ func executeCommand(args ...string) (string, error) {
 
 func parseJSONOutput(output string) ([]Event, error) {
 	var result []Event
-	err := json.Unmarshal([]byte(output), &result)
-	return result, err
+	if err := json.Unmarshal([]byte(output), &result); err == nil {
+		return result, nil
+	}
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		var event Event
+		if err := json.Unmarshal([]byte(trimmed), &event); err != nil {
+			return nil, err
+		}
+		result = append(result, event)
+	}
+	return result, nil
 }
 
 func hasExitCode(output string, code int) bool {
@@ -1487,7 +1629,6 @@ func TestGraphQLFixMutation(t *testing.T) {
 
 // #endregion GraphQL Tests
 
-
 // #region Tree Tests
 
 func executeTreeCommand(args ...string) (string, error) {
@@ -1506,7 +1647,7 @@ func TestTreeCommands(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping slow tree test")
 	}
-	
+
 	output, err := executeTreeCommand("tree", "go/repo")
 	if err != nil {
 		t.Errorf("repo tree failed: %v", err)
@@ -1547,6 +1688,168 @@ func TestTreeCommands(t *testing.T) {
 	// We expect at least the root or some structure
 	if len(output) == 0 {
 		t.Errorf("ticket tree output empty")
+	}
+}
+
+func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping e2e cli tests in short mode")
+	}
+
+	fileRel := filepath.ToSlash(filepath.Join("go", "repo", "main.go"))
+
+	openOut, err := executeCommand(
+		"ticket", "open",
+		"E2E Ticket Positional",
+		"E2E prompt positional",
+		"cursor-chat",
+		"sonnet-4-5",
+		"--no-issue",
+		"--no-github",
+	)
+	if err != nil {
+		t.Fatalf("ticket open positional failed: %v\nOutput: %s", err, openOut)
+	}
+	mustHaveExitCode(t, openOut, 0)
+	y, m, d, slug := parseTicketOpenResult(t, openOut)
+	defer os.RemoveAll(GetTicketPath(y, m, d, slug))
+
+	closeOut, err := executeCommand(
+		"ticket", "close",
+		"--no-github",
+		"--year", strconv.Itoa(y),
+		"--month", strconv.Itoa(m),
+		"--day", strconv.Itoa(d),
+		"--slug", slug,
+		"--summary", "E2E summary",
+		"--files", fileRel,
+	)
+	if err != nil {
+		t.Fatalf("ticket close flags failed: %v\nOutput: %s", err, closeOut)
+	}
+	mustHaveExitCode(t, closeOut, 0)
+	if status := parseTicketCloseStatus(t, closeOut); status != "closed" {
+		t.Fatalf("expected closed status, got %s", status)
+	}
+
+	reopenOut, err := executeCommand(
+		"ticket", "reopen",
+		fmt.Sprintf("%04d/%02d/%02d/%s", y, m, d, slug),
+		"E2E reopen prompt",
+		"--cursor-chat",
+		"--sonnet-4-5",
+		"--no-github",
+	)
+	if err != nil {
+		t.Fatalf("ticket reopen mix failed: %v\nOutput: %s", err, reopenOut)
+	}
+	mustHaveExitCode(t, reopenOut, 0)
+	if status := parseTicketReopenStatus(t, reopenOut); status != "open" {
+		t.Fatalf("expected open status, got %s", status)
+	}
+
+	listOut, err := executeCommand("ticket", "list", "--year", strconv.Itoa(y))
+	if err != nil {
+		t.Fatalf("ticket list failed: %v\nOutput: %s", err, listOut)
+	}
+	mustHaveExitCode(t, listOut, 0)
+}
+
+func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping e2e cli tests in short mode")
+	}
+	openOut, err := executeCommand(
+		"goal", "open",
+		"E2E Goal Title",
+		"E2E Goal Description",
+		"E2E Goal Prompt",
+		"2026-02-15",
+		"cursor-chat",
+		"gpt-5-mini",
+		"--no-github",
+	)
+	if err != nil {
+		t.Fatalf("goal open failed: %v\nOutput: %s", err, openOut)
+	}
+	mustHaveExitCode(t, openOut, 0)
+	goalID := parseGoalCreateID(t, openOut)
+	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
+
+	closeOut, err := executeCommand("goal", "close", goalID, "--no-github")
+	if err != nil {
+		t.Fatalf("goal close failed: %v\nOutput: %s", err, closeOut)
+	}
+	mustHaveExitCode(t, closeOut, 0)
+
+	reopenOut, err := executeCommand("goal", "reopen", goalID, "--no-github")
+	if err != nil {
+		t.Fatalf("goal reopen failed: %v\nOutput: %s", err, reopenOut)
+	}
+	mustHaveExitCode(t, reopenOut, 0)
+}
+
+func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping e2e cli tests in short mode")
+	}
+
+	out, err := executeCommand("bundle", "list")
+	if err != nil {
+		t.Fatalf("bundle list failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("bundle", "tree")
+	if err != nil {
+		t.Fatalf("bundle tree failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("folder", "list", "go")
+	if err != nil {
+		t.Fatalf("folder list failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("file", "list", "go")
+	if err != nil {
+		t.Fatalf("file list failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("section", "list", "js/semio/semio.ts")
+	if err != nil {
+		t.Fatalf("section list failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("definition", "list", "js/semio/semio.ts")
+	if err != nil {
+		t.Fatalf("definition list failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("policy", "list")
+	if err != nil {
+		t.Fatalf("policy list failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("policy", "check", "code", "@semio/js")
+	if err != nil {
+		t.Fatalf("policy check failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("mcp", "--dry-run")
+	if err != nil {
+		t.Fatalf("mcp dry-run failed: %v\nOutput: %s", err, out)
+	}
+
+	out, err = executeCommand("update")
+	if err != nil {
+		t.Fatalf("update default dry-run failed: %v\nOutput: %s", err, out)
 	}
 }
 

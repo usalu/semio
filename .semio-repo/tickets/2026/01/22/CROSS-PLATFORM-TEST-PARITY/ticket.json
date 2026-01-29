@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Make all semio tests pass identically across TypeScript, Python, C#, Go, and Rust implementations. Fix any remaining issues including the Zip SQLite foreign key issue and implement Rust tests.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "copilot-chat",
       "author": "usalu",
       "date": "2026-01-22T12:50:19.739497906Z",

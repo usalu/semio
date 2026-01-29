@@ -1,7 +1,7 @@
 {
   "title": "Remove debug diagnostics and temporary logs",
   "prompt": "Remove debug diagnostics and temporary logs",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

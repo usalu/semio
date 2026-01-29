@@ -1,7 +1,7 @@
 {
   "title": "Fix piece hover and selection in diagram after drag and drop",
   "prompt": "Fix piece hover and selection in diagram after drag and drop",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

@@ -1,7 +1,7 @@
 {
   "title": "SIMPLIFY-TICKETS",
   "prompt": "Simplify the ticket mechanism to remove checkpoints and iterations. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.",
-  "llm": "claude-opus-4",
+  "llm": "opus-4",
   "status": "closed",
   "author": "Ueli Saluz",
   "dates": {

@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Remove all metrics from the graphql layer and purely move it into the sqlite database over views. Extend the graphql test by nodes and edges query and check that every id collection is non-empty. Extend the query to cover every edge (only degree one). Refactor the repo, cli, mcp, vscode extension and all the tests cleanly.",
-      "llm": "claude-opus-4",
+      "llm": "opus-4",
       "author": "Ueli Saluz",
       "date": "2026-01-08T10:44:44Z",
       "commit": "c2a1cc641cf88c7bd90134e335bf6193169ce048"

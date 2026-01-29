@@ -1,7 +1,7 @@
 {
   "title": "CI/CD automation and canonical commands",
   "prompt": "CI/CD automation and canonical commands",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

@@ -1,5 +1,5 @@
 {
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "author": "usalu",
   "title": "schema-changes-names-and-interfaces",
   "dates": {

@@ -1,7 +1,7 @@
 {
   "title": "Fix unresponsive app after metabolism kit import",
   "prompt": "Fix unresponsive app after metabolism kit import",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

@@ -3,7 +3,7 @@
 ## Problem
 The semio-repo VSCode extension is not showing after devcontainer setup. The post-attach script reports:
 ```
-Extension file not found at js/vscode/semio.vsix
+Extension file not found at js/vscode/semio-repo.vsix
 Run 'cd js/vscode && npm run package' to build it
 ```
 
@@ -18,5 +18,5 @@ Run 'cd js/vscode && npm run package' to build it
 - [ ] Check js/vscode/package.json for build scripts
 - [ ] Install dependencies
 - [ ] Run npm run package to build the vsix
-- [ ] Verify semio.vsix exists
+- [ ] Verify semio-repo.vsix exists
 - [ ] Install the extension

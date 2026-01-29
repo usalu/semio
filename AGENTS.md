@@ -1,9 +1,8 @@
 <!-- IMPORTANT -->
 
-ALWAYS work inside a ticket. Create a new ticket with semio-repo mcp tool `ticket_open` (or `./go/repo/repo ticket open "<title>" "<prompt>" "<ui>" "<llm?>"` --goal "<goal?>" --parent "<parent-ticket?>"`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md`. NEVER answer directly in the chat and ALWAYS document everything (plan, todos, changes, summary, etc) in `ticket.md`. ALWAYS use the semio-repo mcp tool `ticket_close` (or `./go/repo/repo ticket close "YYYY/MM/DD/TICKETSLUG" "<summary>" <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with semio-repo mcp tool `ticket_reopen` (or `./go/repo/repo ticket reopen YYYY/MM/DD/TICKETSLUG "<prompt>" "<ui>" "<llm?>" "<new-title?>"`).
-Create a goal with semio-repo mcp tool `goal_open` (or `./go/repo/repo goal open "<title>" "<description>" "<prompt>" "<due-date>" "<ui>" "<llm?>"`).
-
-The title MUST be titleized (e.g. "Some Title on Something") and NOT a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`. Available UIs are: `claude-code`, `cursor`, `copilot-chat`, `antigravity`, `codex`, `droid`.
+ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or `./go/repo/repo`) for repo-specific infrastructure. Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <ui> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <ui> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
+Create a goal with mcp tool `goal_open`(or`goal open <title> <description> <prompt> <ui> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or`goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <ui> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
+A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1.5`. Available UIs are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -58,6 +57,7 @@ Code analysis problems MUST include reason and solution text.
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
 Devcontainer post-attach MUST install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity via IDE IPC hook CLIs, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates when CLIs report WSL-only usage.
+Devcontainer post-attach MUST write the Windsurf MCP config at `~/.codeium/windsurf/mcp_config.json` to register the semio-repo MCP server.
 Semio VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
 Playwright browser caches MUST use the workspace `node_modules` volume path so `npx playwright install` stays cached across reloads.
 Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
@@ -88,13 +88,15 @@ A ticket MUST store a `prompt` which is the prompt used to create the ticket.
 
 A ticket MUST store a `commit` which is the git commit at ticket creation for line stats calculation.
 
+A ticket iteration MUST store `started` and optional `finished` timestamps.
+
 A ticket MUST store a summary when finished.
 
 A ticket MUST store semantic diffs for bundles, folders, files, sections, and definitions with line stats when finished.
 
 Ticket workspaces MUST store a single ticket.md that captures todos, changes, log entries, and the summary.
-Ticket workspaces MUST store the original plan file (keeping the filename) or plan.md if no plan was provided.
-The plan file content MUST NOT be duplicated in ticket.md.
+Ticket workspaces MUST store the content of the draft if provided.
+The draft content MUST NOT be duplicated in ticket.md.
 
 Tickets can be reopened to return to **open** status.
 
@@ -141,13 +143,15 @@ The repo dev server MUST send outbound notifications formatted with prompt and s
 
 ### Repo Tooling
 
-Ticket open inputs MUST allow optional `noIssue` and `planPath` fields.
+Ticket open inputs MUST allow optional `noIssue` and `draft` fields.
 The repo CLI binary MUST be consolidated into a single `go/repo/main.go` source file that owns engine, CLI, MCP, and rendering behavior.
 Legacy repo CLI adapter packages MUST NOT exist outside `go/repo/main.go`.
 Repo operational commands (benchmark, preflight, update) MUST live in the single-file repo entrypoint.
 Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifiers.
 Ticket reopen MUST require `prompt` and `ui` values. `llm` is optional.
 GraphQL TicketUI inputs MUST accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) for UI selection.
+GraphQL `TicketDate` fields MUST include `started` and `finished` timestamps.
+GraphQL iteration queries MUST return a list of `Iteration` objects with prompt, author, and time bounds.
 GraphQL section/definition ranges MUST expose line and column positions for start and end.
 GraphQL range selections MUST request Position subfields (line, column) for start and end.
 Section list queries MUST include nested children ranges for full tree hydration.
@@ -162,7 +166,7 @@ Ticket reopen MUST add a `# 🤖 Prompt` comment with the latest prompt.
 Ticket close MUST prepend a `# 🔍 Summary` heading to the summary comment.
 Ticket GitHub heading formatting MUST be consistent across create, reopen, and close flows.
 Ticket line metrics MUST use full line counts for added and deleted scopes, and diff-based counts for modified scopes.
-Ticket close MUST ignore files inside the active ticket workspace (plan.md, ticket.md).
+Ticket close MUST ignore files inside the active ticket workspace (ticket.md).
 Repo analyze without a scope MUST emit a codebase snapshot to `.semio-repo/reports/codebase.json` for semantic diffing.
 Ticket GitHub issues MUST be linked to the usalu project 2 on create and reopen.
 VS Code extension manifests MUST use an unscoped `name` value for vsce packaging.
@@ -175,8 +179,11 @@ Repo operational artifacts (tickets, contributors, reports) MUST be stored under
 Repo analyze MUST exclude gitignored files, `.semio-repo/`, and `assets/repo/` from analysis.
 Repo file/folder listing and diagnostics MUST apply `.gitignore` patterns directly (including tracked matches) and exclude `.semio-repo/` paths in the repo CLI.
 Repo CLI analyze and fix commands MUST accept scope arguments through flags or positional inputs.
+GraphQL `node(id:)` MUST accept the canonical node IDs emitted by the schema (`@semio/...`, `@semio-repo/...`).
 Ticket close MUST derive bundle labels from semantic bundle diffs and MUST NOT infer `@semio-repo` from README.md or AGENTS.md.
 Ticket iterations MUST store their own semantic diff payloads; tickets MUST NOT store diff payloads at the top level.
+
+Ticket close MUST require at least one considered file after applying repo exclusions and `.gitignore` filtering.
 
 ### MCP Tools
 
@@ -693,7 +700,7 @@ repo definition list js/semio/semio.ts                      # List all definitio
 repo bundle list                                            # List all Nx bundles
 repo folder tree js/semio                                   # Show folder tree
 repo ticket open <title> <prompt> <llm> <ui> [--no-issue]    # Create ticket (positional syntax)
-repo ticket open --title <t> --prompt <p> --llm <l> --ui <u>  # Create ticket (explicit syntax) - llm: opus-4-5, claude-sonnet-4, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; ui: claude-code, cursor, copilot-chat, antigravity, codex, droid
+repo ticket open --title <t> --prompt <p> --llm <l> --ui <u>  # Create ticket (explicit syntax) - llm: opus-4-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; ui: claude-code, cursor, copilot-chat, antigravity, codex, droid
 repo ticket list [year] [month] [day]                       # List tickets (optionally filtered by date)
 repo ticket close <YYYY/MM/DD/SLUG> <summary> <files...> [--title <new-title>]  # Close ticket (--title updates GitHub issue)
 repo ticket reopen <YYYY/MM/DD/SLUG> <prompt> <llm> [--title <new-title>]      # Reopen ticket (--title updates GitHub issue)
@@ -1704,7 +1711,7 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 
 ## 📄 .devcontainer/post-attach.sh
 
-Devcontainer post-attach script that builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration on WSL-only CLI responses.
+Devcontainer post-attach script that builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration on WSL-only CLI responses, then writes the Windsurf MCP config for the semio-repo server.
 
 ## 📁 js/
 
@@ -3920,7 +3927,7 @@ Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP s
 
 ## 📄 go/repo/main.go
 
-Single-file repo CLI implementation with embedded engine, streaming command registry and emitter event model for CLI/MCP/VS Code adapters, CLI command definitions with GraphQL query strings for repo operations (including export and section integrate commands), analyze/fix commands accepting scope via flags or positional arguments, ticket workflows with optional noIssue/planPath inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, TicketUI enum normalization for GraphQL inputs, range resolution returning line/column positions with Position subfield selections and nested section list queries for full tree hydration, ticket UI validation, MCP tool handlers with cursor/limit paging over streamed item events, ticket title updates that rename folder paths, ticket.md creation and summary injection with plan.md seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, benchmark/preflight/update operational command wiring, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, file/folder streaming and folder file listing filtered by `.gitignore` patterns (including tracked matches) plus `.semio-repo/` and `assets/repo/` exclusions, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, legacy ticket directory fallback for reads, and contributor aggregation from tickets and source headers.
+Single-file repo CLI implementation with embedded engine, streaming command registry and emitter event model for CLI/MCP/VS Code adapters, CLI command definitions with GraphQL query strings for repo operations (including export and section integrate commands), analyze/fix commands accepting scope via flags or positional arguments, Relay node resolution via `node(id:)` accepting canonical `@semio/...` and `@semio-repo/...` IDs, ticket workflows with optional noIssue/draft inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, TicketUI enum normalization for GraphQL inputs, `TicketIteration` tracking with `started` and `finished` timestamps, range resolution returning line/column positions with Position subfield selections and nested section list queries for full tree hydration, ticket UI validation, MCP tool handlers with cursor/limit paging over streamed item events, ticket title updates that rename folder paths, ticket.md creation and summary injection with draft seeding, per-iteration semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket close requiring at least one considered (non-gitignored) file after repo exclusion filtering, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, benchmark/preflight/update operational command wiring, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, file/folder streaming and folder file listing filtered by `.gitignore` patterns (including tracked matches) plus `.semio-repo/` and `assets/repo/` exclusions, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, legacy ticket directory fallback for reads, and contributor aggregation from tickets and source headers.
 
 ## 📁net/
 

@@ -1,7 +1,7 @@
 {
   "title": "SQLITE-EXPORT",
   "prompt": "add an export command to a sqlite file (create a schema) that has all the information (repo, bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations)",
-  "llm": "claude-opus-4",
+  "llm": "opus-4",
   "status": "finished",
   "author": "usalu",
   "dates": {

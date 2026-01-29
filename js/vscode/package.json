@@ -8,7 +8,7 @@
   "version": "0.0.1",
   "publisher": "usalu",
   "engines": {
-    "vscode": "^1.105.0"
+    "vscode": "^1.104.0"
   },
   "repository": {
     "type": "git",
@@ -117,8 +117,8 @@
         "icon": "$(issue-reopened)"
       },
       {
-        "command": "semio.ticketRead",
-        "title": "semio-repo: Read Ticket"
+        "command": "semio.ticketTree",
+        "title": "semio-repo: Show Ticket Tree"
       },
       {
         "command": "semio.projectList",
@@ -337,6 +337,14 @@
         "command": "semio.openCommitInGitHub",
         "title": "Open Commit in GitHub",
         "icon": "$(github)"
+      },
+      {
+        "command": "semio.goalOpen",
+        "title": "semio-repo: Open/Create Goal"
+      },
+      {
+        "command": "semio.goalList",
+        "title": "semio-repo: List Goals"
       }
     ],
     "keybindings": [
@@ -458,7 +466,7 @@
     "test": "vscode-test",
     "build": "npm run build:codegen && vite build && vite build --config vite.test.config.ts",
     "build:codegen": "graphql-codegen --config codegen.ts",
-    "package": "vsce package --no-dependencies --out semio.vsix",
+    "package": "vsce package --no-dependencies --out semio-repo.vsix",
     "preflight": "tsc --noEmit",
     "vscode:prepublish": "npm run build"
   },
@@ -469,7 +477,7 @@
     "@graphql-typed-document-node/core": "^3.2.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.10.1",
-    "@types/vscode": "^1.106.0",
+    "@types/vscode": "^1.104.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
     "graphql": "^16.12.0",

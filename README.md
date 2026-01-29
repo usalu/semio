@@ -113,7 +113,7 @@ Let me walk you through 🚶
          - [↕️ Reorderer](#-reorderer-)
          - [🔁 Formatter](#-formatter-)
        - [🤖 Models](#-models-)
-         - [Claude Opus 4.5](#-claude-opus-45-)
+         - [Claude Opus 4.5](#-opus-45-)
          - [GPT-5.2 Codex](#-gpt-52-codex-)
      - [🔄 CI/CD](#-cicd-)
 1. [♻️ Ecosystems](#%EF%B8%8F-ecosystems-)
@@ -762,8 +762,10 @@ Then you can run `npm run build` from the root to build all packages, or run `ts
 
 ## 🎫 Tickets [↑](#-development)
 
-Contributor workflows use tickets to track each task across iterations, recording prompts, file touch lists, and per-file line diffs so work is auditable and easy to continue.
-Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and summary sections so all task context stays in one place alongside `plan.md`.
+Contributor workflows use tickets to track each task across iterations.
+A ticket iteration records a prompt, author, and is bounded by `{started, finished}` timestamps.
+Ticket workflows record file touch lists and per-file line diffs so work is auditable and easy to continue.
+Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and summary sections so all task context stays in one place.
 
 ## 🧰 Violations [↑](#-development)
 
@@ -1153,6 +1155,8 @@ VS Code extension packaging requires an unscoped extension name in `js/vscode/pa
 Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo/` so workflow state stays centralized and out of product bundles.
 Repo analyze only inspects considered files by honoring `.gitignore`, excluding `.semio-repo/`, and skipping `assets/repo/` fixtures.
 Repo file/folder listing and diagnostics apply `.gitignore` patterns directly (including tracked matches) alongside repo metadata exclusions, and CLI analyze/fix commands accept scope arguments so tooling stays consistent across entrypoints.
+GraphQL Relay `node(id:)` resolves the canonical IDs emitted by the schema (`@semio/...` and `@semio-repo/...`) so clients can round-trip IDs without constructing custom `kind:id` strings.
+Ticket close derives semantic diffs from a file list after applying the same repo exclusions and `.gitignore` filters, so tooling and tests must pass at least one considered (non-gitignored) path.
 
 ## 🧱 Devcontainer Persistence [↑](#-bundles-)
 
@@ -1160,6 +1164,7 @@ Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI au
 Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
 Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
 Post-attach runs the local extension installer through IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity), validates installs by checking list-extensions output, and falls back to direct extensions directory installs plus extensions.json registration when CLIs report WSL-only usage.
+Post-attach also writes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` so the semio-repo MCP server is ready after rebuilds without manual setup.
 Engine compatibility for the local extension is aligned to the lowest supported editor build so Cursor and VS Code accept the same VSIX.
 
 ## 🛰️ Repo Dev Server [↑](#-bundles-)
@@ -1176,7 +1181,7 @@ Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen acti
 Ticket closing derives bundle labels from every touched path, adds `@semio-repo` when a file falls outside bundles, and posts a semantic change list for bundles, folders, files, sections, and definitions using status icons plus `-removed`/`+added` counts.
 Ticket summary comments prepend a `# 🔍 Summary` heading so the close summary is visually consistent in GitHub issues.
 Ticket line metrics report full line counts for added and deleted scopes, and diff-based added/removed counts for modified scopes.
-Ticket close ignores files inside the active ticket workspace (`plan.md`, `ticket.md`) so ticket artifacts never appear in change lists.
+Ticket close ignores files inside the active ticket workspace (`ticket.md`) so ticket artifacts never appear in change lists.
 Prompt and summary headings are formatted through shared ticket helpers to keep create, reopen, and close flows consistent.
 Ticket title updates rename the ticket folder to the new slug so ticket paths stay aligned with their titles.
 Ticket GitHub issues are automatically linked to the usalu project 2 during create and reopen flows.
@@ -1256,7 +1261,7 @@ Shell files follow the same `# region` and `# endregion` markers as other hash-c
 
 Development work is tracked as tickets composed of iterations. Ticket creation does not create an iteration; iterations are explicitly started and finished, require file lists (`updated`, `created`, `removed`), and iteration finish derives the per-file lists and line stats from git diffs between the last iteration commit (or ticket base) and the current commit. Ticket finish aggregates all iteration files and recomputes total line stats from git against the ticket base commit.
 Ticket entry points require prompt text for ticket creation and iteration start, while file arrays can be omitted at entry and still enforced by iteration rules.
-Each ticket workspace stores `plan.md` plus a single `ticket.md` that holds todos, changes, log, and summary sections; closing a ticket writes the summary into the `ticket.md` summary block.
+Each ticket workspace stores a single `ticket.md` that holds todos, changes, log, and summary sections; closing a ticket writes the summary into the `ticket.md` summary block.
 Line totals only include the files declared in the ticket iterations so unrelated diffs stay out of ticket reports.
 Section line metrics map added lines using current file sections, map removed lines using base-commit section ranges, and determine affected definitions from added lines only so edits stay attributed to the right sections.
 Ticket section ranges are stored as line-only start/end integers with no column data so tooling treats them as line spans.

@@ -1,0 +1,18 @@
+{
+  "title": "VS Code Repo Commands \u0026 Smart Wizards",
+  "iterations": [
+    {
+      "prompt": "All commands from the binary should be available in vscode (a lot are missing e.g. the goal commands). The arguments should be fetched smarter than just asking the user for strings. E.g. instead of asking for year, month, day, slug which identifies a ticket, show a list of years, then months, then days, then a list of tickets to choose from. Instead of asking for an id of the goal, show first a the top-level goals, then the sub-goals. Do multiple commands that execute the same command but with multiple different ways to fetch the arguments when it makes sense e.g. a ticket can also be selected by goals, subgoals, ticket, sub-tickets, etc.",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "date": "2026-01-28T08:42:53.047206146Z",
+      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849"
+    }
+  ],
+  "status": "open",
+  "dates": {},
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/237"
+  }
+}

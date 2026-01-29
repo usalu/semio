@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Fix CRLF line endings in post-create.sh causing devcontainer setup failures",
-      "llm": "claude-opus-4",
+      "llm": "opus-4",
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "date": "2026-01-15T14:12:26.8362062+01:00",
       "commit": "cdf182fd45d68575d7cd636b17b2dda9f0be67a3"

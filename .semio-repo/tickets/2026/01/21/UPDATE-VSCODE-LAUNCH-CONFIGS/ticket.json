@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "Update VSCode launch configs: all package commands available, add test/test:unit/test:e2e/test:coverage, reorder by lifecycle (dev-\u003etest-\u003ebuild-\u003epublish), use new naming style @package/name script",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "usalu",
       "date": "2026-01-21T10:16:23.092819251Z",

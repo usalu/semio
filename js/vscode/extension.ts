@@ -42,28 +42,6 @@ type RepoEvent = {
   done?: { exit_code?: number };
 };
 
-const LLM_OPTIONS = [
-  "opus-4-5",
-  "claude-opus-4",
-  "sonnet-4-5",
-  "claude-sonnet-4",
-  "haiku-4-5",
-  "gemini-3-pro",
-  "gemini-3-flash",
-  "gpt-5-2",
-  "gpt-5-2-codex",
-  "gpt-5-mini",
-];
-
-const UI_OPTIONS = [
-  "copilot-chat",
-  "antigravity",
-  "cursor",
-  "claude-code",
-  "codex",
-  "droid",
-];
-
 // #endregion Imports
 
 // #region urql Client
@@ -284,7 +262,17 @@ const TicketsDocument = graphql(`
         id year month day slug path uri prompt summary status
         author { github name }
         llm commit
-        date { created finished }
+        dates { started finished }
+        iterations {
+          prompt
+          plan
+          llm
+          ui
+          author { github name }
+          started
+          finished
+          commit
+        }
       }
     }
   }
@@ -391,6 +379,24 @@ const CodebaseDocument = graphql(`
       policies {
         id name description scopes
         violationKinds { id priority autofixable reason solution }
+      }
+    }
+  }
+`);
+
+const GoalsDocument = graphql(`
+  query Goals {
+    repo {
+      goals {
+        id
+        title
+        description
+        prompt
+        status
+        dueDate
+        ui
+        llm
+        milestone
       }
     }
   }
@@ -944,7 +950,20 @@ interface TicketFrontmatter {
   summary?: string;
   author?: string;
   commit?: string;
+  started?: string;
+  finished?: string;
   ignore?: boolean;
+}
+
+interface TicketIteration {
+  prompt: string;
+  plan?: string;
+  llm: string;
+  ui: string;
+  author: { github: string; name?: string | null };
+  started: string;
+  finished?: string;
+  commit?: string;
 }
 
 interface TicketData {
@@ -955,6 +974,7 @@ interface TicketData {
   frontmatter: TicketFrontmatter;
   folderPath: string;
   filePath: string;
+  iterations?: TicketIteration[];
 }
 
 interface PolicyData {
@@ -1670,7 +1690,24 @@ class SearchViewProvider implements vscode.WebviewViewProvider {
 
 type TicketFilter = "all" | "open" | "closed";
 
-type TicketTreeItem = TicketYearItem | TicketMonthItem | TicketDayItem | TicketItem | TicketAuthorItem | TicketCommitsItem | TicketCommitItem;
+type TicketTreeItem = TicketYearItem | TicketMonthItem | TicketDayItem | TicketItem | TicketIterationItem | TicketAuthorItem | TicketCommitsItem | TicketCommitItem | TicketDateItem;
+
+class TicketIterationItem extends vscode.TreeItem {
+  constructor(public readonly iteration: TicketIteration, public readonly index: number, public readonly ticket: TicketData) {
+    super(`Iteration ${index + 1}`, vscode.TreeItemCollapsibleState.Collapsed);
+    this.description = iteration.prompt;
+    this.tooltip = iteration.prompt;
+    this.iconPath = iteration.finished ? new vscode.ThemeIcon("check") : new vscode.ThemeIcon("play");
+  }
+}
+
+class TicketDateItem extends vscode.TreeItem {
+  constructor(public readonly label: string, public readonly date: string) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    this.description = new Date(date).toLocaleString();
+    this.iconPath = new vscode.ThemeIcon("calendar");
+  }
+}
 
 class TicketYearItem extends vscode.TreeItem {
   constructor(public readonly year: number) {
@@ -1798,7 +1835,19 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
           summary: t.summary ?? undefined,
           author: t.author?.github,
           commit: t.commit ?? undefined,
+          started: t.dates.started,
+          finished: t.dates.finished ?? undefined,
         },
+        iterations: t.iterations?.map((it) => ({
+          prompt: it.prompt,
+          plan: it.plan ?? undefined,
+          llm: it.llm,
+          ui: it.ui,
+          author: it.author,
+          started: it.started,
+          finished: it.finished ?? undefined,
+          commit: it.commit ?? undefined,
+        })),
       }));
       log("[TicketsProvider.getChildren] cachedTickets.length after fetch:", this.cachedTickets.length);
     }
@@ -1840,15 +1889,33 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
     }
     if (element instanceof TicketItem) {
       const children: TicketTreeItem[] = [];
-      const commits: string[] = [];
-      if (element.ticket.frontmatter.commit) {
-        commits.push(element.ticket.frontmatter.commit);
+      if (element.ticket.iterations) {
+        element.ticket.iterations.forEach((it, i) => {
+          children.push(new TicketIterationItem(it, i, element.ticket));
+        });
+      } else {
+        const commits: string[] = [];
+        if (element.ticket.frontmatter.commit) {
+          commits.push(element.ticket.frontmatter.commit);
+        }
+        if (element.ticket.frontmatter.author) {
+          children.push(new TicketAuthorItem(element.ticket.frontmatter.author, element.ticket));
+        }
+        if (commits.length > 0) {
+          children.push(new TicketCommitsItem(commits));
+        }
       }
-      if (element.ticket.frontmatter.author) {
-        children.push(new TicketAuthorItem(element.ticket.frontmatter.author, element.ticket));
+      return children;
+    }
+    if (element instanceof TicketIterationItem) {
+      const children: TicketTreeItem[] = [];
+      children.push(new TicketAuthorItem(element.iteration.author.github || element.iteration.author.name || "unknown", element.ticket));
+      children.push(new TicketDateItem("Started", element.iteration.started));
+      if (element.iteration.finished) {
+        children.push(new TicketDateItem("Finished", element.iteration.finished));
       }
-      if (commits.length > 0) {
-        children.push(new TicketCommitsItem(commits));
+      if (element.iteration.commit) {
+        children.push(new TicketCommitsItem([element.iteration.commit]));
       }
       return children;
     }
@@ -2762,7 +2829,7 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
       items.push(new CodebaseDefinitionItem(def, file.uri));
     }
 
-    return items;
+    return this.sortItemsByLine(items);
   }
 
   private buildSectionChildren(section: CodebaseSection, file: CodebaseFile): CodebaseTreeItem[] {
@@ -2775,18 +2842,38 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
       return !remainder.includes("#");
     });
 
+    const allSectionDefs = this.getDefinitionsForSection(file, section);
+    // Definitions directly in this section but NOT in any child section
+    const directDefs = allSectionDefs.filter((d) => {
+      return !childSections.some(child => this.isDefinitionInSection(d, child));
+    });
+
     for (const child of childSections) {
       const hasGrand = file.sections.some((s) => s.path.startsWith(child.path + "#") && s.path !== child.path);
-      const hasDefs = this.getDefinitionsForSection(file, child).length > 0;
-      items.push(new CodebaseSectionItem(child, file, child.name, hasGrand || hasDefs));
+      // Ensure recursive definitions check enables collapsing
+      const hasChildDefs = this.getDefinitionsForSection(file, child).length > 0;
+      items.push(new CodebaseSectionItem(child, file, child.name, hasGrand || hasChildDefs));
     }
 
-    const sectionDefs = this.getDefinitionsForSection(file, section);
-    for (const def of sectionDefs) {
+    for (const def of directDefs) {
       items.push(new CodebaseDefinitionItem(def, file.uri));
     }
 
-    return items;
+    return this.sortItemsByLine(items);
+  }
+
+  private sortItemsByLine(items: CodebaseTreeItem[]): CodebaseTreeItem[] {
+    return items.sort((a, b) => {
+      const lineA = this.getItemStartLine(a);
+      const lineB = this.getItemStartLine(b);
+      return lineA - lineB;
+    });
+  }
+
+  private getItemStartLine(item: CodebaseTreeItem): number {
+    if (item instanceof CodebaseSectionItem) return (item.section.range?.start as any) || 0;
+    if (item instanceof CodebaseDefinitionItem) return (item.definition.range?.start as any) || 0;
+    return 0;
   }
 
   private isDefinitionInSection(def: CodebaseDefinition, section: CodebaseSection): boolean {
@@ -2980,6 +3067,156 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
 // #endregion Sidebar Views
 
 // #region Commands
+
+// #region Smart Wizards
+
+const LLMS = ["opus-4-5", "sonnet-4-5", "haiku-4-5", "gemini-3-pro", "gemini-3-flash", "gpt-5-2-codex", "gpt-5-mini", "swe-1.5"];
+const UIS = ["copilot-chat", "windsurf-chat", "claude-code", "codex", "cursor-chat", "antigravity-chat", "droid"];
+
+async function pickLLM(): Promise<string | undefined> {
+  return await vscode.window.showQuickPick(LLMS, { placeHolder: "Select LLM (default: opus-4-5)" });
+}
+
+async function pickUI(): Promise<string | undefined> {
+  return await vscode.window.showQuickPick(UIS, { placeHolder: "Select UI (default: copilot-chat)" });
+}
+
+interface GoalItem extends vscode.QuickPickItem {
+  goalId: string;
+  isLeaf: boolean;
+  children: GoalItem[];
+}
+
+async function pickGoal(): Promise<string | undefined> {
+  const client = getUrqlClient();
+  if (!client) {
+    vscode.window.showErrorMessage("Repo client not available");
+    return undefined;
+  }
+
+  const result = await client.query(GoalsDocument, {}).toPromise();
+  if (result.error) {
+    vscode.window.showErrorMessage("Failed to fetch goals: " + result.error.message);
+    return undefined;
+  }
+  const goals = result.data?.repo?.goals ?? [];
+  if (goals.length === 0) return ""; // No goals available, return empty string which means root/no-goal
+
+  // Normalize and sort
+  goals.sort((a, b) => a.id.localeCompare(b.id));
+
+  const getChildren = (parentId: string | null): typeof goals => {
+    return goals.filter(g => {
+      if (parentId === null) {
+        return !g.id.includes("/");
+      }
+      return g.id.startsWith(parentId + "/") && g.id.split("/").length === parentId.split("/").length + 1;
+    });
+  };
+
+  let currentParentId: string | null = null;
+
+  while (true) {
+    const children = getChildren(currentParentId);
+    const items: vscode.QuickPickItem[] = children.map(g => ({
+      label: g.title || g.id,
+      description: g.id,
+      detail: g.description || undefined
+    }));
+
+    const CONFIRM = "$(check) Confirm " + (currentParentId ? `"${currentParentId}"` : "None");
+    const UP = "$(arrow-up) Up";
+
+    const specialItems: vscode.QuickPickItem[] = [];
+    specialItems.push({ label: CONFIRM, description: "Select this goal" });
+    if (currentParentId !== null) {
+      specialItems.push({ label: UP, description: "Go to parent" });
+    }
+
+    const selection = await vscode.window.showQuickPick([...specialItems, ...items], {
+      placeHolder: currentParentId ? `Select sub-goal of ${currentParentId}` : "Select goal",
+      ignoreFocusOut: true
+    });
+
+    if (!selection) return undefined; // Cancelled
+
+    if (selection.label.startsWith("$(check) Confirm")) {
+      return currentParentId || "";
+    }
+    if (selection.label.startsWith("$(arrow-up) Up")) {
+      const parts: string[] = currentParentId!.split("/");
+      parts.pop();
+      currentParentId = parts.length > 0 ? parts.join("/") : null;
+      continue;
+    }
+
+    // Selected a child
+    const selectedGoal = goals.find(g => (g.title || g.id) === selection.label && g.id === selection.description);
+    if (selectedGoal) {
+      const grandChildren = getChildren(selectedGoal.id);
+      if (grandChildren.length > 0) {
+        // Has children, dive in
+        currentParentId = selectedGoal.id;
+        continue;
+      } else {
+        // Leaf node. User logic "show me... then confirm".
+        // Maybe if leaf, we can just return it?
+        // Or should we allow user to stay on leaf and see "Confirm"?
+        // If I assume selection of leaf is final:
+        return selectedGoal.id;
+      }
+    }
+  }
+}
+
+async function pickTicketGql(): Promise<string | undefined> {
+  const client = getUrqlClient();
+  if (!client) return undefined;
+
+  const result = await client.query(TicketsDocument, {}).toPromise();
+  if (result.error) return undefined;
+  const tickets = result.data?.repo?.tickets ?? [];
+
+  const years = [...new Set(tickets.map(t => t.year))].sort((a, b) => b - a);
+  if (years.length === 0) return undefined;
+
+  const yearPick = await vscode.window.showQuickPick(years.map(y => y.toString()), {
+    placeHolder: "Select Year",
+    ignoreFocusOut: true
+  });
+  if (!yearPick) return undefined;
+  const selectedYear = parseInt(yearPick);
+
+  const months = [...new Set(tickets.filter(t => t.year === selectedYear).map(t => t.month))].sort((a, b) => b - a);
+  const monthPick = await vscode.window.showQuickPick(months.map(m => m.toString()), {
+    placeHolder: "Select Month",
+    ignoreFocusOut: true
+  });
+  if (!monthPick) return undefined;
+  const selectedMonth = parseInt(monthPick);
+
+  const monthTickets = tickets.filter(t => t.year === selectedYear && t.month === selectedMonth);
+  // Sort by day desc
+  monthTickets.sort((a, b) => b.day - a.day);
+
+  const ticketItems = monthTickets.map(t => ({
+    label: `${t.year}/${t.month.toString().padStart(2, '0')}/${t.day.toString().padStart(2, '0')}/${t.slug}`,
+    description: t.status,
+    detail: t.prompt,
+    ticket: t
+  }));
+
+  const selection = await vscode.window.showQuickPick(ticketItems, {
+    placeHolder: "Select Ticket",
+    ignoreFocusOut: true
+  });
+  if (!selection) return undefined;
+
+  const t = selection.ticket;
+  return `${t.year}/${t.month.toString().padStart(2, '0')}/${t.day.toString().padStart(2, '0')}/${t.slug}`;
+}
+
+// #endregion Smart Wizards
 
 function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
@@ -3275,6 +3512,11 @@ function registerCommands(context: vscode.ExtensionContext): void {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
+
+      // Smart wizard: pick goal first
+      const goal = await pickGoal();
+      if (goal === undefined) return;
+
       const title = await vscode.window.showInputBox({
         prompt: "Enter a titleized title for the ticket (e.g. \"Some Title on Something\"): ",
         placeHolder: "Some Title on Something",
@@ -3288,20 +3530,17 @@ function registerCommands(context: vscode.ExtensionContext): void {
       });
       if (!prompt) return;
 
-      const ui = await vscode.window.showQuickPick(UI_OPTIONS, {
-        placeHolder: "Select UI",
-      });
+      const ui = await pickUI();
       if (!ui) return;
 
-      const llm = await vscode.window.showQuickPick(["(None)", ...LLM_OPTIONS], {
-        placeHolder: "Select LLM (Optional)",
-      });
+      const llm = await pickLLM();
       if (!llm) return;
-      const actualLlm = llm === "(None)" ? "" : llm;
 
-      const cmd = actualLlm 
-          ? `ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${ui}" "${actualLlm}"`
-          : `ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${ui}"`;
+      let cmd = `ticket open "${title.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" ${ui} ${llm}`;
+
+      if (goal) {
+        cmd += ` --goal "${goal.replace(/"/g, '\\"')}"`;
+      }
       runRepoCommand(cmd);
     }),
     vscode.commands.registerCommand("semio.goalOpen", async () => {
@@ -3327,24 +3566,29 @@ function registerCommands(context: vscode.ExtensionContext): void {
       });
       if (!prompt) return;
 
-      const dueDate = await vscode.window.showInputBox({
-        prompt: "Enter goal due date (YYYY-MM-DD)",
-        placeHolder: "2026-02-15",
-      });
-      if (!dueDate) return;
-
-      const ui = await vscode.window.showQuickPick(UI_OPTIONS, {
-        placeHolder: "Select UI",
-      });
+      const ui = await pickUI();
       if (!ui) return;
 
-      const llm = await vscode.window.showQuickPick(LLM_OPTIONS, {
-        placeHolder: "Select LLM",
-      });
+      const llm = await pickLLM();
       if (!llm) return;
 
-      const cmd = `goal open "${title.replace(/"/g, '\\"')}" "${description.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" "${dueDate.replace(/"/g, '\\"')}" "${ui}" "${llm}"`;
+      const dueDate = await vscode.window.showInputBox({
+        prompt: "Enter goal due date (YYYY-MM-DD) (optional)",
+        placeHolder: "2026-02-15",
+      });
+
+      let cmd = `goal open "${title.replace(/"/g, '\\"')}" "${description.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" ${ui} ${llm}`;
+      if (dueDate) {
+        cmd += ` --due "${dueDate.replace(/"/g, '\\"')}"`;
+      }
       runRepoCommand(cmd);
+    }),
+    vscode.commands.registerCommand("semio.goalList", async () => {
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
+        return;
+      }
+      runRepoCommand("goal list");
     }),
     vscode.commands.registerCommand("semio.ticketList", async () => {
       if (!hasRepoAccess()) {
@@ -3396,30 +3640,59 @@ function registerCommands(context: vscode.ExtensionContext): void {
       });
       if (!prompt) return;
 
-      const ui = await vscode.window.showQuickPick(UI_OPTIONS, {
-        placeHolder: "Select UI",
-      });
+      const ui = await pickUI();
       if (!ui) return;
 
-      const llm = await vscode.window.showQuickPick(["(None)", ...LLM_OPTIONS], {
-        placeHolder: "Select LLM (Optional)",
-      });
+      const llm = await pickLLM();
       if (!llm) return;
-      const actualLlm = llm === "(None)" ? "" : llm;
 
-      const cmd = actualLlm
-        ? `ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" "${ui}" "${actualLlm}"`
-        : `ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" "${ui}"`;
+      const cmd = `ticket reopen ${resolvedTicket.year}/${resolvedTicket.month}/${resolvedTicket.day}/${resolvedTicket.slug} "${prompt.replace(/"/g, '\\"')}" ${ui} ${llm}`;
       runRepoCommand(cmd);
     }),
-    vscode.commands.registerCommand("semio.ticketRead", async () => {
+    vscode.commands.registerCommand("semio.goalClose", async () => {
       if (!hasRepoAccess()) {
         vscode.window.showErrorMessage("repo binary not found in go/repo/");
         return;
       }
-      const ticket = await pickTicket();
-      if (!ticket) return;
-      runRepoCommand(`ticket read ${ticket.year} ${ticket.month} ${ticket.day} ${ticket.slug}`);
+      const goal = await pickGoal();
+      if (!goal) return;
+
+      const summary = await vscode.window.showInputBox({
+        prompt: "Enter summary",
+        placeHolder: "Reason for closing...",
+      });
+      if (!summary) return;
+
+      runRepoCommand(`goal close "${goal.replace(/"/g, '\\"')}" "${summary.replace(/"/g, '\\"')}"`);
+    }),
+    vscode.commands.registerCommand("semio.goalReopen", async () => {
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
+        return;
+      }
+      const goal = await pickGoal();
+      if (!goal) return;
+
+      const prompt = await vscode.window.showInputBox({
+        prompt: "Enter prompt",
+        placeHolder: "Reason for reopening...",
+      });
+      if (!prompt) return;
+
+      const ui = await pickUI();
+      if (!ui) return;
+
+      const llm = await pickLLM();
+      if (!llm) return;
+
+      runRepoCommand(`goal reopen "${goal.replace(/"/g, '\\"')}" "${prompt.replace(/"/g, '\\"')}" ${ui} ${llm}`);
+    }),
+    vscode.commands.registerCommand("semio.ticketTree", async () => {
+      if (!hasRepoAccess()) {
+        vscode.window.showErrorMessage("repo binary not found in go/repo/");
+        return;
+      }
+      runRepoCommand("ticket tree");
     }),
     vscode.commands.registerCommand("semio.projectList", async () => {
       if (!hasRepoAccess()) {

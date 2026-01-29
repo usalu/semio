@@ -4,7 +4,7 @@
     {
       "prompt": "Refactor positional arguments for ticket open to \u003cui\u003e \u003cllm?\u003e and extend TicketUI enum.",
       "llm": "gemini-3-pro",
-      "ui": "antigravity",
+      "ui": "windsurf-chat",
       "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
       "date": "2026-01-27T22:19:13.211688294Z",
       "commit": "0e79162e48ba1c50c004cfa6dd88f38d251cc80a"

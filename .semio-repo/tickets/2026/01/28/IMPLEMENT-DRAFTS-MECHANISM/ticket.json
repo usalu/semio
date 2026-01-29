@@ -1,0 +1,19 @@
+{
+  "title": "Implement Drafts Mechanism",
+  "status": "open",
+  "prompt": "Extend repo mechanism to introduce drafts replacing plans",
+  "started": "2026-01-28T16:50:58.053517969Z",
+  "iterations": [
+    {
+      "prompt": "Extend repo mechanism to introduce drafts replacing plans",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-28T16:50:58.053517969Z",
+      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849"
+    }
+  ]
+}

@@ -4,7 +4,7 @@ date: "2025-11-28T18:49:22.576Z"
 slug: PIECE-HOVER-FIX
 author: Ueli Saluz <ueli.saluz@iek.uni-hannover.de>
 summary: Fix piece hover and selection not working in diagram
-model: claude-sonnet-4.5
+model: sonnet-4.5
 ---
 
 # Previously

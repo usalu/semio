@@ -34,5 +34,5 @@ The `semio-repo` VS Code extension was broken due to:
     - Verified activation events are correct (`onStartupFinished`).
 
 ## Verification
-- Ran `npm run package` successfully, producing a valid `semio.vsix`.
+- Ran `npm run package` successfully, producing a valid `semio-repo.vsix`.
 - Verified the VSIX contains the necessary icons and the bundled `extension.js`.

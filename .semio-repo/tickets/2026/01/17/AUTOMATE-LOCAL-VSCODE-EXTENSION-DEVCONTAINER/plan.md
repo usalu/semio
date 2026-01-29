@@ -18,8 +18,8 @@ Use `@vscode/vsce` to package the extension and install it via `code --install-e
    - This tool packages VSCode extensions into `.vsix` files
 
 2. **Add a `package` script** to `js/vscode/package.json`
-   - Script: `"package": "vsce package --out semio.vsix"`
-   - This creates a `semio.vsix` file in the extension directory
+   - Script: `"package": "vsce package --out semio-repo.vsix"`
+   - This creates a `semio-repo.vsix` file in the extension directory
 
 3. **Update `.devcontainer/post-create.sh`** to:
    - Build the VSCode extension

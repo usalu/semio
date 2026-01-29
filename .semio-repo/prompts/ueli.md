@@ -5,10 +5,13 @@
 Implement the following plan:
 Continue.
 
+Dont create any new test files but extend the existing test file. A single tests should always cover one unit and do multiple tests for that unit.
+Make sure all tests pass.
+
 Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
-Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in ticket.md
+Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG/ticket.md`
 Dont keep any legacy api or backwards compatiblity.
 
 Make a refactor plan that cleanly achieves this.
@@ -16,6 +19,81 @@ Make a refactor plan that cleanly achieves this.
 The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
+
+Extend the repo mechanism to introduce: drafts
+Drafts replace plans. A draft is created before a ticket is started. A draft has only a name (the name of the folder in `.semio-repo/drafts/`). There is no `draft.json` file. When a ticket is opened, all files from the draft are moved to the ticket folder. If a file already exists in the ticket folder e.g. `plan.md` then append a number such as `plan_2.md`, `plan_3.md`, etc. Ticket open and reopen dont accept a plan-id but a draft-id. The draft id is the folder name of the draft.
+Add draft create, draft delete, draft list commands.
+
+- Add goal change command. It should be able to change the title, description, due date, parent goal, etc.
+- The due date from goal does not propagate to github milestones. They must be synchronized.
+- Add ticket change command. It should be able to change the title, prompt, llm, ui, goal, parent ticket, etc.
+
+- Remove ticket progress command. Only open, close and reopen.
+- There is a lot of duplicate information in the ticket.json (remove year, month, day, ticket path, slug, etc) which is implicit in the file/folder structure. Never store information twice.
+
+Make sure there is a complete pairity between repo cli commands, mcp tools and vscode extension commands. Currently not all commands are available in all clients.
+Add a policy `Repo` that targets all @semio-repo code (repo binary, vscode extension, grapqhl and sql ) that produces e.g. violation kinds for missing-command.
+
+Make sure to extend/change/refactor the repo binary, vscode extension and graphql to support the following commands:
+```bash
+ticket open <title> <prompt> <ui> <llm> --goal <goal>? --parent <parent-ticket>? --no-github?
+ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> <ui> <llm> --title <new-title>? --goal <new-goal>? --parent <new-parent-ticket>? --no-github?
+ticket close <YYYY/MM/DD/TICKETSLUG> <summary> <files...> --no-github?
+goal open <title> <description> <prompt> <ui> <llm> --due <YYYY-MM-DD?> --parent <parent-goal?> --no-github?
+goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <ui> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>? --no-github?
+goal close <GOALSLUG/SUBGOALSLUG> <summary> --no-github?
+```
+
+The ticket mechanism should be extended/refactored/changed:
+- Introduce a `important.md` file for remaining compulsory actions that have to be taken before finishing the work. When closing a ticket, throw an error if `important.md` is not empty. Once an action is completed, remove the bullet point from the `important.md` file. Create the `important.md` file when the ticket is opened.
+
+Make sure all commands that interact with github have a --no-github flag to disable github interaction. Refactor all commands to use this flag.
+
+The cli should be tested e2e for all commands with all different syntaxes (positional, flags, named values). Never interact with github on tests and cleanup afterwards.
+e.g. $ go/repo/repo goal tree
+✗ error: graphql errors: [Cannot query field "data" on type "Ticket". Did you mean "day", "path", or "dates"?]
+✗ failed   1ms (exit: 1)
+Error: exit status 1
+Usage:
+  repo goal tree [flags]
+
+Flags:
+  -h, --help   help for tree
+
+Global Flags:
+      --json               Output NDJSON
+      --repo string        Repo root path
+      --timeout duration   Timeout for command execution
+      --verbose            Verbose output
+
+exit status 1
+
+Rename the section section in explorer sideview in vscode to active file.
+
+Migrate all existing tickets with a temporary migration script to the new format. Some tickets have `plan.md`, `log.md`, `summary.md`. Merge them into a single `ticket.md` file. Some tickets have iterations only with date instead of started and finished dates. The date is the started date.
+
+repo binary, vscode extension, graphql:
+A ticket iteration should not have one date but instead dates: {started, finished}
+
+Create a new goal for `r26-02` release. The aim of this release is to have sketchpad running at mvp level, along with updated docs and examples.
+
+Create a new goal tree:
+- r26-02
+  - Running sketchpad
+    - Running sketchpad Apps
+      - Running Home App
+      - Running Kit App
+      - Running Type App
+      - Running Design App
+      - Running Docs App
+  - Updated Docs
+    - Updated User Docs
+      - Updated thinking-in-semio Tutorial
+      - Updated hello-semio Tutorial
+
+All commands from the binary should be available in vscode (a lot are missing e.g. the goal commands). The arguments should be fetched smarter than just asking the user for strings. E.g. instead of asking for year, month, day, slug which identifies a ticket, show a list of years, then months, then days, then a list of tickets to choose from. Instead of asking for an id of the goal, show first a the top-level goals, then the sub-goals. Do multiple commands that execute the same command but with multiple different ways to fetch the arguments when it makes sense e.g. a ticket can also be selected by goals, subgoals, ticket, sub-tickets, etc.
+
+All section tree items in codebase tree should be unfoldable and show the definitions and subsections. They should be sorted same as in the appearance in the source code.
 
 Goals must have a title, a description, prompt, due date, ui and llm. Throw if the arguments are not provided.  Allow same as the other command positional ( <title> <description> <prompt> <due-date> <ui> <llm>), flagged such as (--<date> --<ui> --<llm>) or named flaggs such as: --title <title> --description <description> --prompt <prompt> --due-date <due-date> --ui <ui> --llm <llm>. Test everything. Never interact with github on tests and cleanup afterwards.
 
@@ -25,7 +103,7 @@ Ticket reopen needs to have ui flag either positional or over "--ui <ui>" or "--
 
 Some commands show semio: and some show semio-repo: prefix in vscode. The output panel of vscode logs also shows semio instead of semio-repo. All should be semio-repo.
 
-Add a new command: timeline that prints a timeline of the commits, tickets, bundles, folders, files.
+Add a new command: timeline that prints a timeline of the commits, goals tickets, bundles, folders, files.
 
 The repo mcp should not use the json api but the same output format as the cli.
 
@@ -567,7 +645,7 @@ Validation/Invalid # Invalid Kit -> Validate = Invalid Report
 Validation/Metabolism # Metabolism Kit -> Validate = Empty report
 @semio_test.go@semio.go @semio.py@semio.test.py @semio.rs @semio.test.ts@semio.ts @Semio.cs@Tests.cs 
 
-When opening a ticket the llm should be more forgiving. e.g. claude-opus-4-5-20251101 or Claude Opus 4.5 should also automatically work. Slugify and check for prefixes. Some legacy code still uses model as concept. Replace model with llm everywhere.
+When opening a ticket the llm should be more forgiving. e.g. opus-4-5-20251101 or Claude Opus 4.5 should also automatically work. Slugify and check for prefixes. Some legacy code still uses model as concept. Replace model with llm everywhere.
 
 Dont ask in between, just finish the task. Edit files in workspaces/semio workspace. No active workspace is needed. Just keep on.
 
@@ -781,7 +859,7 @@ C:\git\semio.tech\semio\py\engine\engine.py
 
 The ticket mechanism still has some issues.
 - The ticket open command should not accept an author string and take the git author from gitconfig, lookup contributors from contributors list and if a contributor matches use the github username and if no contributor is found then not leave the NAME <EMAIL> from gitconfig. Use the email for the identification of the contributor.
-- The llm should not be any string but only from the enum list. Kebaberize the provided string. e.g. claude-opus-4.5 should be equivalent to claude-opus-4-5. Throw if the model is not part of the model list and give a message to add the model first to the list if it doesnt exist.
+- The llm should not be any string but only from the enum list. Kebaberize the provided string. e.g. opus-4.5 should be equivalent to opus-4-5. Throw if the model is not part of the model list and give a message to add the model first to the list if it doesnt exist.
 - Ranges should not be position with line and colum but be only ranges of lines.
 Instead of:
 "range": {
@@ -818,7 +896,7 @@ Make sure the commands have this api:
 
 The vscode extension commands are not matching the cli command arguments.
 E.g. ticket open requires to select at least one file although ticket open does not require any files.
-Ticket finish should show a list of open tickets and let the user select one and then ask for the summary and at least one file. The llm should be an enum from a fixed list of llms (opus-4-5, claude-opus-4, sonnet-4-5, claude-sonnet-4, haiku-4-5, gemini-3-pro, gemini-3-flash, gpt-5-2, gpt-5-mini).
+Ticket finish should show a list of open tickets and let the user select one and then ask for the summary and at least one file. The llm should be an enum from a fixed list of llms (opus-4-5, opus-4, sonnet-4-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gemini-3-flash, gpt-5-2, gpt-5-mini).
 Scan for all commands and make sure that whenever something is referenced then vscode should show the list of options to choose from (bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations).
 
 Make sure the commands have this api:

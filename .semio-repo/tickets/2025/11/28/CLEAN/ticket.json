@@ -1,7 +1,7 @@
 {
   "title": "Cleanup logs for diagnostic traces",
   "prompt": "Cleanup logs for diagnostic traces",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

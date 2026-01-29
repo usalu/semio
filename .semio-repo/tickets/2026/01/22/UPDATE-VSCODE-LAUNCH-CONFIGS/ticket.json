@@ -3,7 +3,7 @@
   "iterations": [
     {
       "prompt": "The vscode launch configs are outdated. All package commands should be available there. Make sure that all configs have test, test:unit, test:e2e, test:coverage. Reorder from specific first to general last. Consider the development lifecycle in the order (e.g. dev-\u003etest-\u003ebuild-\u003epublish:test-\u003epublish). Use a new naming style like @semio-repo/go build, @semio-repo/vscode build, @semio/js dev, etc.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "usalu",
       "date": "2026-01-22T10:38:53.634705497Z",
@@ -11,7 +11,7 @@
     },
     {
       "prompt": "Extend missing scripts in package.json files where it makes sense, or remove launch configs where scripts don't exist. Need to analyze which bundles have which commands and ensure consistency.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "usalu",
       "date": "2026-01-22T10:52:07.44664694Z",
@@ -19,7 +19,7 @@
     },
     {
       "prompt": "Remove all non-standard scripts and merge them into standard monorepo scripts: dev, build, preflight, test, publish. For example, animate should be merged into build, watch is usually dev, etc.",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "usalu",
       "date": "2026-01-22T11:01:07.913699321Z",
@@ -27,7 +27,7 @@
     },
     {
       "prompt": "Fix missing script \"package\" error on devcontainer startup. Find and replace all non-standard scripts like \"package\" with standard ones like \"build\".",
-      "llm": "claude-opus-4-5",
+      "llm": "opus-4-5",
       "ui": "claude-code",
       "author": "usalu",
       "date": "2026-01-22T19:04:54.878766718Z",

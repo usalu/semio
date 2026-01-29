@@ -267,32 +267,32 @@ type ContributorContributions {
 }
 
 type ContributorBundle {
-    name: String!
-    lines: LineMetrics!
-    folders: [ContributorFolder!]!
+  name: String!
+  lines: LineMetrics!
+  folders: [ContributorFolder!]!
 }
 
 type ContributorFolder {
-    name: String!
-    lines: LineMetrics!
-    files: [ContributorFile!]!
+  name: String!
+  lines: LineMetrics!
+  files: [ContributorFile!]!
 }
 
 type ContributorFile {
-    name: String!
-    lines: LineMetrics!
-    sections: [ContributorSection!]!
+  name: String!
+  lines: LineMetrics!
+  sections: [ContributorSection!]!
 }
 
 type ContributorSection {
-    name: String!
-    lines: LineMetrics!
-    definitions: [ContributorDefinition!]!
+  name: String!
+  lines: LineMetrics!
+  definitions: [ContributorDefinition!]!
 }
 
 type ContributorDefinition {
-    name: String!
-    lines: LineMetrics!
+  name: String!
+  lines: LineMetrics!
 }
 
 type LineMetrics {
@@ -338,9 +338,21 @@ type Ticket implements Node {
   llm: String
   ui: TicketUI
   commit: String
-  date: TicketDate!
+  dates: TicketDate!
+  iterations: [Iteration!]!
   bundles: [Bundle!]!
   files: [File!]!
+}
+
+type Iteration {
+  prompt: String!
+  plan: String
+  llm: String!
+  ui: TicketUI!
+  author: Contributor!
+  started: DateTime!
+  finished: DateTime
+  commit: String
 }
 
 enum TicketStatus {
@@ -358,7 +370,7 @@ enum TicketUI {
 }
 
 type TicketDate {
-  created: DateTime!
+  started: DateTime!
   finished: DateTime
 }
 

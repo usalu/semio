@@ -1,7 +1,7 @@
 {
   "title": "Migration from 2025-11-21_KIT-IMPORT-EXPORT.md",
   "prompt": "Migration from 2025-11-21_KIT-IMPORT-EXPORT.md",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

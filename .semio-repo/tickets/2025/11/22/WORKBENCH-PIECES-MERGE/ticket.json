@@ -1,7 +1,7 @@
 {
   "title": "Merge design app workbench sections into single pieces section",
   "prompt": "Merge design app workbench sections into single pieces section",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

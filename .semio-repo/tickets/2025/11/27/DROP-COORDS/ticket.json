@@ -1,7 +1,7 @@
 {
   "title": "Fix drop coordinates for diagram and scene",
   "prompt": "Fix drop coordinates for diagram and scene",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

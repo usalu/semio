@@ -1,7 +1,7 @@
 {
   "title": "Migration from 2025-11-22_MIGRATION-PORT-RESOLUTION.md",
   "prompt": "Migration from 2025-11-22_MIGRATION-PORT-RESOLUTION.md",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

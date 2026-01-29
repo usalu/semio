@@ -1,7 +1,7 @@
 {
   "title": "Sync Python unit tests with JS fixtures and extend engine.py",
   "prompt": "Sync Python unit tests with JS fixtures and extend engine.py",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

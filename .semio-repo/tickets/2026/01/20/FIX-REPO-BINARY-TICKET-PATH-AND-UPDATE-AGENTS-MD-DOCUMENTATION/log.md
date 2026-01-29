@@ -73,7 +73,7 @@ User requested explicit flag syntax: `--title "My Task" --prompt "Prompt" --llm 
 - Refactored `ticketOpenCmd` to use named string flags instead of positional args + boolean flags
 - Flags: `--title`, `--prompt`, `--llm`, `--ui` (all string values)
 - Updated MCP `ticketOpen` function to map lowercase UI values to GraphQL enum names
-- Updated help text with correct LLM values: opus-4-5, claude-sonnet-4, haiku-4-5, gemini-3-pro, gpt-5-2
+- Updated help text with correct LLM values: opus-4-5, sonnet-4, haiku-4-5, gemini-3-pro, gpt-5-2
 
 ### AGENTS.md
 

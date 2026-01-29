@@ -1,6 +1,6 @@
 {
   "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
-  "llm": "claude-opus-4",
+  "llm": "opus-4",
   "status": "OPEN",
   "author": "Ueli Saluz <ueli@semio.tech>",
   "date": {

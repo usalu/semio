@@ -3,7 +3,7 @@
 #region PostAttach
 set -e
 echo "🔌 Running post-attach setup..."
-VSIX_PATH="js/vscode/semio.vsix"
+VSIX_PATH="js/vscode/semio-repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
 EXTENSION_ID=""
@@ -227,6 +227,24 @@ else
   echo "   Extension installation skipped - this is expected outside supported IDEs"
 fi
 #endregion InstallExtension
+
+#region WindsurfMcpConfig
+WINDSURF_MCP_DIR="/home/vscode/.codeium/windsurf"
+WINDSURF_MCP_FILE="${WINDSURF_MCP_DIR}/mcp_config.json"
+mkdir -p "$WINDSURF_MCP_DIR"
+cat > "$WINDSURF_MCP_FILE" <<'EOF'
+{
+    "mcpServers": {
+        "semio-repo": {
+            "command": "./go/repo/repo",
+            "args": [
+                "mcp"
+            ]
+        }
+    }
+}
+EOF
+#endregion WindsurfMcpConfig
 
 echo "✅ Post-attach setup complete!"
 #endregion PostAttach

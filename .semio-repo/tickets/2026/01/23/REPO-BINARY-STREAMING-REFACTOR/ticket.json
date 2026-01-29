@@ -11,7 +11,7 @@
     },
     {
       "prompt": "Received follow-up message; logging update.",
-      "llm": "claude-sonnet-4-5",
+      "llm": "sonnet-4-5",
       "ui": "codex",
       "author": "usalu",
       "date": "2026-01-23T14:57:05.197344449Z",
@@ -19,7 +19,7 @@
     },
     {
       "prompt": "Received new user message; recording response.",
-      "llm": "claude-sonnet-4-5",
+      "llm": "sonnet-4-5",
       "ui": "codex",
       "author": "usalu",
       "date": "2026-01-23T14:57:50.11301237Z",
@@ -27,7 +27,7 @@
     },
     {
       "prompt": "Received new user message; logging response.",
-      "llm": "claude-sonnet-4-5",
+      "llm": "sonnet-4-5",
       "ui": "codex",
       "author": "usalu",
       "date": "2026-01-23T14:59:18.880823754Z",
@@ -35,7 +35,7 @@
     },
     {
       "prompt": "Ensure command tests pass and restore VS Code extension run flow.",
-      "llm": "claude-sonnet-4-5",
+      "llm": "sonnet-4-5",
       "ui": "codex",
       "author": "usalu",
       "date": "2026-01-23T16:29:20.454246437Z",

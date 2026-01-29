@@ -6,7 +6,7 @@ The semio VSCode extension (`js/vscode/`) should be automatically installed when
 
 The current approach in `post-create.sh` uses:
 ```bash
-code --install-extension semio.vsix --force || true
+code --install-extension semio-repo.vsix --force || true
 ```
 
 This doesn't work reliably because:

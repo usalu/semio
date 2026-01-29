@@ -1,7 +1,7 @@
 {
   "title": "Document reports folder in AGENTS",
   "prompt": "Document reports folder in AGENTS",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

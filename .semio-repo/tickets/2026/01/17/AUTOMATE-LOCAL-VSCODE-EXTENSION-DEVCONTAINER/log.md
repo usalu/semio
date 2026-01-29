@@ -12,11 +12,11 @@
 ## Implementation
 
 1. Added `@vscode/vsce` dependency to `js/vscode/package.json` for packaging
-2. Added `package` script to create `.vsix` file: `vsce package --out semio.vsix`
+2. Added `package` script to create `.vsix` file: `vsce package --out semio-repo.vsix`
 3. Updated `.devcontainer/post-create.sh` to:
    - Build the extension with `npm run build`
    - Package it with `npm run package`
-   - Install it with `code --install-extension semio.vsix --force`
+   - Install it with `code --install-extension semio-repo.vsix --force`
 4. Added `*.vsix` to `.gitignore` to avoid committing packaged extensions
 
 ## Notes

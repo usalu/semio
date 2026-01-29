@@ -5,7 +5,7 @@
 The `postAttachCommand` in `.devcontainer/devcontainer.json` fails with exit code 127 because:
 
 1. The `code` or `code-insiders` CLI is not available in all container environments (only available when VS Code attaches)
-2. The `semio.vsix` file doesn't exist - it needs to be built first
+2. The `semio-repo.vsix` file doesn't exist - it needs to be built first
 
 ## Solution
 

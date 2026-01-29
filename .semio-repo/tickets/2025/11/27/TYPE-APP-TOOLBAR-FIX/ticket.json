@@ -1,7 +1,7 @@
 {
   "title": "Add missing toolbar rendering and test for connector tool",
   "prompt": "Add missing toolbar rendering and test for connector tool",
-  "llm": "claude-sonnet-4",
+  "llm": "sonnet-4",
   "status": "finished",
   "author": "uelisaluz",
   "dates": {

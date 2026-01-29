@@ -13,7 +13,7 @@ echo "Building and installing semio VSCode extension..."
 cd js/vscode
 npm run build
 npm run package
-code --install-extension semio.vsix --force || true
+code --install-extension semio-repo.vsix --force || true
 cd ../..
 ```
 
