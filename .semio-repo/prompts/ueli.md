@@ -28,10 +28,53 @@ Repo metrics:
 - Contributors [total]
 - Policies
 
+Extend bundles
+
+
+Expand bundle, folder, definition to have a semantic kind property. Those properties cant simply be derived from the names but need general knowledge and repository knowledge.
+
+Bundle kinds: library (e.g. `@semio/js`, `@semio/go`, `@semio/py`, `@semio/rust`, …), schema (e.g. `@semio/sqlite`, `@semio/graphql`, `@semio/json-schema`, …), binary (`@semio-repo/go`, `@semio-repo/server`, …), ui (`@semio-repo/vscode`, `@semio/grasshopper`, `@semio/desktop`, …), site (`@semio/play`, …), assets (`@semio/icons`, …)
+
+Folder kinds: organization (not necessary e.g. `js`, `go`, `py`, `rs`, …), required (e.g. bundles must be inside a folder because they have config files with reserved names, …)
+
+Definition kinds: implementation (concrete implementation such as function such as function or const ()=>{}, class, struct, …), interface (some api without implementation such as interface in typescript, type in typescript, traits in rust, …), constant (global const or var in javascript, let in javascript, enum …). 
+
+Dont derive file kinds only from file names. e.g. there are `*.ts` files which are not code but script or config files.
+Do the same for determining what folders and files are generates such as `js/vscode/generated` folder along with the content in it. This logic is all part of the repo binary and buissness logic is never part of the vscode extension.
+
+Add global --no-<kind> flag, there should be a --only-<kind> flag to show only the kind. Multiple --only-<kind> flags can be provided to show a combination of kinds.
+
+Further add --no-<year>, --only-<year>, --no-<month>, --only-<month>, --no-<day>, --only-<day> flags to filter the time dimension.
+Further add --no-<contributor>, --only-<contributor> flags to filter the contributor dimension.
+Further add --no-<policy>, --only-<policy> flags to filter the policy dimension.
+Further add --no-<violation-kind>, --only-<violation-kind> flags to filter the violation kind dimension.
+
+vscode extension:
+Extend the filter section to have tree items with menu toggle actions on them that act as toggles for the kind (additionally add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles) 
+
+├─ filter # default, none, all
+│ ├─ SEARCH # match case, match whole word, regex
+│ ├─ bundle # library, binary, ui, site, assets, default
+│ ├─ folder # organization, required
+│ ├─ section # none, all
+│ ├─ definition # implementation, interface, constant
+│ ├─ time # none, all
+│ │ └─ YEAR # none, all
+│ │ │ └─ MONTH # none, all
+│ │ │ │ └─ DAY # none, all
+│ └─ contributors # none, all
+│ │ └─ CONTRIBUTOR # none, all
+
+
+├─ codebase
+…
+
 
 The file tree items should have different codeicons according the file kind (code, script, config, test, docs, resource, license).
 
 The sections section along with all tree items of the explorer side view in vscode should be the same as the file tree item in codebase section in the semio-repo side view. 100% the same (same behaviour such as drag and drop, same action toggles, same icons, same order, same children, etc).
+
+Finish the ticket and only stop once everything runs and is tested:
 
 repo binary, vscode extension, graphql:
 For every --no-<kind> flag, there should be a --only-<kind> flag to show only the kind.
@@ -40,7 +83,8 @@ Add to every list and tree command --filter <filter-string>, --regex, --match-ca
 
 The filter flags for file kinds (--no-<kind>, --only-<kind>) should work for every single list and tree command (even if not file related). e.g. --only-code should only show bundles that have code files, show tickets that have diffs on code files, show policies that affect code files, show commands that affect code files, show contributors that have contributed to code files.
 
-Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles. Use the search field with the search toggles as a filter string with the filter options
+Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles. Use the search field with the search toggles as a filter string with the filter options. After this there is a filter section and below it the codebase section.
+Make sure that all search functionality is implemented over the binary and not on the frontend in the vscode extension. All the buissness logic should be in the binary (e.g. what is filtered, the file kind, etc).
 
 vscode extension: When clicking on a section tree item or definition tree item it should jump to the right line where it starts. Both dont currently work.
 
@@ -145,6 +189,9 @@ repo binary, vscode extension, graphql:
 A ticket iteration should not have one date but instead dates: {started, finished}
 
 Create a new goal for `r26-02` release. The aim of this release is to have sketchpad running at mvp level, along with updated docs and examples.
+
+Add a new goal to the `r26-02` release goal: Running sketchpad
+Due date mid of next month.
 
 Create a new goal tree:
 - r26-02

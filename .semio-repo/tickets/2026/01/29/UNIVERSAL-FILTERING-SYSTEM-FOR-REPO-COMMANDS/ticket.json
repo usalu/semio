@@ -1,0 +1,1134 @@
+{
+  "title": "Universal Filtering System for Repo Commands",
+  "status": "closed",
+  "prompt": "Add --only-\u003ckind\u003e flags for every --no-\u003ckind\u003e flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
+  "summary": "Implemented universal filtering system across repo CLI, GraphQL API, and VSCode extension. Added --only-\u003ckind\u003e flags to complement --no-\u003ckind\u003e flags. Added --filter, --regex, --match-case, --match-whole-word flags to all list and tree commands. Extended file kind filtering to non-file commands (bundles, tickets, goals, contributors, policies) by checking associated files. Updated GraphQL schema with FilterInput type and FileKind enum. Refactored VSCode extension filter UI with file kind toggles and show all/none/default actions.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/272"
+  },
+  "started": "2026-01-29T11:40:11.004712157Z",
+  "finished": "2026-01-29T12:24:22.627979859Z",
+  "iterations": [
+    {
+      "prompt": "Add --only-\u003ckind\u003e flags for every --no-\u003ckind\u003e flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
+      "llm": "sonnet-4-5",
+      "ui": "windsurf-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-29T11:40:11.004712157Z",
+      "finished": "2026-01-29T12:24:22.627979859Z",
+      "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/go",
+              "lines": {
+                "added": 392,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo",
+              "lines": {
+                "added": 235,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/go/main.go",
+              "lines": {
+                "added": 534,
+                "removed": 142
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql",
+              "lines": {
+                "added": 35,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts",
+              "lines": {
+                "added": 250,
+                "removed": 15
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "@semio-repo/repo/AGENTS.md",
+              "lines": {
+                "added": 4347,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/repo/AGENTS.md#Using TypeScript fallback",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Inputs",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Query",
+              "lines": {
+                "added": 7,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Commands",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views",
+              "lines": {
+                "added": 233,
+                "removed": 15
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/go/main.go§AllowedLLMs",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Analyze",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Bundles",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Bundles",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Bundles",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Bundles",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Contributor",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ContributorFolder",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Contributors",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Contributors",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Contributors",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Contributors",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CreateDraft",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CreateTicket",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§CreateTicket",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§DeleteDraft",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§DeriveFileKind",
+              "lines": {
+                "added": 1,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§DeriveFileKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§DraftDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§DraftDelete",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§FilterInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§FinishTicket",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetDrafts",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetDrafts",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetImportantFilePath",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsGenerated",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsGenerated",
+              "lines": {
+                "added": 4,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsNode",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsNode",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsNode",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsNode",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsSemanticallyIgnored",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§IsSemanticallyIgnored",
+              "lines": {
+                "added": 16,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ParseDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ParseDefinitions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Policies",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Policies",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Policies",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Policies",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Policy",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§QueryResolver",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§QueryResolver",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§RepoResolver",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§RepoResolver",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Section",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Section",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§SectionMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamBundles",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamContributors",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamFiles",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamFiles",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamFolders",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamGoals",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamPolicies",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Ticket",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Ticket",
+              "lines": {
+                "added": 0,
+                "removed": 17
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketClose",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§TicketOpen",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Tickets",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Tickets",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Tickets",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§Tickets",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ToStreamOptions",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§UpdateTicketTitle",
+              "lines": {
+                "added": 1,
+                "removed": 13
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ViolationKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§buildSchema",
+              "lines": {
+                "added": 96,
+                "removed": 16
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§bundleMatchesKinds",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§contributorCommand",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§contributorCommand",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§goalCommand",
+              "lines": {
+                "added": 20,
+                "removed": 17
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§goalCommand",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§policyCommand",
+              "lines": {
+                "added": 20,
+                "removed": 10
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§policyCommand",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§shouldIncludeKind",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ticketCommand",
+              "lines": {
+                "added": 6,
+                "removed": 9
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ticketCommand",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Inputs§FileKind",
+              "lines": {
+                "added": 9,
+                "removed": 4
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Inputs§FilterInput",
+              "lines": {
+                "added": 10,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Query§Query",
+              "lines": {
+                "added": 7,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Query§Query",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§Repo",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Types§Repo",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseDragAndDropController",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseDragAndDropController",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseFilter",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseProvider",
+              "lines": {
+                "added": 1,
+                "removed": 5
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseTreeItem",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CommandGroupItem",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CommandNode",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CommandTreeItem",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§DEFAULT_FILTER",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FILTER_EXTENSIONS",
+              "lines": {
+                "added": 54,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FileKind",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FilterItem",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FilterItemType",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FilterProvider",
+              "lines": {
+                "added": 101,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§SearchViewProvider",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§codebaseProvider",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§codebaseProvider",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§commandsProvider",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§commandsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributorsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§contributorsProvider",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§filterProvider",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§globalMatchCase",
+              "lines": {
+                "added": 10,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§globalMatchCase",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§globalMatchWholeWord",
+              "lines": {
+                "added": 10,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§globalMatchWholeWord",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§globalSearchQuery",
+              "lines": {
+                "added": 10,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§globalSearchQuery",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§globalUseRegex",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§globalUseRegex",
+              "lines": {
+                "added": 10,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§matchesSearchText",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§matchesSearchText",
+              "lines": {
+                "added": 10,
+                "removed": 7
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§policiesProvider",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§policiesProvider",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§registerSidebarViews",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§registerSidebarViews",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§sectionsProvider",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§sectionsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ticketsProvider",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§ticketsProvider",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "@semio-repo/go/main.go§FilterInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§GetImportantFilePath",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamContributors",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamGoals",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§StreamPolicies",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§ToStreamOptions",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go/main.go§bundleMatchesKinds",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Inputs§FileKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/graphql/repo/schema.graphql#Inputs§FilterInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§CodebaseFilter",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§DEFAULT_FILTER",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FILTER_EXTENSIONS",
+              "lines": {
+                "added": 54,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FileKind",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FilterItem",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FilterItemType",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§FilterProvider",
+              "lines": {
+                "added": 101,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio/semio-repo/extension.ts#Sidebar Views§filterProvider",
+              "lines": {
+                "added": 48,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

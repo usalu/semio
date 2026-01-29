@@ -20,6 +20,7 @@
   ],
   "activationEvents": [
     "onStartupFinished",
+    "onView:semio.codebase",
     "onView:semio.filter",
     "onView:semio.tickets",
     "onView:semio.policies",
@@ -41,9 +42,8 @@
     "views": {
       "semio-repo": [
         {
-          "id": "semio.search",
-          "name": "Search",
-          "type": "webview"
+          "id": "semio.codebase",
+          "name": "Codebase"
         },
         {
           "id": "semio.filter",
@@ -278,6 +278,14 @@
         "command": "semio.refreshContributors",
         "title": "Refresh Contributors",
         "icon": "$(refresh)"
+      },
+      {
+        "command": "semio.toggleFilter",
+        "title": "Toggle File Kind Filter"
+      },
+      {
+        "command": "semio.filterAction",
+        "title": "Filter Action"
       },
       {
         "command": "semio.toggleTicketFilter",

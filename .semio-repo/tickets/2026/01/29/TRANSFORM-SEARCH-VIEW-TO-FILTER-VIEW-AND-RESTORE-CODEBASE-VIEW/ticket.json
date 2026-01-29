@@ -1,0 +1,19 @@
+{
+  "title": "Transform Search View to Filter View and Restore Codebase View",
+  "status": "open",
+  "prompt": "Replace Search view with Filter view and restore Codebase view functionality",
+  "started": "2026-01-29T11:33:05.852316932Z",
+  "iterations": [
+    {
+      "prompt": "Replace Search view with Filter view and restore Codebase view functionality",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-29T11:33:05.852316932Z",
+      "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87"
+    }
+  ]
+}

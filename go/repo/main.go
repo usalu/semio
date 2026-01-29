@@ -676,20 +676,30 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "list",
 		Short: "List all registered policies",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			query := `query Policies {
-				repo {
-					policies {
-						id
-						name
-						description
-						scopes
-						violationKinds { id priority autofixable reason solution }
+			opts := getStreamOptions(cmd)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "policy list"}
+
+				policyChan := make(chan PolicyDef)
+				go func() {
+					StreamPolicies(context.Background(), policyChan, opts)
+				}()
+
+				for p := range policyChan {
+					data, err := json.Marshal(map[string]interface{}{"policy": p})
+					if err != nil {
+						continue
 					}
+					stream <- Event{Kind: KindResult, Command: "policy list", Data: data}
 				}
-			}`
-			return runGraphQL(cmd, factory, config, query, nil)
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(listCmd)
 	checkCmd := &cobra.Command{
 		Use:   "check",
 		Short: "Check a policy against a scope",
@@ -999,9 +1009,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 					day = &dayVal
 				}
 
+				opts := getStreamOptions(cmd)
 				ticketChan := make(chan Ticket)
 				go func() {
-					StreamTickets(context.Background(), year, month, day, ticketChan)
+					StreamTickets(context.Background(), year, month, day, ticketChan, opts)
 				}()
 
 				for t := range ticketChan {
@@ -1040,6 +1051,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	listCmd.Flags().Int("year", 0, "Filter by year")
 	listCmd.Flags().Int("month", 0, "Filter by month")
 	listCmd.Flags().Int("day", 0, "Filter by day")
+	bindStreamFlags(listCmd)
 	closeCmd := &cobra.Command{
 		Use:   "close [path] [summary] [files...]",
 		Short: "Close a ticket",
@@ -1242,9 +1254,10 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 					day = &dayVal
 				}
 
+				opts := getStreamOptions(cmd)
 				ticketChan := make(chan Ticket)
 				go func() {
-					StreamTickets(context.Background(), year, month, day, ticketChan)
+					StreamTickets(context.Background(), year, month, day, ticketChan, opts)
 				}()
 
 				var tickets []Ticket
@@ -1320,6 +1333,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	treeCmd.Flags().Int("year", 0, "Filter by year")
 	treeCmd.Flags().Int("month", 0, "Filter by month")
 	treeCmd.Flags().Int("day", 0, "Filter by day")
+	bindStreamFlags(treeCmd)
 
 	changeCmd := &cobra.Command{
 		Use:   "change <path>",
@@ -1415,24 +1429,30 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "list",
 		Short: "List goals",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			query := `query Goals {
-				repo {
-					goals {
-						id
-						title
-						description
-						prompt
-						dueDate
-						ui
-						llm
-						status
-						milestone
+			opts := getStreamOptions(cmd)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "goal list"}
+
+				goalChan := make(chan *Goal)
+				go func() {
+					StreamGoals(context.Background(), goalChan, opts)
+				}()
+
+				for g := range goalChan {
+					data, err := json.Marshal(map[string]interface{}{"goal": g})
+					if err != nil {
+						continue
 					}
+					stream <- Event{Kind: KindResult, Command: "goal list", Data: data}
 				}
-			}`
-			return runGraphQL(cmd, factory, config, query, nil)
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(listCmd)
 	changeCmd := &cobra.Command{
 		Use:   "change <SLUG>",
 		Short: "Change a goal",
@@ -1719,22 +1739,30 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "list",
 		Short: "List contributors",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			query := `query Contributors {
-				repo {
-					contributors {
-						id
-						github
-						name
-						emails
-						icons { avatar avatarRound github }
-						links { name url }
-						metrics { commits tickets bundles folders files sections definitions lines }
+			opts := getStreamOptions(cmd)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "contributor list"}
+
+				contributorChan := make(chan Contributor)
+				go func() {
+					StreamContributors(context.Background(), contributorChan, opts)
+				}()
+
+				for c := range contributorChan {
+					data, err := json.Marshal(map[string]interface{}{"contributor": c})
+					if err != nil {
+						continue
 					}
+					stream <- Event{Kind: KindResult, Command: "contributor list", Data: data}
 				}
-			}`
-			return runGraphQL(cmd, factory, config, query, nil)
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
+	bindStreamFlags(listCmd)
 	addCmd := &cobra.Command{
 		Use:   "add",
 		Short: "Add a contributor",
@@ -3321,6 +3349,7 @@ var AllowedLLMs = []string{
 	"gpt-5-2",
 	"gpt-5-2-codex",
 	"gpt-5-mini",
+	"swe-1.5",
 }
 
 var AllowedUIs = []string{
@@ -3561,7 +3590,7 @@ func DeriveFileKind(name string) string {
 	case ".ts", ".tsx", ".js", ".jsx", ".py", ".cs", ".go", ".c", ".cpp", ".h", ".hpp", ".rs", ".java", ".kt", ".swift":
 		return FileKindCode
 	case ".css", ".scss", ".less", ".sass", ".html", ".htm":
-		return FileKindCode 
+		return FileKindCode
 	case ".sql", ".graphql", ".gql":
 		return FileKindCode // Schema code
 	}
@@ -3573,8 +3602,7 @@ func DeriveFileKind(name string) string {
 	return FileKindResource
 }
 
-func (f *File) IsNode()       {}
-
+func (f *File) IsNode() {}
 
 func IsGenerated(path string) bool {
 	base := strings.ToLower(filepath.Base(path))
@@ -3587,44 +3615,44 @@ func IsGenerated(path string) bool {
 	if strings.HasSuffix(base, ".generated.go") || strings.HasSuffix(base, ".pb.go") {
 		return true
 	}
-    // "assets/semio/validation.json" is generated? 
-    if strings.Contains(path, "generated") { // risky
-        // return true
-    }
+	// "assets/semio/validation.json" is generated?
+	if strings.Contains(path, "generated") { // risky
+		// return true
+	}
 	return false
 }
 
 func IsSemanticallyIgnored(path string) bool {
-    base := filepath.Base(path)
-    if strings.HasPrefix(base, ".") && base != ".gitignore" && base != ".env" {
-        // Dotfiles generally ignored, except specific configs
-        return true
-    }
-    // "Currently some folders and files are just ignored (e.g. ... LICENSE.md files, json files, etc)."
-    // User wants these NOT ignored/excluded, but maybe marked Ignored=true?
-    // No, "Files kinds: ... license". Vscode has "codebase shortcuts" toggles.
-    // I think LICENSE.md should NOT be ignored.
-    // JSON files? Config.
-    // So what IS ignored?
-    // Maybe things like "dist", "build", "coverage", "__pycache__" if they show up (even if not gitignored).
-    if base == "dist" || base == "build" || base == "coverage" || base == "__pycache__" || base == "node_modules" {
-        return true
-    }
-    return false
+	base := filepath.Base(path)
+	if strings.HasPrefix(base, ".") && base != ".gitignore" && base != ".env" {
+		// Dotfiles generally ignored, except specific configs
+		return true
+	}
+	// "Currently some folders and files are just ignored (e.g. ... LICENSE.md files, json files, etc)."
+	// User wants these NOT ignored/excluded, but maybe marked Ignored=true?
+	// No, "Files kinds: ... license". Vscode has "codebase shortcuts" toggles.
+	// I think LICENSE.md should NOT be ignored.
+	// JSON files? Config.
+	// So what IS ignored?
+	// Maybe things like "dist", "build", "coverage", "__pycache__" if they show up (even if not gitignored).
+	if base == "dist" || base == "build" || base == "coverage" || base == "__pycache__" || base == "node_modules" {
+		return true
+	}
+	return false
 }
 
 func (f *File) GetID() string { return f.ID }
 
 type Section struct {
-	ID         string    `json:"id,omitempty"`
-	Name       string    `json:"name"`
-	Path       string    `json:"path,omitempty"`
-	FilePath   string    `json:"filePath,omitempty"`
-	StartLine  int       `json:"startLine"`
-	EndLine    int       `json:"endLine"`
-	StartIndex int       `json:"startIndex"`
-	EndIndex   int       `json:"endIndex"`
-	Children   []Section `json:"children,omitempty"`
+	ID          string       `json:"id,omitempty"`
+	Name        string       `json:"name"`
+	Path        string       `json:"path,omitempty"`
+	FilePath    string       `json:"filePath,omitempty"`
+	StartLine   int          `json:"startLine"`
+	EndLine     int          `json:"endLine"`
+	StartIndex  int          `json:"startIndex"`
+	EndIndex    int          `json:"endIndex"`
+	Children    []Section    `json:"children,omitempty"`
 	Definitions []Definition `json:"definitions,omitempty"`
 }
 
@@ -3714,7 +3742,8 @@ type Commit struct {
 	Date     time.Time `json:"date"`
 }
 
-func (c *Commit) IsNode()       {}
+func (c *Commit) IsNode() {}
+
 // #region Drafts
 
 type Draft struct {
@@ -3781,23 +3810,24 @@ func DeleteDraft(id string) error {
 func (c *Commit) GetID() string { return "@semio-repo/commit/" + c.SHA }
 
 type Ticket struct {
-	Year       int               `json:"-" yaml:"-"`
-	Month      int               `json:"-" yaml:"-"`
-	Day        int               `json:"-" yaml:"-"`
-	Slug       string            `json:"-" yaml:"-"`
-	Title      string            `json:"title" yaml:"title"`
-	Status     TicketStatus      `json:"status" yaml:"status"`
-	Prompt     string            `json:"prompt" yaml:"prompt"`
-	Summary    string            `json:"summary,omitempty" yaml:"summary,omitempty"`
-	GitHub     *TicketGithubData `json:"github,omitempty" yaml:"github,omitempty"`
-	Goal       string            `json:"goal,omitempty" yaml:"goal,omitempty"`
-	Parent     string            `json:"parent,omitempty" yaml:"parent,omitempty"`
-	Started    time.Time         `json:"started" yaml:"started"`
-	Finished   *time.Time        `json:"finished,omitempty" yaml:"finished,omitempty"`
-	Iterations []TicketIteration `json:"iterations" yaml:"iterations"`
-	FolderPath string            `json:"-" yaml:"-"`
-	JsonPath   string            `json:"-" yaml:"-"`
-	TicketPath string            `json:"-" yaml:"-"`
+	Year          int               `json:"-" yaml:"-"`
+	Month         int               `json:"-" yaml:"-"`
+	Day           int               `json:"-" yaml:"-"`
+	Slug          string            `json:"-" yaml:"-"`
+	Title         string            `json:"title" yaml:"title"`
+	Status        TicketStatus      `json:"status" yaml:"status"`
+	Prompt        string            `json:"prompt" yaml:"prompt"`
+	Summary       string            `json:"summary,omitempty" yaml:"summary,omitempty"`
+	GitHub        *TicketGithubData `json:"github,omitempty" yaml:"github,omitempty"`
+	Goal          string            `json:"goal,omitempty" yaml:"goal,omitempty"`
+	Parent        string            `json:"parent,omitempty" yaml:"parent,omitempty"`
+	Started       time.Time         `json:"started" yaml:"started"`
+	Finished      *time.Time        `json:"finished,omitempty" yaml:"finished,omitempty"`
+	Iterations    []TicketIteration `json:"iterations" yaml:"iterations"`
+	FolderPath    string            `json:"-" yaml:"-"`
+	JsonPath      string            `json:"-" yaml:"-"`
+	TicketPath    string            `json:"-" yaml:"-"`
+	ImportantPath string            `json:"-" yaml:"-"`
 }
 
 func (t *Ticket) IsNode() {}
@@ -4603,6 +4633,45 @@ type ContributorAddInput struct {
 	Github string   `json:"github"`
 	Name   *string  `json:"name,omitempty"`
 	Emails []string `json:"emails,omitempty"`
+}
+
+type FilterInput struct {
+	Filter         *string  `json:"filter,omitempty"`
+	Regex          *bool    `json:"regex,omitempty"`
+	MatchCase      *bool    `json:"matchCase,omitempty"`
+	MatchWholeWord *bool    `json:"matchWholeWord,omitempty"`
+	ShowIgnored    *bool    `json:"showIgnored,omitempty"`
+	ShowGenerated  *bool    `json:"showGenerated,omitempty"`
+	ExcludeKinds   []string `json:"excludeKinds,omitempty"`
+	IncludeKinds   []string `json:"includeKinds,omitempty"`
+}
+
+func (f *FilterInput) ToStreamOptions() StreamOptions {
+	if f == nil {
+		return StreamOptions{}
+	}
+	opts := StreamOptions{}
+	if f.Filter != nil {
+		opts.Filter = *f.Filter
+	}
+	if f.Regex != nil {
+		opts.Regex = *f.Regex
+	}
+	if f.MatchCase != nil {
+		opts.MatchCase = *f.MatchCase
+	}
+	if f.MatchWholeWord != nil {
+		opts.MatchWholeWord = *f.MatchWholeWord
+	}
+	if f.ShowIgnored != nil {
+		opts.ShowIgnored = *f.ShowIgnored
+	}
+	if f.ShowGenerated != nil {
+		opts.ShowGenerated = *f.ShowGenerated
+	}
+	opts.ExcludeKinds = f.ExcludeKinds
+	opts.IncludeKinds = f.IncludeKinds
+	return opts
 }
 
 // #endregion GraphQL Input Types
@@ -7411,11 +7480,11 @@ func ParseDefinitions(content string, filePath string) []Definition {
 	definitions := make([]Definition, len(ranges))
 	for i, r := range ranges {
 		definitions[i] = Definition{
-			Name:       r.Name,
-			Kind:       DefinitionKindFunction,
-			StartLine:  r.Start,
-			EndLine:    r.End,
-			FilePath:   filePath,
+			Name:      r.Name,
+			Kind:      DefinitionKindFunction,
+			StartLine: r.Start,
+			EndLine:   r.End,
+			FilePath:  filePath,
 		}
 	}
 	return definitions
@@ -7831,6 +7900,27 @@ func FindPolicy(id string) (PolicyDef, bool) {
 
 func GetPolicies() []PolicyDef {
 	return policies
+}
+
+func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOptions) error {
+	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
+	for _, p := range policies {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if !matchesFilter(p.ID, options) && !matchesFilter(p.Name, options) {
+				continue
+			}
+			out <- p
+		}
+	}
+	return nil
 }
 
 type PolicyContext struct {
@@ -9751,6 +9841,10 @@ func GetTicketFilePath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.md")
 }
 
+func GetImportantFilePath(year, month, day int, slug string) string {
+	return filepath.Join(GetTicketPath(year, month, day, slug), "important.md")
+}
+
 func GetTicketJsonPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.json")
 }
@@ -9863,6 +9957,7 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	ticket.FolderPath = newFolderPath
 	ticket.JsonPath = GetTicketJsonPath(ticket.Year, ticket.Month, ticket.Day, slug)
 	ticket.TicketPath = GetTicketFilePath(ticket.Year, ticket.Month, ticket.Day, slug)
+	ticket.ImportantPath = GetImportantFilePath(ticket.Year, ticket.Month, ticket.Day, slug)
 	return nil
 }
 
@@ -9899,6 +9994,7 @@ func CreateTicket(title, prompt, llm, ui, draft string, noIssue bool, goal strin
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
 
 	ticketFilePath := GetTicketFilePath(year, month, day, slug)
+	importantFilePath := GetImportantFilePath(year, month, day, slug)
 	gitAuthor := GetGitAuthorGithub()
 	gitCommit := GetGitCommit()
 
@@ -9924,20 +10020,25 @@ func CreateTicket(title, prompt, llm, ui, draft string, noIssue bool, goal strin
 		return nil, fmt.Errorf("failed to write ticket file: %w", err)
 	}
 
+	if err := WriteTextFile(importantFilePath, ""); err != nil {
+		return nil, fmt.Errorf("failed to write important file: %w", err)
+	}
+
 	ticket := &Ticket{
-		Year:       year,
-		Month:      month,
-		Day:        day,
-		Slug:       slug,
-		Title:      title,
-		Status:     TicketStatusOpen,
-		Prompt:     prompt,
-		Goal:       goal,
-		Parent:     parent,
-		Started:    now,
-		FolderPath: ticketDir,
-		JsonPath:   jsonPath,
-		TicketPath: ticketFilePath,
+		Year:          year,
+		Month:         month,
+		Day:           day,
+		Slug:          slug,
+		Title:         title,
+		Status:        TicketStatusOpen,
+		Prompt:        prompt,
+		Goal:          goal,
+		Parent:        parent,
+		Started:       now,
+		FolderPath:    ticketDir,
+		JsonPath:      jsonPath,
+		TicketPath:    ticketFilePath,
+		ImportantPath: importantFilePath,
 		Iterations: []TicketIteration{{
 			Prompt:  prompt,
 			LLM:     llmSlug,
@@ -10629,6 +10730,10 @@ func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions
 			continue
 		}
 
+		if !bundleMatchesKinds(b, options) {
+			continue
+		}
+
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -10637,6 +10742,60 @@ func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions
 		}
 	}
 	return nil
+}
+
+func bundleMatchesKinds(b Bundle, opts StreamOptions) bool {
+	if len(opts.IncludeKinds) == 0 && len(opts.ExcludeKinds) == 0 {
+		return true
+	}
+
+	bundleRoot := filepath.Join(rootDir, b.Root)
+	hasIncluded := false
+	hasExcluded := false
+
+	if len(opts.IncludeKinds) == 0 {
+		hasIncluded = true
+	}
+
+	filepath.Walk(bundleRoot, func(path string, info os.FileInfo, err error) error {
+		if err != nil || info.IsDir() {
+			return nil
+		}
+		if isRepoExcludedPath(path) || isGitIgnored(path) {
+			return nil
+		}
+
+		kind := DeriveFileKind(filepath.Base(path))
+
+		if len(opts.IncludeKinds) > 0 {
+			for _, k := range opts.IncludeKinds {
+				if k == kind {
+					hasIncluded = true
+				}
+			}
+		}
+
+		for _, k := range opts.ExcludeKinds {
+			if k == kind {
+				hasExcluded = true
+			}
+		}
+
+		if hasIncluded && (len(opts.ExcludeKinds) == 0 || hasExcluded) {
+			return filepath.SkipAll
+		}
+		return nil
+	})
+
+	if len(opts.IncludeKinds) > 0 && !hasIncluded {
+		return false
+	}
+
+	if len(opts.ExcludeKinds) > 0 && hasExcluded {
+		return false
+	}
+
+	return true
 }
 
 type StreamOptions struct {
@@ -10860,7 +11019,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 	if err != nil {
 		return err
 	}
-	
+
 	for _, filePath := range files {
 		ignored := isGitIgnored(filePath)
 		generated := IsGenerated(filePath)
@@ -10888,7 +11047,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 			id := b.GetID()
 			bundleID = &id
 		}
-		
+
 		folderPath := filepath.Dir(relPath)
 		var folderID *string
 		if folderPath != "." {
@@ -11309,6 +11468,19 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool)
 	if len(files) == 0 {
 		return fmt.Errorf("at least one file is required to finish a ticket")
 	}
+
+	// Validate important.md is empty
+	if FileExists(ticket.ImportantPath) {
+		importantContent, err := ReadTextFile(ticket.ImportantPath)
+		if err == nil && strings.TrimSpace(importantContent) != "" {
+			return fmt.Errorf("cannot finish ticket: %s is not empty. Please complete all compulsory actions", filepath.Base(ticket.ImportantPath))
+		}
+		// Delete important.md file after validation
+		if err := os.Remove(ticket.ImportantPath); err != nil {
+			fmt.Printf("Warning: Failed to delete %s: %v\n", filepath.Base(ticket.ImportantPath), err)
+		}
+	}
+
 	tickFilesResult, err := ComputeTicketFiles(ticket, files)
 	if err != nil {
 		return err
@@ -14188,9 +14360,9 @@ func (c *defaultContext) GoalDelete(input GoalDeleteInput) (bool, error) { retur
 
 func (c *defaultContext) TicketDelete(input TicketDeleteInput) (bool, error) { return false, nil }
 
-func (c *defaultContext) GetDrafts() ([]*Draft, error) { return []*Draft{}, nil }
+func (c *defaultContext) GetDrafts() ([]*Draft, error)                       { return []*Draft{}, nil }
 func (c *defaultContext) DraftCreate(input DraftCreateInput) (*Draft, error) { return nil, nil }
-func (c *defaultContext) DraftDelete(id string) (bool, error) { return false, nil }
+func (c *defaultContext) DraftDelete(id string) (bool, error)                { return false, nil }
 
 var _ RepoContext = (*defaultContext)(nil)
 
@@ -15505,6 +15677,80 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 
 	queryResolverInstance := &queryResolver{resolver}
 
+	fileKindEnum := graphql.NewEnum(graphql.EnumConfig{
+		Name: "FileKind",
+		Values: graphql.EnumValueConfigMap{
+			"CODE":     &graphql.EnumValueConfig{Value: FileKindCode},
+			"SCRIPT":   &graphql.EnumValueConfig{Value: FileKindScript},
+			"CONFIG":   &graphql.EnumValueConfig{Value: FileKindConfig},
+			"TEST":     &graphql.EnumValueConfig{Value: FileKindTest},
+			"DOCS":     &graphql.EnumValueConfig{Value: FileKindDocs},
+			"RESOURCE": &graphql.EnumValueConfig{Value: FileKindResource},
+			"LICENSE":  &graphql.EnumValueConfig{Value: FileKindLicense},
+		},
+	})
+
+	filterInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "FilterInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"filter":         &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"regex":          &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"matchCase":      &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"matchWholeWord": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"showIgnored":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"showGenerated":  &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"excludeKinds":   &graphql.InputObjectFieldConfig{Type: graphql.NewList(fileKindEnum)},
+			"includeKinds":   &graphql.InputObjectFieldConfig{Type: graphql.NewList(fileKindEnum)},
+		},
+	})
+
+	parseFilterInput := func(args map[string]interface{}) *FilterInput {
+		filterArg, ok := args["filter"]
+		if !ok || filterArg == nil {
+			return nil
+		}
+		filterMap, ok := filterArg.(map[string]interface{})
+		if !ok {
+			return nil
+		}
+		input := &FilterInput{}
+		if v, ok := filterMap["filter"].(string); ok {
+			input.Filter = &v
+		}
+		if v, ok := filterMap["regex"].(bool); ok {
+			input.Regex = &v
+		}
+		if v, ok := filterMap["matchCase"].(bool); ok {
+			input.MatchCase = &v
+		}
+		if v, ok := filterMap["matchWholeWord"].(bool); ok {
+			input.MatchWholeWord = &v
+		}
+		if v, ok := filterMap["showIgnored"].(bool); ok {
+			input.ShowIgnored = &v
+		}
+		if v, ok := filterMap["showGenerated"].(bool); ok {
+			input.ShowGenerated = &v
+		}
+		if v, ok := filterMap["excludeKinds"].([]interface{}); ok {
+			for _, k := range v {
+				if s, ok := k.(string); ok {
+					input.ExcludeKinds = append(input.ExcludeKinds, s)
+				}
+			}
+		}
+		if v, ok := filterMap["includeKinds"].([]interface{}); ok {
+			for _, k := range v {
+				if s, ok := k.(string); ok {
+					input.IncludeKinds = append(input.IncludeKinds, s)
+				}
+			}
+		}
+		return input
+	}
+	_ = filterInputType
+	_ = parseFilterInput
+
 	queryType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Query",
 		Fields: graphql.Fields{
@@ -15559,8 +15805,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			},
 			"bundles": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType))),
+				Args: graphql.FieldConfigArgument{
+					"filter": &graphql.ArgumentConfig{Type: filterInputType},
+				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					return queryResolverInstance.Bundles(p.Context)
+					filter := parseFilterInput(p.Args)
+					return queryResolverInstance.Bundles(p.Context, filter)
 				},
 			},
 			"folders": &graphql.Field{
@@ -15589,8 +15839,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			},
 			"contributors": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorType))),
+				Args: graphql.FieldConfigArgument{
+					"filter": &graphql.ArgumentConfig{Type: filterInputType},
+				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					return queryResolverInstance.Contributors(p.Context)
+					filter := parseFilterInput(p.Args)
+					return queryResolverInstance.Contributors(p.Context, filter)
 				},
 			},
 			"tickets": &graphql.Field{
@@ -15600,6 +15854,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					"month":  &graphql.ArgumentConfig{Type: graphql.Int},
 					"day":    &graphql.ArgumentConfig{Type: graphql.Int},
 					"status": &graphql.ArgumentConfig{Type: ticketStatusEnum},
+					"filter": &graphql.ArgumentConfig{Type: filterInputType},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					var year, month, day *int
@@ -15616,7 +15871,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := p.Args["status"].(TicketStatus); ok {
 						status = &s
 					}
-					return queryResolverInstance.Tickets(p.Context, year, month, day, status)
+					filter := parseFilterInput(p.Args)
+					return queryResolverInstance.Tickets(p.Context, year, month, day, status, filter)
 				},
 			},
 			"drafts": &graphql.Field{
@@ -15627,8 +15883,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			},
 			"policies": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(policyType))),
+				Args: graphql.FieldConfigArgument{
+					"filter": &graphql.ArgumentConfig{Type: filterInputType},
+				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					return queryResolverInstance.Policies(p.Context)
+					filter := parseFilterInput(p.Args)
+					return queryResolverInstance.Policies(p.Context, filter)
 				},
 			},
 			"violationKinds": &graphql.Field{
@@ -16170,10 +16430,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					inputMap := p.Args["input"].(map[string]interface{})
 					input := TicketChangeInput{
-						Year:   inputMap["year"].(int),
-						Month:  inputMap["month"].(int),
-						Day:    inputMap["day"].(int),
-						Slug:   inputMap["slug"].(string),
+						Year:  inputMap["year"].(int),
+						Month: inputMap["month"].(int),
+						Day:   inputMap["day"].(int),
+						Slug:  inputMap["slug"].(string),
 					}
 					if s, ok := inputMap["title"].(string); ok {
 						input.Title = &s
@@ -16464,9 +16724,17 @@ func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	}, nil
 }
 
-func (r *queryResolver) Bundles(ctx context.Context) ([]*Bundle, error) {
+func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetBundles(), nil
+		opts := filter.ToStreamOptions()
+		bundleChan := make(chan Bundle)
+		go StreamBundles(ctx, bundleChan, opts)
+		var bundles []*Bundle
+		for b := range bundleChan {
+			bCopy := b
+			bundles = append(bundles, &bCopy)
+		}
+		return bundles, nil
 	}
 	return []*Bundle{}, nil
 }
@@ -16499,23 +16767,55 @@ func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) 
 	return []*Definition{}, nil
 }
 
-func (r *queryResolver) Contributors(ctx context.Context) ([]*Contributor, error) {
+func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetContributors()
+		opts := filter.ToStreamOptions()
+		contributorChan := make(chan Contributor)
+		go StreamContributors(ctx, contributorChan, opts)
+		var contributors []*Contributor
+		for c := range contributorChan {
+			cCopy := c
+			contributors = append(contributors, &cCopy)
+		}
+		return contributors, nil
 	}
 	return []*Contributor{}, nil
 }
 
-func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus) ([]*Ticket, error) {
+func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetTickets(year, month, day, status)
+		opts := filter.ToStreamOptions()
+		ticketChan := make(chan Ticket)
+		go StreamTickets(ctx, year, month, day, ticketChan, opts)
+		var tickets []*Ticket
+		for t := range ticketChan {
+			tCopy := t
+			if status != nil && tCopy.Status != *status {
+				continue
+			}
+			tickets = append(tickets, &tCopy)
+		}
+		return tickets, nil
 	}
 	return []*Ticket{}, nil
 }
 
-func (r *queryResolver) Policies(ctx context.Context) ([]*Policy, error) {
+func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetPolicies(), nil
+		opts := filter.ToStreamOptions()
+		policyChan := make(chan PolicyDef)
+		go StreamPolicies(ctx, policyChan, opts)
+		var policies []*Policy
+		for p := range policyChan {
+			desc := p.Description
+			policies = append(policies, &Policy{
+				ID:          p.ID,
+				Name:        p.Name,
+				Description: &desc,
+				Scopes:      p.Scopes,
+			})
+		}
+		return policies, nil
 	}
 	return []*Policy{}, nil
 }
@@ -16917,9 +17217,17 @@ func (r *Resolver) Repo_() RepoResolver {
 	return &repoResolver{r}
 }
 
-func (r *repoResolver) Bundles(ctx context.Context, obj *Repo) ([]*Bundle, error) {
+func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetBundles(), nil
+		opts := filter.ToStreamOptions()
+		bundleChan := make(chan Bundle)
+		go StreamBundles(ctx, bundleChan, opts)
+		var bundles []*Bundle
+		for b := range bundleChan {
+			bCopy := b
+			bundles = append(bundles, &bCopy)
+		}
+		return bundles, nil
 	}
 	return []*Bundle{}, nil
 }
@@ -16952,23 +17260,55 @@ func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definitio
 	return []*Definition{}, nil
 }
 
-func (r *repoResolver) Contributors(ctx context.Context, obj *Repo) ([]*Contributor, error) {
+func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetContributors()
+		opts := filter.ToStreamOptions()
+		contributorChan := make(chan Contributor)
+		go StreamContributors(ctx, contributorChan, opts)
+		var contributors []*Contributor
+		for c := range contributorChan {
+			cCopy := c
+			contributors = append(contributors, &cCopy)
+		}
+		return contributors, nil
 	}
 	return []*Contributor{}, nil
 }
 
-func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus) ([]*Ticket, error) {
+func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetTickets(year, month, day, status)
+		opts := filter.ToStreamOptions()
+		ticketChan := make(chan Ticket)
+		go StreamTickets(ctx, year, month, day, ticketChan, opts)
+		var tickets []*Ticket
+		for t := range ticketChan {
+			tCopy := t
+			if status != nil && tCopy.Status != *status {
+				continue
+			}
+			tickets = append(tickets, &tCopy)
+		}
+		return tickets, nil
 	}
 	return []*Ticket{}, nil
 }
 
-func (r *repoResolver) Policies(ctx context.Context, obj *Repo) ([]*Policy, error) {
+func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetPolicies(), nil
+		opts := filter.ToStreamOptions()
+		policyChan := make(chan PolicyDef)
+		go StreamPolicies(ctx, policyChan, opts)
+		var policies []*Policy
+		for p := range policyChan {
+			desc := p.Description
+			policies = append(policies, &Policy{
+				ID:          p.ID,
+				Name:        p.Name,
+				Description: &desc,
+				Scopes:      p.Scopes,
+			})
+		}
+		return policies, nil
 	}
 	return []*Policy{}, nil
 }
@@ -16998,12 +17338,12 @@ func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string)
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (Node, error)
 	Repo(ctx context.Context) (*Repo, error)
-	Bundles(ctx context.Context) ([]*Bundle, error)
+	Bundles(ctx context.Context, filter *FilterInput) ([]*Bundle, error)
 	Folders(ctx context.Context) ([]*Folder, error)
 	Files(ctx context.Context) ([]*File, error)
-	Contributors(ctx context.Context) ([]*Contributor, error)
-	Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus) ([]*Ticket, error)
-	Policies(ctx context.Context) ([]*Policy, error)
+	Contributors(ctx context.Context, filter *FilterInput) ([]*Contributor, error)
+	Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error)
+	Policies(ctx context.Context, filter *FilterInput) ([]*Policy, error)
 	ViolationKinds(ctx context.Context) ([]*ViolationKindMeta, error)
 	Violations(ctx context.Context, scope *string) ([]*Violation, error)
 	Bundle(ctx context.Context, name string) (*Bundle, error)
@@ -17038,12 +17378,12 @@ type MutationResolver interface {
 }
 
 type RepoResolver interface {
-	Bundles(ctx context.Context, obj *Repo) ([]*Bundle, error)
+	Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error)
 	Folders(ctx context.Context, obj *Repo) ([]*Folder, error)
 	Files(ctx context.Context, obj *Repo) ([]*File, error)
-	Contributors(ctx context.Context, obj *Repo) ([]*Contributor, error)
-	Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus) ([]*Ticket, error)
-	Policies(ctx context.Context, obj *Repo) ([]*Policy, error)
+	Contributors(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Contributor, error)
+	Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error)
+	Policies(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Policy, error)
 	ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error)
 	Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error)
 }
@@ -19347,6 +19687,32 @@ func ListContributors() ([]Contributor, error) {
 	return result, nil
 }
 
+func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...StreamOptions) error {
+	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
+	contributors, err := ListContributors()
+	if err != nil {
+		return err
+	}
+
+	for _, c := range contributors {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if !matchesFilter(c.Github, options) && !matchesFilter(c.Name, options) {
+				continue
+			}
+			out <- c
+		}
+	}
+	return nil
+}
+
 func GetContributorAvatarPath(github string) string {
 	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar.png")
 }
@@ -20241,6 +20607,32 @@ func ListGoals() ([]*Goal, error) {
 		return nil
 	})
 	return goals, err
+}
+
+func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) error {
+	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
+	goals, err := ListGoals()
+	if err != nil {
+		return err
+	}
+
+	for _, g := range goals {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if !matchesFilter(g.ID, options) && !matchesFilter(g.Title, options) {
+				continue
+			}
+			out <- g
+		}
+	}
+	return nil
 }
 
 func SaveGoal(goal Goal) error {

@@ -38,12 +38,13 @@ interface Node {
 type Query {
   node(id: ID!): Node
   repo: Repo!
-  bundles: [Bundle!]!
-  folders: [Folder!]!
-  files: [File!]!
-  contributors: [Contributor!]!
-  tickets(year: Int, month: Int, day: Int, status: TicketStatus): [Ticket!]!
-  policies: [Policy!]!
+  bundles(filter: FilterInput): [Bundle!]!
+  folders(filter: FilterInput): [Folder!]!
+  files(filter: FilterInput): [File!]!
+  contributors(filter: FilterInput): [Contributor!]!
+  tickets(year: Int, month: Int, day: Int, status: TicketStatus, filter: FilterInput): [Ticket!]!
+  goals(filter: FilterInput): [Goal!]!
+  policies(filter: FilterInput): [Policy!]!
   violationKinds: [ViolationKind!]!
   violations(scope: String): [Violation!]!
   bundle(name: String!): Bundle
@@ -135,6 +136,27 @@ input ContributorAddInput {
   emails: [String!]
 }
 
+input FilterInput {
+  filter: String
+  regex: Boolean
+  matchCase: Boolean
+  matchWholeWord: Boolean
+  showIgnored: Boolean
+  showGenerated: Boolean
+  excludeKinds: [FileKind!]
+  includeKinds: [FileKind!]
+}
+
+enum FileKind {
+  CODE
+  SCRIPT
+  CONFIG
+  TEST
+  DOCS
+  RESOURCE
+  LICENSE
+}
+
 # #endregion Inputs
 
 # #region Types
@@ -143,15 +165,15 @@ type Repo implements Node {
   id: ID!
   name: String!
   path: String!
-  bundles: [Bundle!]!
-  folders: [Folder!]!
-  files: [File!]!
+  bundles(filter: FilterInput): [Bundle!]!
+  folders(filter: FilterInput): [Folder!]!
+  files(filter: FilterInput): [File!]!
   sections: [Section!]!
   definitions: [Definition!]!
-  contributors: [Contributor!]!
-  goals: [Goal!]!
-  tickets(year: Int, month: Int, day: Int, status: TicketStatus): [Ticket!]!
-  policies: [Policy!]!
+  contributors(filter: FilterInput): [Contributor!]!
+  goals(filter: FilterInput): [Goal!]!
+  tickets(year: Int, month: Int, day: Int, status: TicketStatus, filter: FilterInput): [Ticket!]!
+  policies(filter: FilterInput): [Policy!]!
   violationKinds: [ViolationKind!]!
   violations(scope: String): [Violation!]!
 }

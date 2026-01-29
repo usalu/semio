@@ -1550,25 +1550,28 @@ let globalMatchCase = false;
 let globalMatchWholeWord = false;
 let globalUseRegex = false;
 
-function matchesSearchText(text: string): boolean {
-  if (!globalSearchQuery) return true;
+function matchesSearchText(text: string, query: string = ""): boolean {
+  // Use passed query or global fallback (from filter provider if initialized)
+  const currentQuery = query || (filterProvider ? filterProvider.globalSearchQuery : "");
+  if (!currentQuery) return true;
+
   try {
     if (globalUseRegex) {
       const flags = globalMatchCase ? "" : "i";
-      const pattern = globalMatchWholeWord ? `\\b${globalSearchQuery}\\b` : globalSearchQuery;
+      const pattern = globalMatchWholeWord ? `\\b${currentQuery}\\b` : currentQuery;
       const regex = new RegExp(pattern, flags);
       return regex.test(text);
     } else {
-      const query = globalMatchCase ? globalSearchQuery : globalSearchQuery.toLowerCase();
+      const q = globalMatchCase ? currentQuery : currentQuery.toLowerCase();
       const target = globalMatchCase ? text : text.toLowerCase();
       if (globalMatchWholeWord) {
-        const wordRegex = new RegExp(`\\b${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, globalMatchCase ? "" : "i");
+        const wordRegex = new RegExp(`\\b${q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, globalMatchCase ? "" : "i");
         return wordRegex.test(text);
       }
-      return target.includes(query);
+      return target.includes(q);
     }
   } catch {
-    return text.toLowerCase().includes(globalSearchQuery.toLowerCase());
+    return text.toLowerCase().includes(currentQuery.toLowerCase());
   }
 }
 
@@ -1589,6 +1592,9 @@ class SearchViewProvider implements vscode.WebviewViewProvider {
           globalMatchCase = data.matchCase;
           globalMatchWholeWord = data.matchWholeWord;
           globalUseRegex = data.useRegex;
+          if (filterProvider) {
+            filterProvider.setSearchQuery(data.query, data.matchCase, data.matchWholeWord, data.useRegex);
+          }
           ticketsProvider.refresh();
           policiesProvider.refresh();
           contributorsProvider.refresh();
@@ -2703,6 +2709,216 @@ type CodebaseTreeItem =
   | CodebaseSectionItem
   | CodebaseDefinitionItem;
 
+type FileKind = "code" | "script" | "config" | "test" | "docs" | "resource" | "license";
+
+interface CodebaseFilter {
+  code: boolean;
+  script: boolean;
+  config: boolean;
+  test: boolean;
+  docs: boolean;
+  resource: boolean;
+  license: boolean;
+}
+
+const DEFAULT_FILTER: CodebaseFilter = {
+  code: true,
+  script: true,
+  config: true,
+  test: true,
+  docs: true,
+  resource: true,
+  license: true,
+};
+
+const FILTER_EXTENSIONS: Record<FileKind, Set<string>> = {
+  code: new Set(["ts", "js", "py", "cs", "go", "rs", "tsx", "jsx", "c", "cpp", "h", "hpp", "java", "kt", "swift", "php", "rb", "pl"]),
+  script: new Set(["sh", "ps1", "bat", "cmd", "bash", "zsh"]),
+  config: new Set([
+    "json",
+    "yaml",
+    "yml",
+    "toml",
+    "xml",
+    "ini",
+    "env",
+    "conf",
+    "config",
+    "properties",
+    "gitignore",
+    "dockerignore",
+    "editorconfig",
+    "prettierrc",
+    "eslintrc",
+  ]),
+  test: new Set([]),
+  docs: new Set(["md", "txt", "rst", "adoc", "html", "css", "scss", "less"]),
+  resource: new Set([
+    "png",
+    "jpg",
+    "jpeg",
+    "gif",
+    "svg",
+    "ico",
+    "webp",
+    "mp4",
+    "webm",
+    "mp3",
+    "wav",
+    "ogg",
+    "glb",
+    "gltf",
+    "fbx",
+    "obj",
+    "stl",
+    "ply",
+    "dae",
+    "3ds",
+    "3mf",
+    "usdz",
+    "vrm",
+    "ifc",
+    "pdf",
+    "zip",
+    "tar",
+    "gz",
+  ]),
+  license: new Set([]),
+};
+
+type FilterItemType = "kind" | "action";
+
+class FilterItem extends vscode.TreeItem {
+  constructor(
+    public readonly label: string,
+    public readonly itemType: FilterItemType,
+    public readonly kind?: keyof CodebaseFilter,
+    public readonly enabled?: boolean,
+    public readonly action?: string
+  ) {
+    super(label, vscode.TreeItemCollapsibleState.None);
+    if (itemType === "kind" && kind !== undefined) {
+      this.contextValue = "filterItem";
+      this.iconPath = new vscode.ThemeIcon(enabled ? "check" : "circle-large-outline");
+      this.command = {
+        command: "semio.toggleFilter",
+        title: "Toggle Filter",
+        arguments: [kind],
+      };
+    } else if (itemType === "action" && action) {
+      this.contextValue = "filterAction";
+      this.iconPath = new vscode.ThemeIcon("symbol-event");
+      this.command = {
+        command: "semio.filterAction",
+        title: action,
+        arguments: [action],
+      };
+    }
+  }
+}
+
+class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<FilterItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+
+  public globalSearchQuery: string = "";
+  public globalMatchCase: boolean = false;
+  public globalMatchWholeWord: boolean = false;
+  public globalUseRegex: boolean = false;
+
+  private filters: CodebaseFilter = { ...DEFAULT_FILTER };
+
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  setSearchQuery(query: string, matchCase: boolean = false, matchWholeWord: boolean = false, useRegex: boolean = false): void {
+    this.globalSearchQuery = query;
+    this.globalMatchCase = matchCase;
+    this.globalMatchWholeWord = matchWholeWord;
+    this.globalUseRegex = useRegex;
+    if (codebaseProvider) codebaseProvider.refresh();
+    ticketsProvider.refresh();
+    contributorsProvider.refresh();
+    policiesProvider.refresh();
+    commandsProvider.refresh();
+  }
+
+  toggle(kind: keyof CodebaseFilter): void {
+    this.filters[kind] = !this.filters[kind];
+    this.refresh();
+    if (codebaseProvider) {
+      codebaseProvider.refresh();
+    }
+  }
+
+  showAll(): void {
+    this.filters = { code: true, script: true, config: true, test: true, docs: true, resource: true, license: true };
+    this.refresh();
+    if (codebaseProvider) codebaseProvider.refresh();
+  }
+
+  showNone(): void {
+    this.filters = { code: false, script: false, config: false, test: false, docs: false, resource: false, license: false };
+    this.refresh();
+    if (codebaseProvider) codebaseProvider.refresh();
+  }
+
+  showDefault(): void {
+    this.filters = { ...DEFAULT_FILTER };
+    this.refresh();
+    if (codebaseProvider) codebaseProvider.refresh();
+  }
+
+  getFilters(): CodebaseFilter {
+    return this.filters;
+  }
+
+  getIncludeKinds(): FileKind[] {
+    return (Object.keys(this.filters) as FileKind[]).filter(k => this.filters[k]);
+  }
+
+  getExcludeKinds(): FileKind[] {
+    return (Object.keys(this.filters) as FileKind[]).filter(k => !this.filters[k]);
+  }
+
+  getTreeItem(element: FilterItem): vscode.TreeItem {
+    return element;
+  }
+
+  getChildren(element?: FilterItem): FilterItem[] {
+    if (element) return [];
+    return [
+      new FilterItem("Show All", "action", undefined, undefined, "showAll"),
+      new FilterItem("Show None", "action", undefined, undefined, "showNone"),
+      new FilterItem("Show Default", "action", undefined, undefined, "showDefault"),
+      new FilterItem("Code", "kind", "code", this.filters.code),
+      new FilterItem("Script", "kind", "script", this.filters.script),
+      new FilterItem("Config", "kind", "config", this.filters.config),
+      new FilterItem("Test", "kind", "test", this.filters.test),
+      new FilterItem("Docs", "kind", "docs", this.filters.docs),
+      new FilterItem("Resource", "kind", "resource", this.filters.resource),
+      new FilterItem("License", "kind", "license", this.filters.license),
+    ];
+  }
+
+  shouldInclude(filename: string): boolean {
+    if (this.globalSearchQuery && !matchesSearchText(filename, this.globalSearchQuery)) return false;
+
+    if (filename.startsWith(".")) return this.filters.config;
+    const ext = path.extname(filename).toLowerCase().replace(".", "");
+    if (!ext) return this.filters.config;
+
+    if (FILTER_EXTENSIONS.code.has(ext)) return this.filters.code;
+    if (FILTER_EXTENSIONS.script.has(ext)) return this.filters.script;
+    if (FILTER_EXTENSIONS.config.has(ext)) return this.filters.config;
+    if (FILTER_EXTENSIONS.docs.has(ext)) return this.filters.docs;
+    if (FILTER_EXTENSIONS.resource.has(ext)) return this.filters.resource;
+
+    return true;
+  }
+}
+
 class CodebaseRepoItem extends vscode.TreeItem {
   constructor(public readonly treeChildren: TreeNodeMap) {
     super("@semio", vscode.TreeItemCollapsibleState.Expanded);
@@ -2864,6 +3080,7 @@ class CodebaseProvider implements vscode.TreeDataProvider<CodebaseTreeItem> {
     }
 
     for (const file of content.files) {
+      if (filterProvider && !filterProvider.shouldInclude(file.name)) continue;
       const fileObj: CodebaseFile = {
         id: file.path,
         path: file.path,
@@ -3153,7 +3370,7 @@ class CodebaseDragAndDropController implements vscode.TreeDragAndDropController<
       const sourcePath = source.file.path;
       const targetFile = target.file.path;
       const targetSectionName = target.section.name;
-      
+
       try {
         log(`[CodebaseDragAndDrop] Integrating ${sourcePath} into ${targetFile} section ${targetSectionName}`);
         await executeGraphQL(`
@@ -3180,7 +3397,7 @@ class CodebaseDragAndDropController implements vscode.TreeDragAndDropController<
     if (source instanceof CodebaseSectionItem && (target instanceof CodebaseFolderItem || target instanceof CodebaseBundleItem)) {
       const sourceFile = source.file.path;
       const sourceSection = source.section.name;
-      
+
       let targetDir = "";
       if (target instanceof CodebaseFolderItem) targetDir = target.folderPath;
       if (target instanceof CodebaseBundleItem) targetDir = target.bundle.root;
@@ -3209,9 +3426,9 @@ class CodebaseDragAndDropController implements vscode.TreeDragAndDropController<
             }
           }
         `, {
-            sourceFile: sourceFile,
-            sourceSection: sourceSection,
-            targetFile: targetFile
+          sourceFile: sourceFile,
+          sourceSection: sourceSection,
+          targetFile: targetFile
         });
         vscode.window.showInformationMessage(`Extracted ${sourceSection} to ${filename}`);
         codebaseProvider.refresh();
@@ -3230,11 +3447,12 @@ let policiesProvider: PoliciesProvider;
 let commandsProvider: CommandsProvider;
 let sectionsProvider: SectionsProvider;
 let codebaseProvider: CodebaseProvider;
+let filterProvider: FilterProvider;
 
 function registerSidebarViews(context: vscode.ExtensionContext): void {
   try {
     log("[registerSidebarViews] Initializing providers...");
-    const searchProvider = new SearchViewProvider(context.extensionUri);
+    filterProvider = new FilterProvider();
     ticketsProvider = new TicketsProvider();
     contributorsProvider = new ContributorsProvider();
     policiesProvider = new PoliciesProvider();
@@ -3242,8 +3460,8 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     sectionsProvider = new SectionsProvider();
     codebaseProvider = new CodebaseProvider();
 
-    log("[registerSidebarViews] Registering semio.search (Webview)...");
-    context.subscriptions.push(vscode.window.registerWebviewViewProvider(SearchViewProvider.viewType, searchProvider));
+    log("[registerSidebarViews] Registering semio.filter tree view...");
+    context.subscriptions.push(vscode.window.createTreeView("semio.filter", { treeDataProvider: filterProvider }));
 
     log("[registerSidebarViews] Creating semio.codebase tree view...");
     context.subscriptions.push(vscode.window.createTreeView("semio.codebase", { treeDataProvider: codebaseProvider, showCollapseAll: true, dragAndDropController: new CodebaseDragAndDropController() }));
@@ -3434,6 +3652,23 @@ async function pickTicketGql(): Promise<string | undefined> {
 
 function registerCommands(context: vscode.ExtensionContext): void {
   context.subscriptions.push(
+    vscode.commands.registerCommand("semio.toggleFilter", (kind: keyof CodebaseFilter) => {
+      if (filterProvider) filterProvider.toggle(kind);
+    }),
+    vscode.commands.registerCommand("semio.filterAction", (action: string) => {
+      if (!filterProvider) return;
+      switch (action) {
+        case "showAll":
+          filterProvider.showAll();
+          break;
+        case "showNone":
+          filterProvider.showNone();
+          break;
+        case "showDefault":
+          filterProvider.showDefault();
+          break;
+      }
+    }),
     vscode.commands.registerCommand("semio.toggleTicketFilter", () => ticketsProvider.toggleFilter()),
     vscode.commands.registerCommand("semio.openTicket", async (ticket: TicketData | ContributorTicketData | { ticket: TicketData | ContributorTicketData }) => {
       const resolvedTicket = resolveTicketData(ticket);

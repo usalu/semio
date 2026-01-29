@@ -661,6 +661,29 @@ npx tsx repo.tsx <command> [subcommand] [options]
 - `file.tsx#Region` - Section scope
 - `file.tsx§Function` - Definition scope
 
+**Universal Filtering:**
+
+All `list` and `tree` commands support filtering flags:
+
+- `--filter <string>` - Filter by ID/name pattern
+- `--regex` - Treat filter as regex
+- `--match-case` - Case-sensitive matching
+- `--match-whole-word` - Match whole words only
+- `--show-ignored` - Include gitignored items
+- `--show-generated` - Include generated items
+
+File kind filters (apply to all commands):
+
+- `--no-code` / `--only-code` - Code files (.ts, .js, .py, .go, etc.)
+- `--no-script` / `--only-script` - Script files (.sh, .ps1, .bat)
+- `--no-config` / `--only-config` - Config files (.json, .yaml, .toml)
+- `--no-test` / `--only-test` - Test files
+- `--no-docs` / `--only-docs` - Documentation files (.md, .txt)
+- `--no-resource` / `--only-resource` - Resource files (.png, .svg, .glb)
+- `--no-license` / `--only-license` - License files
+
+Kind filters work on non-file commands by checking associated files (e.g., `--only-code` on bundles shows bundles containing code files).
+
 **Output:**
 
 All commands output JSON with structure:
