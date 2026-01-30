@@ -1,5 +1,0 @@
-- [x] Update `GetGitAuthorGithub` to support name-based and email-based fallback lookups.
-- [x] Update `CreateTicket` to validate LLM model names against an allowed list and normalize string format.
-- [x] Simplify `Range` struct to use flat `Start`/`End` integer line numbers.
-- [x] Update GraphQL schema to reflect `Range` changes.
-- [x] Fix integration tests in `repo_test.go` to match the new schema structure.

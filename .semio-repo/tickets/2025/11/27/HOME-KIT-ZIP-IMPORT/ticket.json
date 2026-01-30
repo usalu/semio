@@ -1,12 +1,19 @@
 {
   "title": "Support drag and drop of zip files in home app to import kits",
-  "prompt": "Support drag and drop of zip files in home app to import kits",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.730Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Support drag and drop of zip files in home app to import kits",
+  "started": "2025-12-16T17:06:07.730Z",
+  "iterations": [
+    {
+      "prompt": "Support drag and drop of zip files in home app to import kits",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.730Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

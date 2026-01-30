@@ -1,12 +1,19 @@
 {
   "title": "Fix VS Code extension linting and test setup",
-  "prompt": "Fix VS Code extension linting and test setup",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.722Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix VS Code extension linting and test setup",
+  "started": "2025-12-16T17:06:07.722Z",
+  "iterations": [
+    {
+      "prompt": "Fix VS Code extension linting and test setup",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.722Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

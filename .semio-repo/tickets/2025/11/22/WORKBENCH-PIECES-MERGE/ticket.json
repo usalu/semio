@@ -1,12 +1,19 @@
 {
   "title": "Merge design app workbench sections into single pieces section",
-  "prompt": "Merge design app workbench sections into single pieces section",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.705Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Merge design app workbench sections into single pieces section",
+  "started": "2025-12-16T17:06:07.705Z",
+  "iterations": [
+    {
+      "prompt": "Merge design app workbench sections into single pieces section",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.705Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

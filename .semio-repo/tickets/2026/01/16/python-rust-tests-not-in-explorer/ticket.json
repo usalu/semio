@@ -1,0 +1,19 @@
+{
+  "title": "Python Rust Tests Not In Explorer",
+  "status": "finished",
+  "prompt": "Migrated from legacy files",
+  "started": "2026-01-29T19:44:04.192458Z",
+  "iterations": [
+    {
+      "prompt": "Migrated from legacy files",
+      "llm": null,
+      "ui": null,
+      "author": {
+        "name": "Migration Script",
+        "email": null
+      },
+      "started": "2026-01-29T19:44:04.192458Z",
+      "commit": null
+    }
+  ]
+}

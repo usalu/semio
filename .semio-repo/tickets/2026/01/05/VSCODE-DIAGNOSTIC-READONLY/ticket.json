@@ -1,12 +1,19 @@
 {
   "title": "VSCODE-DIAGNOSTIC-READONLY",
-  "prompt": "Fix VSCode diagnostics opening files as read-only preview instead of editable files when clicking on semio violation diagnostics.",
-  "llm": "opus-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2026-01-05T11:12:30Z"
-  },
-  "commit": "393dfeadd9c012eb01d37dad9cd10065832c6c1c",
-  "summary": "Migrated ticket"
+  "prompt": "Fix VSCode diagnostics opening files as read-only preview instead of editable files when clicking on semio violation diagnostics.",
+  "started": "2026-01-05T11:12:30Z",
+  "iterations": [
+    {
+      "prompt": "Fix VSCode diagnostics opening files as read-only preview instead of editable files when clicking on semio violation diagnostics.",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2026-01-05T11:12:30Z",
+      "commit": "393dfeadd9c012eb01d37dad9cd10065832c6c1c"
+    }
+  ]
 }

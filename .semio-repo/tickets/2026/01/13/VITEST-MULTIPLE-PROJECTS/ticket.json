@@ -1,14 +1,21 @@
 {
   "title": "vitest-multiple-projects",
-  "prompt": "Investigate Vitest multiple projects warning and suggest solutions",
-  "llm": "opus-4-5",
   "status": "closed",
-  "author": "Ueli Saluz",
-  "dates": {
-    "created": "2026-01-12T23:10:17Z",
-    "finished": "2026-01-12T23:13:02Z"
-  },
-  "commit": "3dd947fa6070f83e97789aa59d612cd61e1d3902",
-  "summary": "Investigated Vitest multiple projects warning. Found 6 configs but only 2 have tests. Recommended creating vitest.workspace.ts for monorepo setup.",
-  "files": {}
+  "prompt": "Investigate Vitest multiple projects warning and suggest solutions",
+  "started": "2026-01-12T23:10:17Z",
+  "iterations": [
+    {
+      "prompt": "Investigate Vitest multiple projects warning and suggest solutions",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "Ueli Saluz",
+        "email": null
+      },
+      "started": "2026-01-12T23:10:17Z",
+      "commit": "3dd947fa6070f83e97789aa59d612cd61e1d3902",
+      "finished": "2026-01-12T23:13:02Z"
+    }
+  ],
+  "finished": "2026-01-12T23:13:02Z"
 }

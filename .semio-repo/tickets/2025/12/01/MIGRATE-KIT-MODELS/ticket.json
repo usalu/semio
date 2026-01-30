@@ -1,12 +1,19 @@
 {
   "title": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
-  "prompt": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.794Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
+  "started": "2025-12-16T17:06:07.794Z",
+  "iterations": [
+    {
+      "prompt": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.794Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

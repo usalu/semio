@@ -1,1 +1,0 @@
-Implemented CONTINUE/NOTICKET keyword handling in repo ticket open flows, added MCP argument support, and covered behavior with tests. Updated README.md and AGENTS.md to document the new keywords in ticket workflows and codebase notes.

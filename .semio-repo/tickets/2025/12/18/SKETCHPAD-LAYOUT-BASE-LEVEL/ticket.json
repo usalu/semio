@@ -1,13 +1,21 @@
 {
   "title": "Wrap global Sketchpad layout in base LevelProvider",
-  "prompt": "Make sure the global sketchpad has layout base context provider. Currently e.g. navbar and footer are transparent.",
-  "llm": "gpt-5.2-codex",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-18T16:15:40.759Z",
-    "finished": "2025-12-18T16:18:19.098Z"
-  },
-  "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
-  "summary": "Migrated ticket"
+  "prompt": "Make sure the global sketchpad has layout base context provider. Currently e.g. navbar and footer are transparent.",
+  "started": "2025-12-18T16:15:40.759Z",
+  "iterations": [
+    {
+      "prompt": "Make sure the global sketchpad has layout base context provider. Currently e.g. navbar and footer are transparent.",
+      "llm": "gpt-5.2-codex",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-18T16:15:40.759Z",
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
+      "finished": "2025-12-18T16:18:19.098Z"
+    }
+  ],
+  "finished": "2025-12-18T16:18:19.098Z"
 }

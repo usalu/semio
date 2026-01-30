@@ -21,3 +21,6 @@
 
 Refactored the `CodebaseProvider` in the VS Code extension to correctly sort sections and definitions by their appearance in the source code (using start lines).
 Also improved the hierarchy logic to ensuring definitions are nested under their specific sections and not duplicated in parent sections, and that sections containing definitions are collapsible.
+
+
+Refactored CodebaseProvider to sort sections/definitions by line and nesting.

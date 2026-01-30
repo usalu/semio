@@ -1,12 +1,19 @@
 {
   "title": "\"Finish the UI state machine with proper states, guards, menus, and context\"",
-  "prompt": "\"Finish the UI state machine with proper states, guards, menus, and context\"",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.891Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "\"Finish the UI state machine with proper states, guards, menus, and context\"",
+  "started": "2025-12-16T17:06:07.891Z",
+  "iterations": [
+    {
+      "prompt": "\"Finish the UI state machine with proper states, guards, menus, and context\"",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.891Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

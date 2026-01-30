@@ -1,12 +1,19 @@
 {
   "title": "Remove transaction props from elements",
-  "prompt": "Remove transaction props from elements",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.920Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Remove transaction props from elements",
+  "started": "2025-12-16T17:06:07.920Z",
+  "iterations": [
+    {
+      "prompt": "Remove transaction props from elements",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.920Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

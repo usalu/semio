@@ -1,12 +1,19 @@
 {
   "title": "STATE-MANAGEMENT-REFACTOR",
-  "prompt": "\"Implement state management refactor plan: fix hasInitialized patterns, remove duplicate handlers, replace useKit() overfetch with narrow hooks, fix effect dependencies, remove window module cache patterns\"",
-  "llm": "opus-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-22T17:54:18.735Z"
-  },
-  "commit": "3ffb517e8f38727f82f28fe79563bf3d4c7c50d3",
-  "summary": "Migrated ticket"
+  "prompt": "\"Implement state management refactor plan: fix hasInitialized patterns, remove duplicate handlers, replace useKit() overfetch with narrow hooks, fix effect dependencies, remove window module cache patterns\"",
+  "started": "2025-12-22T17:54:18.735Z",
+  "iterations": [
+    {
+      "prompt": "\"Implement state management refactor plan: fix hasInitialized patterns, remove duplicate handlers, replace useKit() overfetch with narrow hooks, fix effect dependencies, remove window module cache patterns\"",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-22T17:54:18.735Z",
+      "commit": "3ffb517e8f38727f82f28fe79563bf3d4c7c50d3"
+    }
+  ]
 }

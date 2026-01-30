@@ -1,27 +1,16 @@
 {
   "title": "DEVCONTAINER-CRLF-FIX",
+  "status": "closed",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Fix CRLF line endings in post-create.sh causing devcontainer setup failures",
-      "llm": "opus-4",
-      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
-      "date": "2026-01-15T14:12:26.8362062+01:00",
-      "commit": "cdf182fd45d68575d7cd636b17b2dda9f0be67a3"
-    }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-15T14:14:02.3834505+01:00"
-  },
-  "summary": "Fixed CRLF line endings in post-create.sh and created .gitattributes to prevent future occurrences",
-  "files": [
-    {
-      "path": ".devcontainer/post-create.sh",
-      "status": ""
-    },
-    {
-      "path": ".gitattributes",
-      "status": ""
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ]
 }

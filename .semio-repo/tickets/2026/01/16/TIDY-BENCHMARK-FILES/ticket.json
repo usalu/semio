@@ -1,60 +1,16 @@
 {
   "title": "Tidy benchmark files",
+  "status": "closed",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Reorganize benchmark files to follow a consistent naming convention across all language implementations (py, go, js, rs, net)",
-      "llm": "opus-4-5",
-      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
-      "date": "2026-01-16T20:31:07.7786891+01:00",
-      "commit": "2f0e6c6251dca141615c00c2bb4074d0c80c6443"
-    }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-16T20:35:24.9685756+01:00"
-  },
-  "summary": "Reorganized benchmark files to follow consistent naming convention across py/go/js/rs",
-  "files": [
-    {
-      "path": "py/semio/semio.benchmark.py",
-      "status": ""
-    },
-    {
-      "path": "js/semio/semio.benchmark.ts",
-      "status": ""
-    },
-    {
-      "path": "rs/semio/semio.benchmark.rs",
-      "status": ""
-    },
-    {
-      "path": "rs/semio/Cargo.toml",
-      "status": "",
-      "sections": [
-        {
-          "name": "bin",
-          "range": {
-            "start": 33,
-            "end": 36
-          },
-          "lines": {
-            "added": 4,
-            "removed": 0
-          }
-        }
-      ]
-    },
-    {
-      "path": "go/semio/semio_benchmark.go",
-      "status": ""
-    },
-    {
-      "path": "go/repo/cmd_benchmark.go",
-      "status": ""
-    },
-    {
-      "path": "reports/benchmark.csv",
-      "status": ""
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ]
 }

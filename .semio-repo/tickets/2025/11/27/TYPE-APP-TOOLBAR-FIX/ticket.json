@@ -1,12 +1,19 @@
 {
   "title": "Add missing toolbar rendering and test for connector tool",
-  "prompt": "Add missing toolbar rendering and test for connector tool",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.732Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Add missing toolbar rendering and test for connector tool",
+  "started": "2025-12-16T17:06:07.732Z",
+  "iterations": [
+    {
+      "prompt": "Add missing toolbar rendering and test for connector tool",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.732Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

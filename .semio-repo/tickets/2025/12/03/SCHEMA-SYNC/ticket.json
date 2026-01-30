@@ -1,12 +1,19 @@
 {
   "title": "Schema extraction and synchronization script",
-  "prompt": "Schema extraction and synchronization script",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.856Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Schema extraction and synchronization script",
+  "started": "2025-12-16T17:06:07.856Z",
+  "iterations": [
+    {
+      "prompt": "Schema extraction and synchronization script",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.856Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

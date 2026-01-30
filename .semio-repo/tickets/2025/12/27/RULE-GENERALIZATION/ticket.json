@@ -1,12 +1,19 @@
 {
   "title": "RULE-GENERALIZATION",
-  "prompt": ">-",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-26T23:23:12.673Z"
-  },
-  "commit": "fb102e545bdc3ee63de0e3d93cf631da7fa2fe7c",
-  "summary": "Migrated ticket"
+  "prompt": ">-",
+  "started": "2025-12-26T23:23:12.673Z",
+  "iterations": [
+    {
+      "prompt": ">-",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-26T23:23:12.673Z",
+      "commit": "fb102e545bdc3ee63de0e3d93cf631da7fa2fe7c"
+    }
+  ]
 }

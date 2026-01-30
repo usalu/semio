@@ -1,12 +1,19 @@
 {
   "title": "Fix XState actor context for GoldenLayout windows",
-  "prompt": "Fix XState actor context for GoldenLayout windows",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.888Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix XState actor context for GoldenLayout windows",
+  "started": "2025-12-16T17:06:07.888Z",
+  "iterations": [
+    {
+      "prompt": "Fix XState actor context for GoldenLayout windows",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.888Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

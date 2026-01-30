@@ -1,106 +1,16 @@
 {
   "title": "IMPROVE-REPO-CLI",
+  "status": "closed",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Ticket open command should not accept an author string and take the git author from gitconfig, lookup contributors. The llm should not be any string but only from the enum list. Kebaberize the provided string. Ranges should not be position with line and colum but be only ranges of lines.",
-      "llm": "gemini-3-pro",
-      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
-      "date": "2026-01-13T17:30:39.0014513+01:00",
-      "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
-    }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-13T17:31:33.2761498+01:00"
-  },
-  "summary": "Improved the repository CLI by implementing stricter LLM validation and simplified range structures.",
-  "files": [
-    {
-      "path": "go/repo/repo.go",
-      "status": "",
-      "sections": [
-        {
-          "name": "GraphQL Types",
-          "range": {
-            "start": 47,
-            "end": 533
-          },
-          "definitions": [
-            "AllowedLLMs",
-            "Range"
-          ],
-          "lines": {
-            "added": 12,
-            "removed": 0
-          }
-        },
-        {
-          "name": "Utils",
-          "range": {
-            "start": 2170,
-            "end": 2616
-          },
-          "definitions": [
-            "GetGitAuthorGithub"
-          ],
-          "lines": {
-            "added": 13,
-            "removed": 0
-          }
-        },
-        {
-          "name": "Tickets",
-          "range": {
-            "start": 4750,
-            "end": 5336
-          },
-          "definitions": [
-            "CreateTicket",
-            "computeAffectedSections",
-            "result"
-          ],
-          "lines": {
-            "added": 19,
-            "removed": 0
-          }
-        },
-        {
-          "name": "Schema Builder",
-          "range": {
-            "start": 8031,
-            "end": 9221
-          },
-          "definitions": [
-            "buildSchema"
-          ],
-          "lines": {
-            "added": 6,
-            "removed": 0
-          }
-        }
-      ]
-    },
-    {
-      "path": "go/repo/repo_test.go",
-      "status": "",
-      "sections": [
-        {
-          "name": "Nodes and Edges Tests",
-          "range": {
-            "start": 332,
-            "end": 686
-          },
-          "definitions": [
-            "TestSectionsEdges",
-            "resp",
-            "TestDefinitionsEdges"
-          ],
-          "lines": {
-            "added": 6,
-            "removed": 0
-          }
-        }
-      ]
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ]
 }

@@ -1,55 +1,16 @@
 {
   "title": "fix-devcontainer-postattach",
+  "status": "closed",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "The postAttachCommand from devcontainer.json failed with exit code 127 because code or code-insiders is not installed. Investigate and fix.",
-      "llm": "opus-4-5-20251101",
-      "author": "",
-      "date": "2026-01-19T12:15:00Z",
-      "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-19T12:22:02.050678988Z"
-  },
-  "summary": "Fixed devcontainer postAttachCommand to use a robust script that handles missing code CLI gracefully",
-  "files": {
-    "deleted": [],
-    "renamed": [],
-    "modified": [
-      {
-        "path": ".devcontainer/post-attach.sh"
-      },
-      {
-        "path": ".devcontainer/devcontainer.json",
-        "status": "modified",
-        "sections": [
-          {
-            "name": "postAttachCommand",
-            "range": {
-              "start": 44,
-              "end": 44
-            },
-            "lines": {
-              "added": 1,
-              "removed": 1
-            }
-          },
-          {
-            "name": "customizations#vscode#extensions",
-            "range": {
-              "start": 94,
-              "end": 146
-            },
-            "lines": {
-              "added": 1,
-              "removed": 1
-            }
-          }
-        ]
-      }
-    ],
-    "added": []
-  }
+  ]
 }

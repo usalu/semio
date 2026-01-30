@@ -1,3 +1,0 @@
-- Migrated ticket diff storage to per-iteration `diff` payloads, removed ticket-level diff fields, and updated aggregated diff access and ticket close behavior.
-- Updated codebase usage to aggregate diffs via `GetFiles` across iterations and stored close diff on the latest iteration.
-- Documented per-iteration diff storage in README.md and AGENTS.md.

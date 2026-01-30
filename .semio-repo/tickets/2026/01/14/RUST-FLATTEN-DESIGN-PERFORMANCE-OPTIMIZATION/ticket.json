@@ -1,0 +1,19 @@
+{
+  "title": "Rust Flatten Design Performance Optimization",
+  "status": "finished",
+  "prompt": "Migrated from legacy files",
+  "started": "2026-01-29T19:44:04.037365Z",
+  "iterations": [
+    {
+      "prompt": "Migrated from legacy files",
+      "llm": null,
+      "ui": null,
+      "author": {
+        "name": "Migration Script",
+        "email": null
+      },
+      "started": "2026-01-29T19:44:04.037365Z",
+      "commit": null
+    }
+  ]
+}

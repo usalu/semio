@@ -1,12 +1,19 @@
 {
   "title": "REMOVE-YJS-FROM-APP-STORES",
-  "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
-  "llm": "opus-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-19T22:05:57.199Z"
-  },
-  "commit": "2ac49129091a7cee4b05f2fe08423415f179ea77",
-  "summary": "Migrated ticket"
+  "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
+  "started": "2025-12-19T22:05:57.199Z",
+  "iterations": [
+    {
+      "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-19T22:05:57.199Z",
+      "commit": "2ac49129091a7cee4b05f2fe08423415f179ea77"
+    }
+  ]
 }

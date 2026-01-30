@@ -1,12 +1,19 @@
 {
   "title": "RESOLVER-LAZY-EVALUATION",
-  "prompt": "\"\"",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2026-01-06T20:32:28Z"
-  },
-  "commit": "499de7aa26b90905b08ea93d1f95d61b80f2c54d",
-  "summary": "Migrated ticket"
+  "prompt": "\"\"",
+  "started": "2026-01-06T20:32:28Z",
+  "iterations": [
+    {
+      "prompt": "\"\"",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2026-01-06T20:32:28Z",
+      "commit": "499de7aa26b90905b08ea93d1f95d61b80f2c54d"
+    }
+  ]
 }

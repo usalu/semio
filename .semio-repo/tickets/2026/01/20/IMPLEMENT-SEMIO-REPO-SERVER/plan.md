@@ -1,6 +1,0 @@
-- Review existing repo tooling and plan requirements.
-- Implement go/server/main.go with config, SQLite schema, event bus, diff ingestion, indexing, claims, warnings, and HTTP endpoints.
-- Add go/server module metadata and update go/go.work.
-- Update README.md and AGENTS.md documentation.
-- Verify server entry points and finalize ticket logs and summary.
-- No additional work requested after reopen; close ticket.

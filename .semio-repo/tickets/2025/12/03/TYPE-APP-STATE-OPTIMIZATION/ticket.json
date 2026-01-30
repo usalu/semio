@@ -1,12 +1,19 @@
 {
   "title": "Optimize TypeApp state management to fix overfetching and overrendering",
-  "prompt": "Optimize TypeApp state management to fix overfetching and overrendering",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.860Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Optimize TypeApp state management to fix overfetching and overrendering",
+  "started": "2025-12-16T17:06:07.860Z",
+  "iterations": [
+    {
+      "prompt": "Optimize TypeApp state management to fix overfetching and overrendering",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.860Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

@@ -682,6 +682,27 @@ File kind filters (apply to all commands):
 - `--no-resource` / `--only-resource` - Resource files (.png, .svg, .glb)
 - `--no-license` / `--only-license` - License files
 
+Definition category filters (definition list command):
+
+- `--no-implementation` / `--only-implementation` - Implementation definitions (functions, classes)
+- `--no-interface` / `--only-interface` - Interface definitions (interfaces, protocols)
+- `--no-constant` / `--only-constant` - Constant definitions (const, enum values)
+
+Ticket time filters (ticket list command):
+
+- `--no-year <year>` / `--only-year <year>` - Filter by year (IntSlice, repeatable)
+- `--no-month <month>` / `--only-month <month>` - Filter by month (IntSlice, repeatable)
+- `--no-day <day>` / `--only-day <day>` - Filter by day (IntSlice, repeatable)
+
+Contributor filters (contributor list command):
+
+- `--no-contributor <id>` / `--only-contributor <id>` - Filter by contributor ID (StringSlice, repeatable)
+
+Policy filters (policy list command):
+
+- `--no-policy <id>` / `--only-policy <id>` - Filter by policy ID (StringSlice, repeatable)
+- `--no-violation <id>` / `--only-violation <id>` - Filter by violation kind ID (StringSlice, repeatable)
+
 Kind filters work on non-file commands by checking associated files (e.g., `--only-code` on bundles shows bundles containing code files).
 
 **Output:**
@@ -3899,6 +3920,21 @@ Tree data providers for tickets, policies, contributors, and commands with searc
 Contributor tree nodes group contributions into commits, bundles, tickets by date, and files by folder with navigation commands for tickets, commits, bundles, and files.
 Contributor commit items expose inline copy SHA and open in GitHub actions.
 Sections view provider resolves the active editor path, calls `repo section list`, normalizes GraphQL section ranges into a nested SectionInfo tree, opens section locations on selection, binds F2 rename, supports drag-and-drop section moves, maps JSON object keys into the section tree, and routes rename/create-child/delete actions through repo section commands with refresh on active editor and document changes.
+
+### Filters
+
+FilterProvider manages cross-view filter state with multiple filter dimensions:
+
+- **File Kind Filters**: code, script, config, test, docs, resource, license
+- **Definition Category Filters**: implementation, interface, constant
+- **Time Filters**: year, month, day (for ticket filtering)
+- **Contributor Filters**: filter by contributor ID
+- **Policy Filters**: filter by policy ID
+- **Violation Filters**: filter by violation kind ID
+
+Filter state uses `no<Kind>` and `only<Kind>` arrays to support both exclusion and inclusion patterns.
+All toggle methods call `refreshAllViews()` to apply filters across all tree providers (codebase, tickets, contributors, policies, commands).
+Filter values (years, months, days, contributors, policies, violations) are loaded on extension startup via `loadAvailableFilterValues()`.
 
 ### Commands
 

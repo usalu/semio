@@ -1,12 +1,19 @@
 {
   "title": "Extend sketchpad tests for type app and design app panels",
-  "prompt": "Extend sketchpad tests for type app and design app panels",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.798Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Extend sketchpad tests for type app and design app panels",
+  "started": "2025-12-16T17:06:07.798Z",
+  "iterations": [
+    {
+      "prompt": "Extend sketchpad tests for type app and design app panels",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.798Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

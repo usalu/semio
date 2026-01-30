@@ -1,12 +1,19 @@
 {
   "title": "Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies",
-  "prompt": "Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.812Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies",
+  "started": "2025-12-16T17:06:07.812Z",
+  "iterations": [
+    {
+      "prompt": "Fix infinite loop in DesignAppFooter and TypeAppFooter useEffect dependencies",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.812Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

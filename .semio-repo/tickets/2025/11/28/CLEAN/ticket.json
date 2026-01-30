@@ -1,12 +1,19 @@
 {
   "title": "Cleanup logs for diagnostic traces",
-  "prompt": "Cleanup logs for diagnostic traces",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.733Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Cleanup logs for diagnostic traces",
+  "started": "2025-12-16T17:06:07.733Z",
+  "iterations": [
+    {
+      "prompt": "Cleanup logs for diagnostic traces",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.733Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

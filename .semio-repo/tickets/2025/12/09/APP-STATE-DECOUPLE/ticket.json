@@ -1,12 +1,19 @@
 {
   "title": "\"Decouple app state from Y.js, move transactions to app level\"",
-  "prompt": "\"Decouple app state from Y.js, move transactions to app level\"",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.892Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "\"Decouple app state from Y.js, move transactions to app level\"",
+  "started": "2025-12-16T17:06:07.892Z",
+  "iterations": [
+    {
+      "prompt": "\"Decouple app state from Y.js, move transactions to app level\"",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.892Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

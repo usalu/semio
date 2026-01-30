@@ -1,12 +1,19 @@
 {
   "title": "TICKET-CREATE-WITH-FILES",
-  "prompt": "Creating a new ticket should always start the first iteration. At least one file needs to be provided per iteration (and when opening a ticket). The vscode extension should add a file dialog to select files from the repo. The current opened active file should be preselected.",
-  "llm": "opus-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2026-01-03T00:10:18Z"
-  },
-  "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb",
-  "summary": "Migrated ticket"
+  "prompt": "Creating a new ticket should always start the first iteration. At least one file needs to be provided per iteration (and when opening a ticket). The vscode extension should add a file dialog to select files from the repo. The current opened active file should be preselected.",
+  "started": "2026-01-03T00:10:18Z",
+  "iterations": [
+    {
+      "prompt": "Creating a new ticket should always start the first iteration. At least one file needs to be provided per iteration (and when opening a ticket). The vscode extension should add a file dialog to select files from the repo. The current opened active file should be preselected.",
+      "llm": "opus-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2026-01-03T00:10:18Z",
+      "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb"
+    }
+  ]
 }

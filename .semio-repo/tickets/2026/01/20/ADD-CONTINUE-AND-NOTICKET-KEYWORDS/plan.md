@@ -1,4 +1,0 @@
-- Identify where ticket commands and keyword parsing are implemented.
-- Implement CONTINUE and NOTICKET keyword behavior in ticket flow.
-- Update README.md and AGENTS.md documentation for the new keywords.
-- Capture work in log.md and summary.md; close ticket with file list.

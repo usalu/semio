@@ -991,6 +991,68 @@ func TestDefinitionsEdges(t *testing.T) {
 	}
 }
 
+func TestDefinitionCategory(t *testing.T) {
+	executor := getTestExecutor(t)
+	ctx := context.Background()
+
+	query := `{
+		files {
+			id
+			path
+			definitions {
+				id
+				name
+				kind
+				category
+			}
+		}
+	}`
+
+	result, err := executor.ExecuteJSON(ctx, query, nil)
+	if err != nil {
+		t.Fatalf("query failed: %v", err)
+	}
+
+	var resp struct {
+		Files []struct {
+			ID          string `json:"id"`
+			Path        string `json:"path"`
+			Definitions []struct {
+				ID       string `json:"id"`
+				Name     string `json:"name"`
+				Kind     string `json:"kind"`
+				Category string `json:"category"`
+			} `json:"definitions"`
+		} `json:"files"`
+	}
+
+	if err := json.Unmarshal([]byte(result), &resp); err != nil {
+		t.Fatalf("failed to parse response: %v\nResponse: %s", err, result)
+	}
+
+	definitionsFound := false
+	validCategories := map[string]bool{
+		"implementation": true,
+		"interface":      true,
+		"constant":       true,
+	}
+
+	for _, file := range resp.Files {
+		for _, def := range file.Definitions {
+			definitionsFound = true
+			if def.Category == "" {
+				t.Errorf("definition %s in file %s has empty category", def.Name, file.Path)
+			}
+			if !validCategories[def.Category] {
+				t.Errorf("definition %s has invalid category: %s (expected implementation, interface, or constant)", def.Name, def.Category)
+			}
+		}
+	}
+	if !definitionsFound {
+		t.Skip("no definitions found in any file - may be expected for test repository")
+	}
+}
+
 // #endregion Nodes and Edges Tests
 
 // #region Cli
@@ -1764,9 +1826,9 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"E2E Goal Title",
 		"E2E Goal Description",
 		"E2E Goal Prompt",
-		"2026-02-15",
 		"cursor-chat",
 		"gpt-5-mini",
+		"--due-date", "2026-02-15",
 		"--no-github",
 	)
 	if err != nil {
@@ -1776,13 +1838,13 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 	goalID := parseGoalCreateID(t, openOut)
 	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
 
-	closeOut, err := executeCommand("goal", "close", goalID, "--no-github")
+	closeOut, err := executeCommand("goal", "close", goalID, "E2E Goal Summary", "--no-github")
 	if err != nil {
 		t.Fatalf("goal close failed: %v\nOutput: %s", err, closeOut)
 	}
 	mustHaveExitCode(t, closeOut, 0)
 
-	reopenOut, err := executeCommand("goal", "reopen", goalID, "--no-github")
+	reopenOut, err := executeCommand("goal", "reopen", goalID, "E2E Goal Reopen Prompt", "cursor-chat", "gpt-5-mini", "--no-github")
 	if err != nil {
 		t.Fatalf("goal reopen failed: %v\nOutput: %s", err, reopenOut)
 	}

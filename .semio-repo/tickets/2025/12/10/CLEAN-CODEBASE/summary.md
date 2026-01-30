@@ -1,4 +1,0 @@
-# Summary
-
-Cleanup diagnostic artifacts
-

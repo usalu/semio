@@ -1,16 +1,18 @@
 {
   "title": "Extend Ticket UI Enum and Labels",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Change/refactor/extend the ticket mechanism; update repo binary and vscode extension; extend ticket open UI enum; update AGENTS ticket instructions; fix derived GitHub labels for bundles; final comment line metrics; ensure VSCode extension attached on devcontainer.",
-      "llm": "gpt-5-2",
-      "author": "usalu",
-      "date": "2026-01-19T16:04:48.220040644Z",
-      "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ],
-  "status": "open",
-  "dates": {},
   "github": {
     "issue": "https://github.com/usalu/semio/issues/162"
   }

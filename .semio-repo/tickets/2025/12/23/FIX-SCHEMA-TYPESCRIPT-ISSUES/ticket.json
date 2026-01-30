@@ -1,11 +1,19 @@
 {
   "title": "FIX-SCHEMA-TYPESCRIPT-ISSUES",
-  "prompt": ">-",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-23T14:27:10.321Z"
-  },
-  "summary": "Migrated ticket"
+  "prompt": ">-",
+  "started": "2025-12-23T14:27:10.321Z",
+  "iterations": [
+    {
+      "prompt": ">-",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-23T14:27:10.321Z",
+      "commit": null
+    }
+  ]
 }

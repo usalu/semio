@@ -1,18 +1,18 @@
 {
   "title": "Extend Ticket Mechanism With Goals And Subissues",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "The ticket mechanism should be extended:\n- Introduce goals (in github they are milestones). A goal has a title and a description. Every ticket can optionally be assigned to a goal. Synchronize goals with github milestones (create, edit, close, delete)\n- Every ticket can have optional a parent ticket (in github it becomes a subissue).\n- Introduce ticket delete. Delete also the github issue.\nChange/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.\nDont ask in between, no confirmations, no matter the issue. Figure it out.\nBe sure that it works everywhere before stopping.\nMake sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in ticket.md\nDont keep any legacy api or backwards compatiblity.",
-      "plan": "plan.md",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "usalu",
-      "date": "2026-01-26T21:59:46.353300262Z",
-      "commit": "50fee306d5950f68a11bcce4c811399db543ae80"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ],
-  "status": "open",
-  "dates": {},
   "github": {
     "issue": "https://github.com/usalu/semio/issues/219"
   }

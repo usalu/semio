@@ -1,113 +1,16 @@
 {
   "title": "FIX-REMOVED-LINES-COUNT",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Fix bug where file metrics when closing a ticket always counts removed lines as 0 even when lines were actually removed. E.g. go/repo/repo.go Utils GetGitAuthorGithub shows added 13 and removed 0 although it actually added 14 lines and removed 8 lines across 2 hunks.",
-      "llm": "opus-4-5",
-      "author": "Ueli Saluz",
-      "date": "2026-01-13T16:38:05Z",
-      "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
-    },
-    {
-      "prompt": "Removed lines are being attributed to wrong sections. E.g. Schema Builder should show removed: 10, added: 6, but currently shows removed: 0. The GraphQL Executor incorrectly shows the removed: 10. This is because removed lines reference OLD file line numbers but are being compared against NEW file section ranges. Need to parse sections from the OLD file to correctly attribute removed lines.",
-      "llm": "opus-4-5",
-      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
-      "date": "2026-01-13T18:15:33.0652547+01:00",
-      "commit": "b97d48cc239f068dc557d07bc1f05409cef1ba12"
-    }
-  ],
-  "status": "open",
-  "dates": {},
-  "summary": "Fixed bug where ticket file metrics always showed removed lines as 0. Added DiffLines struct and updated GetGitDiffLines to parse both added and removed line ranges from git diff hunk headers.",
-  "files": [
-    {
-      "path": "go/repo/repo.go",
-      "status": "",
-      "sections": [
-        {
-          "name": "GraphQL Types",
-          "range": {
-            "start": 47,
-            "end": 536
-          },
-          "definitions": [
-            "AllowedLLMs",
-            "Range",
-            "DiffLines"
-          ],
-          "lines": {
-            "added": 16,
-            "removed": 6
-          }
-        },
-        {
-          "name": "Utils",
-          "range": {
-            "start": 2173,
-            "end": 2619
-          },
-          "definitions": [
-            "GetGitAuthor",
-            "GetGitAuthorGithub",
-            "config"
-          ],
-          "lines": {
-            "added": 13,
-            "removed": 7
-          }
-        },
-        {
-          "name": "Tickets",
-          "range": {
-            "start": 4753,
-            "end": 5360
-          },
-          "definitions": [
-            "GetTicketPlanPath",
-            "CreateTicket",
-            "ListTickets",
-            "ComputeTicketFiles",
-            "result",
-            "computeAffectedSections",
-            "affectedDefs",
-            "setDifference",
-            "diff",
-            "setIntersection",
-            "intersection",
-            "GetGitDiffLines",
-            "currentFile"
-          ],
-          "lines": {
-            "added": 71,
-            "removed": 33
-          }
-        },
-        {
-          "name": "GraphQL Executor",
-          "range": {
-            "start": 7943,
-            "end": 8053
-          },
-          "lines": {
-            "added": 0,
-            "removed": 10
-          }
-        },
-        {
-          "name": "Schema Builder",
-          "range": {
-            "start": 8055,
-            "end": 9245
-          },
-          "definitions": [
-            "buildSchema"
-          ],
-          "lines": {
-            "added": 6,
-            "removed": 0
-          }
-        }
-      ]
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ]
 }

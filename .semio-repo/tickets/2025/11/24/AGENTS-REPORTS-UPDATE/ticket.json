@@ -1,12 +1,19 @@
 {
   "title": "Update agents reports and docs",
-  "prompt": "Update agents reports and docs",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.709Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Update agents reports and docs",
+  "started": "2025-12-16T17:06:07.709Z",
+  "iterations": [
+    {
+      "prompt": "Update agents reports and docs",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.709Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

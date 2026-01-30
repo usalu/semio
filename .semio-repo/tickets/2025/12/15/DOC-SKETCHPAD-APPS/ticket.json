@@ -1,12 +1,19 @@
 {
   "title": "Document Sketchpad apps and core mechanisms",
-  "prompt": "The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.",
-  "llm": "opus-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.956Z"
-  },
-  "commit": "2fb81ef29354981c1b9625769dba4a06360a4aef",
-  "summary": "Migrated ticket"
+  "prompt": "The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.",
+  "started": "2025-12-16T17:06:07.956Z",
+  "iterations": [
+    {
+      "prompt": "The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.956Z",
+      "commit": "2fb81ef29354981c1b9625769dba4a06360a4aef"
+    }
+  ]
 }

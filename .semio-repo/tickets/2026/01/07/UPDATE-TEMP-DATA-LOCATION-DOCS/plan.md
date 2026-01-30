@@ -1,3 +1,0 @@
-- Locate temp/ guidance in README.md and AGENTS.md.
-- Update documentation to state temporary data belongs in the active ticket folder.
-- Record work in log.md and finalize summary.md with touched files.

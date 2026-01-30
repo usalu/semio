@@ -1,12 +1,19 @@
 {
   "title": "Use Action UI elements for all window buttons",
-  "prompt": "The buttons for every window should be action ui elements.",
-  "llm": "gpt-5.2-codex",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-18T15:27:45.865Z"
-  },
-  "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
-  "summary": "Migrated ticket"
+  "prompt": "The buttons for every window should be action ui elements.",
+  "started": "2025-12-18T15:27:45.865Z",
+  "iterations": [
+    {
+      "prompt": "The buttons for every window should be action ui elements.",
+      "llm": "gpt-5.2-codex",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-18T15:27:45.865Z",
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c"
+    }
+  ]
 }

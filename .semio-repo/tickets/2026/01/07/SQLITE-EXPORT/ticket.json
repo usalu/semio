@@ -1,12 +1,21 @@
 {
   "title": "SQLITE-EXPORT",
-  "prompt": "add an export command to a sqlite file (create a schema) that has all the information (repo, bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations)",
-  "llm": "opus-4",
   "status": "finished",
-  "author": "usalu",
-  "dates": {
-    "created": "2026-01-07T14:00:00Z",
-    "finished": "2026-01-07T15:35:00Z"
-  },
-  "summary": "Migrated ticket"
+  "prompt": "add an export command to a sqlite file (create a schema) that has all the information (repo, bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations)",
+  "started": "2026-01-07T14:00:00Z",
+  "iterations": [
+    {
+      "prompt": "add an export command to a sqlite file (create a schema) that has all the information (repo, bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations)",
+      "llm": "opus-4",
+      "ui": null,
+      "author": {
+        "name": "usalu",
+        "email": null
+      },
+      "started": "2026-01-07T14:00:00Z",
+      "commit": null,
+      "finished": "2026-01-07T15:35:00Z"
+    }
+  ],
+  "finished": "2026-01-07T15:35:00Z"
 }

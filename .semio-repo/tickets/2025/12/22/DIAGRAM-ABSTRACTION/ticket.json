@@ -1,11 +1,19 @@
 {
   "title": "DIAGRAM-ABSTRACTION",
-  "prompt": ">-",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-22T22:14:17.678Z"
-  },
-  "summary": "Migrated ticket"
+  "prompt": ">-",
+  "started": "2025-12-22T22:14:17.678Z",
+  "iterations": [
+    {
+      "prompt": ">-",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-22T22:14:17.678Z",
+      "commit": null
+    }
+  ]
 }

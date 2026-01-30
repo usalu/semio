@@ -1,15 +1,16 @@
 {
   "title": "Refactor Repo and VSCode Extension",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Refactor ticket title validation, author resolution, plan handling, and ignore logic.",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "usalu",
-      "date": "2026-01-26T09:58:35.409671604Z",
-      "commit": "eeb8272d91c5437d9c455971d216c6c538261f87"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
-  ],
-  "status": "open",
-  "dates": {}
+  ]
 }

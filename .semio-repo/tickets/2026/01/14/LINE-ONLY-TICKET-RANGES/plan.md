@@ -1,4 +1,0 @@
-- Review existing ticket range structures in repo, cli, mcp, and VS Code extension.
-- Update range data structures, serialization, and consumers to use line-only ints.
-- Update dev docs (README.md, AGENTS.md) to reflect ticket range format change.
-- Verify usage sites for range handling and adjust related tests or mappings if present.

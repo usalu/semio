@@ -1,9 +1,0 @@
-- Analyzed `repo.go` to understand current implementation of author lookup and ticket creation.
-- Modified `GetGitAuthorGithub` to implement new lookup logic: Git Config Name -> Email -> Contributor List.
-- Added `AllowedLLMs` list and validation logic in `CreateTicket`.
-- Simplified `Range` struct and updated `buildSchema` for `Range` type.
-- Ran tests and identified failures in `repo_test.go`.
-- Systematically fixed `repo_test.go`:
-  - Updated `TestSectionsEdges` and `TestDefinitionsEdges` query strings and structs to match `range { start end }`.
-  - Removed `TestCommitsEdges` as `commits` field was removed from `Contributor` type.
-- Verified all tests pass with `go test`.

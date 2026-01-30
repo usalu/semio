@@ -1,12 +1,19 @@
 {
   "title": "Fix coordinate system transformation for connectors and geometry",
-  "prompt": "Fix coordinate system transformation for connectors and geometry",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.828Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix coordinate system transformation for connectors and geometry",
+  "started": "2025-12-16T17:06:07.828Z",
+  "iterations": [
+    {
+      "prompt": "Fix coordinate system transformation for connectors and geometry",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.828Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

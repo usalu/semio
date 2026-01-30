@@ -1,12 +1,19 @@
 {
   "title": "node-tests-fix",
-  "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
-  "llm": "OPUS",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2026-01-07T11:23:05Z"
-  },
-  "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
-  "summary": "Migrated ticket"
+  "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
+  "started": "2026-01-07T11:23:05Z",
+  "iterations": [
+    {
+      "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
+      "llm": "OPUS",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2026-01-07T11:23:05Z",
+      "commit": "864921b472c3d45c3c0d70e8940686a9678caad0"
+    }
+  ]
 }

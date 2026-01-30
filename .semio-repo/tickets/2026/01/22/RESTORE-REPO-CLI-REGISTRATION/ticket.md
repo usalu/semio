@@ -21,3 +21,11 @@ Restore repo CLI registration and resolve consolidation regressions in go/repo/m
 - Normalized GraphQL enum parsing, range outputs, and node lookup behavior.
 - Updated policy checks to avoid fixture false positives.
 - Tests: `go test ./...`.
+
+
+## Todos
+# Restore Repo CLI Registration Plan
+
+1. Remove leftover legacy command fragments and stabilize engine-based CLI wiring.
+2. Verify Go compile/tests and resolve remaining failures.
+3. Update documentation and ticket summary, then close ticket.

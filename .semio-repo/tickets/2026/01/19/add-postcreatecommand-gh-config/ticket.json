@@ -1,6 +1,16 @@
 {
   "title": "add-postcreatecommand-gh-config",
+  "status": "closed",
   "prompt": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
-  "llm": "claude",
-  "status": "closed"
+  "started": null,
+  "iterations": [
+    {
+      "prompt": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
+      "llm": "claude",
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
+    }
+  ]
 }

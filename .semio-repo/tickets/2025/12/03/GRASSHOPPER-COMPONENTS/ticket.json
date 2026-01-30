@@ -1,12 +1,19 @@
 {
   "title": "Fix Grasshopper entity components to match semio.ts schema",
-  "prompt": "Fix Grasshopper entity components to match semio.ts schema",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.837Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix Grasshopper entity components to match semio.ts schema",
+  "started": "2025-12-16T17:06:07.837Z",
+  "iterations": [
+    {
+      "prompt": "Fix Grasshopper entity components to match semio.ts schema",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.837Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

@@ -1,12 +1,19 @@
 {
   "title": "Create test for kit import drag and drop",
-  "prompt": "Create test for kit import drag and drop",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.762Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Create test for kit import drag and drop",
+  "started": "2025-12-16T17:06:07.762Z",
+  "iterations": [
+    {
+      "prompt": "Create test for kit import drag and drop",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.762Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

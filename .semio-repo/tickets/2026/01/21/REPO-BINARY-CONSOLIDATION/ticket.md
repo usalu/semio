@@ -37,3 +37,11 @@ Consolidate repo binary into go/repo/main.go with clean engine-only architecture
 - Updated plan to include integrate command usage and cleanup steps.
 - Integrated benchmark, preflight, update, and github sources into go/repo/main.go; repaired update command block, added missing imports, removed duplicate GitHub helpers, and cleaned inline comments.
 - Updated README.md and AGENTS.md to document consolidated benchmark/preflight/update commands in the repo entrypoint.
+
+
+## Todos
+# Repo Binary Consolidation Plan
+
+1. Integrate remaining go/repo/\*.go sources into go/repo/main.go using the integrate command. (done)
+2. Reconcile duplicated logic and delete legacy go/repo sources and internal packages. (in progress)
+3. Update tests and docs (README.md, AGENTS.md), run tests, and close the ticket with summary.

@@ -1,13 +1,21 @@
 {
   "title": "Consolidate three Metabolism scripts into single update-metabolism.tsx",
-  "prompt": ">-",
-  "llm": "composer-1",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-23T13:42:09.548Z",
-    "finished": "2025-12-23T13:42:09.548Z"
-  },
-  "commit": "b41e500849192cc526ed0ce105fff7e2a478e3f0",
-  "summary": "Migrated ticket"
+  "prompt": ">-",
+  "started": "2025-12-23T13:42:09.548Z",
+  "iterations": [
+    {
+      "prompt": ">-",
+      "llm": "composer-1",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-23T13:42:09.548Z",
+      "commit": "b41e500849192cc526ed0ce105fff7e2a478e3f0",
+      "finished": "2025-12-23T13:42:09.548Z"
+    }
+  ],
+  "finished": "2025-12-23T13:42:09.548Z"
 }

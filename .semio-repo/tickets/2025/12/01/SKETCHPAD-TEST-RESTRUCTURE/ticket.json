@@ -1,12 +1,19 @@
 {
   "title": "Restructure sketchpad tests to one test per app with parent initialization",
-  "prompt": "Restructure sketchpad tests to one test per app with parent initialization",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.799Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Restructure sketchpad tests to one test per app with parent initialization",
+  "started": "2025-12-16T17:06:07.799Z",
+  "iterations": [
+    {
+      "prompt": "Restructure sketchpad tests to one test per app with parent initialization",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.799Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

@@ -1,12 +1,19 @@
 {
   "title": "Fix create port/tag buttons doing nothing",
-  "prompt": "Fix create port/tag buttons doing nothing",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.905Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix create port/tag buttons doing nothing",
+  "started": "2025-12-16T17:06:07.905Z",
+  "iterations": [
+    {
+      "prompt": "Fix create port/tag buttons doing nothing",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.905Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

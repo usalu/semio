@@ -1,12 +1,19 @@
 {
   "title": "Fix hover and selection state overfetching for performance",
-  "prompt": "Fix hover and selection state overfetching for performance",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.810Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix hover and selection state overfetching for performance",
+  "started": "2025-12-16T17:06:07.810Z",
+  "iterations": [
+    {
+      "prompt": "Fix hover and selection state overfetching for performance",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.810Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

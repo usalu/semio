@@ -1,0 +1,22 @@
+{
+  "title": "VSCode Extension Fixes",
+  "status": "open",
+  "prompt": "vscode-extension-fixes",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/280"
+  },
+  "started": "2026-01-29T21:09:40.387526517Z",
+  "iterations": [
+    {
+      "prompt": "vscode-extension-fixes",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-29T21:09:40.387526517Z",
+      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc"
+    }
+  ]
+}

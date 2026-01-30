@@ -1,1 +1,0 @@
-Fixed VS Code sections view by resolving file sections in the repo GraphQL layer, updating CLI section list queries, normalizing section list output in the extension, and documenting the section tree behavior.

@@ -1,12 +1,19 @@
 {
   "title": "Fix Kit app details panel rendering",
-  "prompt": "Fix Kit app details panel rendering",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.927Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix Kit app details panel rendering",
+  "started": "2025-12-16T17:06:07.927Z",
+  "iterations": [
+    {
+      "prompt": "Fix Kit app details panel rendering",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.927Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

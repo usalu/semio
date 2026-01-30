@@ -1,12 +1,21 @@
 {
   "title": "VSCODE-FIX-COMMAND",
-  "prompt": "\"Fix the VSCode fix command that fails with: Failed to fix violation: Error: Command failed: c:\\\\git\\\\semio.tech\\\\semio\\\\bin\\\\repo.exe fix js/semio/playwright.config.ts. Also enable individual violation fixing.\"",
-  "llm": "opus-4-5",
   "status": "closed",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2026-01-03T02:14:06Z",
-    "finished": "2026-01-03T02:17:59Z"
-  },
-  "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e"
+  "prompt": "\"Fix the VSCode fix command that fails with: Failed to fix violation: Error: Command failed: c:\\\\git\\\\semio.tech\\\\semio\\\\bin\\\\repo.exe fix js/semio/playwright.config.ts. Also enable individual violation fixing.\"",
+  "started": "2026-01-03T02:14:06Z",
+  "iterations": [
+    {
+      "prompt": "\"Fix the VSCode fix command that fails with: Failed to fix violation: Error: Command failed: c:\\\\git\\\\semio.tech\\\\semio\\\\bin\\\\repo.exe fix js/semio/playwright.config.ts. Also enable individual violation fixing.\"",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2026-01-03T02:14:06Z",
+      "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",
+      "finished": "2026-01-03T02:17:59Z"
+    }
+  ],
+  "finished": "2026-01-03T02:17:59Z"
 }

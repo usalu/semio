@@ -1,3 +1,0 @@
-- Verify the repo CLI source uses Position subfield selections for section list GraphQL queries.
-- Rebuild the repo binary and validate `section list` against a known file.
-- Document the Sections view data flow and update ticket notes/summary.

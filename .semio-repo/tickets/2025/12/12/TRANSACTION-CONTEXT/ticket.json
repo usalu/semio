@@ -1,12 +1,19 @@
 {
   "title": ">-",
-  "prompt": ">-",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.918Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": ">-",
+  "started": "2025-12-16T17:06:07.918Z",
+  "iterations": [
+    {
+      "prompt": ">-",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.918Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

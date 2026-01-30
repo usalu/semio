@@ -55,18 +55,30 @@ function parseRepoEvents(output: string): RepoEvent[] {
 }
 
 function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
-  let lastResult: unknown = null;
+  const results: unknown[] = [];
   for (const event of events) {
     if (event.kind === "error" && event.error?.fatal) {
       throw new Error(event.error.message ?? "Repo command failed");
     }
     if (event.kind === "result") {
-      lastResult = event.result ?? event.data ?? null;
+      results.push(event.result ?? event.data ?? null);
     }
   }
+
+  // Handle aggregated section results
+  if (results.length > 0 && results.some(r => r && typeof r === 'object' && 'section' in r)) {
+    const sections = results.map(r => (r as any).section).filter(s => s);
+    if (sections.length > 0) {
+      return { data: { sections } };
+    }
+  }
+
+  let lastResult = results.length > 0 ? results[results.length - 1] : null;
+
   if (lastResult && typeof lastResult === "object" && !Array.isArray(lastResult)) {
-    if ("data" in (lastResult as Record<string, unknown>)) {
-      return lastResult as Record<string, unknown>;
+    const res = lastResult as Record<string, unknown>;
+    if ("data" in res || "errors" in res) {
+      return res;
     }
   }
   return { data: lastResult };
@@ -104,7 +116,7 @@ function getUrqlClient(): Client | null {
         const { stdout, stderr } = await execFileAsync(repoPath, repoArgs, {
           cwd: root,
           timeout: 45000,
-          maxBuffer: 50 * 1024 * 1024,
+          maxBuffer: 500 * 1024 * 1024,
         });
         const duration = Date.now() - start;
         log(`[urql] CLI execution successful in ${duration}ms, stdout size: ${stdout.length}`);
@@ -452,15 +464,38 @@ interface Codebase extends GqlCodebase {
 
 // #region GraphQL Helpers
 
+const RepoRootQuery = `
+  query RepoRoot {
+    repo {
+      id
+      name
+      path
+      bundles {
+        id
+        name
+        root
+        sourceRoot
+        projectType
+        tags
+        uri
+      }
+    }
+  }
+`;
+
 async function fetchRepoViaGraphQL(): Promise<Repo | null> {
   const client = getUrqlClient();
   if (!client) return null;
-  const result = await client.query(RepoDocument, {});
+  // Use explicit string query instead of RepoDocument to avoid fetching tickets/contributors/policies
+  // This drastically reduces payload size and improve startup performance.
+  // We use 'as any' because the project usually uses TypedDocumentNode, but we want a lightweight ad-hoc query here.
+  const result = await client.query(RepoRootQuery as any, {});
   if (result.error) {
     logError("[GraphQL] fetchRepoViaGraphQL error:", result.error);
     return null;
   }
-  return result.data?.repo ?? null;
+  // Data will lack tickets/contributors/policies, but consumers (loadCodebase) only strictly need bundles.
+  return result.data?.repo as unknown as Repo ?? null;
 }
 
 async function fetchBundlesViaGraphQL(): Promise<Bundle[]> {
@@ -721,16 +756,22 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   }
 }
 
-function normalizeSectionTree(sections: GraphqlSection[]): SectionInfo[] {
-  return sections.map((section) => ({
-    name: section.name,
-    kind: section.__typename ?? "Section",
-    startLine: section.range?.start?.line ?? 0,
-    endLine: section.range?.end?.line ?? 0,
-    startIndex: 0,
-    endIndex: 0,
-    children: normalizeSectionTree(section.children ?? []),
-  }));
+function normalizeSectionTree(sections: (GraphqlSection | any)[]): SectionInfo[] {
+  return sections.map((sectionOrWrapper) => {
+    // Handle CLI wrapper { section: { ... } }
+    const section = sectionOrWrapper.section ?? sectionOrWrapper;
+    
+    return {
+      name: section.name,
+      kind: section.__typename ?? "Section",
+      // Use optional chaining carefully, section might be a raw JSON object from CLI
+      startLine: section.range?.start?.line ?? section.startLine ?? 0,
+      endLine: section.range?.end?.line ?? section.endLine ?? 0,
+      startIndex: section.startIndex ?? 0,
+      endIndex: section.endIndex ?? 0,
+      children: normalizeSectionTree(section.children ?? []),
+    };
+  });
 }
 
 function extractSections(result: any): SectionInfo[] {
@@ -1874,6 +1915,20 @@ class TicketsProvider implements vscode.TreeDataProvider<TicketTreeItem> {
 
     log("[TicketsProvider.getChildren] tickets after search filter:", tickets.length);
 
+    if (filterProvider) {
+      const timeFilter = filterProvider.getTimeFilter();
+      if (timeFilter.excludeYears.length > 0) {
+        tickets = tickets.filter((t) => !timeFilter.excludeYears.includes(t.year));
+      }
+      if (timeFilter.excludeMonths.length > 0) {
+        tickets = tickets.filter((t) => !timeFilter.excludeMonths.includes(t.month));
+      }
+      if (timeFilter.excludeDays.length > 0) {
+        tickets = tickets.filter((t) => !timeFilter.excludeDays.includes(t.day));
+      }
+      log("[TicketsProvider.getChildren] tickets after time filter:", tickets.length);
+    }
+
     if (!element) {
       if (tickets.length === 0) {
         log("[TicketsProvider.getChildren] no tickets, returning empty array");
@@ -2055,11 +2110,21 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
           this.cachedViolationKinds.set(policy.id, policy.violationKinds.map((vk) => vk.id));
         }
       }
+      
+      let policies = this.cachedPolicies;
+      
+      if (filterProvider) {
+        const policyFilter = filterProvider.getPolicyFilter();
+        if (policyFilter.excludePolicies.length > 0) {
+          policies = policies.filter((p) => !policyFilter.excludePolicies.includes(p.id));
+        }
+      }
+      
       if (!globalSearchQuery) {
-        return this.cachedPolicies.map((policy) => new PolicyItem(policy));
+        return policies.map((policy) => new PolicyItem(policy));
       }
       const matchingPolicies: PolicyItem[] = [];
-      for (const policy of this.cachedPolicies) {
+      for (const policy of policies) {
         if (this.matchesPolicySearch(policy)) {
           matchingPolicies.push(new PolicyItem(policy));
         } else {
@@ -2072,12 +2137,29 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
       return matchingPolicies;
     }
     if (element instanceof PolicyItem) {
-      const kinds = await this.getViolationKinds(element.policy.id);
+      let kinds = await this.getViolationKinds(element.policy.id);
+      
+      if (filterProvider) {
+        const violationFilter = filterProvider.getViolationFilter();
+        if (violationFilter.excludeViolations.length > 0) {
+          kinds = kinds.filter((k) => !violationFilter.excludeViolations.some((v) => k.startsWith(v)));
+        }
+      }
+      
       const filtered = globalSearchQuery ? kinds.filter((k) => this.matchesViolationKindSearch(k) || this.matchesPolicySearch(element.policy)) : kinds;
       return this.buildViolationTree(filtered, element.policy.id, "");
     }
     if (element instanceof ViolationKindGroupItem) {
-      return this.buildViolationTree(element.children, element.policyId, element.groupPath);
+      let children = element.children;
+      
+      if (filterProvider) {
+        const violationFilter = filterProvider.getViolationFilter();
+        if (violationFilter.excludeViolations.length > 0) {
+          children = children.filter((k) => !violationFilter.excludeViolations.some((v) => k.startsWith(v)));
+        }
+      }
+      
+      return this.buildViolationTree(children, element.policyId, element.groupPath);
     }
     return [];
   }
@@ -2425,7 +2507,16 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
         }));
       }
       const root = getWorkspaceRoot();
-      return this.cachedContributors.filter((c) => this.matchesSearch(c)).map((contributor) => {
+      let contributors = this.cachedContributors.filter((c) => this.matchesSearch(c));
+      
+      if (filterProvider) {
+        const contributorFilter = filterProvider.getContributorFilter();
+        if (contributorFilter.excludeContributors.length > 0) {
+          contributors = contributors.filter((c) => !contributorFilter.excludeContributors.includes(c.name || c.github));
+        }
+      }
+      
+      return contributors.map((contributor) => {
         const avatarPath = root ? path.join(root, ".semio-repo", "contributors", contributor.github, "avatar-round-90x90.png") : undefined;
         return new ContributorItem(contributor, avatarPath);
       });
@@ -2710,6 +2801,9 @@ type CodebaseTreeItem =
   | CodebaseDefinitionItem;
 
 type FileKind = "code" | "script" | "config" | "test" | "docs" | "resource" | "license";
+type BundleKind = "library" | "schema" | "binary" | "ui" | "site" | "assets";
+type FolderKind = "organization" | "required";
+type DefinitionCategory = "implementation" | "interface" | "constant";
 
 interface CodebaseFilter {
   code: boolean;
@@ -2721,6 +2815,27 @@ interface CodebaseFilter {
   license: boolean;
 }
 
+interface BundleFilter {
+  library: boolean;
+  schema: boolean;
+  binary: boolean;
+  ui: boolean;
+  site: boolean;
+  assets: boolean;
+}
+
+interface FolderFilter {
+  organization: boolean;
+  required: boolean;
+}
+
+interface DefinitionFilter {
+  [key: string]: boolean;
+  implementation: boolean;
+  interface: boolean;
+  constant: boolean;
+}
+
 const DEFAULT_FILTER: CodebaseFilter = {
   code: true,
   script: true,
@@ -2729,6 +2844,26 @@ const DEFAULT_FILTER: CodebaseFilter = {
   docs: true,
   resource: true,
   license: true,
+};
+
+const DEFAULT_BUNDLE_FILTER: BundleFilter = {
+  library: true,
+  schema: true,
+  binary: true,
+  ui: true,
+  site: true,
+  assets: true,
+};
+
+const DEFAULT_FOLDER_FILTER: FolderFilter = {
+  organization: true,
+  required: true,
+};
+
+const DEFAULT_DEFINITION_FILTER: DefinitionFilter = {
+  implementation: true,
+  interface: true,
+  constant: true,
 };
 
 const FILTER_EXTENSIONS: Record<FileKind, Set<string>> = {
@@ -2786,38 +2921,96 @@ const FILTER_EXTENSIONS: Record<FileKind, Set<string>> = {
   license: new Set([]),
 };
 
-type FilterItemType = "kind" | "action";
 
-class FilterItem extends vscode.TreeItem {
+
+interface TimeFilter {
+  excludeYears: number[];
+  includeYears: number[];
+  excludeMonths: number[];
+  includeMonths: number[];
+  excludeDays: number[];
+  includeDays: number[];
+}
+
+interface ContributorFilter {
+  excludeContributors: string[];
+  includeContributors: string[];
+}
+
+interface PolicyFilter {
+  excludePolicies: string[];
+  includePolicies: string[];
+}
+
+interface ViolationFilter {
+  excludeViolations: string[];
+  includeViolations: string[];
+}
+
+interface SectionFilter {
+  none: boolean;
+  all: boolean;
+}
+
+const DEFAULT_TIME_FILTER: TimeFilter = {
+  excludeYears: [],
+  includeYears: [],
+  excludeMonths: [],
+  includeMonths: [],
+  excludeDays: [],
+  includeDays: [],
+};
+
+const DEFAULT_CONTRIBUTOR_FILTER: ContributorFilter = {
+  excludeContributors: [],
+  includeContributors: [],
+};
+
+const DEFAULT_POLICY_FILTER: PolicyFilter = {
+  excludePolicies: [],
+  includePolicies: [],
+};
+
+const DEFAULT_VIOLATION_FILTER: ViolationFilter = {
+  excludeViolations: [],
+  includeViolations: [],
+};
+
+const DEFAULT_SECTION_FILTER: SectionFilter = {
+  none: false,
+  all: true,
+};
+
+export type FilterItemType = "root" | "search" | "bundle" | "folder" | "section" | "definition" | "time" | "contributors" | "policy" | "violation" | "timeYear" | "timeMonth" | "timeDay" | "contributor" | "action";
+
+export class FilterItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
+    public readonly collapsibleState: vscode.TreeItemCollapsibleState,
     public readonly itemType: FilterItemType,
-    public readonly kind?: keyof CodebaseFilter,
-    public readonly enabled?: boolean,
-    public readonly action?: string
+    public readonly timeValue?: number,
+    public readonly secondaryTimeValue?: number,
+    public readonly tertiaryTimeValue?: number,
+    public readonly contributorValue?: string,
+    public readonly policyValue?: string,
+    public readonly violationValue?: string
   ) {
-    super(label, vscode.TreeItemCollapsibleState.None);
-    if (itemType === "kind" && kind !== undefined) {
-      this.contextValue = "filterItem";
-      this.iconPath = new vscode.ThemeIcon(enabled ? "check" : "circle-large-outline");
-      this.command = {
-        command: "semio.toggleFilter",
-        title: "Toggle Filter",
-        arguments: [kind],
-      };
-    } else if (itemType === "action" && action) {
-      this.contextValue = "filterAction";
-      this.iconPath = new vscode.ThemeIcon("symbol-event");
-      this.command = {
-        command: "semio.filterAction",
-        title: action,
-        arguments: [action],
-      };
-    }
+    super(label, collapsibleState);
+    this.contextValue = "filterItem";
+
+    if (itemType === "search") this.iconPath = new vscode.ThemeIcon("search");
+    else if (itemType === "bundle") this.iconPath = new vscode.ThemeIcon("package");
+    else if (itemType === "folder") this.iconPath = new vscode.ThemeIcon("folder");
+    else if (itemType === "section") this.iconPath = new vscode.ThemeIcon("symbol-class");
+    else if (itemType === "definition") this.iconPath = new vscode.ThemeIcon("symbol-method");
+    else if (itemType === "time") this.iconPath = new vscode.ThemeIcon("calendar");
+    else if (itemType === "contributors") this.iconPath = new vscode.ThemeIcon("organization");
+    else if (itemType === "policy") this.iconPath = new vscode.ThemeIcon("shield");
+    else if (itemType === "violation") this.iconPath = new vscode.ThemeIcon("warning");
   }
 }
 
-class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
+export class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<FilterItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
@@ -2826,7 +3019,33 @@ class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
   public globalMatchWholeWord: boolean = false;
   public globalUseRegex: boolean = false;
 
+  public availableYears: number[] = [];
+  public availableMonths: number[] = [];
+  public availableDays: number[] = [];
+  public availableContributors: string[] = [];
+  public availablePolicies: string[] = [];
+  public availableViolations: string[] = [];
+
   private filters: CodebaseFilter = { ...DEFAULT_FILTER };
+  private bundleFilters: BundleFilter = { ...DEFAULT_BUNDLE_FILTER };
+  private folderFilters: FolderFilter = { ...DEFAULT_FOLDER_FILTER };
+  private definitionFilters: DefinitionFilter = { ...DEFAULT_DEFINITION_FILTER };
+  private timeFilter: TimeFilter = { ...DEFAULT_TIME_FILTER };
+  private contributorFilter: ContributorFilter = { ...DEFAULT_CONTRIBUTOR_FILTER };
+  private policyFilter: PolicyFilter = { ...DEFAULT_POLICY_FILTER };
+  private violationFilter: ViolationFilter = { ...DEFAULT_VIOLATION_FILTER };
+  private sectionFilter: SectionFilter = { ...DEFAULT_SECTION_FILTER };
+
+  constructor(private readonly workspaceRoot: string) {}
+
+  private refreshAllViews(): void {
+    if (codebaseProvider) codebaseProvider.refresh();
+    if (ticketsProvider) ticketsProvider.refresh();
+    if (contributorsProvider) contributorsProvider.refresh();
+    if (policiesProvider) policiesProvider.refresh();
+    if (commandsProvider) commandsProvider.refresh();
+    if (sectionsProvider) sectionsProvider.refresh();
+  }
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -2837,69 +3056,291 @@ class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
     this.globalMatchCase = matchCase;
     this.globalMatchWholeWord = matchWholeWord;
     this.globalUseRegex = useRegex;
-    if (codebaseProvider) codebaseProvider.refresh();
-    ticketsProvider.refresh();
-    contributorsProvider.refresh();
-    policiesProvider.refresh();
-    commandsProvider.refresh();
+    this.refresh();
+    this.refreshAllViews();
   }
 
   toggle(kind: keyof CodebaseFilter): void {
     this.filters[kind] = !this.filters[kind];
     this.refresh();
-    if (codebaseProvider) {
-      codebaseProvider.refresh();
+    this.refreshAllViews();
+  }
+
+  toggleBundleKind(kind: keyof BundleFilter): void {
+    this.bundleFilters[kind] = !this.bundleFilters[kind];
+    this.refresh();
+    this.refreshAllViews();
+  }
+
+  toggleFolderKind(kind: keyof FolderFilter): void {
+    this.folderFilters[kind] = !this.folderFilters[kind];
+    this.refresh();
+    this.refreshAllViews();
+  }
+
+  toggleDefinitionKind(kind: keyof DefinitionFilter): void {
+    this.definitionFilters[kind] = !this.definitionFilters[kind];
+    this.refresh();
+    this.refreshAllViews();
+  }
+  
+  toggleSectionFilter(mode: "none" | "all"): void {
+    if (mode === "none") {
+      this.sectionFilter.none = !this.sectionFilter.none;
+      if (this.sectionFilter.none) this.sectionFilter.all = false;
+    } else {
+      this.sectionFilter.all = !this.sectionFilter.all;
+      if (this.sectionFilter.all) this.sectionFilter.none = false;
     }
+    this.refresh();
+    this.refreshAllViews();
+  }
+
+  toggleYear(year: number): void {
+    const idx = this.timeFilter.excludeYears.indexOf(year);
+    if (idx >= 0) this.timeFilter.excludeYears.splice(idx, 1);
+    else this.timeFilter.excludeYears.push(year);
+    this.refresh();
+    this.refreshAllViews();
+  }
+
+  toggleMonth(month: number): void {
+    const idx = this.timeFilter.excludeMonths.indexOf(month);
+    if (idx >= 0) this.timeFilter.excludeMonths.splice(idx, 1);
+    else this.timeFilter.excludeMonths.push(month);
+    this.refresh();
+    this.refreshAllViews();
+  }
+
+  toggleDay(day: number): void {
+    const idx = this.timeFilter.excludeDays.indexOf(day);
+    if (idx >= 0) this.timeFilter.excludeDays.splice(idx, 1);
+    else this.timeFilter.excludeDays.push(day);
+    this.refresh();
+    this.refreshAllViews();
+  }
+
+  toggleContributor(contributor: string): void {
+    const idx = this.contributorFilter.excludeContributors.indexOf(contributor);
+    if (idx >= 0) this.contributorFilter.excludeContributors.splice(idx, 1);
+    else this.contributorFilter.excludeContributors.push(contributor);
+    this.refresh();
+    this.refreshAllViews();
+  }
+
+  togglePolicy(policy: string): void {
+    const idx = this.policyFilter.excludePolicies.indexOf(policy);
+    if (idx >= 0) this.policyFilter.excludePolicies.splice(idx, 1);
+    else this.policyFilter.excludePolicies.push(policy);
+    this.refresh();
+    this.refreshAllViews();
+  }
+
+  toggleViolation(violation: string): void {
+    const idx = this.violationFilter.excludeViolations.indexOf(violation);
+    if (idx >= 0) this.violationFilter.excludeViolations.splice(idx, 1);
+    else this.violationFilter.excludeViolations.push(violation);
+    this.refresh();
+    this.refreshAllViews();
   }
 
   showAll(): void {
     this.filters = { code: true, script: true, config: true, test: true, docs: true, resource: true, license: true };
+    this.bundleFilters = { ...DEFAULT_BUNDLE_FILTER };
+    this.folderFilters = { ...DEFAULT_FOLDER_FILTER };
+    this.definitionFilters = { ...DEFAULT_DEFINITION_FILTER };
+    this.sectionFilter = { none: false, all: true };
+    this.timeFilter = { ...DEFAULT_TIME_FILTER };
+    this.contributorFilter = { ...DEFAULT_CONTRIBUTOR_FILTER };
+    this.policyFilter = { ...DEFAULT_POLICY_FILTER };
+    this.violationFilter = { ...DEFAULT_VIOLATION_FILTER };
     this.refresh();
-    if (codebaseProvider) codebaseProvider.refresh();
+    this.refreshAllViews();
   }
 
   showNone(): void {
     this.filters = { code: false, script: false, config: false, test: false, docs: false, resource: false, license: false };
+    this.bundleFilters = { library: false, schema: false, binary: false, ui: false, site: false, assets: false };
+    this.folderFilters = { organization: false, required: false };
+    this.definitionFilters = { implementation: false, interface: false, constant: false };
+    this.sectionFilter = { none: true, all: false };
     this.refresh();
-    if (codebaseProvider) codebaseProvider.refresh();
+    this.refreshAllViews();
   }
 
   showDefault(): void {
     this.filters = { ...DEFAULT_FILTER };
+    this.bundleFilters = { ...DEFAULT_BUNDLE_FILTER };
+    this.folderFilters = { ...DEFAULT_FOLDER_FILTER };
+    this.definitionFilters = { ...DEFAULT_DEFINITION_FILTER };
+    this.sectionFilter = { ...DEFAULT_SECTION_FILTER };
+    this.timeFilter = { ...DEFAULT_TIME_FILTER };
+    this.contributorFilter = { ...DEFAULT_CONTRIBUTOR_FILTER };
+    this.policyFilter = { ...DEFAULT_POLICY_FILTER };
+    this.violationFilter = { ...DEFAULT_VIOLATION_FILTER };
     this.refresh();
-    if (codebaseProvider) codebaseProvider.refresh();
+    this.refreshAllViews();
   }
 
-  getFilters(): CodebaseFilter {
-    return this.filters;
-  }
+  getFilters(): CodebaseFilter { return this.filters; }
+  getBundleFilters(): BundleFilter { return this.bundleFilters; }
+  getFolderFilters(): FolderFilter { return this.folderFilters; }
+  getDefinitionFilters(): DefinitionFilter { return this.definitionFilters; }
+  getSectionFilter(): SectionFilter { return this.sectionFilter; }
+  
+  getIncludeKinds(): FileKind[] { return (Object.keys(this.filters) as FileKind[]).filter(k => this.filters[k]); }
+  getExcludeKinds(): FileKind[] { return (Object.keys(this.filters) as FileKind[]).filter(k => !this.filters[k]); }
+  getIncludeBundleKinds(): BundleKind[] { return (Object.keys(this.bundleFilters) as BundleKind[]).filter(k => this.bundleFilters[k]); }
+  getExcludeBundleKinds(): BundleKind[] { return (Object.keys(this.bundleFilters) as BundleKind[]).filter(k => !this.bundleFilters[k]); }
+  getIncludeFolderKinds(): FolderKind[] { return (Object.keys(this.folderFilters) as FolderKind[]).filter(k => this.folderFilters[k]); }
+  getExcludeFolderKinds(): FolderKind[] { return (Object.keys(this.folderFilters) as FolderKind[]).filter(k => !this.folderFilters[k]); }
+  getIncludeDefinitionKinds(): DefinitionCategory[] { return (Object.keys(this.definitionFilters) as DefinitionCategory[]).filter(k => this.definitionFilters[k]); }
+  getExcludeDefinitionKinds(): DefinitionCategory[] { return (Object.keys(this.definitionFilters) as DefinitionCategory[]).filter(k => !this.definitionFilters[k]); }
 
-  getIncludeKinds(): FileKind[] {
-    return (Object.keys(this.filters) as FileKind[]).filter(k => this.filters[k]);
-  }
-
-  getExcludeKinds(): FileKind[] {
-    return (Object.keys(this.filters) as FileKind[]).filter(k => !this.filters[k]);
-  }
+  getTimeFilter(): TimeFilter { return this.timeFilter; }
+  getContributorFilter(): ContributorFilter { return this.contributorFilter; }
+  getPolicyFilter(): PolicyFilter { return this.policyFilter; }
+  getViolationFilter(): ViolationFilter { return this.violationFilter; }
 
   getTreeItem(element: FilterItem): vscode.TreeItem {
     return element;
   }
 
-  getChildren(element?: FilterItem): FilterItem[] {
-    if (element) return [];
-    return [
-      new FilterItem("Show All", "action", undefined, undefined, "showAll"),
-      new FilterItem("Show None", "action", undefined, undefined, "showNone"),
-      new FilterItem("Show Default", "action", undefined, undefined, "showDefault"),
-      new FilterItem("Code", "kind", "code", this.filters.code),
-      new FilterItem("Script", "kind", "script", this.filters.script),
-      new FilterItem("Config", "kind", "config", this.filters.config),
-      new FilterItem("Test", "kind", "test", this.filters.test),
-      new FilterItem("Docs", "kind", "docs", this.filters.docs),
-      new FilterItem("Resource", "kind", "resource", this.filters.resource),
-      new FilterItem("License", "kind", "license", this.filters.license),
-    ];
+  async getChildren(element?: FilterItem): Promise<FilterItem[]> {
+    if (!element) {
+      return [
+        new FilterItem("Search", vscode.TreeItemCollapsibleState.None, "search"),
+        new FilterItem("Bundles", vscode.TreeItemCollapsibleState.Collapsed, "bundle"),
+        new FilterItem("Folders", vscode.TreeItemCollapsibleState.Collapsed, "folder"),
+        new FilterItem("Sections", vscode.TreeItemCollapsibleState.Collapsed, "section"),
+        new FilterItem("Definitions", vscode.TreeItemCollapsibleState.Collapsed, "definition"),
+        new FilterItem("Time", vscode.TreeItemCollapsibleState.Collapsed, "time"),
+        new FilterItem("Contributors", vscode.TreeItemCollapsibleState.Collapsed, "contributors"),
+        new FilterItem("Policies", vscode.TreeItemCollapsibleState.Collapsed, "policy"),
+        new FilterItem("Violations", vscode.TreeItemCollapsibleState.Collapsed, "violation")
+      ];
+    }
+
+    if (element.itemType === "time") {
+      return this.availableYears.map(year => {
+        const excluded = this.timeFilter.excludeYears.includes(year);
+        const item = new FilterItem(`${year}`, vscode.TreeItemCollapsibleState.Collapsed, "timeYear", year);
+        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.contextValue = "filterTimeYear";
+        return item;
+      });
+    }
+
+    if (element.itemType === "timeYear" && element.timeValue !== undefined) {
+      const months = this.availableMonths.length > 0 ? this.availableMonths : [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+      return months.map(month => {
+        const excluded = this.timeFilter.excludeMonths.includes(month);
+        const date = new Date(2000, month - 1, 1);
+        const monthName = date.toLocaleString('default', { month: 'long' });
+        const item = new FilterItem(monthName, vscode.TreeItemCollapsibleState.Collapsed, "timeMonth", element.timeValue, month);
+        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.contextValue = "filterTimeMonth";
+        return item;
+      });
+    }
+
+    if (element.itemType === "timeMonth" && element.secondaryTimeValue !== undefined) {
+      const days = this.availableDays.length > 0 ? this.availableDays : Array.from({length: 31}, (_, i) => i + 1);
+      return days.map(day => {
+        const excluded = this.timeFilter.excludeDays.includes(day);
+        const item = new FilterItem(`${day}`, vscode.TreeItemCollapsibleState.None, "timeDay", element.timeValue, element.secondaryTimeValue, day);
+        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.contextValue = "filterTimeDay";
+        return item;
+      });
+    }
+
+    if (element.itemType === "contributors") {
+      return this.availableContributors.map(c => {
+        const excluded = this.contributorFilter.excludeContributors.includes(c);
+        const item = new FilterItem(c, vscode.TreeItemCollapsibleState.None, "contributor", undefined, undefined, undefined, c);
+        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.contextValue = "filterContributor";
+        return item;
+      });
+    }
+
+    if (element.itemType === "bundle") {
+        return Object.keys(this.bundleFilters).map(k => {
+           const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
+           item.contextValue = "filterBundleKind";
+           item.command = { command: "semio.toggleBundleFilter", title: "Toggle", arguments: [k] };
+           item.iconPath = new vscode.ThemeIcon((this.bundleFilters as any)[k] ? "check" : "circle-slash");
+           return item;
+        });
+    }
+    
+    if (element.itemType === "folder") {
+        return Object.keys(this.folderFilters).map(k => {
+           const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
+           item.contextValue = "filterFolderKind";
+           item.command = { command: "semio.toggleFolderFilter", title: "Toggle", arguments: [k] };
+           item.iconPath = new vscode.ThemeIcon((this.folderFilters as any)[k] ? "check" : "circle-slash");
+           return item;
+        });
+    }
+
+    if (element.itemType === "definition") {
+        return Object.keys(this.definitionFilters).map(k => {
+           const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
+           item.contextValue = "filterDefinitionKind";
+           item.command = { command: "semio.toggleDefinitionFilter", title: "Toggle", arguments: [k] };
+           item.iconPath = new vscode.ThemeIcon((this.definitionFilters as any)[k] ? "check" : "circle-slash");
+           return item;
+        });
+    }
+    
+    if (element.itemType === "section") {
+        const items: FilterItem[] = [];
+        const noneItem = new FilterItem("None", vscode.TreeItemCollapsibleState.None, "action");
+        noneItem.command = { command: "semio.toggleSectionFilter", title: "Toggle", arguments: ["none"] };
+        noneItem.iconPath = new vscode.ThemeIcon(this.sectionFilter.none ? "check" : "circle-slash");
+        items.push(noneItem);
+        
+        const allItem = new FilterItem("All", vscode.TreeItemCollapsibleState.None, "action");
+        allItem.command = { command: "semio.toggleSectionFilter", title: "Toggle", arguments: ["all"] };
+        allItem.iconPath = new vscode.ThemeIcon(this.sectionFilter.all ? "check" : "circle-slash");
+        items.push(allItem);
+        return items;
+    }
+
+    if (element.itemType === "policy") {
+      return this.availablePolicies.map(p => {
+        const excluded = this.policyFilter.excludePolicies.includes(p);
+        const item = new FilterItem(p, vscode.TreeItemCollapsibleState.None, "action", undefined, undefined, undefined, undefined, p, undefined);
+        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.contextValue = "filterPolicy";
+        item.command = { command: "semio.togglePolicyFilter", title: "Toggle", arguments: [p] };
+        return item;
+      });
+    }
+
+    if (element.itemType === "violation") {
+      return this.availableViolations.map(v => {
+        const excluded = this.violationFilter.excludeViolations.includes(v);
+        const item = new FilterItem(v, vscode.TreeItemCollapsibleState.None, "action", undefined, undefined, undefined, undefined, undefined, v);
+        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.contextValue = "filterViolation";
+        item.command = { command: "semio.toggleViolationFilter", title: "Toggle", arguments: [v] };
+        return item;
+      });
+    }
+
+    // Default empty
+    return [];
+  }
+
+  updateAvailableFilters(data: { years?: number[], contributors?: string[], policies?: string[], violations?: string[] }): void {
+    if (data.years) this.availableYears = data.years;
+    if (data.contributors) this.availableContributors = data.contributors;
+    if (data.policies) this.availablePolicies = data.policies;
+    if (data.violations) this.availableViolations = data.violations;
+    this.refresh();
   }
 
   shouldInclude(filename: string): boolean {
@@ -3373,17 +3814,7 @@ class CodebaseDragAndDropController implements vscode.TreeDragAndDropController<
 
       try {
         log(`[CodebaseDragAndDrop] Integrating ${sourcePath} into ${targetFile} section ${targetSectionName}`);
-        await executeGraphQL(`
-          mutation Integrate($source: String!, $targetSection: String!, $targetFile: String!) {
-            integrate(source: $source, targetSection: $targetSection, targetFile: $targetFile) {
-              id
-            }
-          }
-        `, {
-          source: sourcePath,
-          targetSection: targetSectionName,
-          targetFile: targetFile
-        });
+        await runRepoCommandJson(`section integrate "${sourcePath}" "${targetSectionName}" "${targetFile}"`);
         vscode.window.showInformationMessage(`Integrated ${path.basename(sourcePath)} into ${targetSectionName}`);
         codebaseProvider.refresh();
       } catch (e) {
@@ -3419,17 +3850,7 @@ class CodebaseDragAndDropController implements vscode.TreeDragAndDropController<
 
       try {
         log(`[CodebaseDragAndDrop] Extracting ${sourceSection} from ${sourceFile} to ${targetFile}`);
-        await executeGraphQL(`
-          mutation Extract($sourceFile: String!, $sourceSection: String!, $targetFile: String!) {
-            extract(sourceFile: $sourceFile, sourceSection: $sourceSection, targetFile: $targetFile) {
-              id
-            }
-          }
-        `, {
-          sourceFile: sourceFile,
-          sourceSection: sourceSection,
-          targetFile: targetFile
-        });
+        await runRepoCommandJson(`section extract "${sourceFile}" "${sourceSection}" "${targetFile}"`);
         vscode.window.showInformationMessage(`Extracted ${sourceSection} to ${filename}`);
         codebaseProvider.refresh();
       } catch (e) {
@@ -3452,7 +3873,7 @@ let filterProvider: FilterProvider;
 function registerSidebarViews(context: vscode.ExtensionContext): void {
   try {
     log("[registerSidebarViews] Initializing providers...");
-    filterProvider = new FilterProvider();
+    filterProvider = new FilterProvider(getWorkspaceRoot() || "");
     ticketsProvider = new TicketsProvider();
     contributorsProvider = new ContributorsProvider();
     policiesProvider = new PoliciesProvider();
@@ -3489,10 +3910,55 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
       vscode.commands.registerCommand("semio.refreshPolicies", () => policiesProvider.refresh()),
     );
 
+    loadAvailableFilterValues();
+
     log("[registerSidebarViews] Sidebar views registration complete.");
   } catch (error) {
     logError("[registerSidebarViews] CRASH during registration:", error);
     throw error;
+  }
+}
+
+async function loadAvailableFilterValues(): Promise<void> {
+  try {
+    const root = getWorkspaceRoot();
+    if (!root) return;
+
+    const years: Set<number> = new Set();
+    const contributors: Set<string> = new Set();
+    const policies: Set<string> = new Set();
+    const violations: Set<string> = new Set();
+
+    const tickets = await fetchTicketsViaGraphQL();
+    for (const ticket of tickets) {
+      years.add(ticket.year);
+    }
+
+    const contributorsList = await fetchContributorsViaGraphQL();
+    for (const contributor of contributorsList) {
+      contributors.add(contributor.name || contributor.id);
+    }
+
+    const policiesList = await fetchPoliciesViaGraphQL();
+    for (const policy of policiesList) {
+      policies.add(policy.id);
+      if (policy.violationKinds) {
+        for (const violation of policy.violationKinds) {
+          violations.add(violation.id);
+        }
+      }
+    }
+
+    if (filterProvider) {
+      filterProvider.updateAvailableFilters({
+        years: Array.from(years).sort((a, b) => b - a),
+        contributors: Array.from(contributors).sort(),
+        policies: Array.from(policies).sort(),
+        violations: Array.from(violations).sort(),
+      });
+    }
+  } catch (error) {
+    logError("[loadAvailableFilterValues] Failed to load filter values:", error);
   }
 }
 
@@ -3622,7 +4088,6 @@ async function pickTicketGql(): Promise<string | undefined> {
   const months = [...new Set(tickets.filter(t => t.year === selectedYear).map(t => t.month))].sort((a, b) => b - a);
   const monthPick = await vscode.window.showQuickPick(months.map(m => m.toString()), {
     placeHolder: "Select Month",
-    ignoreFocusOut: true
   });
   if (!monthPick) return undefined;
   const selectedMonth = parseInt(monthPick);
@@ -3655,6 +4120,33 @@ function registerCommands(context: vscode.ExtensionContext): void {
     vscode.commands.registerCommand("semio.toggleFilter", (kind: keyof CodebaseFilter) => {
       if (filterProvider) filterProvider.toggle(kind);
     }),
+    vscode.commands.registerCommand("semio.toggleBundleFilter", (kind: keyof BundleFilter) => {
+      if (filterProvider) filterProvider.toggleBundleKind(kind);
+    }),
+    vscode.commands.registerCommand("semio.toggleFolderFilter", (kind: keyof FolderFilter) => {
+      if (filterProvider) filterProvider.toggleFolderKind(kind);
+    }),
+    vscode.commands.registerCommand("semio.toggleDefinitionFilter", (kind: keyof DefinitionFilter) => {
+      if (filterProvider) filterProvider.toggleDefinitionKind(kind);
+    }),
+    vscode.commands.registerCommand("semio.toggleYearFilter", (year: number) => {
+      if (filterProvider) filterProvider.toggleYear(year);
+    }),
+    vscode.commands.registerCommand("semio.toggleMonthFilter", (month: number) => {
+      if (filterProvider) filterProvider.toggleMonth(month);
+    }),
+    vscode.commands.registerCommand("semio.toggleDayFilter", (day: number) => {
+      if (filterProvider) filterProvider.toggleDay(day);
+    }),
+    vscode.commands.registerCommand("semio.toggleContributorFilter", (contributor: string) => {
+      if (filterProvider) filterProvider.toggleContributor(contributor);
+    }),
+    vscode.commands.registerCommand("semio.togglePolicyFilter", (policy: string) => {
+      if (filterProvider) filterProvider.togglePolicy(policy);
+    }),
+    vscode.commands.registerCommand("semio.toggleViolationFilter", (violation: string) => {
+      if (filterProvider) filterProvider.toggleViolation(violation);
+    }),
     vscode.commands.registerCommand("semio.filterAction", (action: string) => {
       if (!filterProvider) return;
       switch (action) {
@@ -3679,6 +4171,9 @@ function registerCommands(context: vscode.ExtensionContext): void {
       const resolvedPath = path.isAbsolute(filePath) ? filePath : root ? path.join(root, filePath) : filePath;
       const uri = vscode.Uri.file(resolvedPath);
       await vscode.commands.executeCommand("markdown.showPreview", uri);
+    }),
+    vscode.commands.registerCommand("semio.ticketRead", async (ticket: TicketData | ContributorTicketData | { ticket: TicketData | ContributorTicketData }) => {
+      await vscode.commands.executeCommand("semio.openTicket", ticket);
     }),
     vscode.commands.registerCommand("semio.openTicketPlan", async (ticket: TicketData | ContributorTicketData | { ticket: TicketData | ContributorTicketData }) => {
       const resolvedTicket = resolveTicketData(ticket);

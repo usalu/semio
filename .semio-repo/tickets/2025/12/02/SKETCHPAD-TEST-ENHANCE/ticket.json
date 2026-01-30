@@ -1,12 +1,19 @@
 {
   "title": "Enhance sketchpad tests with panel verification and drag-drop functionality",
-  "prompt": "Enhance sketchpad tests with panel verification and drag-drop functionality",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.826Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Enhance sketchpad tests with panel verification and drag-drop functionality",
+  "started": "2025-12-16T17:06:07.826Z",
+  "iterations": [
+    {
+      "prompt": "Enhance sketchpad tests with panel verification and drag-drop functionality",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.826Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

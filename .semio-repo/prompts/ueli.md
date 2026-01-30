@@ -28,14 +28,20 @@ Repo metrics:
 - Contributors [total]
 - Policies
 
-Extend bundles
+Extend the bundle, folder, file, section, definition with metrics:
+- LoC - Lines of code [total, <language> such as python, typescript, javascript, html, css, json, yaml, toml, markdown, text, …]
+{
+  "total": 100,
+  "<language>": <count>
+}
+- Memory in MB
+Display the metrics in the cli, vscode extension, graphql and mcp tool.
 
+Expand bundle, folder, definition to have a kind property. Those kinds cant simply be derived from the names but need general knowledge and repository knowledge.
 
-Expand bundle, folder, definition to have a semantic kind property. Those properties cant simply be derived from the names but need general knowledge and repository knowledge.
+Introduce bundle kinds for all bundles: library (e.g. `@semio/js`, `@semio/go`, `@semio/py`, `@semio/rust`, …), schema (e.g. `@semio/sqlite`, `@semio/graphql`, `@semio/json-schema`, …), binary (`@semio-repo/go`, `@semio-repo/server`, …), ui (`@semio-repo/vscode`, `@semio/grasshopper`, `@semio/desktop`, …), site (`@semio/play`, …), assets (`@semio/icons`, …). Make sure that it is described inside the `package.json` and not hardcoded in the repo binary. Use different codeicons in the vscode extension for the different kinds for the tree items.
 
-Bundle kinds: library (e.g. `@semio/js`, `@semio/go`, `@semio/py`, `@semio/rust`, …), schema (e.g. `@semio/sqlite`, `@semio/graphql`, `@semio/json-schema`, …), binary (`@semio-repo/go`, `@semio-repo/server`, …), ui (`@semio-repo/vscode`, `@semio/grasshopper`, `@semio/desktop`, …), site (`@semio/play`, …), assets (`@semio/icons`, …)
-
-Folder kinds: organization (not necessary e.g. `js`, `go`, `py`, `rs`, …), required (e.g. bundles must be inside a folder because they have config files with reserved names, …)
+Introduce folder kinds: organization (not necessary e.g. `js`, `go`, `py`, `rs`, …), required (e.g. bundles must be inside a folder because they have config files with reserved names, …)
 
 Definition kinds: implementation (concrete implementation such as function such as function or const ()=>{}, class, struct, …), interface (some api without implementation such as interface in typescript, type in typescript, traits in rust, …), constant (global const or var in javascript, let in javascript, enum …). 
 
@@ -65,12 +71,7 @@ Extend the filter section to have tree items with menu toggle actions on them th
 │ └─ contributors # none, all
 │ │ └─ CONTRIBUTOR # none, all
 
-
-├─ codebase
-…
-
-
-The file tree items should have different codeicons according the file kind (code, script, config, test, docs, resource, license).
+The codebase tree items (bundle, folder, file, section, definition) should have different codeicons according their kind.
 
 The sections section along with all tree items of the explorer side view in vscode should be the same as the file tree item in codebase section in the semio-repo side view. 100% the same (same behaviour such as drag and drop, same action toggles, same icons, same order, same children, etc).
 
@@ -163,34 +164,17 @@ The ticket mechanism should be extended/refactored/changed:
 Make sure all commands that interact with github have a --no-github flag to disable github interaction. Refactor all commands to use this flag.
 
 The cli should be tested e2e for all commands with all different syntaxes (positional, flags, named values). Never interact with github on tests and cleanup afterwards.
-e.g. $ go/repo/repo goal tree
-✗ error: graphql errors: [Cannot query field "data" on type "Ticket". Did you mean "day", "path", or "dates"?]
-✗ failed   1ms (exit: 1)
-Error: exit status 1
-Usage:
-  repo goal tree [flags]
-
-Flags:
-  -h, --help   help for tree
-
-Global Flags:
-      --json               Output NDJSON
-      --repo string        Repo root path
-      --timeout duration   Timeout for command execution
-      --verbose            Verbose output
-
-exit status 1
 
 Rename the section section in explorer sideview in vscode to active file.
 
-Migrate all existing tickets with a temporary migration script to the new format. Some tickets have `plan.md`, `log.md`, `summary.md`. Merge them into a single `ticket.md` file. Some tickets have iterations only with date instead of started and finished dates. The date is the started date.
+Migrate all existing tickets with a temporary migration script to the new format. Some tickets have `plan.md`, `log.md`, `summary.md`. Merge them into a single `ticket.md` file. Make sure to match as much as you can from old json formats to the new json format. Check indidvidually what makes sense. Whenever you cant migrate something because of missing information, make it null.
 
 repo binary, vscode extension, graphql:
 A ticket iteration should not have one date but instead dates: {started, finished}
 
 Create a new goal for `r26-02` release. The aim of this release is to have sketchpad running at mvp level, along with updated docs and examples.
 
-Add a new goal to the `r26-02` release goal: Running sketchpad
+Add a new goal to the `r26-02` release goal: Updated Docs
 Due date mid of next month.
 
 Create a new goal tree:
@@ -204,8 +188,19 @@ Create a new goal tree:
       - Running Docs App
   - Updated Docs
     - Updated User Docs
-      - Updated thinking-in-semio Tutorial
-      - Updated hello-semio Tutorial
+      - Updated Tutorials
+      - Updated Examples
+    - Updated Dev Docs
+      - Updated AGENTS.md
+      - Updated README.md
+- AI-optimized Repo
+  - Repo Client
+    - Repo Binary
+      - Repo MCP
+      - Repo CLI
+    - Repo VSCode Extension
+  - Repo Server
+    - Repo API
 
 All commands from the binary should be available in vscode (a lot are missing e.g. the goal commands). The arguments should be fetched smarter than just asking the user for strings. E.g. instead of asking for year, month, day, slug which identifies a ticket, show a list of years, then months, then days, then a list of tickets to choose from. Instead of asking for an id of the goal, show first a the top-level goals, then the sub-goals. Do multiple commands that execute the same command but with multiple different ways to fetch the arguments when it makes sense e.g. a ticket can also be selected by goals, subgoals, ticket, sub-tickets, etc.
 

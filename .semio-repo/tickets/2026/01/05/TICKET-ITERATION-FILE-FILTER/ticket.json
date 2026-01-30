@@ -1,12 +1,19 @@
 {
   "title": "TICKET-ITERATION-FILE-FILTER",
-  "prompt": "Fix ticket iteration end to only calculate lines for files that were declared when the iteration started, not all files from git.",
-  "llm": "opus-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2026-01-05T11:41:39Z"
-  },
-  "commit": "393dfeadd9c012eb01d37dad9cd10065832c6c1c",
-  "summary": "Migrated ticket"
+  "prompt": "Fix ticket iteration end to only calculate lines for files that were declared when the iteration started, not all files from git.",
+  "started": "2026-01-05T11:41:39Z",
+  "iterations": [
+    {
+      "prompt": "Fix ticket iteration end to only calculate lines for files that were declared when the iteration started, not all files from git.",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2026-01-05T11:41:39Z",
+      "commit": "393dfeadd9c012eb01d37dad9cd10065832c6c1c"
+    }
+  ]
 }

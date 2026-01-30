@@ -1,13 +1,21 @@
 {
   "title": "Make UI elements transparent; only windows paint background",
-  "prompt": "Remove per-element backgrounds so only Window surfaces have a background.",
-  "llm": "gpt-5.2-codex",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-18T15:34:29.349Z",
-    "finished": "2025-12-18T15:55:58.196Z"
-  },
-  "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
-  "summary": "Migrated ticket"
+  "prompt": "Remove per-element backgrounds so only Window surfaces have a background.",
+  "started": "2025-12-18T15:34:29.349Z",
+  "iterations": [
+    {
+      "prompt": "Remove per-element backgrounds so only Window surfaces have a background.",
+      "llm": "gpt-5.2-codex",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-18T15:34:29.349Z",
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
+      "finished": "2025-12-18T15:55:58.196Z"
+    }
+  ],
+  "finished": "2025-12-18T15:55:58.196Z"
 }

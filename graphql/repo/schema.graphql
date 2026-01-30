@@ -145,6 +145,24 @@ input FilterInput {
   showGenerated: Boolean
   excludeKinds: [FileKind!]
   includeKinds: [FileKind!]
+  excludeBundleKinds: [BundleKind!]
+  includeBundleKinds: [BundleKind!]
+  excludeFolderKinds: [FolderKind!]
+  includeFolderKinds: [FolderKind!]
+  excludeDefinitionKinds: [DefinitionCategory!]
+  includeDefinitionKinds: [DefinitionCategory!]
+  excludeYears: [Int!]
+  includeYears: [Int!]
+  excludeMonths: [Int!]
+  includeMonths: [Int!]
+  excludeDays: [Int!]
+  includeDays: [Int!]
+  excludeContributors: [String!]
+  includeContributors: [String!]
+  excludePolicies: [String!]
+  includePolicies: [String!]
+  excludeViolations: [String!]
+  includeViolations: [String!]
 }
 
 enum FileKind {
@@ -155,6 +173,26 @@ enum FileKind {
   DOCS
   RESOURCE
   LICENSE
+}
+
+enum BundleKind {
+  LIBRARY
+  SCHEMA
+  BINARY
+  UI
+  SITE
+  ASSETS
+}
+
+enum FolderKind {
+  ORGANIZATION
+  REQUIRED
+}
+
+enum DefinitionCategory {
+  IMPLEMENTATION
+  INTERFACE
+  CONSTANT
 }
 
 # #endregion Inputs
@@ -185,6 +223,7 @@ type Bundle implements Node {
   sourceRoot: String
   projectType: String
   tags: [String!]!
+  kind: BundleKind!
   uri: String!
   folders: [Folder!]!
   files: [File!]!
@@ -198,6 +237,7 @@ type Folder implements Node {
   path: String!
   uri: String!
   name: String!
+  kind: FolderKind!
   parent: Folder
   children: [Folder!]!
   files: [File!]!
@@ -236,6 +276,7 @@ type Definition implements Node {
   id: ID!
   name: String!
   kind: DefinitionKind!
+  category: DefinitionCategory!
   file: File!
   section: Section
   violations: [Violation!]!

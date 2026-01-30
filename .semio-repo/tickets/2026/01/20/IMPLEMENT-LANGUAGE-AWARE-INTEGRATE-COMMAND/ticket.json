@@ -1,17 +1,18 @@
 {
   "title": "Implement Language Aware Integrate Command",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Refactor and extend the integrate repo command to handle source code integration with language-specific section wrapping and header merging.",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "usalu",
-      "date": "2026-01-20T10:01:21.886069305Z",
-      "commit": "faaeb3f919b96cb76d170b8fa215e17f66eeb5ae"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ],
-  "status": "open",
-  "dates": {},
   "github": {
     "issue": "https://github.com/usalu/semio/issues/170"
   }

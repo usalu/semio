@@ -1,12 +1,19 @@
 {
   "title": "SIDEPANEL-HUDPANEL-REFACTOR",
-  "prompt": "Refactor panels to introduce SidePanel and HudPanel components. SidePanel is left/right with scrollable tabs. HudPanel is center. Replace dropdown toggles with simple panel toggles. Apps register tabs to panels.",
-  "llm": "opus-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-20T16:01:35.453Z"
-  },
-  "commit": "0d022d52b13d63e4c46cdfe775245a290c4e89a2",
-  "summary": "Migrated ticket"
+  "prompt": "Refactor panels to introduce SidePanel and HudPanel components. SidePanel is left/right with scrollable tabs. HudPanel is center. Replace dropdown toggles with simple panel toggles. Apps register tabs to panels.",
+  "started": "2025-12-20T16:01:35.453Z",
+  "iterations": [
+    {
+      "prompt": "Refactor panels to introduce SidePanel and HudPanel components. SidePanel is left/right with scrollable tabs. HudPanel is center. Replace dropdown toggles with simple panel toggles. Apps register tabs to panels.",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-20T16:01:35.453Z",
+      "commit": "0d022d52b13d63e4c46cdfe775245a290c4e89a2"
+    }
+  ]
 }

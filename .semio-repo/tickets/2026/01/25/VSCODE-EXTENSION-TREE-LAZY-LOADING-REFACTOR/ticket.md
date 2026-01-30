@@ -8,6 +8,11 @@
 - [x] Fix tickets, policies, and contributors providers to not depend on getCodebase()
 - [x] Update contributor avatar path to new location
 
+
+- Verify the repo CLI source uses Position subfield selections for section list GraphQL queries.
+- Rebuild the repo binary and validate `section list` against a known file.
+- Document the Sections view data flow and update ticket notes/summary.
+
 ## Changes
 
 ### Critical Fix: CLI Flags

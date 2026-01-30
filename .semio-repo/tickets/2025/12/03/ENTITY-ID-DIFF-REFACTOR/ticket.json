@@ -1,12 +1,19 @@
 {
   "title": "Refactor EntityId and Diff Schemas",
-  "prompt": "Refactor EntityId and Diff Schemas",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.836Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Refactor EntityId and Diff Schemas",
+  "started": "2025-12-16T17:06:07.836Z",
+  "iterations": [
+    {
+      "prompt": "Refactor EntityId and Diff Schemas",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.836Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

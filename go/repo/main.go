@@ -2104,6 +2104,46 @@ func bindStreamFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("only-resource", false, "Only show resource files")
 	cmd.Flags().Bool("only-license", false, "Only show license files")
 
+	cmd.Flags().Bool("no-library", false, "Exclude library bundles")
+	cmd.Flags().Bool("no-schema", false, "Exclude schema bundles")
+	cmd.Flags().Bool("no-binary", false, "Exclude binary bundles")
+	cmd.Flags().Bool("no-ui", false, "Exclude UI bundles")
+	cmd.Flags().Bool("no-site", false, "Exclude site bundles")
+	cmd.Flags().Bool("no-assets", false, "Exclude asset bundles")
+
+	cmd.Flags().Bool("only-library", false, "Only show library bundles")
+	cmd.Flags().Bool("only-schema", false, "Only show schema bundles")
+	cmd.Flags().Bool("only-binary", false, "Only show binary bundles")
+	cmd.Flags().Bool("only-ui", false, "Only show UI bundles")
+	cmd.Flags().Bool("only-site", false, "Only show site bundles")
+	cmd.Flags().Bool("only-assets", false, "Only show asset bundles")
+
+	cmd.Flags().Bool("no-organization", false, "Exclude organization folders")
+	cmd.Flags().Bool("no-required", false, "Exclude required folders")
+	cmd.Flags().Bool("only-organization", false, "Only show organization folders")
+	cmd.Flags().Bool("only-required", false, "Only show required folders")
+
+	cmd.Flags().Bool("no-implementation", false, "Exclude implementation definitions")
+	cmd.Flags().Bool("no-interface", false, "Exclude interface definitions")
+	cmd.Flags().Bool("no-constant", false, "Exclude constant definitions")
+	cmd.Flags().Bool("only-implementation", false, "Only show implementation definitions")
+	cmd.Flags().Bool("only-interface", false, "Only show interface definitions")
+	cmd.Flags().Bool("only-constant", false, "Only show constant definitions")
+
+	cmd.Flags().IntSlice("no-year", nil, "Exclude years")
+	cmd.Flags().IntSlice("only-year", nil, "Only show years")
+	cmd.Flags().IntSlice("no-month", nil, "Exclude months")
+	cmd.Flags().IntSlice("only-month", nil, "Only show months")
+	cmd.Flags().IntSlice("no-day", nil, "Exclude days")
+	cmd.Flags().IntSlice("only-day", nil, "Only show days")
+
+	cmd.Flags().StringSlice("no-contributor", nil, "Exclude contributors")
+	cmd.Flags().StringSlice("only-contributor", nil, "Only show contributors")
+	cmd.Flags().StringSlice("no-policy", nil, "Exclude policies")
+	cmd.Flags().StringSlice("only-policy", nil, "Only show policies")
+	cmd.Flags().StringSlice("no-violation", nil, "Exclude violation kinds")
+	cmd.Flags().StringSlice("only-violation", nil, "Only show violation kinds")
+
 	cmd.Flags().String("filter", "", "Filter string")
 	cmd.Flags().Bool("regex", false, "Use regex for filter")
 	cmd.Flags().Bool("match-case", false, "Match case for filter")
@@ -2160,20 +2200,130 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 		includeKinds = append(includeKinds, FileKindLicense)
 	}
 
+	var excludeBundleKinds []BundleKind
+	if v, _ := cmd.Flags().GetBool("no-library"); v {
+		excludeBundleKinds = append(excludeBundleKinds, BundleKindLibrary)
+	}
+	if v, _ := cmd.Flags().GetBool("no-schema"); v {
+		excludeBundleKinds = append(excludeBundleKinds, BundleKindSchema)
+	}
+	if v, _ := cmd.Flags().GetBool("no-binary"); v {
+		excludeBundleKinds = append(excludeBundleKinds, BundleKindBinary)
+	}
+	if v, _ := cmd.Flags().GetBool("no-ui"); v {
+		excludeBundleKinds = append(excludeBundleKinds, BundleKindUI)
+	}
+	if v, _ := cmd.Flags().GetBool("no-site"); v {
+		excludeBundleKinds = append(excludeBundleKinds, BundleKindSite)
+	}
+	if v, _ := cmd.Flags().GetBool("no-assets"); v {
+		excludeBundleKinds = append(excludeBundleKinds, BundleKindAssets)
+	}
+
+	var includeBundleKinds []BundleKind
+	if v, _ := cmd.Flags().GetBool("only-library"); v {
+		includeBundleKinds = append(includeBundleKinds, BundleKindLibrary)
+	}
+	if v, _ := cmd.Flags().GetBool("only-schema"); v {
+		includeBundleKinds = append(includeBundleKinds, BundleKindSchema)
+	}
+	if v, _ := cmd.Flags().GetBool("only-binary"); v {
+		includeBundleKinds = append(includeBundleKinds, BundleKindBinary)
+	}
+	if v, _ := cmd.Flags().GetBool("only-ui"); v {
+		includeBundleKinds = append(includeBundleKinds, BundleKindUI)
+	}
+	if v, _ := cmd.Flags().GetBool("only-site"); v {
+		includeBundleKinds = append(includeBundleKinds, BundleKindSite)
+	}
+	if v, _ := cmd.Flags().GetBool("only-assets"); v {
+		includeBundleKinds = append(includeBundleKinds, BundleKindAssets)
+	}
+
+	var excludeFolderKinds []FolderKind
+	if v, _ := cmd.Flags().GetBool("no-organization"); v {
+		excludeFolderKinds = append(excludeFolderKinds, FolderKindOrganization)
+	}
+	if v, _ := cmd.Flags().GetBool("no-required"); v {
+		excludeFolderKinds = append(excludeFolderKinds, FolderKindRequired)
+	}
+
+	var includeFolderKinds []FolderKind
+	if v, _ := cmd.Flags().GetBool("only-organization"); v {
+		includeFolderKinds = append(includeFolderKinds, FolderKindOrganization)
+	}
+	if v, _ := cmd.Flags().GetBool("only-required"); v {
+		includeFolderKinds = append(includeFolderKinds, FolderKindRequired)
+	}
+
+	var excludeDefinitionKinds []DefinitionCategory
+	if v, _ := cmd.Flags().GetBool("no-implementation"); v {
+		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionCategoryImplementation)
+	}
+	if v, _ := cmd.Flags().GetBool("no-interface"); v {
+		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionCategoryInterface)
+	}
+	if v, _ := cmd.Flags().GetBool("no-constant"); v {
+		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionCategoryConstant)
+	}
+
+	var includeDefinitionKinds []DefinitionCategory
+	if v, _ := cmd.Flags().GetBool("only-implementation"); v {
+		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionCategoryImplementation)
+	}
+	if v, _ := cmd.Flags().GetBool("only-interface"); v {
+		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionCategoryInterface)
+	}
+	if v, _ := cmd.Flags().GetBool("only-constant"); v {
+		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionCategoryConstant)
+	}
+
+	excludeYears, _ := cmd.Flags().GetIntSlice("no-year")
+	includeYears, _ := cmd.Flags().GetIntSlice("only-year")
+	excludeMonths, _ := cmd.Flags().GetIntSlice("no-month")
+	includeMonths, _ := cmd.Flags().GetIntSlice("only-month")
+	excludeDays, _ := cmd.Flags().GetIntSlice("no-day")
+	includeDays, _ := cmd.Flags().GetIntSlice("only-day")
+
+	excludeContributors, _ := cmd.Flags().GetStringSlice("no-contributor")
+	includeContributors, _ := cmd.Flags().GetStringSlice("only-contributor")
+	excludePolicies, _ := cmd.Flags().GetStringSlice("no-policy")
+	includePolicies, _ := cmd.Flags().GetStringSlice("only-policy")
+	excludeViolations, _ := cmd.Flags().GetStringSlice("no-violation")
+	includeViolations, _ := cmd.Flags().GetStringSlice("only-violation")
+
 	filter, _ := cmd.Flags().GetString("filter")
 	regex, _ := cmd.Flags().GetBool("regex")
 	matchCase, _ := cmd.Flags().GetBool("match-case")
 	matchWholeWord, _ := cmd.Flags().GetBool("match-whole-word")
 
 	return StreamOptions{
-		ShowIgnored:    showIgnored,
-		ShowGenerated:  showGenerated,
-		ExcludeKinds:   excludeKinds,
-		IncludeKinds:   includeKinds,
-		Filter:         filter,
-		Regex:          regex,
-		MatchCase:      matchCase,
-		MatchWholeWord: matchWholeWord,
+		ShowIgnored:            showIgnored,
+		ShowGenerated:          showGenerated,
+		ExcludeKinds:           excludeKinds,
+		IncludeKinds:           includeKinds,
+		ExcludeBundleKinds:     excludeBundleKinds,
+		IncludeBundleKinds:     includeBundleKinds,
+		ExcludeFolderKinds:     excludeFolderKinds,
+		IncludeFolderKinds:     includeFolderKinds,
+		ExcludeDefinitionKinds: excludeDefinitionKinds,
+		IncludeDefinitionKinds: includeDefinitionKinds,
+		ExcludeYears:           excludeYears,
+		IncludeYears:           includeYears,
+		ExcludeMonths:          excludeMonths,
+		IncludeMonths:          includeMonths,
+		ExcludeDays:            excludeDays,
+		IncludeDays:            includeDays,
+		ExcludeContributors:    excludeContributors,
+		IncludeContributors:    includeContributors,
+		ExcludePolicies:        excludePolicies,
+		IncludePolicies:        includePolicies,
+		ExcludeViolations:      excludeViolations,
+		IncludeViolations:      includeViolations,
+		Filter:                 filter,
+		Regex:                  regex,
+		MatchCase:              matchCase,
+		MatchWholeWord:         matchWholeWord,
 	}
 }
 
@@ -2999,12 +3149,17 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 			ptype, _ = bundle["type"].(string)
 		}
 
+		typeStr := ""
+		if ptype != "" {
+			typeStr = fmt.Sprintf(", type: %s", ptype)
+		}
+
 		// Compact line: 📦 NAME (root: ROOT, type: PROJECTTYPE)
-		return fmt.Sprintf("  %s %s (root: %s, type: %s)\n",
+		return fmt.Sprintf("  %s %s (root: %s%s)\n",
 			colorize("📦", ColorBlue, isTTY),
 			colorize(name, ColorBold, isTTY),
 			root,
-			ptype)
+			typeStr)
 	}
 
 	// Case 7: File result
@@ -3077,6 +3232,154 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 			}
 			return sb.String()
 		}
+	}
+
+	// Case 8: Single Section Result
+	if sec, ok := payload["section"].(map[string]interface{}); ok {
+		name, _ := sec["name"].(string)
+		filePath, _ := sec["filePath"].(string)
+		startLine, _ := sec["startLine"].(float64)
+		endLine, _ := sec["endLine"].(float64)
+
+		childrenCount := 0
+		if children, ok := sec["children"].([]interface{}); ok {
+			childrenCount = len(children)
+		}
+		childrenStr := ""
+		if childrenCount > 0 {
+			childrenStr = fmt.Sprintf(" (+%d children)", childrenCount)
+		}
+
+		// § NAME (FILE:START-END) (+X children)
+		return fmt.Sprintf("  %s %s %s%s\n",
+			colorize("§", ColorYellow, isTTY),
+			colorize(name, ColorBold, isTTY),
+			colorize(fmt.Sprintf("(%s:%d-%d)", filePath, int(startLine), int(endLine)), ColorDim, isTTY),
+			colorize(childrenStr, ColorDim, isTTY))
+	}
+
+	// Case 9: Single Definition Result
+	if def, ok := payload["definition"].(map[string]interface{}); ok {
+		name, _ := def["name"].(string)
+		kind, _ := def["kind"].(string)
+		filePath, _ := def["filePath"].(string)
+		startLine, _ := def["startLine"].(float64)
+		endLine, _ := def["endLine"].(float64)
+
+		// ƒ NAME (kind: KIND, FILE:START-END)
+		return fmt.Sprintf("  %s %s %s\n",
+			colorize("ƒ", ColorGreen, isTTY),
+			colorize(name, ColorBold, isTTY),
+			colorize(fmt.Sprintf("(kind: %s, %s:%d-%d)", kind, filePath, int(startLine), int(endLine)), ColorDim, isTTY))
+	}
+
+
+	// Case 11: Single Folder Result
+	if folder, ok := payload["folder"].(map[string]interface{}); ok {
+		path, _ := folder["path"].(string)
+		kind, _ := folder["kind"].(string)
+
+		// 📂 PATH (KIND)
+		return fmt.Sprintf("  %s %s %s\n",
+			colorize("📂", ColorBlue, isTTY),
+			colorize(path, ColorBold, isTTY),
+			colorize(fmt.Sprintf("(%s)", kind), ColorDim, isTTY))
+	}
+
+	// Case 12: Single File Result
+	if file, ok := payload["file"].(map[string]interface{}); ok {
+		path, _ := file["id"].(string)
+		
+		// 📄 PATH
+		return fmt.Sprintf("  %s %s\n",
+			colorize("📄", ColorDim, isTTY),
+			path)
+	}
+
+	// Case 13: Single Goal Result
+	if goal, ok := payload["goal"].(map[string]interface{}); ok {
+		id, _ := goal["id"].(string)
+		title, _ := goal["title"].(string)
+		status, _ := goal["status"].(string)
+		dates, _ := goal["dates"].(map[string]interface{})
+		dueStr, _ := dates["due"].(string)
+
+		// Icon logic
+		statusIcon := "◯"
+		statusColor := ColorBlue
+		if status == "closed" || status == "finished" {
+			statusIcon = "✓"
+			statusColor = ColorGreen
+		}
+
+		dateStr := ""
+		if dueStr != "" {
+			dateStr = fmt.Sprintf(" (due: %s)", dueStr)
+		}
+
+		// 🎯 TITLE (ID) (due: DATE)
+		return fmt.Sprintf("  %s %s %s%s\n",
+			colorize(statusIcon, statusColor, isTTY),
+			colorize(title, ColorBold, isTTY),
+			colorize("("+id+")", ColorDim, isTTY),
+			colorize(dateStr, ColorDim, isTTY))
+	}
+
+	// Case 14: Single Contributor Result
+	if contrib, ok := payload["contributor"].(map[string]interface{}); ok {
+		github, _ := contrib["github"].(string)
+		name, _ := contrib["name"].(string)
+		email, _ := contrib["email"].(string)
+		// contributions might be a map
+		contributions, _ := contrib["contributions"].(map[string]interface{})
+		
+		stats := []string{}
+		if c, ok := contributions["commits"].(float64); ok && c > 0 {
+			stats = append(stats, fmt.Sprintf("%d commits", int(c)))
+		}
+		if t, ok := contributions["tickets"].(float64); ok && t > 0 {
+			stats = append(stats, fmt.Sprintf("%d tickets", int(t)))
+		}
+
+		statsStr := ""
+		if len(stats) > 0 {
+			statsStr = fmt.Sprintf(" (%s)", strings.Join(stats, ", "))
+		}
+
+		display := name
+		if display == "" {
+			display = github
+		}
+		if display == "" {
+			display = email
+		}
+
+		// 👤 NAME (@GITHUB) stats
+		return fmt.Sprintf("  %s %s %s%s\n",
+			colorize("👤", ColorBlue, isTTY),
+			colorize(display, ColorBold, isTTY),
+			colorize("(@"+github+")", ColorDim, isTTY),
+			colorize(statsStr, ColorDim, isTTY))
+	}
+
+	// Case 15: Single Policy Result
+	if policy, ok := payload["policy"].(map[string]interface{}); ok {
+		id, _ := policy["id"].(string)
+		desc, _ := policy["description"].(string)
+		kinds, _ := policy["kinds"].([]interface{})
+		
+		kindsCount := len(kinds)
+		kindsStr := ""
+		if kindsCount > 0 {
+			kindsStr = fmt.Sprintf(" (%d kinds)", kindsCount)
+		}
+
+		// 🛡️ ID DESCRIPTION (X kinds)
+		return fmt.Sprintf("  %s %s %s%s\n",
+			colorize("🛡️", ColorBlue, isTTY),
+			colorize(id, ColorBold, isTTY),
+			colorize(desc, ColorDim, isTTY),
+			colorize(kindsStr, ColorDim, isTTY))
 	}
 
 	// Default: JSON dump
@@ -3275,21 +3578,58 @@ type Node interface {
 type DefinitionKind string
 
 const (
-	DefinitionKindFunction DefinitionKind = "function"
-	DefinitionKindClass    DefinitionKind = "class"
-	DefinitionKindVariable DefinitionKind = "variable"
-	DefinitionKindPort     DefinitionKind = "interface"
-	DefinitionKindType     DefinitionKind = "type"
-	DefinitionKindEnum     DefinitionKind = "enum"
-	DefinitionKindMethod   DefinitionKind = "method"
-	DefinitionKindProperty DefinitionKind = "property"
+	DefinitionKindFunction  DefinitionKind = "function"
+	DefinitionKindClass     DefinitionKind = "class"
+	DefinitionKindVariable  DefinitionKind = "variable"
+	DefinitionKindPort      DefinitionKind = "interface"
+	DefinitionKindType      DefinitionKind = "type"
+	DefinitionKindEnum      DefinitionKind = "enum"
+	DefinitionKindMethod    DefinitionKind = "method"
+	DefinitionKindProperty  DefinitionKind = "property"
+	DefinitionKindConstant  DefinitionKind = "constant"
+	DefinitionKindStruct    DefinitionKind = "struct"
+	DefinitionKindTrait     DefinitionKind = "trait"
+	DefinitionKindModule    DefinitionKind = "module"
+	DefinitionKindNamespace DefinitionKind = "namespace"
 )
+
+type DefinitionCategory string
+
+const (
+	DefinitionCategoryImplementation DefinitionCategory = "implementation"
+	DefinitionCategoryInterface      DefinitionCategory = "interface"
+	DefinitionCategoryConstant       DefinitionCategory = "constant"
+)
+
+func (e DefinitionCategory) IsValid() bool {
+	switch e {
+	case DefinitionCategoryImplementation, DefinitionCategoryInterface, DefinitionCategoryConstant:
+		return true
+	}
+	return false
+}
+
+func (e DefinitionCategory) String() string {
+	return string(e)
+}
+
+func DeriveDefinitionCategory(kind DefinitionKind) DefinitionCategory {
+	switch kind {
+	case DefinitionKindPort, DefinitionKindType, DefinitionKindTrait:
+		return DefinitionCategoryInterface
+	case DefinitionKindConstant, DefinitionKindEnum:
+		return DefinitionCategoryConstant
+	default:
+		return DefinitionCategoryImplementation
+	}
+}
 
 func (e DefinitionKind) IsValid() bool {
 	switch e {
 	case DefinitionKindFunction, DefinitionKindClass, DefinitionKindVariable,
 		DefinitionKindPort, DefinitionKindType, DefinitionKindEnum,
-		DefinitionKindMethod, DefinitionKindProperty:
+		DefinitionKindMethod, DefinitionKindProperty, DefinitionKindConstant,
+		DefinitionKindStruct, DefinitionKindTrait, DefinitionKindModule, DefinitionKindNamespace:
 		return true
 	}
 	return false
@@ -3481,12 +3821,61 @@ type Repo struct {
 func (r *Repo) IsNode()       {}
 func (r *Repo) GetID() string { return "@semio-repo/repo" }
 
+type BundleKind string
+
+const (
+	BundleKindLibrary BundleKind = "library"
+	BundleKindSchema  BundleKind = "schema"
+	BundleKindBinary  BundleKind = "binary"
+	BundleKindUI      BundleKind = "ui"
+	BundleKindSite    BundleKind = "site"
+	BundleKindAssets  BundleKind = "assets"
+)
+
+func (e BundleKind) IsValid() bool {
+	switch e {
+	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindUI, BundleKindSite, BundleKindAssets:
+		return true
+	}
+	return false
+}
+
+func (e BundleKind) String() string {
+	return string(e)
+}
+
+func DeriveBundleKind(name string, root string) BundleKind {
+	normalized := normalizeBundleLabel(name)
+	switch normalized {
+	case "@semio/sqlite", "@semio/graphql", "@semio/json-schema", "@semio/openapi", "@semio/rdf":
+		return BundleKindSchema
+	case "@semio-repo/go", "@semio-repo/server":
+		return BundleKindBinary
+	case "@semio-repo/vscode", "@semio/grasshopper", "@semio/desktop", "@semio/sketchpad":
+		return BundleKindUI
+	case "@semio/play", "@semio/docs":
+		return BundleKindSite
+	case "@semio/icons", "@semio/assets", "@semio/logo", "@semio/images":
+		return BundleKindAssets
+	case "@semio/js", "@semio/go", "@semio/py", "@semio/rs", "@semio/net", "@semio/engine", "@semio/semio", "@semio/rb":
+		return BundleKindLibrary
+	}
+	if strings.Contains(root, "sql/") || strings.Contains(root, "graphql/") || strings.Contains(root, "jsonschema/") || strings.Contains(root, "openapi/") || strings.Contains(root, "rdf/") {
+		return BundleKindSchema
+	}
+	if strings.Contains(root, "assets/") || strings.Contains(root, "icons/") || strings.Contains(root, "images/") || strings.Contains(root, "logo/") {
+		return BundleKindAssets
+	}
+	return BundleKindLibrary
+}
+
 type Bundle struct {
-	Name        string   `json:"name"`
-	Root        string   `json:"root"`
-	SourceRoot  string   `json:"sourceRoot,omitempty"`
-	ProjectType string   `json:"projectType,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
+	Name        string     `json:"name"`
+	Root        string     `json:"root"`
+	SourceRoot  string     `json:"sourceRoot,omitempty"`
+	ProjectType string     `json:"projectType,omitempty"`
+	Tags        []string   `json:"tags,omitempty"`
+	Kind        BundleKind `json:"kind"`
 }
 
 func (b *Bundle) IsNode()       {}
@@ -3525,15 +3914,77 @@ func bundlePathPrefix(name string) string {
 	return name + "/"
 }
 
+type FolderKind string
+
+const (
+	FolderKindOrganization FolderKind = "organization"
+	FolderKindRequired     FolderKind = "required"
+)
+
+func (e FolderKind) IsValid() bool {
+	switch e {
+	case FolderKindOrganization, FolderKindRequired:
+		return true
+	}
+	return false
+}
+
+func (e FolderKind) String() string {
+	return string(e)
+}
+
+func DeriveFolderKind(path string) FolderKind {
+	base := filepath.Base(path)
+	parent := filepath.Dir(path)
+	if parent == "." || parent == "" {
+		orgFolders := []string{"js", "go", "py", "rs", "net", "rb", "sql", "graphql", "jsonschema", "openapi", "rdf", "assets", "examples", "scripts", "reports", "yak", "antlr", "peg", "liveblocks", "meta", "temp", "engineering", "dotnet"}
+		for _, org := range orgFolders {
+			if base == org {
+				return FolderKindOrganization
+			}
+		}
+	}
+	requiredIndicators := []string{"package.json", "pyproject.toml", "go.mod", "Cargo.toml", "*.csproj", "*.sln"}
+	for _, indicator := range requiredIndicators {
+		pattern := filepath.Join(GetRootDir(), path, indicator)
+		matches, _ := filepath.Glob(pattern)
+		if len(matches) > 0 {
+			return FolderKindRequired
+		}
+	}
+	return FolderKindOrganization
+}
+
+func IsGeneratedFolder(path string) bool {
+	parts := strings.Split(filepath.ToSlash(path), "/")
+	for _, part := range parts {
+		if part == "generated" || part == "dist" || part == "build" || part == "node_modules" || part == "__pycache__" || part == ".next" || part == "coverage" {
+			return true
+		}
+	}
+	generatedFolders := []string{
+		"js/vscode/generated",
+		"js/semio/generated",
+	}
+	normalized := filepath.ToSlash(path)
+	for _, gen := range generatedFolders {
+		if normalized == gen || strings.HasPrefix(normalized, gen+"/") {
+			return true
+		}
+	}
+	return false
+}
+
 type Folder struct {
-	ID        string  `json:"id"`
-	Path      string  `json:"path"`
-	URI       string  `json:"uri"`
-	Name      string  `json:"name"`
-	ParentID  *string `json:"parentId,omitempty"`
-	BundleID  *string `json:"bundleId,omitempty"`
-	Ignored   bool    `json:"ignored"`
-	Generated bool    `json:"generated"`
+	ID        string     `json:"id"`
+	Path      string     `json:"path"`
+	URI       string     `json:"uri"`
+	Name      string     `json:"name"`
+	ParentID  *string    `json:"parentId,omitempty"`
+	BundleID  *string    `json:"bundleId,omitempty"`
+	Kind      FolderKind `json:"kind"`
+	Ignored   bool       `json:"ignored"`
+	Generated bool       `json:"generated"`
 }
 
 func (f *Folder) IsNode()       {}
@@ -3668,15 +4119,16 @@ func (s *Section) GetID() string {
 }
 
 type Definition struct {
-	ID          string         `json:"id,omitempty"`
-	Name        string         `json:"name"`
-	Kind        DefinitionKind `json:"kind"`
-	FilePath    string         `json:"filePath,omitempty"`
-	SectionPath string         `json:"sectionPath,omitempty"`
-	StartLine   int            `json:"startLine"`
-	EndLine     int            `json:"endLine"`
-	StartIndex  int            `json:"startIndex"`
-	EndIndex    int            `json:"endIndex"`
+	ID           string                 `json:"id,omitempty"`
+	Name         string                 `json:"name"`
+	Kind         DefinitionKind         `json:"kind"`
+	Category     DefinitionCategory     `json:"category"`
+	FilePath     string                 `json:"filePath,omitempty"`
+	SectionPath  string                 `json:"sectionPath,omitempty"`
+	StartLine    int                    `json:"startLine"`
+	EndLine      int                    `json:"endLine"`
+	StartIndex   int                    `json:"startIndex"`
+	EndIndex     int                    `json:"endIndex"`
 }
 
 func (d *Definition) IsNode() {}
@@ -3709,26 +4161,31 @@ type ContributorContributionsTree struct {
 
 type ContributorBundle struct {
 	Name    string
+	Lines   LineMetrics
 	Folders []*ContributorFolder
 }
 
 type ContributorFolder struct {
 	Name  string
+	Lines LineMetrics
 	Files []*ContributorFile
 }
 
 type ContributorFile struct {
 	Name     string
+	Lines    LineMetrics
 	Sections []*ContributorSection
 }
 
 type ContributorSection struct {
 	Name        string
+	Lines       LineMetrics
 	Definitions []*ContributorDefinition
 }
 
 type ContributorDefinition struct {
-	Name string
+	Name  string
+	Lines LineMetrics
 }
 
 func (c *Contributor) IsNode()       {}
@@ -4760,6 +5217,7 @@ type LanguagePlugin interface {
 
 type DefinitionRange struct {
 	Name    string
+	Kind    string
 	Start   int
 	End     int
 	Excerpt string
@@ -4912,6 +5370,7 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 	}
 	type defStart struct {
 		name string
+		kind string
 		line int
 	}
 	var defStarts []defStart
@@ -4919,7 +5378,8 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 		matches := l.definitionRegexp.FindAllStringSubmatch(line, -1)
 		for _, match := range matches {
 			if len(match) > 1 && match[1] != "" {
-				defStarts = append(defStarts, defStart{name: match[1], line: i + 1})
+				kind := extractDefinitionKeyword(match[0], match[1])
+				defStarts = append(defStarts, defStart{name: match[1], kind: kind, line: i + 1})
 			}
 		}
 	}
@@ -4976,12 +5436,34 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 		}
 		defRanges = append(defRanges, DefinitionRange{
 			Name:    defStarts[i].name,
+			Kind:    defStarts[i].kind,
 			Start:   start,
 			End:     end,
 			Excerpt: defStarts[i].name,
 		})
 	}
 	return defRanges
+}
+
+func extractDefinitionKeyword(fullMatch, name string) string {
+	keywords := []string{
+		"async def", "async function",
+		"function", "class", "interface", "type", "enum", "const", "let", "var",
+		"func", "struct", "trait", "impl", "mod",
+		"def", "module",
+		"public", "private", "protected", "internal", "abstract", "sealed", "virtual", "override",
+		"delegate", "record", "union", "scalar", "query", "mutation", "subscription", "fragment",
+		"CREATE TABLE", "CREATE VIEW", "CREATE PROCEDURE", "CREATE FUNCTION", "CREATE TRIGGER",
+		"CREATE INDEX", "CREATE TYPE", "CREATE SCHEMA", "CREATE DATABASE", "CREATE SEQUENCE",
+		"input", "extend type", "extend interface", "extend enum", "extend union", "extend input",
+	}
+	lower := strings.ToLower(fullMatch)
+	for _, kw := range keywords {
+		if strings.Contains(lower, strings.ToLower(kw)) {
+			return kw
+		}
+	}
+	return "definition"
 }
 
 func (l *BaseLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
@@ -7917,6 +8399,30 @@ func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOpt
 			if !matchesFilter(p.ID, options) && !matchesFilter(p.Name, options) {
 				continue
 			}
+			if len(options.IncludePolicies) > 0 {
+				found := false
+				for _, id := range options.IncludePolicies {
+					if p.ID == id || strings.HasPrefix(p.ID, id+":") {
+						found = true
+						break
+					}
+				}
+				if !found {
+					continue
+				}
+			}
+			if len(options.ExcludePolicies) > 0 {
+				excluded := false
+				for _, id := range options.ExcludePolicies {
+					if p.ID == id || strings.HasPrefix(p.ID, id+":") {
+						excluded = true
+						break
+					}
+				}
+				if excluded {
+					continue
+				}
+			}
 			out <- p
 		}
 	}
@@ -10660,6 +11166,7 @@ func LoadBundles() []Bundle {
 				SourceRoot:  project.SourceRoot,
 				ProjectType: project.ProjectType,
 				Tags:        project.Tags,
+				Kind:        DeriveBundleKind(project.Name, project.Root),
 			})
 		}
 	}
@@ -10709,6 +11216,7 @@ func LoadBundles() []Bundle {
 					SourceRoot:  project.SourceRoot,
 					ProjectType: project.ProjectType,
 					Tags:        project.Tags,
+					Kind:        DeriveBundleKind(project.Name, project.Root),
 				})
 			}
 		}
@@ -10727,6 +11235,10 @@ func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions
 	bundles := LoadBundles()
 	for _, b := range bundles {
 		if !matchesFilter(b.Name, options) {
+			continue
+		}
+
+		if !shouldIncludeBundleKind(b.Kind, options) {
 			continue
 		}
 
@@ -10807,6 +11319,26 @@ type StreamOptions struct {
 	Regex          bool
 	MatchCase      bool
 	MatchWholeWord bool
+
+	ExcludeBundleKinds     []BundleKind
+	IncludeBundleKinds     []BundleKind
+	ExcludeFolderKinds     []FolderKind
+	IncludeFolderKinds     []FolderKind
+	ExcludeDefinitionKinds []DefinitionCategory
+	IncludeDefinitionKinds []DefinitionCategory
+
+	ExcludeYears        []int
+	IncludeYears        []int
+	ExcludeMonths       []int
+	IncludeMonths       []int
+	ExcludeDays         []int
+	IncludeDays         []int
+	ExcludeContributors []string
+	IncludeContributors []string
+	ExcludePolicies     []string
+	IncludePolicies     []string
+	ExcludeViolations   []string
+	IncludeViolations   []string
 }
 
 func matchesFilter(name string, opts StreamOptions) bool {
@@ -10867,6 +11399,72 @@ func shouldIncludeKind(kind string, opts StreamOptions) bool {
 	return true
 }
 
+func shouldIncludeBundleKind(kind BundleKind, opts StreamOptions) bool {
+	if len(opts.IncludeBundleKinds) > 0 {
+		found := false
+		for _, k := range opts.IncludeBundleKinds {
+			if k == kind {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	for _, k := range opts.ExcludeBundleKinds {
+		if k == kind {
+			return false
+		}
+	}
+	return true
+}
+
+func shouldIncludeFolderKind(kind FolderKind, opts StreamOptions) bool {
+	if len(opts.IncludeFolderKinds) > 0 {
+		found := false
+		for _, k := range opts.IncludeFolderKinds {
+			if k == kind {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	for _, k := range opts.ExcludeFolderKinds {
+		if k == kind {
+			return false
+		}
+	}
+	return true
+}
+
+func shouldIncludeDefinitionKind(kind DefinitionCategory, opts StreamOptions) bool {
+	if len(opts.IncludeDefinitionKinds) > 0 {
+		found := false
+		for _, k := range opts.IncludeDefinitionKinds {
+			if k == kind {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+
+	for _, k := range opts.ExcludeDefinitionKinds {
+		if k == kind {
+			return false
+		}
+	}
+	return true
+}
+
 func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -10919,7 +11517,9 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 
 	for _, folderPath := range folders {
 		ignored := isGitIgnored(folderPath)
-		generated := IsGenerated(folderPath)
+		relPath, _ := filepath.Rel(rootDir, folderPath)
+		generated := IsGenerated(folderPath) || IsGeneratedFolder(relPath)
+		folderKind := DeriveFolderKind(relPath)
 
 		if ignored && !options.ShowIgnored {
 			continue
@@ -10928,11 +11528,14 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 			continue
 		}
 
+		if !shouldIncludeFolderKind(folderKind, options) {
+			continue
+		}
+
 		if !matchesFilter(filepath.Base(folderPath), options) {
 			continue
 		}
 
-		relPath, _ := filepath.Rel(rootDir, folderPath)
 		var bundleID *string
 		if b := GetBundleByPath(relPath); b != nil {
 			id := b.GetID()
@@ -10957,6 +11560,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 				Name:      filepath.Base(relPath),
 				ParentID:  parentID,
 				BundleID:  bundleID,
+				Kind:      folderKind,
 				Ignored:   ignored,
 				Generated: generated,
 			}
@@ -11144,10 +11748,20 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 		lines := strings.Split(content, "\n")
 		defs := lang.ParseDefinitions(content, lines)
 		for _, d := range defs {
-			// Convert DefinitionRange to Definition
+			defKind := DefinitionKind(d.Kind)
+			if d.Kind == "" {
+				defKind = DefinitionKind("definition")
+			}
+			category := DeriveDefinitionCategory(defKind)
+
+			if !shouldIncludeDefinitionKind(category, options) {
+				continue
+			}
+
 			def := Definition{
 				Name:      d.Name,
-				Kind:      DefinitionKind("definition"),
+				Kind:      defKind,
+				Category:  category,
 				FilePath:  f.Path,
 				StartLine: d.Start,
 				EndLine:   d.End,
@@ -14541,6 +15155,35 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
+	definitionCategoryEnum := graphql.NewEnum(graphql.EnumConfig{
+		Name: "DefinitionCategory",
+		Values: graphql.EnumValueConfigMap{
+			"IMPLEMENTATION": &graphql.EnumValueConfig{Value: DefinitionCategoryImplementation},
+			"INTERFACE":      &graphql.EnumValueConfig{Value: DefinitionCategoryInterface},
+			"CONSTANT":       &graphql.EnumValueConfig{Value: DefinitionCategoryConstant},
+		},
+	})
+
+	bundleKindEnum := graphql.NewEnum(graphql.EnumConfig{
+		Name: "BundleKind",
+		Values: graphql.EnumValueConfigMap{
+			"LIBRARY": &graphql.EnumValueConfig{Value: BundleKindLibrary},
+			"SCHEMA":  &graphql.EnumValueConfig{Value: BundleKindSchema},
+			"BINARY":  &graphql.EnumValueConfig{Value: BundleKindBinary},
+			"UI":      &graphql.EnumValueConfig{Value: BundleKindUI},
+			"SITE":    &graphql.EnumValueConfig{Value: BundleKindSite},
+			"ASSETS":  &graphql.EnumValueConfig{Value: BundleKindAssets},
+		},
+	})
+
+	folderKindEnum := graphql.NewEnum(graphql.EnumConfig{
+		Name: "FolderKind",
+		Values: graphql.EnumValueConfigMap{
+			"ORGANIZATION": &graphql.EnumValueConfig{Value: FolderKindOrganization},
+			"REQUIRED":     &graphql.EnumValueConfig{Value: FolderKindRequired},
+		},
+	})
+
 	ticketStatusEnum := graphql.NewEnum(graphql.EnumConfig{
 		Name: "TicketStatus",
 		Values: graphql.EnumValueConfigMap{
@@ -14615,6 +15258,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"sourceRoot":  &graphql.Field{Type: graphql.String},
 				"projectType": &graphql.Field{Type: graphql.String},
 				"tags":        &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"kind": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						bundle := p.Source.(*Bundle)
+						return string(bundle.Kind), nil
+					},
+				},
 				"uri": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -14648,10 +15298,17 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "Folder",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":     &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-				"path":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"uri":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"name":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"id":   &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"path": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"uri":  &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"kind": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						folder := p.Source.(*Folder)
+						return string(folder.Kind), nil
+					},
+				},
 				"parent": &graphql.Field{Type: folderType},
 				"children": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(folderType))),
@@ -14926,8 +15583,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return definition.GetID(), nil
 					},
 				},
-				"name":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"kind":    &graphql.Field{Type: graphql.NewNonNull(definitionKindEnum)},
+				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"kind": &graphql.Field{Type: graphql.NewNonNull(definitionKindEnum)},
+				"category": &graphql.Field{
+					Type: graphql.NewNonNull(definitionCategoryEnum),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						definition := p.Source.(*Definition)
+						return definition.Category, nil
+					},
+				},
 				"file":    &graphql.Field{Type: graphql.NewNonNull(fileType)},
 				"section": &graphql.Field{Type: sectionType},
 				"violations": &graphql.Field{
@@ -16637,6 +17301,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 
 	_ = rangeType
 	_ = countMetricsType
+	_ = bundleKindEnum
+	_ = folderKindEnum
 
 	return graphql.NewSchema(graphql.SchemaConfig{
 		Query:    queryType,
@@ -19707,6 +20373,30 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 			if !matchesFilter(c.Github, options) && !matchesFilter(c.Name, options) {
 				continue
 			}
+			if len(options.IncludeContributors) > 0 {
+				found := false
+				for _, id := range options.IncludeContributors {
+					if c.Github == id || c.Name == id {
+						found = true
+						break
+					}
+				}
+				if !found {
+					continue
+				}
+			}
+			if len(options.ExcludeContributors) > 0 {
+				excluded := false
+				for _, id := range options.ExcludeContributors {
+					if c.Github == id || c.Name == id {
+						excluded = true
+						break
+					}
+				}
+				if excluded {
+					continue
+				}
+			}
 			out <- c
 		}
 	}
@@ -20748,23 +21438,28 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 
 	// Maps for Tree Construction
 	type DefNode struct {
-		Name string
+		Name  string
+		Lines LineMetrics
 	}
 	type SecNode struct {
-		Name string
-		Defs map[string]*DefNode
+		Name  string
+		Defs  map[string]*DefNode
+		Lines LineMetrics
 	}
 	type FileNode struct {
-		Name string
-		Secs map[string]*SecNode
+		Name  string
+		Secs  map[string]*SecNode
+		Lines LineMetrics
 	}
 	type FolderNode struct {
 		Name  string
 		Files map[string]*FileNode
+		Lines LineMetrics
 	}
 	type BundleNode struct {
 		Name    string
 		Folders map[string]*FolderNode
+		Lines   LineMetrics
 	}
 
 	bundlesMap := map[string]*BundleNode{}
@@ -20800,7 +21495,7 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 		return s.Defs[name]
 	}
 
-	processPath := func(fullPath string, bundleName string) {
+	processPath := func(fullPath string, bundleName string, lines *LineMetrics) {
 		if bundleName == "" {
 			bundleName = "other"
 		}
@@ -20829,17 +21524,47 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 		file := filepath.Base(filePath)
 
 		b := getBundle(bundleName)
+		if lines != nil {
+			b.Lines.Added += lines.Added
+			b.Lines.Removed += lines.Removed
+		}
+
 		f := getFolder(b, dir)
+		if lines != nil {
+			f.Lines.Added += lines.Added
+			f.Lines.Removed += lines.Removed
+		}
+
 		fi := getFile(f, file)
+		if lines != nil {
+			fi.Lines.Added += lines.Added
+			fi.Lines.Removed += lines.Removed
+		}
 
 		if regionName != "" {
 			s := getSec(fi, regionName)
+			if lines != nil {
+				s.Lines.Added += lines.Added
+				s.Lines.Removed += lines.Removed
+			}
 			if defName != "" {
-				getDef(s, defName)
+				d := getDef(s, defName)
+				if lines != nil {
+					d.Lines.Added += lines.Added
+					d.Lines.Removed += lines.Removed
+				}
 			}
 		} else if defName != "" {
 			s := getSec(fi, "Global")
-			getDef(s, defName)
+			if lines != nil {
+				s.Lines.Added += lines.Added
+				s.Lines.Removed += lines.Removed
+			}
+			d := getDef(s, defName)
+			if lines != nil {
+				d.Lines.Added += lines.Added
+				d.Lines.Removed += lines.Removed
+			}
 		}
 	}
 
@@ -20851,15 +21576,15 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 		iter := func(set TicketDiffSet) {
 			for _, f := range set.Added {
 				bn := GetBundleNameForPath(f.Path)
-				processPath(f.Path, bn)
+				processPath(f.Path, bn, f.Lines)
 			}
 			for _, f := range set.Modified {
 				bn := GetBundleNameForPath(f.Path)
-				processPath(f.Path, bn)
+				processPath(f.Path, bn, f.Lines)
 			}
 			for _, f := range set.Renamed {
 				bn := GetBundleNameForPath(f.To)
-				processPath(f.To, bn)
+				processPath(f.To, bn, f.Lines)
 			}
 		}
 		iter(diffs.Files)
@@ -20869,15 +21594,15 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 
 	resBundles := []*ContributorBundle{}
 	for _, b := range bundlesMap {
-		cb := &ContributorBundle{Name: b.Name, Folders: []*ContributorFolder{}}
+		cb := &ContributorBundle{Name: b.Name, Lines: b.Lines, Folders: []*ContributorFolder{}}
 		for _, f := range b.Folders {
-			cf := &ContributorFolder{Name: f.Name, Files: []*ContributorFile{}}
+			cf := &ContributorFolder{Name: f.Name, Lines: f.Lines, Files: []*ContributorFile{}}
 			for _, fi := range f.Files {
-				cfi := &ContributorFile{Name: fi.Name, Sections: []*ContributorSection{}}
+				cfi := &ContributorFile{Name: fi.Name, Lines: fi.Lines, Sections: []*ContributorSection{}}
 				for _, s := range fi.Secs {
-					cs := &ContributorSection{Name: s.Name, Definitions: []*ContributorDefinition{}}
+					cs := &ContributorSection{Name: s.Name, Lines: s.Lines, Definitions: []*ContributorDefinition{}}
 					for _, d := range s.Defs {
-						cs.Definitions = append(cs.Definitions, &ContributorDefinition{Name: d.Name})
+						cs.Definitions = append(cs.Definitions, &ContributorDefinition{Name: d.Name, Lines: d.Lines})
 					}
 					sort.Slice(cs.Definitions, func(i, j int) bool { return cs.Definitions[i].Name < cs.Definitions[j].Name })
 					cfi.Sections = append(cfi.Sections, cs)

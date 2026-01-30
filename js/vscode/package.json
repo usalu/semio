@@ -284,6 +284,42 @@
         "title": "Toggle File Kind Filter"
       },
       {
+        "command": "semio.toggleBundleFilter",
+        "title": "Toggle Bundle Kind Filter"
+      },
+      {
+        "command": "semio.toggleFolderFilter",
+        "title": "Toggle Folder Kind Filter"
+      },
+      {
+        "command": "semio.toggleDefinitionFilter",
+        "title": "Toggle Definition Kind Filter"
+      },
+      {
+        "command": "semio.toggleYearFilter",
+        "title": "Toggle Year Filter"
+      },
+      {
+        "command": "semio.toggleMonthFilter",
+        "title": "Toggle Month Filter"
+      },
+      {
+        "command": "semio.toggleDayFilter",
+        "title": "Toggle Day Filter"
+      },
+      {
+        "command": "semio.toggleContributorFilter",
+        "title": "Toggle Contributor Filter"
+      },
+      {
+        "command": "semio.togglePolicyFilter",
+        "title": "Toggle Policy Filter"
+      },
+      {
+        "command": "semio.toggleViolationFilter",
+        "title": "Toggle Violation Filter"
+      },
+      {
         "command": "semio.filterAction",
         "title": "Filter Action"
       },

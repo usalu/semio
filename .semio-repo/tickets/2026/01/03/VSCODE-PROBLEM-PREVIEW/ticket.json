@@ -1,12 +1,21 @@
 {
   "title": "VSCODE-PROBLEM-PREVIEW",
-  "prompt": "When clicking on violations under problems in vscode it only opens the file preview and not the tab of the file. Pressing ctrl+s then doesnt work. Fix it.",
-  "llm": "sonnet-4-5",
   "status": "closed",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2026-01-03T02:57:08Z",
-    "finished": "2026-01-03T02:59:45Z"
-  },
-  "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e"
+  "prompt": "When clicking on violations under problems in vscode it only opens the file preview and not the tab of the file. Pressing ctrl+s then doesnt work. Fix it.",
+  "started": "2026-01-03T02:57:08Z",
+  "iterations": [
+    {
+      "prompt": "When clicking on violations under problems in vscode it only opens the file preview and not the tab of the file. Pressing ctrl+s then doesnt work. Fix it.",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2026-01-03T02:57:08Z",
+      "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",
+      "finished": "2026-01-03T02:59:45Z"
+    }
+  ],
+  "finished": "2026-01-03T02:59:45Z"
 }

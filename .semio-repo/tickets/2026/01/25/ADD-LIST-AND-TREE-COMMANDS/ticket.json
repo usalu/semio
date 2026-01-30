@@ -1,17 +1,18 @@
 {
   "title": "Add List and Tree Commands",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Add list and tree command to ticket, file, bundle, folder, section and definition. For list stream items. For tree create a proper sorted and rendered tree. Extend repo go, vscode extension, etc.",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "usalu",
-      "date": "2026-01-25T18:46:15.788730601Z",
-      "commit": "e1e882dab3240cb3b0cf056c9a6201b737a4ffe5"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ],
-  "status": "open",
-  "dates": {},
   "github": {
     "issue": "https://github.com/usalu/semio/issues/193"
   }

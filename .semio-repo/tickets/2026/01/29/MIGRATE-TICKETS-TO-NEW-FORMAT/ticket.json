@@ -1,0 +1,88 @@
+{
+  "title": "Migrate Tickets To New Format",
+  "status": "closed",
+  "prompt": "Migrate all existing tickets with a temporary migration script to the new format. Some tickets have plan.md, log.md, summary.md. Merge them into a single ticket.md file. Make sure to match as much as you can from old json formats to the new json format. Check indidvidually what makes sense. Whenever you cant migrate something because of missing information, make it null.",
+  "summary": "Successfully migrated all tickets to the new format. Merged plan.md, log.md, and summary.md into a single ticket.md file. Updated ticket.json structure to match the new schema. Verified migration on 394 tickets.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/276"
+  },
+  "started": "2026-01-29T19:40:11.475346108Z",
+  "finished": "2026-01-29T19:47:13.099658628Z",
+  "iterations": [
+    {
+      "prompt": "Migrate all existing tickets with a temporary migration script to the new format. Some tickets have plan.md, log.md, summary.md. Merge them into a single ticket.md file. Make sure to match as much as you can from old json formats to the new json format. Check indidvidually what makes sense. Whenever you cant migrate something because of missing information, make it null.",
+      "llm": "sonnet-4-5",
+      "ui": "windsurf-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-29T19:40:11.475346108Z",
+      "finished": "2026-01-29T19:47:13.099658628Z",
+      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "@semio-repo/repo/AGENTS.md",
+              "lines": {
+                "added": 4383,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/repo/AGENTS.md#Codebase#📁 js/vscode/#Filters",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/repo/AGENTS.md#Using TypeScript fallback",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "AGENTS.md#Codebase#📁 js/vscode/#Filters",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

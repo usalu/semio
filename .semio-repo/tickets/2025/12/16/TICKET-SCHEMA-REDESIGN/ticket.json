@@ -1,13 +1,21 @@
 {
   "title": "Redesign ticket schema with files-only and git-derived fields",
-  "prompt": "Redesign ticket schema with nested date objects and git-derived fields",
-  "llm": "opus-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T16:58:02.879Z",
-    "finished": "2025-12-16T17:08:05.259Z"
-  },
-  "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c",
-  "summary": "Migrated ticket"
+  "prompt": "Redesign ticket schema with nested date objects and git-derived fields",
+  "started": "2025-12-16T16:58:02.879Z",
+  "iterations": [
+    {
+      "prompt": "Redesign ticket schema with nested date objects and git-derived fields",
+      "llm": "opus-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T16:58:02.879Z",
+      "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c",
+      "finished": "2025-12-16T17:08:05.259Z"
+    }
+  ],
+  "finished": "2025-12-16T17:08:05.259Z"
 }

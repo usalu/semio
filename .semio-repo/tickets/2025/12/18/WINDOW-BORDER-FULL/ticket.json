@@ -1,13 +1,21 @@
 {
   "title": "Fix missing bottom/right window borders",
-  "prompt": "Every window should have a full border around it. Currently the bottom and right border are missing.",
-  "llm": "gpt-5.2-codex",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-18T15:40:32.088Z",
-    "finished": "2025-12-18T16:01:54.858Z"
-  },
-  "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
-  "summary": "Migrated ticket"
+  "prompt": "Every window should have a full border around it. Currently the bottom and right border are missing.",
+  "started": "2025-12-18T15:40:32.088Z",
+  "iterations": [
+    {
+      "prompt": "Every window should have a full border around it. Currently the bottom and right border are missing.",
+      "llm": "gpt-5.2-codex",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-18T15:40:32.088Z",
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
+      "finished": "2025-12-18T16:01:54.858Z"
+    }
+  ],
+  "finished": "2025-12-18T16:01:54.858Z"
 }

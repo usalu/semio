@@ -1,12 +1,19 @@
 {
   "title": "XState owns Sketchpad UI state",
-  "prompt": "\"Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE → {\\\\navigation\\\\:\\\\design\\\\}\"",
-  "llm": "gpt-5-2",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.948Z"
-  },
-  "commit": "7765b633fe739bc29cd811ac7ec884e782e2e945",
-  "summary": "Migrated ticket"
+  "prompt": "\"Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE \u2192 {\\\\navigation\\\\:\\\\design\\\\}\"",
+  "started": "2025-12-16T17:06:07.948Z",
+  "iterations": [
+    {
+      "prompt": "\"Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE \u2192 {\\\\navigation\\\\:\\\\design\\\\}\"",
+      "llm": "gpt-5-2",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.948Z",
+      "commit": "7765b633fe739bc29cd811ac7ec884e782e2e945"
+    }
+  ]
 }

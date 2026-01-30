@@ -1,12 +1,19 @@
 {
   "title": "Add model tag selection in footer for design and type apps",
-  "prompt": "Add model tag selection in footer for design and type apps",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.795Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Add model tag selection in footer for design and type apps",
+  "started": "2025-12-16T17:06:07.795Z",
+  "iterations": [
+    {
+      "prompt": "Add model tag selection in footer for design and type apps",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.795Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

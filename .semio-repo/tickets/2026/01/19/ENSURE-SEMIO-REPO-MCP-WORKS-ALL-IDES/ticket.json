@@ -1,91 +1,18 @@
 {
   "title": "ENSURE-SEMIO-REPO-MCP-WORKS-ALL-IDES",
+  "status": "closed",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Make sure that semio-repo mcp tool is working in vscode, windsurf, claude code, codex and cursor. Change/refactor/extend whatever is necessary to get it working.",
-      "llm": "opus-4-5",
-      "author": "usalu",
-      "date": "2026-01-19T17:37:54.640812755Z",
-      "commit": "bb54f0b1c5737689a9306dc94bf6e81e985cab21"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-19T17:41:33.748837191Z"
-  },
-  "summary": "Created and configured MCP server definitions for semio-repo across five IDEs (VSCode, Claude Code, Cursor, Windsurf, Codex). Standardized all configs to use prebuilt binary ./go/repo/repo mcp. Created new config files for Cursor (.cursor/mcp.json), Windsurf (.windsurf/mcp.json), and Codex (.codex/config.toml).",
-  "files": {
-    "deleted": [],
-    "renamed": [],
-    "modified": [
-      {
-        "path": ".mcp.json",
-        "status": "modified",
-        "sections": [
-          {
-            "name": "mcpServers#semio-repo#command",
-            "range": {
-              "start": 12,
-              "end": 12
-            },
-            "lines": {
-              "added": 1,
-              "removed": 1
-            }
-          },
-          {
-            "name": "mcpServers#semio-repo#args",
-            "range": {
-              "start": 13,
-              "end": 15
-            },
-            "lines": {
-              "added": 1,
-              "removed": 3
-            }
-          }
-        ]
-      },
-      {
-        "path": ".vscode/mcp.json",
-        "status": "modified",
-        "sections": [
-          {
-            "name": "servers#semio-repo#command",
-            "range": {
-              "start": 13,
-              "end": 13
-            },
-            "lines": {
-              "added": 1,
-              "removed": 1
-            }
-          },
-          {
-            "name": "servers#semio-repo#args",
-            "range": {
-              "start": 14,
-              "end": 16
-            },
-            "lines": {
-              "added": 1,
-              "removed": 1
-            }
-          }
-        ]
-      },
-      {
-        "path": ".cursor/mcp.json"
-      },
-      {
-        "path": ".windsurf/mcp.json"
-      },
-      {
-        "path": ".codex/config.toml"
-      }
-    ],
-    "added": []
-  },
   "github": {
     "issue": "https://github.com/usalu/semio/issues/163"
   }

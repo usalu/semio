@@ -1,12 +1,19 @@
 {
   "title": "Fix drop coordinates for diagram and scene",
-  "prompt": "Fix drop coordinates for diagram and scene",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.728Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Fix drop coordinates for diagram and scene",
+  "started": "2025-12-16T17:06:07.728Z",
+  "iterations": [
+    {
+      "prompt": "Fix drop coordinates for diagram and scene",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.728Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

@@ -1,12 +1,19 @@
 {
   "title": "Exclude prompts.md from formatting",
-  "prompt": ">-",
-  "llm": "gpt-5-2",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2026-01-07T13:45:28.013Z"
-  },
-  "commit": "76900221ecf5cfb30a37d69fbb66abb3e0a0e45a",
-  "summary": "Migrated ticket"
+  "prompt": ">-",
+  "started": "2026-01-07T13:45:28.013Z",
+  "iterations": [
+    {
+      "prompt": ">-",
+      "llm": "gpt-5-2",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2026-01-07T13:45:28.013Z",
+      "commit": "76900221ecf5cfb30a37d69fbb66abb3e0a0e45a"
+    }
+  ]
 }

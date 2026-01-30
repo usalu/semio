@@ -1,3 +1,0 @@
-- Fix VS Code extension manifest name so vsce packaging succeeds.
-- Update devcontainer post-attach expectations and documentation for extension packaging rules.
-- Record changes in ticket log and finalize summary.

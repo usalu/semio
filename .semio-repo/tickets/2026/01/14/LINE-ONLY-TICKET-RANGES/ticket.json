@@ -1,14 +1,16 @@
 {
   "title": "LINE-ONLY-TICKET-RANGES",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Update ticket ranges to line-only ints across repo, CLI, MCP, and VS Code extension. Adjust docs.",
-      "llm": "gpt-5-2",
-      "author": "Ueli Saluz <ueli.saluz@iek.uni-hannover.de>",
-      "date": "2026-01-14T12:58:49.0327391+01:00",
-      "commit": "1d85d636b1d52190c8df6e9b1106024c8d009265"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
-  ],
-  "status": "open",
-  "dates": {}
+  ]
 }

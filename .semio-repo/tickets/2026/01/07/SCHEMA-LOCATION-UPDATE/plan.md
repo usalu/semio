@@ -1,7 +1,0 @@
-# Plan
-
-# Previously
-
-# Plan
-
-# Changes

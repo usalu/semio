@@ -1,12 +1,19 @@
 {
   "title": "Document reports folder in AGENTS",
-  "prompt": "Document reports folder in AGENTS",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.765Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Document reports folder in AGENTS",
+  "started": "2025-12-16T17:06:07.765Z",
+  "iterations": [
+    {
+      "prompt": "Document reports folder in AGENTS",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.765Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

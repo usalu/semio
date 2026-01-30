@@ -1,14 +1,16 @@
 {
   "title": "auto-install-vscode-extension-devcontainer",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "VSCode extension should be automatically installed by the devcontainer instead of requiring manual installation via 'Developer: Install Extension From Location...'",
-      "llm": "opus-4-5",
-      "author": "",
-      "date": "2026-01-17T16:38:58.121780689Z",
-      "commit": ""
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
-  ],
-  "status": "open",
-  "dates": {}
+  ]
 }

@@ -1,13 +1,21 @@
 {
   "title": "Fix window borders and revert to solid style",
-  "prompt": "Still no bottom and right border. Remove the dashed border.",
-  "llm": "gpt-5.2-codex",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-17T18:34:02.257Z",
-    "finished": "2025-12-17T18:36:14.754Z"
-  },
-  "commit": "7c4820638369104ae259b238d9240f08e429e67e",
-  "summary": "Migrated ticket"
+  "prompt": "Still no bottom and right border. Remove the dashed border.",
+  "started": "2025-12-17T18:34:02.257Z",
+  "iterations": [
+    {
+      "prompt": "Still no bottom and right border. Remove the dashed border.",
+      "llm": "gpt-5.2-codex",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-17T18:34:02.257Z",
+      "commit": "7c4820638369104ae259b238d9240f08e429e67e",
+      "finished": "2025-12-17T18:36:14.754Z"
+    }
+  ],
+  "finished": "2025-12-17T18:36:14.754Z"
 }

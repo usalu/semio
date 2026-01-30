@@ -1,0 +1,19 @@
+{
+  "title": "Fix VS Code Extension Data Loading",
+  "status": "open",
+  "prompt": "Fix failures in codebase, ticket, and contributor loading in VS Code extension",
+  "started": "2026-01-29T20:00:29.560096904Z",
+  "iterations": [
+    {
+      "prompt": "Fix failures in codebase, ticket, and contributor loading in VS Code extension",
+      "llm": "",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-29T20:00:29.560096904Z",
+      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc"
+    }
+  ]
+}

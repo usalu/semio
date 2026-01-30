@@ -1,13 +1,21 @@
 {
   "title": "Refactored all scripts to use npx tsx directly instead of node --import tsx",
-  "prompt": "Refactor all the scripts to be able to use tsx directly.",
-  "llm": "composer-1",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-23T13:28:13.198Z",
-    "finished": "2025-12-23T13:28:53.505Z"
-  },
-  "commit": "b41e500849192cc526ed0ce105fff7e2a478e3f0",
-  "summary": "Migrated ticket"
+  "prompt": "Refactor all the scripts to be able to use tsx directly.",
+  "started": "2025-12-23T13:28:13.198Z",
+  "iterations": [
+    {
+      "prompt": "Refactor all the scripts to be able to use tsx directly.",
+      "llm": "composer-1",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-23T13:28:13.198Z",
+      "commit": "b41e500849192cc526ed0ce105fff7e2a478e3f0",
+      "finished": "2025-12-23T13:28:53.505Z"
+    }
+  ],
+  "finished": "2025-12-23T13:28:53.505Z"
 }

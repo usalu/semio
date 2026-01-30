@@ -1,12 +1,19 @@
 {
   "title": "Sync C# schema with TypeScript semio.ts",
-  "prompt": "Sync C# schema with TypeScript semio.ts",
-  "llm": "sonnet-4-5",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.832Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Sync C# schema with TypeScript semio.ts",
+  "started": "2025-12-16T17:06:07.832Z",
+  "iterations": [
+    {
+      "prompt": "Sync C# schema with TypeScript semio.ts",
+      "llm": "sonnet-4-5",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.832Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

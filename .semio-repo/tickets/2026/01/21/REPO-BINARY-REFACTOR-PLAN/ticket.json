@@ -1,17 +1,18 @@
 {
   "title": "Repo Binary Refactor Plan",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Implement /workspaces/semio/plans/repo-binary-refactor-plan.md. Change/refactor/extend whatever is necessary to get it working. Update docs and ticket workspace.",
-      "llm": "gpt-5-2-codex",
-      "ui": "cursor",
-      "author": "usalu",
-      "date": "2026-01-21T13:40:48.801802421Z",
-      "commit": "e5d4dc0e7af0fb47c586f3c8efb5539e446e8f2e"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
   ],
-  "status": "open",
-  "dates": {},
   "github": {
     "issue": "https://github.com/usalu/semio/issues/182"
   }

@@ -1,15 +1,16 @@
 {
   "title": "Integrate Global IDs in Graph",
+  "status": "open",
+  "prompt": "",
+  "started": null,
   "iterations": [
     {
-      "prompt": "Refactor ID generation to use prefixes like bundle:, folder:, file: to satisfy GraphQL Node interface requirements.",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "usalu",
-      "date": "2026-01-26T15:23:58.944345056Z",
-      "commit": "50fee306d5950f68a11bcce4c811399db543ae80"
+      "prompt": "",
+      "llm": null,
+      "ui": null,
+      "author": null,
+      "started": null,
+      "commit": null
     }
-  ],
-  "status": "open",
-  "dates": {}
+  ]
 }

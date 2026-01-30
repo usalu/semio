@@ -1,1 +1,0 @@
-Improved the repository CLI by implementing stricter LLM validation, simplifying range structures for easier parsing, and enhancing author attribution logic to robustly handle git configuration and contributor lookups.

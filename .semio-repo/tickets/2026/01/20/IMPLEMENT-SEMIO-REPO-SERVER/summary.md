@@ -1,1 +1,0 @@
-Implemented the Go repo dev server with SQLite persistence, diff ingestion, indexing, claims, warnings, webhooks, and HTTP API. Added the server module to the Go workspace, plus module metadata and dependencies. Documented the server in README bundles and AGENTS SRS/codebase sections.

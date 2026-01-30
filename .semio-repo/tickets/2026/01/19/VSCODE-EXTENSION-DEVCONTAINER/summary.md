@@ -1,1 +1,0 @@
-Fixed VS Code extension packaging by switching the extension manifest name to an unscoped value, and documented the vsce naming requirement in README/AGENTS alongside the codebase entry for js/vscode/package.json.

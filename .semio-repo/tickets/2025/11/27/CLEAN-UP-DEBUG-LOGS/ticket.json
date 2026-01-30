@@ -1,12 +1,19 @@
 {
   "title": "Remove debug diagnostics and temporary logs",
-  "prompt": "Remove debug diagnostics and temporary logs",
-  "llm": "sonnet-4",
   "status": "finished",
-  "author": "uelisaluz",
-  "dates": {
-    "created": "2025-12-16T17:06:07.723Z"
-  },
-  "commit": "0000000000000000000000000000000000000000",
-  "summary": "Migrated ticket"
+  "prompt": "Remove debug diagnostics and temporary logs",
+  "started": "2025-12-16T17:06:07.723Z",
+  "iterations": [
+    {
+      "prompt": "Remove debug diagnostics and temporary logs",
+      "llm": "sonnet-4",
+      "ui": null,
+      "author": {
+        "name": "uelisaluz",
+        "email": null
+      },
+      "started": "2025-12-16T17:06:07.723Z",
+      "commit": "0000000000000000000000000000000000000000"
+    }
+  ]
 }

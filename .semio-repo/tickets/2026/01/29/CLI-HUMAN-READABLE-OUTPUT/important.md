@@ -1,0 +1,1 @@
+- Consolidate all tests into main_test.go
