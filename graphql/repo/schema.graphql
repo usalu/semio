@@ -149,8 +149,8 @@ input FilterInput {
   includeBundleKinds: [BundleKind!]
   excludeFolderKinds: [FolderKind!]
   includeFolderKinds: [FolderKind!]
-  excludeDefinitionKinds: [DefinitionCategory!]
-  includeDefinitionKinds: [DefinitionCategory!]
+  excludeDefinitionKinds: [DefinitionKind!]
+  includeDefinitionKinds: [DefinitionKind!]
   excludeYears: [Int!]
   includeYears: [Int!]
   excludeMonths: [Int!]
@@ -189,7 +189,7 @@ enum FolderKind {
   REQUIRED
 }
 
-enum DefinitionCategory {
+enum DefinitionKind {
   IMPLEMENTATION
   INTERFACE
   CONSTANT
@@ -276,22 +276,10 @@ type Definition implements Node {
   id: ID!
   name: String!
   kind: DefinitionKind!
-  category: DefinitionCategory!
   file: File!
   section: Section
   violations: [Violation!]!
   range: Range!
-}
-
-enum DefinitionKind {
-  FUNCTION
-  CLASS
-  VARIABLE
-  INTERFACE
-  TYPE
-  ENUM
-  METHOD
-  PROPERTY
 }
 
 type Range {
@@ -402,6 +390,8 @@ type Ticket implements Node {
   llm: String
   ui: TicketUI
   commit: String
+  goal: String
+  parent: String
   dates: TicketDate!
   iterations: [Iteration!]!
   bundles: [Bundle!]!

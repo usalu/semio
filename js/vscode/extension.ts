@@ -760,7 +760,7 @@ function normalizeSectionTree(sections: (GraphqlSection | any)[]): SectionInfo[]
   return sections.map((sectionOrWrapper) => {
     // Handle CLI wrapper { section: { ... } }
     const section = sectionOrWrapper.section ?? sectionOrWrapper;
-    
+
     return {
       name: section.name,
       kind: section.__typename ?? "Section",
@@ -2110,16 +2110,16 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
           this.cachedViolationKinds.set(policy.id, policy.violationKinds.map((vk) => vk.id));
         }
       }
-      
+
       let policies = this.cachedPolicies;
-      
+
       if (filterProvider) {
         const policyFilter = filterProvider.getPolicyFilter();
         if (policyFilter.excludePolicies.length > 0) {
           policies = policies.filter((p) => !policyFilter.excludePolicies.includes(p.id));
         }
       }
-      
+
       if (!globalSearchQuery) {
         return policies.map((policy) => new PolicyItem(policy));
       }
@@ -2138,27 +2138,27 @@ class PoliciesProvider implements vscode.TreeDataProvider<PolicyTreeItem> {
     }
     if (element instanceof PolicyItem) {
       let kinds = await this.getViolationKinds(element.policy.id);
-      
+
       if (filterProvider) {
         const violationFilter = filterProvider.getViolationFilter();
         if (violationFilter.excludeViolations.length > 0) {
           kinds = kinds.filter((k) => !violationFilter.excludeViolations.some((v) => k.startsWith(v)));
         }
       }
-      
+
       const filtered = globalSearchQuery ? kinds.filter((k) => this.matchesViolationKindSearch(k) || this.matchesPolicySearch(element.policy)) : kinds;
       return this.buildViolationTree(filtered, element.policy.id, "");
     }
     if (element instanceof ViolationKindGroupItem) {
       let children = element.children;
-      
+
       if (filterProvider) {
         const violationFilter = filterProvider.getViolationFilter();
         if (violationFilter.excludeViolations.length > 0) {
           children = children.filter((k) => !violationFilter.excludeViolations.some((v) => k.startsWith(v)));
         }
       }
-      
+
       return this.buildViolationTree(children, element.policyId, element.groupPath);
     }
     return [];
@@ -2508,14 +2508,14 @@ class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeIte
       }
       const root = getWorkspaceRoot();
       let contributors = this.cachedContributors.filter((c) => this.matchesSearch(c));
-      
+
       if (filterProvider) {
         const contributorFilter = filterProvider.getContributorFilter();
         if (contributorFilter.excludeContributors.length > 0) {
           contributors = contributors.filter((c) => !contributorFilter.excludeContributors.includes(c.name || c.github));
         }
       }
-      
+
       return contributors.map((contributor) => {
         const avatarPath = root ? path.join(root, ".semio-repo", "contributors", contributor.github, "avatar-round-90x90.png") : undefined;
         return new ContributorItem(contributor, avatarPath);
@@ -2803,7 +2803,7 @@ type CodebaseTreeItem =
 type FileKind = "code" | "script" | "config" | "test" | "docs" | "resource" | "license";
 type BundleKind = "library" | "schema" | "binary" | "ui" | "site" | "assets";
 type FolderKind = "organization" | "required";
-type DefinitionCategory = "implementation" | "interface" | "constant";
+type DefinitionKind = "implementation" | "interface" | "constant";
 
 interface CodebaseFilter {
   code: boolean;
@@ -3036,7 +3036,7 @@ export class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
   private violationFilter: ViolationFilter = { ...DEFAULT_VIOLATION_FILTER };
   private sectionFilter: SectionFilter = { ...DEFAULT_SECTION_FILTER };
 
-  constructor(private readonly workspaceRoot: string) {}
+  constructor(private readonly workspaceRoot: string) { }
 
   private refreshAllViews(): void {
     if (codebaseProvider) codebaseProvider.refresh();
@@ -3083,7 +3083,7 @@ export class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
     this.refresh();
     this.refreshAllViews();
   }
-  
+
   toggleSectionFilter(mode: "none" | "all"): void {
     if (mode === "none") {
       this.sectionFilter.none = !this.sectionFilter.none;
@@ -3187,15 +3187,15 @@ export class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
   getFolderFilters(): FolderFilter { return this.folderFilters; }
   getDefinitionFilters(): DefinitionFilter { return this.definitionFilters; }
   getSectionFilter(): SectionFilter { return this.sectionFilter; }
-  
+
   getIncludeKinds(): FileKind[] { return (Object.keys(this.filters) as FileKind[]).filter(k => this.filters[k]); }
   getExcludeKinds(): FileKind[] { return (Object.keys(this.filters) as FileKind[]).filter(k => !this.filters[k]); }
   getIncludeBundleKinds(): BundleKind[] { return (Object.keys(this.bundleFilters) as BundleKind[]).filter(k => this.bundleFilters[k]); }
   getExcludeBundleKinds(): BundleKind[] { return (Object.keys(this.bundleFilters) as BundleKind[]).filter(k => !this.bundleFilters[k]); }
   getIncludeFolderKinds(): FolderKind[] { return (Object.keys(this.folderFilters) as FolderKind[]).filter(k => this.folderFilters[k]); }
   getExcludeFolderKinds(): FolderKind[] { return (Object.keys(this.folderFilters) as FolderKind[]).filter(k => !this.folderFilters[k]); }
-  getIncludeDefinitionKinds(): DefinitionCategory[] { return (Object.keys(this.definitionFilters) as DefinitionCategory[]).filter(k => this.definitionFilters[k]); }
-  getExcludeDefinitionKinds(): DefinitionCategory[] { return (Object.keys(this.definitionFilters) as DefinitionCategory[]).filter(k => !this.definitionFilters[k]); }
+  getIncludeDefinitionKinds(): DefinitionKind[] { return (Object.keys(this.definitionFilters) as DefinitionKind[]).filter(k => this.definitionFilters[k]); }
+  getExcludeDefinitionKinds(): DefinitionKind[] { return (Object.keys(this.definitionFilters) as DefinitionKind[]).filter(k => !this.definitionFilters[k]); }
 
   getTimeFilter(): TimeFilter { return this.timeFilter; }
   getContributorFilter(): ContributorFilter { return this.contributorFilter; }
@@ -3245,7 +3245,7 @@ export class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
     }
 
     if (element.itemType === "timeMonth" && element.secondaryTimeValue !== undefined) {
-      const days = this.availableDays.length > 0 ? this.availableDays : Array.from({length: 31}, (_, i) => i + 1);
+      const days = this.availableDays.length > 0 ? this.availableDays : Array.from({ length: 31 }, (_, i) => i + 1);
       return days.map(day => {
         const excluded = this.timeFilter.excludeDays.includes(day);
         const item = new FilterItem(`${day}`, vscode.TreeItemCollapsibleState.None, "timeDay", element.timeValue, element.secondaryTimeValue, day);
@@ -3266,47 +3266,47 @@ export class FilterProvider implements vscode.TreeDataProvider<FilterItem> {
     }
 
     if (element.itemType === "bundle") {
-        return Object.keys(this.bundleFilters).map(k => {
-           const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
-           item.contextValue = "filterBundleKind";
-           item.command = { command: "semio.toggleBundleFilter", title: "Toggle", arguments: [k] };
-           item.iconPath = new vscode.ThemeIcon((this.bundleFilters as any)[k] ? "check" : "circle-slash");
-           return item;
-        });
+      return Object.keys(this.bundleFilters).map(k => {
+        const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
+        item.contextValue = "filterBundleKind";
+        item.command = { command: "semio.toggleBundleFilter", title: "Toggle", arguments: [k] };
+        item.iconPath = new vscode.ThemeIcon((this.bundleFilters as any)[k] ? "check" : "circle-slash");
+        return item;
+      });
     }
-    
+
     if (element.itemType === "folder") {
-        return Object.keys(this.folderFilters).map(k => {
-           const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
-           item.contextValue = "filterFolderKind";
-           item.command = { command: "semio.toggleFolderFilter", title: "Toggle", arguments: [k] };
-           item.iconPath = new vscode.ThemeIcon((this.folderFilters as any)[k] ? "check" : "circle-slash");
-           return item;
-        });
+      return Object.keys(this.folderFilters).map(k => {
+        const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
+        item.contextValue = "filterFolderKind";
+        item.command = { command: "semio.toggleFolderFilter", title: "Toggle", arguments: [k] };
+        item.iconPath = new vscode.ThemeIcon((this.folderFilters as any)[k] ? "check" : "circle-slash");
+        return item;
+      });
     }
 
     if (element.itemType === "definition") {
-        return Object.keys(this.definitionFilters).map(k => {
-           const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
-           item.contextValue = "filterDefinitionKind";
-           item.command = { command: "semio.toggleDefinitionFilter", title: "Toggle", arguments: [k] };
-           item.iconPath = new vscode.ThemeIcon((this.definitionFilters as any)[k] ? "check" : "circle-slash");
-           return item;
-        });
+      return Object.keys(this.definitionFilters).map(k => {
+        const item = new FilterItem(k, vscode.TreeItemCollapsibleState.None, "action");
+        item.contextValue = "filterDefinitionKind";
+        item.command = { command: "semio.toggleDefinitionFilter", title: "Toggle", arguments: [k] };
+        item.iconPath = new vscode.ThemeIcon((this.definitionFilters as any)[k] ? "check" : "circle-slash");
+        return item;
+      });
     }
-    
+
     if (element.itemType === "section") {
-        const items: FilterItem[] = [];
-        const noneItem = new FilterItem("None", vscode.TreeItemCollapsibleState.None, "action");
-        noneItem.command = { command: "semio.toggleSectionFilter", title: "Toggle", arguments: ["none"] };
-        noneItem.iconPath = new vscode.ThemeIcon(this.sectionFilter.none ? "check" : "circle-slash");
-        items.push(noneItem);
-        
-        const allItem = new FilterItem("All", vscode.TreeItemCollapsibleState.None, "action");
-        allItem.command = { command: "semio.toggleSectionFilter", title: "Toggle", arguments: ["all"] };
-        allItem.iconPath = new vscode.ThemeIcon(this.sectionFilter.all ? "check" : "circle-slash");
-        items.push(allItem);
-        return items;
+      const items: FilterItem[] = [];
+      const noneItem = new FilterItem("None", vscode.TreeItemCollapsibleState.None, "action");
+      noneItem.command = { command: "semio.toggleSectionFilter", title: "Toggle", arguments: ["none"] };
+      noneItem.iconPath = new vscode.ThemeIcon(this.sectionFilter.none ? "check" : "circle-slash");
+      items.push(noneItem);
+
+      const allItem = new FilterItem("All", vscode.TreeItemCollapsibleState.None, "action");
+      allItem.command = { command: "semio.toggleSectionFilter", title: "Toggle", arguments: ["all"] };
+      allItem.iconPath = new vscode.ThemeIcon(this.sectionFilter.all ? "check" : "circle-slash");
+      items.push(allItem);
+      return items;
     }
 
     if (element.itemType === "policy") {
@@ -3968,7 +3968,7 @@ async function loadAvailableFilterValues(): Promise<void> {
 
 // #region Smart Wizards
 
-const LLMS = ["opus-4-5", "sonnet-4-5", "haiku-4-5", "gemini-3-pro", "gemini-3-flash", "gpt-5-2-codex", "gpt-5-mini", "swe-1.5"];
+const LLMS = ["opus-4-5", "sonnet-4-5", "haiku-4-5", "gemini-3-pro", "gemini-3-flash", "gpt-5-2-codex", "gpt-5-mini", "swe-1-5"];
 const UIS = ["copilot-chat", "windsurf-chat", "claude-code", "codex", "cursor-chat", "antigravity-chat", "droid"];
 
 async function pickLLM(): Promise<string | undefined> {

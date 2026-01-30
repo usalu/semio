@@ -1,0 +1,22 @@
+{
+  "title": "Fix Sketchpad Desktop Dev Startup",
+  "status": "open",
+  "prompt": "Get sketchpad desktop dev running. Currently failing with TypeScript config errors: \"failed to resolve 'extends':'@semio/js/tsconfig.json'\" and missing main.js build output.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/286"
+  },
+  "started": "2026-01-30T13:40:05.531504824Z",
+  "iterations": [
+    {
+      "prompt": "Get sketchpad desktop dev running. Currently failing with TypeScript config errors: \"failed to resolve 'extends':'@semio/js/tsconfig.json'\" and missing main.js build output.",
+      "llm": "gpt-5-2-codex",
+      "ui": "claude-code",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-30T13:40:05.531504824Z",
+      "commit": "923068ca75f4196ae30974c0e0ae39733780e301"
+    }
+  ]
+}

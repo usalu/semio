@@ -1,13 +1,11 @@
 {
-  "name": "@semio/engine",
+  "name": "@coda/engine",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "py/engine",
+  "sourceRoot": "py/coda",
   "projectType": "application",
   "scripts": {
-    "dev": "uv run engine.py",
-    "build": "tsx ./build.ts",
-    "test": "tsx ./test.ts",
+    "dev": "uv run coda.py",
     "preflight": "ruff format . && ruff check --fix ."
   },
   "targets": {
@@ -25,5 +23,9 @@
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
+  },
+  "semioRepo": {
+    "kind": "binary",
+    "created": "2026-01-30"
   }
 }

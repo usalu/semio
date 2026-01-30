@@ -1176,7 +1176,7 @@ Webhook receivers enrich GitHub issue events, and Discord notifications format p
 
 ## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
 
-Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every iteration records the toolchain context.
+Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every iteration records the toolchain context. Parsing is forgiving; for example, `claude-opus-4-5-20251101` resolves to `opus-4-5` by finding it as a substring of the slugified input.
 Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen actions add a prompt comment with the same heading so each iteration is surfaced in GitHub.
 Ticket closing derives bundle labels from every touched path, adds `@semio-repo` when a file falls outside bundles, and posts a semantic change list for bundles, folders, files, sections, and definitions using status icons plus `-removed`/`+added` counts.
 Ticket summary comments prepend a `# 🔍 Summary` heading so the close summary is visually consistent in GitHub issues.

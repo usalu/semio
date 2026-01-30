@@ -775,12 +775,17 @@ func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 		}
 		normalized := NormalizeLLMSlug(arg)
 		matched := false
+		bestMatch := ""
 		for _, allowed := range AllowedLLMs {
-			if strings.HasPrefix(normalized, allowed) {
-				foundLLM = allowed
-				matched = true
-				break
+			if strings.Contains(normalized, NormalizeLLMSlug(allowed)) {
+				if len(allowed) > len(bestMatch) {
+					bestMatch = allowed
+					matched = true
+				}
 			}
+		}
+		if matched {
+			foundLLM = bestMatch
 		}
 		if !matched {
 			remaining = append(remaining, arg)
@@ -812,12 +817,17 @@ func extractUIFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 		}
 		normalized := NormalizeUISlug(arg)
 		matched := false
+		bestMatch := ""
 		for _, allowed := range AllowedUIs {
-			if strings.HasPrefix(normalized, allowed) {
-				foundUI = allowed
-				matched = true
-				break
+			if strings.Contains(normalized, NormalizeUISlug(allowed)) {
+				if len(allowed) > len(bestMatch) {
+					bestMatch = allowed
+					matched = true
+				}
 			}
+		}
+		if matched {
+			foundUI = bestMatch
 		}
 		if !matched {
 			remaining = append(remaining, arg)
@@ -1713,10 +1723,8 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 						id
 						slug
 						status
-						data {
-							goal
-							parent
-						}
+						goal
+						parent
 					}
 				}
 			}`
@@ -2256,26 +2264,26 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 		includeFolderKinds = append(includeFolderKinds, FolderKindRequired)
 	}
 
-	var excludeDefinitionKinds []DefinitionCategory
+	var excludeDefinitionKinds []DefinitionKind
 	if v, _ := cmd.Flags().GetBool("no-implementation"); v {
-		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionCategoryImplementation)
+		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionKindImplementation)
 	}
 	if v, _ := cmd.Flags().GetBool("no-interface"); v {
-		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionCategoryInterface)
+		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionKindInterface)
 	}
 	if v, _ := cmd.Flags().GetBool("no-constant"); v {
-		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionCategoryConstant)
+		excludeDefinitionKinds = append(excludeDefinitionKinds, DefinitionKindConstant)
 	}
 
-	var includeDefinitionKinds []DefinitionCategory
+	var includeDefinitionKinds []DefinitionKind
 	if v, _ := cmd.Flags().GetBool("only-implementation"); v {
-		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionCategoryImplementation)
+		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionKindImplementation)
 	}
 	if v, _ := cmd.Flags().GetBool("only-interface"); v {
-		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionCategoryInterface)
+		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionKindInterface)
 	}
 	if v, _ := cmd.Flags().GetBool("only-constant"); v {
-		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionCategoryConstant)
+		includeDefinitionKinds = append(includeDefinitionKinds, DefinitionKindConstant)
 	}
 
 	excludeYears, _ := cmd.Flags().GetIntSlice("no-year")
@@ -3273,7 +3281,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 			colorize(fmt.Sprintf("(kind: %s, %s:%d-%d)", kind, filePath, int(startLine), int(endLine)), ColorDim, isTTY))
 	}
 
-
 	// Case 11: Single Folder Result
 	if folder, ok := payload["folder"].(map[string]interface{}); ok {
 		path, _ := folder["path"].(string)
@@ -3289,7 +3296,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	// Case 12: Single File Result
 	if file, ok := payload["file"].(map[string]interface{}); ok {
 		path, _ := file["id"].(string)
-		
+
 		// 📄 PATH
 		return fmt.Sprintf("  %s %s\n",
 			colorize("📄", ColorDim, isTTY),
@@ -3332,7 +3339,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		email, _ := contrib["email"].(string)
 		// contributions might be a map
 		contributions, _ := contrib["contributions"].(map[string]interface{})
-		
+
 		stats := []string{}
 		if c, ok := contributions["commits"].(float64); ok && c > 0 {
 			stats = append(stats, fmt.Sprintf("%d commits", int(c)))
@@ -3367,7 +3374,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		id, _ := policy["id"].(string)
 		desc, _ := policy["description"].(string)
 		kinds, _ := policy["kinds"].([]interface{})
-		
+
 		kindsCount := len(kinds)
 		kindsStr := ""
 		if kindsCount > 0 {
@@ -3432,10 +3439,8 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 			status, _ := tm["status"].(string)
 
 			var goalID, parentID string
-			if data, ok := tm["data"].(map[string]interface{}); ok {
-				goalID, _ = data["goal"].(string)
-				parentID, _ = data["parent"].(string)
-			}
+			goalID, _ = tm["goal"].(string)
+			parentID, _ = tm["parent"].(string)
 
 			node := &TicketNode{ID: id, Slug: slug, Status: status, GoalID: goalID, ParentID: parentID}
 			ticketMap[id] = node
@@ -3578,58 +3583,14 @@ type Node interface {
 type DefinitionKind string
 
 const (
-	DefinitionKindFunction  DefinitionKind = "function"
-	DefinitionKindClass     DefinitionKind = "class"
-	DefinitionKindVariable  DefinitionKind = "variable"
-	DefinitionKindPort      DefinitionKind = "interface"
-	DefinitionKindType      DefinitionKind = "type"
-	DefinitionKindEnum      DefinitionKind = "enum"
-	DefinitionKindMethod    DefinitionKind = "method"
-	DefinitionKindProperty  DefinitionKind = "property"
-	DefinitionKindConstant  DefinitionKind = "constant"
-	DefinitionKindStruct    DefinitionKind = "struct"
-	DefinitionKindTrait     DefinitionKind = "trait"
-	DefinitionKindModule    DefinitionKind = "module"
-	DefinitionKindNamespace DefinitionKind = "namespace"
+	DefinitionKindImplementation DefinitionKind = "implementation"
+	DefinitionKindInterface      DefinitionKind = "interface"
+	DefinitionKindConstant       DefinitionKind = "constant"
 )
-
-type DefinitionCategory string
-
-const (
-	DefinitionCategoryImplementation DefinitionCategory = "implementation"
-	DefinitionCategoryInterface      DefinitionCategory = "interface"
-	DefinitionCategoryConstant       DefinitionCategory = "constant"
-)
-
-func (e DefinitionCategory) IsValid() bool {
-	switch e {
-	case DefinitionCategoryImplementation, DefinitionCategoryInterface, DefinitionCategoryConstant:
-		return true
-	}
-	return false
-}
-
-func (e DefinitionCategory) String() string {
-	return string(e)
-}
-
-func DeriveDefinitionCategory(kind DefinitionKind) DefinitionCategory {
-	switch kind {
-	case DefinitionKindPort, DefinitionKindType, DefinitionKindTrait:
-		return DefinitionCategoryInterface
-	case DefinitionKindConstant, DefinitionKindEnum:
-		return DefinitionCategoryConstant
-	default:
-		return DefinitionCategoryImplementation
-	}
-}
 
 func (e DefinitionKind) IsValid() bool {
 	switch e {
-	case DefinitionKindFunction, DefinitionKindClass, DefinitionKindVariable,
-		DefinitionKindPort, DefinitionKindType, DefinitionKindEnum,
-		DefinitionKindMethod, DefinitionKindProperty, DefinitionKindConstant,
-		DefinitionKindStruct, DefinitionKindTrait, DefinitionKindModule, DefinitionKindNamespace:
+	case DefinitionKindImplementation, DefinitionKindInterface, DefinitionKindConstant:
 		return true
 	}
 	return false
@@ -3637,6 +3598,17 @@ func (e DefinitionKind) IsValid() bool {
 
 func (e DefinitionKind) String() string {
 	return string(e)
+}
+
+func DeriveDefinitionKind(rawKind string) DefinitionKind {
+	switch rawKind {
+	case "interface", "type", "trait":
+		return DefinitionKindInterface
+	case "constant", "enum":
+		return DefinitionKindConstant
+	default:
+		return DefinitionKindImplementation
+	}
 }
 
 type TicketStatus string
@@ -3689,7 +3661,7 @@ var AllowedLLMs = []string{
 	"gpt-5-2",
 	"gpt-5-2-codex",
 	"gpt-5-mini",
-	"swe-1.5",
+	"swe-1-5",
 }
 
 var AllowedUIs = []string{
@@ -3718,7 +3690,7 @@ func ResolveAllowedLLM(llm string) (string, error) {
 	llmSlug := NormalizeLLMSlug(llm)
 	bestMatch := ""
 	for _, allowed := range AllowedLLMs {
-		if strings.HasPrefix(llmSlug, allowed) {
+		if strings.Contains(llmSlug, NormalizeLLMSlug(allowed)) {
 			if len(allowed) > len(bestMatch) {
 				bestMatch = allowed
 			}
@@ -3734,7 +3706,7 @@ func ResolveAllowedUI(ui string) (string, error) {
 	uiSlug := NormalizeUISlug(ui)
 	bestMatch := ""
 	for _, allowed := range AllowedUIs {
-		if strings.HasPrefix(uiSlug, allowed) {
+		if strings.Contains(uiSlug, NormalizeUISlug(allowed)) {
 			if len(allowed) > len(bestMatch) {
 				bestMatch = allowed
 			}
@@ -4119,16 +4091,15 @@ func (s *Section) GetID() string {
 }
 
 type Definition struct {
-	ID           string                 `json:"id,omitempty"`
-	Name         string                 `json:"name"`
-	Kind         DefinitionKind         `json:"kind"`
-	Category     DefinitionCategory     `json:"category"`
-	FilePath     string                 `json:"filePath,omitempty"`
-	SectionPath  string                 `json:"sectionPath,omitempty"`
-	StartLine    int                    `json:"startLine"`
-	EndLine      int                    `json:"endLine"`
-	StartIndex   int                    `json:"startIndex"`
-	EndIndex     int                    `json:"endIndex"`
+	ID          string         `json:"id,omitempty"`
+	Name        string         `json:"name"`
+	Kind        DefinitionKind `json:"kind"`
+	FilePath    string         `json:"filePath,omitempty"`
+	SectionPath string         `json:"sectionPath,omitempty"`
+	StartLine   int            `json:"startLine"`
+	EndLine     int            `json:"endLine"`
+	StartIndex  int            `json:"startIndex"`
+	EndIndex    int            `json:"endIndex"`
 }
 
 func (d *Definition) IsNode() {}
@@ -7963,7 +7934,7 @@ func ParseDefinitions(content string, filePath string) []Definition {
 	for i, r := range ranges {
 		definitions[i] = Definition{
 			Name:      r.Name,
-			Kind:      DefinitionKindFunction,
+			Kind:      DefinitionKindImplementation,
 			StartLine: r.Start,
 			EndLine:   r.End,
 			FilePath:  filePath,
@@ -11324,8 +11295,8 @@ type StreamOptions struct {
 	IncludeBundleKinds     []BundleKind
 	ExcludeFolderKinds     []FolderKind
 	IncludeFolderKinds     []FolderKind
-	ExcludeDefinitionKinds []DefinitionCategory
-	IncludeDefinitionKinds []DefinitionCategory
+	ExcludeDefinitionKinds []DefinitionKind
+	IncludeDefinitionKinds []DefinitionKind
 
 	ExcludeYears        []int
 	IncludeYears        []int
@@ -11443,7 +11414,7 @@ func shouldIncludeFolderKind(kind FolderKind, opts StreamOptions) bool {
 	return true
 }
 
-func shouldIncludeDefinitionKind(kind DefinitionCategory, opts StreamOptions) bool {
+func shouldIncludeDefinitionKind(kind DefinitionKind, opts StreamOptions) bool {
 	if len(opts.IncludeDefinitionKinds) > 0 {
 		found := false
 		for _, k := range opts.IncludeDefinitionKinds {
@@ -11748,20 +11719,19 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 		lines := strings.Split(content, "\n")
 		defs := lang.ParseDefinitions(content, lines)
 		for _, d := range defs {
-			defKind := DefinitionKind(d.Kind)
-			if d.Kind == "" {
-				defKind = DefinitionKind("definition")
+			rawKind := d.Kind
+			if rawKind == "" {
+				rawKind = "definition"
 			}
-			category := DeriveDefinitionCategory(defKind)
+			kind := DeriveDefinitionKind(rawKind)
 
-			if !shouldIncludeDefinitionKind(category, options) {
+			if !shouldIncludeDefinitionKind(kind, options) {
 				continue
 			}
 
 			def := Definition{
 				Name:      d.Name,
-				Kind:      defKind,
-				Category:  category,
+				Kind:      kind,
 				FilePath:  f.Path,
 				StartLine: d.Start,
 				EndLine:   d.End,
@@ -15144,23 +15114,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	definitionKindEnum := graphql.NewEnum(graphql.EnumConfig{
 		Name: "DefinitionKind",
 		Values: graphql.EnumValueConfigMap{
-			"FUNCTION":  &graphql.EnumValueConfig{Value: DefinitionKindFunction},
-			"CLASS":     &graphql.EnumValueConfig{Value: DefinitionKindClass},
-			"VARIABLE":  &graphql.EnumValueConfig{Value: DefinitionKindVariable},
-			"INTERFACE": &graphql.EnumValueConfig{Value: DefinitionKindPort},
-			"TYPE":      &graphql.EnumValueConfig{Value: DefinitionKindType},
-			"ENUM":      &graphql.EnumValueConfig{Value: DefinitionKindEnum},
-			"METHOD":    &graphql.EnumValueConfig{Value: DefinitionKindMethod},
-			"PROPERTY":  &graphql.EnumValueConfig{Value: DefinitionKindProperty},
-		},
-	})
-
-	definitionCategoryEnum := graphql.NewEnum(graphql.EnumConfig{
-		Name: "DefinitionCategory",
-		Values: graphql.EnumValueConfigMap{
-			"IMPLEMENTATION": &graphql.EnumValueConfig{Value: DefinitionCategoryImplementation},
-			"INTERFACE":      &graphql.EnumValueConfig{Value: DefinitionCategoryInterface},
-			"CONSTANT":       &graphql.EnumValueConfig{Value: DefinitionCategoryConstant},
+			"IMPLEMENTATION": &graphql.EnumValueConfig{Value: DefinitionKindImplementation},
+			"INTERFACE":      &graphql.EnumValueConfig{Value: DefinitionKindInterface},
+			"CONSTANT":       &graphql.EnumValueConfig{Value: DefinitionKindConstant},
 		},
 	})
 
@@ -15583,15 +15539,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return definition.GetID(), nil
 					},
 				},
-				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"kind": &graphql.Field{Type: graphql.NewNonNull(definitionKindEnum)},
-				"category": &graphql.Field{
-					Type: graphql.NewNonNull(definitionCategoryEnum),
-					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						definition := p.Source.(*Definition)
-						return definition.Category, nil
-					},
-				},
+				"name":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"kind":    &graphql.Field{Type: graphql.NewNonNull(definitionKindEnum)},
 				"file":    &graphql.Field{Type: graphql.NewNonNull(fileType)},
 				"section": &graphql.Field{Type: sectionType},
 				"violations": &graphql.Field{
@@ -15949,6 +15898,26 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 							"started":  started,
 							"finished": finished,
 						}, nil
+					},
+				},
+				"goal": &graphql.Field{
+					Type: graphql.String,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						if ticket.Goal == "" {
+							return nil, nil
+						}
+						return ticket.Goal, nil
+					},
+				},
+				"parent": &graphql.Field{
+					Type: graphql.String,
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ticket := p.Source.(*Ticket)
+						if ticket.Parent == "" {
+							return nil, nil
+						}
+						return ticket.Parent, nil
 					},
 				},
 				"bundles": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType)))},
@@ -17576,7 +17545,7 @@ func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []
 func (r *queryResolver) Definition(ctx context.Context, path string, name string) (*Definition, error) {
 	return &Definition{
 		Name: name,
-		Kind: DefinitionKindFunction,
+		Kind: DefinitionKindImplementation,
 	}, nil
 }
 
@@ -18070,6 +18039,58 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("scope", mcp.Description("Scope to analyze (e.g., @semio, @semio/js, path/to/file.ts)"), mcp.DefaultString("@semio")),
 		),
 		analyze,
+	)
+	s.AddResource(
+		mcp.NewResource("semio://bundles", "Bundles", mcp.WithMIMEType("application/json")),
+		handleBundlesResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semio://folders", "Folders", mcp.WithMIMEType("application/json")),
+		handleFoldersResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semio://folder/{path}", "Folder"),
+		handleFolderResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semio://files", "Files", mcp.WithMIMEType("application/json")),
+		handleFilesResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semio://file/{path}", "File"),
+		handleFileResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semio://sections/{path}", "Sections"),
+		handleSectionsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semio://definitions/{path}", "Definitions"),
+		handleDefinitionsResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semio://contributors", "Contributors", mcp.WithMIMEType("application/json")),
+		handleContributorsResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semio://goals", "Goals", mcp.WithMIMEType("application/json")),
+		handleGoalsResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semio://tickets", "Tickets", mcp.WithMIMEType("application/json")),
+		handleTicketsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semio://ticket/{year}/{month}/{day}/{slug}", "Ticket"),
+		handleTicketResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semio://policies", "Policies", mcp.WithMIMEType("application/json")),
+		handlePoliciesResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semio://violation-kinds", "Violation Kinds", mcp.WithMIMEType("application/json")),
+		handleViolationKindsResource,
 	)
 	s.AddTool(
 		mcp.NewTool("fix",
@@ -19569,6 +19590,218 @@ func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	}
 	return textResult(result), nil
 }
+
+// #region Mcp Resources Handlers
+
+func handleBundlesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Bundles { repo { bundles { id name root sourceRoot projectType tags kind } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleFoldersResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Folders { repo { folders { id path name kind } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	path := strings.TrimPrefix(request.Params.URI, "semio://folder/")
+	query := `query Folder($path: String!) { folder(path: $path) { id path name kind parent { path } children { path name kind } files { path name kind } violations { id } } }`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleFilesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Files { repo { files { id path name kind extension } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	path := strings.TrimPrefix(request.Params.URI, "semio://file/")
+	query := `query File($path: String!) { file(path: $path) { id path name kind extension folder { path } bundle { name } violations { id } } }`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	path := strings.TrimPrefix(request.Params.URI, "semio://sections/")
+	query := `query Sections($path: String!) { file(path: $path) { sections { id path name kind startLine endLine definitions { name } children { name } } } }`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	path := strings.TrimPrefix(request.Params.URI, "semio://definitions/")
+	query := `query Definitions($path: String!) { file(path: $path) { definitions { id name kind line } } }`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleContributorsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Contributors { repo { contributors { id email name contributions { count } } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	goals := ToolGoalList()
+	bytes, err := json.Marshal(goals)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     string(bytes),
+		},
+	}, nil
+}
+
+func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Tickets { repo { tickets { id slug title status prompt iteration { prompt } } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	parts := strings.Split(strings.TrimPrefix(request.Params.URI, "semio://ticket/"), "/")
+	if len(parts) != 4 {
+		return nil, fmt.Errorf("invalid ticket URI: %s", request.Params.URI)
+	}
+	year, _ := strconv.Atoi(parts[0])
+	month, _ := strconv.Atoi(parts[1])
+	day, _ := strconv.Atoi(parts[2])
+	slug := parts[3]
+
+	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) { ticket(year: $year, month: $month, day: $day, slug: $slug) { id slug title status prompt iteration { prompt started finished } } }`
+	result, err := gql(query, map[string]interface{}{"year": year, "month": month, "day": day, "slug": slug})
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Policies { repo { policies { id description violations { id } } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+func handleViolationKindsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query ViolationKinds { repo { violationKinds { id priority autofixable reason solution } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "application/json",
+			Text:     result,
+		},
+	}, nil
+}
+
+// #endregion Mcp Resources Handlers
 
 // #endregion Handlers
 

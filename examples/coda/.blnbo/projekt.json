@@ -1,0 +1,10 @@
+{
+    "byKind": [
+        {
+            "kind": "area.gfa.net.usbl.ofc-work.ofc-rm",
+            "constraints": {
+                "min": 300
+            }
+        }
+    ]
+}

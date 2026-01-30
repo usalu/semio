@@ -209,14 +209,9 @@ export type Definition = Node & {
 };
 
 export enum DefinitionKind {
-  Class = 'CLASS',
-  Enum = 'ENUM',
-  Function = 'FUNCTION',
-  Port = 'INTERFACE',
-  Method = 'METHOD',
-  Property = 'PROPERTY',
-  Type = 'TYPE',
-  Variable = 'VARIABLE'
+  Implementation = 'IMPLEMENTATION',
+  Interface = 'INTERFACE',
+  Constant = 'CONSTANT'
 }
 
 export type DefinitionMetrics = {

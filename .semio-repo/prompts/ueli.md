@@ -20,6 +20,121 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+The semio repo mcp server should expose the following resources:
+
+repo: "semiorepo://repo"
+bundles: "semiorepo://"
+bundle: "semiorepo://{id}"
+folders: "semiorepo://{bundle-id}/{parent-folder-path*}"
+folder: "semiorepo://{bundle-id}/{path*}"
+files: "semiorepo://{bundle-id}/{parent-folder-path*}"
+file: "semiorepo://{bundle-id}/{path*}"
+sections: "semiorepo://{bundle-id}/{file-path*}"
+section: "semiorepo://{bundle-id}/{path*}"
+definitions: "semiorepo://{bundle-id}/{section-path*}"
+definition: "semiorepo://{bundle-id}/{path*}"
+tickets: "semiorepo://tickets"
+ticket: "semiorepo://ticket/{year}/{month}/{day}/{slug}"
+goals: "semiorepo://goals"
+goal: "semiorepo://goal/{path*}"
+policies: "semiorepo://policies"
+policy: "semiorepo://policy/{id}"
+violationKinds: "semiorepo://violation-kinds"
+violationKind: "semiorepo://violation-kind/{policy-id}/{path*}"
+contributors: "semiorepo://contributors"
+contributor: "semiorepo://contributor/{github}"
+commits: "semiorepo://commits"
+commit: "semiorepo://commit/{sha}"
+
+{?ui?llm?contributor?year?month?day?filter?}
+
+The id system in semio-repo is:
+
+repo: "@semio-repo"
+bundles: "@semio-repo/"
+bundle: "@semio-repo/{id}"
+folders: "@semio-repo/{bundle-id}/"
+folder: "@semio-repo/{bundle-id}/{path*}" # exception: root folders are under "@semio-repo/repo" e.g. "@semio-repo/repo/js" is the folder for the bundle "@semio/js"
+file: "@semio-repo/{bundle-id}/{path*}" # exception: root files are under "@semio-repo/repo" e.g. "@semio-repo/repo/.devcontainer/devcontainer.json"
+section: "@semio-repo/{bundle-id}/{file-path*}#{path*}"
+definition: "@semio-repo/{bundle-id}#{section-path*}§{path*}"
+ticket: "@semio-repo/tickets/{year}/{month}/{day}/{slug}"
+goal: "@semio-repo/goals/{path*}"
+policy: "@semio-repo/policies/{id}"
+violationKind: "@semio-repo/policies/{policy-id}/{path*}"
+contributor: "@semio-repo/contributors/{github}"
+commit: "@semio-repo/commits/{sha}"
+
+The cli should 
+`./go/repo/repo repo`
+`./go/repo/repo bundle list`
+`./go/repo/repo bundle create <id> <folder>?` e.g. `./go/repo/repo bundle create @semio/js js/semio`
+`./go/repo/repo bundle update <id> --id <new-id>? --folder <new-folder>?` e.g. `./go/repo/repo bundle update @semio/js --id @semio/javascript --folder js/javascript`
+`./go/repo/repo bundle <id>`
+
+
+
+
+Create a new design assistant mcp server called `coda` (Constrained Design Assistant).
+
+Expose the following resources:
+measures: "coda://measures"
+measure: "coda://measure/{id}"
+targets: "coda://targets"
+target: "coda://target/{id}"
+properties: "coda://{target-id}/properties"
+property:"coda://{target-id}/property/{id}"
+
+Expose the following tools:
+
+
+
+
+It is an ai that helps in designing buildings with Automated-Compliance-Checking (ACC).
+
+There is one source `design` and many `targets` which are used to validated the design. The `design` is modeled within an authoring software that provides an mcp tool. For each `target` there is a `translator` with a corresponding `validator`.
+There is an assistant go binary that calls `translators` (each translator is an agent) and `validators` (each validator is a binary) to check if a design is compliant. The result from a `translator` is directly piped into the `validator`. Every `translator` and `validator` pair is concurrently called. The assistant fans out to all `translators` and as soon as a `translator` returns the assistant calls the `validator` with the result. Then it waits until all `validators` have returned for all `targets`. It aggregates the result to a `report`. If the `report`contains `violations`, then the `report` is provided to the `changer` (agent) which changes the `design` over the design mcp server. The `changer` iterates as much as it can to fix all the violations from the `report`. It uses both anylze tools and change tools from the design mcp. Once it thinks it fixed all the violations, it signals the `assistant`. The `assistant` then calls the `translators` and `validators` again on the changed `design`.
+
+ In general there are `rules` which are validated by the `validators`. Every `rule` consists of `clauses`. A violation appears when one `clause` is not satisfied. There are  `measures`
+
+It should all be within one file `go/assistant/main.go`.
+
+As example, the design format/authoring platform/mcp server is `semio` and the targets are `BerlinBuildingCode` and `RoomProgram`.
+There is one translator
+for `semio->BerlinBuildingCode`
+and a validator
+for `BerlinBuildingCode`.
+There is one translator
+for `semio->RoomProgram`
+and a validator
+for `RoomProgram`.
+
+Make a detailed architectural plan that I can download.
+
+new design assistant 
+
+.coda
+	runs
+		RUNTIMESTAMP
+			run.json
+			iterations
+				ITERATION
+					iteration.json
+					targets
+						TARGET
+							trials
+								TRIAL
+									trial.TARGETEXTENSION
+									error.json
+							target.TARGETEXTENSION
+							report.REPORTEXTENSION
+						report.json
+					design.DESIGNEXTENSION
+					fixed.DESIGNEXTENSION
+
+
+Currently the repo mcp server is only working with tools. Make sure that reading bundles, folders, files, sections, definitions, contributors, goals, tickets, policies, violationKinds are turned into resources.
+
 Repo metrics:
 - Average, max  | tree: repo, per bundle, per folder, per file, per section, per definition | tree: contributor 
 - Lines of code [total, added, removed]
@@ -36,6 +151,7 @@ Extend the bundle, folder, file, section, definition with metrics:
 }
 - Memory in MB
 Display the metrics in the cli, vscode extension, graphql and mcp tool.
+Extend the tickets and contributors with codebase diff metrics:
 
 Expand bundle, folder, definition to have a kind property. Those kinds cant simply be derived from the names but need general knowledge and repository knowledge.
 
@@ -174,7 +290,7 @@ A ticket iteration should not have one date but instead dates: {started, finishe
 
 Create a new goal for `r26-02` release. The aim of this release is to have sketchpad running at mvp level, along with updated docs and examples.
 
-Add a new goal to the `r26-02` release goal: Updated Docs
+Add a new goal to the `r26-02` release goal: Running sketchpad
 Due date mid of next month.
 
 Create a new goal tree:
@@ -314,29 +430,6 @@ Extend repo go, vscode extension, etc.
 
 All cli commands should not be json and instead return human and llm consice visual colored cli output. Make sure that the streaming is streaming into the console. Use the --json flag to return pure ndjson.
 
-A new system is implemented: a design `assistance` which uses automated compliance checking.
-There is one source `design` and many `targets` which are used to validated the design. The `design` is modeled within an authoring software that provides an mcp tool. For each `target` there is a `translator` with a corresponding `validator`.
-There is an assistant go binary that calls `translators` (each translator is an agent) and `validators` (each validator is a binary) to check if a design is compliant. The result from a `translator` is directly piped into the `validator`. Every `translator` and `validator` pair is concurrently called. The assistant fans out to all `translators` and as soon as a `translator` returns the assistant calls the `validator` with the result. Then it waits until all `validators` have returned for all `targets`. It aggregates the result to a `report`. If the `report`contains `violations`, then the `report` is provided to the `changer` (agent) which changes the `design` over the design mcp server. The `changer` iterates as much as it can to fix all the violations from the `report`. It uses both anylze tools and change tools from the design mcp. Once it thinks it fixed all the violations, it signals the `assistant`. The `assistant` then calls the `translators` and `validators` again on the changed `design`.
-
- In general there are `rules` which are validated by the `validators`. Every `rule` consists of `clauses`. A violation appears when one `clause` is not satisfied. There are  `measures`
-
-It should all be within one file `go/assistant/main.go`.
-
-As example, the design format/authoring platform/mcp server is `semio` and the targets are `BerlinBuildingCode` and `RoomProgram`.
-There is one translator
-for `semio->BerlinBuildingCode`
-and a validator
-for `BerlinBuildingCode`.
-There is one translator
-for `semio->RoomProgram`
-and a validator
-for `RoomProgram`.
-
-Make a detailed architectural plan that I can download.
-
-new design assistant 
-
-
 The ticket mechanism should be extended:
 - reopen can also receive a plan and the markdown file should also be moved to the ticket folder. In order to prevent the markdown file from being overwritten, it should be renamed to `plan_ITERATIONINDEX+1.md`. Ticket create starts the first iteration hence `plan_1.md`
 ├─ .semio-repo
@@ -349,7 +442,6 @@ The ticket mechanism should be extended:
 │ │ │ │ │ │ ├─ ticket.json
 │ │ │ │ │ │ ├─ plan_ITERATION.md
 │ │ │ │ │ │ └─ FILES
-
 
 The new event- and adapter-based repo binary was recently started. Finish it until only the new architecture remains, all tests pass, and all the source code remains in in `go/repo/**.go` is only the single file `go/repo/main.go`. Use the integrate command to start to integrate all the other go files into it.
 

@@ -7,3 +7,5 @@
 ## Log
 
 ## Summary
+
+Removed the old detailed DefinitionKind enum (function, class, variable, interface, type, enum, method, property, constant, struct, trait, module, namespace) and renamed DefinitionCategory (implementation, interface, constant) to DefinitionKind across the entire codebase. Updated GraphQL schema, Go backend types/constants/GraphQL enum registration/streaming logic/resolver, Go tests, VS Code extension TypeScript types, and generated GraphQL TypeScript types. The DeriveDefinitionCategory function was renamed to DeriveDefinitionKind and now takes a raw string kind instead of the removed typed enum.

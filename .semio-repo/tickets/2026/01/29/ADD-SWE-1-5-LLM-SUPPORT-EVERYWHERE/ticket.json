@@ -1,8 +1,8 @@
 {
   "title": "Add SWE-1.5 LLM Support Everywhere",
   "status": "closed",
-  "prompt": "The swe-1.5 llm should be supported everywhere. Need to identify all places where LLM models are configured or referenced and ensure swe-1.5 is included in the available options.",
-  "summary": "Successfully added swe-1.5 LLM support everywhere in the codebase. The swe-1.5 model was already included in the VSCode extension and documentation, but was missing from the Go repo's AllowedLLMs list. Added swe-1.5 to the AllowedLLMs array in go/repo/main.go, which automatically enables the --swe-1.5 flag for all relevant CLI commands (ticket open, ticket reopen, goal open, goal reopen). The change has been tested and confirmed working.",
+  "prompt": "The swe-1-5 llm should be supported everywhere. Need to identify all places where LLM models are configured or referenced and ensure swe-1-5 is included in the available options.",
+  "summary": "Successfully added swe-1-5 LLM support everywhere in the codebase. The swe-1-5 model was already included in the VSCode extension and documentation, but was missing from the Go repo's AllowedLLMs list. Added swe-1-5 to the AllowedLLMs array in go/repo/main.go, which automatically enables the --swe-1-5 flag for all relevant CLI commands (ticket open, ticket reopen, goal open, goal reopen). The change has been tested and confirmed working.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/269"
   },
@@ -10,7 +10,7 @@
   "finished": "2026-01-29T11:13:56.253208688Z",
   "iterations": [
     {
-      "prompt": "The swe-1.5 llm should be supported everywhere. Need to identify all places where LLM models are configured or referenced and ensure swe-1.5 is included in the available options.",
+      "prompt": "The swe-1-5 llm should be supported everywhere. Need to identify all places where LLM models are configured or referenced and ensure swe-1-5 is included in the available options.",
       "llm": "sonnet-4-5",
       "ui": "claude-code",
       "author": {

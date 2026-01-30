@@ -991,7 +991,7 @@ func TestDefinitionsEdges(t *testing.T) {
 	}
 }
 
-func TestDefinitionCategory(t *testing.T) {
+func TestDefinitionKind(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 
@@ -1003,7 +1003,6 @@ func TestDefinitionCategory(t *testing.T) {
 				id
 				name
 				kind
-				category
 			}
 		}
 	}`
@@ -1018,10 +1017,9 @@ func TestDefinitionCategory(t *testing.T) {
 			ID          string `json:"id"`
 			Path        string `json:"path"`
 			Definitions []struct {
-				ID       string `json:"id"`
-				Name     string `json:"name"`
-				Kind     string `json:"kind"`
-				Category string `json:"category"`
+				ID   string `json:"id"`
+				Name string `json:"name"`
+				Kind string `json:"kind"`
 			} `json:"definitions"`
 		} `json:"files"`
 	}
@@ -1031,7 +1029,7 @@ func TestDefinitionCategory(t *testing.T) {
 	}
 
 	definitionsFound := false
-	validCategories := map[string]bool{
+	validKinds := map[string]bool{
 		"implementation": true,
 		"interface":      true,
 		"constant":       true,
@@ -1040,11 +1038,11 @@ func TestDefinitionCategory(t *testing.T) {
 	for _, file := range resp.Files {
 		for _, def := range file.Definitions {
 			definitionsFound = true
-			if def.Category == "" {
-				t.Errorf("definition %s in file %s has empty category", def.Name, file.Path)
+			if def.Kind == "" {
+				t.Errorf("definition %s in file %s has empty kind", def.Name, file.Path)
 			}
-			if !validCategories[def.Category] {
-				t.Errorf("definition %s has invalid category: %s (expected implementation, interface, or constant)", def.Name, def.Category)
+			if !validKinds[def.Kind] {
+				t.Errorf("definition %s has invalid kind: %s (expected implementation, interface, or constant)", def.Name, def.Kind)
 			}
 		}
 	}
@@ -1751,6 +1749,16 @@ func TestTreeCommands(t *testing.T) {
 	if len(output) == 0 {
 		t.Errorf("ticket tree output empty")
 	}
+
+	// 5. Goal Tree
+	output, err = executeTreeCommand("goal", "tree")
+	if err != nil {
+		t.Errorf("goal tree failed: %v", err)
+	}
+	// Goal tree should produce some output (goals + tickets hierarchy)
+	if len(output) == 0 {
+		t.Errorf("goal tree output empty")
+	}
 }
 
 func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
@@ -1901,6 +1909,36 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 	out, err = executeCommand("policy", "check", "code", "@semio/js")
 	if err != nil {
 		t.Fatalf("policy check failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("goal", "list")
+	if err != nil {
+		t.Fatalf("goal list failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("goal", "tree")
+	if err != nil {
+		t.Fatalf("goal tree failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("ticket", "list")
+	if err != nil {
+		t.Fatalf("ticket list failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("ticket", "tree")
+	if err != nil {
+		t.Fatalf("ticket tree failed: %v\nOutput: %s", err, out)
+	}
+	mustHaveExitCode(t, out, 0)
+
+	out, err = executeCommand("contributor", "list")
+	if err != nil {
+		t.Fatalf("contributor list failed: %v\nOutput: %s", err, out)
 	}
 	mustHaveExitCode(t, out, 0)
 
