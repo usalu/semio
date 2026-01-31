@@ -44,8 +44,10 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"text/template"
 	"time"
 
+	"github.com/Masterminds/sprig/v3"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/graphql-go/graphql"
 	"github.com/graphql-go/graphql/language/ast"
@@ -797,7 +799,7 @@ func extractLLMFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 // extractUIFromArgs extracts UI from flags or positional args
 func extractUIFromArgs(cmd *cobra.Command, args []string) (string, []string) {
 	// First check named --ui flag
-	if ui, _ := cmd.Flags().GetString("ui"); ui != "" {
+	if ui, _ := cmd.Flags().GetString("client"); ui != "" {
 		return ui, args
 	}
 	// Then check boolean flags for each allowed UI
@@ -955,7 +957,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			input := map[string]interface{}{
 				"title":    title,
 				"prompt":   prompt,
-				"ui":       strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
+				"client":       strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
 				"noIssue":  noIssue,
 				"noGithub": noGithub,
 			}
@@ -987,7 +989,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("title", "", "Ticket title")
 	openCmd.Flags().String("prompt", "", "Ticket prompt")
 	openCmd.Flags().String("llm", "", "LLM")
-	openCmd.Flags().String("ui", "", "UI")
+	openCmd.Flags().String("client", "", "UI")
 	openCmd.Flags().Bool("no-issue", false, "Skip GitHub issue")
 	openCmd.Flags().String("draft", "", "Draft ID")
 	openCmd.Flags().String("goal", "", "Goal ID")
@@ -1197,7 +1199,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"day":      day,
 				"slug":     slug,
 				"prompt":   prompt,
-				"ui":       strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
+				"client":       strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
 			}
 			if llm != "" {
 				input["llm"] = llm
@@ -1232,7 +1234,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	reopenCmd.Flags().String("slug", "", "Ticket slug")
 	reopenCmd.Flags().String("prompt", "", "Prompt")
 	reopenCmd.Flags().String("llm", "", "LLM")
-	reopenCmd.Flags().String("ui", "", "UI")
+	reopenCmd.Flags().String("client", "", "UI")
 	reopenCmd.Flags().String("title", "", "Title")
 	reopenCmd.Flags().String("draft", "", "Draft ID")
 	reopenCmd.Flags().String("goal", "", "Goal ID")
@@ -1398,7 +1400,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				input["parent"] = parent
 			}
 			if ui != "" {
-				input["ui"] = strings.ToUpper(strings.ReplaceAll(ui, "-", "_"))
+				input["client"] = strings.ToUpper(strings.ReplaceAll(ui, "-", "_"))
 			}
 			if llm != "" {
 				input["llm"] = llm
@@ -1564,7 +1566,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"prompt":      prompt,
 				"dueDate":     dueDate,
 				"llm":         llm,
-				"ui":          ui,
+				"client":          ui,
 				"noGithub":    noGithub,
 			}
 			variables := map[string]interface{}{"input": input}
@@ -1587,7 +1589,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("prompt", "", "Goal prompt")
 	openCmd.Flags().String("due-date", "", "Goal due date (e.g., 2026-02-15)")
 	openCmd.Flags().String("llm", "", "LLM")
-	openCmd.Flags().String("ui", "", "UI")
+	openCmd.Flags().String("client", "", "UI")
 	openCmd.Flags().Bool("no-github", false, "Skip GitHub synchronization")
 	addLLMFlags(openCmd)
 	addUIFlags(openCmd)
@@ -1672,7 +1674,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			input := map[string]interface{}{
 				"id":       id,
 				"prompt":   prompt,
-				"ui":       ui,
+				"client":       ui,
 				"llm":      llm,
 				"noGithub": noGithub,
 			}
@@ -3571,6 +3573,8 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 	return renderStream(cmd, config, stream)
 }
 
+// #endregion CLI Renderers
+
 // #endregion Cli Adapter
 
 // #region GraphQL Types
@@ -4944,7 +4948,7 @@ type TicketOpenInput struct {
 	Title    string `json:"title"`
 	Prompt   string `json:"prompt"`
 	LLM      string `json:"llm,omitempty"`
-	UI       string `json:"ui"`
+	UI       string `json:"client"`
 	NoIssue  bool   `json:"noIssue,omitempty"`
 	Draft    string `json:"draft,omitempty"`
 	Goal     string `json:"goal,omitempty"`
@@ -4971,7 +4975,7 @@ type GoalCreateInput struct {
 	Prompt      string `json:"prompt"`
 	DueDate     string `json:"dueDate"`
 	LLM         string `json:"llm"`
-	UI          string `json:"ui"`
+	UI          string `json:"client"`
 	NoGithub    bool   `json:"noGithub,omitempty"`
 	Parent      string `json:"parent,omitempty"`
 }
@@ -4995,7 +4999,7 @@ type GoalCloseInput struct {
 type GoalReopenInput struct {
 	ID          string  `json:"id"`
 	Prompt      string  `json:"prompt"`
-	UI          string  `json:"ui"`
+	UI          string  `json:"client"`
 	LLM         string  `json:"llm"`
 	Title       *string `json:"title,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -5035,7 +5039,7 @@ type TicketReopenInput struct {
 	Slug     string  `json:"slug"`
 	Prompt   string  `json:"prompt"`
 	LLM      string  `json:"llm,omitempty"`
-	UI       string  `json:"ui"`
+	UI       string  `json:"client"`
 	Title    *string `json:"title,omitempty"`
 	Draft    string  `json:"draft,omitempty"`
 	Goal     string  `json:"goal,omitempty"`
@@ -5295,44 +5299,64 @@ func (l *BaseLanguage) ParseSections(content string) []Section {
 		return nil
 	}
 	lines := strings.Split(content, "\n")
-	var stack []*Section
-	var roots []Section
+
+	type sectionPtr struct {
+		s        *Section
+		children []*sectionPtr
+	}
+
+	var stack []*sectionPtr
+	var roots []*sectionPtr
 	charIndex := 0
 	for i, line := range lines {
-		// fmt.Printf("Line %d: %s\n", i+1, line)
 		lineStart := charIndex
 		lineNum := i + 1
 		if match := l.sectionStart.FindStringSubmatch(line); match != nil {
-			// fmt.Printf("Found section start: %v\n", match)
 			name := strings.TrimSpace(match[1])
-			section := &Section{
+			s := &Section{
 				Name:       name,
 				StartLine:  lineNum,
-				EndLine:    -1,
+				EndLine:    len(lines),
 				StartIndex: lineStart,
-				EndIndex:   -1,
-				Children:   []Section{},
+				EndIndex:   len(content),
+				Children:   nil,
 			}
+			sp := &sectionPtr{s: s}
 			if len(stack) > 0 {
 				parent := stack[len(stack)-1]
-				parent.Children = append(parent.Children, *section)
-				section = &parent.Children[len(parent.Children)-1]
+				parent.children = append(parent.children, sp)
+			} else {
+				roots = append(roots, sp)
 			}
-			stack = append(stack, section)
+			stack = append(stack, sp)
 		} else if l.sectionEnd != nil && l.sectionEnd.MatchString(line) {
 			if len(stack) > 0 {
-				section := stack[len(stack)-1]
-				section.EndLine = lineNum
-				section.EndIndex = charIndex + len(line)
+				sp := stack[len(stack)-1]
+				sp.s.EndLine = lineNum
+				sp.s.EndIndex = charIndex + len(line)
 				stack = stack[:len(stack)-1]
-				if len(stack) == 0 {
-					roots = append(roots, *section)
-				}
 			}
 		}
 		charIndex += len(line) + 1
 	}
-	return roots
+
+	var convert func(*sectionPtr) Section
+	convert = func(sp *sectionPtr) Section {
+		s := *sp.s
+		if len(sp.children) > 0 {
+			s.Children = make([]Section, len(sp.children))
+			for i, child := range sp.children {
+				s.Children[i] = convert(child)
+			}
+		}
+		return s
+	}
+
+	result := make([]Section, len(roots))
+	for i, root := range roots {
+		result[i] = convert(root)
+	}
+	return result
 }
 
 func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
@@ -5876,7 +5900,7 @@ func (l *PythonLanguage) FormatImports(imports []string) string {
 	return strings.Join(uniqueImports, "\n")
 }
 
-// #endregion Python
+// #endregion Go
 
 // #region C#
 
@@ -6422,7 +6446,7 @@ type Goal struct {
 	Summary     string            `json:"summary,omitempty"`
 	DueDate     string            `json:"dueDate,omitempty"`
 	Dates       GoalDates         `json:"dates"`
-	UI          string            `json:"ui"`
+	UI          string            `json:"client"`
 	LLM         string            `json:"llm"`
 	Parent      string            `json:"parent,omitempty"`
 	GitHub      *GoalGithubData   `json:"github,omitempty"`
@@ -11651,6 +11675,17 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 	return nil
 }
 
+func flattenSections(sections []Section) []Section {
+	var result []Section
+	for _, s := range sections {
+		children := s.Children
+		s.Children = nil
+		result = append(result, s)
+		result = append(result, flattenSections(children)...)
+	}
+	return result
+}
+
 func StreamSections(ctx context.Context, scope string, out chan<- Section, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -11674,7 +11709,8 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 			continue
 		}
 		sections := ParseSections(content, f.Path)
-		for _, s := range sections {
+		flatSections := flattenSections(sections)
+		for _, s := range flatSections {
 			if !matchesFilter(s.Name, options) {
 				continue
 			}
@@ -13926,7 +13962,7 @@ func ToolExport(outputPath string) ToolResult {
 
 // #endregion SQLite Export
 
-// #endregion Commands
+// #endregion Tickets
 
 // #region GraphQL Context Port
 
@@ -15714,7 +15750,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return goal.Dates.Due, nil
 				},
 			},
-			"ui":     &graphql.Field{Type: graphql.String},
+			"client":     &graphql.Field{Type: graphql.String},
 			"llm":    &graphql.Field{Type: graphql.String},
 			"status": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 			"milestone": &graphql.Field{
@@ -15781,7 +15817,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return llm, nil
 					},
 				},
-				"ui": &graphql.Field{
+				"client": &graphql.Field{
 					Type: ticketUIEnum,
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						ticket := p.Source.(*Ticket)
@@ -16679,7 +16715,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"ui":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
+			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
 			"noIssue":  &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -16710,7 +16746,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"day":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
 			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"ui":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
+			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
 			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -16730,7 +16766,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"ui":       &graphql.InputObjectFieldConfig{Type: ticketUIEnum},
+			"client":       &graphql.InputObjectFieldConfig{Type: ticketUIEnum},
 			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
@@ -16745,7 +16781,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"prompt":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"ui":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"client":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noGithub":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
@@ -16778,7 +16814,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.InputObjectConfigFieldMap{
 			"id":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"ui":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"client":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"title":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -16817,7 +16853,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := inputMap["dueDate"].(string); ok {
 						input.DueDate = s
 					}
-					if s, ok := inputMap["ui"].(string); ok {
+					if s, ok := inputMap["client"].(string); ok {
 						input.UI = s
 					}
 					if s, ok := inputMap["llm"].(string); ok {
@@ -16890,7 +16926,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					input := GoalReopenInput{
 						ID:     inputMap["id"].(string),
 						Prompt: inputMap["prompt"].(string),
-						UI:     inputMap["ui"].(string),
+						UI:     inputMap["client"].(string),
 						LLM:    inputMap["llm"].(string),
 					}
 					if s, ok := inputMap["title"].(string); ok {
@@ -16964,7 +17000,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					input := TicketOpenInput{
 						Title:  inputMap["title"].(string),
 						Prompt: inputMap["prompt"].(string),
-						UI:     inputMap["ui"].(string),
+						UI:     inputMap["client"].(string),
 					}
 					if inputMap["llm"] != nil {
 						input.LLM = inputMap["llm"].(string)
@@ -17032,7 +17068,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						Day:    inputMap["day"].(int),
 						Slug:   inputMap["slug"].(string),
 						Prompt: inputMap["prompt"].(string),
-						UI:     inputMap["ui"].(string),
+						UI:     inputMap["client"].(string),
 					}
 					if inputMap["llm"] != nil {
 						input.LLM = inputMap["llm"].(string)
@@ -17077,7 +17113,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := inputMap["llm"].(string); ok {
 						input.LLM = &s
 					}
-					if s, ok := inputMap["ui"].(string); ok {
+					if s, ok := inputMap["client"].(string); ok {
 						input.UI = &s
 					}
 					if s, ok := inputMap["goal"].(string); ok {
@@ -18032,6 +18068,35 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 		"semio-repo",
 		"1.0.0",
 		server.WithToolCapabilities(true),
+		server.WithPromptCapabilities(true),
+	)
+	s.AddPrompt(
+		mcp.NewPrompt("enhance",
+			mcp.WithPromptDescription("Enhance the implementation by adding more features and enhance the existing tests to cover the new features."),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("The prompt to enhance the implementation with."), mcp.RequiredArgument()),
+		),
+		handleEnhancePrompt,
+	)
+	s.AddPrompt(
+		mcp.NewPrompt("refactor",
+			mcp.WithPromptDescription("Refactor the implementation and dont stop until all tests pass."),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("The prompt to refactor the implementation with."), mcp.RequiredArgument()),
+		),
+		handleRefactorPrompt,
+	)
+	s.AddPrompt(
+		mcp.NewPrompt("test",
+			mcp.WithPromptDescription("Extend the current tests by testing more features."),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("The prompt to extend the tests with."), mcp.RequiredArgument()),
+		),
+		handleTestPrompt,
+	)
+	s.AddPrompt(
+		mcp.NewPrompt("comply",
+			mcp.WithPromptDescription("Get the implementation to comply the a set of tests. Dont remove any functionality from the tests."),
+			mcp.WithArgument("prompt", mcp.ArgumentDescription("The prompt to comply the implementation with."), mcp.RequiredArgument()),
+		),
+		handleComplyPrompt,
 	)
 	s.AddTool(
 		mcp.NewTool("analyze",
@@ -18041,56 +18106,96 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 		analyze,
 	)
 	s.AddResource(
-		mcp.NewResource("semio://bundles", "Bundles", mcp.WithMIMEType("application/json")),
-		handleBundlesResource,
+		mcp.NewResource("semiorepo://repo", "Repo", mcp.WithMIMEType("text/plain")),
+		handleRepoResource,
 	)
 	s.AddResource(
-		mcp.NewResource("semio://folders", "Folders", mcp.WithMIMEType("application/json")),
+		mcp.NewResource("semiorepo://bundles", "Bundles", mcp.WithMIMEType("text/plain")),
+		handleBundlesResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semiorepo://bundle/{id}", "Bundle"),
+		handleBundleResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semiorepo://folders", "Folders", mcp.WithMIMEType("text/plain")),
 		handleFoldersResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semio://folder/{path}", "Folder"),
+		mcp.NewResourceTemplate("semiorepo://folder/{path}", "Folder"),
 		handleFolderResource,
 	)
 	s.AddResource(
-		mcp.NewResource("semio://files", "Files", mcp.WithMIMEType("application/json")),
+		mcp.NewResource("semiorepo://files", "Files", mcp.WithMIMEType("text/plain")),
 		handleFilesResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semio://file/{path}", "File"),
+		mcp.NewResourceTemplate("semiorepo://file/{path}", "File"),
 		handleFileResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semio://sections/{path}", "Sections"),
+		mcp.NewResourceTemplate("semiorepo://sections/{path}", "Sections"),
 		handleSectionsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semio://definitions/{path}", "Definitions"),
+		mcp.NewResourceTemplate("semiorepo://section/{path}#{sectionPath}", "Section"),
+		handleSectionResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semiorepo://definitions/{path}", "Definitions"),
 		handleDefinitionsResource,
 	)
-	s.AddResource(
-		mcp.NewResource("semio://contributors", "Contributors", mcp.WithMIMEType("application/json")),
-		handleContributorsResource,
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semiorepo://definition/{path}#{name}", "Definition"),
+		handleDefinitionResource,
 	)
 	s.AddResource(
-		mcp.NewResource("semio://goals", "Goals", mcp.WithMIMEType("application/json")),
-		handleGoalsResource,
-	)
-	s.AddResource(
-		mcp.NewResource("semio://tickets", "Tickets", mcp.WithMIMEType("application/json")),
+		mcp.NewResource("semiorepo://tickets", "Tickets", mcp.WithMIMEType("text/plain")),
 		handleTicketsResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semio://ticket/{year}/{month}/{day}/{slug}", "Ticket"),
+		mcp.NewResourceTemplate("semiorepo://ticket/{year}/{month}/{day}/{slug}", "Ticket"),
 		handleTicketResource,
 	)
 	s.AddResource(
-		mcp.NewResource("semio://policies", "Policies", mcp.WithMIMEType("application/json")),
-		handlePoliciesResource,
+		mcp.NewResource("semiorepo://goals", "Goals", mcp.WithMIMEType("text/plain")),
+		handleGoalsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semiorepo://goal/{slug}", "Goal"),
+		handleGoalResource,
 	)
 	s.AddResource(
-		mcp.NewResource("semio://violation-kinds", "Violation Kinds", mcp.WithMIMEType("application/json")),
+		mcp.NewResource("semiorepo://policies", "Policies", mcp.WithMIMEType("text/plain")),
+		handlePoliciesResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semiorepo://policy/{id}", "Policy"),
+		handlePolicyResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semiorepo://violationKinds", "Violation Kinds", mcp.WithMIMEType("text/plain")),
 		handleViolationKindsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semiorepo://violationKind/{id}", "Violation Kind"),
+		handleViolationKindResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semiorepo://contributors", "Contributors", mcp.WithMIMEType("text/plain")),
+		handleContributorsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semiorepo://contributor/{id}", "Contributor"),
+		handleContributorResource,
+	)
+	s.AddResource(
+		mcp.NewResource("semiorepo://commits", "Commits", mcp.WithMIMEType("text/plain")),
+		handleCommitsResource,
+	)
+	s.AddResourceTemplate(
+		mcp.NewResourceTemplate("semiorepo://commit/{oid}", "Commit"),
+		handleCommitResource,
 	)
 	s.AddTool(
 		mcp.NewTool("fix",
@@ -18119,7 +18224,7 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("title", mcp.Required(), mcp.Description("Ticket title (will be uppercased and kebab-cased for folder name)")),
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("Ticket prompt/description")),
 			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM used for this ticket")),
-			mcp.WithString("ui", mcp.Required(), mcp.Description("UI used for this ticket")),
+			mcp.WithString("client", mcp.Required(), mcp.Description("UI used for this ticket")),
 			mcp.WithBoolean("noIssue", mcp.Description("Skip GitHub issue creation")),
 			mcp.WithString("draft", mcp.Description("Optional draft slug to seed ticket workspace")),
 		),
@@ -18166,7 +18271,7 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("New prompt/description for the ticket")),
 			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM used for this ticket")),
-			mcp.WithString("ui", mcp.Required(), mcp.Description("UI used for this ticket")),
+			mcp.WithString("client", mcp.Required(), mcp.Description("UI used for this ticket")),
 			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
 			mcp.WithString("draft", mcp.Description("Optional draft slug to seed ticket workspace")),
 		),
@@ -18206,7 +18311,7 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("description", mcp.Required(), mcp.Description("Goal description")),
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("Goal prompt")),
 			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM model")),
-			mcp.WithString("ui", mcp.Required(), mcp.Description("UI client")),
+			mcp.WithString("client", mcp.Required(), mcp.Description("UI client")),
 			mcp.WithString("due_date", mcp.Description("Due date (YYYY-MM-DD)")),
 			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub milestone creation")),
 		),
@@ -18227,7 +18332,7 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("id", mcp.Required(), mcp.Description("Goal ID (SLUG/SUBGOAL...)")),
 			mcp.WithString("prompt", mcp.Required(), mcp.Description("Reopening prompt")),
 			mcp.WithString("llm", mcp.Required(), mcp.Description("LLM model")),
-			mcp.WithString("ui", mcp.Required(), mcp.Description("UI client")),
+			mcp.WithString("client", mcp.Required(), mcp.Description("UI client")),
 			mcp.WithString("title", mcp.Description("New title")),
 			mcp.WithString("description", mcp.Description("New description")),
 			mcp.WithString("due_date", mcp.Description("New due date (YYYY-MM-DD)")),
@@ -18575,6 +18680,18 @@ func requireFolderTargetPath(path string) error {
 
 // #region GraphQL
 
+func jsonToYaml(jsonStr string) (string, error) {
+	var data interface{}
+	if err := json.Unmarshal([]byte(jsonStr), &data); err != nil {
+		return "", err
+	}
+	yamlBytes, err := yaml.Marshal(data)
+	if err != nil {
+		return "", err
+	}
+	return string(yamlBytes), nil
+}
+
 func gql(query string, variables map[string]interface{}) (string, error) {
 	return executor.ExecuteJSON(context.Background(), query, variables)
 }
@@ -18582,6 +18699,80 @@ func gql(query string, variables map[string]interface{}) (string, error) {
 // #endregion GraphQL
 
 // #region Handlers
+
+func renderPromptTemplate(name string, data map[string]string) (string, error) {
+	path := filepath.Join(".semio-repo", "prompt", "templates", name+".tpl")
+	content, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	tmpl, err := template.New(name).Funcs(sprig.TxtFuncMap()).Parse(string(content))
+	if err != nil {
+		return "", err
+	}
+	var out strings.Builder
+	if err := tmpl.Execute(&out, data); err != nil {
+		return "", err
+	}
+	return out.String(), nil
+}
+
+func handleEnhancePrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	prompt := request.Params.Arguments["prompt"]
+	content, err := renderPromptTemplate("enhance", map[string]string{"prompt": prompt})
+	if err != nil {
+		return nil, err
+	}
+	return mcp.NewGetPromptResult(
+		"Enhance the implementation by adding more features and enhance the existing tests to cover the new features.",
+		[]mcp.PromptMessage{
+			mcp.NewPromptMessage(mcp.RoleUser, mcp.NewTextContent(content)),
+		},
+	), nil
+}
+
+func handleRefactorPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	prompt := request.Params.Arguments["prompt"]
+	content, err := renderPromptTemplate("refactor", map[string]string{"prompt": prompt})
+	if err != nil {
+		return nil, err
+	}
+	return mcp.NewGetPromptResult(
+		"Refactor the implementation and dont stop until all tests pass.",
+		[]mcp.PromptMessage{
+			mcp.NewPromptMessage(mcp.RoleUser, mcp.NewTextContent(content)),
+		},
+	), nil
+}
+
+func handleTestPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	prompt := request.Params.Arguments["prompt"]
+	content, err := renderPromptTemplate("test", map[string]string{"prompt": prompt})
+	if err != nil {
+		return nil, err
+	}
+	return mcp.NewGetPromptResult(
+		"Extend the current tests by testing more features.",
+		[]mcp.PromptMessage{
+			mcp.NewPromptMessage(mcp.RoleUser, mcp.NewTextContent(content)),
+		},
+	), nil
+}
+
+func handleComplyPrompt(ctx context.Context, request mcp.GetPromptRequest) (*mcp.GetPromptResult, error) {
+	prompt := request.Params.Arguments["prompt"]
+	content, err := renderPromptTemplate("comply", map[string]string{"prompt": prompt})
+	if err != nil {
+		return nil, err
+	}
+	return mcp.NewGetPromptResult(
+		"Get the implementation to comply the a set of tests. Dont remove any functionality from the tests.",
+		[]mcp.PromptMessage{
+			mcp.NewPromptMessage(mcp.RoleUser, mcp.NewTextContent(content)),
+		},
+	), nil
+}
+
 func analyze(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	scope, ok, err := getStringArg(args, "scope")
@@ -18727,7 +18918,7 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	ui, err := requireStringArg(args, "ui")
+	ui, err := requireStringArg(args, "client")
 	if err != nil {
 		return nil, err
 	}
@@ -18864,7 +19055,7 @@ func ticketReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	if err != nil {
 		return nil, err
 	}
-	ui, err := requireStringArg(args, "ui")
+	ui, err := requireStringArg(args, "client")
 	if err != nil {
 		return nil, err
 	}
@@ -18939,7 +19130,7 @@ func goalOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 	if err != nil {
 		return nil, err
 	}
-	ui, err := requireStringArg(args, "ui")
+	ui, err := requireStringArg(args, "client")
 	if err != nil {
 		return nil, err
 	}
@@ -18979,7 +19170,7 @@ func goalReopen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	if err != nil {
 		return nil, err
 	}
-	ui, err := requireStringArg(args, "ui")
+	ui, err := requireStringArg(args, "client")
 	if err != nil {
 		return nil, err
 	}
@@ -19593,17 +19784,60 @@ func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 
 // #region Mcp Resources Handlers
 
-func handleBundlesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Bundles { repo { bundles { id name root sourceRoot projectType tags kind } } }`
+func handleRepoResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Repo { repo { id name bundles { id } tickets { id } policies { id } contributors { id } } }`
 	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
 	if err != nil {
 		return nil, err
 	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleBundlesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Bundles { repo { bundles { id name root sourceRoot projectType tags kind } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleBundleResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	id := strings.TrimPrefix(request.Params.URI, "semiorepo://bundle/")
+	query := `query Bundle($id: String!) { bundle(name: $id) { id name root sourceRoot projectType tags kind } }`
+	result, err := gql(query, map[string]interface{}{"id": id})
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
@@ -19614,27 +19848,35 @@ func handleFoldersResource(ctx context.Context, request mcp.ReadResourceRequest)
 	if err != nil {
 		return nil, err
 	}
-	return []mcp.ResourceContents{
-		mcp.TextResourceContents{
-			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
-		},
-	}, nil
-}
-
-func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	path := strings.TrimPrefix(request.Params.URI, "semio://folder/")
-	query := `query Folder($path: String!) { folder(path: $path) { id path name kind parent { path } children { path name kind } files { path name kind } violations { id } } }`
-	result, err := gql(query, map[string]interface{}{"path": path})
+	yaml, err := jsonToYaml(result)
 	if err != nil {
 		return nil, err
 	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	path := strings.TrimPrefix(request.Params.URI, "semiorepo://folder/")
+	query := `query Folder($path: String!) { folder(path: $path) { id path name kind parent { path } children { path name kind } files { path name kind } violations { id } } }`
+	result, err := gql(query, map[string]interface{}{"path": path})
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
@@ -19645,89 +19887,129 @@ func handleFilesResource(ctx context.Context, request mcp.ReadResourceRequest) (
 	if err != nil {
 		return nil, err
 	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
 
 func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	path := strings.TrimPrefix(request.Params.URI, "semio://file/")
+	path := strings.TrimPrefix(request.Params.URI, "semiorepo://file/")
 	query := `query File($path: String!) { file(path: $path) { id path name kind extension folder { path } bundle { name } violations { id } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
 		return nil, err
 	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
 
 func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	path := strings.TrimPrefix(request.Params.URI, "semio://sections/")
+	path := strings.TrimPrefix(request.Params.URI, "semiorepo://sections/")
 	query := `query Sections($path: String!) { file(path: $path) { sections { id path name kind startLine endLine definitions { name } children { name } } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
 		return nil, err
 	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	uri := strings.TrimPrefix(request.Params.URI, "semiorepo://section/")
+	parts := strings.Split(uri, "#")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid section URI: %s", request.Params.URI)
+	}
+	path := parts[0]
+    sectionPath := strings.Split(parts[1], "/")
+
+	query := `query Section($path: String!, $sectionPath: [String!]!) { section(path: $path, sectionPath: $sectionPath) { id path name kind startLine endLine } }`
+	result, err := gql(query, map[string]interface{}{"path": path, "sectionPath": sectionPath})
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
 
 func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	path := strings.TrimPrefix(request.Params.URI, "semio://definitions/")
+	path := strings.TrimPrefix(request.Params.URI, "semiorepo://definitions/")
 	query := `query Definitions($path: String!) { file(path: $path) { definitions { id name kind line } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
 		return nil, err
 	}
-	return []mcp.ResourceContents{
-		mcp.TextResourceContents{
-			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
-		},
-	}, nil
-}
-
-func handleContributorsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Contributors { repo { contributors { id email name contributions { count } } } }`
-	result, err := gql(query, nil)
+	yaml, err := jsonToYaml(result)
 	if err != nil {
 		return nil, err
 	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
 
-func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	goals := ToolGoalList()
-	bytes, err := json.Marshal(goals)
+func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+    uri := strings.TrimPrefix(request.Params.URI, "semiorepo://definition/")
+	parts := strings.Split(uri, "#")
+	if len(parts) != 2 {
+		return nil, fmt.Errorf("invalid definition URI: %s", request.Params.URI)
+	}
+	path := parts[0]
+    name := parts[1]
+
+	query := `query Definition($path: String!, $name: String!) { definition(path: $path, name: $name) { id name kind line } }`
+	result, err := gql(query, map[string]interface{}{"path": path, "name": name})
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
 	if err != nil {
 		return nil, err
 	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     string(bytes),
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
@@ -19738,17 +20020,21 @@ func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest)
 	if err != nil {
 		return nil, err
 	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
 
 func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	parts := strings.Split(strings.TrimPrefix(request.Params.URI, "semio://ticket/"), "/")
+	parts := strings.Split(strings.TrimPrefix(request.Params.URI, "semiorepo://ticket/"), "/")
 	if len(parts) != 4 {
 		return nil, fmt.Errorf("invalid ticket URI: %s", request.Params.URI)
 	}
@@ -19762,13 +20048,40 @@ func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	if err != nil {
 		return nil, err
 	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
+}
+
+func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	goals := ToolGoalList()
+	bytes, err := json.Marshal(goals)
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(string(bytes))
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+    return nil, fmt.Errorf("goal resource not implemented")
 }
 
 func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -19777,11 +20090,35 @@ func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest
 	if err != nil {
 		return nil, err
 	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+    id := strings.TrimPrefix(request.Params.URI, "semiorepo://policy/")
+	query := `query Policy($id: String!) { policy(id: $id) { id description violations { id } } }`
+	result, err := gql(query, map[string]interface{}{"id": id})
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
 }
@@ -19792,13 +20129,99 @@ func handleViolationKindsResource(ctx context.Context, request mcp.ReadResourceR
 	if err != nil {
 		return nil, err
 	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
 	return []mcp.ResourceContents{
 		mcp.TextResourceContents{
 			URI:      request.Params.URI,
-			MIMEType: "application/json",
-			Text:     result,
+			MIMEType: "text/plain",
+			Text:     yaml,
 		},
 	}, nil
+}
+
+func handleViolationKindResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+    id := strings.TrimPrefix(request.Params.URI, "semiorepo://violationKind/")
+	query := `query ViolationKind($id: String!) { violationKind(id: $id) { id priority autofixable reason solution } }`
+	result, err := gql(query, map[string]interface{}{"id": id})
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleContributorsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Contributors { repo { contributors { id email name contributions { count } } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+    id := strings.TrimPrefix(request.Params.URI, "semiorepo://contributor/")
+	query := `query Contributor($id: String!) { contributor(id: $id) { id email name contributions { count } } }`
+	result, err := gql(query, map[string]interface{}{"id": id})
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleCommitsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Commits { repo { commits { oid message author { name } } } }`
+	result, err := gql(query, nil)
+	if err != nil {
+		return nil, err
+	}
+	yaml, err := jsonToYaml(result)
+	if err != nil {
+		return nil, err
+	}
+	return []mcp.ResourceContents{
+		mcp.TextResourceContents{
+			URI:      request.Params.URI,
+			MIMEType: "text/plain",
+			Text:     yaml,
+		},
+	}, nil
+}
+
+func handleCommitResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+    return nil, fmt.Errorf("commit resource not implemented")
 }
 
 // #endregion Mcp Resources Handlers
@@ -21857,3 +22280,4 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 		Bundles: resBundles,
 	}
 }
+// #endregion Cli

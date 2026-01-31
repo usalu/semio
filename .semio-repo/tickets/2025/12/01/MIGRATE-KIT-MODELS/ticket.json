@@ -7,7 +7,7 @@
     {
       "prompt": "Migrate models from kit_metabolism.json.old to kit_metabolism.json",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

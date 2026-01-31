@@ -7,7 +7,7 @@
     {
       "prompt": "UI-ID-SYSTEM-ANALYSIS",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "Fix coordinate system transformation for connectors and geometry",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

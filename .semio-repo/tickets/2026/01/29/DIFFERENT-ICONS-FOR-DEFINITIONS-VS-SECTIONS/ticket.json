@@ -12,7 +12,7 @@
     {
       "prompt": "The definitions tree item icon should be different compared to the section tree item icon.",
       "llm": "sonnet-4-5",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

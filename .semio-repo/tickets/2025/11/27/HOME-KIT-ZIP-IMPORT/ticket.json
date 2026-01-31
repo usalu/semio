@@ -7,7 +7,7 @@
     {
       "prompt": "Support drag and drop of zip files in home app to import kits",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

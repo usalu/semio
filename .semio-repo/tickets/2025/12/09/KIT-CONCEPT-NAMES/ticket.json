@@ -7,7 +7,7 @@
     {
       "prompt": "Display concept names in kit app rows",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

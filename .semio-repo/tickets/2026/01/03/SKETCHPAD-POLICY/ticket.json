@@ -7,7 +7,7 @@
     {
       "prompt": "\"Add a new policy for sketchpad covering: 1) Third party imports must only be in elements.tsx which reexports reusable UI elements, 2) State management rules - single state machine (createMachine once, no createActor, Yjs only for kit data sync not app state), 3) UI elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()\"",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

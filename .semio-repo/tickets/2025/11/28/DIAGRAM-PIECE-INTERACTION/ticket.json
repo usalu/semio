@@ -7,7 +7,7 @@
     {
       "prompt": "Fix piece hover and selection in diagram after drag and drop",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

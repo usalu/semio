@@ -21,7 +21,7 @@
     },
     "targets": [
         {
-            "id": "mbo.blnbo",
+            "id": "ldrbmrtv.blnbo",
             "llm": [
                 "claude-opus-4-5",
                 "sonnet-4-5",
@@ -30,7 +30,7 @@
             ]
         },
         {
-            "id": "program."
+            "id": "room.program."
         }
     ]
 }

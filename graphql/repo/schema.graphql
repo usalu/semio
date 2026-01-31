@@ -104,7 +104,7 @@ input TicketOpenInput {
   title: String!
   prompt: String!
   llm: String!
-  ui: TicketUI!
+  ui: TicketClient!
   noIssue: Boolean
   planPath: String
 }
@@ -388,7 +388,7 @@ type Ticket implements Node {
   status: TicketStatus!
   author: Contributor
   llm: String
-  ui: TicketUI
+  ui: TicketClient
   commit: String
   goal: String
   parent: String
@@ -402,7 +402,7 @@ type Iteration {
   prompt: String!
   plan: String
   llm: String!
-  ui: TicketUI!
+  ui: TicketClient!
   author: Contributor!
   started: DateTime!
   finished: DateTime
@@ -414,7 +414,7 @@ enum TicketStatus {
   CLOSED
 }
 
-enum TicketUI {
+enum TicketClient {
   COPILOT_CHAT
   ANTIGRAVITY
   CURSOR

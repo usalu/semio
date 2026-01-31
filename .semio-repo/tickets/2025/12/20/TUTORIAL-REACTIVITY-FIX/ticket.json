@@ -7,7 +7,7 @@
     {
       "prompt": "\"Fix Smell 5: Non-reactive snapshot reads in Tutorials.tsx - RecordingControlsContent now uses reactive hooks instead of store.snapshot()\"",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

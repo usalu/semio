@@ -7,7 +7,7 @@
     {
       "prompt": "Introduce Field<T> type and useDesignAppField helper to reduce hook boilerplate",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

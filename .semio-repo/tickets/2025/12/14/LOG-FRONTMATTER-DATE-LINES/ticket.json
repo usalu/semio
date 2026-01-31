@@ -7,7 +7,7 @@
     {
       "prompt": "Remove stats nesting, add nesting to lines {added;removed}, add nesting to date {created,updated}, rename base to commit, and migrate all existing logs to the new format.",
       "llm": "gpt-5-2",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

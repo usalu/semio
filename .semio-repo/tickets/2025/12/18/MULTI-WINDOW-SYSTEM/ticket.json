@@ -7,7 +7,7 @@
     {
       "prompt": "\"Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas\"",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "Remove reflection from Grasshopper components and hardcode inputs/outputs",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

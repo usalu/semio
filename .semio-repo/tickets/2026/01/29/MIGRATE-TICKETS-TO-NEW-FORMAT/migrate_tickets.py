@@ -55,13 +55,13 @@ def migrate_ticket(ticket_dir):
 
         commit = data.get("commit")
         llm = data.get("llm")
-        ui = data.get("ui")
+        ui = data.get("client")
 
         # Construct iterations
         iteration = {
             "prompt": prompt,
             "llm": llm,
-            "ui": ui,
+            "client": ui,
             "author": author_obj,
             "started": created,
             "commit": commit,

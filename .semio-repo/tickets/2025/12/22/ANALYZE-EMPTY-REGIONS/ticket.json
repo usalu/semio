@@ -7,7 +7,7 @@
     {
       "prompt": "Extend the analyze and fix code hook to check and remove empty regions.",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

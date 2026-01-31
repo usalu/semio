@@ -12,7 +12,7 @@
     {
       "prompt": "Make sure that reading bundles, folders, files, sections, definitions, contributors, goals, tickets, policies, and violation-kinds are turned into resources",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

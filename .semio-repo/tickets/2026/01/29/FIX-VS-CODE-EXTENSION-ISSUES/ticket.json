@@ -10,7 +10,7 @@
     {
       "prompt": "Fix codebase tree sections, explorer section view, and ticket list visibility in VS Code extension.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

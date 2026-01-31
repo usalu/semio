@@ -7,7 +7,7 @@
     {
       "prompt": "Document reports folder in AGENTS",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

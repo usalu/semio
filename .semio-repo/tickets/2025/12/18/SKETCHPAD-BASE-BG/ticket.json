@@ -7,7 +7,7 @@
     {
       "prompt": "Sketchpad needs to have base background",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

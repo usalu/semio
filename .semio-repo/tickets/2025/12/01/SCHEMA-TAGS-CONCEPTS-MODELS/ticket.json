@@ -7,7 +7,7 @@
     {
       "prompt": "\"Tags, Concepts become kit entities; Models link to files with guid\"",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

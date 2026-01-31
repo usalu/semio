@@ -7,7 +7,7 @@
     {
       "prompt": "The vscode extension should show the violation diagnostics of every open file and rerun the targeted analyze command when saved again.",
       "llm": "opus-4-5-20251101",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

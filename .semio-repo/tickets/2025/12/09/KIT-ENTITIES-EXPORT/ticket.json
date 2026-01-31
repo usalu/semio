@@ -7,7 +7,7 @@
     {
       "prompt": "Expose kit entities individually from assets index",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

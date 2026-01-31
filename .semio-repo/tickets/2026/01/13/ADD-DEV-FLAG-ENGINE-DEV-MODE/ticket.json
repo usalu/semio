@@ -7,7 +7,7 @@
     {
       "prompt": "Add a dev flag to engine to run in dev mode in py/engine/engine.py.",
       "llm": "gpt-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "Ueli Saluz",
         "email": null

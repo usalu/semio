@@ -7,7 +7,7 @@
     {
       "prompt": "User encountered EBADENGINE while trying to install npm@11.7.0. Current Node.js v20.14.0 is incompatible with npm@11.7.0 requirements (^20.17.0 or >=22.9.0). Update package.json to reflect these requirements.",
       "llm": "Gemini 3 Flash (Preview)",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "GitHub Copilot",
         "email": null

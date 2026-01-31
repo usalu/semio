@@ -7,7 +7,7 @@
     {
       "prompt": "Scope iteration and ticket line diffs to declared ticket files",
       "llm": "gpt-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

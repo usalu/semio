@@ -12,7 +12,7 @@
     {
       "prompt": "When clicking on a section tree item or definition tree item in the VS Code extension, it should jump to the right line where it starts. Both don't currently work.",
       "llm": "opus-4-5",
-      "ui": "claude-code",
+      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

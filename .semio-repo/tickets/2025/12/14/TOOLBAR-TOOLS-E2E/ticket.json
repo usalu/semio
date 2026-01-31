@@ -7,7 +7,7 @@
     {
       "prompt": "Implement toolbar in apps and extend Type app E2E test for connector tool",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

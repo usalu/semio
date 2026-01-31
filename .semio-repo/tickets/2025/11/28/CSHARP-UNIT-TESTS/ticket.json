@@ -7,7 +7,7 @@
     {
       "prompt": "Sync C# unit tests with JS semio.ts tests using same fixtures",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

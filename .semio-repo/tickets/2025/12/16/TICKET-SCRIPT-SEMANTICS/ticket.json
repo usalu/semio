@@ -7,7 +7,7 @@
     {
       "prompt": "Improve log script semantics. Rename logs to tickets. create log becomes ticket open. Then a new command is ticket iteration start Then there should be ticket iteration finish finish becomes ticket close Throw an error if an iteration is unifinished for a ticket (e.g. when another iteration start or ticket close is called) Force files to be a necessary parameter to call for iteration start and iteration finish. Update the file list on finish for the iteration and compute stats (lines).",
       "llm": "gpt-5-2",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "Fix npm Invalid Version error on npm install",
       "llm": "gemini-3-flash-preview",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "KinanSarak",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "Show VS Code extension commands in a command/subcommand tree",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

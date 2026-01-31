@@ -12,7 +12,7 @@
     {
       "prompt": "The sections section along with all tree items of the explorer side view in vscode should be the same as the file tree item in codebase section in the semio-repo side view. 100% the same (same behaviour such as drag and drop, same action toggles, same icons, same order, same children, etc).",
       "llm": "opus-4-5",
-      "ui": "claude-code",
+      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

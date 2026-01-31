@@ -7,7 +7,7 @@
     {
       "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

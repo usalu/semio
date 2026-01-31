@@ -7,7 +7,7 @@
     {
       "prompt": "\"The ui system needs to be more tightly integrated with itself. Bands horizontal only, optionally scrollable. New Strip component. Standardized heights: tiny/small/medium/large.\"",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

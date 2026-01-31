@@ -7,7 +7,7 @@
     {
       "prompt": "PIECE-HOVER-FIX",
       "llm": "sonnet-4",
-      "ui": null,
+      "clientient": null,
       "author": {
         "name": "uelisaluz",
         "email": null

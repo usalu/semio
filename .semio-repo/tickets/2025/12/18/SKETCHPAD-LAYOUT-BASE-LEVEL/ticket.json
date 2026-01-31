@@ -7,7 +7,7 @@
     {
       "prompt": "Make sure the global sketchpad has layout base context provider. Currently e.g. navbar and footer are transparent.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

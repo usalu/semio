@@ -7,7 +7,7 @@
     {
       "prompt": "'Refactor ticket mechanism: create takes title/prompt/llm/plan, creates ticket.json/plan.md/log.md/summary.md, checkpoints compute section metrics from git diffs'",
       "llm": "opus-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

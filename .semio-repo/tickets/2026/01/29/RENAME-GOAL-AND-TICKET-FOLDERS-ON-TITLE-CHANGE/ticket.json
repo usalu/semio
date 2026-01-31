@@ -12,7 +12,7 @@
     {
       "prompt": "When a goal or ticket title is changed (via reopen), the folder name should also be renamed to match the new title. Currently the folder keeps the old slug even after a title change.",
       "llm": "opus-4-5",
-      "ui": "claude-code",
+      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

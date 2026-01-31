@@ -7,7 +7,7 @@
     {
       "prompt": "\"Fix Smell 4: Module-level mutable state (globalHoverClearTimeout, currentHoveredPieceGuid, isPanning, isDraggingNode) replaced with HoverIntentContext using refs\"",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -20,50 +20,98 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
-The semio repo mcp server should expose the following resources:
+Rename ui to client for tickets and goals.
 
-repo: "semiorepo://repo"
-bundles: "semiorepo://"
-bundle: "semiorepo://{id}"
-folders: "semiorepo://{bundle-id}/{parent-folder-path*}"
-folder: "semiorepo://{bundle-id}/{path*}"
-files: "semiorepo://{bundle-id}/{parent-folder-path*}"
-file: "semiorepo://{bundle-id}/{path*}"
-sections: "semiorepo://{bundle-id}/{file-path*}"
-section: "semiorepo://{bundle-id}/{path*}"
-definitions: "semiorepo://{bundle-id}/{section-path*}"
-definition: "semiorepo://{bundle-id}/{path*}"
-tickets: "semiorepo://tickets"
-ticket: "semiorepo://ticket/{year}/{month}/{day}/{slug}"
-goals: "semiorepo://goals"
-goal: "semiorepo://goal/{path*}"
-policies: "semiorepo://policies"
-policy: "semiorepo://policy/{id}"
-violationKinds: "semiorepo://violation-kinds"
-violationKind: "semiorepo://violation-kind/{policy-id}/{path*}"
-contributors: "semiorepo://contributors"
-contributor: "semiorepo://contributor/{github}"
-commits: "semiorepo://commits"
-commit: "semiorepo://commit/{sha}"
+The semio repo mcp server should expose the following
 
-{?ui?llm?contributor?year?month?day?filter?}
+resources:
+
+The uri system in semio-repo is:
+
+repo: `semiorepo://repo`
+bundles: `semiorepo://bundles`
+bundle: `semiorepo://bundle/{id}`
+folders: `semiorepo://folders/{parent-path*}`
+folder: `semiorepo://folder/{path*}`
+files: `semiorepo://files/{folder-path*}`
+file: `semiorepo://file/{path*}`
+sections: `semiorepo://sections/{file-path*}`
+section: `semiorepo://section/{path*}`
+definitions: `semiorepo://definitions/{path*}`
+definition: `semiorepo://definition/{path*}`
+tickets: `semiorepo://tickets`
+ticket: `semiorepo://ticket/{year}/{month}/{day}/{slug}` # {status} is optional and can be open or closed
+goals: `semiorepo://goals`
+goal: `semiorepo://goal/{path*}` # {path*} is a uppercase slug path to a goal e.g. "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP"
+policies: `semiorepo://policies`
+policy: `semiorepo://policy/{id}`
+violationKinds: `semiorepo://violationKinds`
+violationKind: `semiorepo://violationKind/{policy-id}/{path*}`
+contributors: `semiorepo://contributors`
+contributor: `semiorepo://contributor/{github}`
+commits: `semiorepo://commits`
+commit: `semiorepo://commit/{sha}`
+
+General query params: 
+{?client}
+repo: filter all children by client (different meaning for different resources)
+bundle: every bundle has a client (e.g.) 
+
+
+?llm?contributor?year?month?day?filter?status?}
 
 The id system in semio-repo is:
 
-repo: "@semio-repo"
-bundles: "@semio-repo/"
-bundle: "@semio-repo/{id}"
-folders: "@semio-repo/{bundle-id}/"
-folder: "@semio-repo/{bundle-id}/{path*}" # exception: root folders are under "@semio-repo/repo" e.g. "@semio-repo/repo/js" is the folder for the bundle "@semio/js"
-file: "@semio-repo/{bundle-id}/{path*}" # exception: root files are under "@semio-repo/repo" e.g. "@semio-repo/repo/.devcontainer/devcontainer.json"
-section: "@semio-repo/{bundle-id}/{file-path*}#{path*}"
-definition: "@semio-repo/{bundle-id}#{section-path*}§{path*}"
-ticket: "@semio-repo/tickets/{year}/{month}/{day}/{slug}"
-goal: "@semio-repo/goals/{path*}"
-policy: "@semio-repo/policies/{id}"
-violationKind: "@semio-repo/policies/{policy-id}/{path*}"
-contributor: "@semio-repo/contributors/{github}"
-commit: "@semio-repo/commits/{sha}"
+repo: `🌍@semio-repo`
+bundles: `📦@semio-repo`
+bundle: `<kind>@semio-repo/{id}` (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 🌐:site, 🏪:assets)
+folders: `📁@semio-repo/{bundle-id}/{parent-path*}` # exception: root folders are under `📁@semio-repo/repo` e.g. `📁@semio-repo/repo/js` is the folder for the bundle `📦@semio/js` in `./js/semio`
+folder: `<kind>@semio-repo/{path*}` (<kind> - 🗃️:organization, 📁:required)
+files: `📄@semio-repo/{folder-path*}` 
+file: `<kind>@semio-repo/{path*}` (<kind> - 💻:code, 🧪:test, 📃:docs, ⚙️:config, 💾:resource, ⚖️:license)
+sections: `🔖@semio-repo/{bundle-id}/{file-path*}#{path*}`
+section: `🔖@semio-repo/{path*}` 
+definitions: `🏷️@semio-repo/{file-path*}#{section-path*}§{path*}`
+definition: `<kind>@semio-repo/{file-path*}#{section-path*}§{path*}` (<kind> - 🛠️:implementation, ✂️:interface, 🪨:constant)
+tickets: `📅@semio-repo`
+ticket: `📅@semio-repo/{year}/{month}/{day}/{slug}{?status}`
+goals: `🎯@semio-repo`
+goal: `🎯@semio-repo/goals/{path*}`
+policies: `🛡️@semio-repo`
+policy: `🛡️@semio-repo/{id}`
+violationKinds: `🚫@semio-repo`
+violationKind: `🚫@semio-repo/{policy-id}/{path*}`
+contributors: `👤@semio-repo`
+contributor: `👤@semio-repo/{github}`
+commits: `🔀@semio-repo`
+commit: `🔀@semio-repo/{sha}`
+
+
+Make sure every command has three different output formats: human colored text with ids used by the cli, markdown with uris used by mcp and json mode that has all information.
+
+prompts:
+enhance <prompt> # Enhance the implementation by adding more features and enhance the existing tests to cover the new features.
+refactor <prompt> # Refactor the implementation and dont stop until all tests pass.
+test <prompt> # Extend the current tests by testing more features.
+comply <prompt> # Get the implementation to comply the a set of tests. Dont remove any functionality from the tests.
+
+
+The id system in semio-repo is:
+
+repo: "semiorepo:/"
+bundles: "semiorepo://bundles"
+bundle: "semiorepo://bundles/{id}"
+folders: "semiorepo://folders/{path*}"
+folder: "semiorepo://folders/{path*}" # exception: root folders are under "@semio-repo/repo" e.g. "@semio-repo/repo/js" is the folder for the bundle "@semio/js"
+file: "semiorepo://{bundle-id}/{path*}" # exception: root files are under "@semio-repo/repo" e.g. "@semio-repo/repo/.devcontainer/devcontainer.json"
+section: "semiorepo://{bundle-id}/{file-path*}#{path*}"
+definition: "semiorepo://{bundle-id}#{section-path*}§{path*}"
+ticket: "semiorepo://tickets/{year}/{month}/{day}/{slug}"
+goal: "semiorepo://goals/{path*}"
+policy: "semiorepo://policies/{id}"
+violationKind: "semiorepo://policies/{policy-id}/{path*}"
+contributor: "semiorepo://contributors/{github}"
+commit: "semiorepo://commits/{sha}"
 
 The cli should 
 `./go/repo/repo repo`
@@ -78,16 +126,25 @@ The cli should
 Create a new design assistant mcp server called `coda` (Constrained Design Assistant).
 
 Expose the following resources:
+
 measures: "coda://measures"
 measure: "coda://measure/{id}"
 targets: "coda://targets"
 target: "coda://target/{id}"
 properties: "coda://{target-id}/properties"
 property:"coda://{target-id}/property/{id}"
+rules: "coda://{target-id}/rules"
+rule: "coda://{target-id}/rule/{id}"
+Expose the following tools:
 
 Expose the following tools:
 
+analyze <prompt>
 
+
+Expose the following prompts:
+
+change <prompt>
 
 
 It is an ai that helps in designing buildings with Automated-Compliance-Checking (ACC).
@@ -155,7 +212,7 @@ Extend the tickets and contributors with codebase diff metrics:
 
 Expand bundle, folder, definition to have a kind property. Those kinds cant simply be derived from the names but need general knowledge and repository knowledge.
 
-Introduce bundle kinds for all bundles: library (e.g. `@semio/js`, `@semio/go`, `@semio/py`, `@semio/rust`, …), schema (e.g. `@semio/sqlite`, `@semio/graphql`, `@semio/json-schema`, …), binary (`@semio-repo/go`, `@semio-repo/server`, …), ui (`@semio-repo/vscode`, `@semio/grasshopper`, `@semio/desktop`, …), site (`@semio/play`, …), assets (`@semio/icons`, …). Make sure that it is described inside the `package.json` and not hardcoded in the repo binary. Use different codeicons in the vscode extension for the different kinds for the tree items.
+Introduce bundle kinds for all bundles: library (e.g. `@semio/js`, `@semio/go`, `@semio/py`, `@semio/rust`, …), schema (e.g. `@semio/sqlite`, `@semio/graphql`, `@semio/json-schema`, …), binary (`@semio-repo/go`, `@semio-repo/server`, …), client (`@semio-repo/vscode`, `@semio/grasshopper`, `@semio/desktop`, …), site (`@semio/play`, …), assets (`@semio/icons`, …). Make sure that it is described inside the `package.json` and not hardcoded in the repo binary. Use different codeicons in the vscode extension for the different kinds for the tree items.
 
 Introduce folder kinds: organization (not necessary e.g. `js`, `go`, `py`, `rs`, …), required (e.g. bundles must be inside a folder because they have config files with reserved names, …)
 
@@ -256,7 +313,7 @@ Add draft create, draft delete, draft list commands.
 
 - Add goal change command. It should be able to change the title, description, due date, parent goal, etc.
 - The due date from goal does not propagate to github milestones. They must be synchronized.
-- Add ticket change command. It should be able to change the title, prompt, llm, ui, goal, parent ticket, etc.
+- Add ticket change command. It should be able to change the title, prompt, llm, client, goal, parent ticket, etc.
 
 - Remove ticket progress command. Only open, close and reopen.
 - There is a lot of duplicate information in the ticket.json (remove year, month, day, ticket path, slug, etc) which is implicit in the file/folder structure. Never store information twice.
@@ -266,11 +323,11 @@ Add a policy `Repo` that targets all @semio-repo code (repo binary, vscode exten
 
 Make sure to extend/change/refactor the repo binary, vscode extension and graphql to support the following commands:
 ```bash
-ticket open <title> <prompt> <ui> <llm> --goal <goal>? --parent <parent-ticket>? --no-github?
-ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> <ui> <llm> --title <new-title>? --goal <new-goal>? --parent <new-parent-ticket>? --no-github?
+ticket open <title> <prompt> <client> <llm> --goal <goal>? --parent <parent-ticket>? --no-github?
+ticket reopen YYYY/MM/DD/TICKETSLUG <prompt> <client> <llm> --title <new-title>? --goal <new-goal>? --parent <new-parent-ticket>? --no-github?
 ticket close <YYYY/MM/DD/TICKETSLUG> <summary> <files...> --no-github?
-goal open <title> <description> <prompt> <ui> <llm> --due <YYYY-MM-DD?> --parent <parent-goal?> --no-github?
-goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <ui> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>? --no-github?
+goal open <title> <description> <prompt> <client> <llm> --due <YYYY-MM-DD?> --parent <parent-goal?> --no-github?
+goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>? --no-github?
 goal close <GOALSLUG/SUBGOALSLUG> <summary> --no-github?
 ```
 
@@ -322,11 +379,11 @@ All commands from the binary should be available in vscode (a lot are missing e.
 
 All section tree items in codebase tree should be unfoldable and show the definitions and subsections. They should be sorted same as in the appearance in the source code.
 
-Goals must have a title, a description, prompt, due date, ui and llm. Throw if the arguments are not provided.  Allow same as the other command positional ( <title> <description> <prompt> <due-date> <ui> <llm>), flagged such as (--<date> --<ui> --<llm>) or named flaggs such as: --title <title> --description <description> --prompt <prompt> --due-date <due-date> --ui <ui> --llm <llm>. Test everything. Never interact with github on tests and cleanup afterwards.
+Goals must have a title, a description, prompt, due date, client and llm. Throw if the arguments are not provided.  Allow same as the other command positional ( <title> <description> <prompt> <due-date> <client> <llm>), flagged such as (--<date> --<client> --<llm>) or named flaggs such as: --title <title> --description <description> --prompt <prompt> --due-date <due-date> --client <client> --llm <llm>. Test everything. Never interact with github on tests and cleanup afterwards.
 
-Change the positional arguments from <llm> <ui> to <ui> <llm?> for all commands. llm is optional. Extend ui to antigravity, antigravity-chat, cursor, cursor-chat, vscode, copilot-chat, codex, droid.
+Change the positional arguments from <llm> <client> to <client> <llm?> for all commands. llm is optional. Extend client to antigravity, antigravity-chat, cursor, cursor-chat, vscode, copilot-chat, codex, droid.
 
-Ticket reopen needs to have ui flag either positional or over "--ui <ui>" or "--<ui>".
+Ticket reopen needs to have client flag either positional or over "--client <client>" or "--<client>".
 
 Some commands show semio: and some show semio-repo: prefix in vscode. The output panel of vscode logs also shows semio instead of semio-repo. All should be semio-repo.
 
@@ -366,7 +423,7 @@ The vscode extension is outdated. The contributor tree should be lazy loaded. In
 │ │ │ │ │ │ │ │ │ └─ DEFINITIONNAME # Navigate to definition 
 
 Make sure the ticket cli api supports all kinds of calls
-All ui and llm values should be both passable as positional arguments such as `gemini-3-pro copilot-chat`, as flags such as `--gemini-3-pro --copilot-chat` or as named values such as `--llm "gemini-3-pro" --ui "copilot-chat"`. In general support mixtures of positional, flags and named values.
+All client and llm values should be both passable as positional arguments such as `gemini-3-pro copilot-chat`, as flags such as `--gemini-3-pro --copilot-chat` or as named values such as `--llm "gemini-3-pro" --client "copilot-chat"`. In general support mixtures of positional, flags and named values.
 e.g.
 ```bash
 go/repo/repo ticket open "Integrate Global IDs in Graph" "The ticket mechanism should change in repo go file: When a plan is provided by the user, then move the original plan file (keep the file name) to the ticket folder and add the plan to the ticket.json. Dont create the plan_ITERATION.md files anymore. Everything else should be now part of ticket.md." --gemini-3-pro --copilot-chat
@@ -555,9 +612,9 @@ The github integration of tickets should be changed/refactored/extended:
 
 The derived labels are not working properly. E.g. `go/repo/main.go` was edited but the `@semio-repo/go` was not correctly derived. There are general file such as `AGENTS.md` or `README.md` where every task must work on. Dont derive `@semio-repo` from them.
 
-The ui values should not be in caps. The llm and the and the ui should also be accepted like this --opus-4-5 --claude-code.
+The client values should not be in caps. The llm and the and cliecliecliente client should also be accepted like this --opus-4-5 --claude-code.
 The explicit syntax should also work: 
-repo ticket open --title "My Task" --prompt "Prompt for the task" --llm opus-4-5 --ui claude-code
+repo ticket open --title "My Task" --prompt "Prompt for the task" --llm opus-4-5 --client claude-code
 
 Automatically link every ticket github issue with the project `https://github.com/users/usalu/projects/2`.
 Derive the right labels (every bundle has a label.). 
@@ -576,7 +633,7 @@ e.g. `integrate go/repo/cmd_benchmark.go Benchmark go/repo/repo.go`
 e.g. `integrate go/repo/cmd_preflight.go Preflight go/repo/repo.go Benchmark` 
 The headers of the source file should be integrated (contributors and imports merged). Then the body is wrapped in the section (different syntax for every language).
 
-The ui should exclusively use triadic hooks. Add a policy that commands outside hooks are forbidden.
+The client should exclusively use triadic hooks. Add a policy that commands outside hooks are forbidden.
 
 Consolidate go/repo/github.go into go/repo/main.go.
 
@@ -669,8 +726,8 @@ Make sure the line metrics are added to deleted (lines of the file), modified (a
 
 
 Change/refactor/extend the ticket mechanism, update repo binary and vscode extension:
-- Extend ticket open with a manadary enum: ui (copilot-chat, antigravity, cursor, claude-code, codex, droid)
-- Extend AGENTS.md ticket instruction to 1. include all enums (llms, ui)
+- Extend ticket open with a manadary enum: client (copilot-chat, antigravity, cursor, claude-code, codex, droid)
+- Extend AGENTS.md ticket instruction to 1. include all enums (llms, client)
 - The derived github labels are not working properly. Every involved bundle (`@semio/js`,`@semio/py`,`@semio/net`,`@semio/go`,`@semio/play`,`@semio/grasshopper`,`@semio/yak`,`@semio/assets`,`@semio-repo/vscode`, …) is added as a label. If a file inside a bundle, the bundle is added. If a file outside a the repo label `@semio-repo` is added.
 - The final comment should have line metrics such as:
 ```md
@@ -1936,7 +1993,7 @@ When clicking on the semio violation diagnostics in vscode then it opens only re
 Still, it adds all files and lines to iteration but it shouldnt. It should filter only the files that the ticket is working on. Clean teh tickets from today.
 
 Add a new policy: sketchpad
-- All third party imports must be inside elements.tsx. This file reexports reusable ui elements. All other files should not import anything from third party libraries and be dependency free.
+- All third party imports must be inside elements.tsx. This file reexports reusable client elements. All other files should not import anything from third party libraries and be dependency free.
 - state management: sketchpad only uses one state machine. createMachine can only be used once. createActor can never be used. Yjs should never be used for app state. It is only used for kit data synchronization. Stores outside of State Managment sections are forbidden. UI elements only use triadic hooks [state, setState, canSetState]=useSELECTOR().
 
 The fixes in vscode are not showing the description of the fix as label.

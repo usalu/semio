@@ -1,8 +1,8 @@
 <!-- IMPORTANT -->
 
-ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or `./go/repo/repo`) for repo-specific infrastructure. Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <ui> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <ui> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
-Create a goal with mcp tool `goal_open`(or`goal open <title> <description> <prompt> <ui> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or`goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <ui> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
-A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available UIs are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
+ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or `./go/repo/repo`) for repo-specific infrastructure. Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <client> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
+Create a goal with mcp tool `goal_open`(or`goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or`goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
+A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -105,7 +105,7 @@ Tickets can be reopened to return to **open** status.
 Ticket close and reopen actions invoked from the ticket list MUST apply to the selected ticket without additional selection.
 
 Ticket creation MUST require a prompt and a titleized title (e.g. "Some Title on Something"). Slugs or all-caps titles are forbidden.
-Ticket LLM and UI inputs MUST be resolved forgivingly by matching allowed values as substrings within the slugified input.
+Ticket LLM and Client inputs MUST be resolved forgivingly by matching allowed values as substrings within the slugified input.
 
 Ticket title updates MUST rename the ticket folder and slug path.
 Ticket open MUST interpret a `CONTINUE` keyword to continue the latest ticket and a `NOTICKET` keyword to skip ticket creation.
@@ -151,15 +151,15 @@ The repo CLI binary MUST be consolidated into a single `go/repo/main.go` source 
 Legacy repo CLI adapter packages MUST NOT exist outside `go/repo/main.go`.
 Repo operational commands (benchmark, preflight, update) MUST live in the single-file repo entrypoint.
 Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifiers.
-Ticket reopen MUST require `prompt` and `ui` values. `llm` is optional.
-GraphQL TicketUI inputs MUST accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) for UI selection.
+Ticket reopen MUST require `prompt` and `client` values. `llm` is optional.
+GraphQL TicketClient inputs MUST accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) for Client selection.
 GraphQL `TicketDate` fields MUST include `started` and `finished` timestamps.
 GraphQL iteration queries MUST return a list of `Iteration` objects with prompt, author, and time bounds.
 GraphQL section/definition ranges MUST expose line and column positions for start and end.
 GraphQL range selections MUST request Position subfields (line, column) for start and end.
 Section list queries MUST include nested children ranges for full tree hydration.
 Ticket listing MUST read from `.semio-repo/tickets` and fall back to legacy `tickets/` directories when present.
-Ticket open MUST require a ticket UI enum value.
+Ticket open MUST require a ticket Client enum value.
 Repo CLI MUST expose an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
 Repo section tooling MUST expose an integrate command that merges source files into target sections.
 Ticket close MUST apply all affected bundle labels and the `@semio-repo` label for out-of-bundle paths.
@@ -543,7 +543,7 @@ The monorepo uses a devcontainer for consistent cross-platform development. The 
 - ALWAYS inline code.
 - NEVER create a variable, function, … class, that is only used once and inline it.
 - NEVER add extra new blank lines/newlines inside of code.
-- NEVER add raw text to ui elements. ALWAYS use i18n setups and provide translations for the existing languages.
+- NEVER add raw text to client elements. ALWAYS use i18n setups and provide translations for the existing languages.
 - ALWAYS add `[DEBUG] ` prefix to temporary logs so that they can be easily removed later.
 - Keep Sketchpad runtime console output clean: avoid persistent `console.log` usage and rely on warnings/errors plus removable `[DEBUG]` diagnostics only when investigating.
 - NEVER care about backwards compatibility unless explicitly asked to. Even on schema changes ALWAYS refactor to clean code and introduce breaking changes.
@@ -746,8 +746,8 @@ repo section tree repo.tsx                                  # Show section struc
 repo definition list js/semio/semio.ts                      # List all definitions
 repo bundle list                                            # List all Nx bundles
 repo folder tree js/semio                                   # Show folder tree
-repo ticket open <title> <prompt> <llm> <ui> [--no-issue]    # Create ticket (positional syntax)
-repo ticket open --title <t> --prompt <p> --llm <l> --ui <u>  # Create ticket (explicit syntax) - llm: opus-4-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; ui: claude-code, cursor, copilot-chat, antigravity, codex, droid
+repo ticket open <title> <prompt> <llm> <client> [--no-issue]    # Create ticket (positional syntax)
+repo ticket open --title <t> --prompt <p> --llm <l> --client <u>  # Create ticket (explicit syntax) - llm: opus-4-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; client: claude-code, cursor, copilot-chat, antigravity, codex, droid
 repo ticket list [year] [month] [day]                       # List tickets (optionally filtered by date)
 repo ticket close <YYYY/MM/DD/SLUG> <summary> <files...> [--title <new-title>]  # Close ticket (--title updates GitHub issue)
 repo ticket reopen <YYYY/MM/DD/SLUG> <prompt> <llm> [--title <new-title>]      # Reopen ticket (--title updates GitHub issue)

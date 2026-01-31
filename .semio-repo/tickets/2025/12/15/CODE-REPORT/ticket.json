@@ -7,7 +7,7 @@
     {
       "prompt": "\"The analyze script should be extended to create a report for the codebase producing code.json (for typescript, python, c#). It should check for: Comments in the code. Missing License headers. Regions that dont close (every #region REGIONNAME needs to have a corresponding #endregion REGIONNAME).\"",
       "llm": "gpt-5-2",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

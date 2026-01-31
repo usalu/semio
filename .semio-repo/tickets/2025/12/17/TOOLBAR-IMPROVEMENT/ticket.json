@@ -7,7 +7,7 @@
     {
       "prompt": "Improve and extend toolbar mechanism across all sketchpad apps",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

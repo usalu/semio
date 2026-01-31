@@ -7,7 +7,7 @@
     {
       "prompt": "The buttons for every window should be action ui elements.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

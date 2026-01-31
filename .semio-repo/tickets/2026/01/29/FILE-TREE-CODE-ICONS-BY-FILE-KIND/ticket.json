@@ -12,7 +12,7 @@
     {
       "prompt": "The file tree items should have different codeicons according the file kind (code, script, config, test, docs, resource, license).",
       "llm": "sonnet-4-5",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

@@ -7,7 +7,7 @@
     {
       "prompt": "Complete Feedback app implementation including German translations, global footer action, documentation, and Playwright tests",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

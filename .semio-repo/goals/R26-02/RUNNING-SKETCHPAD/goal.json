@@ -6,7 +6,7 @@
   "dates": {
     "due": "2026-02-15"
   },
-  "ui": "windsurf-chat",
+  "client": "windsurf-chat",
   "llm": "sonnet-4-5",
   "github": {
     "milestone": "https://github.com/usalu/semio/milestone/11"
@@ -15,7 +15,7 @@
     {
       "prompt": "Implement and validate the core sketchpad functionality to achieve a running MVP state. This includes ensuring all essential features are working and the application can be used for basic workflows.",
       "llm": "sonnet-4-5",
-      "ui": "windsurf-chat",
+      "client": "windsurf-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
@@ -26,7 +26,7 @@
     {
       "prompt": "Link this goal as a subgoal under the r26-02 release goal.",
       "llm": "sonnet-4-5",
-      "ui": "windsurf-chat",
+      "client": "windsurf-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

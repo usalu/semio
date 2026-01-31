@@ -7,7 +7,7 @@
     {
       "prompt": "Plan XState migration for Sketchpad state management",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "The vscode extension shouldnt log anything from stdout",
       "llm": "opus-4-5-20251101",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

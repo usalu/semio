@@ -7,7 +7,7 @@
     {
       "prompt": "The code analysis and fixing hook doesnt identify and delete multi-line comments. Extend them.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

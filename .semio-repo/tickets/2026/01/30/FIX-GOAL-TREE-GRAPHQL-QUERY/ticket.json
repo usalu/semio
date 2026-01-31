@@ -12,7 +12,7 @@
     {
       "prompt": "Fix the goal tree command which fails with: Cannot query field \"data\" on type \"Ticket\". Ensure all repo commands are tested in main_test.go.",
       "llm": "opus-4-5",
-      "ui": "claude-code",
+      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

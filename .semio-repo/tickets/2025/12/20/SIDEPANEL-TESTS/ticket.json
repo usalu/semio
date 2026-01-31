@@ -7,7 +7,7 @@
     {
       "prompt": "The new sidepanel toggles are not visible. Adjust the sketchpad tests and make sure the are toggleable and check for the individual task in the apps. Dont create new test, just extend the app tests.",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "Fix VS Code extension linting and test setup",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

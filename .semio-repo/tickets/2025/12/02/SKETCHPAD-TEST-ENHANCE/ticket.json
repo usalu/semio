@@ -7,7 +7,7 @@
     {
       "prompt": "Enhance sketchpad tests with panel verification and drag-drop functionality",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

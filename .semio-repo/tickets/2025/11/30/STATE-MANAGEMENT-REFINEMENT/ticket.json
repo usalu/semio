@@ -7,7 +7,7 @@
     {
       "prompt": "\"Refine state management: granular Yjs subscriptions for selectors\"",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

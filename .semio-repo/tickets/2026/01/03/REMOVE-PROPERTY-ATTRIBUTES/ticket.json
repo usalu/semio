@@ -7,7 +7,7 @@
     {
       "prompt": "All properties still have attributes. Stop only once all attributes are removed and no functionality such as validation is missing. Refactor/extend whatever is necessary.",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

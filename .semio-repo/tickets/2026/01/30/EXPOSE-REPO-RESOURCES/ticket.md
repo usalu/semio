@@ -23,4 +23,4 @@
 
 ## Summary
 
-Exposed repository entities as MCP resources to allow LLMs to read codebase structure and metadata directly via the semio-repo server.
+Exposed repository entities as MCP resources to allow LLMs to read codebase structure and metadata directly via the `semio-repo` server. Implemented resources include bundles, folders, files, sections, definitions, contributors, goals, tickets, policies, and violation-kinds. Resources are available via static URIs (e.g., `semio://bundles`) and parameterized templates (e.g., `semio://folder/{path}`).

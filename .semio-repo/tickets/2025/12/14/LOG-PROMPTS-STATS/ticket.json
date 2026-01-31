@@ -7,7 +7,7 @@
     {
       "prompt": "\"Extend the log.ts functionality. Enhance the script and documentation. Include in the frontmatter: prompts an array of all the prompts provided by the user. Whenever the user sends a new prompt append it to the array. log.ts must take model name (of the llm) as forced input (enum). Include stats in the frontmatter and add a command to update stats (affected files, total added/removed lines) recomputed across multiple prompts.\"",
       "llm": "gpt-5-2",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "Refactor ticket system from iterations to checkpoints. Checkpoints are created when todos complete, require files, compute git diffs, and track affected sections/definitions.",
       "llm": "opus-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

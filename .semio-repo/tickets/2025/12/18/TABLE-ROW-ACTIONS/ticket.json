@@ -7,7 +7,7 @@
     {
       "prompt": "Create actions in table rows are not right aligned; tags strip should appear between name and action.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

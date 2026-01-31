@@ -7,7 +7,7 @@
     {
       "prompt": "Extend/adjust/refactor code to comply with sketchpad tests",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

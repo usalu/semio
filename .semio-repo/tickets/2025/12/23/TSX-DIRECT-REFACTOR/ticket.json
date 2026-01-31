@@ -7,7 +7,7 @@
     {
       "prompt": "Refactor all the scripts to be able to use tsx directly.",
       "llm": "composer-1",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

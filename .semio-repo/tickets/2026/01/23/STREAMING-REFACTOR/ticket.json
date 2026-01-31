@@ -7,7 +7,7 @@
     {
       "prompt": "Migrated from legacy files",
       "llm": null,
-      "ui": null,
+      "client": null,
       "author": {
         "name": "Migration Script",
         "email": null

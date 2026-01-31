@@ -12,7 +12,7 @@
     {
       "prompt": "The repo binary is not properly ignoring folders that are in .gitignore. For example, js/storybook-static is gitignored but still shows up as a folder in repo tool output. Investigate and fix the folder listing/tree logic to respect .gitignore rules.",
       "llm": "opus-4-5",
-      "ui": "claude-code",
+      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

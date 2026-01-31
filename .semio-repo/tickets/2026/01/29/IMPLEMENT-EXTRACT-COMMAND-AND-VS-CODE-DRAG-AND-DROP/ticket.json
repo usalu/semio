@@ -12,7 +12,7 @@
     {
       "prompt": "Add extract command to repo CLI/GraphQL and implement drag and drop in VS Code extension codebase view",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

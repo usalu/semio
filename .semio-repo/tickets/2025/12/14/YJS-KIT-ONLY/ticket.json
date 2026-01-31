@@ -7,7 +7,7 @@
     {
       "prompt": "\"Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE \u2192 {\\\\navigation\\\\:\\\\design\\\\}\"",
       "llm": "gpt-5-2",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

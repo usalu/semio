@@ -7,7 +7,7 @@
     {
       "prompt": "Migrate all existing docs and code to the new structure. Update outdated docs.",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

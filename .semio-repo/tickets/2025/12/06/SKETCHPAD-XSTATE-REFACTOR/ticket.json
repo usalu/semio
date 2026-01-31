@@ -7,7 +7,7 @@
     {
       "prompt": "Refactor sketchpad to use pure XState machines with no Y.js in app state",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

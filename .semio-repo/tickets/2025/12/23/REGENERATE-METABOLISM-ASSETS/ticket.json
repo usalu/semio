@@ -7,7 +7,7 @@
     {
       "prompt": "Port was recently renamed to connector. The assets such as metabolism.zip still have sql tables. Regenerate the assets with the scripts. Make sure all metabolism.zip are updated after regenerating such as in public folders on every run.",
       "llm": "composer-1",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

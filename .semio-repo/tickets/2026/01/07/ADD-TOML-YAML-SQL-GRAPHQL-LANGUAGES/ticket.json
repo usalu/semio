@@ -7,7 +7,7 @@
     {
       "prompt": "Add Toml, Yaml, Sql, and Graphql language plugins to the repo CLI language registry",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "Ueli Saluz",
         "email": null

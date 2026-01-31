@@ -1,0 +1,22 @@
+{
+  "title": "Update MCP Resources to semiorepo scheme",
+  "status": "open",
+  "prompt": "Update MCP resources to use semiorepo:// scheme, add missing resources (repo, bundle, section, definition, etc), and ensure output is text (not JSON).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/288"
+  },
+  "started": "2026-01-30T22:06:26.071327319Z",
+  "iterations": [
+    {
+      "prompt": "Update MCP resources to use semiorepo:// scheme, add missing resources (repo, bundle, section, definition, etc), and ensure output is text (not JSON).",
+      "llm": "gemini-3-pro",
+      "client": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-01-30T22:06:26.071327319Z",
+      "commit": "f334fb7b76ab21e8c49a670174e2f431cfe0e0dd"
+    }
+  ]
+}

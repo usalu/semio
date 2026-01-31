@@ -7,7 +7,7 @@
     {
       "prompt": "The analyze violation diagnostics are not shown in vscode under problems",
       "llm": "opus-4-5-20251101",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

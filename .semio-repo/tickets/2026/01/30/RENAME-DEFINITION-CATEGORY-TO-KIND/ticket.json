@@ -12,7 +12,7 @@
     {
       "prompt": "Remove DefinitionKind and rename DefinitionCategory to DefinitionKind.",
       "llm": "opus-4-5",
-      "ui": "claude-code",
+      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

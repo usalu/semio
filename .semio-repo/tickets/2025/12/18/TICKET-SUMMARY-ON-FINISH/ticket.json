@@ -7,7 +7,7 @@
     {
       "prompt": "The summary flag should be only available and forced when closing a ticket.",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -88,7 +88,7 @@ type Ticket struct {
 	Prompt    string     `json:"prompt"`
 	Summary   string     `json:"summary"`
 	LLM       string     `json:"llm"`
-	UI        string     `json:"ui"`
+	Client        string     `json:"client"`
 	Author    string     `json:"author"`
 	GitHub    string     `json:"github_issue"`
 	CreatedAt time.Time  `json:"created_at"`
@@ -173,7 +173,7 @@ type TicketOpenRequest struct {
 	Title       string `json:"title"`
 	Prompt      string `json:"prompt"`
 	LLM         string `json:"llm"`
-	UI          string `json:"ui"`
+	Client          string `json:"client"`
 	Author      string `json:"author"`
 	GitHubIssue string `json:"github_issue"`
 }
@@ -280,7 +280,7 @@ func (d *Database) insertEvent(ctx context.Context, event Event) error {
 }
 
 func (d *Database) upsertTicket(ctx context.Context, ticket Ticket) error {
-	_, err := d.db.ExecContext(ctx, "INSERT INTO tickets (id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, title=excluded.title, prompt=excluded.prompt, summary=excluded.summary, llm=excluded.llm, ui=excluded.ui, author=excluded.author, github_issue=excluded.github_issue, closed_at=excluded.closed_at", ticket.ID, ticket.Status, ticket.Title, ticket.Prompt, ticket.Summary, ticket.LLM, ticket.UI, ticket.Author, ticket.GitHub, ticket.CreatedAt.UTC(), ticket.ClosedAt)
+	_, err := d.db.ExecContext(ctx, "INSERT INTO tickets (id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, title=excluded.title, prompt=excluded.prompt, summary=excluded.summary, llm=excluded.llm, ui=excluded.ui, author=excluded.author, github_issue=excluded.github_issue, closed_at=excluded.closed_at", ticket.ID, ticket.Status, ticket.Title, ticket.Prompt, ticket.Summary, ticket.LLM, ticket.Client, ticket.Author, ticket.GitHub, ticket.CreatedAt.UTC(), ticket.ClosedAt)
 	return err
 }
 
@@ -300,7 +300,7 @@ func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, er
 	for rows.Next() {
 		var ticket Ticket
 		var closedAt sql.NullTime
-		if err := rows.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.UI, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
+		if err := rows.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.Client, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
 			return nil, err
 		}
 		if closedAt.Valid {
@@ -315,7 +315,7 @@ func (d *Database) getTicket(ctx context.Context, ticketID string) (*Ticket, err
 	row := d.db.QueryRowContext(ctx, "SELECT id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets WHERE id = ?", ticketID)
 	var ticket Ticket
 	var closedAt sql.NullTime
-	if err := row.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.UI, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
+	if err := row.Scan(&ticket.ID, &ticket.Status, &ticket.Title, &ticket.Prompt, &ticket.Summary, &ticket.LLM, &ticket.Client, &ticket.Author, &ticket.GitHub, &ticket.CreatedAt, &closedAt); err != nil {
 		return nil, err
 	}
 	if closedAt.Valid {
@@ -1026,7 +1026,7 @@ func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 		Title:     payload.Title,
 		Prompt:    payload.Prompt,
 		LLM:       payload.LLM,
-		UI:        payload.UI,
+		Client:        payload.Client,
 		Author:    payload.Author,
 		GitHub:    payload.GitHubIssue,
 		CreatedAt: now,

@@ -7,7 +7,7 @@
     {
       "prompt": "",
       "llm": null,
-      "ui": null,
+      "client": null,
       "author": null,
       "started": null,
       "commit": null

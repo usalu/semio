@@ -10,7 +10,7 @@
     {
       "prompt": "The section tree items are not showing the child definitions. Make sure the children are both sections and definitions, both in the same order as in the source code.",
       "llm": "gemini-3-pro",
-      "ui": "vscode",
+      "client": "vscode",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

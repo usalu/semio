@@ -588,7 +588,7 @@ let cachedCodebase: Codebase | null = null;
 let codebaseLoadPromise: Promise<Codebase | null> | null = null;
 let cachedProjects: ProjectData[] | null = null;
 let cachedRepoBaseUrl: string | undefined = undefined;
-const UI_STRINGS = {
+const Clientient_STRINGS = {
   en: {
     sectionsEmpty: "No sections found",
     sectionsNoActiveFile: "No active file",
@@ -957,7 +957,7 @@ function resolveCommitSha(commit: string | { sha?: string } | undefined): string
   return commit.sha;
 }
 
-function getUiString(key: keyof typeof UI_STRINGS.en): string {
+function getUiString(key: keyof typeof Client_STRINGS.en): string {
   const language = vscode.env.language.split("-")[0];
   const bundle = UI_STRINGS[language as keyof typeof UI_STRINGS] ?? UI_STRINGS.en;
   return bundle[key];
@@ -3969,14 +3969,14 @@ async function loadAvailableFilterValues(): Promise<void> {
 // #region Smart Wizards
 
 const LLMS = ["opus-4-5", "sonnet-4-5", "haiku-4-5", "gemini-3-pro", "gemini-3-flash", "gpt-5-2-codex", "gpt-5-mini", "swe-1-5"];
-const UIS = ["copilot-chat", "windsurf-chat", "claude-code", "codex", "cursor-chat", "antigravity-chat", "droid"];
+const ClientS = ["copilot-chat", "windsurf-chat", "claude-code", "codex", "cursor-chat", "antigravity-chat", "droid"];
 
 async function pickLLM(): Promise<string | undefined> {
   return await vscode.window.showQuickPick(LLMS, { placeHolder: "Select LLM (default: opus-4-5)" });
 }
 
-async function pickUI(): Promise<string | undefined> {
-  return await vscode.window.showQuickPick(UIS, { placeHolder: "Select UI (default: copilot-chat)" });
+async function pickClient(): Promise<string | undefined> {
+  return await vscode.window.showQuickPick(ClientS, { placeHolder: "Select Client (default: copilot-chat)" });
 }
 
 interface GoalItem extends vscode.QuickPickItem {
@@ -4480,7 +4480,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       });
       if (!prompt) return;
 
-      const ui = await pickUI();
+      const ui = await pickClient();
       if (!ui) return;
 
       const llm = await pickLLM();
@@ -4516,7 +4516,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       });
       if (!prompt) return;
 
-      const ui = await pickUI();
+      const ui = await pickClient();
       if (!ui) return;
 
       const llm = await pickLLM();
@@ -4590,7 +4590,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       });
       if (!prompt) return;
 
-      const ui = await pickUI();
+      const ui = await pickClient();
       if (!ui) return;
 
       const llm = await pickLLM();
@@ -4629,7 +4629,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
       });
       if (!prompt) return;
 
-      const ui = await pickUI();
+      const ui = await pickClient();
       if (!ui) return;
 
       const llm = await pickLLM();

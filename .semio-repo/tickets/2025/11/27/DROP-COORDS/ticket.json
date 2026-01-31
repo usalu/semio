@@ -7,7 +7,7 @@
     {
       "prompt": "Fix drop coordinates for diagram and scene",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

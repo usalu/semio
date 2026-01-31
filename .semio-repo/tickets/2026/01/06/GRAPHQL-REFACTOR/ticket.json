@@ -7,7 +7,7 @@
     {
       "prompt": "Consolidate types and refactor to use GraphQL as the primary API layer",
       "llm": "opus-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

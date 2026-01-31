@@ -7,7 +7,7 @@
     {
       "prompt": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
       "llm": "claude",
-      "ui": null,
+      "client": null,
       "author": null,
       "started": null,
       "commit": null

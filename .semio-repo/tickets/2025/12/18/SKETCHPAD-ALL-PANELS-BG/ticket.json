@@ -7,7 +7,7 @@
     {
       "prompt": "All panels should have panel background. Currently I only see the border of e.g. details or settings panel in home. Toolbar panel is transparent but should have the panel background.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

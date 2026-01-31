@@ -7,7 +7,7 @@
     {
       "prompt": "Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "Every app has windows and there is always one active window. Make sure that the background of the table is set to active background color.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

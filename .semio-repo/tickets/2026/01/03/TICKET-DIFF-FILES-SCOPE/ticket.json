@@ -7,7 +7,7 @@
     {
       "prompt": "Limit ticket line recomputation to ticket files only",
       "llm": "gpt-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

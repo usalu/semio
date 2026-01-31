@@ -7,7 +7,7 @@
     {
       "prompt": "Every window should have a full border around it. Currently the bottom and right border are missing.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

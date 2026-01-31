@@ -7,7 +7,7 @@
     {
       "prompt": "Compute git line stats on iteration and ticket end; derive files and lines instead of null.",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

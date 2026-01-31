@@ -7,7 +7,7 @@
     {
       "prompt": "Merge design app workbench sections into single pieces section",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

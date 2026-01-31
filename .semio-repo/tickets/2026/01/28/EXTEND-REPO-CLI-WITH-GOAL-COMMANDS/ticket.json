@@ -14,7 +14,7 @@
     {
       "prompt": "Extend repo CLI, VS Code extension, and GraphQL to support enhanced ticket commands (goal, parent, no-github) and new goal commands.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

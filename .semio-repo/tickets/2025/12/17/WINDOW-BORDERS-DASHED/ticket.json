@@ -7,7 +7,7 @@
     {
       "prompt": "The windows dont have a border on the bottom and on the right. Make the window border dashed.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

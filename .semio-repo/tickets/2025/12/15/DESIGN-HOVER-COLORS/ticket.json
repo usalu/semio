@@ -7,7 +7,7 @@
     {
       "prompt": ">-",
       "llm": "gpt-5-2",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

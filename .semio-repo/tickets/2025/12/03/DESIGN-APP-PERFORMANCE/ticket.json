@@ -7,7 +7,7 @@
     {
       "prompt": "Design App Pan Performance Investigation",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

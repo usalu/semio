@@ -7,7 +7,7 @@
     {
       "prompt": "Update Playwright drag-and-drop test for dnd-kit compatibility",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

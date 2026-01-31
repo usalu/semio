@@ -49,18 +49,25 @@
             "description": "Change the usage of a space"
         }
     ],
-    "authoring": [
+    "platforms": [
         {
             "id": "semio",
             "measures": [
                 {
                     "id": "increase-gross-floor-area",
                     "instructions": "Increase the floor area by eiter adding pieces or changing the type of existing pieces. Connect the new pieces to the existing pieces.",
-                    "tools": {
-                        "analyze": [
-                            "evaluate_quality"
+                    "mcp": {
+                        "resources": [
+                            {
+                                "id": "qualities",
+                                "instruction": "Try to find qualities that are related the gross floor area."
+                            },
+                            {
+                                "id": "quality",
+                                "instruction": "Access the value of the gross floor-related qualities."
+                            }
                         ],
-                        "change": [
+                        "tools": [
                             "add_piece",
                             "add_connection",
                             "change_piece_type",
@@ -166,7 +173,7 @@
                     "type": "Level",
                     "levels": [
                         {
-                            "id": "building-class-1",
+                            "value": "1",
                             "name": "Building Class 1",
                             "description": "Either free standing building with a height up to 7m and not more than two usage units with a total gross floor area of not more than 400m², or a land or forest usage building.",
                             "measures": {
@@ -179,7 +186,7 @@
                             }
                         },
                         {
-                            "id": "building-class-2",
+                            "value": "2",
                             "name": "Building Class 2",
                             "description": "Building with a height up to 7m and not more than two usage units with a total gross floor area of not more than 400m².",
                             "measures": {
@@ -202,7 +209,7 @@
                             }
                         },
                         {
-                            "id": "building-class-3",
+                            "value": "3",
                             "description": "Other building with a height up to 7m.",
                             "measures": {
                                 "lower": [
@@ -228,22 +235,48 @@
                             }
                         },
                         {
-                            "id": "building-class-4",
-                            "description": "Building with a height up to 13m and usage units with a gross floor area of not more than 400m²."
+                            "value": "4",
+                            "name": "Building Class 4",
+                            "description": "Building with a height up to 13m and usage units with a gross floor area of not more than 400m².",
+                            "measures": {
+                                "lower": [
+                                    {
+                                        "id": "remove-space",
+                                        "instruction": "Remove a space to have less than two usage units."
+                                    }
+                                ],
+                                "higher": [
+                                    {
+                                        "id": "increase-floor-height",
+                                        "instruction": "Increase the floor heigh to be above the limit of 13m of the building."
+                                    },
+                                    {
+                                        "id": "add-storey",
+                                        "instruction": "Add a storey to the building to be above the limit of 13m."
+                                    }
+                                ]
+                            }
                         },
                         {
-                            "id": "building-class-5",
-                            "description": "Other building including underground buildings."
+                            "value": "5",
+                            "name": "Building Class 5",
+                            "description": "Other building including underground buildings.",
+                            "measures": {
+                                "lower": [
+                                    {
+                                        "id": "decrease-floor-height",
+                                        "instruction": "Decrease the floor height to be below the limit of 13m of the building."
+                                    },
+                                    {
+                                        "id": "remove-space",
+                                        "instruction": "Remove a space to have less than two usage units."
+                                    }
+                                ]
+                            }
                         }
                     ]
                 }
             ],
-            "measures": [
-                {
-                    "id": "turn-building-class-1",
-                    "description": "Increase the building class to a higher class.",
-                }
-            ]
             "rules": [
                 {
                     "id": "staircase-located",
@@ -255,11 +288,18 @@
                         },
                         {
                             "id": "not-in-building-classes-1-and-2",
-                            "description": "Not in buildings of building classes 1 and 2"
+                            "description": "Not in buildings of building classes 1 and 2",
+                            "properties": [
+                                {
+                                    "id": "building-class",
+                                    "value": "1"
+                                },
+                                {
+                                    "id": "building-class",
+                                    "value": "2"
+                                }
+                            ]
                         }
-                    ],
-                    "measures": [
-                        "decrease-floor-area"
                     ]
                 },
                 {

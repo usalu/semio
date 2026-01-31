@@ -12,7 +12,7 @@
     {
       "prompt": "Extend the ticket mechanism to include an `important.md` file for compulsory actions. This file must be created on ticket open, and ticket close must fail if the file is not empty.",
       "llm": "sonnet-4-5",
-      "ui": "windsurf-chat",
+      "client": "windsurf-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
@@ -9451,7 +9451,7 @@
     {
       "prompt": "Delete the important.md file when closing a ticket",
       "llm": "sonnet-4-5",
-      "ui": "windsurf-chat",
+      "client": "windsurf-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

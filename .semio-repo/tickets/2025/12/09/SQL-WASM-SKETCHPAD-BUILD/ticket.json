@@ -7,7 +7,7 @@
     {
       "prompt": "Fix sql-wasm.wasm not being included in sketchpad production build",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

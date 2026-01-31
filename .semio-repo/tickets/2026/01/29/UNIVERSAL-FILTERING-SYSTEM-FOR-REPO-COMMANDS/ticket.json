@@ -12,7 +12,7 @@
     {
       "prompt": "Add --only-\u003ckind\u003e flags for every --no-\u003ckind\u003e flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
       "llm": "sonnet-4-5",
-      "ui": "windsurf-chat",
+      "client": "windsurf-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

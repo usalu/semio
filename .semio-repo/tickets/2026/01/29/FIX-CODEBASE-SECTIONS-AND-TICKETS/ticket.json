@@ -12,7 +12,7 @@
     {
       "prompt": "Sections in codebase explorer and Ticket view are empty after previous optimization.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

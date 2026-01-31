@@ -7,7 +7,7 @@
     {
       "prompt": "Add missing toolbar rendering and test for connector tool",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

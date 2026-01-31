@@ -7,7 +7,7 @@
     {
       "prompt": "\"Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...\"",
       "llm": "gpt-5-2",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

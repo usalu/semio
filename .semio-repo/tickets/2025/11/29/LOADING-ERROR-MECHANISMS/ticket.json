@@ -7,7 +7,7 @@
     {
       "prompt": "Add loading spinners and not-found pages to Sketchpad",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

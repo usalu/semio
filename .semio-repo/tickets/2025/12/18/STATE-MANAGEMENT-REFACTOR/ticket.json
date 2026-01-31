@@ -7,7 +7,7 @@
     {
       "prompt": "Analyze js/semio codebase for state management inconsistencies and refactor to triadic hooks pattern",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "\"Fix Kit app settings panel being empty. There should be two sections appearing: kit editor and sketchpad. Extend kit app test to check for the panel and at least one item per section.\"",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

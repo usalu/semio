@@ -7,7 +7,7 @@
     {
       "prompt": "Update gqlgen.yml to reference the new schema location at graphql/repo/schema.graphql",
       "llm": "opus-4-5-20251101",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

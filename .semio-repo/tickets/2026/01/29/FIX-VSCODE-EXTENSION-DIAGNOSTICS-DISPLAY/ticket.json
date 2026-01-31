@@ -12,7 +12,7 @@
     {
       "prompt": "The violations don't show in the vscode extension as diagnostics. Make sure violations show up for files like semio.ts. Test and fix until violations are properly displayed as diagnostics everywhere.",
       "llm": "opus-4-5",
-      "ui": "windsurf-chat",
+      "client": "windsurf-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

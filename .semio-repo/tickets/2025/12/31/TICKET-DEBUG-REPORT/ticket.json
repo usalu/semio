@@ -7,7 +7,7 @@
     {
       "prompt": "Debug report for VS Code extension tickets section appearing empty",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "unknown",
         "email": null

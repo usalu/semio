@@ -7,7 +7,7 @@
     {
       "prompt": "Migration from 2025-11-23_VALIDATION-SYSTEM.md",
       "llm": "sonnet-4",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

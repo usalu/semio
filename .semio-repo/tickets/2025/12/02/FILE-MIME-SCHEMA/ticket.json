@@ -7,7 +7,7 @@
     {
       "prompt": "Add mime field to File schema and migrate kit_metabolism.json",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

@@ -7,7 +7,7 @@
     {
       "prompt": "Remove per-element backgrounds so only Window surfaces have a background.",
       "llm": "gpt-5.2-codex",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

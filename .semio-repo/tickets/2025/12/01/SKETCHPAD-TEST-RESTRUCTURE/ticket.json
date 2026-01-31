@@ -7,7 +7,7 @@
     {
       "prompt": "Restructure sketchpad tests to one test per app with parent initialization",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

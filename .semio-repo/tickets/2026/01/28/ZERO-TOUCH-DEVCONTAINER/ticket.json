@@ -18,7 +18,7 @@
     {
       "prompt": "Windsurf MCP config at ~/.codeium/windsurf/mcp_config.json after rebuild.",
       "llm": "gpt-5-2",
-      "ui": "codex",
+      "client": "codex",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

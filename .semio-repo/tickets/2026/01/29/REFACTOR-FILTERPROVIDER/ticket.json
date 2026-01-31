@@ -9,7 +9,7 @@
     {
       "prompt": "Refactor FilterProvider to use menus instead of tree items and fix tests",
       "llm": "",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

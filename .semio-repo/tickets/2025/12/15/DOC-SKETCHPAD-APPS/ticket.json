@@ -7,7 +7,7 @@
     {
       "prompt": "The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

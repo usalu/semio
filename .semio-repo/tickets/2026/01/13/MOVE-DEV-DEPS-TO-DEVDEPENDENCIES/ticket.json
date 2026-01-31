@@ -7,7 +7,7 @@
     {
       "prompt": "Move @types/* and postcss-* packages from dependencies to devDependencies in js/semio/package.json",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "Ueli Saluz",
         "email": null

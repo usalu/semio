@@ -7,7 +7,7 @@
     {
       "prompt": "\"Decouple app state from Y.js, move transactions to app level\"",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

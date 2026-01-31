@@ -7,7 +7,7 @@
     {
       "prompt": "Investigate Vitest multiple projects warning and suggest solutions",
       "llm": "opus-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "Ueli Saluz",
         "email": null

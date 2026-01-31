@@ -7,7 +7,7 @@
     {
       "prompt": "Simplified panel tests to verify toggle existence",
       "llm": "sonnet-4-5",
-      "ui": null,
+      "client": null,
       "author": {
         "name": "uelisaluz",
         "email": null

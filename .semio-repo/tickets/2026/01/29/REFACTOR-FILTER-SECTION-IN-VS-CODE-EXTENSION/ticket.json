@@ -10,7 +10,7 @@
     {
       "prompt": "Refactor the filter section in the semio-repo sideview of vscode to match the specified structure. Toggles should be menu items, not tree items. update tests.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

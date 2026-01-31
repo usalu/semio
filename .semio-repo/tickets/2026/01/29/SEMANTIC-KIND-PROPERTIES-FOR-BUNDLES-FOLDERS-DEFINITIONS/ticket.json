@@ -12,7 +12,7 @@
     {
       "prompt": "Expand bundle, folder, definition to have semantic kind properties. Add filtering by kind, time, contributor, policy, and violation-kind dimensions. Update VS Code extension filter tree.",
       "llm": "opus-4-5",
-      "ui": "copilot-chat",
+      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

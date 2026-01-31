@@ -10,7 +10,7 @@
     {
       "prompt": "Get sketchpad desktop dev running. Currently failing with TypeScript config errors: \"failed to resolve 'extends':'@semio/js/tsconfig.json'\" and missing main.js build output.",
       "llm": "gpt-5-2-codex",
-      "ui": "claude-code",
+      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
