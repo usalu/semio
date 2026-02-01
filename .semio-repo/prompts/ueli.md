@@ -87,7 +87,7 @@ commits: `🔀@semio-repo`
 commit: `🔀@semio-repo/{sha}`
 
 
-Make sure every command has three different output formats: human colored text with ids used by the cli, markdown with uris used by mcp and json mode that has all information.
+Make sure every command has three different output formats: human colored text with ids used by the cli, markdown with uris used by mcp and json mode that has all information. 
 
 prompts:
 enhance <prompt> # Enhance the implementation by adding more features and enhance the existing tests to cover the new features.
