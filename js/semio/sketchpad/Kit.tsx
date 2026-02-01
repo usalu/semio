@@ -64,6 +64,14 @@ import { useNavigate, useParams, useSearchParams } from "react-router";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";
+import {
+  addToSelection,
+  removeFromSelection,
+  toggleInSelection,
+  replaceSelectionDimension,
+  clearSelectionDimension,
+  type SelectionValue,
+} from "./kitSelectionHelpers";
 import { Author, buildFileTree, Concept, Coord, Design, DesignDiff, DiffStatus, flattenFileTree, Folder, generateUniqueName, guid, Guid, ICON_WIDTH, Kit, KitDiff, Port, Quality, File as SemioFile, Tag, Type, TypeDiff } from "../semio";
 import type { KitStore as KitDataSource, SketchpadStore as SketchpadOrchestrator } from "./Sketchpad";
 import {
@@ -1415,6 +1423,875 @@ export function useKitAppClearSelection(): ActionHookResult<[]> {
   }, [actor, kitGuid, canAct]);
   return [action, canAct];
 }
+
+// #region Selection Helper Hooks
+
+/**
+ * Hook factory for dimension-specific selection operations.
+ * Creates add/remove/toggle/replace hooks for a specific selection dimension.
+ */
+function createDimensionSelectionHooks<K extends keyof KitAppSelection>(dimensionKey: K) {
+  function useAdd(): ActionHookResult<[value: SelectionValue<K>]> {
+    const [selection, setSelection] = useKitAppSelection();
+    const canAct = setSelection !== undefined;
+    const action = useMemo(() => {
+      if (!canAct || !setSelection) return undefined;
+      return (value: SelectionValue<K>) => {
+        const newSelection = addToSelection(selection || {}, dimensionKey, value);
+        setSelection(newSelection);
+      };
+    }, [selection, setSelection, canAct]);
+    return [action, canAct];
+  }
+
+  function useRemove(): ActionHookResult<[value: SelectionValue<K>]> {
+    const [selection, setSelection] = useKitAppSelection();
+    const canAct = setSelection !== undefined;
+    const action = useMemo(() => {
+      if (!canAct || !setSelection) return undefined;
+      return (value: SelectionValue<K>) => {
+        const newSelection = removeFromSelection(selection || {}, dimensionKey, value);
+        setSelection(newSelection);
+      };
+    }, [selection, setSelection, canAct]);
+    return [action, canAct];
+  }
+
+  function useToggle(): ActionHookResult<[value: SelectionValue<K>]> {
+    const [selection, setSelection] = useKitAppSelection();
+    const canAct = setSelection !== undefined;
+    const action = useMemo(() => {
+      if (!canAct || !setSelection) return undefined;
+      return (value: SelectionValue<K>) => {
+        const newSelection = toggleInSelection(selection || {}, dimensionKey, value);
+        setSelection(newSelection);
+      };
+    }, [selection, setSelection, canAct]);
+    return [action, canAct];
+  }
+
+  function useSelectSingle(): ActionHookResult<[value: SelectionValue<K>]> {
+    const [selection, setSelection] = useKitAppSelection();
+    const canAct = setSelection !== undefined;
+    const action = useMemo(() => {
+      if (!canAct || !setSelection) return undefined;
+      return (value: SelectionValue<K>) => {
+        const newSelection = replaceSelectionDimension(selection || {}, dimensionKey, [value] as KitAppSelection[K]);
+        setSelection(newSelection);
+      };
+    }, [selection, setSelection, canAct]);
+    return [action, canAct];
+  }
+
+  function useSelect(): ActionHookResult<[values: SelectionValue<K>[]]> {
+    const [selection, setSelection] = useKitAppSelection();
+    const canAct = setSelection !== undefined;
+    const action = useMemo(() => {
+      if (!canAct || !setSelection) return undefined;
+      return (values: SelectionValue<K>[]) => {
+        const newSelection = replaceSelectionDimension(selection || {}, dimensionKey, values as KitAppSelection[K]);
+        setSelection(newSelection);
+      };
+    }, [selection, setSelection, canAct]);
+    return [action, canAct];
+  }
+
+  function useClear(): ActionHookResult<[]> {
+    const [selection, setSelection] = useKitAppSelection();
+    const canAct = setSelection !== undefined;
+    const action = useMemo(() => {
+      if (!canAct || !setSelection) return undefined;
+      return () => {
+        const newSelection = clearSelectionDimension(selection || {}, dimensionKey);
+        setSelection(newSelection);
+      };
+    }, [selection, setSelection, canAct]);
+    return [action, canAct];
+  }
+
+  return { useAdd, useRemove, useToggle, useSelectSingle, useSelect, useClear };
+}
+
+// #region Types Selection Hooks
+
+export function useKitAppAddTypeToSelection(): ActionHookResult<[typeGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (typeGuid: Guid) => {
+      const newSelection = addToSelection(selection || {}, "types", typeGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemoveTypeFromSelection(): ActionHookResult<[typeGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (typeGuid: Guid) => {
+      const newSelection = removeFromSelection(selection || {}, "types", typeGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleTypeInSelection(): ActionHookResult<[typeGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (typeGuid: Guid) => {
+      const newSelection = toggleInSelection(selection || {}, "types", typeGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSingleType(): ActionHookResult<[typeGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (typeGuid: Guid) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "types", [typeGuid]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectTypes(): ActionHookResult<[typeGuids: Guid[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (typeGuids: Guid[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "types", typeGuids);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearTypes(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "types");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Types Selection Hooks
+
+// #region Designs Selection Hooks
+
+export function useKitAppAddDesignToSelection(): ActionHookResult<[designGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (designGuid: Guid) => {
+      const newSelection = addToSelection(selection || {}, "designs", designGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemoveDesignFromSelection(): ActionHookResult<[designGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (designGuid: Guid) => {
+      const newSelection = removeFromSelection(selection || {}, "designs", designGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleDesignInSelection(): ActionHookResult<[designGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (designGuid: Guid) => {
+      const newSelection = toggleInSelection(selection || {}, "designs", designGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSingleDesign(): ActionHookResult<[designGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (designGuid: Guid) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "designs", [designGuid]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectDesigns(): ActionHookResult<[designsGuids: Guid[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (designsGuids: Guid[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "designs", designsGuids);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearDesigns(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "designs");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Designs Selection Hooks
+
+// #region Qualities Selection Hooks
+
+export function useKitAppAddQualityToSelection(): ActionHookResult<[qualitie: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (qualitie: string) => {
+      const newSelection = addToSelection(selection || {}, "qualities", qualitie);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemoveQualityFromSelection(): ActionHookResult<[qualitie: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (qualitie: string) => {
+      const newSelection = removeFromSelection(selection || {}, "qualities", qualitie);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleQualityInSelection(): ActionHookResult<[qualitie: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (qualitie: string) => {
+      const newSelection = toggleInSelection(selection || {}, "qualities", qualitie);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSingleQuality(): ActionHookResult<[qualitie: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (qualitie: string) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "qualities", [qualitie]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectQualities(): ActionHookResult<[qualitiesNames: string[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (qualitiesNames: string[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "qualities", qualitiesNames);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearQualities(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "qualities");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Qualities Selection Hooks
+
+// #region Ports Selection Hooks
+
+export function useKitAppAddPortToSelection(): ActionHookResult<[portGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (portGuid: Guid) => {
+      const newSelection = addToSelection(selection || {}, "ports", portGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemovePortFromSelection(): ActionHookResult<[portGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (portGuid: Guid) => {
+      const newSelection = removeFromSelection(selection || {}, "ports", portGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppTogglePortInSelection(): ActionHookResult<[portGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (portGuid: Guid) => {
+      const newSelection = toggleInSelection(selection || {}, "ports", portGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSinglePort(): ActionHookResult<[portGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (portGuid: Guid) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "ports", [portGuid]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectPorts(): ActionHookResult<[portsGuids: Guid[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (portsGuids: Guid[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "ports", portsGuids);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearPorts(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "ports");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Ports Selection Hooks
+
+// #region Tags Selection Hooks
+
+export function useKitAppAddTagToSelection(): ActionHookResult<[tagGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (tagGuid: Guid) => {
+      const newSelection = addToSelection(selection || {}, "tags", tagGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemoveTagFromSelection(): ActionHookResult<[tagGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (tagGuid: Guid) => {
+      const newSelection = removeFromSelection(selection || {}, "tags", tagGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleTagInSelection(): ActionHookResult<[tagGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (tagGuid: Guid) => {
+      const newSelection = toggleInSelection(selection || {}, "tags", tagGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSingleTag(): ActionHookResult<[tagGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (tagGuid: Guid) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "tags", [tagGuid]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectTags(): ActionHookResult<[tagsGuids: Guid[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (tagsGuids: Guid[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "tags", tagsGuids);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearTags(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "tags");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Tags Selection Hooks
+
+// #region Concepts Selection Hooks
+
+export function useKitAppAddConceptToSelection(): ActionHookResult<[conceptGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (conceptGuid: Guid) => {
+      const newSelection = addToSelection(selection || {}, "concepts", conceptGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemoveConceptFromSelection(): ActionHookResult<[conceptGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (conceptGuid: Guid) => {
+      const newSelection = removeFromSelection(selection || {}, "concepts", conceptGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleConceptInSelection(): ActionHookResult<[conceptGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (conceptGuid: Guid) => {
+      const newSelection = toggleInSelection(selection || {}, "concepts", conceptGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSingleConcept(): ActionHookResult<[conceptGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (conceptGuid: Guid) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "concepts", [conceptGuid]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectConcepts(): ActionHookResult<[conceptsGuids: Guid[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (conceptsGuids: Guid[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "concepts", conceptsGuids);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearConcepts(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "concepts");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Concepts Selection Hooks
+
+// #region Files Selection Hooks
+
+export function useKitAppAddFileToSelection(): ActionHookResult<[file: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (file: string) => {
+      const newSelection = addToSelection(selection || {}, "files", file);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemoveFileFromSelection(): ActionHookResult<[file: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (file: string) => {
+      const newSelection = removeFromSelection(selection || {}, "files", file);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleFileInSelection(): ActionHookResult<[file: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (file: string) => {
+      const newSelection = toggleInSelection(selection || {}, "files", file);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSingleFile(): ActionHookResult<[file: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (file: string) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "files", [file]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectFiles(): ActionHookResult<[filesNames: string[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (filesNames: string[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "files", filesNames);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearFiles(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "files");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Files Selection Hooks
+
+// #region Folders Selection Hooks
+
+export function useKitAppAddFolderToSelection(): ActionHookResult<[folderGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (folderGuid: Guid) => {
+      const newSelection = addToSelection(selection || {}, "folders", folderGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemoveFolderFromSelection(): ActionHookResult<[folderGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (folderGuid: Guid) => {
+      const newSelection = removeFromSelection(selection || {}, "folders", folderGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleFolderInSelection(): ActionHookResult<[folderGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (folderGuid: Guid) => {
+      const newSelection = toggleInSelection(selection || {}, "folders", folderGuid);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSingleFolder(): ActionHookResult<[folderGuid: Guid]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (folderGuid: Guid) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "folders", [folderGuid]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectFolders(): ActionHookResult<[foldersGuids: Guid[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (foldersGuids: Guid[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "folders", foldersGuids);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearFolders(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "folders");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Folders Selection Hooks
+
+// #region Authors Selection Hooks
+
+export function useKitAppAddAuthorToSelection(): ActionHookResult<[author: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (author: string) => {
+      const newSelection = addToSelection(selection || {}, "authors", author);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppRemoveAuthorFromSelection(): ActionHookResult<[author: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (author: string) => {
+      const newSelection = removeFromSelection(selection || {}, "authors", author);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppToggleAuthorInSelection(): ActionHookResult<[author: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (author: string) => {
+      const newSelection = toggleInSelection(selection || {}, "authors", author);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectSingleAuthor(): ActionHookResult<[author: string]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (author: string) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "authors", [author]);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppSelectAuthors(): ActionHookResult<[authorsNames: string[]]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return (authorsNames: string[]) => {
+      const newSelection = replaceSelectionDimension(selection || {}, "authors", authorsNames);
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+export function useKitAppClearAuthors(): ActionHookResult<[]> {
+  const [selection, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection) return undefined;
+    return () => {
+      const newSelection = clearSelectionDimension(selection || {}, "authors");
+      setSelection(newSelection);
+    };
+  }, [selection, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Authors Selection Hooks
+
+// #region Global Selection Hooks
+
+/**
+ * Selects all artifacts in all dimensions (respects current filter).
+ */
+export function useKitAppSelectAll(): ActionHookResult<[]> {
+  const kit = useKit() as Kit | undefined;
+  const [, setSelection] = useKitAppSelection();
+  const canAct = setSelection !== undefined && kit !== null && kit !== undefined;
+  const action = useMemo(() => {
+    if (!canAct || !setSelection || !kit) return undefined;
+    return () => {
+      const allSelection: KitAppSelection = {};
+      const types = kit.types?.map((t: Type) => t.guid);
+      const designs = kit.designs?.map((d: Design) => d.guid);
+      const qualities = kit.qualities?.map((q: Quality) => q.name);
+      const ports = kit.ports?.map((p: Port) => p.guid);
+      const tags = kit.tags?.map((t: Tag) => t.guid);
+      const concepts = kit.concepts?.map((c: Concept) => c.guid);
+      const files = kit.files?.map((f: SemioFile) => f.name);
+      const folders = kit.folders?.map((f: Folder) => f.guid);
+      const authors = kit.authors?.map((a: Author) => a.name);
+      
+      if (types && types.length > 0) allSelection.types = types;
+      if (designs && designs.length > 0) allSelection.designs = designs;
+      if (qualities && qualities.length > 0) allSelection.qualities = qualities;
+      if (ports && ports.length > 0) allSelection.ports = ports;
+      if (tags && tags.length > 0) allSelection.tags = tags;
+      if (concepts && concepts.length > 0) allSelection.concepts = concepts;
+      if (files && files.length > 0) allSelection.files = files;
+      if (folders && folders.length > 0) allSelection.folders = folders;
+      if (authors && authors.length > 0) allSelection.authors = authors;
+      
+      setSelection(allSelection);
+    };
+  }, [kit, setSelection, canAct]);
+  return [action, canAct];
+}
+
+// #endregion Global Selection Hooks
+
+// #endregion Selection Helper Hooks
 
 export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
   const actor = useSketchpadActor();
