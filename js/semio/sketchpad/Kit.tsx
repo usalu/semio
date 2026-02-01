@@ -94,6 +94,7 @@ import {
   KitScopeProvider,
   LayoutCanvas,
   registerKitAppStoreFactory as registerKitStoreFactory,
+  ToolGroup,
   useAddFooterItem,
   useAddPanelSection,
   useAppType,
@@ -163,14 +164,16 @@ import {
   useInternalNode,
   useReactFlow,
 } from "./elements";
-import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
+import type { Device, HookNoSetResult, HookResult, KitAppId, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, ToolDefinition, YAttributes, YLeafMapNumber, YLeafMapString, YStringArray } from "./shared";
 import {
   AppConfig,
   AppPlugin,
   conditionalHookResult,
+  createField,
   createPanelDefinition,
   createSingleKeyTransactionHandlers,
   Expertise,
+  Field,
   Mode,
   PanelKind,
   parseWindowLayout,
@@ -180,6 +183,7 @@ import {
   registerSingleKeyAppEventHandlers,
   stringifyWindowLayout,
   Theme,
+  ToolKind,
 } from "./shared";
 
 // #endregion Imports
@@ -332,6 +336,7 @@ export interface KitAppDiff {
   sortDirection?: KitAppSortDirection;
   windowLayout?: any;
   diagramForce?: Partial<DiagramForceSettings>;
+  activeTool?: ToolKind;
 }
 export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> {}
 export interface KitAppState {
@@ -347,6 +352,7 @@ export interface KitAppState {
   sortDirection?: KitAppSortDirection;
   windowLayout?: any;
   diagramForce: DiagramForceSettings;
+  activeTool: ToolKind;
 }
 
 export interface KitAppCommandContext extends KitCommandContext {
@@ -1007,6 +1013,18 @@ if (typeof window !== "undefined") {
       return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, diagramForce: newForce } } };
     },
   });
+  registerEventHandler("KIT.SET_ACTIVE_TOOL", {
+    action: (context: any, event: any) => {
+      const app = context.kitApps[event.kitGuid] || createDefaultKitAppState();
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: { ...app, activeTool: event.tool } } };
+    },
+  });
+
+  registerEventHandler("KIT.INIT", {
+    action: (context: any, event: any) => {
+      return { kitApps: { ...context.kitApps, [event.kitGuid]: event.state } };
+    },
+  });
 
   createSingleKeyTransactionHandlers({
     namespace: "KIT",
@@ -1045,6 +1063,7 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
     panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
     selection: undefined,
     hover: undefined,
+    activeTool: ToolKind.SELECTION_NORMAL,
     fullscreenWindow: KitAppFullscreenWindow.None,
     filterSearch: "",
     expandedRows: [],
@@ -1150,6 +1169,34 @@ export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value
     };
   }, [kitGuid, canSet, actor]);
   return [resolvedForce, canSet ? setForce : undefined, canSet] as const;
+}
+
+export function useKitAppActiveTool(): HookResult<ToolKind> {
+  const actor = useSketchpadActor();
+  const kitGuid = useKitScope()?.guid;
+
+  const canSet = useSelector(actor, (snapshot) => {
+    if (!kitGuid) return false;
+    const app = snapshot.context.kitApps?.[kitGuid];
+    return !!app;
+  });
+
+  const activeTool = useSelector(actor, (snapshot) => {
+    if (!kitGuid) return ToolKind.SELECTION_NORMAL;
+    return snapshot.context.kitApps?.[kitGuid]?.activeTool ?? ToolKind.SELECTION_NORMAL;
+  });
+
+  const setActiveTool = useMemo(() => {
+    if (!canSet || !kitGuid) return undefined;
+    return (tool: ToolKind) => actor.send({ type: "KIT.SET_ACTIVE_TOOL", kitGuid, tool });
+  }, [actor, canSet, kitGuid]);
+
+  return conditionalHookResult(canSet, activeTool, setActiveTool);
+}
+
+export function useKitAppActiveToolField(): Field<ToolKind> {
+  const [value, setValue, canSet] = useKitAppActiveTool();
+  return createField(value, setValue ?? (() => {}), canSet);
 }
 
 export function useKitAppSortColumn(): HookNoSetResult<string> {
@@ -3625,6 +3672,7 @@ const AppContent: FC = () => {
   const [sortDirection] = useKitAppSortDirection();
   const kitApp = useKitAppXState(kitScope?.guid ?? "");
   const [hover] = useKitAppHover();
+  const [activeTool] = useKitAppActiveTool();
 
   const [selectTypeAction, canSelectType] = useKitAppSelectType();
   const [selectDesignAction, canSelectDesign] = useKitAppSelectDesign();
@@ -5110,7 +5158,10 @@ const AppContent: FC = () => {
         return;
       }
 
-      if (e.shiftKey && lastClickedIndexRef.current !== -1) {
+      // Determine selection mode based on activeTool or modifier keys
+      const effectiveMode = e.shiftKey ? "range" : e.metaKey || e.ctrlKey ? "toggle" : activeTool === ToolKind.SELECTION_ADDITIVE ? "add" : activeTool === ToolKind.SELECTION_SUBTRACTIVE ? "remove" : "single";
+
+      if (effectiveMode === "range" && lastClickedIndexRef.current !== -1) {
         const start = Math.min(lastClickedIndexRef.current, index);
         const end = Math.max(lastClickedIndexRef.current, index);
         const rangeRows = rows.slice(start, end + 1);
@@ -5154,69 +5205,172 @@ const AppContent: FC = () => {
         return;
       }
 
-      if (e.metaKey || e.ctrlKey) {
+      if (effectiveMode === "toggle" || effectiveMode === "add" || effectiveMode === "remove") {
+        const shouldRemove = effectiveMode === "remove";
+        const shouldAdd = effectiveMode === "add";
+        const shouldToggle = effectiveMode === "toggle";
+
         if (row.kind === "designs") {
           const designId = (row.data as Design).guid;
-          if (selection.designs?.includes(designId)) {
-            setSelectionAction?.({ ...selection, designs: selection.designs.filter((d) => d !== designId) });
-          } else {
-            setSelectionAction?.({ ...selection, designs: [...(selection.designs || []), designId] });
+          const isSelected = selection.designs?.includes(designId);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, designs: selection.designs.filter((d) => d !== designId) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, designs: [...(selection.designs || []), designId] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, designs: selection.designs.filter((d) => d !== designId) });
+            } else {
+              setSelectionAction?.({ ...selection, designs: [...(selection.designs || []), designId] });
+            }
           }
         } else if (row.kind === "types") {
           const typeId = (row.data as Type).guid;
-          if (selection.types?.includes(typeId)) {
-            setSelectionAction?.({ ...selection, types: selection.types.filter((t) => t !== typeId) });
-          } else {
-            setSelectionAction?.({ ...selection, types: [...(selection.types || []), typeId] });
+          const isSelected = selection.types?.includes(typeId);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, types: selection.types.filter((t) => t !== typeId) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, types: [...(selection.types || []), typeId] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, types: selection.types.filter((t) => t !== typeId) });
+            } else {
+              setSelectionAction?.({ ...selection, types: [...(selection.types || []), typeId] });
+            }
           }
         } else if (row.kind === "qualities") {
           const qualityKey = (row.data as Quality).key;
-          if (selection.qualities?.includes(qualityKey)) {
-            setSelectionAction?.({ ...selection, qualities: selection.qualities.filter((q) => q !== qualityKey) });
-          } else {
-            setSelectionAction?.({ ...selection, qualities: [...(selection.qualities || []), qualityKey] });
+          const isSelected = selection.qualities?.includes(qualityKey);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, qualities: selection.qualities.filter((q) => q !== qualityKey) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, qualities: [...(selection.qualities || []), qualityKey] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, qualities: selection.qualities.filter((q) => q !== qualityKey) });
+            } else {
+              setSelectionAction?.({ ...selection, qualities: [...(selection.qualities || []), qualityKey] });
+            }
           }
         } else if (row.kind === "ports") {
           const portId = (row.data as Port).guid;
-          if (selection.ports?.includes(portId)) {
-            setSelectionAction?.({ ...selection, ports: selection.ports.filter((i) => i !== portId) });
-          } else {
-            setSelectionAction?.({ ...selection, ports: [...(selection.ports || []), portId] });
+          const isSelected = selection.ports?.includes(portId);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, ports: selection.ports.filter((i) => i !== portId) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, ports: [...(selection.ports || []), portId] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, ports: selection.ports.filter((i) => i !== portId) });
+            } else {
+              setSelectionAction?.({ ...selection, ports: [...(selection.ports || []), portId] });
+            }
           }
         } else if (row.kind === "tags") {
           const tagId = (row.data as Tag).guid;
-          if (selection.tags?.includes(tagId)) {
-            setSelectionAction?.({ ...selection, tags: selection.tags.filter((t) => t !== tagId) });
-          } else {
-            setSelectionAction?.({ ...selection, tags: [...(selection.tags || []), tagId] });
+          const isSelected = selection.tags?.includes(tagId);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, tags: selection.tags.filter((t) => t !== tagId) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, tags: [...(selection.tags || []), tagId] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, tags: selection.tags.filter((t) => t !== tagId) });
+            } else {
+              setSelectionAction?.({ ...selection, tags: [...(selection.tags || []), tagId] });
+            }
           }
         } else if (row.kind === "concepts") {
           const conceptId = (row.data as Concept).guid;
-          if (selection.concepts?.includes(conceptId)) {
-            setSelectionAction?.({ ...selection, concepts: selection.concepts.filter((c) => c !== conceptId) });
-          } else {
-            setSelectionAction?.({ ...selection, concepts: [...(selection.concepts || []), conceptId] });
+          const isSelected = selection.concepts?.includes(conceptId);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, concepts: selection.concepts.filter((c) => c !== conceptId) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, concepts: [...(selection.concepts || []), conceptId] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, concepts: selection.concepts.filter((c) => c !== conceptId) });
+            } else {
+              setSelectionAction?.({ ...selection, concepts: [...(selection.concepts || []), conceptId] });
+            }
           }
         } else if (row.kind === "files") {
           const fileGuid = (row.data as SemioFile).guid;
-          if (selection.files?.includes(fileGuid)) {
-            setSelectionAction?.({ ...selection, files: selection.files.filter((f) => f !== fileGuid) });
-          } else {
-            setSelectionAction?.({ ...selection, files: [...(selection.files || []), fileGuid] });
+          const isSelected = selection.files?.includes(fileGuid);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, files: selection.files.filter((f) => f !== fileGuid) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, files: [...(selection.files || []), fileGuid] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, files: selection.files.filter((f) => f !== fileGuid) });
+            } else {
+              setSelectionAction?.({ ...selection, files: [...(selection.files || []), fileGuid] });
+            }
           }
         } else if (row.kind === "folders") {
           const folderId = (row.data as Folder).guid;
-          if (selection.folders?.includes(folderId)) {
-            setSelectionAction?.({ ...selection, folders: selection.folders.filter((f) => f !== folderId) });
-          } else {
-            setSelectionAction?.({ ...selection, folders: [...(selection.folders || []), folderId] });
+          const isSelected = selection.folders?.includes(folderId);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, folders: selection.folders.filter((f) => f !== folderId) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, folders: [...(selection.folders || []), folderId] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, folders: selection.folders.filter((f) => f !== folderId) });
+            } else {
+              setSelectionAction?.({ ...selection, folders: [...(selection.folders || []), folderId] });
+            }
           }
         } else if (row.kind === "authors") {
           const authorName = (row.data as Author).name;
-          if (selection.authors?.includes(authorName)) {
-            setSelectionAction?.({ ...selection, authors: selection.authors.filter((a) => a !== authorName) });
-          } else {
-            setSelectionAction?.({ ...selection, authors: [...(selection.authors || []), authorName] });
+          const isSelected = selection.authors?.includes(authorName);
+          if (shouldRemove) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, authors: selection.authors.filter((a) => a !== authorName) });
+            }
+          } else if (shouldAdd) {
+            if (!isSelected) {
+              setSelectionAction?.({ ...selection, authors: [...(selection.authors || []), authorName] });
+            }
+          } else if (shouldToggle) {
+            if (isSelected) {
+              setSelectionAction?.({ ...selection, authors: selection.authors.filter((a) => a !== authorName) });
+            } else {
+              setSelectionAction?.({ ...selection, authors: [...(selection.authors || []), authorName] });
+            }
           }
         }
 
@@ -5248,7 +5402,7 @@ const AppContent: FC = () => {
 
       lastClickedIndexRef.current = index;
     },
-    [kit.guid, sketchpadCommands, setSelectionAction, selection, rows],
+    [kit.guid, sketchpadCommands, setSelectionAction, selection, rows, activeTool],
   );
 
   const handleRowDoubleClick = useCallback(
@@ -6791,13 +6945,21 @@ const MultiWindowApp: FC = () => {
     if (appType !== "kit") return;
 
     addSection("toolbar", {
-      id: "semio.sketchpad.app.kit.kitApp.filters",
+      id: "semio.sketchpad.app.kit.kitApp.tools",
       specificity: 20,
       order: 0,
+      content: <KitToolbarTools />,
+    });
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.kit.kitApp.filters",
+      specificity: 20,
+      order: 1,
       content: <KitToolbarFilters />,
     });
 
     return () => {
+      removeSection("toolbar", "semio.sketchpad.app.kit.kitApp.tools");
       removeSection("toolbar", "semio.sketchpad.app.kit.kitApp.filters");
     };
   }, [appType, addSection, removeSection]);
@@ -6913,6 +7075,39 @@ const MultiWindowApp: FC = () => {
 export default MultiWindowApp;
 
 // #endregion Diagram
+
+// #region Tools
+
+const getKitTools = (): ToolDefinition[] => [
+  {
+    id: "selection",
+    defaultMode: ToolKind.SELECTION_NORMAL,
+    modes: [
+      { id: ToolKind.SELECTION_NORMAL, tooltipId: "semio.sketchpad.tool.selection.normal" },
+      { id: ToolKind.SELECTION_ADDITIVE, tooltipId: "semio.sketchpad.tool.selection.additive" },
+      { id: ToolKind.SELECTION_SUBTRACTIVE, tooltipId: "semio.sketchpad.tool.selection.subtractive" },
+    ],
+  },
+];
+
+export const KitToolbarTools: FC = () => {
+  const [activeTool, setActiveTool, canSet] = useKitAppActiveTool();
+
+  if (!canSet) {
+    // Kit app not initialized yet, return placeholder to avoid layout shift
+    return <div />;
+  }
+
+  return (
+    <ToolGroup
+      tools={getKitTools()}
+      activeTool={activeTool ?? ToolKind.SELECTION_NORMAL}
+      onToolChange={(tool) => setActiveTool && setActiveTool(tool as ToolKind)}
+    />
+  );
+};
+
+// #endregion Tools
 
 // #endregion Windows
 

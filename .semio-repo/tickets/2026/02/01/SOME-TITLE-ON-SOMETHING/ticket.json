@@ -1,0 +1,15 @@
+{
+  "title": "Some Title on Something",
+  "iterations": [
+    {
+      "prompt": "Test prompt",
+      "llm": "claude-opus-4",
+      "ui": "copilot-chat",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "date": "2026-02-01T16:49:17.152522525Z",
+      "commit": "d03f090ef110fb992666bb34c9f2b324e9e12424"
+    }
+  ],
+  "status": "open",
+  "dates": {}
+}

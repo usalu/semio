@@ -809,6 +809,42 @@
           }
         }
       },
+      "tool": {
+        "label": {
+          "normal": "Tools",
+          "beginner": "Tools"
+        },
+        "selection": {
+          "label": {
+            "normal": "Selection",
+            "beginner": "Selection"
+          },
+          "normal": {
+            "label": {
+              "normal": "Normal Selection",
+              "beginner": "Click to select one item at a time"
+            },
+            "manual": "selection",
+            "hotkey": "1"
+          },
+          "additive": {
+            "label": {
+              "normal": "Add to Selection",
+              "beginner": "Click to add items to your selection without holding Ctrl"
+            },
+            "manual": "selection",
+            "hotkey": "2"
+          },
+          "subtractive": {
+            "label": {
+              "normal": "Remove from Selection",
+              "beginner": "Click to remove items from your selection without holding Alt"
+            },
+            "manual": "selection",
+            "hotkey": "3"
+          }
+        }
+      },
       "sort": {
         "label": {
           "normal": "",

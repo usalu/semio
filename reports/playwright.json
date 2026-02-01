@@ -47,7 +47,7 @@
           "**/*.spec.ts",
           "**/sketchpad.test.ts"
         ],
-        "timeout": 180000
+        "timeout": 30000
       }
     ],
     "shard": null,
@@ -65,1159 +65,120 @@
   },
   "suites": [
     {
-      "title": "sketchpad.test.ts",
-      "file": "sketchpad.test.ts",
+      "title": "toolbar_diagnostic.spec.ts",
+      "file": "toolbar_diagnostic.spec.ts",
       "column": 0,
       "line": 0,
-      "specs": [],
-      "suites": [
+      "specs": [
         {
-          "title": "sketchpad",
-          "file": "sketchpad.test.ts",
-          "line": 654,
-          "column": 6,
-          "specs": [
+          "title": "toolbar diagnostic test",
+          "ok": true,
+          "tags": [],
+          "tests": [
             {
-              "title": "Home",
-              "ok": true,
-              "tags": [],
-              "tests": [
+              "timeout": 30000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "firefox",
+              "projectName": "firefox",
+              "results": [
                 {
-                  "timeout": 180000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox",
-                  "projectName": "firefox",
-                  "results": [
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 5817,
+                  "errors": [],
+                  "stdout": [
                     {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 58169,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "[Home] Testing Home app panel toggles\n"
-                        },
-                        {
-                          "text": "[Home] Left sidepanel toggle visible: false\n"
-                        },
-                        {
-                          "text": "[Home] Right sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Home] Toggle rightSidePanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Home] Panel rightSidePanel content: 3 buttons, 0 inputs, 0 tree items (total: 3)\n"
-                        },
-                        {
-                          "text": "[Home] Panel rightSidePanel has 3 content items\n"
-                        },
-                        {
-                          "text": "[Home] HUD panel toggle visible: false\n"
-                        },
-                        {
-                          "text": "[Home] Panel toggle verification complete: left=false, hud=false, right=true\n"
-                        },
-                        {
-                          "text": "[Home] Testing toolbar visibility and filter toggles\n"
-                        },
-                        {
-                          "text": "[Home] Toolbar visible: true\n"
-                        },
-                        {
-                          "text": "[Home] Toolbar toggle groups count: 3\n"
-                        },
-                        {
-                          "text": "[Home] Testing individual filter toggles\n"
-                        },
-                        {
-                          "text": "[Home] Temporary filter toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Home] Local filter toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Home] Remote filter toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Home] Testing temporary filter toggle click\n"
-                        },
-                        {
-                          "text": "[Home] URL after temporary toggle click: http://localhost:5173/?kind=temporary\n"
-                        },
-                        {
-                          "text": "[Home] URL after temporary toggle unclick: http://localhost:5173/\n"
-                        },
-                        {
-                          "text": "[Home] Toolbar and filter toggles test complete\n"
-                        },
-                        {
-                          "text": "[Home] Testing selection state\n"
-                        },
-                        {
-                          "text": "[Home] Initial homeApp state: {\"panelVisibility\":{\"toolbar\":true,\"workbench\":false,\"details\":false,\"chat\":false,\"settings\":false,\"rightSidePanel\":true},\"loadingKits\":[{\"tempGuid\":\"kit-import-019c05ae-55b7-74ea-a4e8-cbbb81eade5b\",\"name\":\"metabolism\"},{\"tempGuid\":\"kit-import-019c05ae-562b-73fd-a39e-f36319aecba7\",\"name\":\"metabolism\"}],\"windowLayout\":{\"root\":{\"type\":\"row\",\"content\":[{\"type\":\"stack\",\"content\":[{\"type\":\"component\",\"content\":[],\"size\":1,\"sizeUnit\":\"fr\",\"minSize\":1,\"minSizeUnit\":\"px\",\"id\":\"\",\"maximised\":false,\"isClosable\":true,\"reorderEnabled\":true,\"title\":\"table\",\"componentType\":\"table\",\"componentState\":{}}],\"size\":100,\"sizeUnit\":\"%\",\"minSize\":1,\"minSizeUnit\":\"px\",\"id\":\"\",\"isClosable\":true,\"maximised\":false,\"activeItemIndex\":0}],\"size\":1,\"sizeUnit\":\"fr\",\"minSize\":1,\"minSizeUnit\":\"px\",\"id\":\"\",\"isClosable\":true},\"openPopouts\":[],\"settings\":{\"constrainDragToContainer\":true,\"reorderEnabled\":true,\"popoutWholeStack\":false,\"blockedPopoutsThrowError\":true,\"closePopoutsOnUnload\":true,\"responsiveMode\":\"none\",\"tabOverlapAllowance\":0,\"reorderOnTabMenuClick\":true,\"tabControlOffset\":10,\"popInOnClose\":false},\"dimensions\":{\"borderWidth\":5,\"borderGrabWidth\":5,\"defaultMinItemHeight\":0,\"defaultMinItemHeightUnit\":\"px\",\"defaultMinItemWidth\":10,\"defaultMinItemWidthUnit\":\"px\",\"headerHeight\":20,\"dragProxyWidth\":300,\"dragProxyHeight\":200},\"header\":{\"show\":\"top\",\"popout\":\"open in new window\",\"dock\":\"dock\",\"close\":\"close\",\"maximise\":\"maximise\",\"minimise\":\"minimise\",\"tabDropdown\":\"additional tabs\"},\"resolved\":true}}\n"
-                        },
-                        {
-                          "text": "[Home] Metabolism row visible: \u001b[33mfalse\u001b[39m\n"
-                        },
-                        {
-                          "text": "[Home] Selection state test complete\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-01-28T17:37:09.944Z",
-                      "annotations": [],
-                      "attachments": []
+                      "text": "\n=== TOOLBAR HTML ===\n"
+                    },
+                    {
+                      "text": "<div class=\"bg-panel flex items-center gap-single border p-single\"><div><div class=\"flex items-center gap-single\"><div role=\"group\" dir=\"ltr\" data-slot=\"toggle-group\" class=\"group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x border-hover-panel divide-hover-panel\" tabindex=\"0\" style=\"outline: none;\"><span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showDesigns\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-small [&amp;_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destr\n"
+                    },
+                    {
+                      "text": "\nTotal radio buttons in toolbar: 9\n"
+                    },
+                    {
+                      "text": "Total toggle groups: 9\n"
+                    },
+                    {
+                      "text": "\nToggle group 0: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showDesigns\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-s\n"
+                    },
+                    {
+                      "text": "\nToggle group 1: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showTypes\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-sel\n"
+                    },
+                    {
+                      "text": "\nToggle group 2: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showQualities\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor\n"
+                    },
+                    {
+                      "text": "\nToggle group 3: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showPorts\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-sel\n"
+                    },
+                    {
+                      "text": "\nToggle group 4: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showTags\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-sele\n"
+                    },
+                    {
+                      "text": "\nToggle group 5: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showConcepts\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-\n"
+                    },
+                    {
+                      "text": "\nToggle group 6: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showFiles\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-sel\n"
+                    },
+                    {
+                      "text": "\nToggle group 7: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showFolders\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-s\n"
+                    },
+                    {
+                      "text": "\nToggle group 8: 1 buttons\n"
+                    },
+                    {
+                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showAuthors\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-s\n"
                     }
                   ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-906fa81402eb8f90acd2",
-              "file": "sketchpad.test.ts",
-              "line": 655,
-              "column": 3
-            },
-            {
-              "title": "Kit",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 180000,
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-02-01T16:31:13.683Z",
                   "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox",
-                  "projectName": "firefox",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 92842,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "[TEST] Page title: semio · sketchpad\n"
-                        },
-                        {
-                          "text": "[TEST] Setting input files: /workspaces/semio/assets/semio/metabolism.zip\n"
-                        },
-                        {
-                          "text": "[TEST] File set via file chooser\n"
-                        },
-                        {
-                          "text": "[TEST] Waiting for 'Metabolism' text to appear...\n"
-                        },
-                        {
-                          "text": "[TEST] 'Metabolism' text appeared\n"
-                        },
-                        {
-                          "text": "[TEST] Looking for table row with data-row-id...\n"
-                        },
-                        {
-                          "text": "[TEST] Found data-row-id values: [ \u001b[32m'docs-root'\u001b[39m, \u001b[32m'f042c2a4-3ba5-44b0-b22c-0ae8f568aacc'\u001b[39m ]\n"
-                        },
-                        {
-                          "text": "[TEST] Table row with Metabolism visible: \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Double-clicked on table row\n"
-                        },
-                        {
-                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
-                        },
-                        {
-                          "text": "[Kit] Debug messages from app:\n"
-                        },
-                        {
-                          "text": "[Kit] Tambour row clicked via JS: false\n"
-                        },
-                        {
-                          "text": "[Kit] Testing Kit app sidepanel toggles\n"
-                        },
-                        {
-                          "text": "[Kit] Left sidepanel toggle visible: false\n"
-                        },
-                        {
-                          "text": "[Kit] Right sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Kit] Toggle rightSidePanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Kit] Panel rightSidePanel content: 3 buttons, 0 inputs, 0 tree items (total: 3)\n"
-                        },
-                        {
-                          "text": "[Kit] Panel rightSidePanel has 3 content items\n"
-                        },
-                        {
-                          "text": "[Kit] Verifying right sidepanel has content\n"
-                        },
-                        {
-                          "text": "[Kit] Right sidepanel content count: 3\n"
-                        },
-                        {
-                          "text": "[Kit] HUD panel toggle visible: false\n"
-                        },
-                        {
-                          "text": "[Kit] Panel toggle verification complete: left=false, hud=false, right=true\n"
-                        },
-                        {
-                          "text": "[Kit] Checking for diagram nodes...\n"
-                        },
-                        {
-                          "text": "[Kit] Diagram container visible: true\n"
-                        },
-                        {
-                          "text": "[Kit] Diagram node count: 70\n"
-                        },
-                        {
-                          "text": "[Kit] First node bounding box: {\"x\":5098.9248046875,\"y\":667.896484375,\"width\":100,\"height\":100}\n"
-                        },
-                        {
-                          "text": "[Kit] Testing toolbar visibility and artifact filter toggles\n"
-                        },
-                        {
-                          "text": "[Kit] Toolbar visible: true\n"
-                        },
-                        {
-                          "text": "[Kit] Toolbar toggle groups count: 9\n"
-                        },
-                        {
-                          "text": "[Kit] Testing individual artifact filter toggles\n"
-                        },
-                        {
-                          "text": "[Kit] Designs filter toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Kit] Types filter toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Kit] Qualities filter toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Kit] Testing designs filter toggle click\n"
-                        },
-                        {
-                          "text": "[Kit] URL after designs toggle click: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc?kind=designs\n"
-                        },
-                        {
-                          "text": "[Kit] URL after designs toggle unclick: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
-                        },
-                        {
-                          "text": "[Kit] Toolbar and artifact filter toggles test complete\n"
-                        },
-                        {
-                          "text": "[Kit] Testing sidepanel toggles again to verify they work\n"
-                        },
-                        {
-                          "text": "[Kit] Left sidepanel toggle visible: false\n"
-                        },
-                        {
-                          "text": "[Kit] Right sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Kit] Right sidepanel toggle clicked successfully\n"
-                        },
-                        {
-                          "text": "[Kit] After click: rightSidePanel=false\n"
-                        },
-                        {
-                          "text": "[Kit] SidePanel toggle test complete\n"
-                        },
-                        {
-                          "text": "[Kit] Testing selection state\n"
-                        },
-                        {
-                          "text": "[Kit] Initial kitApp state: {\"kitApp\":{\"panelVisibility\":{\"toolbar\":false,\"workbench\":false,\"details\":false,\"chat\":false,\"settings\":false,\"rightSidePanel\":false},\"fullscreenWindow\":\"none\",\"others\":[],\"expandedRows\":{},\"transaction\":{\"isTransactionActive\":false,\"currentTransactionStack\":[],\"pastTransactionStack\":[],\"redoStack\":[]}},\"kitGuid\":\"f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\"}\n"
-                        },
-                        {
-                          "text": "[Kit] Tambour type visible: \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[Kit] After click kitApp state: {\"kitApp\":{\"panelVisibility\":{\"toolbar\":false,\"workbench\":false,\"details\":false,\"chat\":false,\"settings\":false,\"rightSidePanel\":false},\"selection\":{\"types\":[\"2a6bb3e8-4adb-44a3-bc87-3314b77b40f7\"]},\"hover\":{\"type\":\"2a6bb3e8-4adb-44a3-bc87-3314b77b40f7\"},\"fullscreenWindow\":\"none\",\"others\":[],\"expandedRows\":{},\"transaction\":{\"isTransactionActive\":false,\"currentTransactionStack\":[],\"pastTransactionStack\":[],\"redoStack\":[]}},\"kitGuid\":\"f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\"}\n"
-                        },
-                        {
-                          "text": "[Kit] Selection types: [ \u001b[32m'2a6bb3e8-4adb-44a3-bc87-3314b77b40f7'\u001b[39m ]\n"
-                        },
-                        {
-                          "text": "[Kit] Selection state test complete\n"
-                        },
-                        {
-                          "text": "[Kit] Verifying diagram node icons match table avatars\n"
-                        },
-                        {
-                          "text": "[Kit] Diagram container visible for icons test: true\n"
-                        },
-                        {
-                          "text": "[Kit] Found 70 nodes with avatars\n"
-                        },
-                        {
-                          "text": "[Kit] Avatar has fallback element: true\n"
-                        },
-                        {
-                          "text": "[Kit] Diagram node icons test complete\n"
-                        },
-                        {
-                          "text": "[Kit] Verifying diagram nodes are draggable\n"
-                        },
-                        {
-                          "text": "[Kit] Found 70 diagram nodes for drag test\n"
-                        },
-                        {
-                          "text": "[Kit] Initial node position: (3748.9541015625, -23.602386474609375)\n"
-                        },
-                        {
-                          "text": "[Kit] Final node position: (3748.9541015625, -23.602386474609375)\n"
-                        },
-                        {
-                          "text": "[Kit] Node moved: X=false, Y=false\n"
-                        },
-                        {
-                          "text": "[Kit] Note: Force simulation may resist movement - this is expected behavior\n"
-                        },
-                        {
-                          "text": "[Kit] Diagram node dragging test complete\n"
-                        },
-                        {
-                          "text": "[Kit] Verifying selection sync between table and diagram\n"
-                        },
-                        {
-                          "text": "[Kit] Tambour type visible in table: true\n"
-                        },
-                        {
-                          "text": "[Kit] Selection state after table click: {\"types\":[\"2a6bb3e8-4adb-44a3-bc87-3314b77b40f7\"]}\n"
-                        },
-                        {
-                          "text": "[Kit] Selected types count: 1\n"
-                        },
-                        {
-                          "text": "[Kit] Diagram table selection sync test complete\n"
-                        },
-                        {
-                          "text": "[Kit] Verifying clicking diagram node updates selection\n"
-                        },
-                        {
-                          "text": "[Kit] Diagram container visible for click test: false\n"
-                        },
-                        {
-                          "text": "[Kit] Diagram not visible, checking for golden layout windows...\n"
-                        },
-                        {
-                          "text": "[Kit] Golden layout windows: 1\n"
-                        },
-                        {
-                          "text": "[Kit] Found 0 diagram nodes for click test\n"
-                        },
-                        {
-                          "text": "[Kit] No diagram nodes found for click test, skipping selection verification\n"
-                        },
-                        {
-                          "text": "[Kit] Verifying hover sync between table and diagram\n"
-                        },
-                        {
-                          "text": "[Kit] Found 0 diagram nodes for hover test\n"
-                        },
-                        {
-                          "text": "[Kit] No diagram nodes found for hover test, skipping\n"
-                        },
-                        {
-                          "text": "[Kit] Verifying filter sync between table and diagram\n"
-                        },
-                        {
-                          "text": "[Kit] Initial diagram node count: 0\n"
-                        },
-                        {
-                          "text": "[Kit] No diagram nodes found for filter test, skipping\n"
-                        },
-                        {
-                          "text": "[Kit] Verifying all artifact types are visible as nodes\n"
-                        },
-                        {
-                          "text": "[Kit] Total diagram nodes: 0\n"
-                        },
-                        {
-                          "text": "[Kit] No diagram nodes found for artifact types test, skipping\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-01-28T17:38:08.568Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
+                  "attachments": []
                 }
               ],
-              "id": "1f96767271edc4239dfa-7f97a605329fb9fde809",
-              "file": "sketchpad.test.ts",
-              "line": 794,
-              "column": 3
-            },
-            {
-              "title": "Type",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 120000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox",
-                  "projectName": "firefox",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 88199,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "[TEST] Page title: semio · sketchpad\n"
-                        },
-                        {
-                          "text": "[TEST] Setting input files: /workspaces/semio/assets/semio/metabolism.zip\n"
-                        },
-                        {
-                          "text": "[TEST] File set via file chooser\n"
-                        },
-                        {
-                          "text": "[TEST] Waiting for 'Metabolism' text to appear...\n"
-                        },
-                        {
-                          "text": "[TEST] 'Metabolism' text appeared\n"
-                        },
-                        {
-                          "text": "[TEST] Looking for table row with data-row-id...\n"
-                        },
-                        {
-                          "text": "[TEST] Found data-row-id values: [ \u001b[32m'docs-root'\u001b[39m, \u001b[32m'f042c2a4-3ba5-44b0-b22c-0ae8f568aacc'\u001b[39m ]\n"
-                        },
-                        {
-                          "text": "[TEST] Table row with Metabolism visible: \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Double-clicked on table row\n"
-                        },
-                        {
-                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
-                        },
-                        {
-                          "text": "[initType] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
-                        },
-                        {
-                          "text": "[initType] Types toggle visible: false\n"
-                        },
-                        {
-                          "text": "[initType] Available row IDs: [\"type-277768b5-9220-4312-bf0d-ab82d9fb6a73\",\"type-0e240cd2-7f98-42b6-af39-34e7ee4fad35\",\"type-49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e\",\"type-71749140-9db9-43f6-bd81-d89011667b80\",\"design-37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\",\"concept-a49b61b1-4c98-4258-bfe5-8e02ef5a92fa\",\"concept-019adc5e-40ee-789d-a877-5baef7bc79fa\",\"design-9a890dd4-0a9c-48ac-920a-9e62666465ef\",\"concept-019adc5e-9205-7364-a213-66fda12e5120\",\"folder-019adc83-0113-75e0-90b2-9d0912f1d60f\",\"type-2a6bb3e8-4adb-44a3-bc87-3314b77b40f7\",\"author-e3d5369e-b103-42a8-960a-7960c75f0f88\"]\n"
-                        },
-                        {
-                          "text": "[initType] Type row IDs: [\"type-277768b5-9220-4312-bf0d-ab82d9fb6a73\",\"type-0e240cd2-7f98-42b6-af39-34e7ee4fad35\",\"type-49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e\",\"type-71749140-9db9-43f6-bd81-d89011667b80\",\"type-2a6bb3e8-4adb-44a3-bc87-3314b77b40f7\"]\n"
-                        },
-                        {
-                          "text": "[initType] About to double-click on type row: type-277768b5-9220-4312-bf0d-ab82d9fb6a73\n"
-                        },
-                        {
-                          "text": "[initType] Double-clicked on type via JS: true\n"
-                        },
-                        {
-                          "text": "[initType] Final URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/types/277768b5-9220-4312-bf0d-ab82d9fb6a73\n"
-                        },
-                        {
-                          "text": "[Type] Current URL after initType: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/types/277768b5-9220-4312-bf0d-ab82d9fb6a73\n"
-                        },
-                        {
-                          "text": "[Type] Is type URL: true\n"
-                        },
-                        {
-                          "text": "[Type] Canvas visible: true\n"
-                        },
-                        {
-                          "text": "[Type Test] Navbar is visible\n"
-                        },
-                        {
-                          "text": "[Type Test] Footer is visible\n"
-                        },
-                        {
-                          "text": "[Type Test] Starting pan operations on three.js canvas\n"
-                        },
-                        {
-                          "text": "[Type Test] Pan 1 took 22ms\n"
-                        },
-                        {
-                          "text": "[Type Test] Pan 2 took 23ms\n"
-                        },
-                        {
-                          "text": "[Type Test] Pan 3 took 22ms\n"
-                        },
-                        {
-                          "text": "[Type Test] Average pan time: 22.333333333333332ms\n"
-                        },
-                        {
-                          "text": "[Type] Testing Type app sidepanel toggles\n"
-                        },
-                        {
-                          "text": "[Type] Left sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Type] Toggle leftSidePanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Type] Panel leftSidePanel content: 2 buttons, 0 inputs, 0 tree items (total: 2)\n"
-                        },
-                        {
-                          "text": "[Type] Panel leftSidePanel has 2 content items\n"
-                        },
-                        {
-                          "text": "[Type] Left sidepanel has connectors/models section: false\n"
-                        },
-                        {
-                          "text": "[Type] Right sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Type] Toggle rightSidePanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Type] Panel rightSidePanel content: 3 buttons, 0 inputs, 0 tree items (total: 3)\n"
-                        },
-                        {
-                          "text": "[Type] Panel rightSidePanel has 3 content items\n"
-                        },
-                        {
-                          "text": "[Type] HUD panel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Type] Toggle hudPanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Type] Panel hudPanel content: 2 buttons, 0 inputs, 0 tree items (total: 2)\n"
-                        },
-                        {
-                          "text": "[Type] Panel hudPanel has 2 content items\n"
-                        },
-                        {
-                          "text": "[Type] Panel toggle verification complete: left=true, hud=true, right=true\n"
-                        },
-                        {
-                          "text": "[Type] Testing toolbar visibility and connector tool\n"
-                        },
-                        {
-                          "text": "[Type] Toolbar visible: true\n"
-                        },
-                        {
-                          "text": "[Type] Connector tool visible: true\n"
-                        },
-                        {
-                          "text": "[Type] Selection tool visible: true\n"
-                        },
-                        {
-                          "text": "[Type] Testing connector tool: clicking to activate\n"
-                        },
-                        {
-                          "text": "[Type] Connector tool active state: on\n"
-                        },
-                        {
-                          "text": "[Type] Moving cursor to canvas center for connector creation preview\n"
-                        },
-                        {
-                          "text": "[Type] Clicking on canvas to create connector\n"
-                        },
-                        {
-                          "text": "[Type] Connector tool test completed - connector creation attempted\n"
-                        },
-                        {
-                          "text": "[Type] Switching back to selection tool\n"
-                        },
-                        {
-                          "text": "[Type] Selection tool active state after switch: null\n"
-                        },
-                        {
-                          "text": "[Type] Toolbar and tools test complete\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-01-28T17:39:41.423Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-f31bbdb743c3cafe1475",
-              "file": "sketchpad.test.ts",
-              "line": 1292,
-              "column": 3
-            },
-            {
-              "title": "Design",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 240000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox",
-                  "projectName": "firefox",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 183539,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "[TEST] Page title: semio · sketchpad\n"
-                        },
-                        {
-                          "text": "[TEST] Setting input files: /workspaces/semio/assets/semio/metabolism.zip\n"
-                        },
-                        {
-                          "text": "[TEST] File set via file chooser\n"
-                        },
-                        {
-                          "text": "[TEST] Waiting for 'Metabolism' text to appear...\n"
-                        },
-                        {
-                          "text": "[TEST] 'Metabolism' text appeared\n"
-                        },
-                        {
-                          "text": "[TEST] Looking for table row with data-row-id...\n"
-                        },
-                        {
-                          "text": "[TEST] Found data-row-id values: [ \u001b[32m'docs-root'\u001b[39m, \u001b[32m'f042c2a4-3ba5-44b0-b22c-0ae8f568aacc'\u001b[39m ]\n"
-                        },
-                        {
-                          "text": "[TEST] Table row with Metabolism visible: \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[TEST] Double-clicked on table row\n"
-                        },
-                        {
-                          "text": "[TEST] Navigated to: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
-                        },
-                        {
-                          "text": "[initDesign] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc\n"
-                        },
-                        {
-                          "text": "[initDesign] Available row IDs: [\"type-277768b5-9220-4312-bf0d-ab82d9fb6a73\",\"type-0e240cd2-7f98-42b6-af39-34e7ee4fad35\",\"type-49ff4ea0-5bb2-4b45-9afd-a1aed3fc8e3e\",\"type-71749140-9db9-43f6-bd81-d89011667b80\",\"design-37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\",\"concept-a49b61b1-4c98-4258-bfe5-8e02ef5a92fa\",\"concept-019adc5e-40ee-789d-a877-5baef7bc79fa\",\"design-9a890dd4-0a9c-48ac-920a-9e62666465ef\",\"concept-019adc5e-9205-7364-a213-66fda12e5120\",\"folder-019adc83-0113-75e0-90b2-9d0912f1d60f\",\"type-2a6bb3e8-4adb-44a3-bc87-3314b77b40f7\",\"author-e3d5369e-b103-42a8-960a-7960c75f0f88\"]\n"
-                        },
-                        {
-                          "text": "[initDesign] Design row IDs: [\"design-37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\",\"design-9a890dd4-0a9c-48ac-920a-9e62666465ef\"]\n"
-                        },
-                        {
-                          "text": "[initDesign] About to double-click on design row: design-37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\n"
-                        },
-                        {
-                          "text": "[initDesign] Double-clicked on design via JS: true\n"
-                        },
-                        {
-                          "text": "[initDesign] Final URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\n"
-                        },
-                        {
-                          "text": "[Design Test] Current URL: http://localhost:5173/kits/f042c2a4-3ba5-44b0-b22c-0ae8f568aacc/designs/37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\n"
-                        },
-                        {
-                          "text": "[Design Test] Is design URL: true\n"
-                        },
-                        {
-                          "text": "[Design Test] ReactFlow elements count: \u001b[33m1\u001b[39m\n"
-                        },
-                        {
-                          "text": "[Design Test] Window/Panel elements count: \u001b[33m53\u001b[39m\n"
-                        },
-                        {
-                          "text": "[Design Test] hasDiagram: \u001b[33mtrue\u001b[39m hasScene: \u001b[33mtrue\u001b[39m\n"
-                        },
-                        {
-                          "text": "[Design Test] Navbar is visible\n"
-                        },
-                        {
-                          "text": "[Design Test] Left toggle is visible\n"
-                        },
-                        {
-                          "text": "[Design Test] HUD toggle is visible\n"
-                        },
-                        {
-                          "text": "[Design Test] Right toggle is visible\n"
-                        },
-                        {
-                          "text": "[Design Test] Footer is visible\n"
-                        },
-                        {
-                          "text": "[Design Test] Piece count: \u001b[33m2880\u001b[39m\n"
-                        },
-                        {
-                          "text": "[Design Test] Pan 1 took 4ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Pan 2 took 181ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Pan timing difference: 177ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Hover (mouse enter) took 2688ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Unhover (mouse leave) took 45ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Hover timing: hover=2688ms, unhover=45ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Hover cycle times: 139, 68, 5406ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Starting scene pan operations on three.js canvas\n"
-                        },
-                        {
-                          "text": "[Design Test] Scene Pan 1 took 34ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Scene Pan 2 took 50ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Scene Pan 3 took 13ms\n"
-                        },
-                        {
-                          "text": "[Design Test] Average subsequent scene pan time: 31.5ms\n"
-                        },
-                        {
-                          "text": "[Design] Testing Design app sidepanel toggles\n"
-                        },
-                        {
-                          "text": "[Design] Left sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Design] Toggle leftSidePanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Design] Panel leftSidePanel content: 2 buttons, 0 inputs, 0 tree items (total: 2)\n"
-                        },
-                        {
-                          "text": "[Design] Panel leftSidePanel has 2 content items\n"
-                        },
-                        {
-                          "text": "[Design] Left sidepanel has types/pieces section: false\n"
-                        },
-                        {
-                          "text": "[Design] Right sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Design] Toggle rightSidePanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Design] Panel rightSidePanel content: 3 buttons, 0 inputs, 0 tree items (total: 3)\n"
-                        },
-                        {
-                          "text": "[Design] Panel rightSidePanel has 3 content items\n"
-                        },
-                        {
-                          "text": "[Design] HUD panel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Design] Toggle hudPanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Design] Panel hudPanel content: 2 buttons, 0 inputs, 0 tree items (total: 2)\n"
-                        },
-                        {
-                          "text": "[Design] Panel hudPanel has 2 content items\n"
-                        },
-                        {
-                          "text": "[Design] Panel toggle verification complete: left=true, hud=true, right=true\n"
-                        },
-                        {
-                          "text": "[Design] Testing toolbar visibility and selection tools\n"
-                        },
-                        {
-                          "text": "[Design] Toolbar visible: true\n"
-                        },
-                        {
-                          "text": "[Design] Testing individual tools\n"
-                        },
-                        {
-                          "text": "[Design] Selection tool visible: true\n"
-                        },
-                        {
-                          "text": "[Design] Lasso tool visible: true\n"
-                        },
-                        {
-                          "text": "[Design] Testing selection tool activation\n"
-                        },
-                        {
-                          "text": "[Design] Selection tool states: data-state=null, aria-pressed=null, aria-checked=null\n"
-                        },
-                        {
-                          "text": "[Design] Selection tool is active: false\n"
-                        },
-                        {
-                          "text": "[Design] Testing lasso tool activation\n"
-                        },
-                        {
-                          "text": "[Design] Lasso tool states: data-state=null, aria-pressed=null, aria-checked=null\n"
-                        },
-                        {
-                          "text": "[Design] Lasso tool is active: false\n"
-                        },
-                        {
-                          "text": "[Design] Toolbar and selection tools test complete\n"
-                        },
-                        {
-                          "text": "[Design Test] Verifying design properties details section\n"
-                        },
-                        {
-                          "text": "[Design Test] Right sidepanel visible: true\n"
-                        },
-                        {
-                          "text": "[Design Test] Design name input visible (global search): false\n"
-                        },
-                        {
-                          "text": "[Design Test] Design name input visible (in right sidepanel): false\n"
-                        },
-                        {
-                          "text": "[Design Test] Design name input not found - this may be expected if panel layout differs\n"
-                        },
-                        {
-                          "text": "[Design Test] Verifying flat planes and centers match expected asset data\n"
-                        },
-                        {
-                          "text": "[Design Test] Comparing 180 computed pieces with 180 expected flat pieces\n"
-                        },
-                        {
-                          "text": "[Design Test] Flat planes/centers verification: 180 matches, 0 mismatches\n"
-                        },
-                        {
-                          "text": "[Design] Testing selection state\n"
-                        },
-                        {
-                          "text": "[Design] Initial designApp state: {\"designGuid\":\"37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\"}\n"
-                        },
-                        {
-                          "text": "[Design] Piece count for selection: \u001b[33m2880\u001b[39m\n"
-                        },
-                        {
-                          "text": "[Design] After click designApp state: {\"designGuid\":\"37ba7ec4-9023-4be7-9ab6-e0ebc80007f8\"}\n"
-                        },
-                        {
-                          "text": "[Design] Selection pieces: []\n"
-                        },
-                        {
-                          "text": "[Design] Selection state test complete\n"
-                        },
-                        {
-                          "text": "[Design] Testing panel toggle independence\n"
-                        },
-                        {
-                          "text": "[Design] Panel workbench: was=true, now=true, toggled=false\n"
-                        },
-                        {
-                          "text": "[Design] Panel toggle toolbar not visible, skipping\n"
-                        },
-                        {
-                          "text": "[Design] Panel details: was=true, now=true, toggled=false\n"
-                        },
-                        {
-                          "text": "[Design] Panel chat: was=false, now=false, toggled=false\n"
-                        },
-                        {
-                          "text": "[Design] Panel settings: was=false, now=false, toggled=false\n"
-                        },
-                        {
-                          "text": "[Design] Panel independence results: {\n  \"workbench\": {\n    \"toggled\": false,\n    \"independent\": true\n  },\n  \"toolbar\": {\n    \"toggled\": false,\n    \"independent\": true\n  },\n  \"details\": {\n    \"toggled\": false,\n    \"independent\": true\n  },\n  \"chat\": {\n    \"toggled\": false,\n    \"independent\": true\n  },\n  \"settings\": {\n    \"toggled\": false,\n    \"independent\": true\n  }\n}\n"
-                        },
-                        {
-                          "text": "[Design] 0/5 panels toggled successfully\n"
-                        },
-                        {
-                          "text": "[Design] 5/5 panels are independent\n"
-                        },
-                        {
-                          "text": "[Design] Panel toggle independence test complete\n"
-                        },
-                        {
-                          "text": "[Design] Testing drag and drop setup\n"
-                        },
-                        {
-                          "text": "[Design] Scene canvas visible for drag and drop: true\n"
-                        },
-                        {
-                          "text": "[Design] Left sidepanel toggle clicked for drag and drop\n"
-                        },
-                        {
-                          "text": "[Design] Left sidepanel visible: false\n"
-                        },
-                        {
-                          "text": "[Design] Falling back to workbench panel for drag and drop\n"
-                        },
-                        {
-                          "text": "[Design] Found 0 avatars in workbench panel\n"
-                        },
-                        {
-                          "text": "[Design] No avatars found initially. Expanding collapsed sections...\n"
-                        },
-                        {
-                          "text": "[Design] Found 0 closed sections\n"
-                        },
-                        {
-                          "text": "[Design] Found 0 draggable type avatars\n"
-                        },
-                        {
-                          "text": "[Design] No type avatars found, skipping drag and drop verification\n"
-                        },
-                        {
-                          "text": "[Design] Design has 180 existing pieces\n"
-                        },
-                        {
-                          "text": "[Design] Plane validation: 1 valid, 179 non-standard, 0 without plane\n"
-                        },
-                        {
-                          "text": "[Design] Note: The Nakagin Capsule Tower has rotated capsules, so most pieces have non-standard plane orientation - this is expected.\n"
-                        },
-                        {
-                          "text": "[Design] Drag and drop setup test complete\n"
-                        },
-                        {
-                          "text": "[Design] Testing diagram node drag to update piece center\n"
-                        },
-                        {
-                          "text": "[Design] Found 2880 piece nodes for drag test\n"
-                        },
-                        {
-                          "text": "[Design] Testing drag on piece node: piece-0-739c5e32-217f-4d03-b7b6-78b9c0cda46a\n"
-                        },
-                        {
-                          "text": "[Design] Piece center before drag: u=undefined, v=undefined\n"
-                        },
-                        {
-                          "text": "[Design] Dragging piece node from (346.20001220703125, 398) to (446.20001220703125, 448)\n"
-                        },
-                        {
-                          "text": "[Design] Piece center after drag: u=undefined, v=undefined\n"
-                        },
-                        {
-                          "text": "[Design] Could not compare centers - centerBeforeDrag or centerAfterDrag is null/undefined\n"
-                        },
-                        {
-                          "text": "[Design] Diagram node drag test complete\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-01-28T17:41:09.647Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-316c376e79692d113733",
-              "file": "sketchpad.test.ts",
-              "line": 1460,
-              "column": 3
-            },
-            {
-              "title": "Docs",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 180000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox",
-                  "projectName": "firefox",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 11339,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "[Docs] Page content preview: \n    SearchSearch for kits, designs, types, and moreFocusFocus on an element in the current viewpage[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-webkit-scrollbar{display:none}ErrorContent not foundNo content availablepageNavigation.nextIntropage[data-radix-scroll-area-viewport]{scrollbar-width:none;-ms-overflow-style:none;-webkit-overflow-scrolling:touch;}[data-radix-scroll-area-viewport]::-we\n"
-                        },
-                        {
-                          "text": "[Docs] Found h1 elements: \u001b[33m3\u001b[39m\n"
-                        },
-                        {
-                          "text": "[Docs] h1 text: Error\n"
-                        },
-                        {
-                          "text": "[Docs] h1 text: Loading...\n"
-                        },
-                        {
-                          "text": "[Docs] h1 text: Welcome to Semio\n"
-                        },
-                        {
-                          "text": "[Docs] Testing Docs app sidepanel toggles\n"
-                        },
-                        {
-                          "text": "[Docs] Left sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Docs] Toggle leftSidePanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Docs] Panel leftSidePanel content: 1 buttons, 0 inputs, 0 tree items (total: 1)\n"
-                        },
-                        {
-                          "text": "[Docs] Panel leftSidePanel has 1 content items\n"
-                        },
-                        {
-                          "text": "[Docs] Left sidepanel has TOC/navigation items: true\n"
-                        },
-                        {
-                          "text": "[Docs] Right sidepanel toggle visible: true\n"
-                        },
-                        {
-                          "text": "[Docs] Toggle rightSidePanel: initial=false, after=true, changed=true\n"
-                        },
-                        {
-                          "text": "[Docs] Panel rightSidePanel content: 2 buttons, 0 inputs, 0 tree items (total: 2)\n"
-                        },
-                        {
-                          "text": "[Docs] Panel rightSidePanel has 2 content items\n"
-                        },
-                        {
-                          "text": "[Docs] HUD panel toggle visible: false\n"
-                        },
-                        {
-                          "text": "[Docs] Panel toggle verification complete: left=true, hud=false, right=true\n"
-                        },
-                        {
-                          "text": "[Docs] Intro button visible: true\n"
-                        },
-                        {
-                          "text": "[Docs] URL after click: http://localhost:5173/docs/index\n"
-                        },
-                        {
-                          "text": "[Docs] Docs test complete\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-01-28T17:44:13.196Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-771f99ee4e67d0c4d1bb",
-              "file": "sketchpad.test.ts",
-              "line": 2131,
-              "column": 3
-            },
-            {
-              "title": "Feedback",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 180000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "firefox",
-                  "projectName": "firefox",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 17354,
-                      "errors": [],
-                      "stdout": [
-                        {
-                          "text": "[Feedback] Testing navigation to feedback page\n"
-                        },
-                        {
-                          "text": "[Feedback] Navigation test complete\n"
-                        },
-                        {
-                          "text": "[Feedback] Testing bug report form\n"
-                        },
-                        {
-                          "text": "[Feedback] Bug report form test complete\n"
-                        },
-                        {
-                          "text": "[Feedback] Testing idea form switch\n"
-                        },
-                        {
-                          "text": "[Feedback] Idea form switch test complete\n"
-                        },
-                        {
-                          "text": "[Feedback] Testing toolbar and send button\n"
-                        },
-                        {
-                          "text": "[Feedback] Send button visible: true\n"
-                        },
-                        {
-                          "text": "[Feedback] Toolbar test complete\n"
-                        },
-                        {
-                          "text": "[Feedback] Testing validation\n"
-                        },
-                        {
-                          "text": "[Feedback] Validation test complete\n"
-                        },
-                        {
-                          "text": "[Feedback] Testing fill bug report\n"
-                        },
-                        {
-                          "text": "[Feedback] Fill bug report test complete\n"
-                        },
-                        {
-                          "text": "[Feedback] Testing fill feature idea\n"
-                        },
-                        {
-                          "text": "[Feedback] Fill feature idea test complete\n"
-                        },
-                        {
-                          "text": "[Feedback] Testing footer action visibility\n"
-                        },
-                        {
-                          "text": "[Feedback] Footer action visibility test complete\n"
-                        }
-                      ],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-01-28T17:44:24.549Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "1f96767271edc4239dfa-03da01cd57897fb6a059",
-              "file": "sketchpad.test.ts",
-              "line": 2238,
-              "column": 3
+              "status": "expected"
             }
-          ]
+          ],
+          "id": "287828828db8a2a91ba9-9f6d142d0926d34a2454",
+          "file": "toolbar_diagnostic.spec.ts",
+          "line": 2,
+          "column": 1
         }
       ]
     }
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-01-28T17:37:08.513Z",
-    "duration": 453993.62,
-    "expected": 6,
+    "startTime": "2026-02-01T16:31:12.417Z",
+    "duration": 8319.807,
+    "expected": 1,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0

@@ -1,0 +1,15 @@
+{
+  "title": "Seed Ticket",
+  "iterations": [
+    {
+      "prompt": "Seed prompt",
+      "llm": "gpt-5-mini",
+      "ui": "codex",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "date": "2026-02-01T16:51:23.805129731Z",
+      "commit": "d03f090ef110fb992666bb34c9f2b324e9e12424"
+    }
+  ],
+  "status": "open",
+  "dates": {}
+}

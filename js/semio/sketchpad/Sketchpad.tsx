@@ -7673,6 +7673,7 @@ export interface KitAppState {
   panelVisibility: PanelVisibility;
   selection?: KitAppSelection;
   hover?: any;
+  activeTool?: ToolKind;
   fullscreenWindow: KitAppFullscreenWindow;
   others: any[];
   filterSearch?: string;
@@ -8121,6 +8122,7 @@ export function createDefaultKitAppState(): KitAppState {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
     selection: undefined,
     hover: undefined,
+    activeTool: ToolKind.SELECTION_NORMAL,
     fullscreenWindow: KitAppFullscreenWindow.None,
     others: [],
     filterSearch: undefined,
