@@ -1,6 +1,6 @@
 <!-- IMPORTANT -->
 
-ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or `./go/repo/repo`) for repo-specific infrastructure. Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <client> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
+ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or `@semio-repo/go/repo`) for repo-specific infrastructure. Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <client> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
 Create a goal with mcp tool `goal_open`(or`goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or`goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
 A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 
@@ -10,7 +10,7 @@ A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`.
 
 1. Under `# 📦 Bundles` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
 2. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
-3. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## js/semio/sketchpad/` or `## net/Semio.cs`
+3. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## @semio/js/semio/sketchpad/` or `## @semio/net/Semio.cs`
    The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
 This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
@@ -611,7 +611,7 @@ go/
 
 ```bash
 # Using Go binary (preferred)
-go/repo/repo <command> [subcommand] [options]
+@semio-repo/go/repo <command> [subcommand] [options]
 
 # Using TypeScript fallback
 npx tsx repo.tsx <command> [subcommand] [options]
@@ -774,7 +774,7 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
   "mcpServers": {
     "semio-repo": {
         "type": "stdio",
-        "command": "go/repo/repo",
+        "command": "@semio-repo/go/repo",
         "args": [
           "--mcp-stdio"
         ]

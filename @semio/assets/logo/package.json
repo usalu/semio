@@ -2,7 +2,7 @@
   "name": "@semio/logo",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "logo",
+  "sourceRoot": "@semio/assets/logo",
   "projectType": "library",
   "scripts": {
     "dev": "tsx watch logo.ts",

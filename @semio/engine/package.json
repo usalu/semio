@@ -2,7 +2,7 @@
   "name": "@semio/engine",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "py/engine",
+  "sourceRoot": "@semio/engine",
   "projectType": "application",
   "scripts": {
     "dev": "uv run engine.py",

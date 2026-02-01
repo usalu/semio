@@ -1,5 +1,5 @@
 [project]
-name = "semio-repo"
+name = "monorepo"
 version = "0.1.0"
 description = "🐍 semio monorepo Python workspace"
 readme = "README.md"
@@ -9,7 +9,7 @@ authors = [{ name = "Ueli Saluz", email = "ueli@semio-tech.com" }]
 dependencies = []
 
 [tool.uv.workspace]
-members = ["py/semio", "py/engine"]
+members = ["@semio/py", "@semio/engine"]
 
 [dependency-groups]
 dev = [

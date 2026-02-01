@@ -20,6 +20,17 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+The complete monorepo was restructured. A new repo concept was introduced: projects. A project is a collection of bundles.
+By design every framework that is used just has one global version. E.g. just one version of Typescript, Python, Go, Rust, C#, etc.
+All frameworks used accross different bundles should be the same version (e.g. react, pydantic, etc.)
+Every ecosystem is now defined at the root (nx.json, package.json, go.work, Monorepo.sln, pyproject.toml, Cargo.toml, etc.). If you need a name then call it monorepo.
+The new repo layout is:
+├─ @PROJECTNAME # currently `semio`, `semio-repo` and `coda`
+│ ├─ BUNDLENAME # e.g. `js`, `go`, `py`, `grasshopper`, `net`, `graphql`, `sqlite`, etc
+├─ WORKSPACEFILE # e.g. `nx.json`, `package.json`, `go.work`, `Monorepo.sln`, `pyproject.toml`, `Cargo.toml`, etc
+
+Make sure to adjust all config files, docs, etc for the new layout and make sure that everything runs, all tests pass, all commands work (e.g. @semio-repo/go binary), etc.
+
 Rename ui to client for tickets and goals.
 
 The semio repo mcp server should expose the following
@@ -36,11 +47,11 @@ folder: `semiorepo://folder/{path*}`
 files: `semiorepo://files/{folder-path*}`
 file: `semiorepo://file/{path*}`
 sections: `semiorepo://sections/{file-path*}`
-section: `semiorepo://section/{path*}`
+section: `semiorepo://section/{path*}` # e.g. 
 definitions: `semiorepo://definitions/{path*}`
 definition: `semiorepo://definition/{path*}`
 tickets: `semiorepo://tickets`
-ticket: `semiorepo://ticket/{year}/{month}/{day}/{slug}` # {status} is optional and can be open or closed
+ticket: `semiorepo://ticket/{year}/{month}/{day}/{slug}` # 
 goals: `semiorepo://goals`
 goal: `semiorepo://goal/{path*}` # {path*} is a uppercase slug path to a goal e.g. "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP"
 policies: `semiorepo://policies`

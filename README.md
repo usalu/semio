@@ -758,7 +758,7 @@ Afterwards you can install uv with this command:
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-Then you can run `npm run build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
+Then you can run `@semio-repo/go/repo preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 ## 🎫 Tickets [↑](#-development)
 
@@ -1031,17 +1031,17 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 
 ### Workspaces
 
-- `js/semio` - Shared TypeScript/React codebase (Sketchpad UI, components, libs).
-- `js/desktop` - Electron desktop shell.
+- `@semio/js` - Shared TypeScript/React codebase (Sketchpad UI, components, libs).
+- `@semio/desktop` - Electron desktop shell.
 - `js/sketchpad` - Standalone Sketchpad web app shell.
-- `js/docs` - Documentation site.
-- `js/play` - Playground.
-- `js/vscode` - VS Code extension.
+- `@semio/docs` - Documentation site.
+- `@semio/play` - Playground.
+- `@semio-repo/vscode` - VS Code extension.
 
 ### Preflight
 
 ```bash
-cd js/semio && npm run preflight
+cd @semio/js && npm run preflight
 ```
 
 <details>
@@ -1078,8 +1078,8 @@ A .NET core for semio 🥜
 
 ### Workspace
 
-- `net/Semio.sln` - .NET solution.
-- `net/Semio.Grasshopper` - Grasshopper plugin.
+- `@semio/net/Semio.sln` - .NET solution.
+- `@semio/@semio/grasshopper/Semio.Grasshopper` - Grasshopper plugin.
 
 > [!WARNING]  
 > [Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
@@ -1107,12 +1107,12 @@ A .NET core for semio 🥜
 
 </details>
 
-The monorepo uses a centralized Python environment managed by `uv` at the repository root. A single `.venv` is shared between `py/semio` and `py/engine`.
+The monorepo uses a centralized Python environment managed by `uv` at the repository root. A single `.venv` is shared between `@semio/py` and `@semio/engine`.
 
 ### Workspace
 
-- `py/semio` - Python library (domain models, validation).
-- `py/engine` - Python engine (serialization, APIs, MCP server).
+- `@semio/py` - Python library (domain models, validation).
+- `@semio/engine` - Python engine (serialization, APIs, MCP server).
 
 ### Preflight
 
@@ -1135,7 +1135,7 @@ All code must sit inside named regions; orphan definitions outside any section a
 The repo CLI is the single source of truth for ticket workflows and the GraphQL schema that powers tooling.
 The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
 The repo CLI streams command execution as JSONL events and adapters decide whether to render compact human output or machine-readable event lines.
-The repo binary is consolidated into a single `go/repo/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
+The repo binary is consolidated into a single `@semio-repo/go/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
 Legacy adapter packages are removed so every command is dispatched through the same engine event stream and GraphQL executor.
 The streaming core uses a command registry with an emitter that surfaces progress, errors, items, logs, and a terminal done payload so CLI, MCP, and VS Code share one execution model.
 Registry invocation accepts JSON inputs and emits item metadata alongside data payloads so tooling can page through large result sets without rehydrating full responses.
@@ -1151,7 +1151,7 @@ Ticket listing reads from the active `.semio-repo/tickets` workspace and falls b
 VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
 Devcontainer attach builds and installs the local extension automatically using IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity), verifies via list-extensions, and falls back to direct installation into IDE extensions directories with extensions.json updates when CLIs report WSL-only usage.
 The semio-repo extension targets a VS Code engine range compatible with Cursor (1.105.x) so Cursor can load the bundled extension without version rejections.
-VS Code extension packaging requires an unscoped extension name in `js/vscode/package.json` so `vsce package` can build the local `.vsix`.
+VS Code extension packaging requires an unscoped extension name in `@semio-repo/vscode/package.json` so `vsce package` can build the local `.vsix`.
 Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo/` so workflow state stays centralized and out of product bundles.
 Repo analyze only inspects considered files by honoring `.gitignore`, excluding `.semio-repo/`, and skipping `assets/repo/` fixtures.
 Repo file/folder listing and diagnostics apply `.gitignore` patterns directly (including tracked matches) alongside repo metadata exclusions, and CLI analyze/fix commands accept scope arguments so tooling stays consistent across entrypoints.
@@ -1233,7 +1233,7 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 
 ## 🧾 Code Report [↑](#-bundles-)
 
-The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (including multi-line and JSDoc blocks, with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `js/semio` files do not import outside the workspace unless they are the shared `elements.tsx`, flags domain-specific terminology inside those shared elements, and includes reason/solution text for each problem to make remediation explicit.
+The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (including multi-line and JSDoc blocks, with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `@semio/js` files do not import outside the workspace unless they are the shared `elements.tsx`, flags domain-specific terminology inside those shared elements, and includes reason/solution text for each problem to make remediation explicit.
 Inline comment violations are grouped per contiguous inline-comment block while comment detection skips markers inside string literals and template literal text.
 
 ## 🧩 Devcontainer Extension Install [↑](#-bundles-)
@@ -1289,7 +1289,7 @@ Selecting a section navigates to its start, F2 triggers rename, drag-and-drop mo
 The view refreshes on editor focus and text changes so the tree stays aligned with the current file structure.
 JSON files surface object keys as section entries so structured config files are navigable in the same tree.
 
-## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)
+## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)
 
 ### Borders
 
@@ -1381,21 +1381,21 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 #### Sketchpad transactions
 
-- `js/semio/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
+- `@semio/js/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
 - Sketchpad elements (`Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, ...) use `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps wrap their UI subtree with `TransactionProvider` using the appropriate transaction hook so all descendant elements participate in undo/redo consistently.
 
 #### Sketchpad selection + hover visuals
 
-- `js/semio/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
+- `@semio/js/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
 - Hover and selection state for Home/Kit/Design/Type/Quality/Docs/Feedback is stored in the Sketchpad state machine; UI rows and diagram nodes dispatch hover events and visuals read from machine state.
-- `js/semio/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
-- `js/semio/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
+- `@semio/js/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
+- `@semio/js/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
 
 #### Sketchpad windows
 
 - Window spacing uses the shared unit sizing system: a single unit gap between windows and a single unit margin between windows and the canvas edge.
-- `js/semio/sketchpad/Sketchpad.tsx` `Canvas` applies `p-single` (1 unit) and window containers (`HorizontalWindows` / `VerticalWindows`) apply `gap-single` (1 unit).
+- `@semio/js/sketchpad/Sketchpad.tsx` `Canvas` applies `p-single` (1 unit) and window containers (`HorizontalWindows` / `VerticalWindows`) apply `gap-single` (1 unit).
 - GoldenLayout window gaps use splitters sized to 1 unit and window borders are applied to the stack container via an inset 1px stroke; `Window` uses `kind="layout"` inside GoldenLayout to avoid nested borders.
 - Window chrome controls are rendered as Action UI elements and forwarded to the underlying layout system when needed.
 - Window surfaces paint the only filled background surface; surrounding UI and overlays remain transparent and rely on borders/blur.
@@ -1403,19 +1403,19 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 #### Kit app artifact creation
 
-- `js/semio/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the `kind` filter and selection to the newly created entity so the details panel opens immediately.
+- `@semio/js/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the `kind` filter and selection to the newly created entity so the details panel opens immediately.
 - Default names are resolved via i18n labels: `semio.sketchpad.app.port.defaultName`, `semio.sketchpad.app.tag.defaultName`, `semio.sketchpad.app.concept.defaultName`.
-- `js/semio/sketchpad/Kit.tsx` details panel sections are registered dynamically; remove all possible section ids (including conditional variants) before adding the active one and mirror removals in the effect cleanup.
-- `js/semio/sketchpad/Kit.tsx` details panel section content that uses `useKit()` is wrapped in `KitScopeProvider` so read-only detail sections can resolve kit data consistently.
-- `js/semio/sketchpad/Kit.tsx` read-only artifact detail fields reuse the same `id` values as the corresponding app details (Type/Design) so i18n/tooltips stay centralized.
+- `@semio/js/sketchpad/Kit.tsx` details panel sections are registered dynamically; remove all possible section ids (including conditional variants) before adding the active one and mirror removals in the effect cleanup.
+- `@semio/js/sketchpad/Kit.tsx` details panel section content that uses `useKit()` is wrapped in `KitScopeProvider` so read-only detail sections can resolve kit data consistently.
+- `@semio/js/sketchpad/Kit.tsx` read-only artifact detail fields reuse the same `id` values as the corresponding app details (Type/Design) so i18n/tooltips stay centralized.
 
 #### Sketchpad state
 
-- `js/semio/sketchpad/Sketchpad.tsx` exposes a single `sketchpadMachine` actor that owns all Sketchpad UI state (`SketchpadState` + app slices like Home/Kit/Design/Type/Quality/Tutorial).
+- `@semio/js/sketchpad/Sketchpad.tsx` exposes a single `sketchpadMachine` actor that owns all Sketchpad UI state (`SketchpadState` + app slices like Home/Kit/Design/Type/Quality/Tutorial).
 - Y.js is reserved for Kit data synchronization (per-kit `KitStore` documents).
 - Sketchpad UI state is persisted locally via `localStorage` key `semio.sketchpad.state.<id>` (no Y.js dependency for settings/navigation/panel sizes).
 - Global interaction mode is stored as `SketchpadState.device` and controlled via `useDevice()` / `SET_DEVICE` with i18n IDs `semio.sketchpad.settings.device.*`.
-- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `js/semio/sketchpad/elements.tsx`.
+- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `@semio/js/sketchpad/elements.tsx`.
 
 KitStore keeps kit concepts in the `yConcepts` array as `ConceptStore` entries so snapshots expose full concept data (name, description, icon, attributes) and persistence rehydrates from that array instead of guid placeholders.
 
@@ -1446,7 +1446,7 @@ Panels are rendered under `LevelProvider level="panel"` so panel chrome and cont
 
 #### Size Constants
 
-All size constants are defined in `js/semio/globals.css` and derived from `--spacing`:
+All size constants are defined in `@semio/js/globals.css` and derived from `--spacing`:
 
 - **Single**: 1 unit (e.g. `gap-1`) - spacing between elements and between icon and element
 - **Tiny**: 3 units (e.g. `h-tiny`, `w-tiny`, `text-tiny`) - icon size in actions, action text size
@@ -1476,7 +1476,7 @@ The unit system automatically adapts based on the `--spacing` mode (compact vs t
 
 The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in bundles.
 
-## ✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-bundles-)
+## ✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/@semio/desktop) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1507,7 +1507,7 @@ An electron-based desktop app primarly working for with local kits 💾
 
 Currently not implemented in this repo (planned component) 🧩
 
-## 📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-bundles-)
+## 📚 [@semio/docs](https://github.com/usalu/semio/tree/main/@semio/docs) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1526,11 +1526,11 @@ Currently not implemented in this repo (planned component) 🧩
 
 </details>
 
-## 🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)
+## 🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/@semio/play) [↑](#-bundles-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
-## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)
+## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)
 
 VS Code extension providing real-time violation diagnostics for semio development. Compatible with VS Code and Windsurf (VSCode OSS 1.106.0+).
 
@@ -1591,7 +1591,7 @@ Ticket tree items expose inline close or reopen actions that apply to the clicke
 
 The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 
-## 🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)
+## 🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/@semio/@semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1675,7 +1675,7 @@ Grasshopper is an amazing tool if you know the system that you want to create bu
 
 </details>
 
-## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)
+## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/@semio/engine) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1746,13 +1746,13 @@ It offers two APIs to other clients:
 - A simple REST OpenAPI 🥇
 - A complex GraphQL Relay API 🥈
 
-### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)
+### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/@semio/engine/engine.py#L5529)
 
 If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
 ![GraphQL Query](assets/images/swagger.png)
 
-### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)
+### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/@semio/engine/engine.py#L5095)
 
 > Still a prototype ✏️
 

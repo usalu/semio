@@ -2,7 +2,7 @@
   "name": "@semio/net",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "net/Semio",
+  "sourceRoot": "@semio/net/Semio",
   "projectType": "library",
   "scripts": {
     "build": "tsx ./build.ts",

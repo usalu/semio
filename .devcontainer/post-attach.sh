@@ -3,7 +3,7 @@
 #region PostAttach
 set -e
 echo "🔌 Running post-attach setup..."
-VSIX_PATH="js/vscode/semio-repo.vsix"
+VSIX_PATH="@semio-repo/vscode/semio-repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
 EXTENSION_ID=""

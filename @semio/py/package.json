@@ -2,7 +2,7 @@
   "name": "@semio/py",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "py/semio",
+  "sourceRoot": "@semio/py",
   "projectType": "library",
   "scripts": {
     "build": "uv build",

@@ -1,0 +1,20 @@
+{
+  "name": "@semio/yak",
+  "version": "1.0.0",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "@semio/grasshopper/Semio.Grasshopper/yak",
+  "projectType": "library",
+  "scripts": {
+    "build": "tsx ./build.ts",
+    "publish": "tsx ./publish.ts",
+    "preflight": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@semio/grasshopper": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  }
+}

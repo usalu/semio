@@ -3861,7 +3861,7 @@ func normalizeBundleLabel(name string) string {
 	if name == "" {
 		return ""
 	}
-	if strings.HasPrefix(name, "@semio/") || strings.HasPrefix(name, "@semio-repo/") || name == "@semio-repo" {
+	if strings.HasPrefix(name, "@") {
 		return name
 	}
 	if name == "vscode" {
@@ -11116,28 +11116,29 @@ func ticketMatchesKinds(t *Ticket, opts StreamOptions) bool {
 }
 
 func LoadBundles() []Bundle {
-	// Read bundles from project.json files in the repository
 	var bundles []Bundle
 	projectsDir := rootDir
 
-	// Look for project.json files that define bundles
-	entries, err := os.ReadDir(projectsDir)
-	if err != nil {
-		return bundles
-	}
-
-	for _, entry := range entries {
-		if !entry.IsDir() {
-			continue
+	filepath.WalkDir(projectsDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
 		}
-		configPath := filepath.Join(projectsDir, entry.Name(), "project.json")
+		if !d.IsDir() {
+			return nil
+		}
+		name := d.Name()
+		if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" || name == "build" || name == "coverage" || name == "target" || name == "bin" || name == "obj" || name == ".semio-repo" {
+			return fs.SkipDir
+		}
+
+		configPath := filepath.Join(path, "project.json")
 		if !FileExists(configPath) {
-			configPath = filepath.Join(projectsDir, entry.Name(), "package.json")
+			configPath = filepath.Join(path, "package.json")
 		}
 		if FileExists(configPath) {
 			content, err := ReadTextFile(configPath)
 			if err != nil {
-				continue
+				return nil
 			}
 			var project struct {
 				Name        string   `json:"name"`
@@ -11146,76 +11147,27 @@ func LoadBundles() []Bundle {
 				ProjectType string   `json:"projectType"`
 				Tags        []string `json:"tags"`
 			}
-			if err := json.Unmarshal([]byte(content), &project); err != nil {
-				continue
-			}
-			if project.Name == "" {
-				project.Name = entry.Name()
-			}
-			if project.Root == "" {
-				project.Root = entry.Name()
-			}
-			bundles = append(bundles, Bundle{
-				Name:        project.Name,
-				Root:        project.Root,
-				SourceRoot:  project.SourceRoot,
-				ProjectType: project.ProjectType,
-				Tags:        project.Tags,
-				Kind:        DeriveBundleKind(project.Name, project.Root),
-			})
-		}
-	}
-
-	// Also check subdirectories (js/, go/, etc.)
-	for _, subDir := range []string{"js", "go", "dotnet", "python"} {
-		subPath := filepath.Join(projectsDir, subDir)
-		if !FileExists(subPath) {
-			continue
-		}
-		subEntries, err := os.ReadDir(subPath)
-		if err != nil {
-			continue
-		}
-		for _, entry := range subEntries {
-			if !entry.IsDir() {
-				continue
-			}
-			configPath := filepath.Join(subPath, entry.Name(), "project.json")
-			if !FileExists(configPath) {
-				configPath = filepath.Join(subPath, entry.Name(), "package.json")
-			}
-			if FileExists(configPath) {
-				content, err := ReadTextFile(configPath)
-				if err != nil {
-					continue
-				}
-				var project struct {
-					Name        string   `json:"name"`
-					Root        string   `json:"root"`
-					SourceRoot  string   `json:"sourceRoot"`
-					ProjectType string   `json:"projectType"`
-					Tags        []string `json:"tags"`
-				}
-				if err := json.Unmarshal([]byte(content), &project); err != nil {
-					continue
-				}
+			if err := json.Unmarshal([]byte(content), &project); err == nil {
 				if project.Name == "" {
-					project.Name = entry.Name()
+					project.Name = name
 				}
-				if project.Root == "" {
-					project.Root = filepath.Join(subDir, entry.Name())
+				relPath, _ := filepath.Rel(projectsDir, path)
+				if relPath == "." {
+					relPath = ""
 				}
+
 				bundles = append(bundles, Bundle{
 					Name:        project.Name,
-					Root:        project.Root,
+					Root:        relPath,
 					SourceRoot:  project.SourceRoot,
 					ProjectType: project.ProjectType,
 					Tags:        project.Tags,
-					Kind:        DeriveBundleKind(project.Name, project.Root),
+					Kind:        DeriveBundleKind(project.Name, relPath),
 				})
 			}
 		}
-	}
+		return nil
+	})
 
 	return bundles
 }

@@ -10,7 +10,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/go/repo",
+      "program": "${workspaceFolder}/@semio-repo/go",
       "cwd": "${workspaceFolder}",
       "args": [
         "help"
@@ -63,7 +63,7 @@
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/go/server",
+      "program": "${workspaceFolder}/@semio-repo/server",
       "cwd": "${workspaceFolder}"
     },
     {
@@ -113,10 +113,10 @@
       "type": "extensionHost",
       "request": "launch",
       "args": [
-        "--extensionDevelopmentPath=${workspaceFolder}/js/vscode"
+        "--extensionDevelopmentPath=${workspaceFolder}/@semio-repo/vscode"
       ],
       "outFiles": [
-        "${workspaceFolder}/js/vscode/out/**/*.js"
+        "${workspaceFolder}/@semio-repo/vscode/out/**/*.js"
       ],
       "preLaunchTask": "@semio-repo/vscode dev"
     },
@@ -128,7 +128,7 @@
       "runtimeArgs": [
         "nx",
         "test",
-        "semio-repo"
+        "@semio-repo/vscode"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -141,7 +141,7 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio-repo"
+        "@semio-repo/vscode"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -154,7 +154,7 @@
       "runtimeArgs": [
         "nx",
         "package",
-        "semio-repo"
+        "@semio-repo/vscode"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -167,7 +167,7 @@
       "runtimeArgs": [
         "nx",
         "preflight",
-        "semio-repo"
+        "@semio-repo/vscode"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"

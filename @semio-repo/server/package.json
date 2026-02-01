@@ -2,7 +2,7 @@
   "name": "@semio-repo/server",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "go/server",
+  "sourceRoot": "@semio-repo/server",
   "projectType": "application",
   "scripts": {
     "dev": "go run main.go",

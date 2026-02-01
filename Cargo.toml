@@ -1,0 +1,6 @@
+[workspace]
+members = [
+    "@semio/rs",
+]
+
+resolver = "2"
