@@ -4,10 +4,8 @@
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 #region Startup
-echo "🔄 Starting semio development environment..."
 #endregion Startup
 #region Ownership
-echo "🔐 Fixing ownership for persisted volume mounts..."
 sudo chown -R vscode:vscode /home/vscode/.cache 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codex 2>/dev/null || true
@@ -18,9 +16,9 @@ sudo chown -R vscode:vscode /home/vscode/.config/openai 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codeium 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.windsurf-server 2>/dev/null || true
+echo "✅ Fixed ownership for persisted volume mounts."
 #endregion Ownership
 #region ClaudeAuth
-echo "🔐 Normalizing Claude Code auth storage..."
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"
 CLAUDE_JSON="${CLAUDE_DIR}/.claude.json"
@@ -48,18 +46,18 @@ fi
 if [ -f "$CLAUDE_JSON_BACKUP" ] && [ ! -e "$CLAUDE_JSON_BACKUP_LINK" ]; then
   ln -s "$CLAUDE_JSON_BACKUP" "$CLAUDE_JSON_BACKUP_LINK"
 fi
+echo "✅ Normalized Claude Code auth storage."
 #endregion ClaudeAuth
 #region GitOwnership
-echo "🔐 Fixing ownership for workspace + submodules (prevents git dubious ownership)..."
 if [ -f "$WORKSPACE/.gitmodules" ]; then
   while IFS= read -r path; do
     [ -n "$path" ] || continue
     sudo chown -R vscode:vscode "$WORKSPACE/$path" 2>/dev/null || true
   done < <(git config -f "$WORKSPACE/.gitmodules" --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
 fi
+echo "✅ Fixed ownership for workspace + submodules."
 #endregion GitOwnership
 #region GitSafe
-echo "✅ Marking workspace + submodules as safe.directory for git..."
 git config --global --add safe.directory "$WORKSPACE"
 if [ -f "$WORKSPACE/.gitmodules" ]; then
   while IFS= read -r path; do
@@ -67,12 +65,13 @@ if [ -f "$WORKSPACE/.gitmodules" ]; then
     git config --global --add safe.directory "$WORKSPACE/$path"
   done < <(git config -f "$WORKSPACE/.gitmodules" --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
 fi
+echo "✅ Marked workspace + submodules as safe.directory for git."
 #endregion GitSafe
 #region PythonVenv
-echo "🐍 Activating Python virtual environment..."
 if [ -d "$WORKSPACE/.venv" ]; then
   source "$WORKSPACE/.venv/bin/activate"
 fi
+echo "✅ Activated Python virtual environment."
 #endregion PythonVenv
-echo "✅ Environment ready!"
+echo "✅ Environment ready."
 #endregion PostStart

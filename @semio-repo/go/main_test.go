@@ -1192,7 +1192,7 @@ func TestPolicyViolationListCommand(t *testing.T) {
 
 func TestFixtureViolationsGroupedInline(t *testing.T) {
 	path := "assets/repo/some/folder/file_invalid.tsx"
-	bundles := GetProjects()
+	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
 	violations, err := CheckPoliciesWithContext(ctx, nil)
@@ -1230,7 +1230,7 @@ func TestFixtureViolationsGroupedInline(t *testing.T) {
 }
 
 func TestFixtureViolationsByLanguage(t *testing.T) {
-	bundles := GetProjects()
+	bundles := LoadBundles()
 	fixtures := []struct {
 		path          string
 		requiredKinds []ViolationKind
@@ -1708,23 +1708,23 @@ func TestTreeCommands(t *testing.T) {
 		t.Skip("skipping slow tree test")
 	}
 
-	output, err := executeTreeCommand("tree", "go/repo")
+	output, err := executeTreeCommand("tree", "@semio/go")
 	if err != nil {
 		t.Errorf("repo tree failed: %v", err)
 	}
-	if !strings.Contains(output, "main.go") {
-		t.Errorf("repo tree go/repo missing main.go, got:\n%s", output)
+	if !strings.Contains(output, "semio.go") {
+		t.Errorf("repo tree @semio/go missing semio.go, got:\n%s", output)
 	}
 
 	// 2. Folder Tree
-	output, err = executeTreeCommand("folder", "tree", "go/repo")
+	output, err = executeTreeCommand("folder", "tree", "@semio/go")
 	if err != nil {
 		t.Errorf("folder tree failed: %v", err)
 	}
 	// Folder tree produces output like "└── cmd/"
 	// Note: output might include metadata/logs unless JSON is false and renderStream handles it well.
 	// renderStream without JSON prints messages directly if they are logs.
-	if !strings.Contains(output, "cmd/") {
+	if !strings.Contains(output, "semio.go") {
 		// Just checking that we got some output
 		if len(output) < 10 {
 			t.Errorf("folder tree output suspicious: %s", output)
@@ -1732,12 +1732,12 @@ func TestTreeCommands(t *testing.T) {
 	}
 
 	// 3. File Tree
-	output, err = executeTreeCommand("file", "tree", "go/repo")
+	output, err = executeTreeCommand("file", "tree", "@semio/go")
 	if err != nil {
 		t.Errorf("file tree failed: %v", err)
 	}
-	if !strings.Contains(output, "main.go") {
-		t.Errorf("file tree missing main.go")
+	if !strings.Contains(output, "semio.go") {
+		t.Errorf("file tree missing semio.go")
 	}
 
 	// 4. Ticket Tree

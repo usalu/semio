@@ -30,7 +30,7 @@ import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
 import { DocumentType, graphql } from "./generated/gql";
-import { TicketStatus } from "./generated/graphql";
+import { TicketStatus, Todo } from "./generated/graphql";
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
@@ -190,6 +190,27 @@ const RepoDocument = graphql(`
       id
       name
       path
+      projects {
+        id
+        name
+        kind
+        root
+        bundles {
+          id
+          name
+          root
+          sourceRoot
+          projectType
+          tags
+          uri
+        }
+      }
+      commits(limit: 100) {
+        id
+        sha
+        title
+        date
+      }
       bundles {
         id
         name
@@ -216,6 +237,12 @@ const RepoDocument = graphql(`
           github
         }
       }
+      goals {
+        id
+        title
+        description
+        status
+      }
       policies {
         id
         name
@@ -237,6 +264,14 @@ const RepoDocument = graphql(`
         links {
           name
           url
+        }
+        contributions {
+           commits {
+             id 
+             sha
+             title
+             date
+           }
         }
       }
     }
@@ -397,6 +432,57 @@ const CodebaseDocument = graphql(`
   }
 `);
 
+const FileContentDocument = graphql(`
+  query FileContent($path: String!) {
+    file(path: $path) {
+      path
+      name
+      uri
+      sections {
+        id
+        name
+        range { start end }
+        parent { id }
+      }
+      definitions {
+        id
+        name
+        kind
+        range { start end }
+        section { id }
+      }
+    }
+  }
+`);
+
+const TodosDocument = graphql(`
+  query Todos($filter: FilterInput) {
+    todos(filter: $filter) {
+      id
+      text
+      location {
+        file
+        line
+        column
+      }
+    }
+  }
+`);
+
+const TodoCreateDocument = graphql(`
+  mutation TodoCreate($input: TodoCreateInput!) {
+    todoCreate(input: $input) {
+      id
+    }
+  }
+`);
+
+const TodoDeleteDocument = graphql(`
+  mutation TodoDelete($id: ID!) {
+    todoDelete(id: $id)
+  }
+`);
+
 const GoalsDocument = graphql(`
   query Goals {
     repo {
@@ -529,6 +615,18 @@ async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: numbe
     return [];
   }
   return result.data?.repo?.tickets ?? [];
+}
+
+async function fetchTodosViaGraphQL(): Promise<Todo[]> {
+  const client = getUrqlClient();
+  if (!client) return [];
+  const filter = {};
+  const result = await client.query(TodosDocument, { filter });
+  if (result.error) {
+    logError("[GraphQL] fetchTodosViaGraphQL error:", result.error);
+    return [];
+  }
+  return result.data?.todos ?? [];
 }
 
 async function fetchPoliciesViaGraphQL(): Promise<Policy[]> {
@@ -2436,6 +2534,47 @@ class ContributorCommitItem extends vscode.TreeItem {
   }
 }
 
+class TodosProvider implements vscode.TreeDataProvider<TodoTreeItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<TodoTreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private cachedTodos: Todo[] = [];
+
+  refresh(): void {
+    this.cachedTodos = [];
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeItem(element: TodoTreeItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(element?: TodoTreeItem): Promise<TodoTreeItem[]> {
+    if (element) return [];
+
+    if (this.cachedTodos.length === 0) {
+      this.cachedTodos = await fetchTodosViaGraphQL();
+    }
+
+    return this.cachedTodos.map((t) => new TodoTreeItem(t));
+  }
+}
+
+class TodoTreeItem extends vscode.TreeItem {
+  constructor(public readonly todo: Todo) {
+    super(todo.text, vscode.TreeItemCollapsibleState.None);
+    this.description = todo.location ? `${todo.location.file}:${todo.location.line}` : "";
+    this.contextValue = "todo";
+    this.iconPath = new vscode.ThemeIcon("checklist");
+    if (todo.location) {
+      this.command = {
+        command: "vscode.open",
+        title: "Open Todo",
+        arguments: [vscode.Uri.file(path.join(getWorkspaceRoot() || "", todo.location.file)), { selection: new vscode.Range(todo.location.line - 1, (todo.location.column || 1) - 1, todo.location.line - 1, (todo.location.column || 1) - 1) }]
+      };
+    }
+  }
+}
+
 class ContributorsProvider implements vscode.TreeDataProvider<ContributorTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<ContributorTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -3863,6 +4002,7 @@ class CodebaseDragAndDropController implements vscode.TreeDragAndDropController<
 }
 
 let ticketsProvider: TicketsProvider;
+let todosProvider: TodosProvider;
 let contributorsProvider: ContributorsProvider;
 let policiesProvider: PoliciesProvider;
 let commandsProvider: CommandsProvider;
@@ -3875,6 +4015,7 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
     log("[registerSidebarViews] Initializing providers...");
     filterProvider = new FilterProvider(getWorkspaceRoot() || "");
     ticketsProvider = new TicketsProvider();
+    todosProvider = new TodosProvider();
     contributorsProvider = new ContributorsProvider();
     policiesProvider = new PoliciesProvider();
     commandsProvider = new CommandsProvider();
@@ -3889,6 +4030,9 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
 
     log("[registerSidebarViews] Creating semio.tickets tree view...");
     context.subscriptions.push(vscode.window.createTreeView("semio.tickets", { treeDataProvider: ticketsProvider, showCollapseAll: true }));
+
+    log("[registerSidebarViews] Creating semio.todos tree view...");
+    context.subscriptions.push(vscode.window.createTreeView("semio.todos", { treeDataProvider: todosProvider, showCollapseAll: true }));
 
     log("[registerSidebarViews] Creating semio.contributors tree view...");
     context.subscriptions.push(vscode.window.createTreeView("semio.contributors", { treeDataProvider: contributorsProvider, showCollapseAll: true }));
@@ -3962,7 +4106,24 @@ async function loadAvailableFilterValues(): Promise<void> {
   }
 }
 
+
+// #region Sidebar Views Registration
+
+let monorepoProvider: MonorepoTreeDataProvider | undefined;
+let filterProvider: FilterTreeDataProvider | undefined;
+
+function registerSidebarViews(context: vscode.ExtensionContext): void {
+  monorepoProvider = new MonorepoTreeDataProvider(context);
+  vscode.window.registerTreeDataProvider("semio.monorepo", monorepoProvider);
+
+  filterProvider = new FilterTreeDataProvider();
+  vscode.window.registerTreeDataProvider("semio.filter", filterProvider);
+}
+
+// #endregion Sidebar Views Registration
+
 // #endregion Sidebar Views
+
 
 // #region Commands
 

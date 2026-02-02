@@ -1,0 +1,27 @@
+{
+  "title": "Running Kit App",
+  "description": "Kit App",
+  "prompt": "Running Kit App",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-28"
+  },
+  "client": "windsurf-chat",
+  "llm": "sonnet-4-5",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/26"
+  },
+  "iterations": [
+    {
+      "prompt": "Running Kit App",
+      "llm": "sonnet-4-5",
+      "ui": "windsurf-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-02T20:23:21.548080362Z",
+      "commit": ""
+    }
+  ]
+}

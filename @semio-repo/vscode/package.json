@@ -20,12 +20,8 @@
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:semio.codebase",
+    "onView:semio.monorepo",
     "onView:semio.filter",
-    "onView:semio.tickets",
-    "onView:semio.policies",
-    "onView:semio.commands",
-    "onView:semio.contributors",
     "onView:semio.sections"
   ],
   "main": "./out/extension.js",
@@ -42,28 +38,16 @@
     "views": {
       "semio-repo": [
         {
-          "id": "semio.codebase",
-          "name": "Codebase"
+          "id": "semio.monorepo",
+          "name": "Monorepo"
+        },
+        {
+          "id": "semio.todos",
+          "name": "Todos"
         },
         {
           "id": "semio.filter",
           "name": "Filter"
-        },
-        {
-          "id": "semio.tickets",
-          "name": "Tickets"
-        },
-        {
-          "id": "semio.policies",
-          "name": "Policies"
-        },
-        {
-          "id": "semio.commands",
-          "name": "Commands"
-        },
-        {
-          "id": "semio.contributors",
-          "name": "Contributors"
         }
       ],
       "explorer": [

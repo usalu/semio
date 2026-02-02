@@ -1,4 +1,4 @@
-module github.com/usalu/semio/go/server
+module github.com/usalu/semio/semio-repo/server
 
 go 1.24.0
 

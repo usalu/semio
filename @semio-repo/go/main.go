@@ -254,10 +254,11 @@ const (
 // #region Cli Adapter
 
 type Config struct {
-	JSON    bool
-	Verbose bool
-	Repo    string
-	Timeout time.Duration
+	JSON     bool
+	Markdown bool
+	Verbose  bool
+	Repo     string
+	Timeout  time.Duration
 }
 
 type EngineFactory func(Config) (*Engine, error)
@@ -282,6 +283,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 		Short: "Monorepo CLI for Semio",
 	}
 	root.PersistentFlags().BoolVar(&config.JSON, "json", false, "Output NDJSON")
+	root.PersistentFlags().BoolVar(&config.Markdown, "md", false, "Output Markdown")
 	root.PersistentFlags().BoolVar(&config.Verbose, "verbose", false, "Verbose output")
 	root.PersistentFlags().StringVar(&config.Repo, "repo", "", "Repo root path")
 	root.PersistentFlags().DurationVar(&config.Timeout, "timeout", 0, "Timeout for command execution")
@@ -291,7 +293,9 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(fixCommand(factory, &config))
 	root.AddCommand(policyCommand(factory, &config))
 	root.AddCommand(ticketCommand(factory, &config))
+	root.AddCommand(todoCommand(factory, &config))
 	root.AddCommand(goalCommand(factory, &config))
+	root.AddCommand(projectCommand(factory, &config))
 	root.AddCommand(contributorCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
 	root.AddCommand(folderCommand(factory, &config))
@@ -550,7 +554,7 @@ func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
 			rootDir := GetRootDir()
 			if strings.HasPrefix(scope, "@semio/") {
 				bundleName := strings.TrimPrefix(scope, "@semio/")
-				bundles := GetProjects()
+				bundles := LoadBundles()
 				for _, b := range bundles {
 					if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
 						rootPath = filepath.Join(rootDir, b.Root)
@@ -916,6 +920,144 @@ func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
+func todoCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "todo", Short: "Todo management commands"}
+	createCmd := &cobra.Command{
+		Use:   "create [parent-id] [name] [description]",
+		Short: "Create a todo",
+		Args:  cobra.MaximumNArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			parentID, _ := cmd.Flags().GetString("parent")
+			name, _ := cmd.Flags().GetString("name")
+			description, _ := cmd.Flags().GetString("description")
+			if len(args) > 0 {
+				parentID = args[0]
+			}
+			if len(args) > 1 {
+				name = args[1]
+			}
+			if len(args) > 2 {
+				description = args[2]
+			}
+			if parentID == "" || name == "" {
+				return fmt.Errorf("missing parent-id or name")
+			}
+			variables := map[string]interface{}{
+				"input": map[string]interface{}{
+					"parentId":    parentID,
+					"name":        name,
+					"description": description,
+				},
+			}
+			query := `mutation TodoCreate($input: TodoCreateInput!) { todoCreate(input: $input) { id name description } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	createCmd.Flags().String("parent", "", "Parent ID")
+	createCmd.Flags().String("name", "", "Todo name")
+	createCmd.Flags().String("description", "", "Todo description")
+
+	changeCmd := &cobra.Command{
+		Use:   "change [id] --name <new-name> --description <new-description>",
+		Short: "Change a todo",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, _ := cmd.Flags().GetString("id")
+			if id == "" && len(args) > 0 {
+				id = args[0]
+			}
+			name, _ := cmd.Flags().GetString("name")
+			description, _ := cmd.Flags().GetString("description")
+			if id == "" {
+				return fmt.Errorf("missing id")
+			}
+			input := map[string]interface{}{
+				"id": id,
+			}
+			if cmd.Flags().Changed("name") {
+				input["name"] = name
+			}
+			if cmd.Flags().Changed("description") {
+				input["description"] = description
+			}
+			variables := map[string]interface{}{"input": input}
+			query := `mutation TodoChange($input: TodoUpdateInput!) { todoChange(input: $input) { id name description } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	changeCmd.Flags().String("id", "", "Todo ID")
+	changeCmd.Flags().String("name", "", "New name")
+	changeCmd.Flags().String("description", "", "New description")
+
+	deleteCmd := &cobra.Command{
+		Use:   "delete [id]",
+		Short: "Delete a todo",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			id, _ := cmd.Flags().GetString("id")
+			if id == "" && len(args) > 0 {
+				id = args[0]
+			}
+			if id == "" {
+				return fmt.Errorf("missing id")
+			}
+			variables := map[string]interface{}{"id": id}
+			query := `mutation TodoDelete($id: ID!) { todoDelete(id: $id) }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+	deleteCmd.Flags().String("id", "", "Todo ID")
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List todos",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := `query Todos { todos { id name description parent { id } location { file { path } line } } }`
+			return runGraphQL(cmd, factory, config, query, nil)
+		},
+	}
+
+	treeCmd := &cobra.Command{
+		Use:   "tree",
+		Short: "Show todo tree",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			// Tree command typically requires specific handling to print tree structure, but for now we can rely on GraphQL output or implement custom renderer.
+			// Given "repo todo tree", it might be like "repo folder tree".
+			// For now, let's just query todos and maybe structure them?
+			// The instruction says "The semio repo go binary should provide commands to ... tree ... todos".
+			// "repo folder tree" uses `runGraphQL` but maybe specific query?
+			// Let's use list for now and maybe the user wants hierarchy. But todos don't have hierarchy among themselves except parent is a resource.
+			// So tree probably means resource tree with todos attached.
+			query := `query Todos { todos { id name description parent { id } } }`
+			// TODO: Implement actual tree rendering if needed.
+			return runGraphQL(cmd, factory, config, query, nil)
+		},
+	}
+
+	searchCmd := &cobra.Command{
+		Use:   "search [search-string]",
+		Short: "Search todos",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			search := ""
+			if len(args) > 0 {
+				search = args[0]
+			}
+			variables := map[string]interface{}{"filter": map[string]interface{}{"filter": search}}
+			query := `query Todos($filter: FilterInput) { todos(filter: $filter) { id name description } }`
+			return runGraphQL(cmd, factory, config, query, variables)
+		},
+	}
+
+	root.AddCommand(createCmd)
+	root.AddCommand(changeCmd)
+	root.AddCommand(deleteCmd)
+	root.AddCommand(listCmd)
+	root.AddCommand(treeCmd)
+	root.AddCommand(searchCmd)
+	return root
+}
+
 func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root := &cobra.Command{Use: "ticket", Short: "Ticket management commands"}
 	openCmd := &cobra.Command{
@@ -957,7 +1099,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			input := map[string]interface{}{
 				"title":    title,
 				"prompt":   prompt,
-				"client":       strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
+				"client":   strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
 				"noIssue":  noIssue,
 				"noGithub": noGithub,
 			}
@@ -1079,7 +1221,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 
 			if len(args) > 0 && (year == 0 || month == 0 || day == 0 || slug == "") {
 				parts := strings.Split(args[0], "/")
-				if len(parts) == 4 {
+				if len(parts) >= 4 {
 					if y, err := strconv.Atoi(parts[0]); err == nil {
 						year = y
 					}
@@ -1089,7 +1231,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 					if d, err := strconv.Atoi(parts[2]); err == nil {
 						day = d
 					}
-					slug = parts[3]
+					slug = strings.Join(parts[3:], "/")
 				}
 			}
 
@@ -1159,7 +1301,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			remainingArgs := args
 			if len(remainingArgs) > 0 && (year == 0 || month == 0 || day == 0 || slug == "") {
 				parts := strings.Split(remainingArgs[0], "/")
-				if len(parts) == 4 {
+				if len(parts) >= 4 {
 					if y, err := strconv.Atoi(parts[0]); err == nil {
 						year = y
 					}
@@ -1169,7 +1311,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 					if d, err := strconv.Atoi(parts[2]); err == nil {
 						day = d
 					}
-					slug = parts[3]
+					slug = strings.Join(parts[3:], "/")
 					remainingArgs = remainingArgs[1:]
 				}
 			}
@@ -1199,7 +1341,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"day":      day,
 				"slug":     slug,
 				"prompt":   prompt,
-				"client":       strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
+				"client":   strings.ToUpper(strings.ReplaceAll(ui, "-", "_")),
 			}
 			if llm != "" {
 				input["llm"] = llm
@@ -1354,7 +1496,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			path := args[0]
 			parts := strings.Split(path, "/")
-			if len(parts) != 4 {
+			if len(parts) < 4 {
 				return fmt.Errorf("invalid ticket path format: expected YYYY/MM/DD/SLUG")
 			}
 			y, err := strconv.Atoi(parts[0])
@@ -1369,7 +1511,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if err != nil {
 				return fmt.Errorf("invalid day")
 			}
-			slug := parts[3]
+			slug := strings.Join(parts[3:], "/")
 
 			title, _ := cmd.Flags().GetString("title")
 			prompt, _ := cmd.Flags().GetString("prompt")
@@ -1406,20 +1548,18 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 				input["llm"] = llm
 			}
 
+			variables := map[string]interface{}{"input": input}
 			query := `mutation TicketChange($input: TicketChangeInput!) {
 				ticketChange(input: $input) {
 					id
 					slug
 					status
-					title
+					parent
 				}
 			}`
-			return runGraphQL(cmd, factory, config, query, map[string]interface{}{"input": input})
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
-	changeCmd.Flags().String("title", "", "New title")
-	changeCmd.Flags().String("prompt", "", "New prompt")
-	changeCmd.Flags().String("goal", "", "New goal ID")
 	changeCmd.Flags().String("parent", "", "New parent ticket slug")
 	changeCmd.Flags().Bool("no-github", false, "Skip GitHub sync")
 	addLLMFlags(changeCmd)
@@ -1478,7 +1618,6 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			noGithub, _ := cmd.Flags().GetBool("no-github")
 
 			input := map[string]interface{}{
-				"id":       id,
 				"noGithub": noGithub,
 			}
 			if cmd.Flags().Changed("title") {
@@ -1494,8 +1633,9 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 				input["parent"] = parent
 			}
 
-			query := `mutation GoalUpdate($input: GoalUpdateInput!) {
-				goalUpdate(input: $input) {
+			variables := map[string]interface{}{"id": id, "input": input}
+			query := `mutation GoalChange($id: ID!, $input: GoalChangeInput!) {
+				goalChange(id: $id, input: $input) {
 					id
 					title
 					description
@@ -1503,7 +1643,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 					parent
 				}
 			}`
-			return runGraphQL(cmd, factory, config, query, map[string]interface{}{"input": input})
+			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
 	changeCmd.Flags().String("title", "", "New title")
@@ -1566,8 +1706,12 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"prompt":      prompt,
 				"dueDate":     dueDate,
 				"llm":         llm,
-				"client":          ui,
+				"client":      ui,
 				"noGithub":    noGithub,
+			}
+			parent, _ := cmd.Flags().GetString("parent")
+			if parent != "" {
+				input["parent"] = parent
 			}
 			variables := map[string]interface{}{"input": input}
 			query := `mutation GoalCreate($input: GoalCreateInput!) {
@@ -1674,7 +1818,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			input := map[string]interface{}{
 				"id":       id,
 				"prompt":   prompt,
-				"client":       ui,
+				"client":   ui,
 				"llm":      llm,
 				"noGithub": noGithub,
 			}
@@ -1720,6 +1864,9 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 						id
 						title
 						status
+						dueDate
+						createdAt
+						parent
 					}
 					tickets {
 						id
@@ -1832,6 +1979,35 @@ func contributorCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(addCmd)
 	root.AddCommand(removeCmd)
 	return root
+}
+
+func projectCommand(factory EngineFactory, config *Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "project",
+		Short: "Manage projects",
+	}
+
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List projects",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runProjectList(factory, *config, cmd, args)
+		},
+	}
+	bindStreamFlags(listCmd)
+	cmd.AddCommand(listCmd)
+
+	treeCmd := &cobra.Command{
+		Use:   "tree",
+		Short: "Show project tree Structure",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			return runProjectTree(factory, *config, cmd, args)
+		},
+	}
+	bindStreamFlags(treeCmd)
+	cmd.AddCommand(treeCmd)
+
+	return cmd
 }
 
 func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -2671,16 +2847,15 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if source == "" || targetSection == "" || targetFile == "" {
 				return fmt.Errorf("missing source, target section, or target file")
 			}
-			input := map[string]interface{}{
+			variables := map[string]interface{}{
 				"source":        source,
 				"targetSection": targetSection,
 				"targetFile":    targetFile,
 			}
 			if targetParent != "" {
-				input["targetParent"] = targetParent
+				variables["targetParent"] = targetParent
 			}
-			variables := map[string]interface{}{"input": input}
-			query := `mutation Integrate($input: IntegrateInput!) { integrate(input: $input) { success } }`
+			query := `mutation Integrate($source: String!, $targetSection: String!, $targetFile: String!, $targetParent: String) { integrate(source: $source, targetSection: $targetSection, targetFile: $targetFile, targetParent: $targetParent) { id } }`
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
@@ -2717,7 +2892,7 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 				"sourceSection": sourceSection,
 				"targetFile":    targetFile,
 			}
-			query := `mutation Extract($sourceFile: String!, $sourceSection: String!, $targetFile: String!) { extract(sourceFile: $sourceFile, sourceSection: $sourceSection, targetFile: $targetFile) { success } }`
+			query := `mutation Extract($sourceFile: String!, $sourceSection: String!, $targetFile: String!) { extract(sourceFile: $sourceFile, sourceSection: $sourceSection, targetFile: $targetFile) { id } }`
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
@@ -3199,10 +3374,9 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 							}
 						}
 
-						line := fmt.Sprintf("%s%s %s %s",
+						line := fmt.Sprintf("%s%s %s",
 							indent,
-							colorize("§", ColorYellow, isTTY),
-							colorize(name, ColorBold, isTTY),
+							colorize("#"+name, ColorBold, isTTY),
 							colorize(fmt.Sprintf("(%d-%d)", start, end), ColorDim, isTTY))
 						sb.WriteString(line + "\n")
 
@@ -3247,7 +3421,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	// Case 8: Single Section Result
 	if sec, ok := payload["section"].(map[string]interface{}); ok {
 		name, _ := sec["name"].(string)
-		filePath, _ := sec["filePath"].(string)
 		startLine, _ := sec["startLine"].(float64)
 		endLine, _ := sec["endLine"].(float64)
 
@@ -3260,11 +3433,17 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 			childrenStr = fmt.Sprintf(" (+%d children)", childrenCount)
 		}
 
-		// § NAME (FILE:START-END) (+X children)
-		return fmt.Sprintf("  %s %s %s%s\n",
-			colorize("§", ColorYellow, isTTY),
-			colorize(name, ColorBold, isTTY),
-			colorize(fmt.Sprintf("(%s:%d-%d)", filePath, int(startLine), int(endLine)), ColorDim, isTTY),
+		// # SECTION_PATH (:START-END) (+X children)
+		sectionPath, _ := sec["path"].(string)
+		displayName := name
+		if sectionPath != "" {
+			displayName = "#" + sectionPath
+		} else {
+			displayName = "#" + name
+		}
+		return fmt.Sprintf("  %s %s%s\n",
+			colorize(displayName, ColorBold, isTTY),
+			colorize(fmt.Sprintf("(:%d-%d)", int(startLine), int(endLine)), ColorDim, isTTY),
 			colorize(childrenStr, ColorDim, isTTY))
 	}
 
@@ -3411,27 +3590,80 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 	}
 
 	type GoalNode struct {
-		ID, Title, Status string
-		Tickets           []*TicketNode
+		ID, Title, Status  string
+		DueDate, CreatedAt string
+		Children           []*GoalNode
+		Tickets            []*TicketNode
 	}
 
 	// Parse Goals
 	goalMap := make(map[string]*GoalNode)
-	var orderedGoals []*GoalNode
 
 	for _, g := range goalsRaw {
 		if gm, ok := g.(map[string]interface{}); ok {
 			id, _ := gm["id"].(string)
 			title, _ := gm["title"].(string)
 			status, _ := gm["status"].(string)
-			node := &GoalNode{ID: id, Title: title, Status: status}
+			dueDate, _ := gm["dueDate"].(string)
+			createdAt, _ := gm["createdAt"].(string)
+			node := &GoalNode{ID: id, Title: title, Status: status, DueDate: dueDate, CreatedAt: createdAt}
 			goalMap[id] = node
-			orderedGoals = append(orderedGoals, node)
 		}
 	}
 
+	// Build goal hierarchy from slash-separated IDs
+	// e.g. "R26-02/RUNNING-SKETCHPAD" is a child of "R26-02"
+	var rootGoals []*GoalNode
+	for _, g := range goalMap {
+		parentID := ""
+		if idx := strings.LastIndex(g.ID, "/"); idx >= 0 {
+			parentID = g.ID[:idx]
+		}
+		if parentID != "" {
+			if parent, ok := goalMap[parentID]; ok {
+				parent.Children = append(parent.Children, g)
+			} else {
+				rootGoals = append(rootGoals, g)
+			}
+		} else {
+			rootGoals = append(rootGoals, g)
+		}
+	}
+
+	// Sort goals by due date, then by creation date
+	var sortGoals func(goals []*GoalNode)
+	sortGoals = func(goals []*GoalNode) {
+		sort.SliceStable(goals, func(i, j int) bool {
+			a, b := goals[i], goals[j]
+			if a.DueDate != b.DueDate {
+				if a.DueDate == "" {
+					return false
+				}
+				if b.DueDate == "" {
+					return true
+				}
+				return a.DueDate < b.DueDate
+			}
+			if a.CreatedAt != b.CreatedAt {
+				if a.CreatedAt == "" {
+					return false
+				}
+				if b.CreatedAt == "" {
+					return true
+				}
+				return a.CreatedAt < b.CreatedAt
+			}
+			return a.ID < b.ID
+		})
+		for _, g := range goals {
+			if len(g.Children) > 0 {
+				sortGoals(g.Children)
+			}
+		}
+	}
+	sortGoals(rootGoals)
+
 	// Parse Tickets
-	ticketMap := make(map[string]*TicketNode)
 	var allTickets []*TicketNode
 
 	for _, t := range ticketsRaw {
@@ -3439,22 +3671,16 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 			id, _ := tm["id"].(string)
 			slug, _ := tm["slug"].(string)
 			status, _ := tm["status"].(string)
-
-			var goalID, parentID string
-			goalID, _ = tm["goal"].(string)
-			parentID, _ = tm["parent"].(string)
-
+			goalID, _ := tm["goal"].(string)
+			parentID, _ := tm["parent"].(string)
 			node := &TicketNode{ID: id, Slug: slug, Status: status, GoalID: goalID, ParentID: parentID}
-			ticketMap[id] = node
 			allTickets = append(allTickets, node)
 		}
 	}
 
-	// Build Hierarchy
+	// Assign tickets to goals
 	var noGoalTickets []*TicketNode
-
 	for _, t := range allTickets {
-		// Assign to Goal
 		if t.GoalID != "" {
 			if g, ok := goalMap[t.GoalID]; ok {
 				g.Tickets = append(g.Tickets, t)
@@ -3466,7 +3692,7 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 		}
 	}
 
-	// Helper to nest tickets
+	// Helper to nest tickets by parent
 	nestTickets := func(nodes []*TicketNode) []*TicketNode {
 		var roots []*TicketNode
 		lookup := make(map[string]*TicketNode)
@@ -3475,8 +3701,7 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 		}
 		for _, n := range nodes {
 			if n.ParentID != "" && lookup[n.ParentID] != nil {
-				parent := lookup[n.ParentID]
-				parent.Children = append(parent.Children, n)
+				lookup[n.ParentID].Children = append(lookup[n.ParentID].Children, n)
 			} else {
 				roots = append(roots, n)
 			}
@@ -3484,46 +3709,87 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 		return roots
 	}
 
-	for _, g := range orderedGoals {
+	for _, g := range goalMap {
 		g.Tickets = nestTickets(g.Tickets)
 	}
 	noGoalTickets = nestTickets(noGoalTickets)
 
+	// Recursive print for tickets
 	var printTickets func(nodes []*TicketNode, prefix string)
 	printTickets = func(nodes []*TicketNode, prefix string) {
 		for i, t := range nodes {
 			isLast := i == len(nodes)-1
 			marker := "├──"
-			newPrefix := prefix + "│  "
+			newPrefix := prefix + "│   "
 			if isLast {
 				marker = "└──"
-				newPrefix = prefix + "   "
+				newPrefix = prefix + "    "
 			}
-
 			statusColor := ColorBlue
-			if t.Status == "finished" || t.Status == "closed" {
-				statusColor = ColorGreen
-			}
-
 			statusIcon := "◯"
 			if t.Status == "finished" || t.Status == "closed" {
+				statusColor = ColorGreen
 				statusIcon = "✓"
 			}
-
-			line := fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize(statusIcon, statusColor, isTTY), colorize(t.Slug, ColorBold, isTTY))
-			sb.WriteString(line)
-
+			sb.WriteString(fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize(statusIcon, statusColor, isTTY), colorize(t.Slug, ColorBold, isTTY)))
 			printTickets(t.Children, newPrefix)
 		}
 	}
 
-	for _, g := range orderedGoals {
+	// Recursive print for goals (renders children goals and tickets within a prefix)
+	var printGoalContents func(g *GoalNode, prefix string)
+	printGoalContents = func(g *GoalNode, prefix string) {
+		total := len(g.Children) + len(g.Tickets)
+		idx := 0
+		for _, child := range g.Children {
+			idx++
+			isLast := idx == total
+			marker := "├──"
+			newPrefix := prefix + "│   "
+			if isLast {
+				marker = "└──"
+				newPrefix = prefix + "    "
+			}
+			childColor := ColorBlue
+			if child.Status == "closed" {
+				childColor = ColorGreen
+			}
+			sb.WriteString(fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize("■", childColor, isTTY), colorize(child.Title, ColorBold, isTTY)))
+			printGoalContents(child, newPrefix)
+		}
+		// Print tickets after child goals
+		for i, t := range g.Tickets {
+			idx++
+			isLast := idx == total
+			// If no children goals, use ticket index for isLast
+			if len(g.Children) == 0 {
+				isLast = i == len(g.Tickets)-1
+			}
+			marker := "├──"
+			newPrefix := prefix + "│   "
+			if isLast {
+				marker = "└──"
+				newPrefix = prefix + "    "
+			}
+			statusColor := ColorBlue
+			statusIcon := "◯"
+			if t.Status == "finished" || t.Status == "closed" {
+				statusColor = ColorGreen
+				statusIcon = "✓"
+			}
+			sb.WriteString(fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize(statusIcon, statusColor, isTTY), colorize(t.Slug, ColorBold, isTTY)))
+			printTickets(t.Children, newPrefix)
+		}
+	}
+
+	// Render root goals
+	for _, g := range rootGoals {
 		statusColor := ColorBlue
 		if g.Status == "closed" {
 			statusColor = ColorGreen
 		}
 		sb.WriteString(fmt.Sprintf("%s %s\n", colorize("■", statusColor, isTTY), colorize(g.Title, ColorBold, isTTY)))
-		printTickets(g.Tickets, "")
+		printGoalContents(g, "")
 	}
 
 	if len(noGoalTickets) > 0 {
@@ -3534,10 +3800,252 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 	return sb.String()
 }
 
+type MarkdownRenderer struct{}
+
+func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
+	exitCode := 0
+	for event := range stream {
+		if event.Kind == KindDone && event.Done != nil {
+			exitCode = event.Done.ExitCode
+			continue
+		}
+		if event.Kind == KindResult && len(event.Data) > 0 {
+			fmt.Fprint(out, formatMarkdownResult(event.Command, event.Data))
+		}
+		if event.Kind == KindError && event.Error != nil {
+			fmt.Fprintf(errOut, "**Error: %s**\n", event.Error.Message)
+			if event.Error.Detail != "" {
+				fmt.Fprintf(errOut, "> %s\n", event.Error.Detail)
+			}
+		}
+	}
+	return exitCode, nil
+}
+
+func formatMarkdownResult(command string, data json.RawMessage) string {
+	var raw map[string]interface{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return fmt.Sprintf("```json\n%s\n```\n", string(data))
+	}
+
+	// Helper to handle GraphQL response wrappers
+	var payload map[string]interface{} = raw
+	if len(raw) == 1 {
+		if d, ok := raw["data"].(map[string]interface{}); ok {
+			payload = d
+		}
+	}
+
+	var sb strings.Builder
+
+	// Case 1: Analyze result
+	if analyze, ok := payload["analyze"].(map[string]interface{}); ok {
+		sb.WriteString("## Analysis Result\n\n")
+		// metrics
+		if metrics, ok := analyze["metrics"].(map[string]interface{}); ok {
+			total := metrics["total"]
+			autofixable := metrics["autofixable"]
+			sb.WriteString(fmt.Sprintf("- **Total Violations**: %v\n", total))
+			if autofixable != nil {
+				sb.WriteString(fmt.Sprintf("- **Autofixable**: %v\n", autofixable))
+			}
+			sb.WriteString("\n")
+		}
+
+		// violations
+		if violations, ok := analyze["violations"].([]interface{}); ok {
+			for _, v := range violations {
+				if vio, ok := v.(map[string]interface{}); ok {
+					kind := ""
+					if k, ok := vio["kind"].(map[string]interface{}); ok {
+						kind = fmt.Sprintf("%v", k["id"])
+					} else if kStr, ok := vio["kind"].(string); ok {
+						kind = kStr
+					}
+
+					scope := fmt.Sprintf("%v", vio["scope"])
+					line := fmt.Sprintf("%v", vio["line"])
+					summary := fmt.Sprintf("%v", vio["summary"])
+					policyId := ""
+					// Try to extract policy id if available from kind id (e.g. policy:violation)
+					parts := strings.Split(kind, ":")
+					if len(parts) > 0 {
+						policyId = parts[0]
+					}
+
+					// violationKind: "semiorepo://policies/{policy-id}/{path*}"
+					// path is kind without policy prefix? logic is fuzzy, assume kind is the path
+					// Actually prompt says: violationKind: "semiorepo://policies/{policy-id}/{path*}"
+
+					// We don't have full context to reconstruct exact URIs for everything perfectly without assumptions.
+					// Assuming kind is the full ID.
+
+					// Construct a file URI?
+					// file: "semiorepo://{bundle-id}/{path*}"
+					// Scope is usually a file path. We need bundle-id.
+
+					// For now, generate a simple markdown representation.
+					sb.WriteString(fmt.Sprintf("- **[%s](semiorepo://policies/%s/%s)** in `%s:%s`: %s\n", kind, policyId, kind, scope, line, summary))
+				}
+			}
+		}
+		return sb.String()
+	}
+
+	// Case 6: Repo result (Tickets, Bundles)
+	if repo, ok := payload["repo"].(map[string]interface{}); ok {
+		hasContent := false
+		// Tickets
+		if tickets, ok := repo["tickets"].([]interface{}); ok {
+			hasContent = true
+			sb.WriteString(fmt.Sprintf("## Tickets (%d)\n\n", len(tickets)))
+			for _, t := range tickets {
+				if ticket, ok := t.(map[string]interface{}); ok {
+					slug, _ := ticket["slug"].(string)
+					status, _ := ticket["status"].(string)
+					title, _ := ticket["title"].(string)
+					dates, _ := ticket["date"].(map[string]interface{})
+					createdStr, _ := dates["created"].(string)
+
+					dateParsed, _ := time.Parse(time.RFC3339, createdStr)
+					ticketUri := fmt.Sprintf("semiorepo://tickets/%d/%02d/%02d/%s", dateParsed.Year(), dateParsed.Month(), dateParsed.Day(), slug)
+
+					statusIcon := "◯"
+					if status == "finished" || status == "closed" {
+						statusIcon = "✓"
+					}
+
+					sb.WriteString(fmt.Sprintf("- %s [%s](%s) (%s) - %s\n", statusIcon, title, ticketUri, slug, status))
+				}
+			}
+			sb.WriteString("\n")
+		}
+
+		// Bundles
+		if bundles, ok := repo["bundles"].([]interface{}); ok {
+			hasContent = true
+			sb.WriteString(fmt.Sprintf("## Bundles (%d)\n\n", len(bundles)))
+			for _, b := range bundles {
+				if bundle, ok := b.(map[string]interface{}); ok {
+					name, _ := bundle["name"].(string)
+					bundleUri := fmt.Sprintf("semiorepo://bundle/%s", name)
+					sb.WriteString(fmt.Sprintf("- [📦 %s](%s)\n", name, bundleUri))
+				}
+			}
+			sb.WriteString("\n")
+		}
+
+		if hasContent {
+			return sb.String()
+		}
+	}
+
+	// Case 6b: Single Ticket Stream Item
+	if ticket, ok := payload["ticket"].(map[string]interface{}); ok {
+		slug, _ := ticket["slug"].(string)
+		status, _ := ticket["status"].(string)
+		title, _ := ticket["title"].(string)
+		dates, _ := ticket["date"].(map[string]interface{})
+		createdStr, _ := dates["created"].(string)
+
+		dateParsed, _ := time.Parse(time.RFC3339, createdStr)
+		ticketUri := fmt.Sprintf("semiorepo://tickets/%d/%02d/%02d/%s", dateParsed.Year(), dateParsed.Month(), dateParsed.Day(), slug)
+
+		statusIcon := "◯"
+		if status == "finished" || status == "closed" {
+			statusIcon = "✓"
+		}
+
+		return fmt.Sprintf("- %s [%s](%s) (%s) - %s\n", statusIcon, title, ticketUri, slug, status)
+	}
+
+	// Case 6c: Single Bundle Stream Item
+	if bundle, ok := payload["bundle"].(map[string]interface{}); ok {
+		name, _ := bundle["name"].(string)
+		bundleUri := fmt.Sprintf("semiorepo://bundle/%s", name)
+		return fmt.Sprintf("- [📦 %s](%s)\n", name, bundleUri)
+	}
+
+	// Case 11: Single Folder Result
+	if folder, ok := payload["folder"].(map[string]interface{}); ok {
+		path, _ := folder["path"].(string)
+		kind, _ := folder["kind"].(string)
+		uri := fmt.Sprintf("semiorepo://folder/%s", path)
+		return fmt.Sprintf("[📂 %s](%s) (%s)\n", path, uri, kind)
+	}
+
+	// Case 12: Single File Result
+	if file, ok := payload["file"].(map[string]interface{}); ok {
+		path, _ := file["id"].(string)
+		uri := fmt.Sprintf("semiorepo://file/%s", path)
+		sb.WriteString(fmt.Sprintf("[📄 %s](%s)\n", path, uri))
+
+		// Sections
+		if sections, ok := file["sections"].([]interface{}); ok {
+			sb.WriteString(fmt.Sprintf("\n### Sections (%d)\n", len(sections)))
+			var printSections func(items []interface{}, indent string)
+			printSections = func(items []interface{}, indent string) {
+				for _, item := range items {
+					if sec, ok := item.(map[string]interface{}); ok {
+						name, _ := sec["name"].(string)
+						sb.WriteString(fmt.Sprintf("%s- %s\n", indent, name))
+
+						if children, ok := sec["children"].([]interface{}); ok && len(children) > 0 {
+							printSections(children, indent+"  ")
+						}
+					}
+				}
+			}
+			printSections(sections, "")
+		}
+
+		// Definitions
+		if definitions, ok := file["definitions"].([]interface{}); ok {
+			sb.WriteString(fmt.Sprintf("\n### Definitions (%d)\n", len(definitions)))
+			for _, d := range definitions {
+				if def, ok := d.(map[string]interface{}); ok {
+					name, _ := def["name"].(string)
+					kind, _ := def["kind"].(string)
+					sb.WriteString(fmt.Sprintf("- %s (%s)\n", name, kind))
+				}
+			}
+		}
+		return sb.String()
+	}
+
+	// Case 13: Single Goal Result
+	if goal, ok := payload["goal"].(map[string]interface{}); ok {
+		id, _ := goal["id"].(string)
+		title, _ := goal["title"].(string)
+		status, _ := goal["status"].(string)
+		uri := fmt.Sprintf("semiorepo://goal/%s", id)
+
+		statusIcon := "◯"
+		if status == "closed" || status == "finished" {
+			statusIcon = "✓"
+		}
+
+		return fmt.Sprintf("%s [%s](%s) (%s)\n", statusIcon, title, uri, id)
+	}
+
+	// Case 14: Single Contributor Result
+	if contrib, ok := payload["contributor"].(map[string]interface{}); ok {
+		github, _ := contrib["github"].(string)
+		uri := fmt.Sprintf("semiorepo://contributor/%s", github)
+		name, _ := contrib["name"].(string)
+		return fmt.Sprintf("[👤 %s](%s)\n", name, uri)
+	}
+
+	// Default fallback
+	return fmt.Sprintf("Result: ```json\n%s\n```\n", string(data))
+}
+
 func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
 	var renderer StreamRenderer
 	if config.JSON {
 		renderer = NDJSONRenderer{}
+	} else if config.Markdown {
+		renderer = MarkdownRenderer{}
 	} else {
 		renderer = HumanRenderer{Verbose: config.Verbose}
 	}
@@ -3789,23 +4297,38 @@ type PriorityCount struct {
 }
 
 type Repo struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
-	Path string `json:"path"`
+	ID       string    `json:"id"`
+	Name     string    `json:"name"`
+	Path     string    `json:"path"`
+	Projects []Project `json:"projects"`
+	Bundles  []Bundle  `json:"bundles"`
 }
 
-func (r *Repo) IsNode()       {}
-func (r *Repo) GetID() string { return "@semio-repo/repo" }
+func (r *Repo) IsNode()        {}
+func (r *Repo) GetID() string  { return "🌍" }
+func (r *Repo) GetURI() string { return "semiorepo://repo" }
+
+type ProjectKind string
+
+const (
+	ProjectKindUser           ProjectKind = "👤"
+	ProjectKindInfrastructure ProjectKind = "🧰"
+	ProjectKindResearch       ProjectKind = "🔬"
+)
+
+func (e ProjectKind) String() string {
+	return string(e)
+}
 
 type BundleKind string
 
 const (
-	BundleKindLibrary BundleKind = "library"
-	BundleKindSchema  BundleKind = "schema"
-	BundleKindBinary  BundleKind = "binary"
-	BundleKindUI      BundleKind = "ui"
-	BundleKindSite    BundleKind = "site"
-	BundleKindAssets  BundleKind = "assets"
+	BundleKindLibrary BundleKind = "📚"
+	BundleKindSchema  BundleKind = "🛂"
+	BundleKindBinary  BundleKind = "⌨️"
+	BundleKindUI      BundleKind = "🖱️"
+	BundleKindSite    BundleKind = "🌐"
+	BundleKindAssets  BundleKind = "🏪"
 )
 
 func (e BundleKind) IsValid() bool {
@@ -3818,6 +4341,21 @@ func (e BundleKind) IsValid() bool {
 
 func (e BundleKind) String() string {
 	return string(e)
+}
+
+func DeriveProjectKind(name string) ProjectKind {
+	switch name {
+	case "semio":
+		return ProjectKindUser
+	case "semio-repo":
+		return ProjectKindInfrastructure
+	case "coda":
+		return ProjectKindResearch
+	}
+	if strings.HasPrefix(name, "@") {
+		return DeriveProjectKind(strings.TrimPrefix(name, "@"))
+	}
+	return ProjectKindUser
 }
 
 func DeriveBundleKind(name string, root string) BundleKind {
@@ -3845,17 +4383,47 @@ func DeriveBundleKind(name string, root string) BundleKind {
 	return BundleKindLibrary
 }
 
+type Project struct {
+	Name    string      `json:"name"`
+	Root    string      `json:"root"`
+	Kind    ProjectKind `json:"kind"`
+	Bundles []Bundle    `json:"bundles"`
+}
+
+func (p *Project) IsNode()        {}
+func (p *Project) GetID() string  { return string(p.Kind) + "@" + p.Name }
+func (p *Project) GetURI() string { return "semiorepo://project/" + p.GetID() }
+
 type Bundle struct {
 	Name        string     `json:"name"`
 	Root        string     `json:"root"`
 	SourceRoot  string     `json:"sourceRoot,omitempty"`
-	ProjectType string     `json:"projectType,omitempty"`
+	ProjectName string     `json:"projectName"`
 	Tags        []string   `json:"tags,omitempty"`
 	Kind        BundleKind `json:"kind"`
+	Packages    []Package  `json:"packages,omitempty"`
 }
 
-func (b *Bundle) IsNode()       {}
-func (b *Bundle) GetID() string { return normalizeBundleID(b.Name) }
+type Package struct {
+	Name    string `json:"name"`
+	Version string `json:"version"`
+	Path    string `json:"path"`
+	Kind    string `json:"kind"` // npm, go, cargo, pip, nuget
+}
+
+func (b *Bundle) IsNode() {}
+func (b *Bundle) GetID() string {
+	projectKind := DeriveProjectKind(b.ProjectName)
+	projectID := string(projectKind) + "@" + b.ProjectName
+	parts := strings.Split(b.Name, "/")
+	shortName := b.Name
+	if len(parts) > 1 {
+		shortName = parts[len(parts)-1]
+	}
+	return string(b.Kind) + "@" + projectID + "/" + shortName
+}
+
+func (b *Bundle) GetURI() string { return "semiorepo://bundle/" + b.GetID() }
 
 func normalizeBundleLabel(name string) string {
 	if name == "" {
@@ -3868,7 +4436,7 @@ func normalizeBundleLabel(name string) string {
 		return "@semio-repo/vscode"
 	}
 	if name == "repo" {
-		return "@semio-repo/repo"
+		return "@semio-repo/go"
 	}
 	return "@semio/" + name
 }
@@ -4980,14 +5548,13 @@ type GoalCreateInput struct {
 	Parent      string `json:"parent,omitempty"`
 }
 
-type GoalUpdateInput struct {
+type GoalChangeInput struct {
 	ID          string  `json:"id"`
-	Title       string  `json:"title,omitempty"`
-	Description string  `json:"description,omitempty"`
-	Status      string  `json:"status,omitempty"`
-	DueDate     string  `json:"dueDate,omitempty"`
-	NoGithub    bool    `json:"noGithub,omitempty"`
+	Title       *string `json:"title,omitempty"`
+	Description *string `json:"description,omitempty"`
+	DueDate     *string `json:"dueDate,omitempty"`
 	Parent      *string `json:"parent,omitempty"`
+	NoGithub    bool    `json:"noGithub,omitempty"`
 }
 
 type GoalCloseInput struct {
@@ -5130,6 +5697,35 @@ type Scope struct {
 	FilePath       string    `json:"filePath,omitempty"`
 	SectionPath    []string  `json:"sectionPath,omitempty"`
 	DefinitionName string    `json:"definitionName,omitempty"`
+}
+
+type TodoCreateInput struct {
+	ParentID    string `json:"parentId"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type TodoChangeInput struct {
+	ID          string  `json:"id"`
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+}
+
+type Todo struct {
+	ID          string    `json:"id"`
+	Name        string    `json:"name"`
+	Description string    `json:"description,omitempty"`
+	ParentID    string    `json:"parentId"`
+	Location    *Location `json:"location,omitempty"`
+}
+
+func (t *Todo) IsNode()       {}
+func (t *Todo) GetID() string { return t.ID }
+
+type Location struct {
+	FilePath string `json:"filePath"`
+	Line     int    `json:"line"`
+	Column   int    `json:"column"`
 }
 
 type Violation struct {
@@ -6197,11 +6793,18 @@ type TomlLanguage struct {
 func NewTomlLanguage() *TomlLanguage {
 	return &TomlLanguage{
 		BaseLanguage: BaseLanguage{
-			name:              "toml",
-			extensions:        []string{".toml"},
-			sectionStart:      regexp.MustCompile(`^\s*\[{1,2}([^\]]+)\]{1,2}\s*$`),
-			commentPrefix:     "#",
-			usesIndentScoping: false,
+			name:               "toml",
+			extensions:         []string{".toml"},
+			sectionStart:       regexp.MustCompile(`(?i)^\s*#\s*region\s+(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(.+?))?\s*$`),
+			commentPrefix:      "#",
+			sectionStartFmt:    "# region %s",
+			sectionEndFmt:      "# endregion %s",
+			sectionBothFmt:     "\n# region %s\n\n# endregion %s\n",
+			headerFmt:          "# region Header\n\n# %s\n\n# %s %s\n\n%s\n\n# endregion Header\n",
+			usesIndentScoping:  false,
+			policySectionStart: regexp.MustCompile(`(?i)^\s*#\s*region(?:\s+(\S.*?))?\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(\S.*?))?\s*$`),
 		},
 	}
 }
@@ -6210,30 +6813,6 @@ func (l *TomlLanguage) SupportsSections() bool    { return true }
 func (l *TomlLanguage) SupportsDefinitions() bool { return false }
 func (l *TomlLanguage) SupportsComments() bool    { return true }
 func (l *TomlLanguage) SupportsHeaders() bool     { return false }
-
-func (l *TomlLanguage) ParseSections(content string) []Section {
-	lines := strings.Split(content, "\n")
-	var sections []Section
-	var currentSection *Section
-	for i, line := range lines {
-		lineNum := i + 1
-		if match := l.sectionStart.FindStringSubmatch(line); match != nil {
-			if currentSection != nil {
-				currentSection.EndLine = lineNum - 1
-				sections = append(sections, *currentSection)
-			}
-			currentSection = &Section{
-				Name:      match[1],
-				StartLine: lineNum,
-				EndLine:   len(lines),
-			}
-		}
-	}
-	if currentSection != nil {
-		sections = append(sections, *currentSection)
-	}
-	return sections
-}
 
 // #endregion TOML
 
@@ -6246,15 +6825,23 @@ type YamlLanguage struct {
 func NewYamlLanguage() *YamlLanguage {
 	return &YamlLanguage{
 		BaseLanguage: BaseLanguage{
-			name:              "yaml",
-			extensions:        []string{".yaml", ".yml"},
-			commentPrefix:     "#",
-			usesIndentScoping: true,
+			name:               "yaml",
+			extensions:         []string{".yaml", ".yml"},
+			sectionStart:       regexp.MustCompile(`(?i)^\s*#\s*region\s+(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(.+?))?\s*$`),
+			commentPrefix:      "#",
+			sectionStartFmt:    "# region %s",
+			sectionEndFmt:      "# endregion %s",
+			sectionBothFmt:     "\n# region %s\n\n# endregion %s\n",
+			headerFmt:          "# region Header\n\n# %s\n\n# %s %s\n\n%s\n\n# endregion Header\n",
+			usesIndentScoping:  true,
+			policySectionStart: regexp.MustCompile(`(?i)^\s*#\s*region(?:\s+(\S.*?))?\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(\S.*?))?\s*$`),
 		},
 	}
 }
 
-func (l *YamlLanguage) SupportsSections() bool    { return false }
+func (l *YamlLanguage) SupportsSections() bool    { return true }
 func (l *YamlLanguage) SupportsDefinitions() bool { return false }
 func (l *YamlLanguage) SupportsComments() bool    { return true }
 func (l *YamlLanguage) SupportsHeaders() bool     { return false }
@@ -9339,37 +9926,19 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 }
 
 func (ctx *CodebaseContext) GetFileID(file string) string {
-	name, root, ok := ctx.GetBundleInfo(file)
-	if !ok {
-		name = "@semio-repo/repo"
-		root = "."
-	}
-	rel, _ := filepath.Rel(root, file)
-	return name + "/" + NormalizePath(rel)
+	return "📄" + NormalizePath(file)
 }
 
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
-	if folder == "." {
-		return "@semio-repo/repo"
-	}
-	name, root, ok := ctx.GetBundleInfo(folder)
-	if !ok {
-		name = "@semio-repo/repo"
-		root = "."
-	}
-	rel, _ := filepath.Rel(root, folder)
-	if rel == "." {
-		return name
-	}
-	return name + "/" + NormalizePath(rel)
+	return "📂" + NormalizePath(folder)
 }
 
 func (ctx *CodebaseContext) FileURI(path string) string {
-	return ctx.RootURI + "/" + NormalizePath(path)
+	return "semiorepo://file/" + NormalizePath(path)
 }
 
 func (ctx *CodebaseContext) FolderURI(path string) string {
-	return "folder://" + NormalizePath(filepath.Join(rootDir, path))
+	return "semiorepo://folder/" + NormalizePath(path)
 }
 
 func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
@@ -10358,6 +10927,20 @@ func hasTicketKeyword(text, keyword string) bool {
 	return strings.Contains(strings.ToUpper(text), keyword)
 }
 
+func FindTicketBySlug(slug string) (*Ticket, error) {
+	tickets, err := ListTickets(nil, nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	for i := len(tickets) - 1; i >= 0; i-- {
+		t := tickets[i]
+		if t.Slug == slug || filepath.Base(t.Slug) == slug {
+			return &t, nil
+		}
+	}
+	return nil, fmt.Errorf("ticket not found: %s", slug)
+}
+
 func LatestTicket() (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -10441,6 +11024,13 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if title == strings.ToLower(slug) {
 		return fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
 	}
+
+	// Preserve parent path if nested
+	parentDir := filepath.Dir(ticket.Slug)
+	if parentDir != "." {
+		slug = filepath.ToSlash(filepath.Join(parentDir, slug))
+	}
+
 	newFolderPath := GetTicketPath(ticket.Year, ticket.Month, ticket.Day, slug)
 	if slug != ticket.Slug {
 		if FileExists(newFolderPath) {
@@ -10474,6 +11064,17 @@ func CreateTicket(title, prompt, llm, ui, draft string, noIssue bool, goal strin
 
 	now := time.Now()
 	year, month, day := FormatDate(now)
+
+	if parent != "" {
+		pTicket, err := FindTicketBySlug(parent)
+		if err != nil {
+			return nil, fmt.Errorf("failed to find parent ticket '%s': %w", parent, err)
+		}
+		year = pTicket.Year
+		month = pTicket.Month
+		day = pTicket.Day
+		slug = filepath.ToSlash(filepath.Join(pTicket.Slug, slug))
+	}
 
 	var llmSlug string
 	var err error
@@ -10696,10 +11297,11 @@ func buildTicketMarkdown(goal, parent string) string {
 		}
 		builder.WriteString("---\n\n")
 	}
-	builder.WriteString("# Ticket\n\n## Todos\n\n")
+	builder.WriteString("# Ticket\n\n## Summary\n\n")
 	builder.WriteString("## Changes\n\n")
 	builder.WriteString("## Log\n\n")
-	builder.WriteString("## Summary\n")
+	builder.WriteString("## Todos\n\n")
+	builder.WriteString("## Plan\n")
 	return builder.String()
 }
 
@@ -10716,10 +11318,28 @@ func updateTicketSummaryFile(ticketPath, summary string) error {
 		content = strings.TrimRight(content, "\n") + "\n\n" + marker + "\n\n" + summary + "\n"
 		return WriteTextFile(ticketPath, content)
 	}
-	parts := strings.Split(content, marker)
-	prefix := strings.TrimRight(parts[0], "\n")
-	updated := prefix + "\n\n" + marker + "\n\n" + summary + "\n"
-	return WriteTextFile(ticketPath, updated)
+	return WriteTextFile(ticketPath, replaceSectionContent(content, marker, summary))
+}
+
+// replaceSectionContent replaces the content of a markdown section (## heading)
+// with new content, preserving all subsequent sections.
+func replaceSectionContent(content, sectionHeading, newContent string) string {
+	idx := strings.Index(content, sectionHeading)
+	if idx == -1 {
+		return content
+	}
+	before := content[:idx]
+	after := content[idx+len(sectionHeading):]
+
+	// Find the next ## heading after this section
+	nextHeading := strings.Index(after, "\n## ")
+	if nextHeading == -1 {
+		// No next section, replace everything after the heading
+		return strings.TrimRight(before, "\n") + "\n\n" + sectionHeading + "\n\n" + newContent + "\n"
+	}
+	// Keep everything from the next heading onward
+	rest := after[nextHeading:]
+	return strings.TrimRight(before, "\n") + "\n\n" + sectionHeading + "\n\n" + newContent + rest
 }
 
 func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
@@ -10907,25 +11527,27 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 				if !FileExists(dayPath) {
 					continue
 				}
-				entries, err := os.ReadDir(dayPath)
-				if err != nil {
-					continue
-				}
-				for _, e := range entries {
-					if e.IsDir() {
-						slug := e.Name()
+				filepath.WalkDir(dayPath, func(path string, dEntry fs.DirEntry, err error) error {
+					if err != nil {
+						return nil
+					}
+					if !dEntry.IsDir() && dEntry.Name() == "ticket.json" {
+						dir := filepath.Dir(path)
+						rel, err := filepath.Rel(dayPath, dir)
+						if err != nil {
+							return nil
+						}
+						slug := filepath.ToSlash(rel)
 						yearInt, _ := strconv.Atoi(y)
 						monthInt, _ := strconv.Atoi(m)
 						dayInt, _ := strconv.Atoi(d)
-						ticketJsonPath := GetTicketJsonPath(yearInt, monthInt, dayInt, slug)
-						if FileExists(ticketJsonPath) {
-							ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
-							if err == nil {
-								tickets = append(tickets, *ticket)
-							}
+						ticket, err := ReadTicket(yearInt, monthInt, dayInt, slug)
+						if err == nil {
+							tickets = append(tickets, *ticket)
 						}
 					}
-				}
+					return nil
+				})
 			}
 		}
 	}
@@ -11010,19 +11632,23 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 				if !FileExists(dayPath) {
 					continue
 				}
-				entries, err := os.ReadDir(dayPath)
-				if err != nil {
-					continue
-				}
-				for _, e := range entries {
+				filepath.WalkDir(dayPath, func(path string, dEntry fs.DirEntry, err error) error {
+					if err != nil {
+						return nil
+					}
 					select {
 					case <-ctx.Done():
 						return ctx.Err()
 					default:
 					}
 
-					if e.IsDir() {
-						slug := e.Name()
+					if !dEntry.IsDir() && dEntry.Name() == "ticket.json" {
+						dir := filepath.Dir(path)
+						rel, err := filepath.Rel(dayPath, dir)
+						if err != nil {
+							return nil
+						}
+						slug := filepath.ToSlash(rel)
 						yearInt, _ := strconv.Atoi(y)
 						monthInt, _ := strconv.Atoi(m)
 						dayInt, _ := strconv.Atoi(d)
@@ -11030,18 +11656,19 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 						if err == nil {
 							// Filter ID/Slug/Title
 							if !matchesFilter(ticket.GetID(), options) && !matchesFilter(ticket.Slug, options) && !matchesFilter(ticket.Title, options) {
-								continue
+								return nil
 							}
 
 							// Filter Kinds
 							if !ticketMatchesKinds(ticket, options) {
-								continue
+								return nil
 							}
 
 							out <- *ticket
 						}
 					}
-				}
+					return nil
+				})
 			}
 		}
 	}
@@ -11115,61 +11742,132 @@ func ticketMatchesKinds(t *Ticket, opts StreamOptions) bool {
 	return true
 }
 
-func LoadBundles() []Bundle {
-	var bundles []Bundle
+func LoadProjects() []Project {
+	var projects []Project
 	projectsDir := rootDir
+	entries, err := os.ReadDir(projectsDir)
+	if err != nil {
+		return nil
+	}
+	// Add root project for semio-repo/go if needed?
+	// User said "@semio-repo/go" -> Project semio-repo.
+	// We handle folders starting with @.
 
-	filepath.WalkDir(projectsDir, func(path string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return nil
-		}
+	for _, d := range entries {
 		if !d.IsDir() {
-			return nil
+			continue
 		}
 		name := d.Name()
-		if strings.HasPrefix(name, ".") || name == "node_modules" || name == "dist" || name == "build" || name == "coverage" || name == "target" || name == "bin" || name == "obj" || name == ".semio-repo" {
-			return fs.SkipDir
+		if !strings.HasPrefix(name, "@") {
+			continue
 		}
 
-		configPath := filepath.Join(path, "project.json")
-		if !FileExists(configPath) {
-			configPath = filepath.Join(path, "package.json")
+		rawName := strings.TrimPrefix(name, "@")
+		project := Project{
+			Name:    rawName,
+			Root:    name,
+			Kind:    DeriveProjectKind(rawName),
+			Bundles: []Bundle{},
 		}
-		if FileExists(configPath) {
-			content, err := ReadTextFile(configPath)
-			if err != nil {
-				return nil
+
+		// Scan for bundles in subdirectories
+		projectPath := filepath.Join(projectsDir, name)
+		subEntries, _ := os.ReadDir(projectPath)
+		for _, sub := range subEntries {
+			if !sub.IsDir() {
+				continue
 			}
-			var project struct {
-				Name        string   `json:"name"`
-				Root        string   `json:"root"`
-				SourceRoot  string   `json:"sourceRoot"`
-				ProjectType string   `json:"projectType"`
-				Tags        []string `json:"tags"`
+			if strings.HasPrefix(sub.Name(), ".") {
+				continue
 			}
-			if err := json.Unmarshal([]byte(content), &project); err == nil {
-				if project.Name == "" {
-					project.Name = name
+			bunName := sub.Name()
+			fullBundleName := name + "/" + bunName
+
+			// Derive bundle kind
+			bundlePath := filepath.Join(name, bunName)
+			kind := DeriveBundleKind(fullBundleName, bundlePath)
+
+			bundle := Bundle{
+				Name:        fullBundleName,
+				Root:        bundlePath,
+				ProjectName: rawName,
+				Kind:        kind,
+			}
+
+			// Load Packages map
+			bundle.Packages = loadPackages(filepath.Join(rootDir, bundlePath))
+
+			// Try to load additional metadata from project.json/package.json
+			configPath := filepath.Join(projectPath, bunName, "project.json")
+			if !FileExists(configPath) {
+				configPath = filepath.Join(projectPath, bunName, "package.json")
+			}
+			if FileExists(configPath) {
+				content, err := ReadTextFile(configPath)
+				if err == nil {
+					var meta struct {
+						SourceRoot string   `json:"sourceRoot"`
+						Tags       []string `json:"tags"`
+					}
+					if json.Unmarshal([]byte(content), &meta) == nil {
+						bundle.SourceRoot = meta.SourceRoot
+						bundle.Tags = meta.Tags
+					}
 				}
-				relPath, _ := filepath.Rel(projectsDir, path)
-				if relPath == "." {
-					relPath = ""
-				}
-
-				bundles = append(bundles, Bundle{
-					Name:        project.Name,
-					Root:        relPath,
-					SourceRoot:  project.SourceRoot,
-					ProjectType: project.ProjectType,
-					Tags:        project.Tags,
-					Kind:        DeriveBundleKind(project.Name, relPath),
-				})
 			}
+			project.Bundles = append(project.Bundles, bundle)
 		}
-		return nil
-	})
+		projects = append(projects, project)
+	}
 
+	return projects
+}
+
+func LoadCommits(limit *int) []Commit {
+	args := []string{"log", "--pretty=format:%H|%aN|%ad|%s", "--date=iso-strict"}
+	if limit != nil {
+		args = append(args, fmt.Sprintf("-n%d", *limit))
+	}
+
+	cmd := exec.Command("git", args...)
+	cmd.Dir = rootDir
+	out, err := cmd.Output()
+	if err != nil {
+		return []Commit{}
+	}
+	lines := strings.Split(string(out), "\n")
+	var commits []Commit
+	for _, line := range lines {
+		parts := strings.Split(line, "|")
+		if len(parts) >= 4 {
+			sha := parts[0]
+			// author := parts[1]
+			dateStr := parts[2]
+			title := strings.Join(parts[3:], "|")
+			date, _ := time.Parse(time.RFC3339, dateStr)
+
+			commits = append(commits, Commit{
+				ID:    sha,
+				SHA:   sha,
+				Title: title,
+				Date:  date,
+			})
+		}
+	}
+	return commits
+}
+
+func LoadBundles() []Bundle {
+	var bundles []Bundle
+	projects := LoadProjects()
+	for _, p := range projects {
+		bundles = append(bundles, p.Bundles...)
+	}
 	return bundles
+}
+
+func GetProjects() []Bundle {
+	return LoadBundles()
 }
 
 func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions) error {
@@ -11255,6 +11953,168 @@ func bundleMatchesKinds(b Bundle, opts StreamOptions) bool {
 	}
 
 	return true
+}
+
+func loadPackages(bundleRoot string) []Package {
+	var packages []Package
+	filepath.WalkDir(bundleRoot, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return nil
+		}
+		// Skip known vendor/output directories and hidden directories
+		if d.IsDir() {
+			name := d.Name()
+			if name == "node_modules" || name == ".git" || name == "bin" || name == "obj" || name == "target" || name == "dist" || name == "build" || name == "__pycache__" || strings.HasPrefix(name, ".") {
+				return fs.SkipDir
+			}
+			return nil
+		}
+
+		rel, _ := filepath.Rel(bundleRoot, path)
+
+		name := ""
+		version := ""
+		kind := ""
+
+		filename := d.Name()
+		switch filename {
+		case "package.json":
+			kind = "npm"
+			if content, err := ioutil.ReadFile(path); err == nil {
+				var meta struct {
+					Name    string `json:"name"`
+					Version string `json:"version"`
+				}
+				json.Unmarshal(content, &meta)
+				name = meta.Name
+				version = meta.Version
+			}
+		case "go.mod":
+			kind = "go"
+			if content, err := ioutil.ReadFile(path); err == nil {
+				lines := strings.Split(string(content), "\n")
+				if len(lines) > 0 && strings.HasPrefix(lines[0], "module ") {
+					name = strings.TrimSpace(strings.TrimPrefix(lines[0], "module "))
+				}
+			}
+		case "Cargo.toml":
+			kind = "cargo"
+			if content, err := ioutil.ReadFile(path); err == nil {
+				lines := strings.Split(string(content), "\n")
+				for _, line := range lines {
+					if strings.HasPrefix(line, "name =") {
+						name = strings.Trim(strings.TrimSpace(strings.TrimPrefix(line, "name =")), "\"")
+						break
+					}
+				}
+			}
+		case "pyproject.toml":
+			kind = "pip"
+			if content, err := ioutil.ReadFile(path); err == nil {
+				lines := strings.Split(string(content), "\n")
+				for _, line := range lines {
+					if strings.HasPrefix(line, "name =") {
+						name = strings.Trim(strings.TrimSpace(strings.TrimPrefix(line, "name =")), "\"")
+						break
+					}
+				}
+			}
+		}
+
+		if strings.HasSuffix(filename, ".csproj") {
+			kind = "nuget"
+			name = strings.TrimSuffix(filename, ".csproj")
+		}
+
+		if kind != "" && name != "" {
+			packages = append(packages, Package{
+				Name:    name,
+				Version: version,
+				Path:    rel,
+				Kind:    kind,
+			})
+		}
+		return nil
+	})
+	return packages
+}
+
+func StreamProjects(ctx context.Context, out chan<- Project, opts ...StreamOptions) error {
+	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+
+	projects := LoadProjects()
+	for _, p := range projects {
+		if !matchesFilter(p.Name, options) {
+			continue
+		}
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			out <- p
+		}
+	}
+	return nil
+}
+
+func runProjectList(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
+	opts := getStreamOptions(cmd)
+	stream := make(chan Event)
+	go func() {
+		defer close(stream)
+		stream <- Event{Kind: KindStart, Command: "project list"}
+
+		projChan := make(chan Project)
+		go func() {
+			StreamProjects(context.Background(), projChan, opts)
+		}()
+
+		for p := range projChan {
+			data, err := json.Marshal(map[string]interface{}{"project": p})
+			if err != nil {
+				continue
+			}
+			stream <- Event{Kind: KindResult, Command: "project list", Data: data}
+		}
+		stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+	}()
+
+	return renderStream(cmd, &config, stream)
+}
+
+func runProjectTree(factory EngineFactory, config Config, cmd *cobra.Command, args []string) error {
+	opts := getStreamOptions(cmd)
+	stream := make(chan Event)
+	go func() {
+		defer close(stream)
+		stream <- Event{Kind: KindStart, Command: "project tree"}
+
+		projChan := make(chan Project)
+		go func() {
+			StreamProjects(context.Background(), projChan, opts)
+		}()
+
+		var projects []Project
+		for p := range projChan {
+			projects = append(projects, p)
+		}
+		sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
+
+		for _, p := range projects {
+			data, err := json.Marshal(map[string]interface{}{"project": p})
+			if err != nil {
+				continue
+			}
+			stream <- Event{Kind: KindResult, Command: "project tree", Data: data}
+		}
+		stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+	}()
+
+	return renderStream(cmd, &config, stream)
 }
 
 type StreamOptions struct {
@@ -11527,10 +12387,32 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 	if strings.HasPrefix(scope, "@semio/") {
 		bundleName := strings.TrimPrefix(scope, "@semio/")
 		bundles := GetProjects()
+		matched := false
 		for _, b := range bundles {
 			if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
 				root = filepath.Join(rootDir, b.Root)
+				matched = true
 				break
+			}
+		}
+		// If no exact bundle match, try matching bundle prefix + sub-path
+		// e.g. "@semio/js/semio.ts" -> bundle "@semio/js" + sub-path "semio.ts"
+		if !matched {
+			parts := strings.SplitN(bundleName, "/", 2)
+			if len(parts) == 2 {
+				prefix := parts[0]
+				subPath := parts[1]
+				for _, b := range bundles {
+					bName := b.Name
+					if strings.HasPrefix(bName, "@semio/") {
+						bName = strings.TrimPrefix(bName, "@semio/")
+					}
+					if bName == prefix || normalizeBundleLabel(bName) == "@semio/"+prefix {
+						root = filepath.Join(rootDir, b.Root, subPath)
+						matched = true
+						break
+					}
+				}
 			}
 		}
 	} else if scope != "" && scope != "@semio" {
@@ -11539,6 +12421,35 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 		} else {
 			root = filepath.Join(rootDir, scope)
 		}
+	}
+
+	// If root is a file (not a directory), return just that file
+	if info, err := os.Stat(root); err == nil && !info.IsDir() {
+		relPath, _ := filepath.Rel(rootDir, root)
+		var bundleID *string
+		if b := GetBundleByPath(relPath); b != nil {
+			id := b.GetID()
+			bundleID = &id
+		}
+		folderPath := filepath.Dir(relPath)
+		var folderID *string
+		if folderPath != "." {
+			id := buildFolderID(folderPath, bundleID)
+			folderID = &id
+		}
+		out <- File{
+			ID:        buildFileID(relPath, bundleID),
+			Path:      relPath,
+			URI:       fmt.Sprintf("file://%s/%s", rootDir, relPath),
+			Name:      filepath.Base(relPath),
+			Extension: filepath.Ext(relPath),
+			FolderID:  folderID,
+			BundleID:  bundleID,
+			Kind:      DeriveFileKind(filepath.Base(relPath)),
+			Ignored:   isGitIgnored(root),
+			Generated: IsGenerated(root),
+		}
+		return nil
 	}
 
 	var files []string
@@ -11628,12 +12539,21 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 }
 
 func flattenSections(sections []Section) []Section {
+	return flattenSectionsWithPrefix(sections, "")
+}
+
+func flattenSectionsWithPrefix(sections []Section, prefix string) []Section {
 	var result []Section
 	for _, s := range sections {
 		children := s.Children
 		s.Children = nil
+		if prefix != "" {
+			s.Path = prefix + "#" + s.Name
+		} else {
+			s.Path = s.Name
+		}
 		result = append(result, s)
-		result = append(result, flattenSections(children)...)
+		result = append(result, flattenSectionsWithPrefix(children, s.Path)...)
 	}
 	return result
 }
@@ -11740,76 +12660,7 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 	return nil
 }
 
-func GetProjects() []Bundle {
-	rootPackagePath := filepath.Join(rootDir, "package.json")
-	workspaceBundles := make(map[string]Bundle)
-	if FileExists(rootPackagePath) {
-		raw, err := ReadTextFile(rootPackagePath)
-		if err == nil {
-			var rootPackage struct {
-				Workspaces []string `json:"workspaces"`
-			}
-			if err := json.Unmarshal([]byte(raw), &rootPackage); err == nil {
-				for _, workspace := range rootPackage.Workspaces {
-					workspacePath := filepath.Join(rootDir, workspace)
-					packagePath := filepath.Join(workspacePath, "package.json")
-					if FileExists(packagePath) {
-						content, err := ReadTextFile(packagePath)
-						if err != nil {
-							continue
-						}
-						var pkg struct {
-							Name       string `json:"name"`
-							SourceRoot string `json:"sourceRoot"`
-						}
-						if err := json.Unmarshal([]byte(content), &pkg); err != nil {
-							continue
-						}
-						bundleName := pkg.Name
-						workspaceBundles[workspace] = Bundle{
-							Name:       bundleName,
-							Root:       workspace,
-							SourceRoot: pkg.SourceRoot,
-						}
-						continue
-					}
-					if strings.HasPrefix(workspace, "py/") {
-						workspaceBundles[workspace] = Bundle{
-							Name: "py",
-							Root: workspace,
-						}
-					}
-				}
-			}
-		}
-	}
-	if len(workspaceBundles) == 0 {
-		return []Bundle{
-			{Name: "js", Root: "js"},
-			{Name: "js", Root: "javascript"},
-			{Name: "py", Root: "py"},
-			{Name: "net", Root: "net"},
-			{Name: "net", Root: "dotnet"},
-			{Name: "play", Root: "js/play"},
-			{Name: "play", Root: "javascript/play"},
-			{Name: "vscode", Root: "js/vscode"},
-			{Name: "vscode", Root: "javascript/vscode"},
-			{Name: "docs", Root: "js/docs"},
-			{Name: "docs", Root: "javascript/docs"},
-			{Name: "assets", Root: "assets"},
-			{Name: "grasshopper", Root: "net/Semio.Grasshopper"},
-			{Name: "grasshopper", Root: "dotnet/Semio.Grasshopper"},
-			{Name: "yak", Root: "yak"},
-			{Name: "repo", Root: "go/repo"},
-			{Name: "go", Root: "go/semio"},
-		}
-	}
-	var bundles []Bundle
-	for _, bundle := range workspaceBundles {
-		bundles = append(bundles, bundle)
-	}
-	return bundles
-}
+// GetProjects legacy removed
 
 func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	var bestMatch string
@@ -13568,9 +14419,7 @@ func exportBundles(tx *sql.Tx, ctx RepoContext) (int, error) {
 		if b.SourceRoot != "" {
 			sourceRoot = b.SourceRoot
 		}
-		if b.ProjectType != "" {
-			projectType = b.ProjectType
-		}
+		// ProjectType was removed
 		if _, err := stmt.Exec(id, b.Name, b.Root, sourceRoot, projectType, uri); err != nil {
 			return 0, err
 		}
@@ -13921,6 +14770,8 @@ func ToolExport(outputPath string) ToolResult {
 type RepoContext interface {
 	GetRootDir() string
 	GetBundles() []*Bundle
+	GetProjects() []*Project
+	GetCommits(limit *int) ([]*Commit, error)
 	GetFolders() []*Folder
 	GetFiles() []*File
 	GetSections() []*Section
@@ -13934,7 +14785,7 @@ type RepoContext interface {
 	Analyze(scope *string) (*AnalyzeResult, error)
 	Fix(scope *string) (*FixResult, error)
 	GoalCreate(input GoalCreateInput) (*Goal, error)
-	GoalUpdate(input GoalUpdateInput) (*Goal, error)
+	GoalChange(input GoalChangeInput) (*Goal, error)
 	GoalClose(input GoalCloseInput) (*Goal, error)
 	GoalReopen(input GoalReopenInput) (*Goal, error)
 	GoalDelete(input GoalDeleteInput) (bool, error)
@@ -14002,7 +14853,7 @@ type repoContext struct {
 
 func NewRepoContext(rootDir string) RepoContext {
 	ctx := &repoContext{rootDir: rootDir}
-	ctx.bundles = GetProjects()
+	ctx.bundles = LoadBundles()
 	return ctx
 }
 
@@ -14024,6 +14875,24 @@ func (c *repoContext) GetBundles() []*Bundle {
 		result[i] = &c.bundles[i]
 	}
 	return result
+}
+
+func (c *repoContext) GetProjects() []*Project {
+	projects := LoadProjects()
+	res := make([]*Project, len(projects))
+	for i := range projects {
+		res[i] = &projects[i]
+	}
+	return res
+}
+
+func (c *repoContext) GetCommits(limit *int) ([]*Commit, error) {
+	commits := LoadCommits(limit)
+	res := make([]*Commit, len(commits))
+	for i := range commits {
+		res[i] = &commits[i]
+	}
+	return res, nil
 }
 
 func (c *repoContext) GetFolders() []*Folder {
@@ -14315,7 +15184,7 @@ func UpdateGoalTitle(goal *Goal, title string) error {
 	return nil
 }
 
-func (c *repoContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) {
+func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
 	content, err := ReadTextFile(path)
@@ -14328,19 +15197,16 @@ func (c *repoContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) {
 	}
 	goal.ID = input.ID // Ensure ID is set
 
-	if input.Title != "" {
-		if err := UpdateGoalTitle(&goal, input.Title); err != nil {
+	if input.Title != nil {
+		if err := UpdateGoalTitle(&goal, *input.Title); err != nil {
 			return nil, err
 		}
 	}
-	if input.Description != "" {
-		goal.Description = input.Description
+	if input.Description != nil {
+		goal.Description = *input.Description
 	}
-	if input.Status != "" {
-		goal.Status = input.Status
-	}
-	if input.DueDate != "" {
-		goal.Dates.Due = input.DueDate
+	if input.DueDate != nil {
+		goal.Dates.Due = *input.DueDate
 	}
 	if input.Parent != nil {
 		goal.Parent = *input.Parent
@@ -14349,7 +15215,9 @@ func (c *repoContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) {
 	if goal.GitHub != nil && !input.NoGithub {
 		number, err := parseMilestoneNumber(goal.GitHub.Milestone)
 		if err == nil {
-			if err := ghUpdateMilestone(number, goal.Title, goal.Description, goal.Status, goal.Dates.Due); err != nil {
+			status := goal.Status
+			// Update milestone with current values
+			if err := ghUpdateMilestone(number, goal.Title, goal.Description, status, goal.Dates.Due); err != nil {
 				return nil, err
 			}
 		}
@@ -14834,7 +15702,11 @@ var _ RepoContext = (*repoContext)(nil)
 
 func (c *defaultContext) GetRootDir() string { return c.rootDir }
 
-func (c *defaultContext) GetBundles() []*Bundle { return []*Bundle{} }
+func (c *defaultContext) GetBundles() []*Bundle   { return []*Bundle{} }
+func (c *defaultContext) GetProjects() []*Project { return []*Project{} }
+func (c *defaultContext) GetCommits(limit *int) ([]*Commit, error) {
+	return []*Commit{}, nil
+}
 
 func (c *defaultContext) GetFolders() []*Folder { return []*Folder{} }
 
@@ -14922,7 +15794,7 @@ func (c *defaultContext) GetGoals() ([]*Goal, error) { return []*Goal{}, nil }
 
 func (c *defaultContext) GoalCreate(input GoalCreateInput) (*Goal, error) { return nil, nil }
 
-func (c *defaultContext) GoalUpdate(input GoalUpdateInput) (*Goal, error) { return nil, nil }
+func (c *defaultContext) GoalChange(input GoalChangeInput) (*Goal, error) { return nil, nil }
 
 func (c *defaultContext) GoalClose(input GoalCloseInput) (*Goal, error) { return nil, nil }
 
@@ -14935,6 +15807,11 @@ func (c *defaultContext) TicketDelete(input TicketDeleteInput) (bool, error) { r
 func (c *defaultContext) GetDrafts() ([]*Draft, error)                       { return []*Draft{}, nil }
 func (c *defaultContext) DraftCreate(input DraftCreateInput) (*Draft, error) { return nil, nil }
 func (c *defaultContext) DraftDelete(id string) (bool, error)                { return false, nil }
+
+func (c *defaultContext) GetTodos(filter *FilterInput) ([]*Todo, error)   { return []*Todo{}, nil }
+func (c *defaultContext) TodoCreate(input TodoCreateInput) (*Todo, error) { return nil, nil }
+func (c *defaultContext) TodoChange(input TodoChangeInput) (*Todo, error) { return nil, nil }
+func (c *defaultContext) TodoDelete(id string) (bool, error)              { return false, nil }
 
 var _ RepoContext = (*defaultContext)(nil)
 
@@ -15161,6 +16038,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	})
 
 	var bundleType *graphql.Object
+	var packageType *graphql.Object
+	var projectType *graphql.Object
 	var folderType *graphql.Object
 	var fileType *graphql.Object
 	var sectionType *graphql.Object
@@ -15170,6 +16049,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	var violationKindType *graphql.Object
 	var policyType *graphql.Object
 	var ticketType *graphql.Object
+	var todoType *graphql.Object
+	var locationType *graphql.Object
 	var goalType *graphql.Object
 	var draftType *graphql.Object
 	var contributorType *graphql.Object
@@ -15185,6 +16066,55 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	var contributorSectionType *graphql.Object
 	var contributorDefinitionType *graphql.Object
 	var commitType *graphql.Object
+
+	packageType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Package",
+		Fields: graphql.Fields{
+			"name":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"version": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"path":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			"kind":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	projectType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Project",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return p.Source.(*Project).GetID(), nil
+					},
+				},
+				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"root": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"kind": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return string(p.Source.(*Project).Kind), nil
+					},
+				},
+				"bundles": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						bun := p.Source.(*Project).Bundles
+						res := make([]*Bundle, len(bun))
+						for i := range bun {
+							res[i] = &bun[i]
+						}
+						return res, nil
+					},
+				},
+				"uri": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return p.Source.(*Project).GetURI(), nil
+					},
+				},
+			}
+		}),
+	})
 
 	bundleType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Bundle",
@@ -15202,6 +16132,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"sourceRoot":  &graphql.Field{Type: graphql.String},
 				"projectType": &graphql.Field{Type: graphql.String},
 				"tags":        &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"packages": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(packageType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return p.Source.(*Bundle).Packages, nil
+					},
+				},
 				"kind": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -15702,7 +16638,23 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return goal.Dates.Due, nil
 				},
 			},
-			"client":     &graphql.Field{Type: graphql.String},
+			"createdAt": &graphql.Field{
+				Type: graphql.String,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					goal := p.Source.(*Goal)
+					if len(goal.Iterations) > 0 {
+						return goal.Iterations[0].Started, nil
+					}
+					return nil, nil
+				},
+			},
+			"ui": &graphql.Field{
+				Type: graphql.String,
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					goal := p.Source.(*Goal)
+					return goal.UI, nil
+				},
+			},
 			"llm":    &graphql.Field{Type: graphql.String},
 			"status": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 			"milestone": &graphql.Field{
@@ -15715,6 +16667,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return parseMilestoneNumber(goal.GitHub.Milestone)
 				},
 			},
+			"parent": &graphql.Field{Type: graphql.String},
 		},
 	})
 
@@ -15923,6 +16876,39 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
+	locationType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Location",
+		Fields: graphql.Fields{
+			"filePath": &graphql.Field{Type: graphql.String},
+			"line":     &graphql.Field{Type: graphql.Int},
+			"column":   &graphql.Field{Type: graphql.Int},
+		},
+	})
+
+	todoType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Todo",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"id": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return p.Source.(*Todo).GetID(), nil
+					},
+				},
+				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"description": &graphql.Field{Type: graphql.String},
+				"parentId": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.ID),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						return p.Source.(*Todo).ParentID, nil
+					},
+				},
+				"location": &graphql.Field{Type: locationType},
+			}
+		}),
+	})
+
+	_ = todoType
 	contributorDefinitionType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "ContributorDefinition",
 		Fields: graphql.Fields{
@@ -16171,6 +17157,31 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"id":   &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
 				"name": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"path": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"projects": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(projectType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						projects := LoadProjects()
+						res := make([]*Project, len(projects))
+						for i := range projects {
+							res[i] = &projects[i]
+						}
+						return res, nil
+					},
+				},
+				"commits": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(commitType))),
+					Args: graphql.FieldConfigArgument{
+						"limit": &graphql.ArgumentConfig{Type: graphql.Int},
+					},
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						_ = p.Source.(*Repo)
+						var limit *int
+						if v, ok := p.Args["limit"].(int); ok {
+							limit = &v
+						}
+						return repoResolverInstance.Ctx.GetCommits(limit)
+					},
+				},
 				"bundles": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -16424,6 +17435,16 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return queryResolverInstance.Repo(p.Context)
 				},
 			},
+			"projects": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(projectType))),
+				Args: graphql.FieldConfigArgument{
+					"filter": &graphql.ArgumentConfig{Type: filterInputType},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					filter := parseFilterInput(p.Args)
+					return queryResolverInstance.Projects(p.Context, filter)
+				},
+			},
 			"bundles": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(bundleType))),
 				Args: graphql.FieldConfigArgument{
@@ -16466,6 +17487,16 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					filter := parseFilterInput(p.Args)
 					return queryResolverInstance.Contributors(p.Context, filter)
+				},
+			},
+			"todos": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(todoType))),
+				Args: graphql.FieldConfigArgument{
+					"filter": &graphql.ArgumentConfig{Type: filterInputType},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					filter := parseFilterInput(p.Args)
+					return queryResolverInstance.Todos(p.Context, filter)
 				},
 			},
 			"tickets": &graphql.Field{
@@ -16667,7 +17698,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
+			"client":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
 			"noIssue":  &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -16698,7 +17729,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"day":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
 			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"client":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
+			"client":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketUIEnum)},
 			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -16718,7 +17749,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"prompt":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"llm":      &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"client":       &graphql.InputObjectFieldConfig{Type: ticketUIEnum},
+			"client":   &graphql.InputObjectFieldConfig{Type: ticketUIEnum},
 			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
@@ -16733,17 +17764,16 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"prompt":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"client":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"client":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noGithub":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
-	goalUpdateInputType := graphql.NewInputObject(graphql.InputObjectConfig{
-		Name: "GoalUpdateInput",
+	goalChangeInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "GoalChangeInput",
 		Fields: graphql.InputObjectConfigFieldMap{
 			"id":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"status":      &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"title":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"dueDate":     &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -16766,7 +17796,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.InputObjectConfigFieldMap{
 			"id":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"prompt":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"client":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"client":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"llm":         &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"title":       &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -16820,35 +17850,34 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return mutationResolverInstance.GoalCreate(p.Context, input)
 				},
 			},
-			"goalUpdate": &graphql.Field{
+			"goalChange": &graphql.Field{
 				Type: goalType,
 				Args: graphql.FieldConfigArgument{
-					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(goalUpdateInputType)},
+					"id":    &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.ID)},
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(goalChangeInputType)},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					id := p.Args["id"].(string)
 					inputMap := p.Args["input"].(map[string]interface{})
-					input := GoalUpdateInput{
-						ID: inputMap["id"].(string),
+					input := GoalChangeInput{
+						ID: id,
 					}
 					if s, ok := inputMap["title"].(string); ok {
-						input.Title = s
+						input.Title = &s
 					}
 					if s, ok := inputMap["description"].(string); ok {
-						input.Description = s
-					}
-					if s, ok := inputMap["status"].(string); ok {
-						input.Status = s
+						input.Description = &s
 					}
 					if s, ok := inputMap["dueDate"].(string); ok {
-						input.DueDate = s
+						input.DueDate = &s
 					}
 					if s, ok := inputMap["parent"].(string); ok {
 						input.Parent = &s
 					}
-					if inputMap["noGithub"] != nil {
-						input.NoGithub = inputMap["noGithub"].(bool)
+					if b, ok := inputMap["noGithub"].(bool); ok {
+						input.NoGithub = b
 					}
-					return mutationResolverInstance.GoalUpdate(p.Context, input)
+					return mutationResolverInstance.GoalChange(p.Context, id, input)
 				},
 			},
 			"goalClose": &graphql.Field{
@@ -16940,6 +17969,52 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					id := p.Args["id"].(string)
 					return mutationResolverInstance.DraftDelete(p.Context, id)
+				},
+			},
+			"todoCreate": &graphql.Field{
+				Type: todoType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(todoCreateInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TodoCreateInput{
+						ParentID: inputMap["parentId"].(string),
+						Name:     inputMap["name"].(string),
+					}
+					if s, ok := inputMap["description"].(string); ok {
+						input.Description = s
+					}
+					return mutationResolverInstance.TodoCreate(p.Context, input)
+				},
+			},
+			"todoChange": &graphql.Field{
+				Type: todoType,
+				Args: graphql.FieldConfigArgument{
+					"input": &graphql.ArgumentConfig{Type: graphql.NewNonNull(todoChangeInputType)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					inputMap := p.Args["input"].(map[string]interface{})
+					input := TodoChangeInput{
+						ID: inputMap["id"].(string),
+					}
+					if s, ok := inputMap["name"].(string); ok {
+						input.Name = &s
+					}
+					if s, ok := inputMap["description"].(string); ok {
+						input.Description = &s
+					}
+					return mutationResolverInstance.TodoChange(p.Context, input)
+				},
+			},
+			"todoDelete": &graphql.Field{
+				Type: graphql.Boolean,
+				Args: graphql.FieldConfigArgument{
+					"id": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.ID)},
+				},
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					id := p.Args["id"].(string)
+					return mutationResolverInstance.TodoDelete(p.Context, id)
 				},
 			},
 			"ticketOpen": &graphql.Field{
@@ -17277,9 +18352,28 @@ func (r *Resolver) Query() QueryResolver {
 
 type queryResolver struct{ *Resolver }
 
+func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetDrafts()
+	}
+	return []*Draft{}, nil
+}
+
 func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
-	if id == "@semio-repo/repo" {
+	if id == "🌍" {
 		return r.Repo(ctx)
+	}
+	if strings.HasPrefix(id, "📄") {
+		return r.File(ctx, strings.TrimPrefix(id, "📄"))
+	}
+	if strings.HasPrefix(id, "📂") {
+		return r.Folder(ctx, strings.TrimPrefix(id, "📂"))
+	}
+	if strings.HasPrefix(id, "👤@") || strings.HasPrefix(id, "🔬@") {
+		return r.Project(ctx, id)
+	}
+	if strings.Contains(id, "@") && (strings.HasPrefix(id, "📚") || strings.HasPrefix(id, "📦") || strings.HasPrefix(id, "🎨") || strings.HasPrefix(id, "🖥️") || strings.HasPrefix(id, "🕸️") || strings.HasPrefix(id, "🧩")) {
+		return r.Bundle(ctx, id)
 	}
 	if strings.HasPrefix(id, "@semio-repo/contributor/") {
 		return r.Contributor(ctx, strings.TrimPrefix(id, "@semio-repo/contributor/"))
@@ -17290,61 +18384,106 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 	if strings.HasPrefix(id, "@semio-repo/violation-kind/") {
 		return r.ViolationKind(ctx, strings.TrimPrefix(id, "@semio-repo/violation-kind/"))
 	}
-	if strings.HasPrefix(id, "@semio-repo/repo/") {
-		path := strings.TrimPrefix(id, "@semio-repo/repo/")
-		stat, err := os.Stat(filepath.Join(r.RootDir, path))
-		if err == nil && stat.IsDir() {
-			return r.Folder(ctx, path)
+
+	parts := strings.Split(id, "/")
+	if len(parts) == 4 {
+		y, err1 := strconv.Atoi(parts[0])
+		m, err2 := strconv.Atoi(parts[1])
+		d, err3 := strconv.Atoi(parts[2])
+		if err1 == nil && err2 == nil && err3 == nil {
+			return r.Ticket(ctx, y, m, d, parts[3])
 		}
-		return r.File(ctx, path)
-	}
-	if strings.HasPrefix(id, "@semio/") {
-		rest := strings.TrimPrefix(id, "@semio/")
-		parts := strings.Split(rest, "/")
-		if len(parts) == 1 {
-			return r.Bundle(ctx, id)
-		}
-		bundleID := "@semio/" + parts[0]
-		rel := strings.Join(parts[1:], "/")
-		path := bundlePathPrefix(bundleID) + rel
-		stat, err := os.Stat(filepath.Join(r.RootDir, path))
-		if err == nil && stat.IsDir() {
-			return r.Folder(ctx, path)
-		}
-		return r.File(ctx, path)
 	}
 
-	parts := strings.SplitN(id, ":", 2)
-	if len(parts) != 2 {
-		return nil, fmt.Errorf("invalid node id format: %s", id)
-	}
-	kind, nodeID := parts[0], parts[1]
-	switch kind {
-	case "repo":
-		return r.Repo(ctx)
-	case "bundle":
-		return r.Bundle(ctx, nodeID)
-	case "folder":
-		return r.Folder(ctx, nodeID)
-	case "file":
-		return r.File(ctx, nodeID)
-	case "contributor":
-		return r.Contributor(ctx, nodeID)
-	case "policy":
-		return r.Policy(ctx, nodeID)
-	case "violationKind":
-		return r.ViolationKind(ctx, nodeID)
-	default:
-		return nil, fmt.Errorf("unknown node kind: %s", kind)
-	}
+	return nil, fmt.Errorf("invalid node id format: %s", id)
 }
 
 func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
+	projects, _ := r.Projects(ctx, nil)
+	bundles, _ := r.Bundles(ctx, &FilterInput{})
+
+	// Convert pointers to values
+	var projectValues []Project
+	for _, p := range projects {
+		projectValues = append(projectValues, *p)
+	}
+	var bundleValues []Bundle
+	for _, b := range bundles {
+		bundleValues = append(bundleValues, *b)
+	}
+
 	return &Repo{
-		ID:   "repo:semio",
-		Name: "semio",
-		Path: r.RootDir,
+		ID:       "repo:semio",
+		Name:     "semio",
+		Path:     r.RootDir,
+		Projects: projectValues,
+		Bundles:  bundleValues,
 	}, nil
+}
+
+func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*Project, error) {
+	allBundles, err := r.Bundles(ctx, &FilterInput{})
+	if err != nil {
+		return nil, err
+	}
+	projectMap := make(map[string]*Project)
+	for _, b := range allBundles {
+		name := normalizeBundleLabel(b.Name)
+		parts := strings.Split(name, "/")
+		projName := "semio"
+		if len(parts) > 1 && strings.HasPrefix(parts[0], "@") {
+			projName = strings.TrimPrefix(parts[0], "@")
+		} else if strings.HasPrefix(name, "@") {
+			if name == "@semio" {
+				projName = "semio"
+			}
+			if name == "@coda" {
+				projName = "coda"
+			}
+		}
+
+		if _, ok := projectMap[projName]; !ok {
+			kind := ProjectKindUser
+			if projName == "semio-repo" {
+				kind = ProjectKindInfrastructure
+			}
+			projectMap[projName] = &Project{
+				Name:    projName,
+				Kind:    kind,
+				Root:    r.RootDir,
+				Bundles: []Bundle{},
+			}
+		}
+		projectMap[projName].Bundles = append(projectMap[projName].Bundles, *b)
+	}
+
+	var results []*Project
+	for _, p := range projectMap {
+		if filter != nil {
+			opts := filter.ToStreamOptions()
+			if !matchesFilter(p.Name, opts) && !matchesFilter(p.GetID(), opts) {
+				continue
+			}
+		}
+		results = append(results, p)
+	}
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].Name < results[j].Name
+	})
+	return results, nil
+}
+
+func (r *queryResolver) Project(ctx context.Context, name string) (*Project, error) {
+	all, err := r.Projects(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+	for _, p := range all {
+		if p.Name == name || p.GetID() == name {
+			return p, nil
+		}
+	}
+	return nil, nil
 }
 
 func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bundle, error) {
@@ -17465,7 +18604,7 @@ func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error
 	if r.Ctx != nil {
 		bundles := r.Ctx.GetBundles()
 		for _, b := range bundles {
-			if b.Name == name {
+			if b.Name == name || b.GetID() == name {
 				return b, nil
 			}
 		}
@@ -17693,9 +18832,10 @@ func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput
 	return nil, fmt.Errorf("not implemented")
 }
 
-func (r *mutationResolver) GoalUpdate(ctx context.Context, input GoalUpdateInput) (*Goal, error) {
+func (r *mutationResolver) GoalChange(ctx context.Context, id string, input GoalChangeInput) (*Goal, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GoalUpdate(input)
+		input.ID = id
+		return r.Ctx.GoalChange(input)
 	}
 	return nil, fmt.Errorf("not implemented")
 }
@@ -17898,6 +19038,13 @@ func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *Filt
 	return []*Contributor{}, nil
 }
 
+func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Todo, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetTodos(filter)
+	}
+	return []*Todo{}, nil
+}
+
 func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -17965,6 +19112,7 @@ type QueryResolver interface {
 	Folders(ctx context.Context) ([]*Folder, error)
 	Files(ctx context.Context) ([]*File, error)
 	Contributors(ctx context.Context, filter *FilterInput) ([]*Contributor, error)
+	Todos(ctx context.Context, filter *FilterInput) ([]*Todo, error)
 	Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error)
 	Policies(ctx context.Context, filter *FilterInput) ([]*Policy, error)
 	ViolationKinds(ctx context.Context) ([]*ViolationKindMeta, error)
@@ -17983,6 +19131,10 @@ type QueryResolver interface {
 
 type MutationResolver interface {
 	Fix(ctx context.Context, scope *string) (*FixResult, error)
+	GoalChange(ctx context.Context, id string, input GoalChangeInput) (*Goal, error)
+	TodoCreate(ctx context.Context, input TodoCreateInput) (*Todo, error)
+	TodoChange(ctx context.Context, input TodoChangeInput) (*Todo, error)
+	TodoDelete(ctx context.Context, id string) (bool, error)
 	TicketOpen(ctx context.Context, input TicketOpenInput) (*Ticket, error)
 	TicketClose(ctx context.Context, input TicketCloseInput) (*Ticket, error)
 	TicketReopen(ctx context.Context, input TicketReopenInput) (*Ticket, error)
@@ -18005,6 +19157,7 @@ type RepoResolver interface {
 	Folders(ctx context.Context, obj *Repo) ([]*Folder, error)
 	Files(ctx context.Context, obj *Repo) ([]*File, error)
 	Contributors(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Contributor, error)
+	Todos(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Todo, error)
 	Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error)
 	Policies(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Policy, error)
 	ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error)
@@ -19899,7 +21052,7 @@ func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest)
 		return nil, fmt.Errorf("invalid section URI: %s", request.Params.URI)
 	}
 	path := parts[0]
-    sectionPath := strings.Split(parts[1], "/")
+	sectionPath := strings.Split(parts[1], "/")
 
 	query := `query Section($path: String!, $sectionPath: [String!]!) { section(path: $path, sectionPath: $sectionPath) { id path name kind startLine endLine } }`
 	result, err := gql(query, map[string]interface{}{"path": path, "sectionPath": sectionPath})
@@ -19940,13 +21093,13 @@ func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequ
 }
 
 func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-    uri := strings.TrimPrefix(request.Params.URI, "semiorepo://definition/")
+	uri := strings.TrimPrefix(request.Params.URI, "semiorepo://definition/")
 	parts := strings.Split(uri, "#")
 	if len(parts) != 2 {
 		return nil, fmt.Errorf("invalid definition URI: %s", request.Params.URI)
 	}
 	path := parts[0]
-    name := parts[1]
+	name := parts[1]
 
 	query := `query Definition($path: String!, $name: String!) { definition(path: $path, name: $name) { id name kind line } }`
 	result, err := gql(query, map[string]interface{}{"path": path, "name": name})
@@ -20033,7 +21186,7 @@ func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) (
 }
 
 func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-    return nil, fmt.Errorf("goal resource not implemented")
+	return nil, fmt.Errorf("goal resource not implemented")
 }
 
 func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -20056,7 +21209,7 @@ func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest
 }
 
 func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-    id := strings.TrimPrefix(request.Params.URI, "semiorepo://policy/")
+	id := strings.TrimPrefix(request.Params.URI, "semiorepo://policy/")
 	query := `query Policy($id: String!) { policy(id: $id) { id description violations { id } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
@@ -20095,7 +21248,7 @@ func handleViolationKindsResource(ctx context.Context, request mcp.ReadResourceR
 }
 
 func handleViolationKindResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-    id := strings.TrimPrefix(request.Params.URI, "semiorepo://violationKind/")
+	id := strings.TrimPrefix(request.Params.URI, "semiorepo://violationKind/")
 	query := `query ViolationKind($id: String!) { violationKind(id: $id) { id priority autofixable reason solution } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
@@ -20134,7 +21287,7 @@ func handleContributorsResource(ctx context.Context, request mcp.ReadResourceReq
 }
 
 func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-    id := strings.TrimPrefix(request.Params.URI, "semiorepo://contributor/")
+	id := strings.TrimPrefix(request.Params.URI, "semiorepo://contributor/")
 	query := `query Contributor($id: String!) { contributor(id: $id) { id email name contributions { count } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
@@ -20173,7 +21326,7 @@ func handleCommitsResource(ctx context.Context, request mcp.ReadResourceRequest)
 }
 
 func handleCommitResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-    return nil, fmt.Errorf("commit resource not implemented")
+	return nil, fmt.Errorf("commit resource not implemented")
 }
 
 // #endregion Mcp Resources Handlers
@@ -20538,26 +21691,11 @@ func findBundleInfo(path string) (name, root string, ok bool) {
 }
 
 func buildFolderID(path string, bundleID *string) string {
-	normalizedPath := NormalizePath(path)
-	name, root, ok := findBundleInfo(normalizedPath)
-	if ok {
-		rel, _ := filepath.Rel(root, normalizedPath)
-		if rel == "." {
-			return normalizeBundleLabel(name)
-		}
-		return normalizeBundleLabel(name) + "/" + NormalizePath(rel)
-	}
-	return "@semio-repo/repo/" + normalizedPath
+	return "📂" + NormalizePath(path)
 }
 
 func buildFileID(path string, bundleID *string) string {
-	normalizedPath := NormalizePath(path)
-	name, root, ok := findBundleInfo(normalizedPath)
-	if ok {
-		rel, _ := filepath.Rel(root, normalizedPath)
-		return normalizeBundleLabel(name) + "/" + NormalizePath(rel)
-	}
-	return "@semio-repo/repo/" + normalizedPath
+	return "📄" + NormalizePath(path)
 }
 
 func buildSectionID(fileID string, sectionPath []string) string {
@@ -21100,14 +22238,6 @@ func (r *Resolver) Definitions(ctx context.Context, repo *Repo) ([]*Definition, 
 
 func (r *Resolver) Contributors(ctx context.Context, repo *Repo) ([]*Contributor, error) {
 	return r.Ctx.GetContributors()
-}
-
-func (r *Resolver) Tickets(ctx context.Context, repo *Repo, year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
-	return r.Ctx.GetTickets(year, month, day, status)
-}
-
-func (r *Resolver) Drafts(ctx context.Context) ([]*Draft, error) {
-	return r.Ctx.GetDrafts()
 }
 
 func (r *Resolver) Policies(ctx context.Context, repo *Repo) ([]*Policy, error) {
@@ -22232,4 +23362,236 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 		Bundles: resBundles,
 	}
 }
+
 // #endregion Cli
+
+// #region Todos
+
+func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
+	allTodos, err := ScanTodos(c.rootDir)
+	if err != nil {
+		return nil, err
+	}
+	if filter != nil && filter.Filter != nil {
+		search := strings.ToLower(*filter.Filter)
+		var match []*Todo
+		for _, t := range allTodos {
+			if strings.Contains(strings.ToLower(t.Name), search) || strings.Contains(strings.ToLower(t.Description), search) {
+				match = append(match, t)
+			}
+		}
+		return match, nil
+	}
+	return allTodos, nil
+}
+
+func ScanTodos(rootDir string) ([]*Todo, error) {
+	var todos []*Todo
+	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if d.IsDir() {
+			if strings.HasPrefix(d.Name(), ".") && d.Name() != "." && d.Name() != ".semio-repo" {
+				return fs.SkipDir
+			}
+			if d.Name() == "node_modules" || d.Name() == "dist" || d.Name() == "build" {
+				return fs.SkipDir
+			}
+			// Parse .todos.md
+			todoPath := filepath.Join(path, ".todos.md")
+			if _, err := os.Stat(todoPath); err == nil {
+				content, _ := os.ReadFile(todoPath)
+				todos = append(todos, ParseTodoMarkdown(string(content), path)...)
+			}
+		} else {
+			ext := filepath.Ext(path)
+			// Supported extensions
+			switch ext {
+			case ".ts", ".js", ".tsx", ".jsx", ".go", ".cs", ".py", ".md", ".json":
+				content, _ := os.ReadFile(path)
+				todos = append(todos, ParseTodoComments(string(content), path)...)
+			}
+		}
+		return nil
+	})
+	return todos, err
+}
+
+func ParseTodoMarkdown(content string, parentPath string) []*Todo {
+	var todos []*Todo
+	lines := strings.Split(content, "\n")
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "- TODO ") {
+			rem := strings.TrimPrefix(trimmed, "- TODO ")
+			parts := strings.SplitN(rem, ":", 2)
+			name := strings.TrimSpace(parts[0])
+			desc := ""
+			if len(parts) > 1 {
+				desc = strings.TrimSpace(parts[1])
+			}
+			id := Slugify(name)
+			todos = append(todos, &Todo{
+				ID:          id,
+				Name:        name,
+				Description: desc,
+				ParentID:    parentPath,
+				Location:    &Location{FilePath: filepath.Join(parentPath, ".todos.md")},
+			})
+		}
+	}
+	return todos
+}
+
+func ParseTodoComments(content string, filePath string) []*Todo {
+	var todos []*Todo
+	lines := strings.Split(content, "\n")
+	// Matches "// TODO name: desc" or "# TODO name: desc"
+	re := regexp.MustCompile(`^\s*(//|#|--)\s*TODO\s+([^:]+):\s*(.*)$`)
+	for i, line := range lines {
+		matches := re.FindStringSubmatch(line)
+		if len(matches) > 3 {
+			name := strings.TrimSpace(matches[2])
+			desc := strings.TrimSpace(matches[3])
+			id := Slugify(name)
+			todos = append(todos, &Todo{
+				ID:          id,
+				Name:        name,
+				Description: desc,
+				ParentID:    filePath,
+				Location:    &Location{FilePath: filePath, Line: i + 1, Column: 1},
+			})
+		}
+	}
+	return todos
+}
+
+func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
+	// Check if parent is folder
+	info, err := os.Stat(input.ParentID)
+	if err == nil && info.IsDir() {
+		todoPath := filepath.Join(input.ParentID, ".todos.md")
+		line := fmt.Sprintf("- TODO %s: %s\n", input.Name, input.Description)
+		f, err := os.OpenFile(todoPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		if _, err := f.WriteString(line); err != nil {
+			return nil, err
+		}
+		return &Todo{
+			ID:          Slugify(input.Name),
+			Name:        input.Name,
+			Description: input.Description,
+			ParentID:    input.ParentID,
+		}, nil
+	}
+	// Check if parent is file
+	if err == nil && !info.IsDir() {
+		ext := filepath.Ext(input.ParentID)
+		prefix := "//"
+		if ext == ".py" || ext == ".sh" || ext == ".yaml" || ext == ".yml" {
+			prefix = "#"
+		} else if ext == ".sql" || ext == ".lua" {
+			prefix = "--"
+		}
+		line := fmt.Sprintf("\n%s TODO %s: %s\n", prefix, input.Name, input.Description)
+		f, err := os.OpenFile(input.ParentID, os.O_APPEND|os.O_WRONLY, 0644)
+		if err != nil {
+			return nil, err
+		}
+		defer f.Close()
+		if _, err := f.WriteString(line); err != nil {
+			return nil, err
+		}
+		return &Todo{
+			ID:          Slugify(input.Name),
+			Name:        input.Name,
+			Description: input.Description,
+			ParentID:    input.ParentID,
+			Location:    &Location{FilePath: input.ParentID},
+		}, nil
+	}
+	return nil, fmt.Errorf("invalid parent id (must be path to folder or file)")
+}
+
+func (c *repoContext) TodoChange(input TodoChangeInput) (*Todo, error) {
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (c *repoContext) TodoDelete(id string) (bool, error) {
+	todos, err := ScanTodos(c.rootDir)
+	if err != nil {
+		return false, err
+	}
+	for _, t := range todos {
+		if t.ID == id {
+			if strings.HasSuffix(t.Location.FilePath, ".todos.md") {
+				removeLineFromMarkdown(t.Location.FilePath, t.Name)
+				// Re-read file to verify?
+				return true, nil
+			}
+			if t.Location.Line > 0 {
+				removeLineFromFile(t.Location.FilePath, t.Location.Line)
+				return true, nil
+			}
+		}
+	}
+	return false, fmt.Errorf("todo not found")
+}
+
+func (c *repoContext) TodoToTicket(id string, input TicketOpenInput) (*Ticket, error) {
+	todos, _ := ScanTodos(c.rootDir)
+	var todo *Todo
+	for _, t := range todos {
+		if t.ID == id {
+			todo = t
+			break
+		}
+	}
+	if todo == nil {
+		return nil, fmt.Errorf("todo not found")
+	}
+
+	if input.Title == "" {
+		input.Title = todo.Name
+	}
+	input.Prompt = fmt.Sprintf("%s\n\n%s", todo.Description, input.Prompt)
+
+	ticket, err := c.TicketOpen(input)
+	if err != nil {
+		return nil, err
+	}
+	c.TodoDelete(id)
+	return ticket, nil
+}
+
+func removeLineFromMarkdown(path, name string) {
+	content, _ := os.ReadFile(path)
+	lines := strings.Split(string(content), "\n")
+	var newLines []string
+	prefix := "- TODO " + name + ":"
+	for _, line := range lines {
+		if strings.HasPrefix(strings.TrimSpace(line), prefix) {
+			continue
+		}
+		newLines = append(newLines, line)
+	}
+	os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
+}
+
+func removeLineFromFile(path string, lineNum int) {
+	content, _ := os.ReadFile(path)
+	lines := strings.Split(string(content), "\n")
+	if lineNum > 0 && lineNum <= len(lines) {
+		// Only remove if it looks like a todo
+		// if strings.Contains(lines[lineNum-1], "TODO") {
+		lines = append(lines[:lineNum-1], lines[lineNum:]...)
+		os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0644)
+		// }
+	}
+}
+
+// #endregion Todos

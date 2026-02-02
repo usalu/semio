@@ -1,6 +1,6 @@
 <!-- IMPORTANT -->
 
-ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or `@semio-repo/go/repo`) for repo-specific infrastructure. Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <client> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
+ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or the cli `./@semio-repo/go/go --md`) for repo-specific infrastructure. ALWAYS start by listing the current goal tree with `goal tree`. Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <client> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
 Create a goal with mcp tool `goal_open`(or`goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or`goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
 A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 
@@ -78,6 +78,10 @@ Engine startup MUST support a pure stdio MCP server mode.
 
 App hover and selection state MUST be managed by the Sketchpad state machine.
 
+### Tooling
+
+Sidebar view providers MUST be registered once per view with a single shared filter state source.
+
 ### Ticket
 
 A `ticket` is a development artifact that tracks a task.
@@ -92,7 +96,7 @@ A ticket iteration MUST store `started` and optional `finished` timestamps.
 
 A ticket MUST store a summary when finished.
 
-A ticket MUST store semantic diffs for bundles, folders, files, sections, and definitions with line stats when finished.
+A ticket MUST store semantic diffs for projects, bundles, packages, folders, files, sections, and definitions with line stats when finished.
 
 Ticket workspaces MUST store a single ticket.md that captures todos, changes, log entries, and the summary.
 Ticket workspaces MUST store the content of the draft if provided.
@@ -114,7 +118,7 @@ Ticket finish MUST require a summary and a list of files.
 
 Temporary task artifacts MUST be stored inside the active ticket workspace.
 
-Ticket finish MUST derive semantic diffs across bundles, folders, files, sections, and definitions via git diff between the ticket base commit and the current commit, scoped to the files declared on the ticket.
+Ticket finish MUST derive semantic diffs across projects, bundles, packages, folders, files, sections, and definitions via git diff between the ticket base commit and the current commit, scoped to the files declared on the ticket.
 Ticket line metrics MUST map added lines to current scopes and removed lines to base-commit scopes for semantic diffs.
 
 ### Goal
@@ -160,10 +164,10 @@ GraphQL range selections MUST request Position subfields (line, column) for star
 Section list queries MUST include nested children ranges for full tree hydration.
 Ticket listing MUST read from `.semio-repo/tickets` and fall back to legacy `tickets/` directories when present.
 Ticket open MUST require a ticket Client enum value.
-Repo CLI MUST expose an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
+Repo CLI MUST expose an export command that emits a SQLite snapshot of projects, bundles, packages, folders, files, sections, contributors, tickets, policies, and violations.
 Repo section tooling MUST expose an integrate command that merges source files into target sections.
 Ticket close MUST apply all affected bundle labels and the `@semio-repo` label for out-of-bundle paths.
-Ticket close MUST post a metrics comment listing semantic changes for bundles, folders, files, sections, and definitions with status icons and `+added`/`-removed` counts.
+Ticket close MUST post a metrics comment listing semantic changes for projects, bundles, packages, folders, files, sections, and definitions with status icons and `+added`/`-removed` counts.
 Ticket issue bodies MUST prepend a `# 🤖 Prompt` heading.
 Ticket reopen MUST add a `# 🤖 Prompt` comment with the latest prompt.
 Ticket close MUST prepend a `# 🔍 Summary` heading to the summary comment.
@@ -200,7 +204,7 @@ Contributor contributions MUST be derived from ticket frontmatter and source fil
 
 Contributor ordering MUST be based on ticket contribution count.
 
-Contributor contributions MUST expose tickets, commits, bundles, files, and line totals.
+Contributor contributions MUST expose tickets, commits, projects, bundles, packages, files, and line totals.
 
 ### Kit
 
@@ -470,6 +474,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - Ticket tooling treats temporary artifacts as part of the active ticket workspace.
 - Devcontainer setup installs the workspace extension for VS Code, Cursor, Windsurf, and Antigravity on attach without manual installation actions, validating installs per detected editor IPC hook CLI and falling back to extensions directories with extensions.json registration on WSL-only CLI responses.
 - Extension engine compatibility targets the lowest supported editor version so Cursor accepts the packaged VSIX.
+- Sidebar view registration keeps a single filter view and monorepo view instance wired to the shared filter state.
 
 # Monorepo
 
@@ -611,7 +616,7 @@ go/
 
 ```bash
 # Using Go binary (preferred)
-@semio-repo/go/repo <command> [subcommand] [options]
+@semio-repo/go/go <command> [subcommand] [options]
 
 # Using TypeScript fallback
 npx tsx repo.tsx <command> [subcommand] [options]
@@ -774,7 +779,7 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
   "mcpServers": {
     "semio-repo": {
         "type": "stdio",
-        "command": "@semio-repo/go/repo",
+        "command": "@semio-repo/go/go",
         "args": [
           "--mcp-stdio"
         ]
@@ -793,8 +798,10 @@ The MCP server communicates via stdio and exposes all repo tools as MCP tools. C
 - `ticket_read` - Read a ticket
 - `ticket_progress` - Progress iteration on a ticket
 - `ticket_close` - Finish a ticket
-- `project_list` - List Nx bundles
-- `project_tree` - Show bundle tree
+- `project_list` - List projects
+- `project_tree` - Show project tree
+- `bundle_list` - List bundles
+- `bundle_tree` - Show bundle tree
 - `folder_create`, `folder_move`, `folder_delete`, `folder_list`, `folder_tree` - Folder operations
 - `file_create`, `file_move`, `file_delete`, `file_list`, `file_tree` - File operations
 - `section_create`, `section_move`, `section_delete`, `section_list`, `section_tree`, `integrate` - Section operations
@@ -1759,6 +1766,18 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 ## 📄 .devcontainer/post-attach.sh
 
 Devcontainer post-attach script that builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration on WSL-only CLI responses, then writes the Windsurf MCP config for the semio-repo server.
+
+## 📁 @semio-repo/
+
+Repo tooling, CLI, and editor integration sources.
+
+## 📁 @semio-repo/vscode/
+
+VS Code extension source for semio-repo tooling workflows.
+
+## 📄 @semio-repo/vscode/extension.ts
+
+Extension activation entrypoint that registers sidebar tree providers (including monorepo and filter views), shared filter state, and startup-loaded filter value hydration.
 
 ## 📁 js/
 

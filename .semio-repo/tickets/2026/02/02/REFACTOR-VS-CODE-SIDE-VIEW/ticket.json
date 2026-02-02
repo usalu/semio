@@ -1,0 +1,23 @@
+{
+  "title": "Refactor VS Code Side View",
+  "status": "open",
+  "prompt": "The  extension sideview should be changed/refactored/consolidated into two sections: Monorepo and Filter.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/304"
+  },
+  "goal": "REPO-VSCODE-EXTENSION",
+  "started": "2026-02-02T17:49:17.002455262Z",
+  "iterations": [
+    {
+      "prompt": "The  extension sideview should be changed/refactored/consolidated into two sections: Monorepo and Filter.",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-02T17:49:17.002455262Z",
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1"
+    }
+  ]
+}

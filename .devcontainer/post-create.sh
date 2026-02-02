@@ -32,7 +32,7 @@ uv sync
 #region Go
 echo "Building Go binaries..."
 cd go/repo
-go build -o repo
+go build
 cd ../..
 #endregion Go
 #region Dotnet

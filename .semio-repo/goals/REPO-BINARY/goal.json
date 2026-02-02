@@ -1,0 +1,27 @@
+{
+  "title": "Repo Binary",
+  "description": "Repository binary tools",
+  "prompt": "Repo Binary",
+  "status": "open",
+  "dates": {
+    "due": "2026-12-31"
+  },
+  "client": "windsurf-chat",
+  "llm": "sonnet-4-5",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/22"
+  },
+  "iterations": [
+    {
+      "prompt": "Repo Binary",
+      "llm": "sonnet-4-5",
+      "ui": "windsurf-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-02T20:23:06.841026298Z",
+      "commit": ""
+    }
+  ]
+}

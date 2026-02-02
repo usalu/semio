@@ -12,10 +12,10 @@ old
 *.exe
 generated
 #--------------------------------------GO--------------------------------------
-go/repo/repo
-go/repo/main
-go/server/server
-go/server/main
+@semio-repo/go/go
+@semio-repo/go/main
+@semio-repo/server/server
+@semio-repo/server/main
 #--------------------------------------MACOS--------------------------------------
 .DS_Store
 #--------------------------------------NX--------------------------------------

@@ -42,6 +42,7 @@ type Query {
   folders(filter: FilterInput): [Folder!]!
   files(filter: FilterInput): [File!]!
   contributors(filter: FilterInput): [Contributor!]!
+  todos(filter: FilterInput): [Todo!]!
   tickets(year: Int, month: Int, day: Int, status: TicketStatus, filter: FilterInput): [Ticket!]!
   goals(filter: FilterInput): [Goal!]!
   policies(filter: FilterInput): [Policy!]!
@@ -68,7 +69,12 @@ type Query {
 type Mutation {
   fix(scope: String): FixResult!
   goalCreate(input: GoalCreateInput!): Goal
+  goalChange(id: ID!, input: GoalChangeInput!): Goal
+  todoCreate(input: TodoCreateInput!): Todo
+  todoChange(input: TodoChangeInput!): Todo
+  todoDelete(id: ID!): Boolean!
   ticketOpen(input: TicketOpenInput!): Ticket
+  ticketChange(year: Int!, month: Int!, day: Int!, slug: String!, input: TicketChangeInput!): Ticket
   ticketClose(input: TicketCloseInput!): Ticket
   ticketReopen(input: TicketReopenInput!): Ticket
   contributorAdd(input: ContributorAddInput!): Contributor
@@ -90,6 +96,18 @@ type Mutation {
 
 # #region Inputs
 
+input TodoCreateInput {
+  parentId: ID!
+  name: String!
+  description: String
+}
+
+input TodoChangeInput {
+  id: ID!
+  name: String
+  description: String
+}
+
 input GoalCreateInput {
   title: String!
   description: String!
@@ -97,6 +115,15 @@ input GoalCreateInput {
   dueDate: String!
   ui: String!
   llm: String!
+  noGithub: Boolean
+  parent: String
+}
+
+input GoalChangeInput {
+  title: String
+  description: String
+  dueDate: String
+  parent: String
   noGithub: Boolean
 }
 
@@ -107,6 +134,14 @@ input TicketOpenInput {
   ui: TicketClient!
   noIssue: Boolean
   planPath: String
+  goal: String
+  parent: String
+  draft: String
+}
+
+input TicketChangeInput {
+  goal: String
+  parent: String
 }
 
 input TicketCloseInput {
@@ -199,21 +234,52 @@ enum DefinitionKind {
 
 # #region Types
 
+type Location {
+  filePath: String
+  line: Int
+  column: Int
+}
+
+type Todo implements Node {
+  id: ID!
+  name: String!
+  description: String
+  parentId: ID!
+  location: Location
+}
+
 type Repo implements Node {
   id: ID!
   name: String!
   path: String!
+  projects(filter: FilterInput): [Project!]!
+  commits(limit: Int): [Commit!]!
   bundles(filter: FilterInput): [Bundle!]!
   folders(filter: FilterInput): [Folder!]!
   files(filter: FilterInput): [File!]!
   sections: [Section!]!
   definitions: [Definition!]!
   contributors(filter: FilterInput): [Contributor!]!
+  todos(filter: FilterInput): [Todo!]!
   goals(filter: FilterInput): [Goal!]!
   tickets(year: Int, month: Int, day: Int, status: TicketStatus, filter: FilterInput): [Ticket!]!
   policies(filter: FilterInput): [Policy!]!
   violationKinds: [ViolationKind!]!
   violations(scope: String): [Violation!]!
+}
+
+type Project implements Node {
+  id: ID!
+  name: String!
+  kind: ProjectKind!
+  root: String!
+  bundles(filter: FilterInput): [Bundle!]!
+}
+
+enum ProjectKind {
+  USER
+  INFRASTRUCTURE
+  RESEARCH
 }
 
 type Bundle implements Node {
@@ -368,10 +434,12 @@ type Goal implements Node {
   description: String
   prompt: String
   dueDate: String
+  createdAt: String
   ui: String
   llm: String
   milestone: Int
   status: String!
+  parent: String
 }
 
 type Ticket implements Node {

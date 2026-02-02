@@ -758,7 +758,7 @@ Afterwards you can install uv with this command:
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-Then you can run `@semio-repo/go/repo preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
+Then you can run `@semio-repo/go/go preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 ## 🎫 Tickets [↑](#-development)
 
@@ -1152,6 +1152,7 @@ VS Code consumes the JSONL stream, extracts the final `result` payload, and retu
 Devcontainer attach builds and installs the local extension automatically using IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity), verifies via list-extensions, and falls back to direct installation into IDE extensions directories with extensions.json updates when CLIs report WSL-only usage.
 The semio-repo extension targets a VS Code engine range compatible with Cursor (1.105.x) so Cursor can load the bundled extension without version rejections.
 VS Code extension packaging requires an unscoped extension name in `@semio-repo/vscode/package.json` so `vsce package` can build the local `.vsix`.
+VS Code extension sidebar views are registered through a single entrypoint so monorepo and filter trees share one provider and codegen can parse `extension.ts` without duplicate identifiers.
 Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo/` so workflow state stays centralized and out of product bundles.
 Repo analyze only inspects considered files by honoring `.gitignore`, excluding `.semio-repo/`, and skipping `assets/repo/` fixtures.
 Repo file/folder listing and diagnostics apply `.gitignore` patterns directly (including tracked matches) alongside repo metadata exclusions, and CLI analyze/fix commands accept scope arguments so tooling stays consistent across entrypoints.

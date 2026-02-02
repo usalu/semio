@@ -11,7 +11,7 @@ Make sure all tests pass.
 Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out.
 Be sure that it works everywhere before stopping.
-Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG/ticket.md`
+Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG*/ticket.md`
 Dont keep any legacy api or backwards compatiblity.
 
 Make a refactor plan that cleanly achieves this.
@@ -19,6 +19,87 @@ Make a refactor plan that cleanly achieves this.
 The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
+
+Introduce the ticket clean command with to close all open tickets.
+
+Make sure that rename, extract and integrate section commands are tested for every single language. Extend the exsting tests.
+
+The monorepo folder layout was recently restructured. The dev docs (AGENTS.md and README.md) are outdated.
+
+The semio repo mechanism should be extanded with: todos
+A todo is a task to be done in the future. It just has a name and a description. Most resources (bundle, folder, file, section, definition) can have todos. In files todos are stored in the file as comments right above the section or definition they belong to. They start with `TODO <name>: <description>`. For folders they are stored in a file called `.todos.md` in the folder. The markdown file just has a list of todos. On the root of bundle folders they are attributed to the bundle instead of the folder.
+```md
+- TODO <name>: <description>
+- TODO <name>: <description>
+- TODO <name>: <description>
+…
+```
+
+The semio repo go binary should provide commands to create, change, delete, list, tree, search todos. As id used the capitalized slug of the name.
+`./@semio-repo/go/go todo create <parent-id> <name> <description>`
+`./@semio-repo/go/go todo change <id> --name <new-name>? --description <new-description>?`
+`./@semio-repo/go/go todo delete <id>`
+`./@semio-repo/go/go todo list`
+`./@semio-repo/go/go todo tree`
+`./@semio-repo/go/go todo search <search-string>`
+Add the option to create a draft from a todo and delete the todo.
+Add the option to create a ticket from a todo and delete the todo.
+
+The semio repo vscode extension should show the todos in the sideview. Additionally every tree item should have an action button menu to create a new todo. Make sure that all todos are fetched lazily once a tree item is expanded.
+
+Extend the existing tests to cover all new features.
+
+The `@semio-repo/vscode` extension sideview should be changed/refactored/consolidated into two sections:
+├─ Monorepo
+│ ├─ @PROJECTNAME # NAVIGATE TO PROJECT
+│ │ ├─ BUNDLENAME # NAVIGATE TO BUNDLE
+│ │ │ ├─ FOLDERNAME* # NAVIGATE TO FOLDER
+│ │ │ │ ├─ FILENAME # NAVIGATE TO FILE
+│ │ │ │ │ ├─ SECTIONNAME* # NAVIGATE TO SECTION
+│ │ │ │ │ │ ├─ DEFINITIONNAME # NAVIGATE TO DEFINITION
+│ ├─ Goals # NAVIGATE TO PROJECT
+│ │ ├─ GOALNAME* # NAVIGATE TO GOAL
+│ │ │ ├─ TICKETNAME* # NAVIGATE TO TICKET
+│ ├─ Tickets # NAVIGATE TO PROJECT
+│ │ ├─ YEAR # NAVIGATE TO YEAR
+│ │ │ ├─ MONTH # NAVIGATE TO MONTH
+│ │ │ │ ├─ DAY # NAVIGATE TO DAY
+│ │ │ │ │ ├─ TICKETNAME* # NAVIGATE TO TICKET
+│ │ │ │ │ │ ├─ TICKETDETAILS* # TICKETDETAILSACTIONS
+│ ├─ Policies # NAVIGATE TO PROJECT
+│ │ ├─ POLICYNAME # NAVIGATE TO POLICY
+│ │ │ ├─ VIOLATIONKINDNAME* # NAVIGATE TO VIOLATIONKIND
+│ ├─ Contributors # NAVIGATE TO PROJECT
+│ │ ├─ CONTRIBUTORNAME # NAVIGATE TO CONTRIBUTOR
+│ │ │ ├─ Emails # MAILTO
+│ │ │ ├─ Links # NAVIGATE TO LINK
+│ │ │ ├─ Contributions # NAVIGATE TO CONTRIBUTIONS
+│ ├─ Commits # NAVIGATE TO PROJECT
+│ │ ├─ COMMITSHA # NAVIGATE TO COMMIT
+│ │ │ ├─ Tickets # NAVIGATE TO TICKETS
+│ │ │ │ ├─ GOALNAME* # NAVIGATE TO GOAL
+│ │ │ │ │ ├─ TICKETNAME* # NAVIGATE TO TICKET
+│ │ │ ├─ Goals # NAVIGATE TO GOALS
+│ │ │ │ ├─ GOALNAME* # NAVIGATE TO GOAL
+├─ Filter
+│ ├─ SEARCH # match case, match whole word, regex
+│ ├─ bundle # library, binary, ui, site, assets, default
+│ ├─ folder # organization, required
+│ ├─ section # none, all
+│ ├─ definition # implementation, interface, constant
+│ ├─ time # none, all
+│ │ └─ YEAR # none, all
+│ │ │ └─ MONTH # none, all
+│ │ │ │ └─ DAY # none, all
+
+The semio repo go binary should be extended/refactored/changed:
+- tickets are currently stored always by `YYYY/MM/DD/SLUG/ticket.md.` Tickets can have a a parent. Make sure that child tickets are stored inside the parent ticket folder e.g. `YYYY/MM/DD/SLUG/CHILD-SLUG/GRANDCHILD-SLUG/ticket.md`.
+
+The `@semio-repo/go` binary is not yet completly updated to the new repo layout. E.g. the id and uri system is not yet completly updated.
+Analyze in detail what is missing and what need to updated. Dont forget to update the dev-docs (AGENTS.md and README.md).
+e.g. all project commands such as project list, project tree, project create, project delete, project update, etc are not yet implemented.
+Further bundles are no longer a one-to-one mapping to native packages such as `package.json`, `go.mod`, `pyproject.toml`, `Cargo.toml`, `*.csproj`, etc but instead a bundle can have multiple native packages e.g. `semio/net` has `Semio/Semio.csproj`, `Semio.Tests.csproj` and `Semio.Benchmark.csproj`.
+The codebase tree view in the `@semio-repo/vscode` extension does not yet have the projects tree items on root level
 
 The complete monorepo was restructured. A new repo concept was introduced: projects. A project is a collection of bundles.
 By design every framework that is used just has one global version. E.g. just one version of Typescript, Python, Go, Rust, C#, etc.
@@ -37,9 +118,39 @@ The semio repo mcp server should expose the following
 
 resources:
 
+The id system in semio-repo is:
+
+repo: `🌍`
+projects: `🏗️`
+project: `<kind>@{project-id}` (<kind> - 👤:user e.g. `semio`, 🧰:infrastructure e.g. `semio-repo`, 🔬:research e.g. `coda`)
+bundles: `📦@{project-id}`
+bundle: `<kind>@{project-id}/{id}` (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 🌐:site, 🏪:assets)
+folders: `📁{parent-path*}`
+folder: `<kind>{path*}` (<kind> - 🗃️:organization, 📁:required)
+files: `📄{folder-path*}` 
+file: `<kind>{path*}` (<kind> - 💻:code, 🧪:test, 📃:docs, ⚙️:config, 💾:resource, ⚖️:license)
+sections: `🔖{file-path*}#{parent-path*}`
+section: `🔖{path*}` 
+definitions: `🏷️{file-path*}#{section-path*}§{path*}`
+definition: `<kind>{file-path*}#{section-path*}§{path*}` (<kind> - 🛠️:implementation, ✂️:interface, 🪨:constant)
+tickets: `📅`
+ticket: `📅{year}/{month}/{day}/{slug}{?status}`
+goals: `🎯`
+goal: `🎯{path*}`
+policies: `🛡️`
+policy: `🛡️/{id}`
+violationKinds: `🚫`
+violationKind: `🚫{policy-id}/{path*}`
+contributors: `👤`
+contributor: `👤{github}`
+commits: `🔀`
+commit: `🔀{sha}`
+
 The uri system in semio-repo is:
 
 repo: `semiorepo://repo`
+projects: `semiorepo://projects`
+project: `semiorepo://project/{id}`
 bundles: `semiorepo://bundles`
 bundle: `semiorepo://bundle/{id}`
 folders: `semiorepo://folders/{parent-path*}`
@@ -47,7 +158,7 @@ folder: `semiorepo://folder/{path*}`
 files: `semiorepo://files/{folder-path*}`
 file: `semiorepo://file/{path*}`
 sections: `semiorepo://sections/{file-path*}`
-section: `semiorepo://section/{path*}` # e.g. 
+section: `semiorepo://section/{path*}` # just id but replace `#` with `/` e.g. `@semio/js/sketchpad/Design.tsx#State Management#Design Store` turns into `@semio/js/sketchpad/Design.tsx/State Management/Design Store`
 definitions: `semiorepo://definitions/{path*}`
 definition: `semiorepo://definition/{path*}`
 tickets: `semiorepo://tickets`
@@ -63,41 +174,40 @@ contributor: `semiorepo://contributor/{github}`
 commits: `semiorepo://commits`
 commit: `semiorepo://commit/{sha}`
 
+The query params are
+
 General query params: 
 {?client}
-repo: filter all children by client (different meaning for different resources)
-bundle: every bundle has a client (e.g.) 
+tickets: at least one iteration with the given client
+goals: at least one iteration with the given client
+
+{?llm?}
+tickets: at least one iteration with the given llm
+goal: at least one iteration with the given llm
+
+{?year}
+tickets: at least one iteration with the given year
+goals: at least one iteration with the given year
+
+{?month}
+tickets: at least one iteration with the given month
+goals: at least one iteration with the given month
+
+{?day}
+tickets: at least one iteration with the given day
+goals: at least one iteration with the given day
+
+{?contributor}
+tickets: at least one iteration with the given contributor
+goals: at least one iteration with the given contributor
+
+{?status}
+tickets: only the given status
+goals: only the given status
 
 
-?llm?contributor?year?month?day?filter?status?}
-
-The id system in semio-repo is:
-
-repo: `🌍@semio-repo`
-bundles: `📦@semio-repo`
-bundle: `<kind>@semio-repo/{id}` (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 🌐:site, 🏪:assets)
-folders: `📁@semio-repo/{bundle-id}/{parent-path*}` # exception: root folders are under `📁@semio-repo/repo` e.g. `📁@semio-repo/repo/js` is the folder for the bundle `📦@semio/js` in `./js/semio`
-folder: `<kind>@semio-repo/{path*}` (<kind> - 🗃️:organization, 📁:required)
-files: `📄@semio-repo/{folder-path*}` 
-file: `<kind>@semio-repo/{path*}` (<kind> - 💻:code, 🧪:test, 📃:docs, ⚙️:config, 💾:resource, ⚖️:license)
-sections: `🔖@semio-repo/{bundle-id}/{file-path*}#{path*}`
-section: `🔖@semio-repo/{path*}` 
-definitions: `🏷️@semio-repo/{file-path*}#{section-path*}§{path*}`
-definition: `<kind>@semio-repo/{file-path*}#{section-path*}§{path*}` (<kind> - 🛠️:implementation, ✂️:interface, 🪨:constant)
-tickets: `📅@semio-repo`
-ticket: `📅@semio-repo/{year}/{month}/{day}/{slug}{?status}`
-goals: `🎯@semio-repo`
-goal: `🎯@semio-repo/goals/{path*}`
-policies: `🛡️@semio-repo`
-policy: `🛡️@semio-repo/{id}`
-violationKinds: `🚫@semio-repo`
-violationKind: `🚫@semio-repo/{policy-id}/{path*}`
-contributors: `👤@semio-repo`
-contributor: `👤@semio-repo/{github}`
-commits: `🔀@semio-repo`
-commit: `🔀@semio-repo/{sha}`
-
-
+Refactor/Extend/Change the semio repo go binary.
+Introduce a global --md flag that outputs the result in markdown format. Markdown should be used by the mcp server.
 Make sure every command has three different output formats: human colored text with ids used by the cli, markdown with uris used by mcp and json mode that has all information. 
 
 prompts:
@@ -130,9 +240,6 @@ The cli should
 `./go/repo/repo bundle create <id> <folder>?` e.g. `./go/repo/repo bundle create @semio/js js/semio`
 `./go/repo/repo bundle update <id> --id <new-id>? --folder <new-folder>?` e.g. `./go/repo/repo bundle update @semio/js --id @semio/javascript --folder js/javascript`
 `./go/repo/repo bundle <id>`
-
-
-
 
 Create a new design assistant mcp server called `coda` (Constrained Design Assistant).
 
@@ -361,7 +468,7 @@ Create a new goal for `r26-02` release. The aim of this release is to have sketc
 Add a new goal to the `r26-02` release goal: Running sketchpad
 Due date mid of next month.
 
-Create a new goal tree:
+Make sure to expand the goal tree to this:
 - r26-02
   - Running sketchpad
     - Running sketchpad Apps
@@ -377,6 +484,12 @@ Create a new goal tree:
     - Updated Dev Docs
       - Updated AGENTS.md
       - Updated README.md
+- r26-03
+  - Running .NET
+    - Tested .NET
+    - Running Grasshopper
+      - Pure C# Components
+      - Tested Grasshopper Components
 - AI-optimized Repo
   - Repo Client
     - Repo Binary
@@ -385,6 +498,8 @@ Create a new goal tree:
     - Repo VSCode Extension
   - Repo Server
     - Repo API
+  
+Browse through all the existing tickets and assign them to a goal and optionally a parent ticket. Use `./@semio-repo/go/go ticket change <ticket-id> --goal <goal-id> --parent <parent-ticket-id>` to change the goal and parent ticket of a ticket. Use `./@semio-repo/go/go goal tree` to get the goal tree. Use `./@semio-repo/go/go ticket list` to get the ticket list.
 
 All commands from the binary should be available in vscode (a lot are missing e.g. the goal commands). The arguments should be fetched smarter than just asking the user for strings. E.g. instead of asking for year, month, day, slug which identifies a ticket, show a list of years, then months, then days, then a list of tickets to choose from. Instead of asking for an id of the goal, show first a the top-level goals, then the sub-goals. Do multiple commands that execute the same command but with multiple different ways to fetch the arguments when it makes sense e.g. a ticket can also be selected by goals, subgoals, ticket, sub-tickets, etc.
 
@@ -470,7 +585,7 @@ The repo binary and vscode extension should additionally ignore LICENSE.md files
 
 Make sure the repo binary and vscode extension are properly ignoring all files and folders that are either gitignored or in the `.semio-repo` folder. E.g. I get in vscode: [analyzeFile] result for .venv/lib/python3.14/site-packages/jupyterlab/tests/mock_packages/interop/consumer/package.json : data: present
 [analyzeFile] no violations found or result format unexpected
-Or I can see @semio-repo/go/repo.exe file
+Or I can see @semio-repo/go/go.exe file
 
 - Remove bundle: prefix in vscode tree view.
 - The codebase tree should be sorted (both in repo binary and vscode side view)

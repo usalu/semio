@@ -2,7 +2,6 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #region PostAttach
 set -e
-echo "🔌 Running post-attach setup..."
 VSIX_PATH="@semio-repo/vscode/semio-repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
@@ -114,7 +113,7 @@ find_working_clis() {
     echo "$bin"
   done
   shopt -u nullglob
-  return 1
+  return 0
 }
 
 mapfile -t IDE_CLIS < <(find_working_clis)
@@ -122,16 +121,14 @@ mapfile -t IDE_CLIS < <(find_working_clis)
 
 #region InstallExtension
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
-  echo "📦 IDE CLIs detected, installing semio extension..."
-  if [ ! -f "$VSIX_PATH" ] || [ "$VSIX_PATH" -ot "js/vscode/extension.ts" ]; then
-    echo "📦 Building semio VS Code extension..."
-    (cd js/vscode && npm run package)
+  if [ ! -f "$VSIX_PATH" ] || [ "$VSIX_PATH" -ot "@semio-repo/vscode/extension.ts" ]; then
+    (cd @semio-repo/vscode && npm run package)
   fi
   if [ -f "$VSIX_PATH" ]; then
-    if [ -f "js/vscode/package.json" ]; then
-      EXTENSION_PUBLISHER=$(node -p "require('./js/vscode/package.json').publisher")
-      EXTENSION_NAME=$(node -p "require('./js/vscode/package.json').name")
-      EXTENSION_VERSION=$(node -p "require('./js/vscode/package.json').version")
+    if [ -f "@semio-repo/vscode/package.json" ]; then
+      EXTENSION_PUBLISHER=$(node -p "require('./@semio-repo/vscode/package.json').publisher")
+      EXTENSION_NAME=$(node -p "require('./@semio-repo/vscode/package.json').name")
+      EXTENSION_VERSION=$(node -p "require('./@semio-repo/vscode/package.json').version")
     fi
     if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
       EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"
@@ -141,37 +138,19 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     fi
     installed_any=""
     for ide_cli in "${IDE_CLIS[@]}"; do
-      install_output="$("$ide_cli" --install-extension "$VSIX_PATH" --force 2>&1)"
-      install_status=$?
+      install_output="$("$ide_cli" --install-extension "$VSIX_PATH" --force 2>&1)" || true
+      # Silently skip CLIs that only work in WSL/VS Code terminal
       if echo "$install_output" | grep -Fq "$WSL_ERROR"; then
-        echo "❌ Failed to install extension via $ide_cli"
-        echo "$install_output"
-        continue
-      fi
-      if [ "$install_status" -ne 0 ]; then
-        echo "❌ Failed to install extension via $ide_cli"
-        echo "$install_output"
         continue
       fi
       if [ -n "$EXTENSION_ID" ]; then
-        list_output="$("$ide_cli" --list-extensions 2>&1)"
-        list_status=$?
+        list_output="$("$ide_cli" --list-extensions 2>&1)" || true
         if echo "$list_output" | grep -Fq "$WSL_ERROR"; then
-          echo "❌ Failed to verify extension via $ide_cli"
-          echo "$list_output"
-          continue
-        fi
-        if [ "$list_status" -ne 0 ]; then
-          echo "❌ Failed to verify extension via $ide_cli"
-          echo "$list_output"
           continue
         fi
         if echo "$list_output" | grep -Fqx "$EXTENSION_ID"; then
           echo "✅ Extension installed via $ide_cli"
           installed_any="1"
-        else
-          echo "❌ Extension not visible via $ide_cli"
-          echo "$list_output"
         fi
       else
         echo "✅ Extension installed via $ide_cli"
@@ -215,16 +194,13 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
       fi
     fi
     if [ -z "$installed_any" ]; then
+      echo "⚠️  No IDE CLI could install the extension."
       exit 1
     fi
   else
     echo "⚠️  Extension file not found at $VSIX_PATH"
-    echo "   Extension build failed; check npm output"
     exit 1
   fi
-else
-  echo "ℹ️  No working IDE CLI found (antigravity, windsurf, cursor, code, code-insiders)"
-  echo "   Extension installation skipped - this is expected outside supported IDEs"
 fi
 #endregion InstallExtension
 
@@ -246,5 +222,5 @@ cat > "$WINDSURF_MCP_FILE" <<'EOF'
 EOF
 #endregion WindsurfMcpConfig
 
-echo "✅ Post-attach setup complete!"
+echo "✅ Post-attach setup complete."
 #endregion PostAttach

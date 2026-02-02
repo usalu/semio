@@ -1,0 +1,27 @@
+{
+  "title": "Tested Grasshopper Components",
+  "description": "Grasshopper tests",
+  "prompt": "Tested Grasshopper Components",
+  "status": "open",
+  "dates": {
+    "due": "2026-03-31"
+  },
+  "client": "windsurf-chat",
+  "llm": "sonnet-4-5",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/35"
+  },
+  "iterations": [
+    {
+      "prompt": "Tested Grasshopper Components",
+      "llm": "sonnet-4-5",
+      "ui": "windsurf-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-02T20:23:40.999870211Z",
+      "commit": ""
+    }
+  ]
+}
