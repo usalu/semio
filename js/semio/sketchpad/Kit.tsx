@@ -439,6 +439,29 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     yMap.set("kit", kit.guid);
 
     yMap.set("fullscreenWindow", state?.fullscreenWindow || KitAppFullscreenWindow.None);
+    yMap.set("activeTool", state?.activeTool ?? ToolKind.SELECTION_NORMAL);
+    
+    if (state?.hover) {
+      const hoverMap = new Y.Map<any>();
+      if (state.hover.types?.length) hoverMap.set("types", state.hover.types);
+      if (state.hover.designs?.length) hoverMap.set("designs", state.hover.designs);
+      if (state.hover.qualities?.length) hoverMap.set("qualities", state.hover.qualities);
+      if (state.hover.ports?.length) hoverMap.set("ports", state.hover.ports);
+      if (state.hover.tags?.length) hoverMap.set("tags", state.hover.tags);
+      if (state.hover.concepts?.length) hoverMap.set("concepts", state.hover.concepts);
+      if (state.hover.files?.length) hoverMap.set("files", state.hover.files);
+      if (state.hover.folders?.length) hoverMap.set("folders", state.hover.folders);
+      if (state.hover.authors?.length) hoverMap.set("authors", state.hover.authors);
+      yMap.set("hover", hoverMap);
+    }
+
+    if (state?.diagramForce) {
+      const forceMap = new Y.Map<any>();
+      forceMap.set("strength", state.diagramForce.strength ?? -200);
+      forceMap.set("distance", state.diagramForce.distance ?? 100);
+      forceMap.set("iterations", state.diagramForce.iterations ?? 300);
+      yMap.set("diagramForce", forceMap);
+    }
 
     const selection = new Y.Map<any>();
     const selectedTypes = new Y.Array<string>();
@@ -495,6 +518,38 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
 
   get fullscreenWindow(): KitAppFullscreenWindow {
     return this.yMap.get("fullscreenWindow") as KitAppFullscreenWindow;
+  }
+
+  get activeTool(): ToolKind {
+    return (this.yMap.get("activeTool") as ToolKind) ?? ToolKind.SELECTION_NORMAL;
+  }
+
+  get hover(): KitAppHover | undefined {
+    const hoverMap = this.yMap.get("hover") as Y.Map<any>;
+    if (!hoverMap) return undefined;
+    return {
+      types: hoverMap.get("types"),
+      designs: hoverMap.get("designs"),
+      qualities: hoverMap.get("qualities"),
+      ports: hoverMap.get("ports"),
+      tags: hoverMap.get("tags"),
+      concepts: hoverMap.get("concepts"),
+      files: hoverMap.get("files"),
+      folders: hoverMap.get("folders"),
+      authors: hoverMap.get("authors"),
+    };
+  }
+
+  get diagramForce(): DiagramForceSettings {
+    const forceMap = this.yMap.get("diagramForce") as Y.Map<any>;
+    if (!forceMap) {
+      return { strength: -200, distance: 100, iterations: 300 };
+    }
+    return {
+      strength: forceMap.get("strength") ?? -200,
+      distance: forceMap.get("distance") ?? 100,
+      iterations: forceMap.get("iterations") ?? 300,
+    };
   }
 
   get panelVisibility(): PanelVisibility {
@@ -614,6 +669,8 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
   protected buildSnapshot(): KitAppState {
     return {
       fullscreenWindow: this.fullscreenWindow,
+      activeTool: this.activeTool,
+      hover: this.hover,
       panelVisibility: this.panelVisibility,
       selection: this.selection,
       isTransactionActive: this.isTransactionActive,
@@ -628,6 +685,13 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
       sortColumn: this.sortColumn,
       sortDirection: this.sortDirection,
       windowLayout: this.windowLayout,
+      diagramForce: this.diagramForce,
+      transaction: {
+        isTransactionActive: this.isTransactionActive,
+        currentTransactionStack: this.currentTransactionStack,
+        pastTransactionStack: this.pastTransactionsStack,
+        redoStack: [],
+      },
     } as any;
   }
 
@@ -635,6 +699,33 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
     this.transact(() => {
       if (diff.fullscreenWindow !== undefined) {
         this.yMap.set("fullscreenWindow", diff.fullscreenWindow);
+      }
+      if (diff.activeTool !== undefined) {
+        this.yMap.set("activeTool", diff.activeTool);
+      }
+      if (diff.hover !== undefined) {
+        if (diff.hover === null) {
+          this.yMap.delete("hover");
+        } else {
+          const hoverMap = this.yMap.get("hover") as Y.Map<any> || new Y.Map<any>();
+          if (diff.hover.types !== undefined) hoverMap.set("types", diff.hover.types);
+          if (diff.hover.designs !== undefined) hoverMap.set("designs", diff.hover.designs);
+          if (diff.hover.qualities !== undefined) hoverMap.set("qualities", diff.hover.qualities);
+          if (diff.hover.ports !== undefined) hoverMap.set("ports", diff.hover.ports);
+          if (diff.hover.tags !== undefined) hoverMap.set("tags", diff.hover.tags);
+          if (diff.hover.concepts !== undefined) hoverMap.set("concepts", diff.hover.concepts);
+          if (diff.hover.files !== undefined) hoverMap.set("files", diff.hover.files);
+          if (diff.hover.folders !== undefined) hoverMap.set("folders", diff.hover.folders);
+          if (diff.hover.authors !== undefined) hoverMap.set("authors", diff.hover.authors);
+          this.yMap.set("hover", hoverMap);
+        }
+      }
+      if (diff.diagramForce !== undefined) {
+        const forceMap = this.yMap.get("diagramForce") as Y.Map<any> || new Y.Map<any>();
+        if (diff.diagramForce.strength !== undefined) forceMap.set("strength", diff.diagramForce.strength);
+        if (diff.diagramForce.distance !== undefined) forceMap.set("distance", diff.diagramForce.distance);
+        if (diff.diagramForce.iterations !== undefined) forceMap.set("iterations", diff.diagramForce.iterations);
+        this.yMap.set("diagramForce", forceMap);
       }
       if (diff.panelVisibility !== undefined) {
         let yPanelVisibility = this.yMap.get("panelVisibility") as Y.Map<boolean>;
@@ -5867,9 +5958,11 @@ function useKitAppYjsToXStateSync() {
     if (sketchpadStore.hasKitApp({ kit: kitGuid })) {
       const store = sketchpadStore.kitApp(kitGuid);
       const initialState = store.snapshot();
+      console.log('[DEBUG] [Kit Init] Store snapshot:', initialState);
 
       xstateInitialState = {
         ...initialState,
+        activeTool: initialState.activeTool ?? ToolKind.SELECTION_NORMAL,
         expandedRows: new Set(initialState.expandedRows || []),
         transaction: {
           isTransactionActive: false,
@@ -5879,10 +5972,12 @@ function useKitAppYjsToXStateSync() {
         },
       };
     } else {
+      console.log('[DEBUG] [Kit Init] No store, using defaults');
       xstateInitialState = {
         panelVisibility: defaultPanelVisibility,
         selection: undefined,
         hover: undefined,
+        activeTool: ToolKind.SELECTION_NORMAL,
         fullscreenWindow: "none",
         others: [],
         filterSearch: undefined,
@@ -6940,29 +7035,74 @@ const MultiWindowApp: FC = () => {
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
   const [activeWindow, setActiveWindow] = useState<string>(KitAppWindowKind.Table);
+  
+  const [activeTool, setActiveTool] = useKitAppActiveTool();
 
   useEffect(() => {
-    if (appType !== "kit") return;
+    console.log('[DEBUG] [Kit Keyboard] Effect mounted, activeTool:', activeTool);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      console.log('[DEBUG] [Kit Keyboard] keydown:', { key: e.key, shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey, activeTool });
+      if (activeTool === ToolKind.SELECTION_NORMAL) {
+        if (e.shiftKey && !e.ctrlKey && !e.metaKey) {
+          console.log('[DEBUG] [Kit Keyboard] Switching to ADDITIVE');
+          if (setActiveTool) setActiveTool(ToolKind.SELECTION_ADDITIVE);
+        } else if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+          console.log('[DEBUG] [Kit Keyboard] Switching to SUBTRACTIVE');
+          if (setActiveTool) setActiveTool(ToolKind.SELECTION_SUBTRACTIVE);
+        }
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      console.log('[DEBUG] [Kit Keyboard] keyup:', { key: e.key, shiftKey: e.shiftKey, ctrlKey: e.ctrlKey, metaKey: e.metaKey, activeTool });
+      if (activeTool === ToolKind.SELECTION_ADDITIVE && !e.shiftKey) {
+        console.log('[DEBUG] [Kit Keyboard] Reverting to NORMAL from ADDITIVE');
+        if (setActiveTool) setActiveTool(ToolKind.SELECTION_NORMAL);
+      } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE && !e.ctrlKey && !e.metaKey) {
+        console.log('[DEBUG] [Kit Keyboard] Reverting to NORMAL from SUBTRACTIVE');
+        if (setActiveTool) setActiveTool(ToolKind.SELECTION_NORMAL);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      console.log('[DEBUG] [Kit Keyboard] Effect unmounting');
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [activeTool, setActiveTool]);
 
+  useEffect(() => {
+    console.log('[DEBUG] [Kit Toolbar] useEffect triggered:', { appType, kitGuid });
+    if (appType !== "kit") return;
+    if (!kitGuid) return;
+
+    console.log('[DEBUG] [Kit Toolbar] Registering toolbar section');
     addSection("toolbar", {
-      id: "semio.sketchpad.app.kit.kitApp.tools",
+      id: "semio.sketchpad.app.kit.kitApp.toolsGroup",
       specificity: 20,
       order: 0,
-      content: <KitToolbarTools />,
-    });
-
-    addSection("toolbar", {
-      id: "semio.sketchpad.app.kit.kitApp.filters",
-      specificity: 20,
-      order: 1,
-      content: <KitToolbarFilters />,
+      content: () => {
+        console.log('[DEBUG] [Kit Toolbar] Content rendering');
+        return (
+          <KitScopeProvider guid={kitGuid}>
+            <div className="flex items-center gap-single">
+              <div className="flex items-center gap-single border-r pr-single">
+                <KitToolbarTools />
+              </div>
+              <div className="flex items-center gap-single">
+                <KitToolbarFilters />
+              </div>
+            </div>
+          </KitScopeProvider>
+        );
+      },
     });
 
     return () => {
-      removeSection("toolbar", "semio.sketchpad.app.kit.kitApp.tools");
-      removeSection("toolbar", "semio.sketchpad.app.kit.kitApp.filters");
+      console.log('[DEBUG] [Kit Toolbar] Unregistering toolbar section');
+      removeSection("toolbar", "semio.sketchpad.app.kit.kitApp.toolsGroup");
     };
-  }, [appType, addSection, removeSection]);
+  }, [appType, addSection, removeSection, kitGuid]);
 
   const hasKit = useHasKit(kitGuid || "");
 
@@ -7093,16 +7233,16 @@ const getKitTools = (): ToolDefinition[] => [
 export const KitToolbarTools: FC = () => {
   const [activeTool, setActiveTool, canSet] = useKitAppActiveTool();
 
-  if (!canSet) {
-    // Kit app not initialized yet, return placeholder to avoid layout shift
-    return <div />;
-  }
+  console.log('[DEBUG] [KitToolbarTools] Rendering:', { activeTool, canSet });
 
   return (
     <ToolGroup
       tools={getKitTools()}
       activeTool={activeTool ?? ToolKind.SELECTION_NORMAL}
-      onToolChange={(tool) => setActiveTool && setActiveTool(tool as ToolKind)}
+      onToolChange={(tool) => {
+        console.log('[DEBUG] [KitToolbarTools] Tool change:', tool);
+        if (setActiveTool) setActiveTool(tool as ToolKind);
+      }}
     />
   );
 };

@@ -10,9 +10,7 @@
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
-    "metadata": {
-      "actualWorkers": 1
-    },
+    "metadata": {},
     "preserveOutput": "always",
     "reporter": [
       [
@@ -36,9 +34,7 @@
         "outputDir": "/workspaces/semio/js/semio/test-results",
         "repeatEach": 1,
         "retries": 0,
-        "metadata": {
-          "actualWorkers": 1
-        },
+        "metadata": {},
         "id": "firefox",
         "name": "firefox",
         "testDir": "/workspaces/semio/js/semio",
@@ -63,122 +59,17 @@
       "timeout": 120000
     }
   },
-  "suites": [
+  "suites": [],
+  "errors": [
     {
-      "title": "toolbar_diagnostic.spec.ts",
-      "file": "toolbar_diagnostic.spec.ts",
-      "column": 0,
-      "line": 0,
-      "specs": [
-        {
-          "title": "toolbar diagnostic test",
-          "ok": true,
-          "tags": [],
-          "tests": [
-            {
-              "timeout": 30000,
-              "annotations": [],
-              "expectedStatus": "passed",
-              "projectId": "firefox",
-              "projectName": "firefox",
-              "results": [
-                {
-                  "workerIndex": 0,
-                  "parallelIndex": 0,
-                  "status": "passed",
-                  "duration": 5817,
-                  "errors": [],
-                  "stdout": [
-                    {
-                      "text": "\n=== TOOLBAR HTML ===\n"
-                    },
-                    {
-                      "text": "<div class=\"bg-panel flex items-center gap-single border p-single\"><div><div class=\"flex items-center gap-single\"><div role=\"group\" dir=\"ltr\" data-slot=\"toggle-group\" class=\"group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x border-hover-panel divide-hover-panel\" tabindex=\"0\" style=\"outline: none;\"><span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showDesigns\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&amp;_svg]:pointer-events-none [&amp;_svg:not([class*='size-'])]:size-small [&amp;_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destr\n"
-                    },
-                    {
-                      "text": "\nTotal radio buttons in toolbar: 9\n"
-                    },
-                    {
-                      "text": "Total toggle groups: 9\n"
-                    },
-                    {
-                      "text": "\nToggle group 0: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showDesigns\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-s\n"
-                    },
-                    {
-                      "text": "\nToggle group 1: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showTypes\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-sel\n"
-                    },
-                    {
-                      "text": "\nToggle group 2: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showQualities\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor\n"
-                    },
-                    {
-                      "text": "\nToggle group 3: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showPorts\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-sel\n"
-                    },
-                    {
-                      "text": "\nToggle group 4: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showTags\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-sele\n"
-                    },
-                    {
-                      "text": "\nToggle group 5: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showConcepts\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-\n"
-                    },
-                    {
-                      "text": "\nToggle group 6: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showFiles\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-sel\n"
-                    },
-                    {
-                      "text": "\nToggle group 7: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showFolders\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-s\n"
-                    },
-                    {
-                      "text": "\nToggle group 8: 1 buttons\n"
-                    },
-                    {
-                      "text": "Group HTML preview: <span class=\"contents\" data-state=\"closed\" data-slot=\"tooltip-trigger\"><button type=\"button\" data-state=\"off\" role=\"radio\" aria-checked=\"false\" data-slot=\"toggle-group-item\" id=\"semio.sketchpad.app.kit.toolbar.showAuthors\" class=\"text-foreground justify-center gap-single text-sm font-medium cursor-s\n"
-                    }
-                  ],
-                  "stderr": [],
-                  "retry": 0,
-                  "startTime": "2026-02-01T16:31:13.683Z",
-                  "annotations": [],
-                  "attachments": []
-                }
-              ],
-              "status": "expected"
-            }
-          ],
-          "id": "287828828db8a2a91ba9-9f6d142d0926d34a2454",
-          "file": "toolbar_diagnostic.spec.ts",
-          "line": 2,
-          "column": 1
-        }
-      ]
+      "message": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments.",
+      "stack": "Error: No tests found.\nMake sure that arguments are regular expressions matching test files.\nYou may need to escape symbols like \"$\" or \"*\" and quote the arguments."
     }
   ],
-  "errors": [],
   "stats": {
-    "startTime": "2026-02-01T16:31:12.417Z",
-    "duration": 8319.807,
-    "expected": 1,
+    "startTime": "2026-02-01T17:22:19.627Z",
+    "duration": 482.26699999999994,
+    "expected": 0,
     "skipped": 0,
     "unexpected": 0,
     "flaky": 0
