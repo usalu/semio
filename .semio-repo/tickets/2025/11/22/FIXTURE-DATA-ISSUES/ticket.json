@@ -1,16 +1,15 @@
 {
   "title": "fixture-data-issues",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Migration from old format",
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-11-22T00:00:00Z",
   "iterations": [
     {
       "prompt": "Migration from old format",
       "llm": "sonnet-4",
-      "client": null,
       "author": {
-        "name": "usalu",
-        "email": null
+        "name": "usalu"
       },
       "started": "2025-11-22T00:00:00Z",
       "commit": "0000000000000000000000000000000000000000"

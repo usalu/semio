@@ -19,3 +19,7 @@ Ensure go/repo/main.go includes import for github.com/usalu/semio/go/repo only o
 
 1. Confirm the exact scope of the requested repo import change.
 2. Implement the update and document it in README.md and AGENTS.md.
+
+## Summary
+
+Bulk close

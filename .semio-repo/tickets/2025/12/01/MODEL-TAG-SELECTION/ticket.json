@@ -1,16 +1,15 @@
 {
   "title": "Add model tag selection in footer for design and type apps",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Add model tag selection in footer for design and type apps",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP",
   "started": "2025-12-16T17:06:07.795Z",
   "iterations": [
     {
       "prompt": "Add model tag selection in footer for design and type apps",
       "llm": "sonnet-4-5",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-16T17:06:07.795Z",
       "commit": "0000000000000000000000000000000000000000"

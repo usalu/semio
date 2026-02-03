@@ -2,15 +2,15 @@
   "title": "DEVCONTAINER-CRLF-FIX",
   "status": "closed",
   "prompt": "",
-  "started": null,
+  "goal": "AI-OPTIMIZED-REPO/SANDBOXED-REPO/ZERO-TOUCH-DEVCONTAINER",
+  "started": "0001-01-01T00:00:00Z",
   "iterations": [
     {
       "prompt": "",
-      "llm": null,
-      "client": null,
-      "author": null,
-      "started": null,
-      "commit": null
+      "llm": "",
+      "author": {},
+      "started": "0001-01-01T00:00:00Z",
+      "commit": ""
     }
   ]
 }

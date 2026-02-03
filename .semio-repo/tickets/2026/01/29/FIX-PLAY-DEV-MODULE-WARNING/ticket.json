@@ -1,21 +1,24 @@
 {
   "title": "Fix Play Dev Module Warning",
-  "status": "open",
+  "status": "closed",
   "prompt": "Add \"type\": \"module\" to js/play/package.json to fix the MODULE_TYPELESS_PACKAGE_JSON warning when running play dev.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/282"
   },
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-29T22:12:04.693048494Z",
+  "finished": "2026-02-03T08:49:57.461577742Z",
   "iterations": [
     {
       "prompt": "Add \"type\": \"module\" to js/play/package.json to fix the MODULE_TYPELESS_PACKAGE_JSON warning when running play dev.",
       "llm": "opus-4-5",
-      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
       },
       "started": "2026-01-29T22:12:04.693048494Z",
+      "finished": "2026-02-03T08:49:57.461577742Z",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc"
     }
   ]

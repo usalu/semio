@@ -1,0 +1,23 @@
+{
+  "title": "Refactor VSCode Extension Sideview",
+  "status": "open",
+  "prompt": "Refactor the @semio-repo/vscode extension sideview to consolidate into 'Monorepo' and 'Filter' sections with specific navigation hierarchy and filtering capabilities. Extend tests to cover new features.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/329"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+  "started": "2026-02-03T17:28:19.164406822Z",
+  "iterations": [
+    {
+      "prompt": "Refactor the @semio-repo/vscode extension sideview to consolidate into 'Monorepo' and 'Filter' sections with specific navigation hierarchy and filtering capabilities. Extend tests to cover new features.",
+      "llm": "sonnet-4-5",
+      "ui": "windsurf-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T17:28:19.164406822Z",
+      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94"
+    }
+  ]
+}

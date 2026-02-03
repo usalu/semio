@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -89,6 +90,37 @@ func TestLifecycleCommands(t *testing.T) {
 
 			// Cleanup
 			defer os.RemoveAll(GetTicketPath(y, m, d, slug))
+
+			// 2.5 Change Ticket
+			changeArgs := []string{"ticket", "change",
+				fmt.Sprintf("%d/%02d/%02d/%s", y, m, d, slug),
+				"--goal", "test-goal",
+				"--parent", "parent-ticket-slug",
+				"--no-github",
+			}
+			changeCmd := NewRoot(factory)
+			changeB := bytes.NewBufferString("")
+			changeCmd.SetOut(changeB)
+			changeCmd.SetErr(changeB)
+			changeCmd.SetArgs(changeArgs)
+			if err := changeCmd.Execute(); err != nil {
+				t.Fatalf("ticket change failed: %v\nOutput: %s", err, changeB.String())
+			}
+
+			// Verify change
+			ticketDir := GetTicketPath(y, m, d, slug)
+			jsonContent, err := os.ReadFile(filepath.Join(ticketDir, "ticket.json"))
+			if err == nil {
+				var tm Ticket
+				if err := json.Unmarshal(jsonContent, &tm); err == nil {
+					if tm.Goal != "test-goal" {
+						t.Errorf("ticket change goal mismatch: expected test-goal, got %s", tm.Goal)
+					}
+					if tm.Parent != "parent-ticket-slug" {
+						t.Errorf("ticket change parent mismatch: expected parent-ticket-slug, got %s", tm.Parent)
+					}
+				}
+			}
 
 			// 3. Close Ticket
 			closeArgs := []string{"ticket", "close",

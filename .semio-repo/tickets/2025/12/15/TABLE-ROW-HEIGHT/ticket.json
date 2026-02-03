@@ -1,16 +1,15 @@
 {
   "title": "Normalize Sketchpad table row heights",
-  "status": "finished",
+  "status": "closed",
   "prompt": "\"Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...\"",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.962Z",
   "iterations": [
     {
       "prompt": "\"Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...\"",
       "llm": "gpt-5-2",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-16T17:06:07.962Z",
       "commit": "76900221ecf5cfb30a37d69fbb66abb3e0a0e45a"

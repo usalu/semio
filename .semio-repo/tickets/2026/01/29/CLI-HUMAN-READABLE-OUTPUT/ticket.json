@@ -1,21 +1,24 @@
 {
   "title": "CLI Human Readable Output",
-  "status": "open",
+  "status": "closed",
   "prompt": "Ensure CLI commands return colored, compact text output by default, and JSON only with --json flag.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/274"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-29T18:20:28.135479136Z",
+  "finished": "2026-02-03T08:49:56.371443059Z",
   "iterations": [
     {
       "prompt": "Ensure CLI commands return colored, compact text output by default, and JSON only with --json flag.",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
       },
       "started": "2026-01-29T18:20:28.135479136Z",
+      "finished": "2026-02-03T08:49:56.371443059Z",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc"
     }
   ]

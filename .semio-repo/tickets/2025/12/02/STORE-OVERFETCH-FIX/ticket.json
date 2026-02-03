@@ -1,16 +1,15 @@
 {
   "title": "Fix store overfetching and overrendering in design app",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Fix store overfetching and overrendering in design app",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.827Z",
   "iterations": [
     {
       "prompt": "Fix store overfetching and overrendering in design app",
       "llm": "sonnet-4-5",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-16T17:06:07.827Z",
       "commit": "0000000000000000000000000000000000000000"

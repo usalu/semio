@@ -1,0 +1,25 @@
+{
+  "title": "Repo VSCode Extension",
+  "description": "Goal for Repo VSCode Extension",
+  "prompt": "Instructions for Repo VSCode Extension",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "REPO-CLIENT",
+  "iterations": [
+    {
+      "prompt": "Instructions for Repo VSCode Extension",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:55:20.346370622Z",
+      "commit": ""
+    }
+  ]
+}

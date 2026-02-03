@@ -526,7 +526,7 @@ suite("Filter Provider Test Suite", () => {
   test("Root elements include expected categories", async () => {
     const provider = new FilterProvider(getWorkspaceRoot());
     const children = await provider.getChildren();
-    const labels = children.map((c) => c.label);
+    const labels = children.map((c) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
     const expected = ["Search", "Bundles", "Folders", "Sections", "Definitions", "Time", "Contributors", "Policies", "Violations"];
     expected.forEach((e) => assert.ok(labels.includes(e), `Missing root element: ${e}`));
   });
@@ -561,32 +561,32 @@ suite("Filter Provider Test Suite", () => {
     assert.ok(children.some((c) => c.label === "15"));
     assert.ok(children.some((c) => c.label === "31"));
   });
-  
+
   test("Contributors category returns contributors", async () => {
     const provider = new FilterProvider(getWorkspaceRoot());
     provider.availableContributors = ["alice", "bob"];
     const contributorsItem = new FilterItem("Contributors", vscode.TreeItemCollapsibleState.Collapsed, "contributors");
     const children = await provider.getChildren(contributorsItem);
     assert.strictEqual(children.length, 2);
-    assert.ok(children.some((c) => c.label === "alice"));
+    assert.ok(children.some((c) => typeof c.label === 'string' ? c.label === "alice" : (c.label as vscode.TreeItemLabel).label === "alice"));
   });
 
   test("Toggle year updates filter", async () => {
-      const provider = new FilterProvider(getWorkspaceRoot());
-      provider.availableYears = [2024];
-      
-      const timeItem = new FilterItem("Time", vscode.TreeItemCollapsibleState.Collapsed, "time");
-      // Initial state: included (check)
-      const children = await provider.getChildren(timeItem);
-      const yearItem = children.find(c => c.label === "2024");
-      assert.strictEqual((yearItem?.iconPath as vscode.ThemeIcon).id, "check");
-      
-      // Toggle to exclude
-      provider.toggleYear(2024);
-      
-      const children2 = await provider.getChildren(timeItem);
-      const yearItem2 = children2.find(c => c.label === "2024");
-      assert.strictEqual((yearItem2?.iconPath as vscode.ThemeIcon).id, "circle-slash");
+    const provider = new FilterProvider(getWorkspaceRoot());
+    provider.availableYears = [2024];
+
+    const timeItem = new FilterItem("Time", vscode.TreeItemCollapsibleState.Collapsed, "time");
+    // Initial state: included (check)
+    const children = await provider.getChildren(timeItem);
+    const yearItem = children.find(c => typeof c.label === 'string' ? c.label === "2024" : (c.label as vscode.TreeItemLabel).label === "2024");
+    assert.strictEqual((yearItem?.iconPath as vscode.ThemeIcon).id, "check");
+
+    // Toggle to exclude
+    provider.toggleYear(2024);
+
+    const children2 = await provider.getChildren(timeItem);
+    const yearItem2 = children2.find(c => typeof c.label === 'string' ? c.label === "2024" : (c.label as vscode.TreeItemLabel).label === "2024");
+    assert.strictEqual((yearItem2?.iconPath as vscode.ThemeIcon).id, "circle-slash");
   });
 
   test("Policies category returns policies", async () => {
@@ -595,8 +595,8 @@ suite("Filter Provider Test Suite", () => {
     const policiesItem = new FilterItem("Policies", vscode.TreeItemCollapsibleState.Collapsed, "policy");
     const children = await provider.getChildren(policiesItem);
     assert.strictEqual(children.length, 2);
-    assert.ok(children.some((c) => c.label === "p1"));
-    assert.ok(children.some((c) => c.label === "p2"));
+    assert.ok(children.some((c) => typeof c.label === 'string' ? c.label === "p1" : (c.label as vscode.TreeItemLabel).label === "p1"));
+    assert.ok(children.some((c) => typeof c.label === 'string' ? c.label === "p2" : (c.label as vscode.TreeItemLabel).label === "p2"));
   });
 });
 

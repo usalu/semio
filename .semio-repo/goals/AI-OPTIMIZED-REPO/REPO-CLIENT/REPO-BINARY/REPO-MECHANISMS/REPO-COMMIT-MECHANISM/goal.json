@@ -1,0 +1,28 @@
+{
+  "title": "Repo Commit Mechanism",
+  "description": "Goal for Repo Commit Mechanism",
+  "prompt": "Instructions for Repo Commit Mechanism",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "REPO-MECHANISMS",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/60"
+  },
+  "iterations": [
+    {
+      "prompt": "Instructions for Repo Commit Mechanism",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:53:27.890895113Z",
+      "commit": ""
+    }
+  ]
+}

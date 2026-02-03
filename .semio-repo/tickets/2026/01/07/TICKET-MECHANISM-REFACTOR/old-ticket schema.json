@@ -2,7 +2,7 @@
   "title": "node-tests-fix",
   "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
   "llm": "OPUS",
-  "status": "finished",
+  "status": "closed",
   "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
   "date": {
     "created": "2026-01-07T11:23:05Z"

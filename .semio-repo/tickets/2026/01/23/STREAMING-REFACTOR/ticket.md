@@ -438,3 +438,7 @@ A reusable “command contract harness”:
   - data is only `item`/`result` events
 
 This keeps the codebase’s command API purely streaming, while still operating within constraints of each adapter’s host protocol.
+
+## Summary
+
+Bulk close

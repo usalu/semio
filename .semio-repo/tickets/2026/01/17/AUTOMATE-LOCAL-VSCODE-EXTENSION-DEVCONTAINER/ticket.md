@@ -66,10 +66,8 @@ Use `@vscode/vsce` to package the extension and install it via `code --install-e
 - The `|| true` at the end of the install command prevents failure if `code` CLI is not available (e.g., during initial container build)
 
 ## Summary
-# Summary
 
-Automated the installation of the local semio VSCode extension in devcontainers.
-
+Bulk close
 ## Changes
 
 - Added `@vscode/vsce` dependency and `package` script to `js/vscode/package.json`

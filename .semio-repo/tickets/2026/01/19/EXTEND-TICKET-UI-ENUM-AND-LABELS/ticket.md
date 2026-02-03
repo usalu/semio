@@ -18,3 +18,5 @@ Update README.md and AGENTS.md documentation for UI enum, labels, and metrics re
 - Documented ticket UI enum, label requirements, and metrics comment format in README.md and AGENTS.md (SRS/UI/Codebase sections).
 
 ## Summary
+
+Bulk close

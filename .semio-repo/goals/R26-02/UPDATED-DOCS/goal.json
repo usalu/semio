@@ -1,0 +1,25 @@
+{
+  "title": "Updated Docs",
+  "description": "Goal for Updated Docs",
+  "prompt": "Instructions for Updated Docs",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "R26-02",
+  "iterations": [
+    {
+      "prompt": "Instructions for Updated Docs",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:54:42.646034996Z",
+      "commit": ""
+    }
+  ]
+}

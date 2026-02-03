@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/287"
   },
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-30T17:22:18.893576529Z",
   "finished": "2026-01-30T17:22:59.892071894Z",
   "iterations": [
     {
       "prompt": "Make sure that reading bundles, folders, files, sections, definitions, contributors, goals, tickets, policies, and violation-kinds are turned into resources",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

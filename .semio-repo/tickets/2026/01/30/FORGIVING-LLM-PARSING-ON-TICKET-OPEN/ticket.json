@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/285"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-01-30T13:39:57.753259032Z",
   "finished": "2026-01-30T13:54:28.835750274Z",
   "iterations": [
     {
       "prompt": "The llm string should be more forgiving during ticket open. For example, 'claude-opus-4-5-20251101' should resolve to 'opus-4-5'. This should be achieved by slugifying the input and checking if any allowed LLM is a substring of it.",
       "llm": "sonnet-4-5",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
@@ -511,7 +511,6 @@
     {
       "prompt": "Fix LLM resolution edge cases and add tests. Specifically, handle identifiers with dots like 'swe-1.5' correctly and ensure the resolution logic is robust.",
       "llm": "sonnet-4-5",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

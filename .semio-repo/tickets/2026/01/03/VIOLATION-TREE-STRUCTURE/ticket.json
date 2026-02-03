@@ -1,16 +1,15 @@
 {
   "title": "VIOLATION-TREE-STRUCTURE",
-  "status": "finished",
+  "status": "closed",
   "prompt": "The violation kinds should be extended to have an arbitrary tree structure. E.g. Header, Section and Comment policies should be consolidated into a single policy called Code. Adjust repo, mcp and vscode extension.",
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-03T01:23:34Z",
   "iterations": [
     {
       "prompt": "The violation kinds should be extended to have an arbitrary tree structure. E.g. Header, Section and Comment policies should be consolidated into a single policy called Code. Adjust repo, mcp and vscode extension.",
       "llm": "opus-4",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2026-01-03T01:23:34Z",
       "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e"

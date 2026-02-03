@@ -1,16 +1,15 @@
 {
   "title": "Fix drop coordinates for diagram and scene",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Fix drop coordinates for diagram and scene",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.728Z",
   "iterations": [
     {
       "prompt": "Fix drop coordinates for diagram and scene",
       "llm": "sonnet-4",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-16T17:06:07.728Z",
       "commit": "0000000000000000000000000000000000000000"

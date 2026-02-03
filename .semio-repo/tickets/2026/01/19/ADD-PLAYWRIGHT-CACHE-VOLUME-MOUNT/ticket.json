@@ -2,18 +2,18 @@
   "title": "Add Playwright Cache Volume Mount",
   "status": "closed",
   "prompt": "",
-  "started": null,
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/168"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "started": "0001-01-01T00:00:00Z",
   "iterations": [
     {
       "prompt": "",
-      "llm": null,
-      "client": null,
-      "author": null,
-      "started": null,
-      "commit": null
+      "llm": "",
+      "author": {},
+      "started": "0001-01-01T00:00:00Z",
+      "commit": ""
     }
-  ],
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/168"
-  }
+  ]
 }

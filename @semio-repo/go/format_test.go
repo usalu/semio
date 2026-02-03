@@ -23,9 +23,8 @@ func TestFormatResult_Section(t *testing.T) {
 
 	// Since isTTY is false, no ANSI codes will be present
 	expectedParts := []string{
-		"§",
-		"MySection",
-		"(path/to/file.ts:10-20)",
+		"#MySection",
+		"(:10-20)",
 	}
 
 	for _, part := range expectedParts {

@@ -1,19 +1,22 @@
 {
   "title": "Integrate Goals And Subtickets",
-  "status": "open",
+  "status": "closed",
   "prompt": "",
-  "started": null,
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/215"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
+  "started": "0001-01-01T00:00:00Z",
+  "finished": "2026-02-03T08:49:44.317130247Z",
   "iterations": [
     {
       "prompt": "",
-      "llm": null,
-      "client": null,
-      "author": null,
-      "started": null,
-      "commit": null
+      "llm": "",
+      "author": {},
+      "started": "0001-01-01T00:00:00Z",
+      "finished": "2026-02-03T08:49:44.317130247Z",
+      "commit": ""
     }
-  ],
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/215"
-  }
+  ]
 }

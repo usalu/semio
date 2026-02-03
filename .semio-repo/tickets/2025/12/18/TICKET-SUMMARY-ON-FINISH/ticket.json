@@ -1,21 +1,20 @@
 {
   "title": "Require summary only when finishing tickets",
-  "status": "finished",
+  "status": "closed",
   "prompt": "The summary flag should be only available and forced when closing a ticket.",
-  "started": "2025-12-18T15:51:06.030Z",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
+  "started": "2025-12-18T15:51:06.03Z",
+  "finished": "2025-12-18T15:52:32.23Z",
   "iterations": [
     {
       "prompt": "The summary flag should be only available and forced when closing a ticket.",
       "llm": "opus-4-5",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
-      "started": "2025-12-18T15:51:06.030Z",
-      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
-      "finished": "2025-12-18T15:52:32.230Z"
+      "started": "2025-12-18T15:51:06.03Z",
+      "finished": "2025-12-18T15:52:32.23Z",
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c"
     }
-  ],
-  "finished": "2025-12-18T15:52:32.230Z"
+  ]
 }

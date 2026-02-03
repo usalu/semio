@@ -29,9 +29,7 @@ Implement the plan in /workspaces/semio/plans/repo_binary_streaming_refactor_pla
 
 ## Summary
 
-Implemented streaming registry integration across repo adapters and documented the shared event model, registry invocation, and MCP paging behavior. Updated CLI/MCP/VS Code wiring notes alongside bundle and codebase documentation.
-
-
+Bulk close
 ## Todos
 # Repo Binary Streaming Refactor Plan
 

@@ -493,10 +493,77 @@ func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
 			folders := []Folder{}
 			files := []File{}
 
+			// Metadata collection
+			type nodeMeta struct {
+				status   string
+				summary  string
+				date     string
+				author   string
+				isGoal   bool
+				isTicket bool
+			}
+			metaMap := make(map[string]nodeMeta)
+			var metaMutex sync.Mutex
+
 			folderCh := make(chan Folder)
 			fileCh := make(chan File)
-			errCh := make(chan error, 2)
+			errCh := make(chan error, 4) // Increased buffer for tickets/goals
 			var wg sync.WaitGroup
+
+			// Metadata streams
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				// Only load metadata if scope covers repo root or .semio-repo
+				// Simple heuristic: if scope is empty, ".", or contains ".semio-repo"
+				
+				// Using context for cancellation
+				ticketCh := make(chan Ticket)
+				go func() {
+					StreamTickets(ctx, nil, nil, nil, ticketCh)
+				}()
+
+				for t := range ticketCh {
+					metaMutex.Lock()
+					author := ""
+					if len(t.Iterations) > 0 {
+						author = t.Iterations[0].Author.Name
+					}
+					date := t.Started.Format("2006-01-02")
+					metaMap[filepath.Clean(t.FolderPath)] = nodeMeta{
+						status:   string(t.Status),
+						summary:  t.Summary,
+						date:     date,
+						author:   author,
+						isTicket: true,
+					}
+					metaMutex.Unlock()
+				}
+			}()
+
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				goalCh := make(chan *Goal)
+				go func() {
+					StreamGoals(ctx, goalCh)
+				}()
+
+				for g := range goalCh {
+					metaMutex.Lock()
+					date := g.Dates.Due
+					if date == "" && g.Dates.Closed != nil {
+						date = g.Dates.Closed.Format("2006-01-02")
+					}
+					metaMap[filepath.Clean(filepath.Join(GetRepoGoalsDir(), Slugify(g.Title)))] = nodeMeta{
+						status:  g.Status,
+						summary: g.Summary,
+						date:    date,
+						isGoal:  true,
+					}
+					metaMutex.Unlock()
+				}
+			}()
 
 			wg.Add(1)
 			go func() {
@@ -552,8 +619,7 @@ func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
 			// Resolve root path to absolute to match StreamFiles/StreamFolders output
 			rootPath := scope
 			rootDir := GetRootDir()
-			if strings.HasPrefix(scope, "@semio/") {
-				bundleName := strings.TrimPrefix(scope, "@semio/")
+			if bundleName, found := strings.CutPrefix(scope, "@semio/"); found {
 				bundles := LoadBundles()
 				for _, b := range bundles {
 					if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
@@ -627,7 +693,37 @@ func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
 					if isLast {
 						connector = "└── "
 					}
-					fmt.Fprintf(cmd.OutOrStdout(), "%s%s%s\n", prefix, connector, node.name)
+					
+					name := node.name
+					metaMutex.Lock()
+					meta, hasMeta := metaMap[node.path]
+					metaMutex.Unlock()
+					
+					if hasMeta {
+						isOpen := meta.status == "open"
+						color := ColorGreen
+						if isOpen {
+							color = ColorBlue
+						}
+						
+						name = colorize(name, color, true)
+						
+						icon := "✅"
+						if isOpen {
+							icon = "🔵"
+						}
+						
+						metaStr := fmt.Sprintf(" %s %s", icon, meta.date)
+						if meta.author != "" {
+							metaStr += " " + meta.author
+						}
+						if meta.summary != "" {
+							metaStr += " # " + meta.summary
+						}
+						name += colorize(metaStr, ColorDim, true)
+					}
+
+					fmt.Fprintf(cmd.OutOrStdout(), "%s%s%s\n", prefix, connector, name)
 
 					newPrefix := prefix + "│   "
 					if isLast {
@@ -1071,6 +1167,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			goal, _ := cmd.Flags().GetString("goal")
 			parent, _ := cmd.Flags().GetString("parent")
 			noGithub, _ := cmd.Flags().GetBool("no-github")
+			issue, _ := cmd.Flags().GetString("issue")
 
 			// Process positional args for title and prompt first
 			remainingArgs := args
@@ -1115,6 +1212,9 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if parent != "" {
 				input["parent"] = parent
 			}
+			if issue != "" {
+				input["issue"] = issue
+			}
 			variables := map[string]interface{}{"input": input}
 			query := `mutation TicketOpen($input: TicketOpenInput!) {
 				ticketOpen(input: $input) {
@@ -1137,6 +1237,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("goal", "", "Goal ID")
 	openCmd.Flags().Bool("no-github", false, "Skip GitHub operations")
 	openCmd.Flags().String("parent", "", "Parent ticket slug")
+	openCmd.Flags().String("issue", "", "Link to existing GitHub issue URL instead of creating new one")
 	addLLMFlags(openCmd)
 	addUIFlags(openCmd)
 	listCmd := &cobra.Command{
@@ -1218,47 +1319,54 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			noGithub, _ := cmd.Flags().GetBool("no-github")
 			files, _ := cmd.Flags().GetStringSlice("files")
 			title, _ := cmd.Flags().GetString("title")
+			closeAll, _ := cmd.Flags().GetBool("all")
 
-			if len(args) > 0 && (year == 0 || month == 0 || day == 0 || slug == "") {
-				parts := strings.Split(args[0], "/")
-				if len(parts) >= 4 {
-					if y, err := strconv.Atoi(parts[0]); err == nil {
-						year = y
+			if !closeAll {
+				if len(args) > 0 && (year == 0 || month == 0 || day == 0 || slug == "") {
+					parts := strings.Split(args[0], "/")
+					if len(parts) >= 4 {
+						if y, err := strconv.Atoi(parts[0]); err == nil {
+							year = y
+						}
+						if m, err := strconv.Atoi(parts[1]); err == nil {
+							month = m
+						}
+						if d, err := strconv.Atoi(parts[2]); err == nil {
+							day = d
+						}
+						slug = strings.Join(parts[3:], "/")
 					}
-					if m, err := strconv.Atoi(parts[1]); err == nil {
-						month = m
-					}
-					if d, err := strconv.Atoi(parts[2]); err == nil {
-						day = d
-					}
-					slug = strings.Join(parts[3:], "/")
+				}
+
+				if summary == "" && len(args) > 1 {
+					summary = args[1]
+				}
+				if len(files) == 0 && len(args) > 2 {
+					files = args[2:]
+				}
+
+				if year == 0 || month == 0 || day == 0 || slug == "" {
+					return fmt.Errorf("missing ticket path (use YYYY/MM/DD/SLUG or flags)")
+				}
+				if summary == "" {
+					return fmt.Errorf("missing summary")
+				}
+				if len(files) == 0 {
+					return fmt.Errorf("missing files")
 				}
 			}
 
-			if summary == "" && len(args) > 1 {
-				summary = args[1]
-			}
-			if len(files) == 0 && len(args) > 2 {
-				files = args[2:]
-			}
-
-			if year == 0 || month == 0 || day == 0 || slug == "" {
-				return fmt.Errorf("missing ticket path (use YYYY/MM/DD/SLUG or flags)")
-			}
-			if summary == "" {
-				return fmt.Errorf("missing summary")
-			}
-			if len(files) == 0 {
-				return fmt.Errorf("missing files")
-			}
 			input := map[string]interface{}{
-				"year":     year,
-				"month":    month,
-				"day":      day,
-				"slug":     slug,
 				"noGithub": noGithub,
-				"summary":  summary,
-				"files":    files,
+				"all":      closeAll,
+			}
+			if !closeAll {
+				input["year"] = year
+				input["month"] = month
+				input["day"] = day
+				input["slug"] = slug
+				input["summary"] = summary
+				input["files"] = files
 			}
 			if title != "" {
 				input["title"] = title
@@ -1275,6 +1383,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			return runGraphQL(cmd, factory, config, query, variables)
 		},
 	}
+	closeCmd.Flags().Bool("all", false, "Close all open tickets")
 	closeCmd.Flags().Int("year", 0, "Ticket year")
 	closeCmd.Flags().Int("month", 0, "Ticket month")
 	closeCmd.Flags().Int("day", 0, "Ticket day")
@@ -1561,6 +1670,9 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 	changeCmd.Flags().String("parent", "", "New parent ticket slug")
+	changeCmd.Flags().String("title", "", "New title")
+	changeCmd.Flags().String("prompt", "", "New prompt")
+	changeCmd.Flags().String("goal", "", "New goal ID")
 	changeCmd.Flags().Bool("no-github", false, "Skip GitHub sync")
 	addLLMFlags(changeCmd)
 	addUIFlags(changeCmd)
@@ -1593,7 +1705,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 				}()
 
 				for g := range goalChan {
-					data, err := json.Marshal(map[string]interface{}{"goal": g})
+					data, err := json.Marshal(map[string]interface{}{"goal": g, "id": g.ID})
 					if err != nil {
 						continue
 					}
@@ -1618,6 +1730,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			noGithub, _ := cmd.Flags().GetBool("no-github")
 
 			input := map[string]interface{}{
+				"id":       id,
 				"noGithub": noGithub,
 			}
 			if cmd.Flags().Changed("title") {
@@ -1713,6 +1826,10 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if parent != "" {
 				input["parent"] = parent
 			}
+			milestone, _ := cmd.Flags().GetString("milestone")
+			if milestone != "" {
+				input["milestone"] = milestone
+			}
 			variables := map[string]interface{}{"input": input}
 			query := `mutation GoalCreate($input: GoalCreateInput!) {
 				goalCreate(input: $input) {
@@ -1735,6 +1852,8 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	openCmd.Flags().String("llm", "", "LLM")
 	openCmd.Flags().String("client", "", "UI")
 	openCmd.Flags().Bool("no-github", false, "Skip GitHub synchronization")
+	openCmd.Flags().String("parent", "", "Parent goal ID")
+	openCmd.Flags().String("milestone", "", "Link to existing GitHub milestone URL instead of creating new one")
 	addLLMFlags(openCmd)
 	addUIFlags(openCmd)
 
@@ -2067,13 +2186,24 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 					return bundles[i].Name < bundles[j].Name
 				})
 
-				stream <- Event{Kind: KindLog, Level: "info", Command: "bundle tree", Message: "."}
-				for i, b := range bundles {
-					connector := "├── "
-					if i == len(bundles)-1 {
-						connector = "└── "
+				if config.Markdown {
+					var sb strings.Builder
+					for _, b := range bundles {
+						// Template: - [<id>](#<id>): <title> - <description>
+						// For bundle: id=Name, title=Name, description=""
+						sb.WriteString(fmt.Sprintf("- [%s](#%s): %s\n", b.Name, b.Name, b.Name))
 					}
-					stream <- Event{Kind: KindLog, Level: "info", Command: "bundle tree", Message: connector + b.Name}
+					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
+					stream <- Event{Kind: KindResult, Command: "bundle tree", Data: data}
+				} else {
+					stream <- Event{Kind: KindLog, Level: "info", Command: "bundle tree", Message: "."}
+					for i, b := range bundles {
+						connector := "├── "
+						if i == len(bundles)-1 {
+							connector = "└── "
+						}
+						stream <- Event{Kind: KindLog, Level: "info", Command: "bundle tree", Message: connector + b.Name}
+					}
 				}
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
@@ -2229,33 +2359,61 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 					}
 				}
 
-				var printNode func(*node, string)
-				printNode = func(n *node, prefix string) {
-					keys := make([]string, 0, len(n.children))
-					for k := range n.children {
-						keys = append(keys, k)
-					}
-					sort.Strings(keys)
-
-					for i, k := range keys {
-						child := n.children[k]
-						isLast := i == len(keys)-1
-						connector := "├── "
-						if isLast {
-							connector = "└── "
+				if config.Markdown {
+					var sb strings.Builder
+					var printMarkdown func(*node, int, string)
+					printMarkdown = func(n *node, depth int, pathPrefix string) {
+						keys := make([]string, 0, len(n.children))
+						for k := range n.children {
+							keys = append(keys, k)
 						}
-						childPrefix := prefix + "│   "
-						if isLast {
-							childPrefix = prefix + "    "
-						}
+						sort.Strings(keys)
 
-						display := child.name + "/"
-						stream <- Event{Kind: KindLog, Level: "info", Command: "folder tree", Message: prefix + connector + display}
-						printNode(child, childPrefix)
+						for _, k := range keys {
+							child := n.children[k]
+							currentPath := k
+							if pathPrefix != "" {
+								currentPath = pathPrefix + "/" + k
+							}
+
+							indent := strings.Repeat("  ", depth)
+							// - [<id>](#<id>): <title> - <description>
+							sb.WriteString(fmt.Sprintf("%s- [%s](#%s): %s\n", indent, currentPath, currentPath, child.name))
+							printMarkdown(child, depth+1, currentPath)
+						}
 					}
+					printMarkdown(root, 0, "")
+					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
+					stream <- Event{Kind: KindResult, Command: "folder tree", Data: data}
+				} else {
+					var printNode func(*node, string)
+					printNode = func(n *node, prefix string) {
+						keys := make([]string, 0, len(n.children))
+						for k := range n.children {
+							keys = append(keys, k)
+						}
+						sort.Strings(keys)
+
+						for i, k := range keys {
+							child := n.children[k]
+							isLast := i == len(keys)-1
+							connector := "├── "
+							if isLast {
+								connector = "└── "
+							}
+							childPrefix := prefix + "│   "
+							if isLast {
+								childPrefix = prefix + "    "
+							}
+
+							display := child.name + "/"
+							stream <- Event{Kind: KindLog, Level: "info", Command: "folder tree", Message: prefix + connector + display}
+							printNode(child, childPrefix)
+						}
+					}
+
+					printNode(root, "")
 				}
-
-				printNode(root, "")
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
 			return renderStream(cmd, config, stream)
@@ -2655,35 +2813,62 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 					}
 				}
 
-				var printNode func(*node, string)
-				printNode = func(n *node, prefix string) {
-					keys := make([]string, 0, len(n.children))
-					for k := range n.children {
-						keys = append(keys, k)
-					}
-					sort.Strings(keys)
+				if config.Markdown {
+					var sb strings.Builder
+					var printMarkdown func(*node, int, string)
+					printMarkdown = func(n *node, depth int, pathPrefix string) {
+						keys := make([]string, 0, len(n.children))
+						for k := range n.children {
+							keys = append(keys, k)
+						}
+						sort.Strings(keys)
 
-					for i, k := range keys {
-						child := n.children[k]
-						isLast := i == len(keys)-1
-						connector := "├── "
-						if isLast {
-							connector = "└── "
-						}
-						childPrefix := prefix + "│   "
-						if isLast {
-							childPrefix = prefix + "    "
-						}
+						for _, k := range keys {
+							child := n.children[k]
+							currentPath := k
+							if pathPrefix != "" {
+								currentPath = pathPrefix + "/" + k
+							}
 
-						display := child.name
-						if !child.isFile {
-							display += "/"
+							indent := strings.Repeat("  ", depth)
+							sb.WriteString(fmt.Sprintf("%s- [%s](#%s): %s\n", indent, currentPath, currentPath, child.name))
+							printMarkdown(child, depth+1, currentPath)
 						}
-						stream <- Event{Kind: KindLog, Level: "info", Command: "file tree", Message: prefix + connector + display}
-						printNode(child, childPrefix)
 					}
+					printMarkdown(root, 0, "")
+					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
+					stream <- Event{Kind: KindResult, Command: "file tree", Data: data}
+				} else {
+					var printNode func(*node, string)
+					printNode = func(n *node, prefix string) {
+						keys := make([]string, 0, len(n.children))
+						for k := range n.children {
+							keys = append(keys, k)
+						}
+						sort.Strings(keys)
+
+						for i, k := range keys {
+							child := n.children[k]
+							isLast := i == len(keys)-1
+							connector := "├── "
+							if isLast {
+								connector = "└── "
+							}
+							childPrefix := prefix + "│   "
+							if isLast {
+								childPrefix = prefix + "    "
+							}
+
+							display := child.name
+							if !child.isFile {
+								display += "/"
+							}
+							stream <- Event{Kind: KindLog, Level: "info", Command: "file tree", Message: prefix + connector + display}
+							printNode(child, childPrefix)
+						}
+					}
+					printNode(root, "")
 				}
-				printNode(root, "")
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
 			return renderStream(cmd, config, stream)
@@ -2784,10 +2969,9 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	deleteCmd.Flags().String("file", "", "File path")
 	deleteCmd.Flags().String("name", "", "Section name")
 	listCmd := &cobra.Command{
-		Use:     "list [file]",
-		Aliases: []string{"tree"},
-		Short:   "List sections",
-		Args:    cobra.MaximumNArgs(1),
+		Use:   "list [file]",
+		Short: "List sections",
+		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			file, _ := cmd.Flags().GetString("file")
 			if file == "" && len(args) > 0 {
@@ -2823,6 +3007,89 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	}
 	listCmd.Flags().String("file", "", "File path")
 	bindStreamFlags(listCmd)
+
+	treeCmd := &cobra.Command{
+		Use:   "tree [file]",
+		Short: "Show section tree",
+		Args:  cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			file, _ := cmd.Flags().GetString("file")
+			if file == "" && len(args) > 0 {
+				file = args[0]
+			}
+			if file == "" {
+				return fmt.Errorf("missing file")
+			}
+
+			opts := getStreamOptions(cmd)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "section tree"}
+
+				sectionChan := make(chan Section)
+				go func() {
+					StreamSections(context.Background(), file, sectionChan, opts)
+				}()
+
+				// Sections from StreamSections might be flat or tree.
+				// If they are top-level with Children populated, we just iterate.
+				var sections []Section
+				for s := range sectionChan {
+					sections = append(sections, s)
+				}
+
+				if config.Markdown {
+					var sb strings.Builder
+					var printMarkdown func(Section, int)
+					printMarkdown = func(s Section, depth int) {
+						indent := strings.Repeat("  ", depth)
+						uri := fmt.Sprintf("semiorepo://section/%s/%s", s.FilePath, Slugify(s.Path))
+						// - [<id>](#<id>): <title> - <description>
+						id := s.Name // Using name as ID for display
+						sb.WriteString(fmt.Sprintf("%s- [%s](%s): %s\n", indent, id, uri, s.Name))
+						for _, child := range s.Children {
+							printMarkdown(child, depth+1)
+						}
+					}
+					for _, s := range sections {
+						printMarkdown(s, 0)
+					}
+					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
+					stream <- Event{Kind: KindResult, Command: "section tree", Data: data}
+				} else {
+					var printNode func(Section, string)
+					printNode = func(s Section, prefix string) {
+						// Logic similar to folder/file but for section structure
+						children := s.Children
+						for i, child := range children {
+							isLast := i == len(children)-1
+							connector := "├── "
+							if isLast {
+								connector = "└── "
+							}
+							childPrefix := prefix + "│   "
+							if isLast {
+								childPrefix = prefix + "    "
+							}
+							stream <- Event{Kind: KindLog, Level: "info", Command: "section tree", Message: prefix + connector + child.Name}
+							printNode(child, childPrefix)
+						}
+					}
+
+					for _, s := range sections {
+						stream <- Event{Kind: KindLog, Level: "info", Command: "section tree", Message: s.Name}
+						printNode(s, "")
+					}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+
+			return renderStream(cmd, config, stream)
+		},
+	}
+	treeCmd.Flags().String("file", "", "File path")
+	bindStreamFlags(treeCmd)
 	integrateCmd := &cobra.Command{
 		Use:   "integrate",
 		Short: "Integrate source code into a target file section",
@@ -2904,6 +3171,7 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(moveCmd)
 	root.AddCommand(deleteCmd)
 	root.AddCommand(listCmd)
+	root.AddCommand(treeCmd)
 	root.AddCommand(integrateCmd)
 	root.AddCommand(extractCmd)
 	return root
@@ -3727,7 +3995,8 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 			}
 			statusColor := ColorBlue
 			statusIcon := "◯"
-			if t.Status == "finished" || t.Status == "closed" {
+			statusLower := strings.ToLower(t.Status)
+			if statusLower == "finished" || statusLower == "closed" {
 				statusColor = ColorGreen
 				statusIcon = "✓"
 			}
@@ -3751,7 +4020,7 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 				newPrefix = prefix + "    "
 			}
 			childColor := ColorBlue
-			if child.Status == "closed" {
+			if strings.ToLower(child.Status) == "closed" {
 				childColor = ColorGreen
 			}
 			sb.WriteString(fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize("■", childColor, isTTY), colorize(child.Title, ColorBold, isTTY)))
@@ -3773,7 +4042,8 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 			}
 			statusColor := ColorBlue
 			statusIcon := "◯"
-			if t.Status == "finished" || t.Status == "closed" {
+			statusLower := strings.ToLower(t.Status)
+			if statusLower == "finished" || statusLower == "closed" {
 				statusColor = ColorGreen
 				statusIcon = "✓"
 			}
@@ -3785,7 +4055,7 @@ func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 	// Render root goals
 	for _, g := range rootGoals {
 		statusColor := ColorBlue
-		if g.Status == "closed" {
+		if strings.ToLower(g.Status) == "closed" {
 			statusColor = ColorGreen
 		}
 		sb.WriteString(fmt.Sprintf("%s %s\n", colorize("■", statusColor, isTTY), colorize(g.Title, ColorBold, isTTY)))
@@ -3838,6 +4108,11 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 
 	var sb strings.Builder
 
+	// Case 0: Direct Markdown
+	if markdown, ok := payload["markdown"].(string); ok {
+		return markdown
+	}
+
 	// Case 1: Analyze result
 	if analyze, ok := payload["analyze"].(map[string]interface{}); ok {
 		sb.WriteString("## Analysis Result\n\n")
@@ -3866,12 +4141,8 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 					scope := fmt.Sprintf("%v", vio["scope"])
 					line := fmt.Sprintf("%v", vio["line"])
 					summary := fmt.Sprintf("%v", vio["summary"])
-					policyId := ""
 					// Try to extract policy id if available from kind id (e.g. policy:violation)
-					parts := strings.Split(kind, ":")
-					if len(parts) > 0 {
-						policyId = parts[0]
-					}
+					// parts := strings.Split(kind, ":")
 
 					// violationKind: "semiorepo://policies/{policy-id}/{path*}"
 					// path is kind without policy prefix? logic is fuzzy, assume kind is the path
@@ -3885,7 +4156,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 					// Scope is usually a file path. We need bundle-id.
 
 					// For now, generate a simple markdown representation.
-					sb.WriteString(fmt.Sprintf("- **[%s](semiorepo://policies/%s/%s)** in `%s:%s`: %s\n", kind, policyId, kind, scope, line, summary))
+					sb.WriteString(fmt.Sprintf("- **[%s](semiorepo://VIOLATION/%s)** in `%s:%s`: %s\n", kind, Slugify(kind), scope, line, summary))
 				}
 			}
 		}
@@ -3908,7 +4179,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 					createdStr, _ := dates["created"].(string)
 
 					dateParsed, _ := time.Parse(time.RFC3339, createdStr)
-					ticketUri := fmt.Sprintf("semiorepo://tickets/%d/%02d/%02d/%s", dateParsed.Year(), dateParsed.Month(), dateParsed.Day(), slug)
+					ticketUri := fmt.Sprintf("semiorepo://TICKET/%d/%02d/%02d/%s", dateParsed.Year(), dateParsed.Month(), dateParsed.Day(), Slugify(slug))
 
 					statusIcon := "◯"
 					if status == "finished" || status == "closed" {
@@ -3928,7 +4199,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 			for _, b := range bundles {
 				if bundle, ok := b.(map[string]interface{}); ok {
 					name, _ := bundle["name"].(string)
-					bundleUri := fmt.Sprintf("semiorepo://bundle/%s", name)
+					bundleUri := fmt.Sprintf("semiorepo://BUNDLE/%s", Slugify(name))
 					sb.WriteString(fmt.Sprintf("- [📦 %s](%s)\n", name, bundleUri))
 				}
 			}
@@ -3949,7 +4220,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		createdStr, _ := dates["created"].(string)
 
 		dateParsed, _ := time.Parse(time.RFC3339, createdStr)
-		ticketUri := fmt.Sprintf("semiorepo://tickets/%d/%02d/%02d/%s", dateParsed.Year(), dateParsed.Month(), dateParsed.Day(), slug)
+		ticketUri := fmt.Sprintf("semiorepo://TICKET/%d/%02d/%02d/%s", dateParsed.Year(), dateParsed.Month(), dateParsed.Day(), Slugify(slug))
 
 		statusIcon := "◯"
 		if status == "finished" || status == "closed" {
@@ -3962,7 +4233,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 	// Case 6c: Single Bundle Stream Item
 	if bundle, ok := payload["bundle"].(map[string]interface{}); ok {
 		name, _ := bundle["name"].(string)
-		bundleUri := fmt.Sprintf("semiorepo://bundle/%s", name)
+		bundleUri := fmt.Sprintf("semiorepo://BUNDLE/%s", Slugify(name))
 		return fmt.Sprintf("- [📦 %s](%s)\n", name, bundleUri)
 	}
 
@@ -3970,14 +4241,14 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 	if folder, ok := payload["folder"].(map[string]interface{}); ok {
 		path, _ := folder["path"].(string)
 		kind, _ := folder["kind"].(string)
-		uri := fmt.Sprintf("semiorepo://folder/%s", path)
+		uri := fmt.Sprintf("semiorepo://FOLDER/%s", Slugify(path))
 		return fmt.Sprintf("[📂 %s](%s) (%s)\n", path, uri, kind)
 	}
 
 	// Case 12: Single File Result
 	if file, ok := payload["file"].(map[string]interface{}); ok {
 		path, _ := file["id"].(string)
-		uri := fmt.Sprintf("semiorepo://file/%s", path)
+		uri := fmt.Sprintf("semiorepo://FILE/%s", Slugify(path))
 		sb.WriteString(fmt.Sprintf("[📄 %s](%s)\n", path, uri))
 
 		// Sections
@@ -4018,7 +4289,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		id, _ := goal["id"].(string)
 		title, _ := goal["title"].(string)
 		status, _ := goal["status"].(string)
-		uri := fmt.Sprintf("semiorepo://goal/%s", id)
+		uri := fmt.Sprintf("semiorepo://GOAL/%s", Slugify(id))
 
 		statusIcon := "◯"
 		if status == "closed" || status == "finished" {
@@ -4031,7 +4302,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 	// Case 14: Single Contributor Result
 	if contrib, ok := payload["contributor"].(map[string]interface{}); ok {
 		github, _ := contrib["github"].(string)
-		uri := fmt.Sprintf("semiorepo://contributor/%s", github)
+		uri := fmt.Sprintf("semiorepo://CONTRIBUTOR/%s", Slugify(github))
 		name, _ := contrib["name"].(string)
 		return fmt.Sprintf("[👤 %s](%s)\n", name, uri)
 	}
@@ -4305,8 +4576,8 @@ type Repo struct {
 }
 
 func (r *Repo) IsNode()        {}
-func (r *Repo) GetID() string  { return "🌍" }
-func (r *Repo) GetURI() string { return "semiorepo://repo" }
+func (r *Repo) GetID() string  { return "repo:semio" }
+func (r *Repo) GetURI() string { return "semiorepo://REPO/SEMIO" }
 
 type ProjectKind string
 
@@ -4391,8 +4662,8 @@ type Project struct {
 }
 
 func (p *Project) IsNode()        {}
-func (p *Project) GetID() string  { return string(p.Kind) + "@" + p.Name }
-func (p *Project) GetURI() string { return "semiorepo://project/" + p.GetID() }
+func (p *Project) GetID() string  { return "project:" + p.Name }
+func (p *Project) GetURI() string { return "semiorepo://PROJECT/" + strings.ToUpper(Slugify(p.Name)) }
 
 type Bundle struct {
 	Name        string     `json:"name"`
@@ -4413,17 +4684,10 @@ type Package struct {
 
 func (b *Bundle) IsNode() {}
 func (b *Bundle) GetID() string {
-	projectKind := DeriveProjectKind(b.ProjectName)
-	projectID := string(projectKind) + "@" + b.ProjectName
-	parts := strings.Split(b.Name, "/")
-	shortName := b.Name
-	if len(parts) > 1 {
-		shortName = parts[len(parts)-1]
-	}
-	return string(b.Kind) + "@" + projectID + "/" + shortName
+	return "bundle:" + b.Name
 }
 
-func (b *Bundle) GetURI() string { return "semiorepo://bundle/" + b.GetID() }
+func (b *Bundle) GetURI() string { return "semiorepo://BUNDLE/" + strings.ToUpper(Slugify(b.Name)) }
 
 func normalizeBundleLabel(name string) string {
 	if name == "" {
@@ -4532,7 +4796,8 @@ type Folder struct {
 }
 
 func (f *Folder) IsNode()       {}
-func (f *Folder) GetID() string { return f.ID }
+func (f *Folder) GetID() string { return "folder:" + f.Path }
+func (f *Folder) GetURI() string { return "semiorepo://FOLDER/" + strings.ToUpper(Slugify(f.Path)) }
 
 type File struct {
 	ID        string  `json:"id"`
@@ -4636,7 +4901,8 @@ func IsSemanticallyIgnored(path string) bool {
 	return false
 }
 
-func (f *File) GetID() string { return f.ID }
+func (f *File) GetID() string { return "file:" + f.Path }
+func (f *File) GetURI() string { return "semiorepo://FILE/" + strings.ToUpper(Slugify(f.Path)) }
 
 type Section struct {
 	ID          string       `json:"id,omitempty"`
@@ -4654,12 +4920,25 @@ type Section struct {
 func (s *Section) IsNode() {}
 func (s *Section) GetID() string {
 	if s.ID != "" {
-		return s.ID
+		if strings.HasPrefix(s.ID, "section:") {
+			return s.ID
+		}
+		return "section:" + s.ID
 	}
 	if s.FilePath != "" && s.Path != "" {
-		return s.FilePath + "#" + s.Path
+		return "section:" + s.FilePath + "#" + s.Path
 	}
-	return "@semio-repo/section/" + s.Name
+	return "section:" + s.Name
+}
+
+func (s *Section) GetURI() string {
+	raw := ""
+	if s.FilePath != "" && s.Path != "" {
+		raw = s.FilePath + "#" + s.Path
+	} else {
+		raw = s.Name
+	}
+	return "semiorepo://SECTION/" + strings.ToUpper(Slugify(raw))
 }
 
 type Definition struct {
@@ -4677,15 +4956,32 @@ type Definition struct {
 func (d *Definition) IsNode() {}
 func (d *Definition) GetID() string {
 	if d.ID != "" {
-		return d.ID
+		if strings.HasPrefix(d.ID, "definition:") {
+			return d.ID
+		}
+		return "definition:" + d.ID
 	}
 	if d.FilePath != "" {
 		if d.SectionPath != "" {
-			return d.FilePath + "#" + d.SectionPath + "§" + d.Name
+			return "definition:" + d.FilePath + "#" + d.SectionPath + "§" + d.Name
 		}
-		return d.FilePath + "§" + d.Name
+		return "definition:" + d.FilePath + "§" + d.Name
 	}
-	return "@semio-repo/definition/" + d.Name
+	return "definition:" + d.Name
+}
+
+func (d *Definition) GetURI() string {
+	raw := ""
+	if d.FilePath != "" {
+		if d.SectionPath != "" {
+			raw = d.FilePath + "#" + d.SectionPath + "§" + d.Name
+		} else {
+			raw = d.FilePath + "§" + d.Name
+		}
+	} else {
+		raw = d.Name
+	}
+	return "semiorepo://DEFINITION/" + strings.ToUpper(Slugify(raw))
 }
 
 type Contributor struct {
@@ -4732,7 +5028,15 @@ type ContributorDefinition struct {
 }
 
 func (c *Contributor) IsNode()       {}
-func (c *Contributor) GetID() string { return "@semio-repo/contributor/" + c.Github }
+func (c *Contributor) GetID() string {
+	raw := c.Name
+	if raw == "" {
+		raw = c.Github
+	}
+	return "contributor:" + raw
+}
+
+func (c *Contributor) GetURI() string { return "semiorepo://CONTRIBUTOR/" + strings.ToUpper(Slugify(c.Github)) }
 
 type Commit struct {
 	ID       string    `json:"id"`
@@ -4807,7 +5111,8 @@ func DeleteDraft(id string) error {
 
 // #endregion Drafts
 
-func (c *Commit) GetID() string { return "@semio-repo/commit/" + c.SHA }
+func (c *Commit) GetID() string { return "commit:" + c.SHA }
+func (c *Commit) GetURI() string { return "semiorepo://COMMIT/" + strings.ToUpper(Slugify(c.SHA)) }
 
 type Ticket struct {
 	Year          int               `json:"-" yaml:"-"`
@@ -4832,7 +5137,11 @@ type Ticket struct {
 
 func (t *Ticket) IsNode() {}
 func (t *Ticket) GetID() string {
-	return fmt.Sprintf("@semio-repo/ticket/%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
+	return fmt.Sprintf("ticket:%d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
+}
+
+func (t *Ticket) GetURI() string {
+	return fmt.Sprintf("semiorepo://TICKET/%d/%02d/%02d/%s", t.Year, t.Month, t.Day, strings.ToUpper(Slugify(t.Slug)))
 }
 
 func (t *Ticket) GetTitle() string {
@@ -4952,7 +5261,8 @@ type Policy struct {
 }
 
 func (p *Policy) IsNode()       {}
-func (p *Policy) GetID() string { return "@semio-repo/policy/" + p.ID }
+func (p *Policy) GetID() string { return "policy:" + p.ID }
+func (p *Policy) GetURI() string { return "semiorepo://POLICY/" + strings.ToUpper(Slugify(p.ID)) }
 
 type ViolationKindMeta struct {
 	Kind        ViolationKind     `json:"kind"`
@@ -4965,8 +5275,10 @@ type ViolationKindMeta struct {
 
 func (v *ViolationKindMeta) IsNode() {}
 func (v *ViolationKindMeta) GetID() string {
-	return "@semio-repo/violation-kind/" + string(v.Kind)
+	return "violation_kind:" + string(v.Kind)
 }
+
+func (v *ViolationKindMeta) GetURI() string { return "semiorepo://VIOLATION_KIND/" + strings.ToUpper(Slugify(string(v.Kind))) }
 
 type AnalyzeResult struct {
 	Violations []*Violation    `json:"violations"`
@@ -5522,6 +5834,7 @@ type TicketOpenInput struct {
 	Goal     string `json:"goal,omitempty"`
 	Parent   string `json:"parent,omitempty"`
 	NoGithub bool   `json:"noGithub,omitempty"`
+	Issue    string `json:"issue,omitempty"` // Link to existing GitHub issue URL instead of creating new one
 }
 
 type DraftCreateInput struct {
@@ -5546,6 +5859,7 @@ type GoalCreateInput struct {
 	UI          string `json:"client"`
 	NoGithub    bool   `json:"noGithub,omitempty"`
 	Parent      string `json:"parent,omitempty"`
+	Milestone   string `json:"milestone,omitempty"` // Link to existing GitHub milestone URL instead of creating new one
 }
 
 type GoalChangeInput struct {
@@ -5597,6 +5911,7 @@ type TicketCloseInput struct {
 	Files    []string `json:"files"`
 	Title    *string  `json:"title,omitempty"`
 	NoGithub bool     `json:"noGithub,omitempty"`
+	All      bool     `json:"all,omitempty"`
 }
 
 type TicketReopenInput struct {
@@ -5720,7 +6035,8 @@ type Todo struct {
 }
 
 func (t *Todo) IsNode()       {}
-func (t *Todo) GetID() string { return t.ID }
+func (t *Todo) GetID() string { return "todo:" + t.ID }
+func (t *Todo) GetURI() string { return "semiorepo://TODO/" + strings.ToUpper(Slugify(t.ID)) }
 
 type Location struct {
 	FilePath string `json:"filePath"`
@@ -5739,7 +6055,8 @@ type Violation struct {
 }
 
 func (v *Violation) IsNode()       {}
-func (v *Violation) GetID() string { return v.ID }
+func (v *Violation) GetID() string { return "violation:" + v.ID }
+func (v *Violation) GetURI() string { return "semiorepo://VIOLATION/" + strings.ToUpper(Slugify(v.ID)) }
 
 func (v *Violation) Priority() ViolationPriority {
 	return v.Kind.Info().Priority
@@ -7044,7 +7361,8 @@ type Goal struct {
 }
 
 func (g *Goal) IsNode()       {}
-func (g *Goal) GetID() string { return "@semio-repo/goal/" + g.ID }
+func (g *Goal) GetID() string { return "goal:" + Slugify(g.Title) }
+func (g *Goal) GetURI() string { return "semiorepo://GOAL/" + strings.ToUpper(Slugify(g.Title)) }
 
 type GoalDates struct {
 	Due    string     `json:"due,omitempty"`
@@ -7716,6 +8034,7 @@ func GetRootDir() string {
 
 func SetRootDir(dir string) {
 	rootDir = dir
+	InvalidateProjectCache()
 }
 
 func GetRepoMetaDir() string {
@@ -8234,16 +8553,16 @@ func ParseScope(raw string) Scope {
 		parts := strings.Split(raw, "#")
 		return Scope{Raw: raw, Kind: ScopeSection, FilePath: parts[0], SectionPath: parts[1:]}
 	}
+	ext := strings.ToLower(filepath.Ext(raw))
+	codeExtensions := map[string]bool{".ts": true, ".tsx": true, ".js": true, ".jsx": true, ".py": true, ".cs": true, ".go": true, ".json": true, ".md": true, ".yaml": true, ".yml": true, ".sql": true, ".graphql": true}
+	if codeExtensions[ext] {
+		return Scope{Raw: raw, Kind: ScopeFile, FilePath: raw}
+	}
 	if strings.HasPrefix(raw, "@semio/") {
 		return Scope{Raw: raw, Kind: ScopeProject, ProjectName: raw}
 	}
 	if strings.HasSuffix(raw, "/") {
 		return Scope{Raw: raw, Kind: ScopeFolder, FilePath: raw}
-	}
-	ext := strings.ToLower(filepath.Ext(raw))
-	codeExtensions := map[string]bool{".ts": true, ".tsx": true, ".js": true, ".jsx": true, ".py": true, ".cs": true, ".go": true, ".json": true, ".md": true, ".yaml": true, ".yml": true, ".sql": true, ".graphql": true}
-	if codeExtensions[ext] {
-		return Scope{Raw: raw, Kind: ScopeFile, FilePath: raw}
 	}
 	return Scope{Raw: raw, Kind: ScopeFolder, FilePath: raw}
 }
@@ -10972,7 +11291,7 @@ func shouldSkipTicket(prompt string) bool {
 	return hasTicketKeyword(prompt, "NOTICKET")
 }
 
-func OpenTicket(title, prompt, llm, ui, draft string, noIssue bool, goal string, parent string, noGithub bool) (*Ticket, error) {
+func OpenTicket(title, prompt, llm, ui, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
 	}
@@ -10989,7 +11308,7 @@ func OpenTicket(title, prompt, llm, ui, draft string, noIssue bool, goal string,
 		}
 		return latest, nil
 	}
-	return CreateTicket(title, prompt, llm, ui, draft, noIssue, goal, parent, noGithub)
+	return CreateTicket(title, prompt, llm, ui, draft, noIssue, goal, parent, noGithub, issue)
 }
 
 func OpenGoal(title, description, prompt, dueDate, ui, llm string, noGithub bool) (*Goal, error) {
@@ -11052,7 +11371,7 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	return nil
 }
 
-func CreateTicket(title, prompt, llm, ui, draft string, noIssue bool, goal string, parent string, noGithub bool) (*Ticket, error) {
+func CreateTicket(title, prompt, llm, ui, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	slug := Slugify(title)
 	if title == slug {
@@ -11153,30 +11472,37 @@ func CreateTicket(title, prompt, llm, ui, draft string, noIssue bool, goal strin
 
 	skipIssue := noIssue || noGithub || strings.Contains(prompt, "NOISSUE")
 	if !skipIssue {
-		issueBody := formatPromptHeading(prompt)
+		if issue != "" {
+			// Use existing issue URL
+			ticket.GitHub = &TicketGithubData{Issue: issue}
+			ghAddIssueToProject(issue)
+		} else {
+			// Create new issue
+			issueBody := formatPromptHeading(prompt)
 
-		var milestone *int
-		if goal != "" {
-			goals, err := ListGoals()
-			if err == nil {
-				for _, g := range goals {
-					if g.ID == goal {
-						if g.GitHub != nil && g.GitHub.Milestone != "" {
-							if n, err := parseMilestoneNumber(g.GitHub.Milestone); err == nil {
-								milestone = &n
+			var milestone *int
+			if goal != "" {
+				goals, err := ListGoals()
+				if err == nil {
+					for _, g := range goals {
+						if g.ID == goal {
+							if g.GitHub != nil && g.GitHub.Milestone != "" {
+								if n, err := parseMilestoneNumber(g.GitHub.Milestone); err == nil {
+									milestone = &n
+								}
 							}
+							break
 						}
-						break
 					}
 				}
 			}
-		}
 
-		issueURL, err := ghCreateIssue(title, issueBody, milestone)
-		if err == nil && issueURL != "" {
-			ticket.GitHub = &TicketGithubData{Issue: issueURL}
-		} else if err != nil {
-			fmt.Printf("Warning: Failed to create GitHub issue: %v\n", err)
+			issueURL, err := ghCreateIssue(title, issueBody, milestone)
+			if err == nil && issueURL != "" {
+				ticket.GitHub = &TicketGithubData{Issue: issueURL}
+			} else if err != nil {
+				fmt.Printf("Warning: Failed to create GitHub issue: %v\n", err)
+			}
 		}
 	}
 
@@ -11198,6 +11524,7 @@ func ghCreateIssue(title, body string, milestone *int) (string, error) {
 	issueURL := strings.TrimSpace(stdout)
 	if issueURL != "" {
 		ghAddIssueToProject(issueURL)
+		ghAssignIssueToCurrentUser(issueURL)
 	}
 	return issueURL, nil
 }
@@ -11211,6 +11538,25 @@ func ghAddIssueToProject(issueURL string) {
 		return
 	}
 	ExecCommand("gh", buildProjectLinkArgs(issueURL), "")
+}
+
+func ghGetCurrentUser() string {
+	stdout, _, exitCode := ExecCommand("gh", []string{"api", "user", "--jq", ".login"}, "")
+	if exitCode != 0 {
+		return ""
+	}
+	return strings.TrimSpace(stdout)
+}
+
+func ghAssignIssueToCurrentUser(issueURL string) {
+	if issueURL == "" {
+		return
+	}
+	user := ghGetCurrentUser()
+	if user == "" {
+		return
+	}
+	ExecCommand("gh", []string{"issue", "edit", issueURL, "--add-assignee", user}, "")
 }
 
 func CountLines(content string) int {
@@ -11426,6 +11772,26 @@ func ghUpdateIssueTitle(issueURL, title string) error {
 	return nil
 }
 
+// ghListOpenIssuesWithLabel returns all open issue URLs with the specified label
+func ghListOpenIssuesWithLabel(label string) ([]string, error) {
+	args := []string{"issue", "list", "--label", label, "--state", "open", "--json", "url", "--limit", "1000"}
+	stdout, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("gh issue list failed: %s", strings.TrimSpace(stderr))
+	}
+	var issues []struct {
+		URL string `json:"url"`
+	}
+	if err := json.Unmarshal([]byte(stdout), &issues); err != nil {
+		return nil, fmt.Errorf("failed to parse gh issue list output: %w", err)
+	}
+	urls := make([]string, len(issues))
+	for i, issue := range issues {
+		urls[i] = issue.URL
+	}
+	return urls, nil
+}
+
 func SaveTicket(ticket *Ticket) error {
 	if false {
 		return fmt.Errorf("ticket data is nil")
@@ -11460,6 +11826,7 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	ticket.FolderPath = folderPath
 	ticket.JsonPath = jsonPath
 	ticket.TicketPath = ticketPath
+	ticket.ImportantPath = GetImportantFilePath(year, month, day, slug)
 
 	return &ticket, nil
 }
@@ -11742,7 +12109,32 @@ func ticketMatchesKinds(t *Ticket, opts StreamOptions) bool {
 	return true
 }
 
+var (
+	projectCache       []Project
+	projectCacheLoaded bool
+	projectCacheMutex  sync.Mutex
+)
+
+func InvalidateProjectCache() {
+	projectCacheMutex.Lock()
+	defer projectCacheMutex.Unlock()
+	projectCacheLoaded = false
+	projectCache = nil
+}
+
 func LoadProjects() []Project {
+	projectCacheMutex.Lock()
+	defer projectCacheMutex.Unlock()
+
+	if projectCacheLoaded {
+		return projectCache
+	}
+	projectCache = loadProjectsInternal()
+	projectCacheLoaded = true
+	return projectCache
+}
+
+func loadProjectsInternal() []Project {
 	var projects []Project
 	projectsDir := rootDir
 	entries, err := os.ReadDir(projectsDir)
@@ -12280,8 +12672,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 	}
 
 	root := rootDir
-	if strings.HasPrefix(scope, "@semio/") {
-		bundleName := strings.TrimPrefix(scope, "@semio/")
+	if bundleName, found := strings.CutPrefix(scope, "@semio/"); found {
 		bundles := GetProjects()
 		for _, b := range bundles {
 			if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
@@ -12363,7 +12754,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 			out <- Folder{
 				ID:        buildFolderID(relPath, bundleID),
 				Path:      relPath,
-				URI:       fmt.Sprintf("file://%s/%s", rootDir, relPath),
+				URI:       "semiorepo://FOLDER/" + Slugify(buildFolderID(relPath, bundleID)),
 				Name:      filepath.Base(relPath),
 				ParentID:  parentID,
 				BundleID:  bundleID,
@@ -12384,8 +12775,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 	}
 
 	root := rootDir
-	if strings.HasPrefix(scope, "@semio/") {
-		bundleName := strings.TrimPrefix(scope, "@semio/")
+	if bundleName, found := strings.CutPrefix(scope, "@semio/"); found {
 		bundles := GetProjects()
 		matched := false
 		for _, b := range bundles {
@@ -12440,7 +12830,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 		out <- File{
 			ID:        buildFileID(relPath, bundleID),
 			Path:      relPath,
-			URI:       fmt.Sprintf("file://%s/%s", rootDir, relPath),
+			URI:       "semiorepo://FILE/" + Slugify(buildFileID(relPath, bundleID)),
 			Name:      filepath.Base(relPath),
 			Extension: filepath.Ext(relPath),
 			FolderID:  folderID,
@@ -12524,7 +12914,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 			out <- File{
 				ID:        buildFileID(relPath, bundleID),
 				Path:      relPath,
-				URI:       fmt.Sprintf("file://%s/%s", rootDir, relPath),
+				URI:       "semiorepo://FILE/" + Slugify(buildFileID(relPath, bundleID)),
 				Name:      filepath.Base(relPath),
 				Extension: filepath.Ext(relPath),
 				FolderID:  folderID,
@@ -12576,7 +12966,11 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 	}()
 
 	for f := range fileChan {
-		content, err := ReadTextFile(f.Path)
+		fullPath := f.Path
+		if !filepath.IsAbs(fullPath) {
+			fullPath = filepath.Join(rootDir, fullPath)
+		}
+		content, err := ReadTextFile(fullPath)
 		if err != nil {
 			continue
 		}
@@ -12616,7 +13010,11 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 	}()
 
 	for f := range fileChan {
-		content, err := ReadTextFile(f.Path)
+		fullPath := f.Path
+		if !filepath.IsAbs(fullPath) {
+			fullPath = filepath.Join(rootDir, fullPath)
+		}
+		content, err := ReadTextFile(fullPath)
 		if err != nil {
 			continue
 		}
@@ -12884,16 +13282,22 @@ func ProgressTicket(ticket *Ticket, summary string) (string, error) {
 	return fmt.Sprintf("Logged progress to %s", ticket.Slug), nil
 }
 
-func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool) error {
-	if summary == "" {
-		return fmt.Errorf("summary is required to finish a ticket")
-	}
-	if len(files) == 0 {
-		return fmt.Errorf("at least one file is required to finish a ticket")
+func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool, bulk bool) error {
+	if !bulk {
+		if summary == "" {
+			return fmt.Errorf("summary is required to finish a ticket")
+		}
+		if len(files) == 0 {
+			return fmt.Errorf("at least one file is required to finish a ticket")
+		}
+	} else {
+		if summary == "" {
+			summary = "Bulk close"
+		}
 	}
 
 	// Validate important.md is empty
-	if FileExists(ticket.ImportantPath) {
+	if !bulk && FileExists(ticket.ImportantPath) {
 		importantContent, err := ReadTextFile(ticket.ImportantPath)
 		if err == nil && strings.TrimSpace(importantContent) != "" {
 			return fmt.Errorf("cannot finish ticket: %s is not empty. Please complete all compulsory actions", filepath.Base(ticket.ImportantPath))
@@ -12904,9 +13308,13 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool)
 		}
 	}
 
-	tickFilesResult, err := ComputeTicketFiles(ticket, files)
-	if err != nil {
-		return err
+	var tickFilesResult *TicketDiffs
+	var err error
+	if !bulk || len(files) > 0 {
+		tickFilesResult, err = ComputeTicketFiles(ticket, files)
+		if err != nil {
+			return err
+		}
 	}
 
 	if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
@@ -12914,50 +13322,52 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool)
 
 		// 1. Add comment with summary and metrics
 
-		// 2. Add labels
-		bundles := GetProjects()
-		labels := make(map[string]struct{})
-		if tickFilesResult != nil {
-			addLabel := func(path string) {
-				if path == "" {
-					return
+		if !bulk {
+			// 2. Add labels
+			bundles := GetProjects()
+			labels := make(map[string]struct{})
+			if tickFilesResult != nil {
+				addLabel := func(path string) {
+					if path == "" {
+						return
+					}
+					labels[path] = struct{}{}
 				}
-				labels[path] = struct{}{}
+				bundleDiffs := tickFilesResult.Bundles
+				for _, entry := range bundleDiffs.Added {
+					addLabel(entry.Path)
+				}
+				for _, entry := range bundleDiffs.Modified {
+					addLabel(entry.Path)
+				}
+				for _, entry := range bundleDiffs.Deleted {
+					addLabel(entry.Path)
+				}
+				for _, entry := range bundleDiffs.Renamed {
+					addLabel(entry.From)
+					addLabel(entry.To)
+				}
 			}
-			bundleDiffs := tickFilesResult.Bundles
-			for _, entry := range bundleDiffs.Added {
-				addLabel(entry.Path)
+			var labelList []string
+			for l := range labels {
+				labelList = append(labelList, l)
 			}
-			for _, entry := range bundleDiffs.Modified {
-				addLabel(entry.Path)
+			if len(labelList) > 0 {
+				if err := ghAddLabels(issueURL, labelList); err != nil {
+					fmt.Printf("Warning: Failed to add labels to GitHub issue: %v\n", err)
+				}
 			}
-			for _, entry := range bundleDiffs.Deleted {
-				addLabel(entry.Path)
-			}
-			for _, entry := range bundleDiffs.Renamed {
-				addLabel(entry.From)
-				addLabel(entry.To)
-			}
-		}
-		var labelList []string
-		for l := range labels {
-			labelList = append(labelList, l)
-		}
-		if len(labelList) > 0 {
-			if err := ghAddLabels(issueURL, labelList); err != nil {
-				fmt.Printf("Warning: Failed to add labels to GitHub issue: %v\n", err)
-			}
-		}
 
-		// 3. Add metrics comment and close
-		comment := formatSummaryHeading(summary)
-		metricsComment := generateMetricsComment(tickFilesResult, bundles)
-		if metricsComment != "" {
-			comment += "\n\n# ✍️ Changes\n\n" + metricsComment
-		}
+			// 3. Add metrics comment and close
+			comment := formatSummaryHeading(summary)
+			metricsComment := generateMetricsComment(tickFilesResult, bundles)
+			if metricsComment != "" {
+				comment += "\n\n# ✍️ Changes\n\n" + metricsComment
+			}
 
-		if err := ghAddComment(issueURL, comment); err != nil {
-			fmt.Printf("Warning: Failed to add summary and metrics comment to GitHub issue: %v\n", err)
+			if err := ghAddComment(issueURL, comment); err != nil {
+				fmt.Printf("Warning: Failed to add summary and metrics comment to GitHub issue: %v\n", err)
+			}
 		}
 
 		// Close issue
@@ -13071,13 +13481,13 @@ func ReopenTicket(ticket *Ticket, prompt, llm, ui, draft string, goal string, pa
 	return SaveTicket(ticket)
 }
 
-func ToolTicketOpen(title, prompt, llm, ui, draft string, noIssue bool, goal string, parent string, noGithub bool) ToolResult {
+func ToolTicketOpen(title, prompt, llm, ui, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) ToolResult {
 	output := NewOutput()
 	resolvedPrompt := prompt
 	if resolvedPrompt == "" {
 		resolvedPrompt = title
 	}
-	ticket, err := OpenTicket(title, prompt, llm, ui, draft, noIssue, goal, parent, noGithub)
+	ticket, err := OpenTicket(title, prompt, llm, ui, draft, noIssue, goal, parent, noGithub, issue)
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
@@ -13165,7 +13575,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 			}
 		}
 	}
-	if err := FinishTicket(ticket, summary, files, noGithub); err != nil {
+	if err := FinishTicket(ticket, summary, files, noGithub, false); err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
@@ -13247,7 +13657,7 @@ func ToolDraftDelete(slug string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
-func ToolGoalCreate(title, description, prompt, dueDate, llm, ui string, noGithub bool) ToolResult {
+func ToolGoalCreate(title, description, prompt, dueDate, llm, ui string, noGithub bool, parent, milestone string) ToolResult {
 	output := NewOutput()
 	ctx := NewRepoContext(rootDir)
 	goal, err := ctx.GoalCreate(GoalCreateInput{
@@ -13258,6 +13668,8 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, ui string, noGithu
 		LLM:         llm,
 		UI:          ui,
 		NoGithub:    noGithub,
+		Parent:      parent,
+		Milestone:   milestone,
 	})
 	if err != nil {
 		output.Error(fmt.Sprintf("Error: %v", err))
@@ -14781,6 +15193,7 @@ type RepoContext interface {
 	GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error)
 	GetPolicies() []*Policy
 	GetDrafts() ([]*Draft, error)
+	GetTodos(filter *FilterInput) ([]*Todo, error)
 	GetViolationKinds() []*ViolationKindMeta
 	Analyze(scope *string) (*AnalyzeResult, error)
 	Fix(scope *string) (*FixResult, error)
@@ -14789,6 +15202,9 @@ type RepoContext interface {
 	GoalClose(input GoalCloseInput) (*Goal, error)
 	GoalReopen(input GoalReopenInput) (*Goal, error)
 	GoalDelete(input GoalDeleteInput) (bool, error)
+	TodoCreate(input TodoCreateInput) (*Todo, error)
+	TodoChange(input TodoChangeInput) (*Todo, error)
+	TodoDelete(id string) (bool, error)
 	DraftCreate(input DraftCreateInput) (*Draft, error)
 	DraftDelete(id string) (bool, error)
 	TicketOpen(input TicketOpenInput) (*Ticket, error)
@@ -15083,25 +15499,32 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 		return nil, err
 	}
 
-	id := Slugify(input.Title)
+	slug := Slugify(input.Title)
+	id := slug
+	if input.Parent != "" {
+		id = input.Parent + "/" + slug
+	}
+
 	dir := GetRepoGoalsDir()
-	path := filepath.Join(dir, id, "goal.json")
+	path := filepath.Join(dir, filepath.FromSlash(id), "goal.json")
 	if FileExists(path) {
 		return nil, fmt.Errorf("goal with id %s already exists", id)
 	}
 
-	var milestoneNumber int
-	if !input.NoGithub {
-		milestoneNumber, err = ghCreateMilestone(input.Title, input.Description)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	var milestoneUrl string
 	if !input.NoGithub {
-		repoUrl, _ := getGhRepoUrl()
-		milestoneUrl = fmt.Sprintf("%s/milestone/%d", repoUrl, milestoneNumber)
+		if input.Milestone != "" {
+			// Use existing milestone URL
+			milestoneUrl = input.Milestone
+		} else {
+			// Create new milestone
+			milestoneNumber, err := ghCreateMilestone(input.Title, input.Description)
+			if err != nil {
+				return nil, err
+			}
+			repoUrl, _ := getGhRepoUrl()
+			milestoneUrl = fmt.Sprintf("%s/milestone/%d", repoUrl, milestoneNumber)
+		}
 	}
 
 	gitAuthor := GetGitAuthorGithub()
@@ -15109,6 +15532,7 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 	goal := Goal{
 		ID:          id,
 		Title:       input.Title,
+		Parent:      input.Parent,
 		Description: input.Description,
 		Prompt:      input.Prompt,
 		Status:      "open",
@@ -15168,17 +15592,25 @@ func UpdateGoalTitle(goal *Goal, title string) error {
 	if title == strings.ToLower(newSlug) {
 		return fmt.Errorf("goal title must be titleized (e.g. \"Some Title on Something\") and NOT a slug")
 	}
-	if newSlug != goal.ID {
+
+	var newID string
+	if goal.Parent != "" {
+		newID = goal.Parent + "/" + newSlug
+	} else {
+		newID = newSlug
+	}
+
+	if newID != goal.ID {
 		dir := GetRepoGoalsDir()
-		oldPath := filepath.Join(dir, goal.ID)
-		newPath := filepath.Join(dir, newSlug)
+		oldPath := filepath.Join(dir, filepath.FromSlash(goal.ID))
+		newPath := filepath.Join(dir, filepath.FromSlash(newID))
 		if FileExists(newPath) {
 			return fmt.Errorf("goal folder already exists: %s", newPath)
 		}
 		if err := os.Rename(oldPath, newPath); err != nil {
 			return err
 		}
-		goal.ID = newSlug
+		goal.ID = newID
 	}
 	goal.Title = title
 	return nil
@@ -15210,6 +15642,37 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	}
 	if input.Parent != nil {
 		goal.Parent = *input.Parent
+
+		// Logic to move goal to new parent
+		slug := goal.ID
+		if idx := strings.LastIndex(goal.ID, "/"); idx != -1 {
+			slug = goal.ID[idx+1:]
+		}
+
+		var newID string
+		if goal.Parent != "" {
+			newID = goal.Parent + "/" + slug
+		} else {
+			newID = slug
+		}
+
+		if newID != goal.ID {
+			oldPath := filepath.Join(dir, filepath.FromSlash(goal.ID))
+			newPath := filepath.Join(dir, filepath.FromSlash(newID))
+
+			if FileExists(newPath) {
+				return nil, fmt.Errorf("goal folder already exists: %s", newPath)
+			}
+			// Ensure parent dir exists
+			if err := os.MkdirAll(filepath.Dir(newPath), 0755); err != nil {
+				return nil, err
+			}
+
+			if err := os.Rename(oldPath, newPath); err != nil {
+				return nil, err
+			}
+			goal.ID = newID
+		}
 	}
 
 	if goal.GitHub != nil && !input.NoGithub {
@@ -15513,7 +15976,7 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 }
 
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
-	return OpenTicket(input.Title, input.Prompt, input.LLM, input.UI, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoGithub)
+	return OpenTicket(input.Title, input.Prompt, input.LLM, input.UI, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoGithub, input.Issue)
 }
 
 func (c *repoContext) TicketProgress(input TicketProgressInput) (string, error) {
@@ -15525,6 +15988,39 @@ func (c *repoContext) TicketProgress(input TicketProgressInput) (string, error) 
 }
 
 func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
+	if input.All {
+		tickets, err := ListTickets(nil, nil, nil)
+		if err != nil {
+			return nil, err
+		}
+		var lastTicket *Ticket
+		for _, t := range tickets {
+			if t.Status == TicketStatusOpen {
+				ticket := t
+				fmt.Printf("Closing ticket %s...\n", ticket.Slug)
+				if err := FinishTicket(&ticket, "Bulk close", []string{}, input.NoGithub, true); err != nil {
+					fmt.Printf("Warning: Failed to close ticket %s: %v\n", ticket.Slug, err)
+					continue
+				}
+				lastTicket = &ticket
+			}
+		}
+		// Also close all GitHub issues with the "ticket" label
+		if !input.NoGithub {
+			issueURLs, err := ghListOpenIssuesWithLabel("ticket")
+			if err != nil {
+				fmt.Printf("Warning: Failed to list GitHub issues with 'ticket' label: %v\n", err)
+			} else {
+				for _, issueURL := range issueURLs {
+					fmt.Printf("Closing GitHub issue %s...\n", issueURL)
+					if err := ghCloseIssue(issueURL); err != nil {
+						fmt.Printf("Warning: Failed to close GitHub issue %s: %v\n", issueURL, err)
+					}
+				}
+			}
+		}
+		return lastTicket, nil
+	}
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
 		return nil, err
@@ -15541,7 +16037,7 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 			}
 		}
 	}
-	if err := FinishTicket(ticket, input.Summary, input.Files, input.NoGithub); err != nil {
+	if err := FinishTicket(ticket, input.Summary, input.Files, input.NoGithub, false); err != nil {
 		return nil, err
 	}
 	return ticket, nil
@@ -17704,20 +18200,22 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"issue":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
 	ticketCloseInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "TicketCloseInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"year":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"month":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"day":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.Int)},
-			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"summary":  &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"files":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+			"year":     &graphql.InputObjectFieldConfig{Type: graphql.Int},
+			"month":    &graphql.InputObjectFieldConfig{Type: graphql.Int},
+			"day":      &graphql.InputObjectFieldConfig{Type: graphql.Int},
+			"slug":     &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"summary":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"files":    &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
 			"title":    &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"all":      &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 		},
 	})
 
@@ -17756,6 +18254,24 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
+	todoCreateInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TodoCreateInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"name":        &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"description": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"parentID":    &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+		},
+	})
+
+	todoChangeInputType := graphql.NewInputObject(graphql.InputObjectConfig{
+		Name: "TodoChangeInput",
+		Fields: graphql.InputObjectConfigFieldMap{
+			"id":          &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"name":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"description": &graphql.InputObjectFieldConfig{Type: graphql.String},
+		},
+	})
+
 	goalCreateInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "GoalCreateInput",
 		Fields: graphql.InputObjectConfigFieldMap{
@@ -17767,6 +18283,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"client":      &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"parent":      &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noGithub":    &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
+			"milestone":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 		},
 	})
 
@@ -18066,15 +18583,28 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						}
 					}
 					input := TicketCloseInput{
-						Year:    inputMap["year"].(int),
-						Month:   inputMap["month"].(int),
-						Day:     inputMap["day"].(int),
-						Slug:    inputMap["slug"].(string),
-						Summary: inputMap["summary"].(string),
-						Files:   files,
+						Files: files,
+					}
+					if v, ok := inputMap["year"].(int); ok {
+						input.Year = v
+					}
+					if v, ok := inputMap["month"].(int); ok {
+						input.Month = v
+					}
+					if v, ok := inputMap["day"].(int); ok {
+						input.Day = v
+					}
+					if v, ok := inputMap["slug"].(string); ok {
+						input.Slug = v
+					}
+					if v, ok := inputMap["summary"].(string); ok {
+						input.Summary = v
 					}
 					if inputMap["noGithub"] != nil {
 						input.NoGithub = inputMap["noGithub"].(bool)
+					}
+					if inputMap["all"] != nil {
+						input.All = inputMap["all"].(bool)
 					}
 					if t, ok := inputMap["title"].(string); ok {
 						input.Title = &t
@@ -18360,39 +18890,75 @@ func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 }
 
 func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
-	if id == "🌍" {
+	if strings.HasPrefix(id, "repo:") {
 		return r.Repo(ctx)
 	}
-	if strings.HasPrefix(id, "📄") {
-		return r.File(ctx, strings.TrimPrefix(id, "📄"))
+	if strings.HasPrefix(id, "project:") {
+		return &Project{Name: strings.TrimPrefix(id, "project:")}, nil // Simplified
 	}
-	if strings.HasPrefix(id, "📂") {
-		return r.Folder(ctx, strings.TrimPrefix(id, "📂"))
+	if strings.HasPrefix(id, "bundle:") {
+		return r.Bundle(ctx, strings.TrimPrefix(id, "bundle:"))
 	}
-	if strings.HasPrefix(id, "👤@") || strings.HasPrefix(id, "🔬@") {
-		return r.Project(ctx, id)
+	if strings.HasPrefix(id, "folder:") {
+		return r.Folder(ctx, strings.TrimPrefix(id, "folder:"))
 	}
-	if strings.Contains(id, "@") && (strings.HasPrefix(id, "📚") || strings.HasPrefix(id, "📦") || strings.HasPrefix(id, "🎨") || strings.HasPrefix(id, "🖥️") || strings.HasPrefix(id, "🕸️") || strings.HasPrefix(id, "🧩")) {
-		return r.Bundle(ctx, id)
+	if strings.HasPrefix(id, "file:") {
+		return r.File(ctx, strings.TrimPrefix(id, "file:"))
 	}
-	if strings.HasPrefix(id, "@semio-repo/contributor/") {
-		return r.Contributor(ctx, strings.TrimPrefix(id, "@semio-repo/contributor/"))
+	if strings.HasPrefix(id, "contributor:") {
+		return r.Contributor(ctx, strings.TrimPrefix(id, "contributor:"))
 	}
-	if strings.HasPrefix(id, "@semio-repo/policy/") {
-		return r.Policy(ctx, strings.TrimPrefix(id, "@semio-repo/policy/"))
+	if strings.HasPrefix(id, "policy:") {
+		return r.Policy(ctx, strings.TrimPrefix(id, "policy:"))
 	}
-	if strings.HasPrefix(id, "@semio-repo/violation-kind/") {
-		return r.ViolationKind(ctx, strings.TrimPrefix(id, "@semio-repo/violation-kind/"))
+	if strings.HasPrefix(id, "violation:") {
+		// violation IDs are usually UUIDs or derived.
+		// We don't have a direct lookup for violation by ID without context?
+		// We can try to finding it in analyze results if needed.
+		// For now, return nil or error?
+		// "Don't keep legacy". If we can't resolve it, error.
+		return nil, fmt.Errorf("resolving violation by ID not implemented")
 	}
-
-	parts := strings.Split(id, "/")
-	if len(parts) == 4 {
-		y, err1 := strconv.Atoi(parts[0])
-		m, err2 := strconv.Atoi(parts[1])
-		d, err3 := strconv.Atoi(parts[2])
-		if err1 == nil && err2 == nil && err3 == nil {
+	if strings.HasPrefix(id, "ticket:") {
+		slugID := strings.TrimPrefix(id, "ticket:")
+		parts := strings.Split(slugID, "/")
+		if len(parts) == 4 {
+			y, _ := strconv.Atoi(parts[0])
+			m, _ := strconv.Atoi(parts[1])
+			d, _ := strconv.Atoi(parts[2])
 			return r.Ticket(ctx, y, m, d, parts[3])
 		}
+	}
+	if strings.HasPrefix(id, "commit:") {
+		// Commits are in repo?
+		// We can return a Commit object if we have the SHA.
+		return &Commit{SHA: strings.TrimPrefix(id, "commit:")}, nil
+	}
+	if strings.HasPrefix(id, "goal:") {
+		// Goal lookup by slug/title?
+		slug := strings.TrimPrefix(id, "goal:")
+		// Assuming helper GetGoal(slug) exists or similar
+		return &Goal{ID: slug, Title: slug}, nil // Placeholder if no lookup
+	}
+	
+	// Complex IDs (Section, Definition)
+	if strings.HasPrefix(id, "section:") {
+		// Parse file path from ID?
+		// ID: section:filepath#path
+		full := strings.TrimPrefix(id, "section:")
+		parts := strings.SplitN(full, "#", 2)
+		if len(parts) == 2 {
+			f, err := r.File(ctx, parts[0])
+			if err == nil && f != nil {
+				// We have file. Need to parse sections.
+				// This assumes we can call something to get specific section.
+				// For now, return nil as "not found" is better than "invalid format".
+				return nil, fmt.Errorf("resolving section by ID not implemented")
+			}
+		}
+	}
+	if strings.HasPrefix(id, "definition:") {
+		return nil, fmt.Errorf("resolving definition by ID not implemented")
 	}
 
 	return nil, fmt.Errorf("invalid node id format: %s", id)
@@ -18543,6 +19109,14 @@ func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) (
 	}
 	return []*Contributor{}, nil
 }
+
+func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo, error) {
+	if r.Ctx != nil {
+		return r.Ctx.GetTodos(filter)
+	}
+	return []*Todo{}, nil
+}
+
 
 func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
@@ -18845,6 +19419,27 @@ func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) 
 		return r.Ctx.GoalClose(input)
 	}
 	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput) (*Todo, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TodoCreate(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput) (*Todo, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TodoChange(input)
+	}
+	return nil, fmt.Errorf("not implemented")
+}
+
+func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, error) {
+	if r.Ctx != nil {
+		return r.Ctx.TodoDelete(id)
+	}
+	return false, fmt.Errorf("not implemented")
 }
 
 func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput) (*Goal, error) {
@@ -19332,6 +19927,10 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("client", mcp.Required(), mcp.Description("UI used for this ticket")),
 			mcp.WithBoolean("noIssue", mcp.Description("Skip GitHub issue creation")),
 			mcp.WithString("draft", mcp.Description("Optional draft slug to seed ticket workspace")),
+			mcp.WithString("goal", mcp.Description("Goal ID to associate with this ticket")),
+			mcp.WithString("parent", mcp.Description("Parent ticket slug for nested tickets")),
+			mcp.WithBoolean("noGithub", mcp.Description("Skip all GitHub operations")),
+			mcp.WithString("issue", mcp.Description("Link to existing GitHub issue URL instead of creating new one")),
 		),
 		ticketOpen,
 	)
@@ -19419,6 +20018,8 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithString("client", mcp.Required(), mcp.Description("UI client")),
 			mcp.WithString("due_date", mcp.Description("Due date (YYYY-MM-DD)")),
 			mcp.WithBoolean("no_github", mcp.Description("Skip GitHub milestone creation")),
+			mcp.WithString("parent", mcp.Description("Parent goal ID")),
+			mcp.WithString("milestone", mcp.Description("Link to existing GitHub milestone URL instead of creating new one")),
 		),
 		goalOpen,
 	)
@@ -20033,8 +20634,9 @@ func ticketOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTool
 	goal, _, _ := getStringArg(args, "goal")
 	parent, _, _ := getStringArg(args, "parent")
 	noGithub, _, _ := getBoolArg(args, "noGithub")
+	issue, _, _ := getStringArg(args, "issue")
 
-	result := ToolTicketOpen(title, prompt, llm, ui, draft, noIssue, goal, parent, noGithub)
+	result := ToolTicketOpen(title, prompt, llm, ui, draft, noIssue, goal, parent, noGithub, issue)
 	return toolResultToMCP(result)
 }
 
@@ -20240,8 +20842,10 @@ func goalOpen(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolRe
 		return nil, err
 	}
 	noGithub, _, _ := getBoolArg(args, "no_github")
+	parent, _, _ := getStringArg(args, "parent")
+	milestone, _, _ := getStringArg(args, "milestone")
 
-	result := ToolGoalCreate(title, description, prompt, dueDate, llm, ui, noGithub)
+	result := ToolGoalCreate(title, description, prompt, dueDate, llm, ui, noGithub, parent, milestone)
 	return toolResultToMCP(result)
 }
 
@@ -21209,7 +21813,7 @@ func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest
 }
 
 func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	id := strings.TrimPrefix(request.Params.URI, "semiorepo://policy/")
+	id := strings.TrimPrefix(request.Params.URI, "semiorepo://POLICY/")
 	query := `query Policy($id: String!) { policy(id: $id) { id description violations { id } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
@@ -21248,7 +21852,7 @@ func handleViolationKindsResource(ctx context.Context, request mcp.ReadResourceR
 }
 
 func handleViolationKindResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	id := strings.TrimPrefix(request.Params.URI, "semiorepo://violationKind/")
+	id := strings.TrimPrefix(request.Params.URI, "semiorepo://VIOLATION-KIND/")
 	query := `query ViolationKind($id: String!) { violationKind(id: $id) { id priority autofixable reason solution } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
@@ -23028,7 +23632,14 @@ func ListGoals() ([]*Goal, error) {
 				return err
 			}
 			relPath, _ := filepath.Rel(dir, path)
-			goal.ID = filepath.Dir(relPath)
+			idPath := filepath.Dir(relPath)
+			goal.ID = filepath.ToSlash(idPath)
+			// Derive Parent from ID to ensure consistency with file structure
+			if idx := strings.LastIndex(goal.ID, "/"); idx != -1 {
+				goal.Parent = goal.ID[:idx]
+			} else {
+				goal.Parent = ""
+			}
 			goal.Path = path
 			goals = append(goals, &goal)
 		}
@@ -23065,7 +23676,7 @@ func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) e
 
 func SaveGoal(goal Goal) error {
 	dir := GetRepoGoalsDir()
-	path := filepath.Join(dir, goal.ID, "goal.json")
+	path := filepath.Join(dir, filepath.FromSlash(goal.ID), "goal.json")
 	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
 		return err
 	}
@@ -23582,16 +24193,13 @@ func removeLineFromMarkdown(path, name string) {
 	os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
 }
 
-func removeLineFromFile(path string, lineNum int) {
-	content, _ := os.ReadFile(path)
-	lines := strings.Split(string(content), "\n")
-	if lineNum > 0 && lineNum <= len(lines) {
-		// Only remove if it looks like a todo
-		// if strings.Contains(lines[lineNum-1], "TODO") {
-		lines = append(lines[:lineNum-1], lines[lineNum:]...)
-		os.WriteFile(path, []byte(strings.Join(lines, "\n")), 0644)
-		// }
-	}
-}
 
-// #endregion Todos
+
+func removeLineFromFile(path string, lineNum int) {
+content, _ := os.ReadFile(path)
+lines := strings.Split(string(content), "\n")
+if lineNum > 0 && lineNum <= len(lines) {
+newLines := append(lines[:lineNum-1], lines[lineNum:]...)
+os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
+}
+}

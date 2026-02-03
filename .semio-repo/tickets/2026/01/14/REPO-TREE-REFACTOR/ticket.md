@@ -145,8 +145,8 @@ This is a breaking change. All existing code that relies on node IDs will need u
 All IDs are now deterministic based on file paths and bundle membership, making them reproducible across different instances.
 
 ## Summary
-# Summary - Node ID Refactoring
 
+Bulk close
 ## Completed
 
 Successfully refactored the Node ID system to use a consistent, globally unique format based on semio's `@` naming convention.

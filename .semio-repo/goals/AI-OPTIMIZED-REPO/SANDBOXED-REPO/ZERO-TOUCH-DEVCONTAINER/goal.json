@@ -1,0 +1,28 @@
+{
+  "title": "Zero-Touch Devcontainer",
+  "description": "Goal for Zero-Touch Devcontainer",
+  "prompt": "Instructions for Zero-Touch Devcontainer",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "SANDBOXED-REPO",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/68"
+  },
+  "iterations": [
+    {
+      "prompt": "Instructions for Zero-Touch Devcontainer",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:53:50.481632375Z",
+      "commit": ""
+    }
+  ]
+}

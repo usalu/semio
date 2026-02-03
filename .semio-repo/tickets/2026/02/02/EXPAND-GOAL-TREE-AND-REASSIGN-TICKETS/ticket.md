@@ -22,3 +22,5 @@
 - Started goal expansion.
 
 ## Summary
+
+Bulk close

@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/269"
   },
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-29T11:11:36.584458249Z",
   "finished": "2026-01-29T11:13:56.253208688Z",
   "iterations": [
     {
       "prompt": "The swe-1-5 llm should be supported everywhere. Need to identify all places where LLM models are configured or referenced and ensure swe-1-5 is included in the available options.",
       "llm": "sonnet-4-5",
-      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

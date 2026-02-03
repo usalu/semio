@@ -5,7 +5,7 @@
 Implement the following plan:
 Continue.
 
-Dont create any new test files but extend the existing test file. A single tests should always cover one unit and do multiple tests for that unit.
+Extend the existing test file to cover all new features. Dont create any new test files. A single tests should always cover one unit and do multiple tests for that unit.
 Make sure all tests pass.
 
 Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
@@ -20,7 +20,144 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
-Introduce the ticket clean command with to close all open tickets.
+The `README.md` should start with a ❤️‍🔥Thanks section
+
+All ticket github issues  should automatically be linked to the project `https://github.com/users/usalu/projects/2`.
+All tickets should be assigned to the account creating the ticket. Test it just now with gh cli and make sure that it works.
+The author should not be
+{
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.de"
+  }
+}
+but instead:
+{
+  "author": "usalu" // or "GITAUTHOR <GITAUTHOR>" e.g. "Ueli Saluz <ueli@semio-tech.de>" when no contributor is found
+}
+
+Extend all `list` and `tree` commands with a filter for status. Again support either `--open` or `--status open` syntax.
+e.g. `@semio-repo/go/go ticket list --closed` `@semio-repo/go/go ticket list --status closed`.
+The flag has different meanings for different commands.
+bundles: open only shows bundles where at least one
+tickets: by default all tickets, otherwise filter status
+Extend goals to have a bundle field
+
+Make sure that all commands show either perfect human output, perfect markdown output or perfect json output.
+e.g. all tree commands with --md are currently just showing wrong lists.
+Use proper nested bullet lists for the markdown output on tree commands
+```md
+- [<id>](#<id>): <title> - <description>
+  - [<id>](#<id>): <title> - <description>
+    - [<id>](#<id>): <title> - <description>
+      - [<id>](#<id>): <title> - <description>
+      - [<id>](#<id>): <title> - <description>
+    - [<id>](#<id>): <title> - <description>
+  - [<id>](#<id>): <title> - <description>
+- [🛠️@semio/js/sketchpad/Design.tsx#State Management#Store§DesignStore](semiorepo://section/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE): Design Store - The store class that manages the state of the design
+```
+For default human output use ASCII tree view for tree commands. It doesnt need to be explicit with symbols but you can use colors for them. e.g. blue for open tickets/goals, green for closed tickets/goals
+Display as much information as you can with different colors. (e.g. date, author, summary)
+```
+```
+
+Whenever a command is called, then a system should store the interaction. Interactions are general and not specific to a goal or ticket. They store dates (started and optionally finished if successful) the system ("linux", "windows", "mac"), optional client that was used, optional llm that was used, optional prompt that was used, optional diff that was created during the interaction.
+ Rename iteration to interaction. Use a different format
+e.g. iterations currently use this:
+```json
+{
+  "created": {
+    "date": "2026-02-03T09:00:00Z",
+    "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
+    "client": "copilot-chat",
+    "llm": "gemini-3-pro",
+    "prompt": "Instructions for Updated Docs",
+    "diff": …
+  },
+  "finished": {
+    "date": "2026-02-03T09:01:00Z",
+    "author": "usalu",
+    "commit": "67f324d380fd2ced3b1697893e7fbcad2761da94",
+    "client": "claude-code",
+    "llm": "opus-4-5",
+    "prompt": "Instructions for Updated Docs",
+    }
+}
+goal iteraterions should be instead of this:
+```json
+ "iterations": [
+    {
+      "prompt": "Updated Dev Docs",
+      "llm": "sonnet-4-5",
+      "ui": "windsurf-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-02T20:23:00.362160845Z",
+      "commit": ""
+    }
+  ]
+```
+this:
+
+```json
+ "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-02T20:23:00.362160845Z",
+        "finished": "2026-02-02T20:23:00.362160845Z"
+      },
+      "author": "usalu",
+      "commit": "67f324d380fd2ced3b1697893e7fbcad2761da94",
+      "ui": "windsurf-chat",
+      "prompt": "Updated Dev Docs",
+      "llm": "sonnet-4-5",
+    }
+  ]
+```
+
+ticket iteraterions should be instead of this:
+```json
+ "iterations": [
+    {
+      "prompt": "Updated Dev Docs",
+      "llm": "sonnet-4-5",
+      "ui": "windsurf-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-02T20:23:00.362160845Z",
+      "commit": ""
+    }
+  ]
+```
+this:
+```json
+ "iterations": [
+    {
+      "dates": {
+        "started": "2026-01-30T00:20:00.522069632Z",
+        "finished": "2026-01-30T01:17:46.995883944Z"
+      },
+      "author": "usalu",
+      "system": "linux",
+      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
+      "client": "windsurf-chat",
+      "llm": "opus-4-5",
+      "prompt": "Remove DefinitionKind and rename DefinitionCategory to DefinitionKind.",
+      "diff": "…"
+    }
+  ]
+```
+
+
+Something with the parent goals and parent tickets is not working.
+
+Make sure that `ticket close --all` does not only close all local tickets but also browses GitHub for all issues with the label `ticket` and closes them without a comment.
+
+Introduce the ticket clean command with to close all open tickets. Close all GitHub ticket issues without a comment. 
 
 Make sure that rename, extract and integrate section commands are tested for every single language. Extend the exsting tests.
 
@@ -137,10 +274,14 @@ tickets: `📅`
 ticket: `📅{year}/{month}/{day}/{slug}{?status}`
 goals: `🎯`
 goal: `🎯{path*}`
+drafts: `✍️`
+draft: `✍️{slug}`
+todos: `📝`
+todo: `📝{slug}`
 policies: `🛡️`
-policy: `🛡️/{id}`
+policy: `🛡️/{slug}`
 violationKinds: `🚫`
-violationKind: `🚫{policy-id}/{path*}`
+violationKind: `🚫{policy-slug}/{slug}`
 contributors: `👤`
 contributor: `👤{github}`
 commits: `🔀`
@@ -158,13 +299,17 @@ folder: `semiorepo://folder/{path*}`
 files: `semiorepo://files/{folder-path*}`
 file: `semiorepo://file/{path*}`
 sections: `semiorepo://sections/{file-path*}`
-section: `semiorepo://section/{path*}` # just id but replace `#` with `/` e.g. `@semio/js/sketchpad/Design.tsx#State Management#Design Store` turns into `@semio/js/sketchpad/Design.tsx/State Management/Design Store`
+section: `semiorepo://section/{path*}` # just id but replace `#` with `/` and replace section name and definition name with uppercase slugs e.g. `@semio/js/sketchpad/Design.tsx#State Management#Design Store` turns into `@semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE`
 definitions: `semiorepo://definitions/{path*}`
 definition: `semiorepo://definition/{path*}`
 tickets: `semiorepo://tickets`
-ticket: `semiorepo://ticket/{year}/{month}/{day}/{slug}` # 
+ticket: `semiorepo://ticket/{year}/{month}/{day}/{slug}`
 goals: `semiorepo://goals`
 goal: `semiorepo://goal/{path*}` # {path*} is a uppercase slug path to a goal e.g. "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP"
+drafts: `semiorepo://drafts`
+draft: `semiorepo://draft/{slug}`
+todos: `semiorepo://todos`
+todo: `semiorepo://todo/{slug}`
 policies: `semiorepo://policies`
 policy: `semiorepo://policy/{id}`
 violationKinds: `semiorepo://violationKinds`
@@ -468,7 +613,7 @@ Create a new goal for `r26-02` release. The aim of this release is to have sketc
 Add a new goal to the `r26-02` release goal: Running sketchpad
 Due date mid of next month.
 
-Make sure to expand the goal tree to this:
+The goal tree was expanded. Adjust the goals. Every goal already has existing tickets. List the tickets and assign them to the appropriate goals and parents. Some existing tickets are not assigned correctly to a goal or parent ticket.
 - r26-02
   - Running sketchpad
     - Running sketchpad Apps
@@ -493,11 +638,35 @@ Make sure to expand the goal tree to this:
 - AI-optimized Repo
   - Repo Client
     - Repo Binary
+      - Repo Mechanisms
+        - Repo Goal Mechanism
+        - Repo Ticket Mechanism
+        - Repo Draft Mechanism
+        - Repo Todo Mechanism
+        - Repo Project Mechanism
+        - Repo Bundle Mechanism
+        - Repo Folder Mechanism
+        - Repo File Mechanism
+        - Repo Section Mechanism
+        - Repo Definition Mechanism
+        - Repo Contributor Mechanism
+        - Repo Commit Mechanism
+        - Repo Policy Mechanism
+        - Repo License Mechanism
       - Repo MCP
+        - Repo MCP Prompts
+        - Repo MCP Resources
+        - Repo MCP Tools
       - Repo CLI
+        - Repo CLI Filters
     - Repo VSCode Extension
   - Repo Server
     - Repo API
+  - Sandboxed Repo
+    - Zero-Touch Devcontainer
+  - Single File Repo
+    - Consistent Sections
+  - Consistent Repo History
   
 Browse through all the existing tickets and assign them to a goal and optionally a parent ticket. Use `./@semio-repo/go/go ticket change <ticket-id> --goal <goal-id> --parent <parent-ticket-id>` to change the goal and parent ticket of a ticket. Use `./@semio-repo/go/go goal tree` to get the goal tree. Use `./@semio-repo/go/go ticket list` to get the ticket list.
 

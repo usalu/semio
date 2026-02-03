@@ -1,18 +1,17 @@
 {
   "title": "Fix drag and drop piece placement in diagram and scene",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Fix drag and drop piece placement in diagram and scene",
-  "started": "2025-12-16T17:06:07.760Z",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "started": "2025-12-16T17:06:07.76Z",
   "iterations": [
     {
       "prompt": "Fix drag and drop piece placement in diagram and scene",
       "llm": "sonnet-4",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
-      "started": "2025-12-16T17:06:07.760Z",
+      "started": "2025-12-16T17:06:07.76Z",
       "commit": "0000000000000000000000000000000000000000"
     }
   ]

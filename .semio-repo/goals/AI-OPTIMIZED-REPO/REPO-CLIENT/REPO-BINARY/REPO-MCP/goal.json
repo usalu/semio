@@ -1,0 +1,25 @@
+{
+  "title": "Repo MCP",
+  "description": "Goal for Repo MCP",
+  "prompt": "Instructions for Repo MCP",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "REPO-BINARY",
+  "iterations": [
+    {
+      "prompt": "Instructions for Repo MCP",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:55:14.119451156Z",
+      "commit": ""
+    }
+  ]
+}

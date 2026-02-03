@@ -15,4 +15,4 @@ Node was warning about `MODULE_TYPELESS_PACKAGE_JSON` because `js/play/package.j
 
 ## Summary
 
-Added `"type": "module"` to `js/play/package.json` to fix the `MODULE_TYPELESS_PACKAGE_JSON` warning. Play dev server starts without warnings.
+Bulk close

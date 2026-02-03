@@ -36,7 +36,7 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 	}
 
 	// 1. Open Ticket
-	ticket, err := OpenTicket("Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, "", "", true)
+	ticket, err := OpenTicket("Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, "", "", true, "")
 	if err != nil {
 		t.Fatalf("OpenTicket failed: %v", err)
 	}
@@ -84,7 +84,7 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 
 	// 2. Finish Ticket
 	// ticket.GitHub is nil, so FinishTicket logic for labels should skip safely.
-	err = FinishTicket(ticket, "Summary", []string{testFile}, true)
+	err = FinishTicket(ticket, "Summary", []string{testFile}, true, false)
 	if err != nil {
 		t.Fatalf("FinishTicket failed: %v", err)
 	}

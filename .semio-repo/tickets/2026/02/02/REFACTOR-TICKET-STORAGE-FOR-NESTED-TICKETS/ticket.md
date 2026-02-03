@@ -18,10 +18,4 @@
 
 ## Summary
 
-Implemented support for nested tickets.
-- Refactored `ListTickets` and `StreamTickets` to use recursive `filepath.WalkDir` to find tickets in subdirectories.
-- Updated `CreateTicket` to resolve parent ticket and construct nested slug/path `PARENT/CHILD`.
-- Updated CLI command parsers (`close`, `reopen`, `change`) to handle paths with nested slugs by joining all parts after date components.
-- Verified nested creation, listing, closing, and reopening with test tickets.
-- Fixed a compilation error regarding `GetProjects` by using `LoadBundles`.
-- Fixed CLI parsing for `ticket close` where arguments with nested slugs were truncated.
+Bulk close

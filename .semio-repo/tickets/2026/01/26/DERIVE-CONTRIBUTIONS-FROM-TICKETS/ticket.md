@@ -7,3 +7,5 @@
 ## Log
 
 ## Summary
+
+Bulk close

@@ -1,16 +1,15 @@
 {
   "title": "Fix XState actor context for GoldenLayout windows",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Fix XState actor context for GoldenLayout windows",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.888Z",
   "iterations": [
     {
       "prompt": "Fix XState actor context for GoldenLayout windows",
       "llm": "sonnet-4-5",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-16T17:06:07.888Z",
       "commit": "0000000000000000000000000000000000000000"

@@ -1,19 +1,22 @@
 {
   "title": "Add No-Github Flag And Tests",
-  "status": "open",
+  "status": "closed",
   "prompt": "",
-  "started": null,
+  "summary": "Bulk close",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/228"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "started": "0001-01-01T00:00:00Z",
+  "finished": "2026-02-03T08:49:46.463174015Z",
   "iterations": [
     {
       "prompt": "",
-      "llm": null,
-      "client": null,
-      "author": null,
-      "started": null,
-      "commit": null
+      "llm": "",
+      "author": {},
+      "started": "0001-01-01T00:00:00Z",
+      "finished": "2026-02-03T08:49:46.463174015Z",
+      "commit": ""
     }
-  ],
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/228"
-  }
+  ]
 }

@@ -2,20 +2,19 @@
   "title": "move-dev-deps-to-devdependencies",
   "status": "closed",
   "prompt": "Move @types/* and postcss-* packages from dependencies to devDependencies in js/semio/package.json",
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-12T23:11:00Z",
+  "finished": "2026-01-12T23:12:22Z",
   "iterations": [
     {
       "prompt": "Move @types/* and postcss-* packages from dependencies to devDependencies in js/semio/package.json",
       "llm": "opus-4-5",
-      "client": null,
       "author": {
-        "name": "Ueli Saluz",
-        "email": null
+        "name": "Ueli Saluz"
       },
       "started": "2026-01-12T23:11:00Z",
-      "commit": "3dd947fa6070f83e97789aa59d612cd61e1d3902",
-      "finished": "2026-01-12T23:12:22Z"
+      "finished": "2026-01-12T23:12:22Z",
+      "commit": "3dd947fa6070f83e97789aa59d612cd61e1d3902"
     }
-  ],
-  "finished": "2026-01-12T23:12:22Z"
+  ]
 }

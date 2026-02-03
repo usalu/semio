@@ -1,0 +1,28 @@
+{
+  "title": "Repo Ticket Mechanism",
+  "description": "Goal for Repo Ticket Mechanism",
+  "prompt": "Instructions for Repo Ticket Mechanism",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "REPO-MECHANISMS",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/50"
+  },
+  "iterations": [
+    {
+      "prompt": "Instructions for Repo Ticket Mechanism",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:53:07.522981207Z",
+      "commit": ""
+    }
+  ]
+}

@@ -61,10 +61,8 @@ Root cause identified in `go/repo/repo.go`:
 - CLI builds successfully
 
 ## Summary
-# Summary
 
-Fixed the bug where ticket file metrics always showed removed lines as 0.
-
+Bulk close
 ## Changes
 - Added `DiffLines` struct to hold both added and removed line numbers
 - Updated `GetGitDiffLines` to parse both `-start,count` (removed) and `+start,count` (added) from git diff hunk headers

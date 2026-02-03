@@ -1,21 +1,20 @@
 {
   "title": "Add reopenTicket function to ticket API",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Extend ticket api to be able to reopen a ticket. This should remove the total files and lines from the ticket (not from the individual iterations) and set the status to open.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2025-12-17T18:39:01.076Z",
+  "finished": "2025-12-17T18:39:54.68Z",
   "iterations": [
     {
       "prompt": "Extend ticket api to be able to reopen a ticket. This should remove the total files and lines from the ticket (not from the individual iterations) and set the status to open.",
       "llm": "opus-4-5",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-17T18:39:01.076Z",
-      "commit": "7c4820638369104ae259b238d9240f08e429e67e",
-      "finished": "2025-12-17T18:39:54.680Z"
+      "finished": "2025-12-17T18:39:54.68Z",
+      "commit": "7c4820638369104ae259b238d9240f08e429e67e"
     }
-  ],
-  "finished": "2025-12-17T18:39:54.680Z"
+  ]
 }

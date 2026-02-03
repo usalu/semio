@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/252"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-28T16:43:28.735847694Z",
   "finished": "2026-01-28T16:44:34.412281118Z",
   "iterations": [
     {
       "prompt": "Implement goal change and ticket change commands in CLI and GraphQL, and fix milestone date propagation",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

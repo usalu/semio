@@ -1,19 +1,18 @@
 {
   "title": "Fix Kill Dev Task",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Migrated from legacy files",
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-29T19:44:04.146221Z",
   "iterations": [
     {
       "prompt": "Migrated from legacy files",
-      "llm": null,
-      "client": null,
+      "llm": "",
       "author": {
-        "name": "Migration Script",
-        "email": null
+        "name": "Migration Script"
       },
       "started": "2026-01-29T19:44:04.146221Z",
-      "commit": null
+      "commit": ""
     }
   ]
 }

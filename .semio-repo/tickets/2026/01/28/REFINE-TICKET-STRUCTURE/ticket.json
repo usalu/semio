@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/249"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-01-28T15:02:46.303240779Z",
   "finished": "2026-01-28T15:09:17.845043498Z",
   "iterations": [
     {
       "prompt": "Remove ticket progress command and deduplicate ticket.json fields",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

@@ -1,0 +1,25 @@
+{
+  "title": "Tested Grasshopper Components",
+  "description": "Goal for Tested Grasshopper Components",
+  "prompt": "Instructions for Tested Grasshopper Components",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "RUNNING-GRASSHOPPER",
+  "iterations": [
+    {
+      "prompt": "Instructions for Tested Grasshopper Components",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:54:54.963309953Z",
+      "commit": ""
+    }
+  ]
+}

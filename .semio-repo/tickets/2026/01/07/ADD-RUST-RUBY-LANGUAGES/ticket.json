@@ -1,19 +1,18 @@
 {
   "title": "ADD-RUST-RUBY-LANGUAGES",
-  "status": "OPEN",
+  "status": "closed",
   "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
-  "started": null,
+  "goal": "AI-OPTIMIZED-REPO",
+  "started": "0001-01-01T00:00:00Z",
   "iterations": [
     {
       "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
       "llm": "opus-4",
-      "client": null,
       "author": {
-        "name": "Ueli Saluz <ueli@semio.tech>",
-        "email": null
+        "name": "Ueli Saluz \u003cueli@semio.tech\u003e"
       },
-      "started": null,
-      "commit": null
+      "started": "0001-01-01T00:00:00Z",
+      "commit": ""
     }
   ]
 }

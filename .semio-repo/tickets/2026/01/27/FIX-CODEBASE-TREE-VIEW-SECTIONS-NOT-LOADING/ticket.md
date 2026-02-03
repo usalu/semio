@@ -21,4 +21,4 @@
 
 ## Summary
 
-Fixed extractSections and added extractDefinitions to handle nested data.file structure from repo binary
+Bulk close

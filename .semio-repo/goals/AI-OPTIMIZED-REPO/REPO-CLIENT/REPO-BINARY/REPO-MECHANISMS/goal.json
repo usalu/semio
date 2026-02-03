@@ -1,0 +1,28 @@
+{
+  "title": "Repo Mechanisms",
+  "description": "Goal for Repo Mechanisms",
+  "prompt": "Instructions for Repo Mechanisms",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "REPO-BINARY",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/48"
+  },
+  "iterations": [
+    {
+      "prompt": "Instructions for Repo Mechanisms",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:53:03.633577702Z",
+      "commit": ""
+    }
+  ]
+}

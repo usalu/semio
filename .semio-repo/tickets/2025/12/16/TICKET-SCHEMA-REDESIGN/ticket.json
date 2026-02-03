@@ -1,21 +1,20 @@
 {
   "title": "Redesign ticket schema with files-only and git-derived fields",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Redesign ticket schema with nested date objects and git-derived fields",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2025-12-16T16:58:02.879Z",
+  "finished": "2025-12-16T17:08:05.259Z",
   "iterations": [
     {
       "prompt": "Redesign ticket schema with nested date objects and git-derived fields",
       "llm": "opus-4-5",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-16T16:58:02.879Z",
-      "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c",
-      "finished": "2025-12-16T17:08:05.259Z"
+      "finished": "2025-12-16T17:08:05.259Z",
+      "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c"
     }
-  ],
-  "finished": "2025-12-16T17:08:05.259Z"
+  ]
 }

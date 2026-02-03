@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/284"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-GOAL-MECHANISM",
   "started": "2026-01-30T00:21:00.05661314Z",
   "finished": "2026-01-30T01:17:46.338167445Z",
   "iterations": [
     {
       "prompt": "Fix the goal tree command which fails with: Cannot query field \"data\" on type \"Ticket\". Ensure all repo commands are tested in main_test.go.",
       "llm": "opus-4-5",
-      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

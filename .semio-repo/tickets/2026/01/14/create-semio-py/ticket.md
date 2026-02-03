@@ -71,3 +71,5 @@ Create a standalone `py/semio/semio.py` package that matches the functionality o
 Creating pure Pydantic-based semio.py following the pattern from semio.ts and semio.go
 
 ## Summary
+
+Bulk close

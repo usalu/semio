@@ -60,3 +60,5 @@ Audited all config files in the monorepo after the restructuring from flat paths
 13. `.vscode/tasks.json` — js/vscode path
 
 ## Summary
+
+Bulk close

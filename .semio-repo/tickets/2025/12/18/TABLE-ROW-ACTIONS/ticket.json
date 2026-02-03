@@ -1,19 +1,18 @@
 {
   "title": "Right-align table create actions and show tags strip between name and action",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Create actions in table rows are not right aligned; tags strip should appear between name and action.",
-  "started": "2025-12-18T15:36:11.110Z",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "started": "2025-12-18T15:36:11.11Z",
   "iterations": [
     {
       "prompt": "Create actions in table rows are not right aligned; tags strip should appear between name and action.",
       "llm": "gpt-5.2-codex",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
-      "started": "2025-12-18T15:36:11.110Z",
-      "commit": null
+      "started": "2025-12-18T15:36:11.11Z",
+      "commit": ""
     }
   ]
 }

@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/263"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-29T09:55:09.911254896Z",
   "finished": "2026-01-29T10:00:30.700814525Z",
   "iterations": [
     {
       "prompt": "When clicking on a section tree item or definition tree item in the VS Code extension, it should jump to the right line where it starts. Both don't currently work.",
       "llm": "opus-4-5",
-      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

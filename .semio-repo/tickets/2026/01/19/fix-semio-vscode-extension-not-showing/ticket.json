@@ -1,19 +1,18 @@
 {
   "title": "Fix Semio Vscode Extension Not Showing",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Migrated from legacy files",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-29T19:44:04.586399Z",
   "iterations": [
     {
       "prompt": "Migrated from legacy files",
-      "llm": null,
-      "client": null,
+      "llm": "",
       "author": {
-        "name": "Migration Script",
-        "email": null
+        "name": "Migration Script"
       },
       "started": "2026-01-29T19:44:04.586399Z",
-      "commit": null
+      "commit": ""
     }
   ]
 }

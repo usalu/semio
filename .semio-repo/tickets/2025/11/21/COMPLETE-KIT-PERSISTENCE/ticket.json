@@ -1,16 +1,15 @@
 {
   "title": "complete-kit-persistence",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Migration from old format",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-KIT-APP",
   "started": "2025-11-21T00:00:00Z",
   "iterations": [
     {
       "prompt": "Migration from old format",
       "llm": "sonnet-4",
-      "clientientientient": null,
       "author": {
-        "name": "usalu",
-        "email": null
+        "name": "usalu"
       },
       "started": "2025-11-21T00:00:00Z",
       "commit": "0000000000000000000000000000000000000000"

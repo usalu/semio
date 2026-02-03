@@ -210,8 +210,8 @@ C# and Rust need implementation of:
 This is substantial work requiring porting complex algorithms from TypeScript.
 
 ## Summary
-# Summary: Standardize Semio Tests Across All Implementations
 
+Bulk close
 ## Objective
 Standardized all semio test suites across TypeScript, Python, C#, Go, and Rust to have identical structure, naming, and behavior.
 

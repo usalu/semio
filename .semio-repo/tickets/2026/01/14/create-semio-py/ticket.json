@@ -1,19 +1,21 @@
 {
   "title": "Create Semio Py",
-  "status": "open",
+  "status": "closed",
   "prompt": "Migrated from legacy files",
+  "summary": "Bulk close",
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-29T19:44:03.852402Z",
+  "finished": "2026-02-03T08:49:28.515884564Z",
   "iterations": [
     {
       "prompt": "Migrated from legacy files",
-      "llm": null,
-      "client": null,
+      "llm": "",
       "author": {
-        "name": "Migration Script",
-        "email": null
+        "name": "Migration Script"
       },
       "started": "2026-01-29T19:44:03.852402Z",
-      "commit": null
+      "finished": "2026-02-03T08:49:28.515884564Z",
+      "commit": ""
     }
   ]
 }

@@ -1,21 +1,24 @@
 {
   "title": "Add extract command and DnD support",
-  "status": "open",
-  "prompt": "Add a new command: extract \u003csource-file\u003e \u003c-source-section-id\u003e \u003ctarget-file\u003e. Implement drag and drop of file tree items and section tree items in the codebase section in the side view of the vscode extension.",
+  "status": "closed",
+  "prompt": "Add a new command: extract <source-file> <-source-section-id> <target-file>. Implement drag and drop of file tree items and section tree items in the codebase section in the side view of the vscode extension.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/258"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-29T09:12:36.223114292Z",
+  "finished": "2026-02-03T08:49:55.286971498Z",
   "iterations": [
     {
-      "prompt": "Add a new command: extract \u003csource-file\u003e \u003c-source-section-id\u003e \u003ctarget-file\u003e. Implement drag and drop of file tree items and section tree items in the codebase section in the side view of the vscode extension.",
+      "prompt": "Add a new command: extract <source-file> <-source-section-id> <target-file>. Implement drag and drop of file tree items and section tree items in the codebase section in the side view of the vscode extension.",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
       },
       "started": "2026-01-29T09:12:36.223114292Z",
+      "finished": "2026-02-03T08:49:55.286971498Z",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3"
     }
   ]

@@ -397,7 +397,7 @@ func TestTicketTitleValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "opus-4", ui: COPILOT_CHAT, noIssue: true }) { id slug year month day } }`
+			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "opus-4", client: COPILOT_CHAT, noIssue: true }) { id slug year month day } }`
 			result, err := executor.ExecuteJSON(ctx, query, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
@@ -1127,7 +1127,7 @@ func TestAnalyzeCommand(t *testing.T) {
 }
 
 func TestAnalyzeFile(t *testing.T) {
-	result := ToolAnalyze("js/semio/semio.ts", nil)
+	result := ToolAnalyze("@semio/js/semio.ts", nil)
 	if result.Error != "" {
 		t.Errorf("ToolAnalyze file returned error: %s", result.Error)
 	}
@@ -1191,7 +1191,7 @@ func TestPolicyViolationListCommand(t *testing.T) {
 }
 
 func TestFixtureViolationsGroupedInline(t *testing.T) {
-	path := "assets/repo/some/folder/file_invalid.tsx"
+	path := "@semio/assets/repo/some/folder/file_invalid.tsx"
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
@@ -1236,15 +1236,15 @@ func TestFixtureViolationsByLanguage(t *testing.T) {
 		requiredKinds []ViolationKind
 	}{
 		{
-			path:          "assets/repo/some/folder/file_invalid.py",
+			path:          "@semio/assets/repo/some/folder/file_invalid.py",
 			requiredKinds: []ViolationKind{ViolationCodeHeaderMissingRegion},
 		},
 		{
-			path:          "assets/repo/some/folder/file_invalid.cs",
+			path:          "@semio/assets/repo/some/folder/file_invalid.cs",
 			requiredKinds: []ViolationKind{ViolationCodeHeaderMissingContributors},
 		},
 		{
-			path:          "assets/repo/some/folder/file_invalid.go",
+			path:          "@semio/assets/repo/some/folder/file_invalid.go",
 			requiredKinds: []ViolationKind{ViolationCodeHeaderMissingLicense},
 		},
 	}
@@ -1269,10 +1269,10 @@ func TestFixtureViolationsByLanguage(t *testing.T) {
 		}
 	}
 	clean := []string{
-		"assets/repo/some/folder/file_fixed.tsx",
-		"assets/repo/some/folder/file_fixed.py",
-		"assets/repo/some/folder/file_fixed.cs",
-		"assets/repo/some/folder/file_fixed.go",
+		"@semio/assets/repo/some/folder/file_fixed.tsx",
+		"@semio/assets/repo/some/folder/file_fixed.py",
+		"@semio/assets/repo/some/folder/file_fixed.cs",
+		"@semio/assets/repo/some/folder/file_fixed.go",
 	}
 	for _, path := range clean {
 		scope := Scope{Kind: ScopeFile, FilePath: path}
@@ -1405,7 +1405,7 @@ func TestFileCreateMoveDelete(t *testing.T) {
 // #region Section Tests
 
 func TestSectionListCommand(t *testing.T) {
-	result := ToolSectionList("js/semio/semio.ts")
+	result := ToolSectionList("@semio/js/semio.ts")
 	if result.Error != "" {
 		t.Errorf("ToolSectionList returned error: %s", result.Error)
 	}
@@ -1433,7 +1433,7 @@ func TestSectionListCommand(t *testing.T) {
 }
 
 func TestSectionTreeCommand(t *testing.T) {
-	result := ToolSectionTree("js/semio/semio.ts")
+	result := ToolSectionTree("@semio/js/semio.ts")
 	if result.Error != "" {
 		t.Errorf("ToolSectionTree returned error: %s", result.Error)
 	}
@@ -1444,7 +1444,7 @@ func TestSectionTreeCommand(t *testing.T) {
 // #region Definition Tests
 
 func TestDefinitionListCommand(t *testing.T) {
-	result := ToolDefinitionList("js/semio/semio.ts")
+	result := ToolDefinitionList("@semio/js/semio.ts")
 	if result.Error != "" {
 		t.Errorf("ToolDefinitionList returned error: %s", result.Error)
 	}
@@ -1463,7 +1463,7 @@ func TestTicketListCommand(t *testing.T) {
 }
 
 func TestTicketOpenNoticketKeyword(t *testing.T) {
-	result := ToolTicketOpen("Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "", false)
+	result := ToolTicketOpen("Skip Ticket", "NOTICKET skip ticket creation", "gpt-5-mini", "codex", "", true, "", "", false, "")
 	if result.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
 	}
@@ -1473,7 +1473,7 @@ func TestTicketOpenNoticketKeyword(t *testing.T) {
 }
 
 func TestTicketOpenContinueKeyword(t *testing.T) {
-	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "", "", false)
+	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "", "", false, "")
 	if first.Error != "" {
 		t.Fatalf("failed to seed ticket: %s", first.Error)
 	}
@@ -1488,7 +1488,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 		}
 	}()
 
-	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "", "", false)
+	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "", "", false, "")
 	if second.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
 	}
@@ -1507,49 +1507,49 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 
 func TestGoalCreateValidation(t *testing.T) {
 	// Test missing title
-	result := ToolGoalCreate("", "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true)
+	result := ToolGoalCreate("", "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
 	if result.Error == "" {
 		t.Error("expected error for missing title")
 	}
 
 	// Test missing description
-	result = ToolGoalCreate("Test Goal", "", "prompt", "2026-02-15", "opus-4-5", "claude-code", true)
+	result = ToolGoalCreate("Test Goal", "", "prompt", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
 	if result.Error == "" {
 		t.Error("expected error for missing description")
 	}
 
 	// Test missing prompt
-	result = ToolGoalCreate("Test Goal", "desc", "", "2026-02-15", "opus-4-5", "claude-code", true)
+	result = ToolGoalCreate("Test Goal", "desc", "", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
 	if result.Error == "" {
 		t.Error("expected error for missing prompt")
 	}
 
 	// Test missing due date
-	result = ToolGoalCreate("Test Goal", "desc", "prompt", "", "opus-4-5", "claude-code", true)
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "", "opus-4-5", "claude-code", true, "", "")
 	if result.Error == "" {
 		t.Error("expected error for missing due date")
 	}
 
 	// Test missing LLM
-	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "", "claude-code", true)
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "", "claude-code", true, "", "")
 	if result.Error == "" {
 		t.Error("expected error for missing llm")
 	}
 
 	// Test missing UI
-	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "", true)
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "", true, "", "")
 	if result.Error == "" {
 		t.Error("expected error for missing ui")
 	}
 
 	// Test invalid LLM
-	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "invalid-llm", "claude-code", true)
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "invalid-llm", "claude-code", true, "", "")
 	if result.Error == "" {
 		t.Error("expected error for invalid llm")
 	}
 
 	// Test invalid UI
-	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "invalid-ui", true)
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "invalid-ui", true, "", "")
 	if result.Error == "" {
 		t.Error("expected error for invalid ui")
 	}
@@ -1557,7 +1557,7 @@ func TestGoalCreateValidation(t *testing.T) {
 
 func TestGoalCreateAndCleanup(t *testing.T) {
 	// Create a goal with noGithub=true to avoid GitHub interaction
-	result := ToolGoalCreate("Test Goal Creation", "Test description", "Test prompt for goal", "2026-02-15", "opus-4-5", "claude-code", true)
+	result := ToolGoalCreate("Test Goal Creation", "Test description", "Test prompt for goal", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
 	if result.Error != "" {
 		t.Fatalf("ToolGoalCreate returned error: %s", result.Error)
 	}
@@ -1587,6 +1587,143 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 	if err := os.RemoveAll(goalPath); err != nil {
 		t.Errorf("failed to cleanup goal: %v", err)
 	}
+}
+
+func TestGoalHierarchy(t *testing.T) {
+	// 1. Create Parent
+	parentTitle := "Test Parent Goal"
+	parentRes := ToolGoalCreate(parentTitle, "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true, "", "")
+	if parentRes.Error != "" {
+		t.Fatalf("Failed to create parent: %s", parentRes.Error)
+	}
+	parent, ok := parentRes.Data.(*Goal)
+	if !ok {
+		t.Fatalf("Expected *Goal data")
+	}
+	
+	// Ensure cleanup of parent (which should clean up nested child if working correctly)
+	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), filepath.FromSlash(parent.ID)))
+
+	if parent.ID != "TEST-PARENT-GOAL" {
+		t.Errorf("Expected parent ID 'TEST-PARENT-GOAL', got '%s'", parent.ID)
+	}
+
+	// 2. Create Child
+	childTitle := "Test Child Goal"
+	childRes := ToolGoalCreate(childTitle, "desc", "prompt", "2026-02-15", "opus-4-5", "claude-code", true, parent.ID, "")
+	if childRes.Error != "" {
+		t.Fatalf("Failed to create child: %s", childRes.Error)
+	}
+	child, ok := childRes.Data.(*Goal)
+	if !ok {
+		t.Fatalf("Expected *Goal data")
+	}
+
+	expectedChildID := "TEST-PARENT-GOAL/TEST-CHILD-GOAL"
+	if child.ID != expectedChildID {
+		t.Errorf("Expected child ID '%s', got '%s'", expectedChildID, child.ID)
+	}
+
+	// 3. Verify file structure
+	childPath := filepath.Join(GetRepoGoalsDir(), filepath.FromSlash(child.ID), "goal.json")
+	if _, err := os.Stat(childPath); os.IsNotExist(err) {
+		t.Errorf("Child goal file not found at %s", childPath)
+	}
+
+	// 4. Verify parent relation
+	if child.Parent != parent.ID {
+		t.Errorf("Expected child parent '%s', got '%s'", parent.ID, child.Parent)
+	}
+
+	// 5. Test Relocation / Rename of Parent
+	// Rename Parent -> "Renamed Parent"
+	// Expected: Parent ID becomes "RENAMED-PARENT"
+	// Child folder should move to "goals/RENAMED-PARENT/TEST-CHILD-GOAL"
+	// Child ID should become "RENAMED-PARENT/TEST-CHILD-GOAL" (as reported by ListGoals/ToolGoalList)
+
+	parent.Title = "Renamed Parent"
+	err := UpdateGoalTitle(parent, parent.Title)
+	if err != nil {
+		t.Fatalf("Failed to update parent title: %v", err)
+	}
+
+	// Update defer cleanup to new path
+	// The old defer will try to remove 'test-parent-goal', which is now gone.
+	// But defer order is LIFO. I should add a check or make sure I clean up efficiently.
+	// os.RemoveAll is idempotent if path doesn't exist? No, it returns nil.
+	// So old defer is safe. I'll add new defer.
+	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), filepath.FromSlash(parent.ID)))
+
+	if parent.ID != "RENAMED-PARENT" {
+		t.Errorf("Expected renamed parent ID 'RENAMED-PARENT', got '%s'", parent.ID)
+	}
+
+	// Verify child file moved
+	// Note: We need to reload child or calculate expected path.
+	// The child ID in memory `child.ID` is still old.
+	// We check if file exists at new location.
+	newChildID := "RENAMED-PARENT/TEST-CHILD-GOAL"
+	newChildPath := filepath.Join(GetRepoGoalsDir(), filepath.FromSlash(newChildID), "goal.json")
+	if _, err := os.Stat(newChildPath); os.IsNotExist(err) {
+		t.Errorf("Child goal file not found at %s after parent rename", newChildPath)
+	}
+
+	// Verify ToolGoalList reports correct Child ID
+	// ToolGoalList uses ListGoals which uses filesystem.
+	// We need to verify that ListGoals sees the new hierarchy.
+	listRes := ToolGoalList()
+	if listRes.Error != "" {
+		t.Fatalf("ToolGoalList failed: %s", listRes.Error)
+	}
+	allGoals := listRes.Data.([]*Goal)
+	var foundChild *Goal
+	for _, g := range allGoals {
+		// Just check suffix because we want to be sure it is our child
+		if strings.HasSuffix(g.ID, "/TEST-CHILD-GOAL") && strings.HasPrefix(g.ID, "RENAMED-PARENT") {
+			foundChild = g
+			break
+		}
+	}
+	if foundChild == nil {
+		t.Errorf("Could not find child with new ID prefix in ListGoals output")
+	} else {
+		if foundChild.ID != newChildID {
+			t.Errorf("Expected listed child ID '%s', got '%s'", newChildID, foundChild.ID)
+		}
+		if foundChild.Parent != parent.ID {
+			t.Errorf("Expected listed child parent '%s', got '%s'", parent.ID, foundChild.Parent)
+		}
+	}
+
+	// 6. Test Reparent Child via GoalChange
+	ctx := &repoContext{}
+	emptyParent := ""
+	changeInput := GoalChangeInput{
+		ID:     newChildID,
+		Parent: &emptyParent,
+	}
+
+	updatedChild, err := ctx.GoalChange(changeInput)
+	if err != nil {
+		t.Fatalf("GoalChange failed: %v", err)
+	}
+
+	if updatedChild.ID != "TEST-CHILD-GOAL" {
+		t.Errorf("Expected reparented child ID 'TEST-CHILD-GOAL', got '%s'", updatedChild.ID)
+	}
+
+	if updatedChild.Parent != "" {
+		t.Errorf("Expected empty parent, got '%s'", updatedChild.Parent)
+	}
+
+	// Verify file moved to root
+	rootChildPath := filepath.Join(GetRepoGoalsDir(), "TEST-CHILD-GOAL", "goal.json")
+	if _, err := os.Stat(rootChildPath); os.IsNotExist(err) {
+		t.Errorf("Child goal file not found at %s after reparenting", rootChildPath)
+	}
+
+	// Cleanup the reparented child explicitly since it's no longer under parent folder
+	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), "TEST-CHILD-GOAL"))
 }
 
 func TestGoalList(t *testing.T) {
@@ -1888,13 +2025,13 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 	}
 	mustHaveExitCode(t, out, 0)
 
-	out, err = executeCommand("section", "list", "js/semio/semio.ts")
+	out, err = executeCommand("section", "list", "@semio/js/semio.ts")
 	if err != nil {
 		t.Fatalf("section list failed: %v\nOutput: %s", err, out)
 	}
 	mustHaveExitCode(t, out, 0)
 
-	out, err = executeCommand("definition", "list", "js/semio/semio.ts")
+	out, err = executeCommand("definition", "list", "@semio/js/semio.ts")
 	if err != nil {
 		t.Fatalf("definition list failed: %v\nOutput: %s", err, out)
 	}
@@ -1954,3 +2091,45 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 }
 
 // #endregion Tree Tests
+
+func TestMarkdownTreeOutput(t *testing.T) {
+t.Run("Bundle Tree Markdown", func(t *testing.T) {
+out, err := executeCommand("bundle", "tree", "--md")
+if err != nil {
+t.Fatalf("bundle tree failed: %v", err)
+}
+if !strings.Contains(out, "- [") {
+t.Errorf("markdown output should contain bullet list links, got:\n%s", out)
+}
+})
+
+t.Run("Folder Tree Markdown", func(t *testing.T) {
+		out, err := executeCommand("folder", "tree", "@semio-repo/go", "--md")
+		if err != nil {
+			t.Fatalf("folder tree failed: %v", err)
+		}
+		if !strings.Contains(out, "- [") {
+			t.Errorf("markdown output should contain bullet list links, got:\n%s", out)
+		}
+	})
+
+	t.Run("File Tree Markdown", func(t *testing.T) {
+		out, err := executeCommand("file", "tree", "@semio-repo/go", "--md")
+		if err != nil {
+			t.Fatalf("file tree failed: %v", err)
+		}
+		if !strings.Contains(out, "- [") {
+			t.Errorf("markdown output should contain bullet list links, got:\n%s", out)
+		}
+	})
+
+	t.Run("Section Tree Markdown", func(t *testing.T) {
+		out, err := executeCommand("section", "tree", "@semio-repo/go/main.go", "--md")
+		if err != nil {
+			t.Fatalf("section tree failed: %v\nOutput: %s", err, out)
+		}
+		if !strings.Contains(out, "- [") {
+			t.Errorf("markdown output should contain bullet list links, got:\n%s", out)
+		}
+	})
+}

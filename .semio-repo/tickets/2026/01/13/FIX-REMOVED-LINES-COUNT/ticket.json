@@ -1,16 +1,19 @@
 {
   "title": "FIX-REMOVED-LINES-COUNT",
-  "status": "open",
+  "status": "closed",
   "prompt": "",
-  "started": null,
+  "summary": "Bulk close",
+  "goal": "AI-OPTIMIZED-REPO",
+  "started": "0001-01-01T00:00:00Z",
+  "finished": "2026-02-03T08:49:28.451275955Z",
   "iterations": [
     {
       "prompt": "",
-      "llm": null,
-      "client": null,
-      "author": null,
-      "started": null,
-      "commit": null
+      "llm": "",
+      "author": {},
+      "started": "0001-01-01T00:00:00Z",
+      "finished": "2026-02-03T08:49:28.451275955Z",
+      "commit": ""
     }
   ]
 }

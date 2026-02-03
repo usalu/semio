@@ -1,9 +1,11 @@
 {
   "title": "Refactor Ticket Storage for Nested Tickets",
-  "status": "open",
+  "status": "closed",
   "prompt": "The semio repo go binary should be extended/refactored/changed to support nested child tickets inside parent ticket folders.",
-  "goal": "AI-OPTIMIZED-REPO",
+  "summary": "Bulk close",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-02-02T16:44:26.030129772Z",
+  "finished": "2026-02-03T08:50:09.614869805Z",
   "iterations": [
     {
       "prompt": "The semio repo go binary should be extended/refactored/changed to support nested child tickets inside parent ticket folders.",
@@ -14,6 +16,7 @@
         "email": "ueli@semio-tech.de"
       },
       "started": "2026-02-02T16:44:26.030129772Z",
+      "finished": "2026-02-03T08:50:09.614869805Z",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1"
     }
   ]

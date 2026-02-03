@@ -79,10 +79,8 @@ Since 1.106.0 → 1.106.1 is a patch version bump, no breaking API changes are e
 All changes completed successfully.
 
 ## Summary
-# Summary
 
-Made the VSCode extension compatible with Windsurf IDE by lowering the VSCode engine version requirement from `^1.106.1` to `^1.106.0`. Windsurf is based on VSCode OSS 1.106.0, which was previously excluded by the version constraint.
-
+Bulk close
 ## Changes
 
 - **js/vscode/package.json**: Updated engine requirement to `^1.106.0`

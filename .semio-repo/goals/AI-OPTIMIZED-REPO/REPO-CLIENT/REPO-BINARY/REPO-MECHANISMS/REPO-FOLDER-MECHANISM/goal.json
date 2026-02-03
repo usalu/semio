@@ -1,0 +1,28 @@
+{
+  "title": "Repo Folder Mechanism",
+  "description": "Goal for Repo Folder Mechanism",
+  "prompt": "Instructions for Repo Folder Mechanism",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "REPO-MECHANISMS",
+  "github": {
+    "milestone": "https://github.com/usalu/semio/milestone/55"
+  },
+  "iterations": [
+    {
+      "prompt": "Instructions for Repo Folder Mechanism",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:53:18.373269214Z",
+      "commit": ""
+    }
+  ]
+}

@@ -140,4 +140,4 @@ The ticket mechanism should change to no longer create `plan.md` files when no p
 
 ## Summary
 
-Refactored the ticket mechanism: (1) No longer creates empty plan.md files when no plan is provided. (2) Fixed author lookup to correctly use ListContributors() and match by email. (3) Added test cleanup. (4) Verified title validation. (5) Added flexible CLI argument parsing. (6) Changed MCP to use CLI-style output instead of JSON.
+Bulk close

@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/278"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-29T20:27:48.92524607Z",
   "finished": "2026-01-29T20:31:41.255849207Z",
   "iterations": [
     {
       "prompt": "The extension is slow/exceeds buffer. Implement lazy fetching. Sections for current file are missing.",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

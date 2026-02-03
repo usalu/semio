@@ -1,18 +1,21 @@
 {
   "title": "Transform Search View to Filter View and Restore Codebase View",
-  "status": "open",
+  "status": "closed",
   "prompt": "Replace Search view with Filter view and restore Codebase view functionality",
+  "summary": "Bulk close",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2026-01-29T11:33:05.852316932Z",
+  "finished": "2026-02-03T08:50:01.813844829Z",
   "iterations": [
     {
       "prompt": "Replace Search view with Filter view and restore Codebase view functionality",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
       },
       "started": "2026-01-29T11:33:05.852316932Z",
+      "finished": "2026-02-03T08:50:01.813844829Z",
       "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87"
     }
   ]

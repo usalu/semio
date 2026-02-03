@@ -1,8 +1,4 @@
 {
-  "year": 2026,
-  "month": 1,
-  "day": 28,
-  "slug": "ENSURE-COMMAND-PARITY",
   "title": "Ensure Command Parity",
   "status": "closed",
   "prompt": "Ensure parity between repo cli commands, mcp tools and vscode extension commands",
@@ -10,14 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/248"
   },
-  "planPath": "/workspaces/semio/.semio-repo/tickets/2026/01/28/ENSURE-COMMAND-PARITY/plan.md",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-28T14:33:33.600775783Z",
   "finished": "2026-01-28T14:51:25.915640668Z",
   "iterations": [
     {
       "prompt": "Ensure parity between repo cli commands, mcp tools and vscode extension commands",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
@@ -1940,8 +1935,5 @@
         }
       }
     }
-  ],
-  "folderPath": "/workspaces/semio/.semio-repo/tickets/2026/01/28/ENSURE-COMMAND-PARITY",
-  "jsonPath": "/workspaces/semio/.semio-repo/tickets/2026/01/28/ENSURE-COMMAND-PARITY/ticket.json",
-  "ticketPath": "/workspaces/semio/.semio-repo/tickets/2026/01/28/ENSURE-COMMAND-PARITY/ticket.md"
+  ]
 }

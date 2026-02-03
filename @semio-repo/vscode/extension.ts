@@ -232,6 +232,7 @@ const RepoDocument = graphql(`
         summary
         status
         commit
+        goal
         author {
           name
           github

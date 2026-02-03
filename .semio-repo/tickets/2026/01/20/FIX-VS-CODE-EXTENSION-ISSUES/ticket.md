@@ -130,10 +130,8 @@ Exit code: 0 in ; all 22 tests passed.
 - Reopened ticket to address 'no data provider registered' error and infinite loading.
 
 ## Summary
-# Summary
 
-The VS Code extension installation issues in the devcontainer were fixed by addressing both a script bug and an engine version mismatch.
-
+Bulk close
 ## Changes
 
 ### 📦 VS Code Extension

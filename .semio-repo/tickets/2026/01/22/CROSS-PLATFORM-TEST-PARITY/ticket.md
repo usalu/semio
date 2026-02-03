@@ -47,3 +47,5 @@ All implementations pass all tests with identical behavior.
 ## Log
 
 ## Summary
+
+Bulk close

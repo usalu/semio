@@ -16,3 +16,5 @@
 ## Log
 
 ## Summary
+
+Bulk close

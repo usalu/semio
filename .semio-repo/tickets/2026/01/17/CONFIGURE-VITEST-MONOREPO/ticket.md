@@ -76,10 +76,8 @@ Both projects are now properly recognized:
 - `npx vitest run --passWithNoTests` → runs tests from both projects
 
 ## Summary
-# Summary
 
-Configured Vitest properly for the monorepo to fix the VSCode extension warning about multiple projects.
-
+Bulk close
 ## Changes
 
 1. **vitest.config.ts** - Updated to use the new Vitest v4 `test.projects` configuration that explicitly defines which configs contain tests:

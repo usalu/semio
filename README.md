@@ -1148,6 +1148,7 @@ Section and definition ranges expose line/column start/end positions so editors 
 Range selections always request start/end line/column subfields so Position objects satisfy schema selection requirements in CLI, MCP, and VS Code queries.
 Section list queries fetch nested children alongside ranges so tree views can render full section hierarchies.
 Ticket listing reads from the active `.semio-repo/tickets` workspace and falls back to legacy root `tickets/` directories when needed.
+Repo `tree` commands support a `--md` flag that renders the structure as a Markdown nested bullet list with links.
 VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
 Devcontainer attach builds and installs the local extension automatically using IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity), verifies via list-extensions, and falls back to direct installation into IDE extensions directories with extensions.json updates when CLIs report WSL-only usage.
 The semio-repo extension targets a VS Code engine range compatible with Cursor (1.105.x) so Cursor can load the bundled extension without version rejections.

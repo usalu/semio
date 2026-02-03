@@ -1,0 +1,25 @@
+{
+  "title": "Tested .NET",
+  "description": "Goal for Tested .NET",
+  "prompt": "Instructions for Tested .NET",
+  "status": "open",
+  "dates": {
+    "due": "2026-02-15"
+  },
+  "client": "copilot-chat",
+  "llm": "gemini-3-pro",
+  "parent": "RUNNING-NET",
+  "iterations": [
+    {
+      "prompt": "Instructions for Tested .NET",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T10:54:51.744386461Z",
+      "commit": ""
+    }
+  ]
+}

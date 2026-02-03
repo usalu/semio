@@ -1,6 +1,6 @@
 <!-- IMPORTANT -->
 
-ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or the cli `./@semio-repo/go/go --md`) for repo-specific infrastructure. ALWAYS start by listing the current goal tree with `goal tree`. Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <client> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
+ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or the cli `./@semio-repo/go/go --md`) for repo-specific infrastructure. ALWAYS start by listing the current goal tree with `goal_tree` (or `goal tree`). Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <client> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
 Create a goal with mcp tool `goal_open`(or`goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or`goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
 A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 
@@ -155,6 +155,7 @@ The repo CLI binary MUST be consolidated into a single `go/repo/main.go` source 
 Legacy repo CLI adapter packages MUST NOT exist outside `go/repo/main.go`.
 Repo operational commands (benchmark, preflight, update) MUST live in the single-file repo entrypoint.
 Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifiers.
+Ticket close MUST support an `--all` flag to bulk close all open tickets without summary requirements or GitHub interaction.
 Ticket reopen MUST require `prompt` and `client` values. `llm` is optional.
 GraphQL TicketClient inputs MUST accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) for Client selection.
 GraphQL `TicketDate` fields MUST include `started` and `finished` timestamps.
@@ -185,6 +186,8 @@ MCP list tools MUST support cursor and limit paging over streamed item events.
 Repo operational artifacts (tickets, contributors, reports) MUST be stored under `.semio-repo/`.
 Repo analyze MUST exclude gitignored files, `.semio-repo/`, and `assets/repo/` from analysis.
 Repo file/folder listing and diagnostics MUST apply `.gitignore` patterns directly (including tracked matches) and exclude `.semio-repo/` paths in the repo CLI.
+Repo `tree` commands (for bundles, folders, files, and sections) MUST support a `--md` flag that outputs a nested Markdown bullet list.
+Repo `tree` command MUST display ASCII tree view by default with colored output for tickets (blue=open, green=finished) and goals (blue=open, green=closed), including metadata (icon, date, author, summary).
 Repo CLI analyze and fix commands MUST accept scope arguments through flags or positional inputs.
 GraphQL `node(id:)` MUST accept the canonical node IDs emitted by the schema (`@semio/...`, `@semio-repo/...`).
 Ticket close MUST derive bundle labels from semantic bundle diffs and MUST NOT infer `@semio-repo` from README.md or AGENTS.md.
@@ -754,6 +757,7 @@ repo folder tree js/semio                                   # Show folder tree
 repo ticket open <title> <prompt> <llm> <client> [--no-issue]    # Create ticket (positional syntax)
 repo ticket open --title <t> --prompt <p> --llm <l> --client <u>  # Create ticket (explicit syntax) - llm: opus-4-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; client: claude-code, cursor, copilot-chat, antigravity, codex, droid
 repo ticket list [year] [month] [day]                       # List tickets (optionally filtered by date)
+repo ticket close --all                                     # Bulk close all open tickets
 repo ticket close <YYYY/MM/DD/SLUG> <summary> <files...> [--title <new-title>]  # Close ticket (--title updates GitHub issue)
 repo ticket reopen <YYYY/MM/DD/SLUG> <prompt> <llm> [--title <new-title>]      # Reopen ticket (--title updates GitHub issue)
 repo tool build                                             # Run Nx build target
@@ -1466,278 +1470,10 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── reports
 │ │ └── codebase.json # Codebase snapshot for semantic ticket diffs
 │ └── tickets # Repo ticket workspaces
-├── reports # Generated validation reports
-│ ├── i18n.json # i18n validation report
-│ ├── eslint.json # ESLint linting report
-│ ├── code.json # Codebase code-quality report with reason/solution metadata
-│ ├── codebase.json # Full codebase snapshot for semantic ticket diffs
-│ ├── typescript.json # TypeScript compiler report
-│ └── ruff.json # Python Ruff linter report
-├── antlr
-├── assets # @semio/gh: assets for the complete repo
-│ ├── badges
-│ ├── contributors
-│ ├── cursors
-│ ├── fonts
-│ ├── grasshopper
-│ ├── icons
-│ ├── images
-│ ├── lists
-│ ├── logo
-│ ├── models
-│ ├── repo # Repo CLI fixtures
-│ └── semio
-├── engineering
-│ ├── dataarchitecture.pu # blueprint for sql schemas
-│ ├── interfacearchitecture.txt # blueprint for json-based (rest api, graphql api, copy&paste) schemas
-│ └── softwarearchitecture.txt # blueprint for object-oriented code
-├── examples
-│ ├── geometry
-│ ├── hello-semio
-│ ├── metabolism # main example with all features
-│ ├── starters
-│ ├── urban-patterns
-│ └── voxels
-├── graphql
-│ └── schema.graphql # autogenerated from `py/engine/generate-schemas.ts`
-├── js
-│ ├── ai
-│ ├── desktop
-│ │ └── package.json # @semio/desktop
-│ ├── docs
-│ │ └── package.json # @semio/docs
-│ ├── js # @semio/js: all shared js code (ui, domain logic, configs, …)
-│ │ ├── .storybook
-│ │ ├── elements
-│ │ │ ├── aggregation
-│ │ │ │ ├── Accordion.stories.tsx
-│ │ │ │ ├── Accordion.tsx
-│ │ │ │ ├── Collapsible.stories.tsx
-│ │ │ │ ├── Collapsible.tsx
-│ │ │ │ ├── Dialog.stories.tsx
-│ │ │ │ ├── Dialog.tsx
-│ │ │ │ ├── Resizable.stories.tsx
-│ │ │ │ ├── Resizable.tsx
-│ │ │ │ ├── Scrollable.stories.tsx
-│ │ │ │ ├── Scrollable.tsx
-│ │ │ │ ├── Tabs.stories.tsx
-│ │ │ │ ├── Tabs.tsx
-│ │ │ │ ├── Tree.stories.tsx
-│ │ │ │ ├── Tree.tsx
-│ │ │ │ └── TreeStateProvider.tsx
-│ │ │ ├── display
-│ │ │ │ ├── Avatar.stories.tsx
-│ │ │ │ ├── Avatar.tsx
-│ │ │ │ ├── HoverCard.stories.tsx
-│ │ │ │ ├── HoverCard.tsx
-│ │ │ │ ├── Icons.stories.tsx
-│ │ │ │ ├── Icons.tsx
-│ │ │ │ ├── Tooltip.stories.tsx
-│ │ │ │ └── Tooltip.tsx
-│ │ │ ├── docs
-│ │ │ │ ├── Aside.tsx
-│ │ │ │ ├── Card.tsx
-│ │ │ │ ├── FileTree.tsx
-│ │ │ │ ├── Page.tsx
-│ │ │ │ ├── Section.tsx
-│ │ │ │ ├── Steps.tsx
-│ │ │ │ ├── Tabs.tsx
-│ │ │ │ └── index.ts
-│ │ │ ├── input
-│ │ │ │ ├── Action.stories.tsx
-│ │ │ │ ├── Action.tsx
-│ │ │ │ ├── Button.stories.tsx
-│ │ │ │ ├── Button.tsx
-│ │ │ │ ├── ButtonGroup.stories.tsx
-│ │ │ │ ├── ButtonGroup.tsx
-│ │ │ │ ├── Combobox.stories.tsx
-│ │ │ │ ├── Combobox.tsx
-│ │ │ │ ├── Input.stories.tsx
-│ │ │ │ ├── Input.tsx
-│ │ │ │ ├── Select.stories.tsx
-│ │ │ │ ├── Select.tsx
-│ │ │ │ ├── Slider.stories.tsx
-│ │ │ │ ├── Slider.tsx
-│ │ │ │ ├── Stepper.stories.tsx
-│ │ │ │ ├── Stepper.tsx
-│ │ │ │ ├── Textarea.stories.tsx
-│ │ │ │ ├── Textarea.tsx
-│ │ │ │ ├── Toggle.stories.tsx
-│ │ │ │ ├── Toggle.tsx
-│ │ │ │ ├── ToggleGroup.stories.tsx
-│ │ │ │ └── ToggleGroup.tsx
-│ │ │ ├── navigation
-│ │ │ │ ├── Breadcrumb.stories.tsx
-│ │ │ │ └── Breadcrumb.tsx
-│ │ │ ├── panels
-│ │ │ │ ├── BottomPanel.tsx
-│ │ │ │ ├── LeftPanel.tsx
-│ │ │ │ ├── MiddlePanel.tsx
-│ │ │ │ ├── Panel.tsx
-│ │ │ │ ├── PanelGroup.tsx
-│ │ │ │ └── RightPanel.tsx
-│ │ │ ├── windows
-│ │ │ │ ├── Diagram.tsx
-│ │ │ │ ├── Scene.tsx
-│ │ │ │ ├── Table.tsx
-│ │ │ │ └── Window.tsx
-│ │ │ ├── Canvas.stories.tsx
-│ │ │ ├── Canvas.tsx
-│ │ │ ├── Command.stories.tsx
-│ │ │ ├── Command.tsx
-│ │ │ ├── Footer.stories.tsx
-│ │ │ ├── Footer.tsx
-│ │ │ ├── Layout.stories.tsx
-│ │ │ ├── Layout.tsx
-│ │ │ ├── Navbar.stories.tsx
-│ │ │ ├── Navbar.tsx
-│ │ │ ├── Popover.stories.tsx
-│ │ │ ├── Popover.tsx
-│ │ │ └── index.ts
-│ │ ├── locales
-│ │ │ ├── de.json
-│ │ │ └── en.json
-│ │ ├── sketchpad
-│ │ │ ├── Sketchpad.tsx # central barrel (Canvas padding, window containers, LayoutCanvas GoldenLayout integration, Navbar, Footer, store, kits, panels)
-│ │ │ ├── Design.tsx # design app
-│ │ │ ├── Docs.tsx # documentation app
-│ │ │ ├── Home.tsx # home app
-│ │ │ ├── Kit.tsx # kit app
-│ │ │ ├── Quality.tsx # quality app
-│ │ │ ├── Type.tsx # type app
-│ │ │ ├── Tutorials.tsx # consolidated tutorial system
-│ │ │ ├── elements.tsx # UI elements (Window kind, LevelProvider/useLevel, TransactionProvider, primitives, Diagram with d3-force layout, DIAGRAM_UNIT=48px coordinate system)
-│ │ │ ├── locales
-│ │ │ │ ├── de.json
-│ │ │ │ └── en.json
-│ │ │ └── pages # documentation pages
-│ │ │ ├── index.mdx
-│ │ │ ├── getting-started
-│ │ │ │ ├── index.mdx
-│ │ │ │ ├── installation.mdx
-│ │ │ │ ├── intro
-│ │ │ │ │ ├── index.mdx
-│ │ │ │ │ ├── think-in-semio.mdx
-│ │ │ │ │ └── why-semio.mdx
-│ │ │ │ └── starter.mdx
-│ │ │ ├── integrations
-│ │ │ │ ├── index.mdx
-│ │ │ │ ├── cloud.mdx
-│ │ │ │ ├── ladybug.mdx
-│ │ │ │ ├── rhino.mdx
-│ │ │ │ ├── speckle.mdx
-│ │ │ │ └── wasp.mdx
-│ │ │ ├── manuals
-│ │ │ │ ├── index.mdx
-│ │ │ │ ├── grasshopper.mdx
-│ │ │ │ ├── semio
-│ │ │ │ │ ├── index.mdx
-│ │ │ │ │ └── kit.mdx
-│ │ │ │ └── sketchpad.mdx
-│ │ │ ├── showcases
-│ │ │ │ ├── index.mdx
-│ │ │ │ └── metabolism.mdx
-│ │ │ ├── theory
-│ │ │ │ ├── index.mdx
-│ │ │ │ ├── design-information-modeling.mdx
-│ │ │ │ ├── graphs.mdx
-│ │ │ │ └── kit-of-parts-architecture.mdx
-│ │ │ └── tutorials
-│ │ │ ├── index.mdx
-│ │ │ ├── hello-semio
-│ │ │ │ ├── index.mdx
-│ │ │ │ ├── model-brick-set.mdx
-│ │ │ │ ├── model-design.mdx
-│ │ │ │ ├── save-kit.mdx
-│ │ │ │ ├── show-design.mdx
-│ │ │ │ └── sketch-setup.mdx
-│ │ │ ├── metabolism
-│ │ │ │ └── index.mdx
-│ │ │ └── serial-conversion
-│ │ │ ├── index.mdx
-│ │ │ └── sketchpad
-│ │ │ └── index.mdx
-│ │ ├── components.json
-│ │ ├── constants.json
-│ │ ├── eslint.config.ts
-│ │ ├── globals.css # Tailwind utilities, sizing tokens, GoldenLayout theme overrides (window surfaces use window background level, 1-unit splitter gaps, inset stack frames, Action-based window chrome controls)
-│ │ ├── i18n.ts
-│ │ ├── index.ts
-│ │ ├── package.json
-│ │ ├── postcss.config.ts
-│ │ ├── semio.ts # all domain logic
-│ │ ├── tailwind.config.ts
-│ │ ├── theme.css
-│ │ ├── tsconfig.json
-│ │ ├── vite.config.ts
-│ │ └── vitest.workspace.ts
-│ ├── play
-│ └── vscode
-│ └── extension.ts # @semio/vscode: VSCode extension with violation diagnostics
-├── jsonschema # autogenerated from `py/engine/generate-schemas.ts`
-├── liveblocks
-├── meta
-├── net
-│ ├── Semio
-│ │ ├── Semio.cs # @semio/net: all .NET code
-│ │ └── UserObjects
-│ │ ├── github
-│ │ ├── gitlab
-│ │ ├── monoceros
-│ │ ├── semio
-│ │ └── wasp
-│ ├── Semio.Grasshopper
-│ │ └── Semio.Grasshopper.cs # @semio/gh: all grasshopper code
-│ ├── Semio.Grasshopper.Tests
-│ └── Semio.Tests
-├── py
-│ ├── engine
-│ │ ├── build.ts # wrapper
-│ │ ├── dev.ts # wrapper
-│ │ ├── engine.py # @semio/engine
-│ │ ├── test_engine.py # pytest
-│ │ ├── package.json # monorepo integration
-│ │ ├── pyproject.toml # uv member file
-│ │ ├── test.ts # wrapper
-│ ├── semio
-│ │ ├── pyproject.toml # uv member file
-│ │ ├── semio.py # @semio/semio
-│ │ ├── semio.test.py # pytest
-├── rb
-├── rdf
-├── scripts
-│ ├── i18n.ts # Checks that all i18n keys are up to date and produces report under `reports/i18n.json`
-│ ├── log.ts # Ticket CLI and frontmatter utilities for `tickets/{year}/{month}/{day}/{slug}.md` (ticket open, ticket progress, ticket close)
-│ ├── utils.ts # General TypeScript utilities for scripts
-│ └── schema.ts # Checks that all schemas are up to date and produces report under `reports/schema.json`
-├── sql
-│ ├── sqlite
-│ │ └── schema.sql # autogenerated from `py/engine/generate-schemas.ts`
-├── tickets # Development task tickets organized by date
-│ ├── YEAR
-│ │ ├── MONTH
-│ │ │ ├── DAY
-│ │ │ │ └── SLUG
-│ │ │ │ │ │─ ticket.md # Ticket file with YAML frontmatter
-│ │ │ │ │ └─ FILES... # Additional files for the ticket
-├── yak
-├── .gitignore
-├── .gitmodules
-├── .prettierignore
-├── .prettierrc.json
-├── AGENTS.md # All general ai information
-├── CITATION.cff
-├── CLAUDE.md # Claude specific
-├── go
-│ ├── go.work # Go workspace file
-│ ├── server # Repo dev server
-│ │ ├── go.mod
-│ │ ├── go.sum
-│ │ └── main.go # Repo dev server (config, SQLite schema, event bus, diff ingestion, indexing, claims, warnings, HTTP API)
-│ └── repo # Go CLI binary
-│ ├── go.mod
-│ └── main.go # Repo binary
 ├── .venv # Centralized Python virtual environment
+├── @coda
+├── @semio
+├── @semio-repo
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup

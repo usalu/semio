@@ -35,3 +35,7 @@ Implement /workspaces/semio/plans/repo-binary-refactor-plan.md. Change/refactor/
 5. Update VS Code launch configs and tasks ordering.
 6. Update tests for streaming JSONL contract.
 7. Update README.md and AGENTS.md documentation.
+
+## Summary
+
+Bulk close

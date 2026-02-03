@@ -1,29 +1,25 @@
 {
-  "year": 2026,
-  "month": 1,
-  "day": 28,
-  "slug": "EXTEND-REPO-CLI-WITH-GOAL-COMMANDS",
   "title": "Extend Repo CLI with Goal Commands",
-  "status": "open",
+  "status": "closed",
   "prompt": "Extend repo CLI, VS Code extension, and GraphQL to support enhanced ticket commands (goal, parent, no-github) and new goal commands.",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/242"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-28T13:54:21.867352599Z",
+  "finished": "2026-02-03T08:49:52.347399037Z",
   "iterations": [
     {
       "prompt": "Extend repo CLI, VS Code extension, and GraphQL to support enhanced ticket commands (goal, parent, no-github) and new goal commands.",
       "llm": "gemini-3-pro",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"
       },
       "started": "2026-01-28T13:54:21.867352599Z",
+      "finished": "2026-02-03T08:49:52.347399037Z",
       "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849"
     }
-  ],
-  "folderPath": "/workspaces/semio/.semio-repo/tickets/2026/01/28/EXTEND-REPO-CLI-WITH-GOAL-COMMANDS",
-  "jsonPath": "/workspaces/semio/.semio-repo/tickets/2026/01/28/EXTEND-REPO-CLI-WITH-GOAL-COMMANDS/ticket.json",
-  "ticketPath": "/workspaces/semio/.semio-repo/tickets/2026/01/28/EXTEND-REPO-CLI-WITH-GOAL-COMMANDS/ticket.md"
+  ]
 }

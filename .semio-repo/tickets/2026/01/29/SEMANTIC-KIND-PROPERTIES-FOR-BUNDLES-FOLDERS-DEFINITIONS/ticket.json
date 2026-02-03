@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/273"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-DEFINITION-MECHANISM",
   "started": "2026-01-29T13:19:57.322659711Z",
   "finished": "2026-01-29T17:24:09.584333056Z",
   "iterations": [
     {
       "prompt": "Expand bundle, folder, definition to have semantic kind properties. Add filtering by kind, time, contributor, policy, and violation-kind dimensions. Update VS Code extension filter tree.",
       "llm": "opus-4-5",
-      "client": "copilot-chat",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

@@ -1,11 +1,14 @@
 {
   "title": "Extend Repo Mechanism With Todos",
-  "status": "open",
+  "status": "closed",
   "prompt": "The semio repo mechanism should be extanded with: todos...",
+  "summary": "Bulk close",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/312"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TODO-MECHANISM",
   "started": "2026-02-02T21:22:30.692347687Z",
+  "finished": "2026-02-03T08:50:09.597106847Z",
   "iterations": [
     {
       "prompt": "The semio repo mechanism should be extanded with: todos...",
@@ -16,6 +19,7 @@
         "email": "ueli@semio-tech.de"
       },
       "started": "2026-02-02T21:22:30.692347687Z",
+      "finished": "2026-02-03T08:50:09.597106847Z",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1"
     }
   ]

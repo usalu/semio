@@ -2,15 +2,15 @@
   "title": "add-postcreatecommand-gh-config",
   "status": "closed",
   "prompt": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
-  "started": null,
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "started": "0001-01-01T00:00:00Z",
   "iterations": [
     {
       "prompt": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
       "llm": "claude",
-      "client": null,
-      "author": null,
-      "started": null,
-      "commit": null
+      "author": {},
+      "started": "0001-01-01T00:00:00Z",
+      "commit": ""
     }
   ]
 }

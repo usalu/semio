@@ -1,19 +1,18 @@
 {
   "title": "Refactor all apps to a unified multi-window system",
-  "status": "finished",
+  "status": "closed",
   "prompt": "\"Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas\"",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-18T15:18:04.589Z",
   "iterations": [
     {
       "prompt": "\"Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas\"",
       "llm": "gpt-5.2-codex",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-18T15:18:04.589Z",
-      "commit": null
+      "commit": ""
     }
   ]
 }

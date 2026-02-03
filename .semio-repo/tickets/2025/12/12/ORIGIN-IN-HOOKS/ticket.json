@@ -1,16 +1,15 @@
 {
   "title": "Hooks auto-inject command origins via useOrigin",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Hooks auto-inject command origins via useOrigin",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2025-12-16T17:06:07.911Z",
   "iterations": [
     {
       "prompt": "Hooks auto-inject command origins via useOrigin",
       "llm": "sonnet-4-5",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
       "started": "2025-12-16T17:06:07.911Z",
       "commit": "0000000000000000000000000000000000000000"

@@ -6,13 +6,13 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/261"
   },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-01-29T09:39:45.008242038Z",
   "finished": "2026-01-29T09:48:14.115939646Z",
   "iterations": [
     {
       "prompt": "When a goal or ticket title is changed (via reopen), the folder name should also be renamed to match the new title. Currently the folder keeps the old slug even after a title change.",
       "llm": "opus-4-5",
-      "client": "claude-code",
       "author": {
         "name": "Ueli Saluz",
         "email": "ueli@semio-tech.de"

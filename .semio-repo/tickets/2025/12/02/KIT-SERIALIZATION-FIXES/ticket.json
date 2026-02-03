@@ -1,18 +1,17 @@
 {
   "title": "Fix Kit Serialization for Vitest Tests",
-  "status": "finished",
+  "status": "closed",
   "prompt": "Fix Kit Serialization for Vitest Tests",
-  "started": "2025-12-16T17:06:07.820Z",
+  "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-KIT-APP",
+  "started": "2025-12-16T17:06:07.82Z",
   "iterations": [
     {
       "prompt": "Fix Kit Serialization for Vitest Tests",
       "llm": "sonnet-4-5",
-      "client": null,
       "author": {
-        "name": "uelisaluz",
-        "email": null
+        "name": "uelisaluz"
       },
-      "started": "2025-12-16T17:06:07.820Z",
+      "started": "2025-12-16T17:06:07.82Z",
       "commit": "0000000000000000000000000000000000000000"
     }
   ]

@@ -1,18 +1,20 @@
 {
   "title": "ADD-TOML-YAML-SQL-GRAPHQL-LANGUAGES",
-  "status": "open",
+  "status": "closed",
   "prompt": "Add Toml, Yaml, Sql, and Graphql language plugins to the repo CLI language registry",
+  "summary": "Bulk close",
+  "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-07T20:52:32Z",
+  "finished": "2026-02-03T08:49:28.416944255Z",
   "iterations": [
     {
       "prompt": "Add Toml, Yaml, Sql, and Graphql language plugins to the repo CLI language registry",
       "llm": "opus-4-5",
-      "client": null,
       "author": {
-        "name": "Ueli Saluz",
-        "email": null
+        "name": "Ueli Saluz"
       },
       "started": "2026-01-07T20:52:32Z",
+      "finished": "2026-02-03T08:49:28.416944255Z",
       "commit": "2579ff5adb2f415787c4b6c83230b8c3bbed6508"
     }
   ]
