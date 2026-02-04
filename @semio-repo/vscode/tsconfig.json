@@ -2,14 +2,34 @@
   "compilerOptions": {
     "module": "ESNext",
     "target": "ES2022",
-    "lib": ["ES2022"],
+    "lib": [
+      "ES2022"
+    ],
     "strict": true,
     "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "noEmit": true
+    "noEmit": true,
+    "paths": {
+      "@semio/js/*": [
+        "../../@semio/js/*"
+      ],
+      "@semio/js": [
+        "../../@semio/js/index.ts"
+      ],
+      "@semio/assets/*": [
+        "../../@semio/assets/*"
+      ]
+    }
   },
-  "include": ["extension.test.ts", "extension.ts"],
-  "exclude": ["node_modules", "out", "test"]
+  "include": [
+    "extension.test.ts",
+    "extension.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "out",
+    "test"
+  ]
 }

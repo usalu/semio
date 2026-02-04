@@ -12,6 +12,75 @@ import (
 )
 
 
+
+func TestMarkdownOutput(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	factory := func(config Config) (*Engine, error) {
+		executor, err := NewExecutor(repoRoot)
+		if err != nil {
+			return nil, err
+		}
+		return NewEngine(executor), nil
+	}
+
+	tests := []struct {
+		name     string
+		args     []string
+		wantMarkers []string
+	}{
+		{
+			name: "Repo Tree MD",
+			args: []string{"tree", "--md"},
+			wantMarkers: []string{"- [", "]("},
+		},
+		{
+			name: "Ticket Tree MD",
+			args: []string{"ticket", "tree", "--md"},
+			wantMarkers: []string{"- [", "]("},
+		},
+		{
+			name: "Goal Tree MD",
+			args: []string{"goal", "tree", "--md"},
+			wantMarkers: []string{"- [", "]("},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rootCmd := NewRoot(factory)
+			b := bytes.NewBufferString("")
+			rootCmd.SetOut(b)
+			rootCmd.SetErr(b)
+			rootCmd.SetArgs(tt.args)
+
+			_ = rootCmd.Execute()
+			// We don't assert error here because some might return errors if no tickets/goals exist, 
+			// but we want to check output format if it produces anything.
+			// Actually, for ticket/goal tree, if empty, it might output just "done".
+			// But for repo tree, it should output something.
+
+			output := b.String()
+			// If output contains "Markdown", check markers
+			// Or check for the event format.
+			// The current main.go uses renderStream which prints raw data.
+			// If --md is passed, renderStream usually tries to look for "markdown" data field?
+			// Let's verify renderStream logic later.
+			
+			// For now, looking for "- [" is a good check for the specific recursive MD generation.
+			// Currently it fails because they print "├──".
+			
+			for _, marker := range tt.wantMarkers {
+				if !strings.Contains(output, marker) {
+					t.Errorf("Output missing marker %q. Got:\n%s", marker, output)
+				}
+			}
+		})
+	}
+}
+
 func TestLifecycleCommands(t *testing.T) {
 	cwd, _ := os.Getwd()
 	repoRoot := findTestRepoRoot(cwd)

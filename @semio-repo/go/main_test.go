@@ -1571,14 +1571,14 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 	if goal.Dates.Due != "2026-02-15" {
 		t.Errorf("expected due date '2026-02-15', got '%s'", goal.Dates.Due)
 	}
-	if len(goal.Iterations) == 0 {
-		t.Error("expected at least one iteration")
+	if len(goal.Interactions) == 0 {
+		t.Error("expected at least one interaction")
 	} else {
-		if goal.Iterations[0].LLM != "opus-4-5" {
-			t.Errorf("expected LLM 'opus-4-5', got '%s'", goal.Iterations[0].LLM)
+		if goal.Interactions[0].LLM != "opus-4-5" {
+			t.Errorf("expected LLM 'opus-4-5', got '%s'", goal.Interactions[0].LLM)
 		}
-		if goal.Iterations[0].UI != "claude-code" {
-			t.Errorf("expected UI 'claude-code', got '%s'", goal.Iterations[0].UI)
+		if goal.Interactions[0].System.Client != "claude-code" {
+			t.Errorf("expected Client 'claude-code', got '%s'", goal.Interactions[0].System.Client)
 		}
 	}
 

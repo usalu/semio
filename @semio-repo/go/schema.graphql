@@ -440,6 +440,7 @@ type Goal implements Node {
   milestone: Int
   status: String!
   parent: String
+  interactions: [Interaction!]!
 }
 
 type Ticket implements Node {
@@ -461,20 +462,25 @@ type Ticket implements Node {
   goal: String
   parent: String
   dates: TicketDate!
-  iterations: [Iteration!]!
+  interactions: [Interaction!]!
   bundles: [Bundle!]!
   files: [File!]!
 }
 
-type Iteration {
-  prompt: String!
-  plan: String
-  llm: String!
-  ui: TicketClient!
-  author: Contributor!
+type Interaction {
+  dates: InteractionDate!
+  system: String!
+  client: String
+  llm: String
+  prompt: String
+  diff: String # TODO: Check if this should be an object
+  author: String!
+  commit: String!
+}
+
+type InteractionDate {
   started: DateTime!
   finished: DateTime
-  commit: String
 }
 
 enum TicketStatus {

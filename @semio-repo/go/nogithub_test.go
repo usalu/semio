@@ -62,8 +62,8 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 	if goal.Prompt != "Goal Prompt" {
 		t.Errorf("expected prompt 'Goal Prompt', got '%s'", goal.Prompt)
 	}
-	if goal.UI != "copilot-chat" {
-		t.Errorf("expected ui 'copilot-chat', got '%s'", goal.UI)
+	if goal.Client != "copilot-chat" {
+		t.Errorf("expected ui 'copilot-chat', got '%s'", goal.Client)
 	}
 	if goal.LLM != "gemini-3-pro" {
 		t.Errorf("expected llm 'gemini-3-pro', got '%s'", goal.LLM)
@@ -110,7 +110,7 @@ func TestTicketLifecycle_NoGithub(t *testing.T) {
 		Description: "Desc",
 		Prompt:      "Prompt",
 		DueDate:     "2026-02-15",
-		UI:          "cursor",
+		Client:          "cursor",
 		LLM:         "gpt-5-2-codex",
 		NoGithub:    true,
 	}

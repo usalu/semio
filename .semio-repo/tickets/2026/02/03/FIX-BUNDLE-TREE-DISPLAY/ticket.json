@@ -1,0 +1,96 @@
+{
+  "title": "Fix Bundle Tree Display",
+  "status": "closed",
+  "prompt": "The bundle tree command is not showing properly as a tree of project-\u003ebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
+  "summary": "Fixed bundle tree command to properly display project-\u003ebundle hierarchy. The tree now groups bundles by their parent project and shows them nested underneath, with proper tree connectors for both projects and bundles.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/330"
+  },
+  "started": "2026-02-03T19:11:51.693765705Z",
+  "finished": "2026-02-03T19:13:34.392795273Z",
+  "iterations": [
+    {
+      "prompt": "The bundle tree command is not showing properly as a tree of project-\u003ebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
+      "llm": "opus-4-5",
+      "ui": "claude-code",
+      "author": {
+        "name": "Ueli Saluz",
+        "email": "ueli@semio-tech.de"
+      },
+      "started": "2026-02-03T19:11:51.693765705Z",
+      "finished": "2026-02-03T19:13:34.392795273Z",
+      "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/go",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go",
+              "lines": {
+                "added": 48,
+                "removed": 14
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter",
+              "lines": {
+                "added": 48,
+                "removed": 14
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§bundleCommand",
+              "lines": {
+                "added": 48,
+                "removed": 14
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§bundleCommand",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    }
+  ]
+}

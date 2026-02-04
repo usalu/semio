@@ -25,7 +25,7 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { FilterProvider, FilterItem } from "./extension";
+import { FilterTreeDataProvider, FilterTreeItem } from "./extension";
 
 // #endregion Imports
 
@@ -514,75 +514,81 @@ suite("Sections View Test Suite", function () {
   });
 });
 
-
-// #region Filter Provider Tests
+// #endregion Sections View Tests
 
 suite("Filter Provider Test Suite", () => {
   test("FilterProvider initializes correctly", () => {
-    const provider = new FilterProvider(getWorkspaceRoot());
+    const provider = new FilterTreeDataProvider();
     assert.ok(provider);
   });
 
   test("Root elements include expected categories", async () => {
-    const provider = new FilterProvider(getWorkspaceRoot());
+    const provider = new FilterTreeDataProvider();
     const children = await provider.getChildren();
-    const labels = children.map((c) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
-    const expected = ["Search", "Bundles", "Folders", "Sections", "Definitions", "Time", "Contributors", "Policies", "Violations"];
-    expected.forEach((e) => assert.ok(labels.includes(e), `Missing root element: ${e}`));
+    assert.strictEqual(children.length, 8, "Should have 8 root elements");
+    const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
+    assert.ok(labels.some(l => l.startsWith("SEARCH")), "Should have Search");
+    assert.ok(labels.includes("bundle"), "Should have bundle");
+    assert.ok(labels.includes("folder"), "Should have folder");
+    assert.ok(labels.includes("section"), "Should have section");
+    assert.ok(labels.includes("definition"), "Should have definition");
+    assert.ok(labels.includes("time"), "Should have time");
+    assert.ok(labels.includes("contributors"), "Should have contributors");
+    assert.ok(labels.includes("policies"), "Should have policies");
   });
 
   test("Time category returns years", async () => {
-    const provider = new FilterProvider(getWorkspaceRoot());
+    const provider = new FilterTreeDataProvider();
     provider.availableYears = [2023, 2024];
-    const timeItem = new FilterItem("Time", vscode.TreeItemCollapsibleState.Collapsed, "time");
+    const timeItem = new FilterTreeItem("Time", "root", vscode.TreeItemCollapsibleState.Collapsed, "filterRoot");
     const children = await provider.getChildren(timeItem);
     assert.strictEqual(children.length, 2);
-    assert.ok(children.some((c) => c.label === "2023"));
-    assert.ok(children.some((c) => c.label === "2024"));
+    assert.ok(children.some((c: FilterTreeItem) => c.label === "2023"));
+    assert.ok(children.some((c: FilterTreeItem) => c.label === "2024"));
   });
 
   test("Year category returns months", async () => {
-    const provider = new FilterProvider(getWorkspaceRoot());
+    const provider = new FilterTreeDataProvider();
     provider.availableMonths = [1, 12];
-    const yearItem = new FilterItem("2024", vscode.TreeItemCollapsibleState.Collapsed, "timeYear", 2024);
+    const yearItem = new FilterTreeItem("2024", "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "timeValue", "year", 2024);
     const children = await provider.getChildren(yearItem);
     assert.strictEqual(children.length, 2);
-    assert.ok(children.some((c) => c.label === "January"));
-    assert.ok(children.some((c) => c.label === "December"));
+    assert.ok(children.some((c: FilterTreeItem) => c.label === "January"));
+    assert.ok(children.some((c: FilterTreeItem) => c.label === "December"));
   });
 
   test("Month category returns days", async () => {
-    const provider = new FilterProvider(getWorkspaceRoot());
+    const provider = new FilterTreeDataProvider();
     provider.availableDays = [1, 15, 31];
-    const monthItem = new FilterItem("January", vscode.TreeItemCollapsibleState.Collapsed, "timeMonth", 2024, 1);
+    const monthItem = new FilterTreeItem("January", "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "timeValue", "month", 1);
     const children = await provider.getChildren(monthItem);
     assert.strictEqual(children.length, 3);
-    assert.ok(children.some((c) => c.label === "1"));
-    assert.ok(children.some((c) => c.label === "15"));
-    assert.ok(children.some((c) => c.label === "31"));
+    assert.ok(children.some((c: FilterTreeItem) => c.label === "1"));
+    assert.ok(children.some((c: FilterTreeItem) => c.label === "15"));
+    assert.ok(children.some((c: FilterTreeItem) => c.label === "31"));
   });
 
   test("Contributors category returns contributors", async () => {
-    const provider = new FilterProvider(getWorkspaceRoot());
+    const provider = new FilterTreeDataProvider();
     provider.availableContributors = ["alice", "bob"];
-    const contributorsItem = new FilterItem("Contributors", vscode.TreeItemCollapsibleState.Collapsed, "contributors");
+    const contributorsItem = new FilterTreeItem("contributors", "root", vscode.TreeItemCollapsibleState.Collapsed, "filterRoot");
     const children = await provider.getChildren(contributorsItem);
     assert.strictEqual(children.length, 2);
-    assert.ok(children.some((c) => typeof c.label === 'string' ? c.label === "alice" : (c.label as vscode.TreeItemLabel).label === "alice"));
+    assert.ok(children.some((c: FilterTreeItem) => typeof c.label === 'string' ? c.label === "alice" : (c.label as vscode.TreeItemLabel).label === "alice"));
   });
 
   test("Toggle year updates filter", async () => {
-    const provider = new FilterProvider(getWorkspaceRoot());
+    const provider = new FilterTreeDataProvider();
     provider.availableYears = [2024];
 
-    const timeItem = new FilterItem("Time", vscode.TreeItemCollapsibleState.Collapsed, "time");
+    const timeItem = new FilterTreeItem("Time", "root", vscode.TreeItemCollapsibleState.Collapsed, "filterRoot");
     // Initial state: included (check)
     const children = await provider.getChildren(timeItem);
-    const yearItem = children.find(c => typeof c.label === 'string' ? c.label === "2024" : (c.label as vscode.TreeItemLabel).label === "2024");
+    const yearItem = children.find((c: FilterTreeItem) => typeof c.label === 'string' ? c.label === "2024" : (c.label as vscode.TreeItemLabel).label === "2024");
     assert.strictEqual((yearItem?.iconPath as vscode.ThemeIcon).id, "check");
 
     // Toggle to exclude
-    provider.toggleYear(2024);
+    provider.toggle("time", "2024");
 
     const children2 = await provider.getChildren(timeItem);
     const yearItem2 = children2.find(c => typeof c.label === 'string' ? c.label === "2024" : (c.label as vscode.TreeItemLabel).label === "2024");
@@ -590,14 +596,14 @@ suite("Filter Provider Test Suite", () => {
   });
 
   test("Policies category returns policies", async () => {
-    const provider = new FilterProvider(getWorkspaceRoot());
+    const provider = new FilterTreeDataProvider();
     provider.availablePolicies = ["p1", "p2"];
-    const policiesItem = new FilterItem("Policies", vscode.TreeItemCollapsibleState.Collapsed, "policy");
+    const policiesItem = new FilterTreeItem("policies", "root", vscode.TreeItemCollapsibleState.Collapsed, "filterRoot");
     const children = await provider.getChildren(policiesItem);
     assert.strictEqual(children.length, 2);
-    assert.ok(children.some((c) => typeof c.label === 'string' ? c.label === "p1" : (c.label as vscode.TreeItemLabel).label === "p1"));
-    assert.ok(children.some((c) => typeof c.label === 'string' ? c.label === "p2" : (c.label as vscode.TreeItemLabel).label === "p2"));
+    assert.ok(children.some((c: FilterTreeItem) => typeof c.label === 'string' ? c.label === "p1" : (c.label as vscode.TreeItemLabel).label === "p1"));
+    assert.ok(children.some((c: FilterTreeItem) => typeof c.label === 'string' ? c.label === "p2" : (c.label as vscode.TreeItemLabel).label === "p2"));
   });
 });
 
-// #endregion Filter Provider Tests
+// ... (rest of the code remains the same)

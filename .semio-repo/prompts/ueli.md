@@ -20,10 +20,45 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
-The `README.md` should start with a ❤️‍🔥Thanks section
+All tree and list commands are not consistent. Use go templates (along with sprig if needed) for rendering all text (for human) and markdown (for llms). All trees should use the same tree template both for text and markdown. All lists should use the same templates both for text and markdown. For text, all information is just concatenated but with different colors per segment being maximum efficient. All text information is displayed as digestable as possible (relative dates to now, etc). The line should be capped to terminal width (or default of 90 characters if not available). The markdown lines always start with id and link to uri then a list of descriptions for each property separated by `-`. The amount of properties varies per resource kind.
+
+Here an example for `goal tree`:
+
+text format:
+
+```
+<kind> <goal-title> <time-left> <open-subgoals>? <open-tickets>? <description>
+├── <kind> <sub-goal-title> <time-left> <open-subgoals>? <open-tickets>? <description>
+│   ├── <kind> <ticket-title>(isOpen ? <opened-ago> : <finished-ago>) (isOpen ? <last-prompt> : <summary>)
+│   │   ├── <kind> <sub-ticket-title> (isOpen ? <opened-ago> : <finished-ago>) (isOpen ? <last-prompt> : <summary>)
+```
+
+```
+./@semio-repo/go/go goal tree
+🎯 r26-02 24 days left 2 open subgoals 10 open tickets The r26-02 release aims to del…
+├── 🎯 Running Sketchpad overdue since 1 day 10 open tickets Running sketchpad infra…
+│   ├── 🎫 Complete Kit Persistance reopened yesterday Migrate sqlite schema to new…
+│   │   ├── 🎫 Kit Zip Fix closed 4 days ago Fixed a zip bug that occured when rou…
+```
+markdown format
+
+```
+- [<id>](<uri>) - <semantic-description-of-property> - <another-one>
+  - [<id>](<uri>) - <another-kind-with-different-property>
+```
+
+```md
+- [🎯R26-02](semiorepo://goal/R26-02) - `created 24 days ago` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
+  - [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `overdue since 1 day` - `Running sketchpad infra…`
+    - [🎫2026/01/30/COMPLETE-KIT-PERSISTANCE](semiorepo://ticket/2026/01/30/COMPLETE-KIT-PERSISTANCE) - `reopened 4 days ago` - `Migrate sqlite schema to new format.`
+      - [🎫2026/01/30/KIT-ZIP-FIX](semiorepo://ticket/2026/01/30/KIT-ZIP-FIX) - `closed 4 days ago` - `Fixed a zip bug that occured when routing the kit zip file.`
+```
+
+The `README.md` should start with a `# ❤️‍🔥First of all, Thanks!` section
 
 All ticket github issues  should automatically be linked to the project `https://github.com/users/usalu/projects/2`.
 All tickets should be assigned to the account creating the ticket. Test it just now with gh cli and make sure that it works.
+For goals and tickets:
 The author should not be
 {
   "author": {
@@ -41,25 +76,29 @@ e.g. `@semio-repo/go/go ticket list --closed` `@semio-repo/go/go ticket list --s
 The flag has different meanings for different commands.
 bundles: open only shows bundles where at least one
 tickets: by default all tickets, otherwise filter status
-Extend goals to have a bundle field
+
+Extend goals to have a bundle field.
 
 Make sure that all commands show either perfect human output, perfect markdown output or perfect json output.
 e.g. all tree commands with --md are currently just showing wrong lists.
 Use proper nested bullet lists for the markdown output on tree commands
 ```md
-- [<id>](#<id>): <title> - <description>
-  - [<id>](#<id>): <title> - <description>
-    - [<id>](#<id>): <title> - <description>
-      - [<id>](#<id>): <title> - <description>
-      - [<id>](#<id>): <title> - <description>
-    - [<id>](#<id>): <title> - <description>
-  - [<id>](#<id>): <title> - <description>
+- [<id>](#<id>):  <title> - <date> - <description>
+  - [<id>](#<id>):  <title> - <date> - <description>
+    - [<id>](#<id>):  <title> - <date> - <description>
+      - [<id>](#<id>):  <title> - <date> - <description>
+      - [<id>](#<id>):  <title> - <date> - <description>
+    - [<id>](#<id>):  <title> - <date> - <description>
+  - [<id>](#<id>):  <title> - <date> - <description>
 - [🛠️@semio/js/sketchpad/Design.tsx#State Management#Store§DesignStore](semiorepo://section/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE): Design Store - The store class that manages the state of the design
 ```
-For default human output use ASCII tree view for tree commands. It doesnt need to be explicit with symbols but you can use colors for them. e.g. blue for open tickets/goals, green for closed tickets/goals
+For default human output use ASCII tree view for all tree commands. It doesnt need to be explicit with symbols but you can use colors for them. e.g. blue for open tickets/goals, green for closed tickets/goals
 Display as much information as you can with different colors. (e.g. date, author, summary)
-```
-```
+
+Some tree commands show nothing e.g. ticket tree.
+
+
+
 
 Whenever a command is called, then a system should store the interaction. Interactions are general and not specific to a goal or ticket. They store dates (started and optionally finished if successful) the system ("linux", "windows", "mac"), optional client that was used, optional llm that was used, optional prompt that was used, optional diff that was created during the interaction.
  Rename iteration to interaction. Use a different format
@@ -109,6 +148,7 @@ this:
         "finished": "2026-02-02T20:23:00.362160845Z"
       },
       "author": "usalu",
+      "system": "linux",
       "commit": "67f324d380fd2ced3b1697893e7fbcad2761da94",
       "ui": "windsurf-chat",
       "prompt": "Updated Dev Docs",
