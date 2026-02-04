@@ -1,0 +1,1 @@
+# Ticket: Extend VS Code Tests\n\n**Status**: Open\n**Goal**: Extend extension.test.ts to cover all new features and ensure all tests pass.\n\n## Plan\n\n- [ ] Explore codebase to identify new features and changes\n- [ ] Update extension.test.ts\n- [ ] Run tests and fix issues\n

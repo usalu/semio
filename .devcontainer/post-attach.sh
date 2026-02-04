@@ -30,7 +30,8 @@ find_working_clis() {
   for cli_env in ANTIGRAVITY_IPC_HOOK_CLI WINDSURF_IPC_HOOK_CLI CURSOR_IPC_HOOK_CLI VSCODE_IPC_HOOK_CLI; do
     cli_path="${!cli_env:-}"
     if [ -n "$cli_path" ]; then
-      if [ -x "$cli_path" ]; then
+      # Check for regular file AND executable (not sockets which also have -x)
+      if [ -f "$cli_path" ] && [ -x "$cli_path" ]; then
         add_cli_path "$cli_path"
       fi
     fi

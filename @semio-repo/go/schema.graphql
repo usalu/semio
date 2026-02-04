@@ -134,7 +134,7 @@ input TicketOpenInput {
   ui: TicketClient!
   noIssue: Boolean
   planPath: String
-  goal: String
+  goal: String!
   parent: String
   draft: String
 }

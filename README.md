@@ -208,7 +208,7 @@ The assistant helps you on every step in the design process with semio ✍️
 
 The VS Code extension keeps tickets close to daily work with inline close or reopen actions that act on the selected ticket, commit visibility, and concise hover descriptions for quick scanning.
 Automation tooling rejects invalid arguments and non-file paths so MCP-driven workflows surface mistakes immediately.
-Ticket creation and iteration starts always request a description, while file lists can be added later when needed.
+Ticket creation MUST require a Goal ID and iteration starts ALWAYS request a description, while file lists can be added later when needed.
 Ticket iteration and finish actions attach git-derived file lists and line totals scoped to the ticket files so progress and impact are visible from the ticket view.
 Code hygiene diagnostics ignore comment markers inside string literals so snippets and URLs stay clean of false comment warnings.
 Code hygiene diagnostics flag orphan definitions outside named sections so the file structure stays consistent.
@@ -1134,14 +1134,17 @@ All code must sit inside named regions; orphan definitions outside any section a
 
 The repo CLI is the single source of truth for ticket workflows and the GraphQL schema that powers tooling.
 The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
-The repo CLI streams command execution as JSONL events and adapters decide whether to render compact human output or machine-readable event lines.
+The repo CLI streams command execution as JSONL events and adapters decide whether to render compact human output, nested Markdown lists with `semiorepo://` links, or machine-readable event lines.
+Human-readable CLI IDs normalize emoji to text presentation (U+FE0E), replacing emoji presentation selectors and appending the text variant when missing, so monospace terminals reserve stable width before adjacent symbols like `@`.
 The repo binary is consolidated into a single `@semio-repo/go/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
+Go tests for repo tooling are consolidated into a single `@semio-repo/go/main_test.go` so CLI behavior, tool helpers, and output format expectations live in one test suite.
 Legacy adapter packages are removed so every command is dispatched through the same engine event stream and GraphQL executor.
 The streaming core uses a command registry with an emitter that surfaces progress, errors, items, logs, and a terminal done payload so CLI, MCP, and VS Code share one execution model.
 Registry invocation accepts JSON inputs and emits item metadata alongside data payloads so tooling can page through large result sets without rehydrating full responses.
 The MCP adapter forwards commands through the same streaming registry and supports cursor plus limit paging over item events for list-style tools.
 Benchmark, preflight, and dependency update workflows are implemented inside the same single-file entrypoint so operational commands share the unified event pipeline.
 The CLI exposes an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
+The `sync github` command reconciles local tickets/goals with GitHub by closing issues for closed tickets, resolving goal milestones by goal title via the GitHub API before applying them to ticket issues, updating stored milestone URLs, and removing `@` labels that no longer map to active projects or bundles.
 Section management includes an integrate command so source files can be merged into target sections through the same GraphQL-backed CLI surface.
 GraphQL ticket UI inputs accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) so CLI and tooling inputs map cleanly to schema enums.
 Section and definition ranges expose line/column start/end positions so editors can locate code precisely.
@@ -1153,7 +1156,12 @@ VS Code consumes the JSONL stream, extracts the final `result` payload, and retu
 Devcontainer attach builds and installs the local extension automatically using IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity), verifies via list-extensions, and falls back to direct installation into IDE extensions directories with extensions.json updates when CLIs report WSL-only usage.
 The semio-repo extension targets a VS Code engine range compatible with Cursor (1.105.x) so Cursor can load the bundled extension without version rejections.
 VS Code extension packaging requires an unscoped extension name in `@semio-repo/vscode/package.json` so `vsce package` can build the local `.vsix`.
-VS Code extension sidebar views are registered through a single entrypoint so monorepo and filter trees share one provider and codegen can parse `extension.ts` without duplicate identifiers.
+VS Code extension sidebar views are consolidated into exactly two views: `Monorepo` (the repo tree) and `Filter` (the global filter state).
+The Filter view is not a second tree of options; it is a compact state panel where each filter-kind is represented by one item and the available options are exposed as menu actions on that item.
+The Filter view updates the shared filter state, and the Monorepo view consumes that state to hide non-matching items across all branches.
+This keeps the UI predictable: expanding nodes always shows structure, while filtering always happens in one place.
+VS Code extension tests run through `@vscode/test-cli` and require a display server on Linux; in headless environments the test script wraps `vscode-test` with `xvfb-run` so Electron can boot without a real `DISPLAY`.
+Electron launch arguments for stable CI/headless execution are configured in `@semio-repo/vscode/.vscode-test.mjs` so local runs and CI share the same test host configuration.
 Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo/` so workflow state stays centralized and out of product bundles.
 Repo analyze only inspects considered files by honoring `.gitignore`, excluding `.semio-repo/`, and skipping `assets/repo/` fixtures.
 Repo file/folder listing and diagnostics apply `.gitignore` patterns directly (including tracked matches) alongside repo metadata exclusions, and CLI analyze/fix commands accept scope arguments so tooling stays consistent across entrypoints.

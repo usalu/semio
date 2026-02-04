@@ -303,6 +303,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(fileCommand(factory, &config))
 	root.AddCommand(sectionCommand(factory, &config))
 	root.AddCommand(definitionCommand(factory, &config))
+	root.AddCommand(syncCommand(factory, &config))
 	root.AddCommand(treeCommand(factory, &config))
 	root.AddCommand(exportCommand(factory, &config))
 	root.AddCommand(benchmarkCmd)
@@ -336,6 +337,26 @@ func main() {
 	if err := Execute(defaultEngineFactory); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
+	}
+}
+
+func syncCommand(factory EngineFactory, config *Config) *cobra.Command {
+	sync := &cobra.Command{
+		Use:   "sync",
+		Short: "Synchronize monorepo artifacts",
+	}
+	sync.AddCommand(syncGithubCommand(factory, config))
+	return sync
+}
+
+func syncGithubCommand(factory EngineFactory, config *Config) *cobra.Command {
+	return &cobra.Command{
+		Use:   "github",
+		Short: "Synchronize local state with GitHub",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			query := `mutation SyncGithub { syncGithub }`
+			return runGraphQL(cmd, factory, config, query, nil)
+		},
 	}
 }
 
@@ -518,7 +539,7 @@ func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
 				defer wg.Done()
 				// Only load metadata if scope covers repo root or .semio-repo
 				// Simple heuristic: if scope is empty, ".", or contains ".semio-repo"
-				
+
 				// Using context for cancellation
 				ticketCh := make(chan Ticket)
 				go func() {
@@ -1236,6 +1257,9 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if client == "" {
 				return fmt.Errorf("missing client. Use --client <value>, --<client-name> flag, or positional arg. Allowed: %s", strings.Join(AllowedClients, ", "))
 			}
+			if goal == "" {
+				return fmt.Errorf("missing goal. Use --goal <goal-id>")
+			}
 			input := map[string]interface{}{
 				"title":    title,
 				"prompt":   prompt,
@@ -1626,23 +1650,41 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 					}
 				}
 
-				var printNode func(*node, string, int)
-				printNode = func(n *node, prefix string, depth int) {
-					keys := make([]string, 0, len(n.children))
-					for k := range n.children {
-						keys = append(keys, k)
-					}
-					sort.Strings(keys)
+				if config.Markdown {
+					var sb strings.Builder
+					var printMarkdown func(*node, int)
+					printMarkdown = func(n *node, depth int) {
+						keys := make([]string, 0, len(n.children))
+						for k := range n.children {
+							keys = append(keys, k)
+						}
+						sort.Strings(keys)
 
-					for i, k := range keys {
-						child := n.children[k]
-						
-						if config.Markdown {
+						for _, k := range keys {
+							child := n.children[k]
 							indent := strings.Repeat("  ", depth)
-							display := fmt.Sprintf("[%s](%s)", child.name, child.path)
-							stream <- Event{Kind: KindLog, Level: "info", Command: "ticket tree", Message: indent + "- " + display}
-							printNode(child, prefix, depth+1)
-						} else {
+							target := child.path
+							if child.ticket != nil {
+								target = child.ticket.GetURI()
+							}
+							sb.WriteString(fmt.Sprintf("%s- [%s](%s)\n", indent, child.name, target))
+							printMarkdown(child, depth+1)
+						}
+					}
+					printMarkdown(root, 0)
+					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
+					stream <- Event{Kind: KindResult, Command: "ticket tree", Data: data}
+				} else {
+					var printNode func(*node, string)
+					printNode = func(n *node, prefix string) {
+						keys := make([]string, 0, len(n.children))
+						for k := range n.children {
+							keys = append(keys, k)
+						}
+						sort.Strings(keys)
+
+						for i, k := range keys {
+							child := n.children[k]
 							isLast := i == len(keys)-1
 							connector := "├── "
 							if isLast {
@@ -1663,12 +1705,12 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 							}
 
 							stream <- Event{Kind: KindLog, Level: "info", Command: "ticket tree", Message: prefix + connector + display}
-							printNode(child, childPrefix, depth+1)
+							printNode(child, childPrefix)
 						}
 					}
-				}
 
-				printNode(root, "", 0)
+					printNode(root, "")
+				}
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
 			return renderStream(cmd, config, stream)
@@ -1938,7 +1980,6 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 					dueDate
 					client
 					llm
-					bundle
 				}
 			}`
 			return runGraphQL(cmd, factory, config, query, variables)
@@ -2350,9 +2391,11 @@ func bundleCommand(factory EngineFactory, config *Config) *cobra.Command {
 				if config.Markdown {
 					var sb strings.Builder
 					for _, b := range bundles {
-						// Template: - [<id>](#<id>): <title> - <description>
-						// For bundle: id=Name, title=Name, description=""
-						sb.WriteString(fmt.Sprintf("- [%s](#%s): %s\n", b.Name, b.Name, b.Name))
+						bMap := map[string]interface{}{}
+						bBytes, _ := json.Marshal(b)
+						json.Unmarshal(bBytes, &bMap)
+						line := renderEntityMarkdown("bundle", bMap)
+						sb.WriteString(line + "\n")
 					}
 					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
 					stream <- Event{Kind: KindResult, Command: "bundle tree", Data: data}
@@ -2504,6 +2547,8 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 					name     string
 					children map[string]*node
 					isFolder bool
+					kind     string
+					path     string
 				}
 				root := &node{children: make(map[string]*node)}
 
@@ -2517,6 +2562,8 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 						curr = curr.children[part]
 						if i == len(parts)-1 {
 							curr.isFolder = true
+							curr.kind = string(f.Kind)
+							curr.path = f.Path
 						}
 					}
 				}
@@ -2539,8 +2586,16 @@ func folderCommand(factory EngineFactory, config *Config) *cobra.Command {
 							}
 
 							indent := strings.Repeat("  ", depth)
-							// - [<id>](#<id>): <title> - <description>
-							sb.WriteString(fmt.Sprintf("%s- [%s](#%s): %s\n", indent, currentPath, currentPath, child.name))
+							data := map[string]interface{}{
+								"path": child.path,
+								"kind": child.kind,
+							}
+							if data["path"] == "" {
+								data["path"] = currentPath
+							}
+
+							line := renderEntityMarkdown("folder", data)
+							sb.WriteString(fmt.Sprintf("%s%s\n", indent, line))
 							printMarkdown(child, depth+1, currentPath)
 						}
 					}
@@ -3032,6 +3087,8 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 					name     string
 					children map[string]*node
 					isFile   bool
+					kind     string
+					path     string
 				}
 				root := &node{children: make(map[string]*node)}
 
@@ -3045,6 +3102,8 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 						curr = curr.children[part]
 						if i == len(parts)-1 {
 							curr.isFile = true
+							curr.kind = string(f.Kind)
+							curr.path = f.Path
 						}
 					}
 				}
@@ -3067,7 +3126,23 @@ func fileCommand(factory EngineFactory, config *Config) *cobra.Command {
 							}
 
 							indent := strings.Repeat("  ", depth)
-							sb.WriteString(fmt.Sprintf("%s- [%s](#%s): %s\n", indent, currentPath, currentPath, child.name))
+							data := map[string]interface{}{}
+							if child.path != "" {
+								data["path"] = child.path
+							} else {
+								data["path"] = currentPath
+							}
+							if child.kind != "" {
+								data["kind"] = child.kind
+							}
+
+							var line string
+							if child.isFile {
+								line = renderEntityMarkdown("file", data)
+							} else {
+								line = renderEntityMarkdown("folder", data)
+							}
+							sb.WriteString(fmt.Sprintf("%s%s\n", indent, line))
 							printMarkdown(child, depth+1, currentPath)
 						}
 					}
@@ -3280,10 +3355,15 @@ func sectionCommand(factory EngineFactory, config *Config) *cobra.Command {
 					var printMarkdown func(Section, int)
 					printMarkdown = func(s Section, depth int) {
 						indent := strings.Repeat("  ", depth)
-						uri := fmt.Sprintf("semiorepo://section/%s/%s", s.FilePath, Slugify(s.Path))
-						// - [<id>](#<id>): <title> - <description>
-						id := s.Name // Using name as ID for display
-						sb.WriteString(fmt.Sprintf("%s- [%s](%s): %s\n", indent, id, uri, s.Name))
+						b, _ := json.Marshal(s)
+						var data map[string]interface{}
+						json.Unmarshal(b, &data)
+
+						// Combine file path and section name for unique ID/URI
+						data["path"] = fmt.Sprintf("%s#%s", s.FilePath, s.Name)
+
+						line := renderEntityMarkdown("section", data)
+						sb.WriteString(fmt.Sprintf("%s%s\n", indent, line))
 						for _, child := range s.Children {
 							printMarkdown(child, depth+1)
 						}
@@ -3459,6 +3539,561 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
+// #region Templates
+
+var globalTemplateManager *TemplateManager
+var globalTemplateManagerOnce sync.Once
+
+type TemplateManager struct {
+	tmpl *template.Template
+}
+
+func GetTemplateManager() *TemplateManager {
+	globalTemplateManagerOnce.Do(func() {
+		t := template.New("root").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{
+			"color":       tmplColor,
+			"colorStatus": tmplColorStatus,
+			"timeAgo":     tmplTimeAgo,
+			"timeLeft":    tmplTimeLeft,
+			"truncate":    tmplTruncate,
+			"ternary":     tmplTernary,
+		})
+
+		// Parse all defined templates
+		for name, content := range defaultTemplates {
+			_, err := t.New(name).Parse(content)
+			if err != nil {
+				panic(fmt.Sprintf("failed to parse template %s: %v", name, err))
+			}
+		}
+
+		globalTemplateManager = &TemplateManager{tmpl: t}
+	})
+	return globalTemplateManager
+}
+
+func (m *TemplateManager) Render(name string, data interface{}) (string, error) {
+	var sb strings.Builder
+	if err := m.tmpl.ExecuteTemplate(&sb, name, data); err != nil {
+		return "", err
+	}
+	return sb.String(), nil
+}
+
+// Template Functions
+
+func tmplColor(color string, s string) string {
+	// Check if NO_COLOR
+	if os.Getenv("NO_COLOR") != "" {
+		return s
+	}
+	c := ColorReset
+	switch color {
+	case "red":
+		c = ColorRed
+	case "green":
+		c = ColorGreen
+	case "blue":
+		c = ColorBlue
+	case "yellow":
+		c = ColorYellow
+	case "dim":
+		c = ColorDim
+	case "bold":
+		c = ColorBold
+	}
+	return c + s + ColorReset
+}
+
+func tmplColorStatus(status string, s string) string {
+	if os.Getenv("NO_COLOR") != "" {
+		return s
+	}
+	c := ColorBlue
+	switch status {
+	case "finished", "closed", "pass":
+		c = ColorGreen
+	case "failed", "error":
+		c = ColorRed
+	case "open":
+		c = ColorBlue
+	}
+	return c + s + ColorReset
+}
+
+func tmplTimeAgo(t string) string {
+	parsed, err := time.Parse(time.RFC3339, t)
+	if err != nil {
+		return t
+	}
+	dur := time.Since(parsed)
+	// Custom logic to match "closed 4 days ago"
+	return humanizeDuration(dur) + " ago"
+}
+
+func tmplTimeLeft(t string) string {
+	parsed, err := time.Parse(time.RFC3339, t)
+	if err != nil {
+		return t
+	}
+	dur := time.Until(parsed)
+	if dur < 0 {
+		return "overdue since " + humanizeDuration(-dur)
+	}
+	return humanizeDuration(dur) + " left"
+}
+
+func humanizeDuration(d time.Duration) string {
+	days := int(d.Hours() / 24)
+	if days > 0 {
+		return fmt.Sprintf("%d days", days)
+	}
+	hours := int(d.Hours())
+	if hours > 0 {
+		return fmt.Sprintf("%d hours", hours)
+	}
+	return "moments"
+}
+
+func tmplTruncate(length int, s string) string {
+	if len(s) <= length {
+		return s
+	}
+	return s[:length] + "…"
+}
+
+func tmplTernary(trueVal, falseVal interface{}, condition bool) interface{} {
+	if condition {
+		return trueVal
+	}
+	return falseVal
+}
+
+var defaultTemplates = map[string]string{
+	"goal_text":    `{{ .Kind }} {{ .Title | color "bold" }} {{ if .DueDate }}{{ .DueDate | timeLeft | color "yellow" }} {{ end }}{{ if .OpenSubgoals }}{{ .OpenSubgoals }} open subgoals {{ end }}{{ if .OpenTickets }}{{ .OpenTickets }} open tickets {{ end }}{{ .Description | truncate 50 | color "dim" }}`,
+	"goal_md":      `[{{ .Kind }}{{ .ID }}]({{ .URI }}){{ if .Title }} - {{ .Title }}{{ end }}{{ if .DueDate }} - {{ .DueDate | timeLeft }}{{ end }}{{ if .Description }} - {{ .Description }}{{ end }}`,
+	"ticket_text":  `{{ .Kind | colorStatus .Status }} {{ .Title | color "bold" }} ({{ .Slug | color "dim" }}) {{ if eq .Status "open" }}{{ if .Created }}opened {{ .Created | timeAgo }} {{ end }}{{ else }}{{ if .Finished }}closed {{ .Finished | timeAgo }} {{ end }}{{ end }}{{ if eq .Status "open" }}{{ .Prompt | truncate 30 }}{{ else }}{{ .Summary | truncate 30 }}{{ end }}`,
+	"ticket_md":    `[{{ .Kind }}{{ .Slug }}]({{ .URI }}){{ if .Title }} - {{ .Title }}{{ end }}{{ if eq .Status "open" }}{{ if .Created }} - opened {{ .Created | timeAgo }}{{ end }}{{ else }}{{ if .Finished }} - closed {{ .Finished | timeAgo }}{{ end }}{{ end }}{{ if eq .Status "open" }}{{ if .Prompt }} - {{ .Prompt }}{{ end }}{{ else }}{{ if .Summary }} - {{ .Summary }}{{ end }}{{ end }}`,
+	"section_text": `{{ .Name | color "bold" }} {{ if .Range }}(lines {{ .Range }}){{ end }}`,
+	"section_md":   `[{{ .Name }}]({{ .URI }}) ({{ .Range }})`,
+	// Add other templates as needed
+}
+
+// #endregion Templates
+
+// #region Models
+
+type TicketNode struct {
+	ID, Slug, Status string
+	Title, URI       string
+	GoalID, ParentID string
+	Children         []*TicketNode
+	Created          string
+	Finished         string
+	Prompt           string
+	Summary          string
+}
+
+type GoalNode struct {
+	ID, Title, Status  string
+	DueDate, CreatedAt string
+	Description        string
+	Children           []*GoalNode
+	Tickets            []*TicketNode
+}
+
+// #endregion Models
+
+// #region Tree Logic
+
+func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode {
+	goalMap := make(map[string]*GoalNode)
+
+	for _, g := range goalsRaw {
+		if gm, ok := g.(map[string]interface{}); ok {
+			id, _ := gm["id"].(string)
+			title, _ := gm["title"].(string)
+			status, _ := gm["status"].(string)
+			dueDate, _ := gm["dueDate"].(string)
+			createdAt, _ := gm["createdAt"].(string)
+			description, _ := gm["description"].(string)
+			node := &GoalNode{ID: id, Title: title, Status: status, DueDate: dueDate, CreatedAt: createdAt, Description: description}
+			goalMap[id] = node
+		}
+	}
+
+	var rootGoals []*GoalNode
+	for _, g := range goalMap {
+		parentID := ""
+		if idx := strings.LastIndex(g.ID, "/"); idx >= 0 {
+			parentID = g.ID[:idx]
+		}
+		if parentID != "" && parentID != g.ID {
+			if parent, ok := goalMap[parentID]; ok {
+				parent.Children = append(parent.Children, g)
+			} else {
+				rootGoals = append(rootGoals, g)
+			}
+		} else {
+			rootGoals = append(rootGoals, g)
+		}
+	}
+
+	// Sort logic (reused)
+	var sortGoals func(goals []*GoalNode)
+	sortGoals = func(goals []*GoalNode) {
+		sort.SliceStable(goals, func(i, j int) bool {
+			a, b := goals[i], goals[j]
+			if a.DueDate != b.DueDate {
+				if a.DueDate == "" {
+					return false
+				}
+				if b.DueDate == "" {
+					return true
+				}
+				return a.DueDate < b.DueDate
+			}
+			return a.ID < b.ID
+		})
+		for _, g := range goals {
+			if len(g.Children) > 0 {
+				sortGoals(g.Children)
+			}
+		}
+	}
+	sortGoals(rootGoals)
+
+	allTickets := make([]*TicketNode, 0)
+	for _, t := range ticketsRaw {
+		if tm, ok := t.(map[string]interface{}); ok {
+			id, _ := tm["id"].(string)
+			slug, _ := tm["slug"].(string)
+			status, _ := tm["status"].(string)
+			title, _ := tm["title"].(string)
+			goalID, _ := tm["goal"].(string)
+			parentID, _ := tm["parent"].(string)
+			prompt, _ := tm["prompt"].(string)
+			summary, _ := tm["summary"].(string)
+
+			created := ""
+			finished := ""
+			if dates, ok := tm["date"].(map[string]interface{}); ok {
+				created, _ = dates["created"].(string)
+				finished, _ = dates["finished"].(string)
+			}
+			// Fallback for timestamps if separate fields
+			if created == "" {
+				created, _ = tm["createdAt"].(string)
+			}
+
+			// Construct URI
+			uri := fmt.Sprintf("semiorepo://ticket/%s", Slugify(slug))
+			if tTime, err := time.Parse(time.RFC3339, created); err == nil {
+				uri = fmt.Sprintf("semiorepo://ticket/%d/%02d/%02d/%s", tTime.Year(), tTime.Month(), tTime.Day(), Slugify(slug))
+			}
+
+			node := &TicketNode{ID: id, Slug: slug, Status: status, Title: title, URI: uri, GoalID: goalID, ParentID: parentID, Created: created, Finished: finished, Prompt: prompt, Summary: summary}
+			allTickets = append(allTickets, node)
+		}
+	}
+
+	var noGoalTickets []*TicketNode
+	for _, t := range allTickets {
+		if t.GoalID != "" {
+			if g, ok := goalMap[t.GoalID]; ok {
+				g.Tickets = append(g.Tickets, t)
+			} else {
+				noGoalTickets = append(noGoalTickets, t)
+			}
+		} else {
+			noGoalTickets = append(noGoalTickets, t)
+		}
+	}
+
+	nestTickets := func(nodes []*TicketNode) []*TicketNode {
+		var roots []*TicketNode
+		lookup := make(map[string]*TicketNode)
+		for _, n := range nodes {
+			lookup[n.ID] = n
+		}
+		for _, n := range nodes {
+			if n.ParentID != "" && lookup[n.ParentID] != nil {
+				lookup[n.ParentID].Children = append(lookup[n.ParentID].Children, n)
+			} else {
+				roots = append(roots, n)
+			}
+		}
+		return roots
+	}
+
+	for _, g := range goalMap {
+		g.Tickets = nestTickets(g.Tickets)
+	}
+
+	if len(noGoalTickets) > 0 {
+		noGoal := &GoalNode{Title: "No Goal", Children: nil, Tickets: nestTickets(noGoalTickets)}
+		rootGoals = append(rootGoals, noGoal)
+	}
+
+	return rootGoals
+}
+
+func countOpenSubgoals(g *GoalNode) int {
+	c := 0
+	for _, child := range g.Children {
+		if child.Status == "open" { // Check status value logic
+			c++
+		}
+		c += countOpenSubgoals(child)
+	}
+	return c
+}
+
+func countOpenTickets(g *GoalNode) int {
+	c := 0
+	var countT func(ts []*TicketNode)
+	countT = func(ts []*TicketNode) {
+		for _, t := range ts {
+			if t.Status == "open" {
+				c++
+			}
+			countT(t.Children)
+		}
+	}
+	countT(g.Tickets)
+	for _, child := range g.Children {
+		c += countOpenTickets(child)
+	}
+	return c
+}
+
+func renderGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool, useMD bool) string {
+	roots := buildGoalTree(goalsRaw, ticketsRaw)
+	format := "text"
+	if useMD {
+		format = "md"
+	}
+	return renderGoalTreeNodes(roots, format)
+}
+
+func renderGoalTreeNodes(roots []*GoalNode, format string) string {
+	tmplManager := GetTemplateManager()
+	var sb strings.Builder
+
+	var render func(node interface{}, prefix string, isLast bool, isRoot bool)
+	render = func(node interface{}, prefix string, isLast bool, isRoot bool) {
+		tmplName := ""
+		var children []interface{}
+		var viewModel map[string]interface{}
+
+		switch n := node.(type) {
+		case *GoalNode:
+			tmplName = "goal_" + format
+			viewModel = map[string]interface{}{
+				"Kind":         "🎯",
+				"ID":           n.ID,
+				"Title":        n.Title,
+				"DueDate":      n.DueDate,
+				"Description":  n.Description,
+				"URI":          fmt.Sprintf("semiorepo://goal/%s", n.ID),
+				"OpenSubgoals": countOpenSubgoals(n),
+				"OpenTickets":  countOpenTickets(n),
+			}
+			for _, c := range n.Children {
+				children = append(children, c)
+			}
+			for _, t := range n.Tickets {
+				children = append(children, t)
+			}
+
+		case *TicketNode:
+			tmplName = "ticket_" + format
+			viewModel = map[string]interface{}{
+				"Kind":     "🎫",
+				"Title":    n.Title,
+				"Slug":     n.Slug,
+				"Status":   n.Status,
+				"Created":  n.Created,
+				"Finished": n.Finished,
+				"Prompt":   n.Prompt,
+				"Summary":  n.Summary,
+				"URI":      n.URI,
+			}
+			for _, c := range n.Children {
+				children = append(children, c)
+			}
+		}
+
+		lineContent, err := tmplManager.Render(tmplName, viewModel)
+		if err != nil {
+			lineContent = fmt.Sprintf("Error rendering: %v", err)
+		}
+
+		if format == "text" {
+			connector := ""
+			if !isRoot {
+				if isLast {
+					connector = "└── "
+				} else {
+					connector = "├── "
+				}
+			}
+			sb.WriteString(prefix + connector + lineContent + "\n")
+
+			newPrefix := prefix
+			if !isRoot {
+				if isLast {
+					newPrefix += "    "
+				} else {
+					newPrefix += "│   "
+				}
+			}
+
+			for i, child := range children {
+				render(child, newPrefix, i == len(children)-1, false)
+			}
+		} else {
+			// Markdown
+			sb.WriteString(prefix + "- " + lineContent + "\n")
+			newPrefix := prefix + "  "
+			for i, child := range children {
+				render(child, newPrefix, i == len(children)-1, false)
+			}
+		}
+	}
+
+	for i, root := range roots {
+		render(root, "", i == len(roots)-1, true)
+	}
+	return sb.String()
+}
+
+func renderSectionTree(root *Section, isTTY bool, useMD bool) string {
+	tmplManager := GetTemplateManager()
+	var sb strings.Builder
+
+	var render func(s *Section, prefix string, isLast bool, isRoot bool)
+	render = func(s *Section, prefix string, isLast bool, isRoot bool) {
+		tmplName := "section_text"
+		if useMD {
+			tmplName = "section_md"
+		}
+
+		// Calculate URI for markdown
+		uri := fmt.Sprintf("semiorepo://section/%s#%s", s.FilePath, s.Name)
+
+		viewModel := map[string]interface{}{
+			"Name":  s.Name,
+			"Range": fmt.Sprintf("%d-%d", s.StartLine, s.EndLine),
+			"URI":   uri,
+		}
+
+		lineContent, err := tmplManager.Render(tmplName, viewModel)
+		if err != nil {
+			lineContent = fmt.Sprintf("Error rendering: %v", err)
+		}
+
+		if !useMD {
+			connector := ""
+			if !isRoot {
+				if isLast {
+					connector = "└── "
+				} else {
+					connector = "├── "
+				}
+			}
+			sb.WriteString(prefix + connector + lineContent + "\n")
+			newPrefix := prefix
+			if !isRoot {
+				if isLast {
+					newPrefix += "    "
+				} else {
+					newPrefix += "│   "
+				}
+			}
+			for i := range s.Children {
+				// Don't pass loop variable pointer, pass address of element
+				childPtr := &s.Children[i]
+				render(childPtr, newPrefix, i == len(s.Children)-1, false)
+			}
+		} else {
+			// Markdown
+			sb.WriteString(prefix + "- " + lineContent + "\n")
+			newPrefix := prefix + "  "
+			for i := range s.Children {
+				childPtr := &s.Children[i]
+				render(childPtr, newPrefix, i == len(s.Children)-1, false)
+			}
+		}
+	}
+
+	render(root, "", true, true)
+	return sb.String()
+}
+
+func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
+	var sb strings.Builder
+	tmplManager := GetTemplateManager()
+
+	tmplName := "ticket_text"
+	if useMD {
+		tmplName = "ticket_md"
+	}
+
+	for _, t := range ticketsRaw {
+		if tm, ok := t.(map[string]interface{}); ok {
+			// id, _ := tm["id"].(string)
+			slug, _ := tm["slug"].(string)
+			status, _ := tm["status"].(string)
+			title, _ := tm["title"].(string)
+			prompt, _ := tm["prompt"].(string)
+			summary, _ := tm["summary"].(string)
+
+			created := ""
+			finished := ""
+			if dates, ok := tm["date"].(map[string]interface{}); ok {
+				created, _ = dates["created"].(string)
+				finished, _ = dates["finished"].(string)
+			}
+			if created == "" {
+				created, _ = tm["createdAt"].(string)
+			}
+
+			// Construct URI
+			uri := fmt.Sprintf("semiorepo://ticket/%s", Slugify(slug))
+			if tTime, err := time.Parse(time.RFC3339, created); err == nil {
+				uri = fmt.Sprintf("semiorepo://ticket/%d/%02d/%02d/%s", tTime.Year(), tTime.Month(), tTime.Day(), Slugify(slug))
+			}
+
+			viewModel := map[string]interface{}{
+				"Kind":     "🎫",
+				"Title":    title,
+				"Slug":     slug,
+				"Status":   status,
+				"Created":  created,
+				"Finished": finished,
+				"Prompt":   prompt,
+				"Summary":  summary,
+				"URI":      uri,
+			}
+
+			line, err := tmplManager.Render(tmplName, viewModel)
+			if err != nil {
+				line = fmt.Sprintf("Error: %v", err)
+			}
+
+			if !useMD {
+				sb.WriteString("  " + line + "\n")
+			} else {
+				sb.WriteString("- " + line + "\n")
+			}
+		}
+	}
+	return sb.String()
+}
+
+// #endregion Tree Logic
+
 // #region CLI Renderers
 
 type StreamRenderer interface {
@@ -3600,7 +4235,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	}
 
 	// Helper to handle GraphQL response wrappers
-	// The engine wraps the graphql result in "data".
 	var payload map[string]interface{} = raw
 	if len(raw) == 1 {
 		if d, ok := raw["data"].(map[string]interface{}); ok {
@@ -3610,6 +4244,11 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 
 	var sb strings.Builder
 	prefix := colorize("→", ColorBlue, isTTY)
+
+	// Case 0: Raw Markdown result
+	if output, ok := payload["markdown"].(string); ok {
+		return output
+	}
 
 	// Case 1: Analyze result
 	if analyze, ok := payload["analyze"].(map[string]interface{}); ok {
@@ -3670,106 +4309,46 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		goals, goalsOk := repo["goals"].([]interface{})
 		tickets, ticketsOk := repo["tickets"].([]interface{})
 		if goalsOk && ticketsOk {
-			return formatGoalTree(goals, tickets, isTTY)
+			useMD := false
+			for _, arg := range os.Args {
+				if arg == "--md" {
+					useMD = true
+					break
+				}
+			}
+			return renderGoalTree(goals, tickets, isTTY, useMD)
 		}
 	}
 
-	// Case 4: Ticket operations
+	// Case 4: Ticket operations (Handle "ticket*", "ticketOpen" fields)
 	for k, v := range payload {
 		if strings.HasPrefix(k, "ticket") || k == "ticket" {
 			if tMap, ok := v.(map[string]interface{}); ok {
-				if slug, ok := tMap["slug"].(string); ok {
-					status, _ := tMap["status"].(string)
-					statusColor := ColorGreen
-					if status == "open" {
-						statusColor = ColorBlue
-					}
-
-					// Check for rich details (Title, Date) for list view
-					if title, ok := tMap["title"].(string); ok {
-						statusIcon := "◯"
-						if status == "finished" || status == "closed" {
-							statusIcon = "✓"
-							statusColor = ColorGreen
-						} else {
-							statusColor = ColorBlue
-						}
-
-						dateDisplay := ""
-						if dates, ok := tMap["date"].(map[string]interface{}); ok {
-							if created, ok := dates["created"].(string); ok {
-								dateDisplay = created
-								if tParsed, err := time.Parse(time.RFC3339, created); err == nil {
-									dateDisplay = tParsed.Format("2006-01-02")
-								}
-							}
-						}
-
-						sb.WriteString(fmt.Sprintf("  %s %s %s %s\n",
-							colorize(statusIcon, statusColor, isTTY),
-							colorize(title, ColorBold, isTTY),
-							colorize("("+slug+")", ColorDim, isTTY),
-							colorize("("+dateDisplay+")", ColorDim, isTTY)))
-						return sb.String()
-					}
-
-					sb.WriteString(fmt.Sprintf("%s ticket %s is %s\n", prefix, colorize(slug, ColorBold, isTTY), colorize(status, statusColor, isTTY)))
-					return sb.String()
+				// Don't double print if it's the exact same object as checked below
+				if k == "ticket" {
+					continue
 				}
+				// e.g. ticketOpen: { slug: ... }
+				return renderEntityHuman("ticket", tMap, isTTY) + "\n"
 			}
 		}
 	}
-
-	// Case 4: Direct ticket object
-	if slug, ok := payload["slug"].(string); ok {
-		status, _ := payload["status"].(string)
-		path, _ := payload["path"].(string)
-		sb.WriteString(fmt.Sprintf("%s ticket %s (%s) %s\n", prefix, colorize(slug, ColorBold, isTTY), status, path))
-		return sb.String()
-	}
-
-	// Case 5: Generic ID/Path
-	if id, ok := payload["id"].(string); ok {
-		if path, ok := payload["path"].(string); ok {
-			return fmt.Sprintf("%s %s %s\n", prefix, id, path)
+	// Direct ticket object check
+	if _, ok := payload["slug"].(string); ok {
+		if _, ok := payload["status"].(string); ok {
+			// Likley a ticket
+			return renderEntityHuman("ticket", payload, isTTY) + "\n"
 		}
-		return fmt.Sprintf("%s item %s\n", prefix, id)
 	}
 
-	// Case 6: Repo result
+	// Case 6: Repo result (Lists)
 	if repo, ok := payload["repo"].(map[string]interface{}); ok {
 		// Tickets
 		if tickets, ok := repo["tickets"].([]interface{}); ok {
 			sb.WriteString(fmt.Sprintf("%s found %d tickets\n", prefix, len(tickets)))
 			for _, t := range tickets {
-				if ticket, ok := t.(map[string]interface{}); ok {
-					slug, _ := ticket["slug"].(string)
-					status, _ := ticket["status"].(string)
-					title, _ := ticket["title"].(string)
-					dates, _ := ticket["date"].(map[string]interface{})
-					createdStr, _ := dates["created"].(string)
-
-					// Simple date parsing to YYYY-MM-DD
-					dateDisplay := createdStr
-					if tParsed, err := time.Parse(time.RFC3339, createdStr); err == nil {
-						dateDisplay = tParsed.Format("2006-01-02")
-					}
-
-					statusIcon := "◯"
-					statusColor := ColorBlue
-					if status == "finished" || status == "closed" {
-						statusIcon = "✓"
-						statusColor = ColorGreen
-					}
-
-					// Compact line: Icon Title (SLUG) (Date)
-					line := fmt.Sprintf("  %s %s %s %s",
-						colorize(statusIcon, statusColor, isTTY),
-						colorize(title, ColorBold, isTTY),
-						colorize("("+slug+")", ColorDim, isTTY),
-						colorize("("+dateDisplay+")", ColorDim, isTTY))
-
-					sb.WriteString(line + "\n")
+				if tMap, ok := t.(map[string]interface{}); ok {
+					sb.WriteString(renderEntityHuman("ticket", tMap, isTTY) + "\n")
 				}
 			}
 			return sb.String()
@@ -3779,110 +4358,90 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		if bundles, ok := repo["bundles"].([]interface{}); ok {
 			sb.WriteString(fmt.Sprintf("%s found %d bundles\n", prefix, len(bundles)))
 			for _, b := range bundles {
-				if bundle, ok := b.(map[string]interface{}); ok {
-					name, _ := bundle["name"].(string)
-					root, _ := bundle["root"].(string)
-					ptype, _ := bundle["projectType"].(string)
-					if ptype == "" {
-						ptype, _ = bundle["type"].(string)
-					}
-
-					// Compact line: 📦 NAME (root: ROOT, type: PROJECTTYPE)
-					line := fmt.Sprintf("  %s %s (root: %s, type: %s)",
-						colorize("📦", ColorBlue, isTTY),
-						colorize(name, ColorBold, isTTY),
-						root,
-						ptype)
-					sb.WriteString(line + "\n")
+				if bMap, ok := b.(map[string]interface{}); ok {
+					sb.WriteString(renderEntityHuman("bundle", bMap, isTTY) + "\n")
 				}
 			}
 			return sb.String()
 		}
 	}
 
-	// Case 6b: Single Ticket Stream Item
+	// Case 16: Todos (List)
+	if todos, ok := payload["todos"].([]interface{}); ok {
+		sb.WriteString(fmt.Sprintf("%s found %d todos\n", prefix, len(todos)))
+		for _, t := range todos {
+			if tMap, ok := t.(map[string]interface{}); ok {
+				sb.WriteString(renderEntityHuman("todo", tMap, isTTY) + "\n")
+			}
+		}
+		return sb.String()
+	}
+
+	// Case 17: Drafts (List)
+	if drafts, ok := payload["drafts"].([]interface{}); ok {
+		sb.WriteString(fmt.Sprintf("%s found %d drafts\n", prefix, len(drafts)))
+		for _, d := range drafts {
+			if dMap, ok := d.(map[string]interface{}); ok {
+				sb.WriteString(renderEntityHuman("draft", dMap, isTTY) + "\n")
+			}
+		}
+		return sb.String()
+	}
+
+	// Case 6b: Single Ticket
 	if ticket, ok := payload["ticket"].(map[string]interface{}); ok {
-		slug, _ := ticket["slug"].(string)
-		status, _ := ticket["status"].(string)
-		title, _ := ticket["title"].(string)
-		dates, _ := ticket["date"].(map[string]interface{})
-		createdStr, _ := dates["created"].(string)
-
-		// Simple date parsing to YYYY-MM-DD
-		dateDisplay := createdStr
-		if tParsed, err := time.Parse(time.RFC3339, createdStr); err == nil {
-			dateDisplay = tParsed.Format("2006-01-02")
-		}
-
-		statusIcon := "◯"
-		statusColor := ColorBlue
-		if status == "finished" || status == "closed" {
-			statusIcon = "✓"
-			statusColor = ColorGreen
-		}
-
-		// Compact line: Icon Title (SLUG) (Date)
-		return fmt.Sprintf("  %s %s %s %s\n",
-			colorize(statusIcon, statusColor, isTTY),
-			colorize(title, ColorBold, isTTY),
-			colorize("("+slug+")", ColorDim, isTTY),
-			colorize("("+dateDisplay+")", ColorDim, isTTY))
+		return renderEntityHuman("ticket", ticket, isTTY) + "\n"
 	}
 
-	// Case 6c: Single Bundle Stream Item
+	// Case 13: Single Goal
+	if goal, ok := payload["goal"].(map[string]interface{}); ok {
+		return renderEntityHuman("goal", goal, isTTY) + "\n"
+	}
+
+	// Case 6c: Single Bundle
 	if bundle, ok := payload["bundle"].(map[string]interface{}); ok {
-		name, _ := bundle["name"].(string)
-		root, _ := bundle["root"].(string)
-		ptype, _ := bundle["projectType"].(string)
-		if ptype == "" {
-			ptype, _ = bundle["type"].(string)
-		}
-
-		typeStr := ""
-		if ptype != "" {
-			typeStr = fmt.Sprintf(", type: %s", ptype)
-		}
-
-		// Compact line: 📦 NAME (root: ROOT, type: PROJECTTYPE)
-		return fmt.Sprintf("  %s %s (root: %s%s)\n",
-			colorize("📦", ColorBlue, isTTY),
-			colorize(name, ColorBold, isTTY),
-			root,
-			typeStr)
+		return renderEntityHuman("bundle", bundle, isTTY) + "\n"
 	}
 
-	// Case 7: File result
+	// Case 11: Single Folder
+	if folder, ok := payload["folder"].(map[string]interface{}); ok {
+		return renderEntityHuman("folder", folder, isTTY) + "\n"
+	}
+
+	// Case 15: Single Policy
+	if policy, ok := payload["policy"].(map[string]interface{}); ok {
+		return renderEntityHuman("policy", policy, isTTY) + "\n"
+	}
+
+	// Case 14: Contributor
+	if contrib, ok := payload["contributor"].(map[string]interface{}); ok {
+		return renderEntityHuman("contributor", contrib, isTTY) + "\n"
+	}
+
+	// Case 7/12: File
 	if file, ok := payload["file"].(map[string]interface{}); ok {
+		line := renderEntityHuman("file", file, isTTY)
+		sb.WriteString(line + "\n")
+
 		// Sections
 		if sections, ok := file["sections"].([]interface{}); ok {
 			sb.WriteString(fmt.Sprintf("%s found %d top-level sections\n", prefix, len(sections)))
-
 			var printSections func(items []interface{}, indent string)
 			printSections = func(items []interface{}, indent string) {
 				for _, item := range items {
 					if sec, ok := item.(map[string]interface{}); ok {
-						name, _ := sec["name"].(string)
-						rng, _ := sec["range"].(map[string]interface{})
-						start := 0
-						end := 0
-						if rng != nil {
-							if s, ok := rng["start"].(map[string]interface{}); ok {
-								start = int(s["line"].(float64))
-							} else if s, ok := rng["start"].(float64); ok {
-								start = int(s)
-							}
-							if e, ok := rng["end"].(map[string]interface{}); ok {
-								end = int(e["line"].(float64))
-							} else if e, ok := rng["end"].(float64); ok {
-								end = int(e)
-							}
-						}
+						// Recursively use renderEntityHuman for section?
+						// renderEntityHuman("section") returns "  NAME (:L-L) (+Children)"
+						// We need indentation. renderEntityHuman includes "  " prefix.
+						// I might need to trim and re-indent or pass indent?
+						// For now, I'll allow standard recursion logic here to ensure formatting matches "Standard" for the node itself.
 
-						line := fmt.Sprintf("%s%s %s",
-							indent,
-							colorize("#"+name, ColorBold, isTTY),
-							colorize(fmt.Sprintf("(%d-%d)", start, end), ColorDim, isTTY))
-						sb.WriteString(line + "\n")
+						// Reconstruct a map for recursive render? The map is 'sec'
+						secStr := renderEntityHuman("section", sec, isTTY)
+						// secStr defaults to 2 spaces indent. strip it.
+						secStr = strings.TrimPrefix(secStr, "  ")
+
+						sb.WriteString(indent + secStr + "\n")
 
 						if children, ok := sec["children"].([]interface{}); ok && len(children) > 0 {
 							printSections(children, indent+"  ")
@@ -3891,7 +4450,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 				}
 			}
 			printSections(sections, "  ")
-			return sb.String()
 		}
 
 		// Definitions
@@ -3899,179 +4457,51 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 			sb.WriteString(fmt.Sprintf("%s found %d definitions\n", prefix, len(definitions)))
 			for _, d := range definitions {
 				if def, ok := d.(map[string]interface{}); ok {
+					// Definitions are not in helper, standardized as Section or explicit?
+					// Case 9 uses "ƒ NAME (kind: KIND, FILE:START-END)"
+					// I'll standardise inline here to match Section style or keep it clear?
+					// I'll keep it inline for now or add to helper if I had more time.
 					name, _ := def["name"].(string)
 					kind, _ := def["kind"].(string)
-					rng, _ := def["range"].(map[string]interface{})
-					start := 0
-					end := 0
-					if rng != nil {
-						start = int(rng["start"].(float64))
-						end = int(rng["end"].(float64))
-					}
-
-					// Compact line: ƒ NAME (kind: KIND, L:START-END)
-					line := fmt.Sprintf("  %s %s (kind: %s, L:%d-%d)",
+					// ...
+					// Reuse logic from Case 9
+					sb.WriteString(fmt.Sprintf("  %s %s (kind: %s)\n",
 						colorize("ƒ", ColorGreen, isTTY),
 						colorize(name, ColorBold, isTTY),
-						kind,
-						start, end)
-					sb.WriteString(line + "\n")
+						kind))
 				}
 			}
+		}
+		if sb.Len() > 0 {
 			return sb.String()
 		}
 	}
 
-	// Case 8: Single Section Result
+	// Case 8: Section
 	if sec, ok := payload["section"].(map[string]interface{}); ok {
-		name, _ := sec["name"].(string)
-		startLine, _ := sec["startLine"].(float64)
-		endLine, _ := sec["endLine"].(float64)
-
-		childrenCount := 0
-		if children, ok := sec["children"].([]interface{}); ok {
-			childrenCount = len(children)
-		}
-		childrenStr := ""
-		if childrenCount > 0 {
-			childrenStr = fmt.Sprintf(" (+%d children)", childrenCount)
-		}
-
-		// # SECTION_PATH (:START-END) (+X children)
-		sectionPath, _ := sec["path"].(string)
-		displayName := name
-		if sectionPath != "" {
-			displayName = "#" + sectionPath
-		} else {
-			displayName = "#" + name
-		}
-		return fmt.Sprintf("  %s %s%s\n",
-			colorize(displayName, ColorBold, isTTY),
-			colorize(fmt.Sprintf("(:%d-%d)", int(startLine), int(endLine)), ColorDim, isTTY),
-			colorize(childrenStr, ColorDim, isTTY))
+		// Use renderSectionTree for hierarchical output
+		b, _ := json.Marshal(sec)
+		var s Section
+		json.Unmarshal(b, &s)
+		return renderSectionTree(&s, isTTY, false)
 	}
 
-	// Case 9: Single Definition Result
+	// Case 9: Definition
 	if def, ok := payload["definition"].(map[string]interface{}); ok {
-		name, _ := def["name"].(string)
-		kind, _ := def["kind"].(string)
-		filePath, _ := def["filePath"].(string)
-		startLine, _ := def["startLine"].(float64)
-		endLine, _ := def["endLine"].(float64)
-
-		// ƒ NAME (kind: KIND, FILE:START-END)
-		return fmt.Sprintf("  %s %s %s\n",
-			colorize("ƒ", ColorGreen, isTTY),
-			colorize(name, ColorBold, isTTY),
-			colorize(fmt.Sprintf("(kind: %s, %s:%d-%d)", kind, filePath, int(startLine), int(endLine)), ColorDim, isTTY))
+		return renderEntityHuman("definition", def, isTTY) + "\n"
 	}
 
-	// Case 11: Single Folder Result
-	if folder, ok := payload["folder"].(map[string]interface{}); ok {
-		path, _ := folder["path"].(string)
-		kind, _ := folder["kind"].(string)
-
-		// 📂 PATH (KIND)
-		return fmt.Sprintf("  %s %s %s\n",
-			colorize("📂", ColorBlue, isTTY),
-			colorize(path, ColorBold, isTTY),
-			colorize(fmt.Sprintf("(%s)", kind), ColorDim, isTTY))
+	// Case Project?
+	if project, ok := payload["project"].(map[string]interface{}); ok {
+		return renderEntityHuman("project", project, isTTY) + "\n"
 	}
 
-	// Case 12: Single File Result
-	if file, ok := payload["file"].(map[string]interface{}); ok {
-		path, _ := file["id"].(string)
-
-		// 📄 PATH
-		return fmt.Sprintf("  %s %s\n",
-			colorize("📄", ColorDim, isTTY),
-			path)
-	}
-
-	// Case 13: Single Goal Result
-	if goal, ok := payload["goal"].(map[string]interface{}); ok {
-		id, _ := goal["id"].(string)
-		title, _ := goal["title"].(string)
-		status, _ := goal["status"].(string)
-		dates, _ := goal["dates"].(map[string]interface{})
-		dueStr, _ := dates["due"].(string)
-
-		// Icon logic
-		statusIcon := "◯"
-		statusColor := ColorBlue
-		if status == "closed" || status == "finished" {
-			statusIcon = "✓"
-			statusColor = ColorGreen
+	// Generic ID/Path fallback (Case 5)
+	if id, ok := payload["id"].(string); ok {
+		if path, ok := payload["path"].(string); ok {
+			return fmt.Sprintf("%s %s %s\n", prefix, id, path)
 		}
-
-		dateStr := ""
-		if dueStr != "" {
-			dateStr = fmt.Sprintf(" (due: %s)", dueStr)
-		}
-
-		// 🎯 TITLE (ID) (due: DATE)
-		return fmt.Sprintf("  %s %s %s%s\n",
-			colorize(statusIcon, statusColor, isTTY),
-			colorize(title, ColorBold, isTTY),
-			colorize("("+id+")", ColorDim, isTTY),
-			colorize(dateStr, ColorDim, isTTY))
-	}
-
-	// Case 14: Single Contributor Result
-	if contrib, ok := payload["contributor"].(map[string]interface{}); ok {
-		github, _ := contrib["github"].(string)
-		name, _ := contrib["name"].(string)
-		email, _ := contrib["email"].(string)
-		// contributions might be a map
-		contributions, _ := contrib["contributions"].(map[string]interface{})
-
-		stats := []string{}
-		if c, ok := contributions["commits"].(float64); ok && c > 0 {
-			stats = append(stats, fmt.Sprintf("%d commits", int(c)))
-		}
-		if t, ok := contributions["tickets"].(float64); ok && t > 0 {
-			stats = append(stats, fmt.Sprintf("%d tickets", int(t)))
-		}
-
-		statsStr := ""
-		if len(stats) > 0 {
-			statsStr = fmt.Sprintf(" (%s)", strings.Join(stats, ", "))
-		}
-
-		display := name
-		if display == "" {
-			display = github
-		}
-		if display == "" {
-			display = email
-		}
-
-		// 👤 NAME (@GITHUB) stats
-		return fmt.Sprintf("  %s %s %s%s\n",
-			colorize("👤", ColorBlue, isTTY),
-			colorize(display, ColorBold, isTTY),
-			colorize("(@"+github+")", ColorDim, isTTY),
-			colorize(statsStr, ColorDim, isTTY))
-	}
-
-	// Case 15: Single Policy Result
-	if policy, ok := payload["policy"].(map[string]interface{}); ok {
-		id, _ := policy["id"].(string)
-		desc, _ := policy["description"].(string)
-		kinds, _ := policy["kinds"].([]interface{})
-
-		kindsCount := len(kinds)
-		kindsStr := ""
-		if kindsCount > 0 {
-			kindsStr = fmt.Sprintf(" (%d kinds)", kindsCount)
-		}
-
-		// 🛡️ ID DESCRIPTION (X kinds)
-		return fmt.Sprintf("  %s %s %s%s\n",
-			colorize("🛡️", ColorBlue, isTTY),
-			colorize(id, ColorBold, isTTY),
-			colorize(desc, ColorDim, isTTY),
-			colorize(kindsStr, ColorDim, isTTY))
+		return fmt.Sprintf("%s item %s\n", prefix, id)
 	}
 
 	// Default: JSON dump
@@ -4081,270 +4511,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		jsonStr = jsonStr[:117] + "..."
 	}
 	return fmt.Sprintf("%s %s\n", prefix, jsonStr)
-}
-
-func formatGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool) string {
-	var sb strings.Builder
-
-	// Define Types
-	type TicketNode struct {
-		ID, Slug, Status string
-		Title, URI       string
-		GoalID, ParentID string
-		Children         []*TicketNode
-	}
-
-	type GoalNode struct {
-		ID, Title, Status  string
-		DueDate, CreatedAt string
-		Children           []*GoalNode
-		Tickets            []*TicketNode
-	}
-
-	// Parse Goals
-	goalMap := make(map[string]*GoalNode)
-
-	for _, g := range goalsRaw {
-		if gm, ok := g.(map[string]interface{}); ok {
-			id, _ := gm["id"].(string)
-			title, _ := gm["title"].(string)
-			status, _ := gm["status"].(string)
-			dueDate, _ := gm["dueDate"].(string)
-			createdAt, _ := gm["createdAt"].(string)
-			node := &GoalNode{ID: id, Title: title, Status: status, DueDate: dueDate, CreatedAt: createdAt}
-			goalMap[id] = node
-		}
-	}
-
-	// Build goal hierarchy from slash-separated IDs
-	// e.g. "R26-02/RUNNING-SKETCHPAD" is a child of "R26-02"
-	var rootGoals []*GoalNode
-	for _, g := range goalMap {
-		parentID := ""
-		if idx := strings.LastIndex(g.ID, "/"); idx >= 0 {
-			parentID = g.ID[:idx]
-		}
-		if parentID != "" {
-			if parent, ok := goalMap[parentID]; ok {
-				parent.Children = append(parent.Children, g)
-			} else {
-				rootGoals = append(rootGoals, g)
-			}
-		} else {
-			rootGoals = append(rootGoals, g)
-		}
-	}
-
-	// Sort goals by due date, then by creation date
-	var sortGoals func(goals []*GoalNode)
-	sortGoals = func(goals []*GoalNode) {
-		sort.SliceStable(goals, func(i, j int) bool {
-			a, b := goals[i], goals[j]
-			if a.DueDate != b.DueDate {
-				if a.DueDate == "" {
-					return false
-				}
-				if b.DueDate == "" {
-					return true
-				}
-				return a.DueDate < b.DueDate
-			}
-			if a.CreatedAt != b.CreatedAt {
-				if a.CreatedAt == "" {
-					return false
-				}
-				if b.CreatedAt == "" {
-					return true
-				}
-				return a.CreatedAt < b.CreatedAt
-			}
-			return a.ID < b.ID
-		})
-		for _, g := range goals {
-			if len(g.Children) > 0 {
-				sortGoals(g.Children)
-			}
-		}
-	}
-	sortGoals(rootGoals)
-
-	// Parse Tickets
-	var allTickets []*TicketNode
-
-	for _, t := range ticketsRaw {
-		if tm, ok := t.(map[string]interface{}); ok {
-			id, _ := tm["id"].(string)
-			slug, _ := tm["slug"].(string)
-			status, _ := tm["status"].(string)
-			title, _ := tm["title"].(string)
-			goalID, _ := tm["goal"].(string)
-			parentID, _ := tm["parent"].(string)
-			
-			// Construct URI
-			uri := fmt.Sprintf("semiorepo://TICKET/%s", Slugify(slug))
-			if dates, ok := tm["date"].(map[string]interface{}); ok {
-				if createdStr, ok := dates["created"].(string); ok {
-					if tTime, err := time.Parse(time.RFC3339, createdStr); err == nil {
-						uri = fmt.Sprintf("semiorepo://TICKET/%d/%02d/%02d/%s", tTime.Year(), tTime.Month(), tTime.Day(), Slugify(slug))
-					}
-				}
-			}
-
-			node := &TicketNode{ID: id, Slug: slug, Status: status, Title: title, URI: uri, GoalID: goalID, ParentID: parentID}
-			allTickets = append(allTickets, node)
-		}
-	}
-
-	// Assign tickets to goals
-	var noGoalTickets []*TicketNode
-	for _, t := range allTickets {
-		if t.GoalID != "" {
-			if g, ok := goalMap[t.GoalID]; ok {
-				g.Tickets = append(g.Tickets, t)
-			} else {
-				noGoalTickets = append(noGoalTickets, t)
-			}
-		} else {
-			noGoalTickets = append(noGoalTickets, t)
-		}
-	}
-
-	// Helper to nest tickets by parent
-	nestTickets := func(nodes []*TicketNode) []*TicketNode {
-		var roots []*TicketNode
-		lookup := make(map[string]*TicketNode)
-		for _, n := range nodes {
-			lookup[n.ID] = n
-		}
-		for _, n := range nodes {
-			if n.ParentID != "" && lookup[n.ParentID] != nil {
-				lookup[n.ParentID].Children = append(lookup[n.ParentID].Children, n)
-			} else {
-				roots = append(roots, n)
-			}
-		}
-		return roots
-	}
-
-	for _, g := range goalMap {
-		g.Tickets = nestTickets(g.Tickets)
-	}
-	noGoalTickets = nestTickets(noGoalTickets)
-
-	// Recursive print for tickets
-	var printTickets func(nodes []*TicketNode, prefix string, depth int)
-	printTickets = func(nodes []*TicketNode, prefix string, depth int) {
-		for i, t := range nodes {
-			if !isTTY {
-				indent := strings.Repeat("  ", depth)
-				sb.WriteString(fmt.Sprintf("%s- [%s](%s) (%s) - %s\n", indent, t.Title, t.URI, t.Slug, t.Status))
-				printTickets(t.Children, prefix, depth+1)
-			} else {
-				isLast := i == len(nodes)-1
-				marker := "├──"
-				newPrefix := prefix + "│   "
-				if isLast {
-					marker = "└──"
-					newPrefix = prefix + "    "
-				}
-				statusColor := ColorBlue
-				statusIcon := "◯"
-				statusLower := strings.ToLower(t.Status)
-				if statusLower == "finished" || statusLower == "closed" {
-					statusColor = ColorGreen
-					statusIcon = "✓"
-				}
-				sb.WriteString(fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize(statusIcon, statusColor, isTTY), colorize(t.Slug, ColorBold, isTTY)))
-				printTickets(t.Children, newPrefix, depth) // depth unused in TTY tree logic but kept for sig match
-			}
-		}
-	}
-
-	// Recursive print for goals
-	var printGoalContents func(g *GoalNode, prefix string, depth int)
-	printGoalContents = func(g *GoalNode, prefix string, depth int) {
-		if !isTTY {
-			indent := strings.Repeat("  ", depth)
-			// Print Children Goals
-			for _, child := range g.Children {
-				sb.WriteString(fmt.Sprintf("%s- **%s** (%s)\n", indent, child.Title, child.Status))
-				printGoalContents(child, prefix, depth+1)
-			}
-			// Print Tickets
-			for _, t := range g.Tickets {
-				sb.WriteString(fmt.Sprintf("%s- [%s](%s) (%s) - %s\n", indent, t.Title, t.URI, t.Slug, t.Status))
-				printTickets(t.Children, prefix, depth+1)
-			}
-		} else {
-			total := len(g.Children) + len(g.Tickets)
-			idx := 0
-			for _, child := range g.Children {
-				idx++
-				isLast := idx == total
-				marker := "├──"
-				newPrefix := prefix + "│   "
-				if isLast {
-					marker = "└──"
-					newPrefix = prefix + "    "
-				}
-				childColor := ColorBlue
-				if strings.ToLower(child.Status) == "closed" {
-					childColor = ColorGreen
-				}
-				sb.WriteString(fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize("■", childColor, isTTY), colorize(child.Title, ColorBold, isTTY)))
-				printGoalContents(child, newPrefix, depth)
-			}
-			for i, t := range g.Tickets {
-				idx++
-				isLast := idx == total
-				if len(g.Children) == 0 {
-					isLast = i == len(g.Tickets)-1
-				}
-				marker := "├──"
-				newPrefix := prefix + "│   "
-				if isLast {
-					marker = "└──"
-					newPrefix = prefix + "    "
-				}
-				statusColor := ColorBlue
-				statusIcon := "◯"
-				statusLower := strings.ToLower(t.Status)
-				if statusLower == "finished" || statusLower == "closed" {
-					statusColor = ColorGreen
-					statusIcon = "✓"
-				}
-				sb.WriteString(fmt.Sprintf("%s%s %s %s\n", prefix, marker, colorize(statusIcon, statusColor, isTTY), colorize(t.Slug, ColorBold, isTTY)))
-				printTickets(t.Children, newPrefix, depth)
-			}
-		}
-	}
-
-	// Render root goals
-	for _, g := range rootGoals {
-		if !isTTY {
-			sb.WriteString(fmt.Sprintf("- **%s** (%s)\n", g.Title, g.Status))
-			printGoalContents(g, "", 1)
-		} else {
-			statusColor := ColorBlue
-			if strings.ToLower(g.Status) == "closed" {
-				statusColor = ColorGreen
-			}
-			sb.WriteString(fmt.Sprintf("%s %s\n", colorize("■", statusColor, isTTY), colorize(g.Title, ColorBold, isTTY)))
-			printGoalContents(g, "", 0)
-		}
-	}
-
-	if len(noGoalTickets) > 0 {
-		if !isTTY {
-			sb.WriteString("- **No Goal**\n")
-			printTickets(noGoalTickets, "", 1)
-		} else {
-			sb.WriteString(fmt.Sprintf("%s %s\n", colorize("?", ColorDim, isTTY), colorize("No Goal", ColorDim, isTTY)))
-			printTickets(noGoalTickets, "", 0)
-		}
-	}
-
-	return sb.String()
 }
 
 type MarkdownRenderer struct{}
@@ -4418,22 +4584,8 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 					scope := fmt.Sprintf("%v", vio["scope"])
 					line := fmt.Sprintf("%v", vio["line"])
 					summary := fmt.Sprintf("%v", vio["summary"])
-					// Try to extract policy id if available from kind id (e.g. policy:violation)
-					// parts := strings.Split(kind, ":")
 
-					// violationKind: "semiorepo://policies/{policy-id}/{path*}"
-					// path is kind without policy prefix? logic is fuzzy, assume kind is the path
-					// Actually prompt says: violationKind: "semiorepo://policies/{policy-id}/{path*}"
-
-					// We don't have full context to reconstruct exact URIs for everything perfectly without assumptions.
-					// Assuming kind is the full ID.
-
-					// Construct a file URI?
-					// file: "semiorepo://{bundle-id}/{path*}"
-					// Scope is usually a file path. We need bundle-id.
-
-					// For now, generate a simple markdown representation.
-					sb.WriteString(fmt.Sprintf("- **[%s](semiorepo://VIOLATION/%s)** in `%s:%s`: %s\n", kind, Slugify(kind), scope, line, summary))
+					sb.WriteString(fmt.Sprintf("- **[%s](semiorepo://violation/%s)** in `%s:%s`: %s\n", kind, Slugify(kind), scope, line, summary))
 				}
 			}
 		}
@@ -4445,7 +4597,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		goals, goalsOk := repo["goals"].([]interface{})
 		tickets, ticketsOk := repo["tickets"].([]interface{})
 		if goalsOk && ticketsOk {
-			return formatGoalTree(goals, tickets, false)
+			return renderGoalTree(goals, tickets, false, true)
 		}
 	}
 
@@ -4457,17 +4609,8 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 			hasContent = true
 			sb.WriteString("## Tickets\n\n")
 			for _, t := range tickets {
-				if ticket, ok := t.(map[string]interface{}); ok {
-					slug, _ := ticket["slug"].(string)
-					status, _ := ticket["status"].(string)
-					title, _ := ticket["title"].(string)
-					dates, _ := ticket["date"].(map[string]interface{})
-					createdStr, _ := dates["created"].(string)
-
-					dateParsed, _ := time.Parse(time.RFC3339, createdStr)
-					ticketUri := fmt.Sprintf("semiorepo://TICKET/%d/%02d/%02d/%s", dateParsed.Year(), dateParsed.Month(), dateParsed.Day(), Slugify(slug))
-
-					sb.WriteString(fmt.Sprintf("- [%s](%s) (%s) - %s\n", title, ticketUri, slug, status))
+				if tMap, ok := t.(map[string]interface{}); ok {
+					sb.WriteString(renderEntityMarkdown("ticket", tMap) + "\n")
 				}
 			}
 			sb.WriteString("\n")
@@ -4478,10 +4621,8 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 			hasContent = true
 			sb.WriteString(fmt.Sprintf("## Bundles (%d)\n\n", len(bundles)))
 			for _, b := range bundles {
-				if bundle, ok := b.(map[string]interface{}); ok {
-					name, _ := bundle["name"].(string)
-					bundleUri := fmt.Sprintf("semiorepo://BUNDLE/%s", Slugify(name))
-					sb.WriteString(fmt.Sprintf("- [📦 %s](%s)\n", name, bundleUri))
+				if bMap, ok := b.(map[string]interface{}); ok {
+					sb.WriteString(renderEntityMarkdown("bundle", bMap) + "\n")
 				}
 			}
 			sb.WriteString("\n")
@@ -4494,38 +4635,45 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 
 	// Case 6b: Single Ticket Stream Item
 	if ticket, ok := payload["ticket"].(map[string]interface{}); ok {
-		slug, _ := ticket["slug"].(string)
-		status, _ := ticket["status"].(string)
-		title, _ := ticket["title"].(string)
-		dates, _ := ticket["date"].(map[string]interface{})
-		createdStr, _ := dates["created"].(string)
+		return renderEntityMarkdown("ticket", ticket) + "\n"
+	}
 
-		dateParsed, _ := time.Parse(time.RFC3339, createdStr)
-		ticketUri := fmt.Sprintf("semiorepo://TICKET/%d/%02d/%02d/%s", dateParsed.Year(), dateParsed.Month(), dateParsed.Day(), Slugify(slug))
-
-		return fmt.Sprintf("- [%s](%s) (%s) - %s\n", title, ticketUri, slug, status)
+	// Case 13: Single Goal
+	if goal, ok := payload["goal"].(map[string]interface{}); ok {
+		return renderEntityMarkdown("goal", goal) + "\n"
 	}
 
 	// Case 6c: Single Bundle Stream Item
 	if bundle, ok := payload["bundle"].(map[string]interface{}); ok {
-		name, _ := bundle["name"].(string)
-		bundleUri := fmt.Sprintf("semiorepo://BUNDLE/%s", Slugify(name))
-		return fmt.Sprintf("- [📦 %s](%s)\n", name, bundleUri)
+		return renderEntityMarkdown("bundle", bundle) + "\n"
 	}
 
 	// Case 11: Single Folder Result
 	if folder, ok := payload["folder"].(map[string]interface{}); ok {
-		path, _ := folder["path"].(string)
-		kind, _ := folder["kind"].(string)
-		uri := fmt.Sprintf("semiorepo://FOLDER/%s", Slugify(path))
-		return fmt.Sprintf("[📂 %s](%s) (%s)\n", path, uri, kind)
+		return renderEntityMarkdown("folder", folder) + "\n"
+	}
+
+	// Case 8: Section
+	if sec, ok := payload["section"].(map[string]interface{}); ok {
+		b, _ := json.Marshal(sec)
+		var s Section
+		json.Unmarshal(b, &s)
+		return renderSectionTree(&s, false, true)
+	}
+
+	// Case 9: Definition
+	if def, ok := payload["definition"].(map[string]interface{}); ok {
+		return renderEntityMarkdown("definition", def) + "\n"
 	}
 
 	// Case 12: Single File Result
 	if file, ok := payload["file"].(map[string]interface{}); ok {
-		path, _ := file["id"].(string)
-		uri := fmt.Sprintf("semiorepo://FILE/%s", Slugify(path))
-		sb.WriteString(fmt.Sprintf("[📄 %s](%s)\n", path, uri))
+		sb.WriteString(renderEntityMarkdown("file", file) + "\n")
+
+		filePath, _ := file["path"].(string)
+		if id, ok := file["id"].(string); ok && id != "" {
+			filePath = id
+		}
 
 		// Sections
 		if sections, ok := file["sections"].([]interface{}); ok {
@@ -4534,8 +4682,11 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 			printSections = func(items []interface{}, indent string) {
 				for _, item := range items {
 					if sec, ok := item.(map[string]interface{}); ok {
-						name, _ := sec["name"].(string)
-						sb.WriteString(fmt.Sprintf("%s- %s\n", indent, name))
+						if _, hasPath := sec["filePath"]; !hasPath {
+							sec["filePath"] = filePath
+						}
+						line := renderEntityMarkdown("section", sec)
+						sb.WriteString(fmt.Sprintf("%s%s\n", indent, line))
 
 						if children, ok := sec["children"].([]interface{}); ok && len(children) > 0 {
 							printSections(children, indent+"  ")
@@ -4551,40 +4702,52 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 			sb.WriteString(fmt.Sprintf("\n### Definitions (%d)\n", len(definitions)))
 			for _, d := range definitions {
 				if def, ok := d.(map[string]interface{}); ok {
-					name, _ := def["name"].(string)
-					kind, _ := def["kind"].(string)
-					sb.WriteString(fmt.Sprintf("- %s (%s)\n", name, kind))
+					if _, hasPath := def["filePath"]; !hasPath {
+						def["filePath"] = filePath
+					}
+					sb.WriteString(renderEntityMarkdown("definition", def) + "\n")
 				}
 			}
 		}
 		return sb.String()
 	}
 
-	// Case 13: Single Goal Result
-	if goal, ok := payload["goal"].(map[string]interface{}); ok {
-		id, _ := goal["id"].(string)
-		title, _ := goal["title"].(string)
-		status, _ := goal["status"].(string)
-		uri := fmt.Sprintf("semiorepo://GOAL/%s", Slugify(id))
-
-		statusIcon := "◯"
-		if status == "closed" || status == "finished" {
-			statusIcon = "✓"
-		}
-
-		return fmt.Sprintf("%s [%s](%s) (%s)\n", statusIcon, title, uri, id)
-	}
-
-	// Case 14: Single Contributor Result
+	// Case 14: Contributor
 	if contrib, ok := payload["contributor"].(map[string]interface{}); ok {
-		github, _ := contrib["github"].(string)
-		uri := fmt.Sprintf("semiorepo://CONTRIBUTOR/%s", Slugify(github))
-		name, _ := contrib["name"].(string)
-		return fmt.Sprintf("[👤 %s](%s)\n", name, uri)
+		return renderEntityMarkdown("contributor", contrib) + "\n"
 	}
 
-	// Default fallback
-	return fmt.Sprintf("Result: ```json\n%s\n```\n", string(data))
+	// Case 15: Policy (inline)
+	if policy, ok := payload["policy"].(map[string]interface{}); ok {
+		id, _ := policy["id"].(string)
+		desc, _ := policy["description"].(string)
+		uri := fmt.Sprintf("semiorepo://policy/%s", Slugify(id))
+		return fmt.Sprintf("- [%s](%s) - %s\n", id, uri, desc)
+	}
+
+	// Case 16: Todos (List)
+	if todos, ok := payload["todos"].([]interface{}); ok {
+		sb.WriteString(fmt.Sprintf("\n### Todos (%d)\n", len(todos)))
+		for _, t := range todos {
+			if tMap, ok := t.(map[string]interface{}); ok {
+				sb.WriteString(renderEntityMarkdown("todo", tMap) + "\n")
+			}
+		}
+		return sb.String()
+	}
+
+	// Case 17: Drafts (List)
+	if drafts, ok := payload["drafts"].([]interface{}); ok {
+		sb.WriteString(fmt.Sprintf("\n### Drafts (%d)\n", len(drafts)))
+		for _, d := range drafts {
+			if dMap, ok := d.(map[string]interface{}); ok {
+				sb.WriteString(renderEntityMarkdown("draft", dMap) + "\n")
+			}
+		}
+		return sb.String()
+	}
+
+	return fmt.Sprintf("```json\n%s\n```\n", string(data))
 }
 
 func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
@@ -4853,7 +5016,7 @@ type Repo struct {
 
 func (r *Repo) IsNode()        {}
 func (r *Repo) GetID() string  { return "repo:semio" }
-func (r *Repo) GetURI() string { return "semiorepo://REPO/SEMIO" }
+func (r *Repo) GetURI() string { return "semiorepo://repo/SEMIO" }
 
 type ProjectKind string
 
@@ -4873,7 +5036,7 @@ const (
 	BundleKindLibrary BundleKind = "📚"
 	BundleKindSchema  BundleKind = "🛂"
 	BundleKindBinary  BundleKind = "⌨️"
-	BundleKindClient      BundleKind = "🖱️"
+	BundleKindClient  BundleKind = "🖱️"
 	BundleKindSite    BundleKind = "🌐"
 	BundleKindAssets  BundleKind = "🏪"
 )
@@ -4939,7 +5102,7 @@ type Project struct {
 
 func (p *Project) IsNode()        {}
 func (p *Project) GetID() string  { return "project:" + p.Name }
-func (p *Project) GetURI() string { return "semiorepo://PROJECT/" + strings.ToUpper(Slugify(p.Name)) }
+func (p *Project) GetURI() string { return "semiorepo://project/" + strings.ToUpper(Slugify(p.Name)) }
 
 type Bundle struct {
 	Name        string     `json:"name"`
@@ -4963,7 +5126,7 @@ func (b *Bundle) GetID() string {
 	return "bundle:" + b.Name
 }
 
-func (b *Bundle) GetURI() string { return "semiorepo://BUNDLE/" + strings.ToUpper(Slugify(b.Name)) }
+func (b *Bundle) GetURI() string { return "semiorepo://bundle/" + strings.ToUpper(Slugify(b.Name)) }
 
 func normalizeBundleLabel(name string) string {
 	if name == "" {
@@ -5071,9 +5234,9 @@ type Folder struct {
 	Generated bool       `json:"generated"`
 }
 
-func (f *Folder) IsNode()       {}
-func (f *Folder) GetID() string { return "folder:" + f.Path }
-func (f *Folder) GetURI() string { return "semiorepo://FOLDER/" + strings.ToUpper(Slugify(f.Path)) }
+func (f *Folder) IsNode()        {}
+func (f *Folder) GetID() string  { return "folder:" + f.Path }
+func (f *Folder) GetURI() string { return "semiorepo://folder/" + strings.ToUpper(Slugify(f.Path)) }
 
 type File struct {
 	ID        string  `json:"id"`
@@ -5177,8 +5340,8 @@ func IsSemanticallyIgnored(path string) bool {
 	return false
 }
 
-func (f *File) GetID() string { return "file:" + f.Path }
-func (f *File) GetURI() string { return "semiorepo://FILE/" + strings.ToUpper(Slugify(f.Path)) }
+func (f *File) GetID() string  { return "file:" + f.Path }
+func (f *File) GetURI() string { return "semiorepo://file/" + strings.ToUpper(Slugify(f.Path)) }
 
 type Section struct {
 	ID          string       `json:"id,omitempty"`
@@ -5214,7 +5377,7 @@ func (s *Section) GetURI() string {
 	} else {
 		raw = s.Name
 	}
-	return "semiorepo://SECTION/" + strings.ToUpper(Slugify(raw))
+	return "semiorepo://section/" + strings.ToUpper(Slugify(raw))
 }
 
 type Definition struct {
@@ -5257,7 +5420,7 @@ func (d *Definition) GetURI() string {
 	} else {
 		raw = d.Name
 	}
-	return "semiorepo://DEFINITION/" + strings.ToUpper(Slugify(raw))
+	return "semiorepo://definition/" + strings.ToUpper(Slugify(raw))
 }
 
 type Contributor struct {
@@ -5303,7 +5466,7 @@ type ContributorDefinition struct {
 	Lines LineMetrics
 }
 
-func (c *Contributor) IsNode()       {}
+func (c *Contributor) IsNode() {}
 func (c *Contributor) GetID() string {
 	raw := c.Name
 	if raw == "" {
@@ -5312,7 +5475,9 @@ func (c *Contributor) GetID() string {
 	return "contributor:" + raw
 }
 
-func (c *Contributor) GetURI() string { return "semiorepo://CONTRIBUTOR/" + strings.ToUpper(Slugify(c.Github)) }
+func (c *Contributor) GetURI() string {
+	return "semiorepo://contributor/" + strings.ToUpper(Slugify(c.Github))
+}
 
 type Commit struct {
 	ID       string    `json:"id"`
@@ -5387,8 +5552,8 @@ func DeleteDraft(id string) error {
 
 // #endregion Drafts
 
-func (c *Commit) GetID() string { return "commit:" + c.SHA }
-func (c *Commit) GetURI() string { return "semiorepo://COMMIT/" + strings.ToUpper(Slugify(c.SHA)) }
+func (c *Commit) GetID() string  { return "commit:" + c.SHA }
+func (c *Commit) GetURI() string { return "semiorepo://commit/" + strings.ToUpper(Slugify(c.SHA)) }
 
 type Ticket struct {
 	Year          int               `json:"-" yaml:"-"`
@@ -5417,7 +5582,7 @@ func (t *Ticket) GetID() string {
 }
 
 func (t *Ticket) GetURI() string {
-	return fmt.Sprintf("semiorepo://TICKET/%d/%02d/%02d/%s", t.Year, t.Month, t.Day, strings.ToUpper(Slugify(t.Slug)))
+	return fmt.Sprintf("semiorepo://ticket/%d/%02d/%02d/%s", t.Year, t.Month, t.Day, strings.ToUpper(Slugify(t.Slug)))
 }
 
 func (t *Ticket) GetTitle() string {
@@ -5536,9 +5701,9 @@ type Policy struct {
 	ViolationKinds []*ViolationKindMeta `json:"violationKinds"`
 }
 
-func (p *Policy) IsNode()       {}
-func (p *Policy) GetID() string { return "policy:" + p.ID }
-func (p *Policy) GetURI() string { return "semiorepo://POLICY/" + strings.ToUpper(Slugify(p.ID)) }
+func (p *Policy) IsNode()        {}
+func (p *Policy) GetID() string  { return "policy:" + p.ID }
+func (p *Policy) GetURI() string { return "semiorepo://policy/" + strings.ToUpper(Slugify(p.ID)) }
 
 type ViolationKindMeta struct {
 	Kind        ViolationKind     `json:"kind"`
@@ -5554,7 +5719,9 @@ func (v *ViolationKindMeta) GetID() string {
 	return "violation_kind:" + string(v.Kind)
 }
 
-func (v *ViolationKindMeta) GetURI() string { return "semiorepo://VIOLATION_KIND/" + strings.ToUpper(Slugify(string(v.Kind))) }
+func (v *ViolationKindMeta) GetURI() string {
+	return "semiorepo://violationKind/" + strings.ToUpper(Slugify(string(v.Kind)))
+}
 
 type AnalyzeResult struct {
 	Violations []*Violation    `json:"violations"`
@@ -6107,7 +6274,7 @@ type TicketOpenInput struct {
 	Client   string `json:"client"`
 	NoIssue  bool   `json:"noIssue,omitempty"`
 	Draft    string `json:"draft,omitempty"`
-	Goal     string `json:"goal,omitempty"`
+	Goal     string `json:"goal"`
 	Parent   string `json:"parent,omitempty"`
 	NoGithub bool   `json:"noGithub,omitempty"`
 	Issue    string `json:"issue,omitempty"` // Link to existing GitHub issue URL instead of creating new one
@@ -6310,9 +6477,9 @@ type Todo struct {
 	Location    *Location `json:"location,omitempty"`
 }
 
-func (t *Todo) IsNode()       {}
-func (t *Todo) GetID() string { return "todo:" + t.ID }
-func (t *Todo) GetURI() string { return "semiorepo://TODO/" + strings.ToUpper(Slugify(t.ID)) }
+func (t *Todo) IsNode()        {}
+func (t *Todo) GetID() string  { return "todo:" + t.ID }
+func (t *Todo) GetURI() string { return "semiorepo://todo/" + strings.ToUpper(Slugify(t.ID)) }
 
 type Location struct {
 	FilePath string `json:"filePath"`
@@ -6330,9 +6497,9 @@ type Violation struct {
 	Excerpt string        `json:"excerpt,omitempty"`
 }
 
-func (v *Violation) IsNode()       {}
-func (v *Violation) GetID() string { return "violation:" + v.ID }
-func (v *Violation) GetURI() string { return "semiorepo://VIOLATION/" + strings.ToUpper(Slugify(v.ID)) }
+func (v *Violation) IsNode()        {}
+func (v *Violation) GetID() string  { return "violation:" + v.ID }
+func (v *Violation) GetURI() string { return "semiorepo://violation/" + strings.ToUpper(Slugify(v.ID)) }
 
 func (v *Violation) Priority() ViolationPriority {
 	return v.Kind.Info().Priority
@@ -7638,26 +7805,26 @@ type TicketData struct {
 }
 
 type Goal struct {
-	Title        string            `json:"title"`
-	Description  string            `json:"description"`
-	Prompt       string            `json:"prompt"`
-	Status       string            `json:"status"`
-	Summary      string            `json:"summary,omitempty"`
-	DueDate      string            `json:"dueDate,omitempty"`
-	Dates        GoalDates         `json:"dates"`
-	Client       string            `json:"client"`
-	LLM          string            `json:"llm"`
-	Parent       string            `json:"parent,omitempty"`
-	GitHub       *GoalGithubData   `json:"github,omitempty"`
-	Interactions []Interaction     `json:"interactions"`
+	Title        string          `json:"title"`
+	Description  string          `json:"description"`
+	Prompt       string          `json:"prompt"`
+	Status       string          `json:"status"`
+	Summary      string          `json:"summary,omitempty"`
+	DueDate      string          `json:"dueDate,omitempty"`
+	Dates        GoalDates       `json:"dates"`
+	Client       string          `json:"client"`
+	LLM          string          `json:"llm"`
+	Parent       string          `json:"parent,omitempty"`
+	GitHub       *GoalGithubData `json:"github,omitempty"`
+	Interactions []Interaction   `json:"interactions"`
 	// Derived fields
 	ID   string `json:"-"`
 	Path string `json:"-"`
 }
 
-func (g *Goal) IsNode()       {}
-func (g *Goal) GetID() string { return "goal:" + Slugify(g.Title) }
-func (g *Goal) GetURI() string { return "semiorepo://GOAL/" + strings.ToUpper(Slugify(g.Title)) }
+func (g *Goal) IsNode()        {}
+func (g *Goal) GetID() string  { return "goal:" + Slugify(g.Title) }
+func (g *Goal) GetURI() string { return "semiorepo://goal/" + strings.ToUpper(Slugify(g.Title)) }
 
 type GoalDates struct {
 	Due    string     `json:"due,omitempty"`
@@ -11613,7 +11780,7 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noGithub 
 		Description: description,
 		Prompt:      prompt,
 		DueDate:     dueDate,
-		Client:          client,
+		Client:      client,
 		LLM:         llm,
 		NoGithub:    noGithub,
 	}
@@ -11668,6 +11835,9 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 
 func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
 	title = strings.TrimSpace(title)
+	if goal == "" {
+		return nil, fmt.Errorf("ticket goal is required")
+	}
 	slug := Slugify(title)
 	if title == slug {
 		return nil, fmt.Errorf("ticket title must be titleized (e.g. \"Some Title on Something\") and NOT an all-caps slug")
@@ -12070,6 +12240,114 @@ func ghUpdateIssueTitle(issueURL, title string) error {
 		return fmt.Errorf("gh issue edit failed: %s", strings.TrimSpace(stderr))
 	}
 	return nil
+}
+
+type ghIssue struct {
+	URL       string `json:"url"`
+	State     string `json:"state"`
+	Milestone *struct {
+		Number int    `json:"number"`
+		Title  string `json:"title"`
+	} `json:"milestone"`
+	Labels []struct {
+		Name string `json:"name"`
+	} `json:"labels"`
+}
+
+type ghMilestone struct {
+	Number      int    `json:"number"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	URL         string `json:"url"`
+	DueOn       string `json:"due_on"`
+	State       string `json:"state"`
+}
+
+func ghGetIssueDetails(issueURL string) (*ghIssue, error) {
+	args := []string{"issue", "view", issueURL, "--json", "url,state,milestone,labels"}
+	stdout, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("gh issue view failed: %s", strings.TrimSpace(stderr))
+	}
+	var issue ghIssue
+	if err := json.Unmarshal([]byte(stdout), &issue); err != nil {
+		return nil, fmt.Errorf("failed to parse gh issue view output: %w", err)
+	}
+	return &issue, nil
+}
+
+func ghGetMilestone(number int) (*ghMilestone, error) {
+	args := []string{"api", fmt.Sprintf("repos/:owner/:repo/milestones/%d", number)}
+	stdout, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("gh api milestone get failed: %s", strings.TrimSpace(stderr))
+	}
+	var milestone ghMilestone
+	if err := json.Unmarshal([]byte(stdout), &milestone); err != nil {
+		return nil, fmt.Errorf("failed to parse gh milestone output: %w", err)
+	}
+	return &milestone, nil
+}
+
+func ghFindMilestoneByTitle(title string) (*ghMilestone, error) {
+	if strings.TrimSpace(title) == "" {
+		return nil, nil
+	}
+	args := []string{"api", "repos/:owner/:repo/milestones", "-X", "GET", "-F", "state=all", "-F", "per_page=100", "--paginate", "--jq", ".[]"}
+	stdout, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return nil, fmt.Errorf("gh api milestone list failed: %s", strings.TrimSpace(stderr))
+	}
+	scanner := bufio.NewScanner(strings.NewReader(stdout))
+	for scanner.Scan() {
+		var milestone ghMilestone
+		if err := json.Unmarshal(scanner.Bytes(), &milestone); err != nil {
+			continue
+		}
+		if milestone.Title == title {
+			return &milestone, nil
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	return nil, nil
+}
+
+func ghUpdateIssueMilestone(issueURL, milestoneTitle string) error {
+	if strings.TrimSpace(milestoneTitle) == "" {
+		return fmt.Errorf("milestone title is required")
+	}
+	args := []string{"issue", "edit", issueURL, "--milestone", milestoneTitle}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh issue edit milestone failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+func ghRemoveLabels(issueURL string, labels []string) error {
+	if len(labels) == 0 {
+		return nil
+	}
+	args := []string{"issue", "edit", issueURL}
+	for _, label := range labels {
+		args = append(args, "--remove-label", label)
+	}
+	_, stderr, exitCode := ExecCommand("gh", args, "")
+	if exitCode != 0 {
+		return fmt.Errorf("gh issue edit remove-label failed: %s", strings.TrimSpace(stderr))
+	}
+	return nil
+}
+
+func extractMilestoneNumber(milestoneURL string) int {
+	parts := strings.Split(milestoneURL, "/")
+	if len(parts) == 0 {
+		return 0
+	}
+	num, _ := strconv.Atoi(parts[len(parts)-1])
+	return num
 }
 
 // ghListOpenIssuesWithLabel returns all open issue URLs with the specified label
@@ -13054,7 +13332,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 			out <- Folder{
 				ID:        buildFolderID(relPath, bundleID),
 				Path:      relPath,
-				URI:       "semiorepo://FOLDER/" + Slugify(buildFolderID(relPath, bundleID)),
+				URI:       "semiorepo://folder/" + Slugify(buildFolderID(relPath, bundleID)),
 				Name:      filepath.Base(relPath),
 				ParentID:  parentID,
 				BundleID:  bundleID,
@@ -13094,9 +13372,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 				subPath := parts[1]
 				for _, b := range bundles {
 					bName := b.Name
-					if strings.HasPrefix(bName, "@semio/") {
-						bName = strings.TrimPrefix(bName, "@semio/")
-					}
+					bName = strings.TrimPrefix(bName, "@semio/")
 					if bName == prefix || normalizeBundleLabel(bName) == "@semio/"+prefix {
 						root = filepath.Join(rootDir, b.Root, subPath)
 						matched = true
@@ -13130,7 +13406,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 		out <- File{
 			ID:        buildFileID(relPath, bundleID),
 			Path:      relPath,
-			URI:       "semiorepo://FILE/" + Slugify(buildFileID(relPath, bundleID)),
+			URI:       "semiorepo://file/" + Slugify(buildFileID(relPath, bundleID)),
 			Name:      filepath.Base(relPath),
 			Extension: filepath.Ext(relPath),
 			FolderID:  folderID,
@@ -13214,7 +13490,7 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 			out <- File{
 				ID:        buildFileID(relPath, bundleID),
 				Path:      relPath,
-				URI:       "semiorepo://FILE/" + Slugify(buildFileID(relPath, bundleID)),
+				URI:       "semiorepo://file/" + Slugify(buildFileID(relPath, bundleID)),
 				Name:      filepath.Base(relPath),
 				Extension: filepath.Ext(relPath),
 				FolderID:  folderID,
@@ -13248,6 +13524,15 @@ func flattenSectionsWithPrefix(sections []Section, prefix string) []Section {
 	return result
 }
 
+func hydrateSectionMetadata(s *Section, filePath string, prefix string) {
+	s.FilePath = filePath
+	s.Path = prefix
+	for i := range s.Children {
+		childPath := prefix + "#" + s.Children[i].Name
+		hydrateSectionMetadata(&s.Children[i], filePath, childPath)
+	}
+}
+
 func StreamSections(ctx context.Context, scope string, out chan<- Section, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -13275,17 +13560,30 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 			continue
 		}
 		sections := ParseSections(content, f.Path)
-		flatSections := flattenSections(sections)
-		for _, s := range flatSections {
-			if !matchesFilter(s.Name, options) {
-				continue
-			}
+		if options.Filter != "" || options.Regex {
+			flatSections := flattenSections(sections)
+			for _, s := range flatSections {
+				s.FilePath = f.Path
+				if !matchesFilter(s.Name, options) {
+					continue
+				}
 
-			select {
-			case <-ctx.Done():
-				return ctx.Err()
-			default:
-				out <- s
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+					out <- s
+				}
+			}
+		} else {
+			for i := range sections {
+				hydrateSectionMetadata(&sections[i], f.Path, sections[i].Name)
+				select {
+				case <-ctx.Done():
+					return ctx.Err()
+				default:
+					out <- sections[i]
+				}
 			}
 		}
 	}
@@ -13972,7 +14270,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noG
 		Prompt:      prompt,
 		DueDate:     dueDate,
 		LLM:         llm,
-		Client:          client,
+		Client:      client,
 		NoGithub:    noGithub,
 		Parent:      parent,
 		Milestone:   milestone,
@@ -14045,7 +14343,7 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 		ID:          id,
 		Prompt:      prompt,
 		LLM:         llm,
-		Client:          client,
+		Client:      client,
 		Title:       titlePtr,
 		Description: descriptionPtr,
 		DueDate:     dueDatePtr,
@@ -15532,6 +15830,7 @@ type RepoContext interface {
 	Extract(sourceFile, sourceSection, targetFile *string) (*File, error)
 	ContributorAdd(input ContributorAddInput) (*Contributor, error)
 	ContributorRemove(github string) error
+	SyncGithub() (bool, error)
 }
 
 // #endregion GraphQL Context Port
@@ -15844,7 +16143,7 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 		Prompt:      input.Prompt,
 		Status:      "open",
 		Dates:       GoalDates{Due: input.DueDate},
-		Client:          uiSlug,
+		Client:      uiSlug,
 		LLM:         llmSlug,
 		Interactions: []Interaction{{
 			Prompt: input.Prompt,
@@ -16145,7 +16444,7 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 			if err != nil {
 				return nil, err
 			}
-			ticket.Interactions[len(ticket.Interactions)-1].Client = uiSlug
+			ticket.Interactions[len(ticket.Interactions)-1].System.Client = uiSlug
 			changed = true
 		}
 	}
@@ -16514,6 +16813,149 @@ func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, e
 
 func (c *repoContext) ContributorRemove(github string) error { return nil }
 
+func updateGoalMilestone(goal *Goal, number int) (int, error) {
+	repoUrl, err := getGhRepoUrl()
+	if err != nil {
+		return number, err
+	}
+	if goal.GitHub == nil {
+		goal.GitHub = &GoalGithubData{}
+	}
+	milestoneUrl := fmt.Sprintf("%s/milestone/%d", repoUrl, number)
+	if goal.GitHub.Milestone != milestoneUrl {
+		goal.GitHub.Milestone = milestoneUrl
+		if err := SaveGoal(*goal); err != nil {
+			return number, err
+		}
+	}
+	return number, nil
+}
+
+func ensureGoalMilestone(goal *Goal) (*ghMilestone, error) {
+	if goal == nil {
+		return nil, nil
+	}
+	if strings.TrimSpace(goal.Title) == "" {
+		return nil, nil
+	}
+	if goal.GitHub != nil && goal.GitHub.Milestone != "" {
+		if n, err := parseMilestoneNumber(goal.GitHub.Milestone); err == nil && n > 0 {
+			if milestone, err := ghGetMilestone(n); err == nil {
+				return milestone, nil
+			}
+		}
+	}
+	found, err := ghFindMilestoneByTitle(goal.Title)
+	if err != nil {
+		return nil, err
+	}
+	if found != nil {
+		if _, err := updateGoalMilestone(goal, found.Number); err != nil {
+			return nil, err
+		}
+		return found, nil
+	}
+	n, err := ghCreateMilestone(goal.Title, goal.Description)
+	if err != nil {
+		return nil, err
+	}
+	if goal.Dates.Due != "" {
+		_ = ghUpdateMilestone(n, "", "", "", goal.Dates.Due)
+	}
+	if _, err := updateGoalMilestone(goal, n); err != nil {
+		return nil, err
+	}
+	milestone, err := ghGetMilestone(n)
+	if err != nil {
+		return &ghMilestone{Number: n, Title: goal.Title, Description: goal.Description}, nil
+	}
+	return milestone, nil
+}
+
+func (c *repoContext) SyncGithub() (bool, error) {
+	fmt.Println("Syncing local tickets and goals with GitHub...")
+
+	// 1. Collect valid labels from projects and bundles
+	projects := LoadProjects()
+	validLabels := make(map[string]bool)
+	for _, p := range projects {
+		projectLabel := "@" + strings.TrimPrefix(p.Name, "@")
+		validLabels[projectLabel] = true
+		for _, b := range p.Bundles {
+			validLabels[normalizeBundleLabel(b.Name)] = true
+		}
+	}
+	validLabels["@semio-repo"] = true
+
+	// 2. Get all tickets
+	tickets, err := ListTickets(nil, nil, nil)
+	if err != nil {
+		return false, err
+	}
+
+	// 3. Process each ticket
+	for i := range tickets {
+		t := &tickets[i]
+		if t.GitHub == nil || t.GitHub.Issue == "" {
+			continue
+		}
+
+		issueURL := t.GitHub.Issue
+
+		// Get remote issue details
+		remoteIssue, err := ghGetIssueDetails(issueURL)
+		if err != nil {
+			fmt.Printf("Warning: Failed to get GitHub issue %s: %v\n", issueURL, err)
+			continue
+		}
+
+		// a. Ticket Status Sync
+		if t.Status == TicketStatusClosed && strings.ToUpper(remoteIssue.State) == "OPEN" {
+			fmt.Printf("Closing GitHub issue %s (Ticket is closed locally)\n", issueURL)
+			if err := ghCloseIssue(issueURL); err != nil {
+				fmt.Printf("Warning: Failed to close GitHub issue %s: %v\n", issueURL, err)
+			}
+		}
+
+		// b. Goal/Milestone Sync
+		if t.Goal != "" {
+			goal, err := ReadGoal(t.Goal)
+			if err == nil {
+				milestone, err := ensureGoalMilestone(goal)
+				if err != nil {
+					fmt.Printf("Warning: Failed to resolve goal milestone for issue %s: %v\n", issueURL, err)
+				} else if milestone != nil && milestone.Title != "" {
+					if remoteIssue.Milestone == nil || remoteIssue.Milestone.Title != milestone.Title {
+						fmt.Printf("Updating milestone for issue %s to %s...\n", issueURL, milestone.Title)
+						if err := ghUpdateIssueMilestone(issueURL, milestone.Title); err != nil {
+							fmt.Printf("Warning: Failed to update milestone for GitHub issue %s: %v\n", issueURL, err)
+						}
+					}
+				}
+			}
+		}
+
+		// c. Label Sync (Project Validation)
+		var labelsToRemove []string
+		for _, label := range remoteIssue.Labels {
+			if strings.HasPrefix(label.Name, "@") {
+				if !validLabels[label.Name] {
+					labelsToRemove = append(labelsToRemove, label.Name)
+				}
+			}
+		}
+		if len(labelsToRemove) > 0 {
+			fmt.Printf("Removing invalid project labels from issue %s: %v\n", issueURL, labelsToRemove)
+			if err := ghRemoveLabels(issueURL, labelsToRemove); err != nil {
+				fmt.Printf("Warning: Failed to remove labels from GitHub issue %s: %v\n", issueURL, err)
+			}
+		}
+	}
+
+	fmt.Println("GitHub sync completed.")
+	return true, nil
+}
+
 var _ RepoContext = (*repoContext)(nil)
 
 func (c *defaultContext) GetRootDir() string { return c.rootDir }
@@ -16605,6 +17047,8 @@ func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor
 }
 
 func (c *defaultContext) ContributorRemove(github string) error { return nil }
+
+func (c *defaultContext) SyncGithub() (bool, error) { return false, nil }
 
 func (c *defaultContext) GetGoals() ([]*Goal, error) { return []*Goal{}, nil }
 
@@ -16807,7 +17251,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"LIBRARY": &graphql.EnumValueConfig{Value: BundleKindLibrary},
 			"SCHEMA":  &graphql.EnumValueConfig{Value: BundleKindSchema},
 			"BINARY":  &graphql.EnumValueConfig{Value: BundleKindBinary},
-			"Client":      &graphql.EnumValueConfig{Value: BundleKindClient},
+			"Client":  &graphql.EnumValueConfig{Value: BundleKindClient},
 			"SITE":    &graphql.EnumValueConfig{Value: BundleKindSite},
 			"ASSETS":  &graphql.EnumValueConfig{Value: BundleKindAssets},
 		},
@@ -16817,7 +17261,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "FolderKind",
 		Values: graphql.EnumValueConfigMap{
 			"ORGANIZATION": &graphql.EnumValueConfig{Value: FolderKindOrganization},
-			"REQClientRED":     &graphql.EnumValueConfig{Value: FolderKindRequired},
+			"REQClientRED": &graphql.EnumValueConfig{Value: FolderKindRequired},
 		},
 	})
 
@@ -18520,7 +18964,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"client":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(ticketClientEnum)},
 			"noIssue":  &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"draft":    &graphql.InputObjectFieldConfig{Type: graphql.String},
-			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"goal":     &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
 			"parent":   &graphql.InputObjectFieldConfig{Type: graphql.String},
 			"noGithub": &graphql.InputObjectFieldConfig{Type: graphql.Boolean},
 			"issue":    &graphql.InputObjectFieldConfig{Type: graphql.String},
@@ -18658,6 +19102,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	mutationType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "Mutation",
 		Fields: graphql.Fields{
+			"syncGithub": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.Boolean),
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					return mutationResolverInstance.SyncGithub(p.Context)
+				},
+			},
 			"goalCreate": &graphql.Field{
 				Type: goalType,
 				Args: graphql.FieldConfigArgument{
@@ -18747,7 +19197,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					input := GoalReopenInput{
 						ID:     inputMap["id"].(string),
 						Prompt: inputMap["prompt"].(string),
-						Client:     inputMap["client"].(string),
+						Client: inputMap["client"].(string),
 						LLM:    inputMap["llm"].(string),
 					}
 					if s, ok := inputMap["title"].(string); ok {
@@ -18867,7 +19317,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					input := TicketOpenInput{
 						Title:  inputMap["title"].(string),
 						Prompt: inputMap["prompt"].(string),
-						Client:     inputMap["client"].(string),
+						Client: inputMap["client"].(string),
 					}
 					if inputMap["llm"] != nil {
 						input.LLM = inputMap["llm"].(string)
@@ -18948,7 +19398,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						Day:    inputMap["day"].(int),
 						Slug:   inputMap["slug"].(string),
 						Prompt: inputMap["prompt"].(string),
-						Client:     inputMap["client"].(string),
+						Client: inputMap["client"].(string),
 					}
 					if inputMap["llm"] != nil {
 						input.LLM = inputMap["llm"].(string)
@@ -19263,7 +19713,7 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 		// Assuming helper GetGoal(slug) exists or similar
 		return &Goal{ID: slug, Title: slug}, nil // Placeholder if no lookup
 	}
-	
+
 	// Complex IDs (Section, Definition)
 	if strings.HasPrefix(id, "section:") {
 		// Parse file path from ID?
@@ -19439,7 +19889,6 @@ func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo
 	}
 	return []*Todo{}, nil
 }
-
 
 func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
@@ -19668,6 +20117,13 @@ func (r *Resolver) Mutation() MutationResolver {
 }
 
 type mutationResolver struct{ *Resolver }
+
+func (r *mutationResolver) SyncGithub(ctx context.Context) (bool, error) {
+	if r.Ctx != nil {
+		return r.Ctx.SyncGithub()
+	}
+	return false, fmt.Errorf("not implemented")
+}
 
 func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, error) {
 	if r.Ctx != nil {
@@ -20048,6 +20504,7 @@ type QueryResolver interface {
 }
 
 type MutationResolver interface {
+	SyncGithub(ctx context.Context) (bool, error)
 	Fix(ctx context.Context, scope *string) (*FixResult, error)
 	GoalChange(ctx context.Context, id string, input GoalChangeInput) (*Goal, error)
 	TodoCreate(ctx context.Context, input TodoCreateInput) (*Todo, error)
@@ -20086,7 +20543,7 @@ type RepoResolver interface {
 
 // #region Mcp
 
-func runMcpServer(cmd *cobra.Command, args []string) error {
+func createMcpServer() *server.MCPServer {
 	s := server.NewMCPServer(
 		"semio-repo",
 		"1.0.0",
@@ -20284,7 +20741,7 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 			mcp.WithNumber("day", mcp.Required(), mcp.Description("Ticket day")),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Ticket slug")),
 			mcp.WithString("summary", mcp.Required(), mcp.Description("Summary of the ticket work")),
-			mcp.WithArray("files", mcp.Description("Files to include (at least one required)")),
+			mcp.WithArray("files", mcp.Description("Files to include (at least one required)"), mcp.WithStringItems()),
 			mcp.WithString("title", mcp.Description("New title for the ticket (also updates GitHub issue)")),
 		),
 		ticketClose,
@@ -20308,7 +20765,7 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 		mcp.NewTool("draft_create",
 			mcp.WithDescription("Create a new draft working directory"),
 			mcp.WithString("slug", mcp.Required(), mcp.Description("Draft slug (identifier)")),
-			mcp.WithArray("files", mcp.Description("Optional list of files to copy into the draft")),
+			mcp.WithArray("files", mcp.Description("Optional list of files to copy into the draft"), mcp.WithStringItems()),
 		),
 		draftCreate,
 	)
@@ -20544,6 +21001,11 @@ func runMcpServer(cmd *cobra.Command, args []string) error {
 		),
 		graphqlQuery,
 	)
+	return s
+}
+
+func runMcpServer(cmd *cobra.Command, args []string) error {
+	s := createMcpServer()
 	if err := server.ServeStdio(s); err != nil {
 		return err
 	}
@@ -22136,7 +22598,7 @@ func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest
 }
 
 func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	id := strings.TrimPrefix(request.Params.URI, "semiorepo://POLICY/")
+	id := strings.TrimPrefix(request.Params.URI, "semiorepo://policy/")
 	query := `query Policy($id: String!) { policy(id: $id) { id description violations { id } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
@@ -22419,6 +22881,12 @@ func isRepoExcludedPath(path string) bool {
 		return true
 	}
 	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") {
+		return true
+	}
+	if normalized == ".git" || strings.HasPrefix(normalized, ".git/") {
+		return true
+	}
+	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") {
 		return true
 	}
 	return false
@@ -23971,6 +24439,25 @@ func ListGoals() ([]*Goal, error) {
 	return goals, err
 }
 
+func ReadGoal(id string) (*Goal, error) {
+	dir := GetRepoGoalsDir()
+	path := filepath.Join(dir, filepath.FromSlash(id), "goal.json")
+	if !FileExists(path) {
+		return nil, fmt.Errorf("goal file not found: %s", path)
+	}
+	content, err := ReadTextFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var goal Goal
+	if err := json.Unmarshal([]byte(content), &goal); err != nil {
+		return nil, err
+	}
+	goal.ID = id
+	goal.Path = path
+	return &goal, nil
+}
+
 func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -24516,13 +25003,407 @@ func removeLineFromMarkdown(path, name string) {
 	os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
 }
 
-
-
 func removeLineFromFile(path string, lineNum int) {
-content, _ := os.ReadFile(path)
-lines := strings.Split(string(content), "\n")
-if lineNum > 0 && lineNum <= len(lines) {
-newLines := append(lines[:lineNum-1], lines[lineNum:]...)
-os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
+	content, _ := os.ReadFile(path)
+	lines := strings.Split(string(content), "\n")
+	if lineNum > 0 && lineNum <= len(lines) {
+		newLines := append(lines[:lineNum-1], lines[lineNum:]...)
+		os.WriteFile(path, []byte(strings.Join(newLines, "\n")), 0644)
+	}
 }
+
+// #region Entity Rendering
+
+// #region Artifact ID
+
+type SemanticId struct {
+	Emoji string
+	Value string
 }
+
+func emojiText(emoji string) string {
+	if emoji == "" {
+		return ""
+	}
+	if strings.Contains(emoji, "\uFE0E") {
+		return emoji
+	}
+	if strings.Contains(emoji, "\uFE0F") {
+		return strings.ReplaceAll(emoji, "\uFE0F", "\uFE0E")
+	}
+	return emoji + "\uFE0E"
+}
+
+func (s SemanticId) String() string {
+	return fmt.Sprintf("%s %s", emojiText(s.Emoji), s.Value)
+}
+
+func GetArtifactID(kind string, data map[string]interface{}) string {
+	switch kind {
+	case "repo":
+		return emojiText("🌍")
+	case "project":
+		name, _ := data["name"].(string)
+		// Based on prompt:
+		// <kind> - 👤:user e.g. semio, 🧰:infrastructure e.g. semio-repo, 🔬:research e.g. coda
+		k := "👤"
+		if strings.Contains(name, "repo") {
+			k = "🧰"
+		}
+		if strings.HasPrefix(name, "coda") {
+			k = "🔬"
+		}
+		if val, ok := data["kind"].(string); ok {
+			switch val {
+			case "infrastructure":
+				k = "🧰"
+			case "research":
+				k = "🔬"
+			case "user":
+				k = "👤"
+			}
+		}
+		return fmt.Sprintf("%s @%s", emojiText(k), name)
+
+	case "bundle":
+		name, _ := data["name"].(string)
+		// (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 🌐:site, 🏪:assets)
+		bType, _ := data["type"].(string)
+		k := "📚" // Default to library
+		switch bType {
+		case "schema":
+			k = "🛂"
+		case "binary", "app":
+			k = "⌨️"
+		case "ui":
+			k = "🖱️"
+		case "site":
+			k = "🌐"
+		case "assets":
+			k = "🏪"
+		case "library":
+			k = "📚"
+		}
+		return fmt.Sprintf("%s %s", emojiText(k), name)
+
+	case "folder":
+		path, _ := data["path"].(string)
+		fkind, _ := data["kind"].(string)
+		// (<kind> - 🗃️:organization, 📁:required)
+		k := "📁"
+		if fkind == "organization" {
+			k = "🗃️"
+		}
+		return fmt.Sprintf("%s %s", emojiText(k), path)
+
+	case "file":
+		path, _ := data["id"].(string)
+		if path == "" {
+			path, _ = data["path"].(string)
+		}
+		fkind, _ := data["kind"].(string)
+		// (<kind> - 💻:code, 🧪:test, 📃:docs, ⚙️:config, 💾:resource, ⚖️:license)
+		k := "📄" // Fallback
+		switch fkind {
+		case "code":
+			k = "💻"
+		case "test":
+			k = "🧪"
+		case "docs":
+			k = "📃"
+		case "config":
+			k = "⚙️"
+		case "resource":
+			k = "💾"
+		case "license":
+			k = "⚖️"
+		}
+		return fmt.Sprintf("%s %s", emojiText(k), path)
+
+	case "section":
+		path, _ := data["path"].(string)
+		return fmt.Sprintf("%s %s", emojiText("🔖"), path)
+
+	case "definition":
+		// (<kind> - 🛠️:implementation, ✂️:interface, 🪨:constant)
+		kind, _ := data["kind"].(string)
+		k := "🛠️"
+		switch kind {
+		case "interface":
+			k = "✂️"
+		case "constant":
+			k = "🪨"
+		}
+		id, _ := data["id"].(string)
+		if id != "" {
+			return fmt.Sprintf("%s %s", emojiText(k), id)
+		}
+		filePath, _ := data["filePath"].(string)
+		name, _ := data["name"].(string)
+		return fmt.Sprintf("%s %s§%s", emojiText(k), filePath, name)
+
+	case "ticket":
+		// ticket: 📅{year}/{month}/{day}/{slug}
+		year, _ := data["year"].(float64)
+		month, _ := data["month"].(float64)
+		day, _ := data["day"].(float64)
+		slug, _ := data["slug"].(string)
+		return fmt.Sprintf("%s %04d/%02d/%02d/%s", emojiText("📅"), int(year), int(month), int(day), slug)
+
+	case "goal":
+		// goal: 🎯{path*}
+		id, _ := data["id"].(string)
+		return fmt.Sprintf("%s %s", emojiText("🎯"), id)
+
+	case "draft":
+		// draft: ✍️{slug}
+		slug, _ := data["slug"].(string)
+		return fmt.Sprintf("%s %s", emojiText("✍️"), slug)
+
+	case "todo":
+		// todo: 📝{slug}
+		slug, _ := data["id"].(string)
+		return fmt.Sprintf("%s %s", emojiText("📝"), slug)
+
+	case "policy":
+		// policy: 🛡️/{slug}
+		slug, _ := data["id"].(string)
+		if !strings.HasPrefix(slug, "/") {
+			slug = "/" + slug
+		}
+		return fmt.Sprintf("%s %s", emojiText("🛡️"), slug)
+
+	case "violationKind":
+		// violationKind: 🚫{policy-slug}/{slug}
+		id, _ := data["id"].(string)
+		return fmt.Sprintf("%s %s", emojiText("🚫"), id)
+
+	case "contributor":
+		// contributor: 👤{github}
+		github, _ := data["github"].(string)
+		return fmt.Sprintf("%s %s", emojiText("👤"), github)
+
+	case "commit":
+		// commit: 🔀{sha}
+		sha, _ := data["sha"].(string)
+		return fmt.Sprintf("%s %s", emojiText("🔀"), sha)
+	}
+	return ""
+}
+
+func GetArtifactURI(kind string, data map[string]interface{}) string {
+	switch kind {
+	case "repo":
+		return "semiorepo://repo"
+	case "project":
+		name, _ := data["name"].(string)
+		return fmt.Sprintf("semiorepo://project/%s", name)
+	case "bundle":
+		name, _ := data["name"].(string)
+		return fmt.Sprintf("semiorepo://bundle/%s", name)
+	case "folder":
+		path, _ := data["path"].(string)
+		return fmt.Sprintf("semiorepo://folder/%s", path)
+	case "file":
+		path, _ := data["id"].(string)
+		if path == "" {
+			path, _ = data["path"].(string)
+		}
+		return fmt.Sprintf("semiorepo://file/%s", path)
+	case "section":
+		path, _ := data["path"].(string)
+		return fmt.Sprintf("semiorepo://section/%s", path)
+	case "definition":
+		id, _ := data["id"].(string)
+		if id == "" {
+			filePath, _ := data["filePath"].(string)
+			name, _ := data["name"].(string)
+			return fmt.Sprintf("semiorepo://definition/%s/%s", filePath, name)
+		}
+		return fmt.Sprintf("semiorepo://definition/%s", id)
+	case "ticket":
+		year, _ := data["year"].(float64)
+		month, _ := data["month"].(float64)
+		day, _ := data["day"].(float64)
+		slug, _ := data["slug"].(string)
+		return fmt.Sprintf("semiorepo://ticket/%d/%02d/%02d/%s", int(year), int(month), int(day), slug)
+	case "goal":
+		id, _ := data["id"].(string)
+		return fmt.Sprintf("semiorepo://goal/%s", id)
+	case "draft":
+		slug, _ := data["slug"].(string)
+		return fmt.Sprintf("semiorepo://draft/%s", slug)
+	case "todo":
+		slug, _ := data["id"].(string)
+		return fmt.Sprintf("semiorepo://todo/%s", slug)
+	case "policy":
+		id, _ := data["id"].(string)
+		return fmt.Sprintf("semiorepo://policy/%s", id)
+	case "violationKind":
+		id, _ := data["id"].(string)
+		return fmt.Sprintf("semiorepo://violationKind/%s", id)
+	case "contributor":
+		id, _ := data["github"].(string)
+		return fmt.Sprintf("semiorepo://contributor/%s", id)
+	case "commit":
+		sha, _ := data["sha"].(string)
+		return fmt.Sprintf("semiorepo://commit/%s", sha)
+	}
+	return ""
+}
+
+// #endregion Artifact ID
+
+func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) string {
+	id := GetArtifactID(kind, data)
+	desc := ""
+	extra := ""
+
+	switch kind {
+	case "ticket":
+		title, _ := data["title"].(string)
+		status, _ := data["status"].(string)
+		dates, _ := data["date"].(map[string]interface{})
+		createdStr, _ := dates["created"].(string)
+		dateDisplay := createdStr
+		if tParsed, err := time.Parse(time.RFC3339, createdStr); err == nil {
+			dateDisplay = tParsed.Format("2006-01-02")
+		}
+		desc = title
+		extra = fmt.Sprintf("%s - %s", status, dateDisplay)
+	case "goal":
+		title, _ := data["title"].(string)
+		status, _ := data["status"].(string)
+		desc = title
+		extra = status
+	case "bundle":
+		root, _ := data["root"].(string)
+		ptype, _ := data["projectType"].(string)
+		if ptype == "" {
+			ptype, _ = data["type"].(string)
+		}
+		desc = root
+		extra = ptype
+	case "folder":
+		fkind, _ := data["kind"].(string)
+		desc = fkind
+	case "file":
+		// id is path
+	case "section":
+		start, _ := data["startLine"].(float64)
+		end, _ := data["endLine"].(float64)
+		desc = fmt.Sprintf(":%d-%d", int(start), int(end))
+	case "definition":
+		name, _ := data["name"].(string)
+		start, _ := data["startLine"].(float64)
+		end, _ := data["endLine"].(float64)
+		desc = name
+		extra = fmt.Sprintf(":%d-%d", int(start), int(end))
+	case "contributor":
+		name, _ := data["name"].(string)
+		email, _ := data["email"].(string)
+		desc = name
+		extra = email
+	case "todo":
+		name, _ := data["name"].(string)
+		desc = name
+	case "draft":
+		slug, _ := data["slug"].(string)
+		desc = slug
+	case "policy":
+		desc, _ = data["description"].(string)
+	case "violationKind":
+		desc, _ = data["description"].(string)
+	case "project":
+		desc, _ = data["description"].(string)
+	case "commit":
+		desc, _ = data["message"].(string)
+	case "repo":
+		name, _ := data["name"].(string)
+		desc = name
+	}
+
+	out := fmt.Sprintf("%s", colorize(id, ColorBold, isTTY))
+	if desc != "" {
+		out += fmt.Sprintf(" - %s", desc)
+	}
+	if extra != "" {
+		out += fmt.Sprintf(" - %s", colorize(extra, ColorDim, isTTY))
+	}
+	return "  " + out
+}
+
+func renderEntityMarkdown(kind string, data map[string]interface{}) string {
+	id := GetArtifactID(kind, data)
+	uri := GetArtifactURI(kind, data)
+	desc := ""
+	extra := ""
+
+	switch kind {
+	case "ticket":
+		title, _ := data["title"].(string)
+		status, _ := data["status"].(string)
+		desc = title
+		extra = status
+	case "goal":
+		title, _ := data["title"].(string)
+		status, _ := data["status"].(string)
+		desc = title
+		extra = status
+	case "bundle":
+		root, _ := data["root"].(string)
+		ptype, _ := data["projectType"].(string)
+		if ptype == "" {
+			ptype, _ = data["type"].(string)
+		}
+		desc = root
+		extra = ptype
+	case "folder":
+		fkind, _ := data["kind"].(string)
+		desc = fkind
+	case "section":
+		start, _ := data["startLine"].(float64)
+		end, _ := data["endLine"].(float64)
+		desc = fmt.Sprintf(":%d-%d", int(start), int(end))
+	case "definition":
+		name, _ := data["name"].(string)
+		start, _ := data["startLine"].(float64)
+		end, _ := data["endLine"].(float64)
+		desc = name
+		extra = fmt.Sprintf(":%d-%d", int(start), int(end))
+	case "contributor":
+		name, _ := data["name"].(string)
+		email, _ := data["email"].(string)
+		desc = name
+		extra = email
+	case "todo":
+		name, _ := data["name"].(string)
+		desc = name
+	case "draft":
+		slug, _ := data["slug"].(string)
+		desc = slug
+	case "policy":
+		desc, _ = data["description"].(string)
+	case "violationKind":
+		desc, _ = data["description"].(string)
+	case "project":
+		desc, _ = data["description"].(string)
+	case "commit":
+		desc, _ = data["message"].(string)
+	case "repo":
+		name, _ := data["name"].(string)
+		desc = name
+	}
+
+	// Format: - [<id>](<uri>) - <semantic-description> - <another-one>
+	out := fmt.Sprintf("- [%s](%s)", id, uri)
+	if desc != "" {
+		out += fmt.Sprintf(" - %s", desc)
+	}
+	if extra != "" {
+		out += fmt.Sprintf(" - %s", extra)
+	}
+	return out
+}
+
+// #endregion Entity Rendering

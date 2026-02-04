@@ -20,19 +20,124 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
-All tree and list commands are not consistent. Use go templates (along with sprig if needed) for rendering all text (for human) and markdown (for llms). All trees should use the same tree template both for text and markdown. All lists should use the same templates both for text and markdown. For text, all information is just concatenated but with different colors per segment being maximum efficient. All text information is displayed as digestable as possible (relative dates to now, etc). The line should be capped to terminal width (or default of 90 characters if not available). The markdown lines always start with id and link to uri then a list of descriptions for each property separated by `-`. The amount of properties varies per resource kind.
+Make goal a required field when creating a ticket. Update code and docs.
 
-Here an example for `goal tree`:
+Create a new command: `sync github` that syncs the local semio-repo artifacts with the remote github artifacts. E.g. when a ticket is closes but the github issue is not closed, then close the github issue. Or when a ticket is assigned to a goal then make sure the goal issue is assigned with the milestone of goal. Check that all labels starting with `@` correspond to the list of projects and bundles (e.g. `@coda`, `@semio`, `@semio-repo`, `@semio/js`, `@semio-repo/go`, etc.). Remove the non corresponding labels (from deleted projects and bundles).
+
+semio repo vscode extension:
+The current project tree view looks like this:
+```
+├─ Projects
+│ ├─ coda
+│ ├─ semio
+│ ├─ semio-repo
+│ │ └─ @semio-repo/go
+```
+but it should look like this:
+```
+├─ Projects
+│ ├─ 🔬@coda
+│ ├─ 👤@semio
+│ ├─ 🧰@semio-repo
+│ │ ├─ 🖱️vscode
+│ │ └─ ⌨️go
+```
+
+The preflight command should delete all empty folders (also inside subfolders).
+
+The id/uri system is not implemented clean and consistent. Refactor it. The system should be shared across all layers (cli, mcp, vscode). Graphql should use the id as id, mcp should use the uri as uri. Note: The emoji is part of the id.
+
+All list commands currently output dfferent formats. They should have the following format: `<id> <property1> <property2> ...` and all properties have different colors and are truncated to terminal width (or default of 90 characters if not available). For the --md mode, the format should be `- [<id>](<uri>) - <property1> - <property2> ...`. 
+
+./@semio-repo/go/go bundle list
+  📚@coda/examples - @coda/examples
+  📚@coda/py - @coda/py
+
+./@semio-repo/go/go contributor list
+  👤kinansarak - KinanSarak
+  👤usalu - Ueli Saluz
+
+./@semio-repo/go/go file list
+  ⚙️📄.codex/config.toml
+  📄📄.devcontainer/post-attach.sh
+
+./@semio-repo/go/go section list
+📝 Sketch Breakdown (lines 72-127)
+├── 🔲 Creating the Brick Molds (lines 89-114)
+└── 🔳 Assembling the Design (lines 115-127)
+Cobe Silo (lines 13-14)
+Test on temporary kits (lines 11-12)
+Header (lines 1-20)
+
+./@semio-repo/go/go definition list
+  ✂️@semio/js/sketchpad/Type.tsx§TypeAppFooter - TypeAppFooter - :3284-3361
+  🛠️@semio/js/sketchpad/Type.tsx§config - config - :3367-3397
+  🪨@semio/js/sketchpad/elements.tsx§SectionSpecificity - SectionSpecificity - :92-100
+  ✂️@semio/js/sketchpad/elements.tsx§InteractionCommands - InteractionCommands - :106-108
+
+./@semio-repo/go/go goal list
+  🎯 - AI-optimized Repo - open
+  🎯 - r26-02 - open
+
+./@semio-repo/go/go project list
+  🔬@coda
+  👤@semio
+  🧰@semio-repo
+
+./@semio-repo/go/go section list @semio/js/semio.ts
+Header (lines 1-20)
+Design (lines 2956-3923)
+Kit (lines 3925-7742)
+├── Design Family Helpers (lines 4339-4390)
+└── Validation (lines 7023-7740)
+    ├── Validation core types (lines 7025-7054)
+    └── Validation serialization (lines 7657-7738)
+
+./@semio-repo/go/go ticket list
+  📅2026/02/04/RENAME-ITERATION-TO-INTERACTION - Rename Iteration to Interaction - open - 2026-02-04
+  📅2026/02/04/STANDARDIZE-LIST-AND-TREE-COMMANDS - Standardize List and Tree Commands - open - 2026-02-04
+
+./@semio-repo/go/go tree
+DEBUG: Markdown=false
+/workspaces/semio
+├── .claude
+├── .codex
+│   └── config.toml
+
+The `ticket.json` should change. Remove the `status`, `started`, `finished` and `prompt` fields. Status should be derived wheather the last interactions was finished (has a finished date) or not.
+
+All semio repo cli commands have the --<value> flags for specific values e.g. --vscode for --client vscode, --opus-4-5 for --llm opus-4-5, --2026 for --year 2026, etc. In the --help page, the flags should not be listed and only a general `--<value>` should be listed. The flag can be used to filter the output of the command.
+
+All list and tree commands should be refactored/cleaned/changed/extended to be consistent and perfect. They should all use the same streaming and formatting mechanism.
+
+All list commands should always be streaming.
+The tree command nicely sorted (e.g. first by status open, then closest due dates, etc).
+
+The default list format (for humans) should be colored segments that always start with id and then different colored segments for each property, truncated to terminal width (or default of 90 characters if not available):
+```
+<id> <semantic-description-of-property> <another-one>
+<id> <semantic-description-of-property> <another-one>
+…
+```
+
+All list --md commands should show a streaming list with the format
+```md
+- [<id>](<uri>) - <semantic-description-of-property> - <another-one>
+- [<id>](<uri>) - <semantic-description-of-property> - <another-one>
+…
+```
+
+All list --json commands should show a streaming list with the NDJSON format.
+
+All tree commands should show
 
 text format:
-
 ```
 <kind> <goal-title> <time-left> <open-subgoals>? <open-tickets>? <description>
 ├── <kind> <sub-goal-title> <time-left> <open-subgoals>? <open-tickets>? <description>
 │   ├── <kind> <ticket-title>(isOpen ? <opened-ago> : <finished-ago>) (isOpen ? <last-prompt> : <summary>)
 │   │   ├── <kind> <sub-ticket-title> (isOpen ? <opened-ago> : <finished-ago>) (isOpen ? <last-prompt> : <summary>)
 ```
-
 ```
 ./@semio-repo/go/go goal tree
 🎯 r26-02 24 days left 2 open subgoals 10 open tickets The r26-02 release aims to del…
@@ -41,12 +146,136 @@ text format:
 │   │   ├── 🎫 Kit Zip Fix closed 4 days ago Fixed a zip bug that occured when rou…
 ```
 markdown format
-
 ```
 - [<id>](<uri>) - <semantic-description-of-property> - <another-one>
   - [<id>](<uri>) - <another-kind-with-different-property>
 ```
+```md
+- [🎯R26-02](semiorepo://goal/R26-02) - `created 24 days ago` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
+  - [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `overdue since 1 day` - `Running sketchpad infra…`
+    - [🎫2026/01/30/COMPLETE-KIT-PERSISTANCE](semiorepo://ticket/2026/01/30/COMPLETE-KIT-PERSISTANCE) - `reopened 4 days ago` - `Migrate sqlite schema to new format.`
+      - [🎫2026/01/30/KIT-ZIP-FIX](semiorepo://ticket/2026/01/30/KIT-ZIP-FIX) - `closed 4 days ago` - `Fixed a zip bug that occured when routing the kit zip file.`
+```
 
+Make sure to extend the test to test for the correct format according the template for all tree and list commands:
+
+./@semio-repo/go/go tree
+./@semio-repo/go/go tree --md
+./@semio-repo/go/go tree --json
+
+./@semio-repo/go/go project list
+./@semio-repo/go/go project list --md
+./@semio-repo/go/go project list --json
+./@semio-repo/go/go project tree
+./@semio-repo/go/go project tree --md
+./@semio-repo/go/go project tree --json
+
+./@semio-repo/go/go bundle list
+./@semio-repo/go/go bundle list --md
+./@semio-repo/go/go bundle list --json
+./@semio-repo/go/go bundle tree
+./@semio-repo/go/go bundle tree --md
+./@semio-repo/go/go bundle tree --json
+
+./@semio-repo/go/go folder list
+./@semio-repo/go/go folder list --md
+./@semio-repo/go/go folder list --json
+./@semio-repo/go/go folder tree
+./@semio-repo/go/go folder tree --md
+./@semio-repo/go/go folder tree --json
+
+./@semio-repo/go/go file list
+./@semio-repo/go/go file list --md
+./@semio-repo/go/go file list --json
+./@semio-repo/go/go file tree
+./@semio-repo/go/go file tree --md
+./@semio-repo/go/go file tree --json
+
+./@semio-repo/go/go section list
+./@semio-repo/go/go section list --md
+./@semio-repo/go/go section list --json
+./@semio-repo/go/go section tree 
+./@semio-repo/go/go section tree --md
+./@semio-repo/go/go section tree --json
+
+./@semio-repo/go/go definition list
+./@semio-repo/go/go definition list --md
+./@semio-repo/go/go definition list --json
+./@semio-repo/go/go definition tree
+./@semio-repo/go/go definition tree --md
+./@semio-repo/go/go definition tree --json
+
+./@semio-repo/go/go ticket list
+./@semio-repo/go/go ticket list --md
+./@semio-repo/go/go ticket list --json
+./@semio-repo/go/go ticket tree
+./@semio-repo/go/go ticket tree --md
+./@semio-repo/go/go ticket tree --json
+
+./@semio-repo/go/go goal list
+./@semio-repo/go/go goal list --md
+./@semio-repo/go/go goal list --json
+./@semio-repo/go/go goal tree
+./@semio-repo/go/go goal tree --md
+./@semio-repo/go/go goal tree --json
+
+./@semio-repo/go/go contributor
+./@semio-repo/go/go contributor list
+./@semio-repo/go/go contributor list --md
+./@semio-repo/go/go contributor list --json
+
+./@semio-repo/go/go commit list
+./@semio-repo/go/go commit list --md
+./@semio-repo/go/go commit list --json
+./@semio-repo/go/go commit tree
+./@semio-repo/go/go commit tree --md
+./@semio-repo/go/go commit tree --json
+
+e.g. here some wrong examples:
+
+ ./@semio-repo/go/go goal list
+→ item AI-OPTIMIZED-REPO/CONSISTENT-REPO-HISTORY
+→ item AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS
+
+ ./go ticket list --md
+- [Migration from REFACTOR.md](semiorepo://TICKET/2025/11/17/REFACTOR) (REFACTOR) - closed
+- [Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md](semiorepo://TICKET/2025/11/18/BREADCRUMB-RENDER-ERROR) (BREADCRUMB-RENDER-ERROR) - closed
+
+$ ./@semio-repo/go/go goal list --md
+◯ [Consistent Repo History](semiorepo://goal/) ()
+◯ [Repo CLI Filters](semiorepo://goal/) ()
+◯ [Repo CLI](semiorepo://goal/) ()
+
+
+
+- The list commands should always be streaming. The tree command nicely sorted (e.g. first by status open, then closest due dates, etc)
+- Empty properties on kinds on markdown list items should not show double `- -` e.g. - [🎫FLATTEN-DESIGN](semiorepo://TICKET/FLATTEN-DESIGN) -  - closed  - 
+- The --md mode is not returning proper markdown. e.g. it doubles the `- -`
+- The uri system is not right.  Only the flexible part in uri is uppercased slugged. e.g. semiorepo://goal/ etc
+Extend the existing test to test that all list commands are streaming, return one line per item, are correct format (human with proper id, markdown, json)
+
+All tree and list commands are not consistent. Use go templates (along with sprig if needed) for rendering all text (for human) and markdown (for llms). All trees should use the same tree template both for text and markdown. All lists should use the same templates both for text and markdown. For text, all information is just concatenated but with different colors per segment being maximum efficient. All text information is displayed as digestable as possible (relative dates to now, etc). The line should be capped to terminal width (or default of 90 characters if not available). The markdown lines always start with id and link to uri then a list of descriptions for each property separated by `-`. The amount of properties varies per resource kind.
+
+Here an example for `goal tree`:
+text format:
+```
+<kind> <goal-title> <time-left> <open-subgoals>? <open-tickets>? <description>
+├── <kind> <sub-goal-title> <time-left> <open-subgoals>? <open-tickets>? <description>
+│   ├── <kind> <ticket-title>(isOpen ? <opened-ago> : <finished-ago>) (isOpen ? <last-prompt> : <summary>)
+│   │   ├── <kind> <sub-ticket-title> (isOpen ? <opened-ago> : <finished-ago>) (isOpen ? <last-prompt> : <summary>)
+```
+```
+./@semio-repo/go/go goal tree
+🎯 r26-02 24 days left 2 open subgoals 10 open tickets The r26-02 release aims to del…
+├── 🎯 Running Sketchpad overdue since 1 day 10 open tickets Running sketchpad infra…
+│   ├── 🎫 Complete Kit Persistance reopened yesterday Migrate sqlite schema to new…
+│   │   ├── 🎫 Kit Zip Fix closed 4 days ago Fixed a zip bug that occured when rou…
+```
+markdown format
+```
+- [<id>](<uri>) - <semantic-description-of-property> - <another-one>
+  - [<id>](<uri>) - <another-kind-with-different-property>
+```
 ```md
 - [🎯R26-02](semiorepo://goal/R26-02) - `created 24 days ago` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
   - [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `overdue since 1 day` - `Running sketchpad infra…`
@@ -97,9 +326,6 @@ Display as much information as you can with different colors. (e.g. date, author
 
 Some tree commands show nothing e.g. ticket tree.
 
-
-
-
 Whenever a command is called, then a system should store the interaction. Interactions are general and not specific to a goal or ticket. They store dates (started and optionally finished if successful) the system ("linux", "windows", "mac"), optional client that was used, optional llm that was used, optional prompt that was used, optional diff that was created during the interaction.
  Rename iteration to interaction. Use a different format
 e.g. iterations currently use this:
@@ -139,7 +365,6 @@ goal iteraterions should be instead of this:
   ]
 ```
 this:
-
 ```json
  "interactions": [
     {
@@ -156,7 +381,6 @@ this:
     }
   ]
 ```
-
 ticket iteraterions should be instead of this:
 ```json
  "iterations": [
@@ -226,48 +450,55 @@ The semio repo vscode extension should show the todos in the sideview. Additiona
 
 Extend the existing tests to cover all new features.
 
-The `@semio-repo/vscode` extension sideview should be changed/refactored/consolidated into two sections:
+The `@semio-repo/vscode` extension sideview should be changed/refactored/consolidated into two sections (not 3 as right now): `Monorepo` and `Filter`.
+Here the tree view (% for on click, # for menu button actions)
 ├─ Monorepo
-│ ├─ @PROJECTNAME # NAVIGATE TO PROJECT
-│ │ ├─ BUNDLENAME # NAVIGATE TO BUNDLE
-│ │ │ ├─ FOLDERNAME* # NAVIGATE TO FOLDER
-│ │ │ │ ├─ FILENAME # NAVIGATE TO FILE
-│ │ │ │ │ ├─ SECTIONNAME* # NAVIGATE TO SECTION
-│ │ │ │ │ │ ├─ DEFINITIONNAME # NAVIGATE TO DEFINITION
-│ ├─ Goals # NAVIGATE TO PROJECT
-│ │ ├─ GOALNAME* # NAVIGATE TO GOAL
-│ │ │ ├─ TICKETNAME* # NAVIGATE TO TICKET
-│ ├─ Tickets # NAVIGATE TO PROJECT
-│ │ ├─ YEAR # NAVIGATE TO YEAR
-│ │ │ ├─ MONTH # NAVIGATE TO MONTH
-│ │ │ │ ├─ DAY # NAVIGATE TO DAY
-│ │ │ │ │ ├─ TICKETNAME* # NAVIGATE TO TICKET
-│ │ │ │ │ │ ├─ TICKETDETAILS* # TICKETDETAILSACTIONS
-│ ├─ Policies # NAVIGATE TO PROJECT
-│ │ ├─ POLICYNAME # NAVIGATE TO POLICY
-│ │ │ ├─ VIOLATIONKINDNAME* # NAVIGATE TO VIOLATIONKIND
-│ ├─ Contributors # NAVIGATE TO PROJECT
-│ │ ├─ CONTRIBUTORNAME # NAVIGATE TO CONTRIBUTOR
-│ │ │ ├─ Emails # MAILTO
-│ │ │ ├─ Links # NAVIGATE TO LINK
-│ │ │ ├─ Contributions # NAVIGATE TO CONTRIBUTIONS
-│ ├─ Commits # NAVIGATE TO PROJECT
-│ │ ├─ COMMITSHA # NAVIGATE TO COMMIT
-│ │ │ ├─ Tickets # NAVIGATE TO TICKETS
-│ │ │ │ ├─ GOALNAME* # NAVIGATE TO GOAL
-│ │ │ │ │ ├─ TICKETNAME* # NAVIGATE TO TICKET
-│ │ │ ├─ Goals # NAVIGATE TO GOALS
-│ │ │ │ ├─ GOALNAME* # NAVIGATE TO GOAL
+│ ├─ Projects
+│ │ ├─ @PROJECTNAME % NAVIGATE TO PROJECT
+│ │ │ ├─ BUNDLENAME % NAVIGATE TO BUNDLE
+│ │ │ │ ├─ FOLDERNAME* % NAVIGATE TO FOLDER
+│ │ │ │ │ ├─ FILENAME % NAVIGATE TO FILE
+│ │ │ │ │ │ ├─ SECTIONNAME* % NAVIGATE TO SECTION
+│ │ │ │ │ │ │ ├─ DEFINITIONNAME % NAVIGATE TO DEFINITION
+│ ├─ Goals
+│ │ ├─ GOALNAME* % NAVIGATE TO GOAL
+│ │ │ ├─ TICKETNAME* % NAVIGATE TO TICKET
+│ ├─ Tickets % NAVIGATE TO PROJECT
+│ │ ├─ YEAR % NAVIGATE TO YEAR
+│ │ │ ├─ MONTH % NAVIGATE TO MONTH
+│ │ │ │ ├─ DAY % NAVIGATE TO DAY
+│ │ │ │ │ ├─ TICKETNAME* % NAVIGATE TO TICKET
+│ │ │ │ │ │ ├─ TICKETDETAILS* % TICKETDETAILSACTIONS
+│ ├─ Policies % NAVIGATE TO PROJECT
+│ │ ├─ POLICYNAME % NAVIGATE TO POLICY
+│ │ │ ├─ VIOLATIONKINDNAME* % NAVIGATE TO VIOLATIONKIND
+│ ├─ Contributors % NAVIGATE TO PROJECT
+│ │ ├─ CONTRIBUTORNAME % NAVIGATE TO CONTRIBUTOR
+│ │ │ ├─ Emails % MAILTO
+│ │ │ ├─ Links % NAVIGATE TO LINK
+│ │ │ ├─ Contributions % NAVIGATE TO CONTRIBUTIONS
+│ ├─ Commits % NAVIGATE TO PROJECT
+│ │ ├─ COMMITSHA % NAVIGATE TO COMMIT
+│ │ │ ├─ Tickets % NAVIGATE TO TICKETS
+│ │ │ │ ├─ GOALNAME* % NAVIGATE TO GOAL
+│ │ │ │ │ ├─ TICKETNAME* % NAVIGATE TO TICKET
+│ │ │ ├─ Goals % NAVIGATE TO GOALS
+│ │ │ │ ├─ GOALNAME* % NAVIGATE TO GOAL
 ├─ Filter
 │ ├─ SEARCH # match case, match whole word, regex
 │ ├─ bundle # library, binary, ui, site, assets, default
 │ ├─ folder # organization, required
 │ ├─ section # none, all
 │ ├─ definition # implementation, interface, constant
+│ ├─ ticket # open, closed
 │ ├─ time # none, all
 │ │ └─ YEAR # none, all
 │ │ │ └─ MONTH # none, all
 │ │ │ │ └─ DAY # none, all
+The filter should filter all tree items in the monorepo section. The filter section currently has tree items for individual toggeling but instead it should have menu button actions for each filter on only one kind tree item. E.g. instead of 7 tree items for bundle -> library | schema | binary | ui | site | assets it should have just one bundle tree item with 6 menu button actions (one for each filter).
+The Project tree is missing. All root tree items (projects, goals, tickets, policies, contributors, commits) dont show any child tree item when uncollapsed.
+Make sure everything is tested (e.g. at least one tree item per kind should appear in the ui).
+
 
 The semio repo go binary should be extended/refactored/changed:
 - tickets are currently stored always by `YYYY/MM/DD/SLUG/ticket.md.` Tickets can have a a parent. Make sure that child tickets are stored inside the parent ticket folder e.g. `YYYY/MM/DD/SLUG/CHILD-SLUG/GRANDCHILD-SLUG/ticket.md`.
@@ -292,16 +523,13 @@ Make sure to adjust all config files, docs, etc for the new layout and make sure
 Rename ui to client for tickets and goals.
 
 The semio repo mcp server should expose the following
-
 resources:
-
 The id system in semio-repo is:
-
 repo: `🌍`
 projects: `🏗️`
-project: `<kind>@{project-id}` (<kind> - 👤:user e.g. `semio`, 🧰:infrastructure e.g. `semio-repo`, 🔬:research e.g. `coda`)
-bundles: `📦@{project-id}`
-bundle: `<kind>@{project-id}/{id}` (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 🌐:site, 🏪:assets)
+project: `<kind>{project-code}` (<kind> - 👤:user e.g. `@semio`, 🧰:infrastructure e.g. `@semio-repo`, 🔬:research e.g. `@coda`)
+bundles: `📦{project-code}`
+bundle: `<kind>{project-code}/{code}` (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 🌐:site, 🏪:assets)
 folders: `📁{parent-path*}`
 folder: `<kind>{path*}` (<kind> - 🗃️:organization, 📁:required)
 files: `📄{folder-path*}` 
@@ -326,9 +554,7 @@ contributors: `👤`
 contributor: `👤{github}`
 commits: `🔀`
 commit: `🔀{sha}`
-
 The uri system in semio-repo is:
-
 repo: `semiorepo://repo`
 projects: `semiorepo://projects`
 project: `semiorepo://project/{id}`
@@ -339,7 +565,7 @@ folder: `semiorepo://folder/{path*}`
 files: `semiorepo://files/{folder-path*}`
 file: `semiorepo://file/{path*}`
 sections: `semiorepo://sections/{file-path*}`
-section: `semiorepo://section/{path*}` # just id but replace `#` with `/` and replace section name and definition name with uppercase slugs e.g. `@semio/js/sketchpad/Design.tsx#State Management#Design Store` turns into `@semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE`
+section: `semiorepo://section/{path*}` # just id but replace `#` with `/` and replace section name and definition name with uppercase slugs e.g. `🔖@semio/js/sketchpad/Design.tsx#State Management#Design Store` turns into `@semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE`
 definitions: `semiorepo://definitions/{path*}`
 definition: `semiorepo://definition/{path*}`
 tickets: `semiorepo://tickets`
@@ -358,38 +584,29 @@ contributors: `semiorepo://contributors`
 contributor: `semiorepo://contributor/{github}`
 commits: `semiorepo://commits`
 commit: `semiorepo://commit/{sha}`
-
 The query params are
-
 General query params: 
 {?client}
 tickets: at least one iteration with the given client
 goals: at least one iteration with the given client
-
 {?llm?}
 tickets: at least one iteration with the given llm
 goal: at least one iteration with the given llm
-
 {?year}
 tickets: at least one iteration with the given year
 goals: at least one iteration with the given year
-
 {?month}
 tickets: at least one iteration with the given month
 goals: at least one iteration with the given month
-
 {?day}
 tickets: at least one iteration with the given day
 goals: at least one iteration with the given day
-
 {?contributor}
 tickets: at least one iteration with the given contributor
 goals: at least one iteration with the given contributor
-
 {?status}
 tickets: only the given status
 goals: only the given status
-
 
 Refactor/Extend/Change the semio repo go binary.
 Introduce a global --md flag that outputs the result in markdown format. Markdown should be used by the mcp server.
@@ -400,7 +617,6 @@ enhance <prompt> # Enhance the implementation by adding more features and enhanc
 refactor <prompt> # Refactor the implementation and dont stop until all tests pass.
 test <prompt> # Extend the current tests by testing more features.
 comply <prompt> # Get the implementation to comply the a set of tests. Dont remove any functionality from the tests.
-
 
 The id system in semio-repo is:
 

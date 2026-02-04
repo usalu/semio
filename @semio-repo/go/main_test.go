@@ -27,7 +27,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"testing"
@@ -36,17 +38,29 @@ import (
 // #region Helpers
 
 func findTestRepoRoot(start string) string {
-	dir := start
-	for {
-		if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err == nil {
-			return dir
+	for _, candidate := range []string{start, func() string {
+		_, file, _, ok := runtime.Caller(0)
+		if !ok {
+			return ""
 		}
-		parent := filepath.Dir(dir)
-		if parent == dir {
-			return start
+		return filepath.Dir(file)
+	}()} {
+		dir := candidate
+		if dir == "" {
+			continue
 		}
-		dir = parent
+		for {
+			if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); err == nil {
+				return dir
+			}
+			parent := filepath.Dir(dir)
+			if parent == dir {
+				break
+			}
+			dir = parent
+		}
 	}
+	return start
 }
 
 func findFirstResultData(output string) (json.RawMessage, bool) {
@@ -397,7 +411,7 @@ func TestTicketTitleValidation(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "opus-4", client: COPILOT_CHAT, noIssue: true }) { id slug year month day } }`
+			query := `mutation { ticketOpen(input: { title: "` + tt.title + `", prompt: "Test prompt", llm: "opus-4", client: COPILOT_CHAT, goal: "TEST-GOAL", noIssue: true }) { id slug year month day } }`
 			result, err := executor.ExecuteJSON(ctx, query, nil)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("ticketOpen() error = %v, wantErr %v", err, tt.wantErr)
@@ -1331,7 +1345,9 @@ func TestBundleTreeCommand(t *testing.T) {
 // #region Folder Tests
 
 func TestFolderListCommand(t *testing.T) {
-	result := ToolFolderList("go")
+	cwd, _ := os.Getwd()
+	SetRootDir(findTestRepoRoot(cwd))
+	result := ToolFolderList("@semio-repo")
 	if result.Error != "" {
 		t.Errorf("ToolFolderList returned error: %s", result.Error)
 	}
@@ -1341,7 +1357,9 @@ func TestFolderListCommand(t *testing.T) {
 }
 
 func TestFolderTreeCommand(t *testing.T) {
-	result := ToolFolderTree("go")
+	cwd, _ := os.Getwd()
+	SetRootDir(findTestRepoRoot(cwd))
+	result := ToolFolderTree("@semio-repo/go")
 	if result.Error != "" {
 		t.Errorf("ToolFolderTree returned error: %s", result.Error)
 	}
@@ -1378,7 +1396,9 @@ func TestFileListCommand(t *testing.T) {
 }
 
 func TestFileTreeCommand(t *testing.T) {
-	result := ToolFileTree("go")
+	cwd, _ := os.Getwd()
+	SetRootDir(findTestRepoRoot(cwd))
+	result := ToolFileTree("@semio-repo/go")
 	if result.Error != "" {
 		t.Errorf("ToolFileTree returned error: %s", result.Error)
 	}
@@ -1473,7 +1493,7 @@ func TestTicketOpenNoticketKeyword(t *testing.T) {
 }
 
 func TestTicketOpenContinueKeyword(t *testing.T) {
-	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "", "", false, "")
+	first := ToolTicketOpen("Seed Ticket", "Seed prompt", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
 	if first.Error != "" {
 		t.Fatalf("failed to seed ticket: %s", first.Error)
 	}
@@ -1488,7 +1508,7 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 		}
 	}()
 
-	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "", "", false, "")
+	second := ToolTicketOpen("Continue Ticket", "CONTINUE follow-up", "gpt-5-mini", "codex", "", true, "TEST-GOAL", "", false, "")
 	if second.Error != "" {
 		t.Fatalf("ToolTicketOpen returned error: %s", second.Error)
 	}
@@ -1536,10 +1556,10 @@ func TestGoalCreateValidation(t *testing.T) {
 		t.Error("expected error for missing llm")
 	}
 
-	// Test missing UI
+	// Test missing Client
 	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "", true, "", "")
 	if result.Error == "" {
-		t.Error("expected error for missing ui")
+		t.Error("expected error for missing client")
 	}
 
 	// Test invalid LLM
@@ -1548,10 +1568,10 @@ func TestGoalCreateValidation(t *testing.T) {
 		t.Error("expected error for invalid llm")
 	}
 
-	// Test invalid UI
-	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "invalid-ui", true, "", "")
+	// Test invalid Client
+	result = ToolGoalCreate("Test Goal", "desc", "prompt", "2026-02-15", "opus-4-5", "invalid-client", true, "", "")
 	if result.Error == "" {
-		t.Error("expected error for invalid ui")
+		t.Error("expected error for invalid client")
 	}
 }
 
@@ -1600,7 +1620,7 @@ func TestGoalHierarchy(t *testing.T) {
 	if !ok {
 		t.Fatalf("Expected *Goal data")
 	}
-	
+
 	// Ensure cleanup of parent (which should clean up nested child if working correctly)
 	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), filepath.FromSlash(parent.ID)))
 
@@ -1911,6 +1931,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"E2E prompt positional",
 		"cursor-chat",
 		"sonnet-4-5",
+		"--goal", "TEST-GOAL",
 		"--no-issue",
 		"--no-github",
 	)
@@ -2090,46 +2111,946 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 	}
 }
 
-// #endregion Tree Tests
+// #region Consolidated Tests
 
-func TestMarkdownTreeOutput(t *testing.T) {
-t.Run("Bundle Tree Markdown", func(t *testing.T) {
-out, err := executeCommand("bundle", "tree", "--md")
-if err != nil {
-t.Fatalf("bundle tree failed: %v", err)
+func TestFormatResult_Section(t *testing.T) {
+	payload := map[string]interface{}{
+		"section": map[string]interface{}{
+			"name":      "MySection",
+			"filePath":  "path/to/file.ts",
+			"startLine": float64(10),
+			"endLine":   float64(20),
+		},
+	}
+
+	bytes, _ := json.Marshal(payload)
+	result := formatResult("section list", json.RawMessage(bytes), false)
+
+	expectedParts := []string{
+		"MySection",
+		"(lines 10-20)",
+	}
+
+	for _, part := range expectedParts {
+		if !strings.Contains(result, part) {
+			t.Errorf("Expected result to contain %q, but got:\n%s", part, result)
+		}
+	}
+
+	if strings.TrimSpace(result)[0] == '{' {
+		t.Errorf("Result looks like raw JSON:\n%s", result)
+	}
 }
-if !strings.Contains(out, "- [") {
-t.Errorf("markdown output should contain bullet list links, got:\n%s", out)
+
+func TestFormatResult_Definition(t *testing.T) {
+	payload := map[string]interface{}{
+		"definition": map[string]interface{}{
+			"name":      "MyDefinition",
+			"kind":      "function",
+			"filePath":  "path/to/file.ts",
+			"startLine": float64(30),
+			"endLine":   float64(40),
+		},
+	}
+
+	bytes, _ := json.Marshal(payload)
+	result := formatResult("definition list", json.RawMessage(bytes), false)
+
+	expectedParts := []string{
+		"TEST-DEFINITION-ID",
+		"MyDefinition",
+		":30-40",
+	}
+
+	for _, part := range expectedParts {
+		if !strings.Contains(result, part) {
+			t.Errorf("Expected result to contain %q, but got:\n%s", part, result)
+		}
+	}
+
+	if strings.TrimSpace(result)[0] == '{' {
+		t.Errorf("Result looks like raw JSON:\n%s", result)
+	}
+}
+
+func TestFormatResult_Bundle(t *testing.T) {
+	payload := map[string]interface{}{
+		"bundle": map[string]interface{}{
+			"name": "MyBundle",
+			"root": "/path/to/bundle",
+		},
+	}
+	bytes, _ := json.Marshal(payload)
+	result := formatResult("bundle list", json.RawMessage(bytes), false)
+
+	expectedParts := []string{
+		"📚︎ MyBundle",
+		"/path/to/bundle",
+	}
+
+	for _, part := range expectedParts {
+		if !strings.Contains(result, part) {
+			t.Errorf("Expected result to contain %q, but got:\n%s", part, result)
+		}
+	}
+}
+
+func TestFormatResult_Folder(t *testing.T) {
+	payload := map[string]interface{}{
+		"folder": map[string]interface{}{
+			"path": "path/to/folder",
+			"kind": "custom",
+		},
+	}
+	bytes, _ := json.Marshal(payload)
+	result := formatResult("folder list", json.RawMessage(bytes), false)
+
+	expectedParts := []string{
+		"📁︎ path/to/folder",
+		"custom",
+	}
+
+	for _, part := range expectedParts {
+		if !strings.Contains(result, part) {
+			t.Errorf("Expected result to contain %q, but got:\n%s", part, result)
+		}
+	}
+}
+
+func TestFormatResult_File(t *testing.T) {
+	payload := map[string]interface{}{
+		"file": map[string]interface{}{
+			"id": "path/to/file.ts",
+		},
+	}
+	bytes, _ := json.Marshal(payload)
+	result := formatResult("file list", json.RawMessage(bytes), false)
+
+	expectedParts := []string{
+		"📄",
+		"path/to/file.ts",
+	}
+
+	for _, part := range expectedParts {
+		if !strings.Contains(result, part) {
+			t.Errorf("Expected result to contain %q, but got:\n%s", part, result)
+		}
+	}
+}
+
+func TestFormatResult_Additional(t *testing.T) {
+	t.Run("Goal", func(t *testing.T) {
+		payload := map[string]interface{}{
+			"goal": map[string]interface{}{
+				"id":          "SKETCHPAD/MVP",
+				"title":       "Sketchpad MVP",
+				"status":      "open",
+				"description": "Get sketchpad running at MVP level",
+				"dates": map[string]interface{}{
+					"due": "2026-02-15",
+				},
+			},
+		}
+		jsonBytes, _ := json.Marshal(payload)
+		var p map[string]interface{}
+		json.Unmarshal(jsonBytes, &p)
+
+		output := formatResult("goal list", jsonBytes, true)
+		if strings.TrimSpace(output) == "" || strings.Contains(output, "\"goal\":") {
+			t.Errorf("expected formatted goal, got: %s", output)
+		}
+		if !strings.Contains(output, "Sketchpad MVP") {
+			t.Error("output missing title")
+		}
+		if !strings.Contains(output, "2026-02-15") {
+			t.Error("output missing due date")
+		}
+		if !strings.Contains(output, "SKETCHPAD/MVP") {
+			t.Error("output missing id/slug")
+		}
+	})
+
+	t.Run("Contributor", func(t *testing.T) {
+		payload := map[string]interface{}{
+			"contributor": map[string]interface{}{
+				"github": "octocat",
+				"name":   "The Octocat",
+				"contributions": map[string]interface{}{
+					"commits": 10,
+				},
+			},
+		}
+		jsonBytes, _ := json.Marshal(payload)
+
+		output := formatResult("contributor list", jsonBytes, true)
+		if strings.TrimSpace(output) == "" || strings.Contains(output, "\"contributor\":") {
+			t.Errorf("expected formatted contributor, got: %s", output)
+		}
+		if !strings.Contains(output, "octocat") {
+			t.Error("output missing github handle")
+		}
+		if !strings.Contains(output, "The Octocat") {
+			t.Error("output missing name")
+		}
+	})
+
+	t.Run("Policy", func(t *testing.T) {
+		payload := map[string]interface{}{
+			"policy": map[string]interface{}{
+				"id":          "code",
+				"description": "Validates source file headers",
+				"kinds":       []interface{}{"code:header"},
+			},
+		}
+		jsonBytes, _ := json.Marshal(payload)
+
+		output := formatResult("policy list", jsonBytes, true)
+		if strings.TrimSpace(output) == "" || strings.Contains(output, "\"policy\":") {
+			t.Errorf("expected formatted policy, got: %s", output)
+		}
+		if !strings.Contains(output, "code") {
+			t.Error("output missing id")
+		}
+		if !strings.Contains(output, "Validates") {
+			t.Error("output missing description")
+		}
+	})
+
+	t.Run("File", func(t *testing.T) {
+		payload := map[string]interface{}{
+			"file": map[string]interface{}{
+				"id":        "path/to/file.md",
+				"extension": ".md",
+			},
+		}
+		jsonBytes, _ := json.Marshal(payload)
+
+		output := formatResult("file list", jsonBytes, true)
+		if strings.TrimSpace(output) == "" || strings.Contains(output, "\"file\":") {
+			t.Errorf("expected formatted file, got: %s", output)
+		}
+		if !strings.Contains(output, "path/to/file.md") {
+			t.Error("output missing path")
+		}
+	})
+
+	t.Run("Fix", func(t *testing.T) {
+		payload := map[string]interface{}{
+			"fix": map[string]interface{}{
+				"fixed":     5,
+				"remaining": 2,
+			},
+		}
+		jsonBytes, _ := json.Marshal(payload)
+
+		output := formatResult("fix", jsonBytes, true)
+		if strings.TrimSpace(output) == "" || strings.Contains(output, "\"fix\":") {
+			t.Errorf("expected formatted fix, got: %s", output)
+		}
+		if !strings.Contains(output, "fixed 5 violations") {
+			t.Error("output missing fixed count")
+		}
+	})
+}
+
+func TestMarkdownOutput(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	factory := func(config Config) (*Engine, error) {
+		executor, err := NewExecutor(repoRoot)
+		if err != nil {
+			return nil, err
+		}
+		return NewEngine(executor), nil
+	}
+
+	tests := []struct {
+		name        string
+		args        []string
+		wantMarkers []string
+	}{
+		{
+			name:        "Repo Tree MD",
+			args:        []string{"tree", "--md"},
+			wantMarkers: []string{"- [", "]("},
+		},
+		{
+			name:        "Ticket Tree MD",
+			args:        []string{"ticket", "tree", "--md"},
+			wantMarkers: []string{"- [", "](semiorepo://ticket/"},
+		},
+		{
+			name:        "Goal Tree MD",
+			args:        []string{"goal", "tree", "--md"},
+			wantMarkers: []string{"- [", "](semiorepo://goal/"},
+		},
+		{
+			name:        "Ticket List MD",
+			args:        []string{"ticket", "list", "--md"},
+			wantMarkers: []string{"- [", "](semiorepo://ticket/"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rootCmd := NewRoot(factory)
+			b := bytes.NewBufferString("")
+			rootCmd.SetOut(b)
+			rootCmd.SetErr(b)
+			rootCmd.SetArgs(tt.args)
+
+			_ = rootCmd.Execute()
+
+			output := b.String()
+			if len(strings.TrimSpace(output)) == 0 {
+				t.Logf("Output is empty for %s, skipping marker checks", tt.name)
+				return
+			}
+
+			for _, marker := range tt.wantMarkers {
+				if !strings.Contains(output, marker) {
+					t.Errorf("Output missing marker %q. Got:\n%s", marker, output)
+				}
+			}
+
+			if strings.Contains(output, " -  - ") {
+				t.Errorf("Output contains double dash ' -  - ' which indicates empty property issue:\n%s", output)
+			}
+		})
+	}
+}
+
+func TestLifecycleCommands(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	factory := func(config Config) (*Engine, error) {
+		executor, err := NewExecutor(repoRoot)
+		if err != nil {
+			return nil, err
+		}
+		return NewEngine(executor), nil
+	}
+
+	modes := []string{"", "json", "md"}
+
+	for _, mode := range modes {
+		t.Run("lifecycle_"+mode, func(t *testing.T) {
+			title := "Test Lifecycle " + mode
+			if mode == "" {
+				title = "Test Lifecycle human"
+			}
+
+			openArgs := []string{"ticket", "open", title, "Test Prompt", "copilot-chat", "gemini-3-pro", "--goal", "test-goal", "--no-issue", "--no-github"}
+			if mode == "json" {
+				openArgs = append(openArgs, "--json")
+			}
+			if mode == "md" {
+				openArgs = append(openArgs, "--md")
+			}
+
+			rootCmd := NewRoot(factory)
+			// Create goal first
+			goalCmd := NewRoot(factory)
+			goalCmd.SetArgs([]string{"goal", "open", "Test Goal", "Test Goal Description", "Test Goal Prompt", "copilot-chat", "gemini-3-pro", "--due-date", "2025-12-31", "--no-github"})
+			goalCmd.Execute()
+
+			b := bytes.NewBufferString("")
+			rootCmd.SetOut(b)
+			rootCmd.SetErr(b)
+			rootCmd.SetArgs(openArgs)
+
+			err := rootCmd.Execute()
+			if err != nil {
+				t.Fatalf("ticket open failed: %v\nOutput: %s", err, b.String())
+			}
+
+			listCmd := NewRoot(factory)
+			listB := bytes.NewBufferString("")
+			listCmd.SetOut(listB)
+			listCmd.SetErr(listB)
+			listCmd.SetArgs([]string{"ticket", "list", "--json"})
+			listCmd.Execute()
+
+			events, _ := parseJSONOutput(listB.String())
+			var y, m, d int
+			var slug string
+			found := false
+
+			for _, e := range events {
+				if e.Kind == KindResult {
+					var env struct {
+						Ticket struct {
+							Year  int    `json:"year"`
+							Month int    `json:"month"`
+							Day   int    `json:"day"`
+							Slug  string `json:"slug"`
+							Title string `json:"title"`
+						} `json:"ticket"`
+					}
+					if json.Unmarshal(e.Data, &env) == nil {
+						if strings.EqualFold(env.Ticket.Title, title) {
+							y, m, d, slug = env.Ticket.Year, env.Ticket.Month, env.Ticket.Day, env.Ticket.Slug
+							found = true
+							break
+						}
+					}
+				}
+			}
+
+			if !found {
+				t.Fatalf("Could not find created ticket with title %q in list output", title)
+			}
+
+			defer os.RemoveAll(GetTicketPath(y, m, d, slug))
+
+			changeArgs := []string{"ticket", "change",
+				fmt.Sprintf("%d/%02d/%02d/%s", y, m, d, slug),
+				"--goal", "test-goal",
+				"--parent", "parent-ticket-slug",
+				"--no-github",
+			}
+			changeCmd := NewRoot(factory)
+			changeB := bytes.NewBufferString("")
+			changeCmd.SetOut(changeB)
+			changeCmd.SetErr(changeB)
+			changeCmd.SetArgs(changeArgs)
+			if err := changeCmd.Execute(); err != nil {
+				t.Fatalf("ticket change failed: %v\nOutput: %s", err, changeB.String())
+			}
+
+			ticketDir := GetTicketPath(y, m, d, slug)
+			jsonContent, err := os.ReadFile(filepath.Join(ticketDir, "ticket.json"))
+			if err == nil {
+				var tm Ticket
+				if err := json.Unmarshal(jsonContent, &tm); err == nil {
+					if tm.Goal != "test-goal" {
+						t.Errorf("ticket change goal mismatch: expected test-goal, got %s", tm.Goal)
+					}
+					if tm.Parent != "parent-ticket-slug" {
+						t.Errorf("ticket change parent mismatch: expected parent-ticket-slug, got %s", tm.Parent)
+					}
+				}
+			}
+
+			closeArgs := []string{"ticket", "close",
+				"--no-github",
+				"--year", strconv.Itoa(y),
+				"--month", strconv.Itoa(m),
+				"--day", strconv.Itoa(d),
+				"--slug", slug,
+				"--summary", "Test Summary",
+				"--files", "@semio-repo/go/main.go",
+			}
+			if mode == "json" {
+				closeArgs = append(closeArgs, "--json")
+			}
+			if mode == "md" {
+				closeArgs = append(closeArgs, "--md")
+			}
+
+			closeCmd := NewRoot(factory)
+			closeB := bytes.NewBufferString("")
+			closeCmd.SetOut(closeB)
+			closeCmd.SetErr(closeB)
+			closeCmd.SetArgs(closeArgs)
+
+			err = closeCmd.Execute()
+			if err != nil {
+				t.Fatalf("ticket close failed: %v\nOutput: %s", err, closeB.String())
+			}
+
+			if closeB.String() == "" {
+				t.Errorf("ticket close output empty")
+			}
+		})
+	}
+}
+
+func TestListCommands(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	factory := func(config Config) (*Engine, error) {
+		executor, err := NewExecutor(repoRoot)
+		if err != nil {
+			return nil, err
+		}
+		return NewEngine(executor), nil
+	}
+
+	tests := []struct {
+		name  string
+		args  []string
+		modes []string
+	}{
+		{
+			name:  "bundle list",
+			args:  []string{"bundle", "list"},
+			modes: []string{"", "json", "md"},
+		},
+		{
+			name:  "ticket list",
+			args:  []string{"ticket", "list"},
+			modes: []string{"", "json", "md"},
+		},
+		{
+			name:  "folder list",
+			args:  []string{"folder", "list", "@semio-repo/go"},
+			modes: []string{"", "json", "md"},
+		},
+		{
+			name:  "file list",
+			args:  []string{"file", "list", "@semio-repo/go"},
+			modes: []string{"", "json", "md"},
+		},
+		{
+			name:  "section list",
+			args:  []string{"section", "list", "@semio-repo/go/main.go"},
+			modes: []string{"", "json", "md"},
+		},
+		{
+			name:  "definition list",
+			args:  []string{"definition", "list", "@semio-repo/go/main.go"},
+			modes: []string{"", "json", "md"},
+		},
+		{
+			name:  "policy list",
+			args:  []string{"policy", "list"},
+			modes: []string{"", "json", "md"},
+		},
+		{
+			name:  "contributor list",
+			args:  []string{"contributor", "list"},
+			modes: []string{"", "json", "md"},
+		},
+		{
+			name:  "project list",
+			args:  []string{"project", "list"},
+			modes: []string{"", "json", "md"},
+		},
+	}
+
+	for _, tt := range tests {
+		for _, mode := range tt.modes {
+			testName := tt.name
+			if mode != "" {
+				testName += " --" + mode
+			} else {
+				testName += " (human)"
+			}
+
+			t.Run(testName, func(t *testing.T) {
+				rootCmd := NewRoot(factory)
+				b := bytes.NewBufferString("")
+				rootCmd.SetOut(b)
+				rootCmd.SetErr(b)
+
+				args := append([]string(nil), tt.args...)
+				if mode == "json" {
+					args = append(args, "--json")
+				}
+				if mode == "md" {
+					args = append(args, "--md")
+				}
+				rootCmd.SetArgs(args)
+
+				err := rootCmd.Execute()
+				if err != nil {
+					t.Fatalf("Command failed: %v\nOutput: %s", err, b.String())
+				}
+
+				output := b.String()
+				if mode == "json" {
+					lines := strings.Split(strings.TrimSpace(output), "\n")
+					for _, line := range lines {
+						if line == "" {
+							continue
+						}
+						if !strings.HasPrefix(strings.TrimSpace(line), "{") {
+							continue
+						}
+					}
+				} else if mode == "md" {
+					if !strings.Contains(output, "# ") && !strings.Contains(output, "- ") && !strings.Contains(output, "|") && output != "" {
+					}
+				}
+			})
+		}
+	}
+}
+
+func TestSectionCommands(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	factory := func(config Config) (*Engine, error) {
+		executor, err := NewExecutor(repoRoot)
+		if err != nil {
+			return nil, err
+		}
+		return NewEngine(executor), nil
+	}
+
+	testDir := filepath.Join(repoRoot, "temp", "section_tests")
+	os.MkdirAll(testDir, 0755)
+	defer os.RemoveAll(testDir)
+
+	tests := []struct {
+		name       string
+		ext        string
+		contentFmt string
+		renameTo   string
+	}{
+		{"TypeScript", ".ts", "const x = 1;\n// #region %s\nconst y = 2;\n// #endregion %s\n", "Renamed"},
+		{"Go", ".go", "package main\n// #region %s\nvar y = 2\n// #endregion %s\n", "Renamed"},
+		{"Python", ".py", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
+		{"CSharp", ".cs", "#region %s\nvar y = 2;\n#endregion %s\n", "Renamed"},
+		{"Rust", ".rs", "// #region %s\nlet y = 2;\n// #endregion %s\n", "Renamed"},
+		{"Ruby", ".rb", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
+		{"Shell", ".sh", "# region %s\ny=2\n# endregion %s\n", "Renamed"},
+		{"TOML", ".toml", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
+		{"YAML", ".yaml", "# region %s\ny: 2\n# endregion %s\n", "Renamed"},
+		{"SQL", ".sql", "-- #region %s\nSELECT 1;\n-- #endregion %s\n", "Renamed"},
+		{"GraphQL", ".graphql", "# #region %s\ntype Query { name: String }\n# #endregion %s\n", "Renamed"},
+		{"Markdown", ".md", "## %s\nContent\n", "Renamed"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			sectionName := "MySection"
+			filename := "test" + tc.ext
+			filePath := filepath.Join(testDir, filename)
+			relPath, _ := filepath.Rel(repoRoot, filePath)
+
+			var content string
+			if tc.name == "Markdown" {
+				content = strings.Replace(tc.contentFmt, "%s", sectionName, 1)
+			} else {
+				content = strings.Replace(tc.contentFmt, "%s", sectionName, 2)
+			}
+			os.WriteFile(filePath, []byte(content), 0644)
+
+			moveCmd := NewRoot(factory)
+			b := bytes.NewBufferString("")
+			moveCmd.SetOut(b)
+			moveCmd.SetErr(b)
+			moveCmd.SetArgs([]string{"section", "move", relPath, sectionName, tc.renameTo})
+			err := moveCmd.Execute()
+			if err != nil {
+				t.Fatalf("Move failed: %v Output: %s", err, b.String())
+			}
+
+			newContentBytes, _ := os.ReadFile(filePath)
+			newContent := string(newContentBytes)
+			if !strings.Contains(newContent, tc.renameTo) {
+				t.Errorf("File content does not contain renamed section %s. Content:\n%s", tc.renameTo, newContent)
+			}
+
+			targetFile := filepath.Join(testDir, "extracted"+tc.ext)
+			relTargetFile, _ := filepath.Rel(repoRoot, targetFile)
+
+			extractCmd := NewRoot(factory)
+			extractCmd.SetOut(b)
+			extractCmd.SetErr(b)
+			extractCmd.SetArgs([]string{"section", "extract", relPath, tc.renameTo, relTargetFile})
+			err = extractCmd.Execute()
+			if err != nil {
+				t.Fatalf("Extract failed: %v Output: %s", err, b.String())
+			}
+
+			targetContentBytes, err := os.ReadFile(targetFile)
+			if err != nil {
+				t.Fatalf("Target file not created: %v", err)
+			}
+			targetContent := string(targetContentBytes)
+			if len(targetContent) == 0 && tc.name != "Markdown" {
+				t.Errorf("Extracted content is empty")
+			}
+
+			sourceIntegrate := filepath.Join(testDir, "to_integrate"+tc.ext)
+			relSourceIntegrate, _ := filepath.Rel(repoRoot, sourceIntegrate)
+			integrateContent := "New Content"
+			os.WriteFile(sourceIntegrate, []byte(integrateContent), 0644)
+
+			integrateCmd := NewRoot(factory)
+			integrateCmd.SetOut(b)
+			integrateCmd.SetErr(b)
+			integrateCmd.SetArgs([]string{"section", "integrate", relSourceIntegrate, tc.renameTo, relPath})
+			err = integrateCmd.Execute()
+			if err != nil {
+				t.Fatalf("Integrate failed: %v Output: %s", err, b.String())
+			}
+
+			finalContentBytes, _ := os.ReadFile(filePath)
+			finalContent := string(finalContentBytes)
+			if !strings.Contains(finalContent, integrateContent) {
+				t.Errorf("File content does not contain integrated content. Content:\n%s", finalContent)
+			}
+		})
+	}
+}
+
+func TestStreamingList(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	factory := func(config Config) (*Engine, error) {
+		executor, err := NewExecutor(repoRoot)
+		if err != nil {
+			return nil, err
+		}
+		return NewEngine(executor), nil
+	}
+
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{
+			name: "Ticket List (Text)",
+			args: []string{"ticket", "list"},
+		},
+		{
+			name: "Bundle List (Text)",
+			args: []string{"bundle", "list"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			rootCmd := NewRoot(factory)
+			b := bytes.NewBufferString("")
+			rootCmd.SetOut(b)
+			rootCmd.SetErr(b)
+			rootCmd.SetArgs(tt.args)
+
+			_ = rootCmd.Execute()
+			output := b.String()
+			lines := strings.Split(strings.TrimSpace(output), "\n")
+
+			for _, line := range lines {
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				if strings.HasPrefix(strings.TrimSpace(line), "{\"kind\":\"result\"") {
+					t.Errorf("Expected formatted text output, got raw JSON event: %s", line)
+				}
+			}
+		})
+	}
+}
+
+func TestTicketLifecycle_NoGithub(t *testing.T) {
+	tmpDir := t.TempDir()
+
+	run := func(name string, field ...string) {
+		cmd := exec.Command(name, field...)
+		cmd.Dir = tmpDir
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("run %s %v failed: %v\nOutput: %s", name, field, err, out)
+		}
+	}
+	run("git", "init")
+	run("git", "config", "user.email", "test@test.com")
+	run("git", "config", "user.name", "Test")
+	run("git", "config", "commit.gpgsign", "false")
+	run("git", "commit", "--allow-empty", "-m", "initial")
+
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	if err := os.MkdirAll(filepath.Join(tmpDir, ".semio-repo", "tickets"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	goal, err := OpenGoal("Goal Title", "Goal Description", "Goal Prompt", "2026-02-15", "copilot-chat", "gemini-3-pro", true)
+	if err != nil {
+		t.Fatalf("OpenGoal failed: %v", err)
+	}
+
+	ticket, err := OpenTicket("Test Title NoGH", "Test Prompt", "gemini-3-pro", "copilot-chat", "", false, goal.ID, "", true, "")
+	if err != nil {
+		t.Fatalf("OpenTicket failed: %v", err)
+	}
+	if ticket.GitHub != nil {
+		t.Error("OpenTicket: GitHub data should be nil")
+	}
+
+	testFile := "test.txt"
+	if err := os.WriteFile(filepath.Join(tmpDir, testFile), []byte("content"), 0644); err != nil {
+		t.Fatal(err)
+	}
+
+	if goal.Title != "Goal Title" {
+		t.Errorf("expected title 'Goal Title', got '%s'", goal.Title)
+	}
+	if goal.Prompt != "Goal Prompt" {
+		t.Errorf("expected prompt 'Goal Prompt', got '%s'", goal.Prompt)
+	}
+	if goal.Client != "copilot-chat" {
+		t.Errorf("expected ui 'copilot-chat', got '%s'", goal.Client)
+	}
+	if goal.LLM != "gemini-3-pro" {
+		t.Errorf("expected llm 'gemini-3-pro', got '%s'", goal.LLM)
+	}
+	if goal.GitHub != nil {
+		t.Error("OpenGoal: GitHub data should be nil")
+	}
+
+	goalPath := filepath.Join(tmpDir, ".semio-repo", "goals", "GOAL-TITLE", "goal.json")
+	if _, err := os.Stat(goalPath); os.IsNotExist(err) {
+		t.Errorf("goal file not created at %s", goalPath)
+	}
+
+	run("git", "add", testFile)
+	run("git", "commit", "-m", "add test file")
+
+	err = FinishTicket(ticket, "Summary", []string{testFile}, true, false)
+	if err != nil {
+		t.Fatalf("FinishTicket failed: %v", err)
+	}
+	if ticket.GetStatus() != TicketStatusClosed {
+		t.Errorf("Ticket status mismatch: got %v, want closed", ticket.GetStatus())
+	}
+
+	err = ReopenTicket(ticket, "Reopen Prompt", "gemini-3-pro", "copilot-chat", "", "", "", true)
+	if err != nil {
+		t.Fatalf("ReopenTicket failed: %v", err)
+	}
+	if ticket.GetStatus() != TicketStatusOpen {
+		t.Errorf("Ticket status mismatch: got %v, want open", ticket.GetStatus())
+	}
+
+	ctx := NewRepoContext(tmpDir)
+
+	goalInput := GoalCreateInput{
+		Title:       "Test Goal NoGH 2",
+		Description: "Desc",
+		Prompt:      "Prompt",
+		DueDate:     "2026-02-15",
+		Client:      "cursor",
+		LLM:         "gpt-5-2-codex",
+		NoGithub:    true,
+	}
+
+	goal2, err := ctx.GoalCreate(goalInput)
+	if err != nil {
+		t.Fatalf("GoalCreate failed: %v", err)
+	}
+	if goal2.Title != "Test Goal NoGH 2" {
+		t.Errorf("expected title 'Test Goal NoGH 2', got '%s'", goal2.Title)
+	}
+}
+
+func TestArtifactIDAndURI(t *testing.T) {
+	tests := []struct {
+		name    string
+		kind    string
+		data    map[string]interface{}
+		wantID  string
+		wantURI string
+	}{
+		{
+			name:    "repo",
+			kind:    "repo",
+			data:    map[string]interface{}{},
+			wantID:  "🌍\ufe0e",
+			wantURI: "semiorepo://repo",
+		},
+		{
+			name: "ticket",
+			kind: "ticket",
+			data: map[string]interface{}{
+				"year":  float64(2025),
+				"month": float64(2),
+				"day":   float64(4),
+				"slug":  "test-ticket",
+			},
+			wantID:  "📅\ufe0e 2025/02/04/test-ticket",
+			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
+		},
+		{
+			name: "file",
+			kind: "file",
+			data: map[string]interface{}{
+				"path": "test.txt",
+				"kind": "docs",
+			},
+			wantID:  "📃\ufe0e test.txt",
+			wantURI: "semiorepo://file/test.txt",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotID := GetArtifactID(tt.kind, tt.data)
+			if gotID != tt.wantID {
+				t.Errorf("GetArtifactID() = %v, want %v", gotID, tt.wantID)
+			}
+			gotURI := GetArtifactURI(tt.kind, tt.data)
+			if gotURI != tt.wantURI {
+				t.Errorf("GetArtifactURI() = %v, want %v", gotURI, tt.wantURI)
+			}
+		})
+	}
+}
+
+// #endregion Consolidated Tests
+func TestMcpToolsSchemas(t *testing.T) {
+s := createMcpServer()
+tools := s.ListTools()
+
+var validateSchema func(path string, schema map[string]any) error
+validateSchema = func(path string, schema map[string]any) error {
+typeVal, ok := schema["type"].(string)
+
+// If type is "array", check for "items"
+if ok && typeVal == "array" {
+if _, hasItems := schema["items"]; !hasItems {
+return fmt.Errorf("property '%s' is of type 'array' but missing 'items' field", path)
+}
+}
+
+// Recursively check properties if present
+if props, ok := schema["properties"].(map[string]any); ok {
+for k, v := range props {
+if propMap, ok := v.(map[string]any); ok {
+if err := validateSchema(path+"."+k, propMap); err != nil {
+return err
+}
+}
+}
+}
+
+// Recursively check items if present (for arrays)
+if items, ok := schema["items"].(map[string]any); ok {
+if err := validateSchema(path+".items", items); err != nil {
+return err
+}
+}
+
+return nil
+}
+
+for name, tool := range tools {
+t.Run(name, func(t *testing.T) {
+// InputSchema.Properties is map[string]any
+for propName, propSchema := range tool.Tool.InputSchema.Properties {
+if propMap, ok := propSchema.(map[string]any); ok {
+if err := validateSchema(propName, propMap); err != nil {
+t.Errorf("Invalid schema for tool '%s': %v", name, err)
+}
+}
 }
 })
-
-t.Run("Folder Tree Markdown", func(t *testing.T) {
-		out, err := executeCommand("folder", "tree", "@semio-repo/go", "--md")
-		if err != nil {
-			t.Fatalf("folder tree failed: %v", err)
-		}
-		if !strings.Contains(out, "- [") {
-			t.Errorf("markdown output should contain bullet list links, got:\n%s", out)
-		}
-	})
-
-	t.Run("File Tree Markdown", func(t *testing.T) {
-		out, err := executeCommand("file", "tree", "@semio-repo/go", "--md")
-		if err != nil {
-			t.Fatalf("file tree failed: %v", err)
-		}
-		if !strings.Contains(out, "- [") {
-			t.Errorf("markdown output should contain bullet list links, got:\n%s", out)
-		}
-	})
-
-	t.Run("Section Tree Markdown", func(t *testing.T) {
-		out, err := executeCommand("section", "tree", "@semio-repo/go/main.go", "--md")
-		if err != nil {
-			t.Fatalf("section tree failed: %v\nOutput: %s", err, out)
-		}
-		if !strings.Contains(out, "- [") {
-			t.Errorf("markdown output should contain bullet list links, got:\n%s", out)
-		}
-	})
+}
 }

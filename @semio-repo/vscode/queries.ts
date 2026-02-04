@@ -129,14 +129,15 @@ export const TicketsDocument = graphql(`
         llm commit
         goal
         dates { started finished }
-        iterations {
+        interactions {
           prompt
-          plan
           llm
-          ui
-          author { github name }
-          started
-          finished
+          client
+          author
+          dates {
+            started
+            finished
+          }
           commit
         }
       }
