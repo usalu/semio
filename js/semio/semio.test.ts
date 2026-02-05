@@ -41,6 +41,16 @@ import {
   validateKit,
   ValidationResult,
 } from "./semio";
+import {
+  getKitDiagramShapeStrategy,
+  KIT_DIAGRAM_CIRCLE_FRAME,
+  KIT_DIAGRAM_COLLIDE_RADIUS,
+  KIT_DIAGRAM_LONG_RECTANGLE_FRAME,
+  KIT_DIAGRAM_RECTANGLE_FRAME,
+  KIT_DIAGRAM_TRIANGLE_FRAME,
+  resolveKitDiagramAnchorPair,
+  resolveKitDiagramProximityAnchor,
+} from "./sketchpad/kitSelectionHelpers";
 
 const TOLERANCE = 0.001;
 
@@ -200,5 +210,69 @@ describe("Validation", () => {
       const expected = InvalidKitValidation as ValidationResult;
       expect(areValidationResultsEqual(result, expected)).toBe(true);
     });
+  });
+});
+
+describe("Kit Diagram Geometry", () => {
+  it("maps shape strategies to deterministic frames and snap points", () => {
+    expect(getKitDiagramShapeStrategy("design").frame).toEqual(KIT_DIAGRAM_CIRCLE_FRAME);
+    expect(getKitDiagramShapeStrategy("type").frame).toEqual(KIT_DIAGRAM_RECTANGLE_FRAME);
+    expect(getKitDiagramShapeStrategy("file").frame).toEqual(KIT_DIAGRAM_TRIANGLE_FRAME);
+    expect(getKitDiagramShapeStrategy("quality").frame).toEqual(KIT_DIAGRAM_LONG_RECTANGLE_FRAME);
+    expect(getKitDiagramShapeStrategy("design").getSnapPoints()).toEqual([
+      { id: "n", x: 50, y: 0, side: "top" },
+      { id: "e", x: 100, y: 50, side: "right" },
+      { id: "s", x: 50, y: 100, side: "bottom" },
+      { id: "w", x: 0, y: 50, side: "left" },
+    ]);
+    expect(getKitDiagramShapeStrategy("type").getSnapPoints()).toEqual([
+      { id: "n", x: 60, y: 0, side: "top" },
+      { id: "e", x: 120, y: 40, side: "right" },
+      { id: "s", x: 60, y: 80, side: "bottom" },
+      { id: "w", x: 0, y: 40, side: "left" },
+    ]);
+    expect(getKitDiagramShapeStrategy("file").getSnapPoints()).toEqual([
+      { id: "apex", x: 50, y: 0, side: "top" },
+      { id: "base-left", x: 0, y: 100, side: "left" },
+      { id: "base-right", x: 100, y: 100, side: "right" },
+    ]);
+    expect(getKitDiagramShapeStrategy("quality").getSnapPoints()).toEqual([
+      { id: "n", x: 80, y: 0, side: "top" },
+      { id: "e", x: 160, y: 36, side: "right" },
+      { id: "s", x: 80, y: 72, side: "bottom" },
+      { id: "w", x: 0, y: 36, side: "left" },
+    ]);
+    expect(KIT_DIAGRAM_COLLIDE_RADIUS).toBe(80);
+  });
+
+  it("resolves nearest anchor pairs for shape combinations", () => {
+    const horizontal = resolveKitDiagramAnchorPair(
+      { kind: "design", position: { x: 0, y: 0 } },
+      { kind: "type", position: { x: 300, y: 0 } },
+    );
+    expect(horizontal.source.localPoint.id).toBe("e");
+    expect(horizontal.target.localPoint.id).toBe("w");
+    expect(horizontal.source.absolutePoint).toEqual({ x: 100, y: 50 });
+    expect(horizontal.target.absolutePoint).toEqual({ x: 300, y: 40 });
+
+    const vertical = resolveKitDiagramAnchorPair(
+      { kind: "type", position: { x: 0, y: 0 } },
+      { kind: "design", position: { x: 0, y: 280 } },
+    );
+    expect(vertical.source.localPoint.id).toBe("s");
+    expect(vertical.target.localPoint.id).toBe("n");
+
+    const triangleUp = resolveKitDiagramAnchorPair(
+      { kind: "file", position: { x: 220, y: 320 } },
+      { kind: "design", position: { x: 220, y: 40 } },
+    );
+    expect(triangleUp.source.localPoint.id).toBe("apex");
+    expect(triangleUp.target.localPoint.id).toBe("s");
+  });
+
+  it("resolves proximity anchors from snap points", () => {
+    const proximity = resolveKitDiagramProximityAnchor("type:1", { kind: "type", position: { x: 200, y: 100 } }, { x: 340, y: 140 });
+    expect(proximity.anchor.localPoint.id).toBe("e");
+    expect(proximity.anchor.absolutePoint).toEqual({ x: 320, y: 140 });
   });
 });

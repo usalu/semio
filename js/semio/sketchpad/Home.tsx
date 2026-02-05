@@ -599,12 +599,7 @@ type KitKind = "temporary" | "local" | "remote";
 
 const HomeToolbarFilters: FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const kits = useKits();
-  const getKitKind = useGetKitKind();
-  const { createKit, navigateToKit } = useSketchpadCommands();
-
   const selectedKind = searchParams.get("kind") as KitKind | null;
-  const defaultKitName = useLabel("semio.sketchpad.app.kit.defaultName");
 
   const toggleKind = (type: KitKind) => {
     const newParams = new URLSearchParams(searchParams);
@@ -620,54 +615,70 @@ const HomeToolbarFilters: FC = () => {
     setSearchParams(newParams);
   };
 
-  const handleCreateKit = (type: KitKind) => {
-    const existingNames = kits.map((k) => k.name);
-    const uniqueName = generateUniqueName(defaultKitName, existingNames);
-    const newKit: Kit = {
-      guid: guid(),
-      name: uniqueName,
-      version: "",
-      types: [],
-      designs: [],
-    };
-    const local = type === "local" || type === "remote";
-    const remote = type === "remote";
-    createKit("semio.sketchpad.app.home.toolbar.createKit", newKit, local, remote);
-    navigateToKit(newKit.guid);
-  };
+  const labelTemporary = useLabel("semio.sketchpad.app.home.toolbar.showTemporary");
+  const labelLocal = useLabel("semio.sketchpad.app.home.toolbar.showLocal");
+  const labelRemote = useLabel("semio.sketchpad.app.home.toolbar.showRemote");
 
   return (
-    <div className="flex items-center gap-single">
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
       <Toggle
-        kind="withAction"
         pressed={selectedKind === "temporary"}
         onPressedChange={() => toggleKind("temporary")}
-        actionIcon={<AddIcon />}
-        onActionClick={() => handleCreateKit("temporary")}
         id="semio.sketchpad.app.home.toolbar.showTemporary"
-        actionId="semio.sketchpad.app.home.toolbar.createTemporary"
         icon={<TemporaryKitIcon />}
+        text={labelTemporary}
       />
       <Toggle
-        kind="withAction"
         pressed={selectedKind === "local"}
         onPressedChange={() => toggleKind("local")}
-        actionIcon={<AddIcon />}
-        onActionClick={() => handleCreateKit("local")}
         id="semio.sketchpad.app.home.toolbar.showLocal"
-        actionId="semio.sketchpad.app.home.toolbar.createLocal"
         icon={<LocalKitIcon />}
+        text={labelLocal}
       />
       <Toggle
-        kind="withAction"
         pressed={selectedKind === "remote"}
         onPressedChange={() => toggleKind("remote")}
-        actionIcon={<AddIcon />}
-        onActionClick={() => handleCreateKit("remote")}
         id="semio.sketchpad.app.home.toolbar.showRemote"
-        actionId="semio.sketchpad.app.home.toolbar.createRemote"
         icon={<RemoteKitIcon />}
+        text={labelRemote}
       />
+    </div>
+  );
+};
+
+const HomeToolbarCreate: FC = () => {
+  const kits = useKits();
+  const defaultKitName = useLabel("semio.sketchpad.app.kit.defaultName");
+  const { createKit, navigateToKit } = useSketchpadCommands();
+
+  const handleCreateKit = useCallback(
+    (type: KitKind) => {
+      const existingNames = kits.map((kit) => kit.name);
+      const uniqueName = generateUniqueName(defaultKitName, existingNames);
+      const newKit: Kit = {
+        guid: guid(),
+        name: uniqueName,
+        version: "",
+        types: [],
+        designs: [],
+      };
+      const local = type === "local" || type === "remote";
+      const remote = type === "remote";
+      createKit("semio.sketchpad.app.home.toolbar.createKit", newKit, local, remote);
+      navigateToKit(newKit.guid);
+    },
+    [createKit, defaultKitName, kits, navigateToKit],
+  );
+
+  const labelTemporary = useLabel("semio.sketchpad.app.home.toolbar.createTemporary");
+  const labelLocal = useLabel("semio.sketchpad.app.home.toolbar.createLocal");
+  const labelRemote = useLabel("semio.sketchpad.app.home.toolbar.createRemote");
+
+  return (
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
+      <Action id="semio.sketchpad.app.home.toolbar.createTemporary" icon={<TemporaryKitIcon />} text={labelTemporary} onClick={() => handleCreateKit("temporary")} />
+      <Action id="semio.sketchpad.app.home.toolbar.createLocal" icon={<LocalKitIcon />} text={labelLocal} onClick={() => handleCreateKit("local")} />
+      <Action id="semio.sketchpad.app.home.toolbar.createRemote" icon={<RemoteKitIcon />} text={labelRemote} onClick={() => handleCreateKit("remote")} />
     </div>
   );
 };
@@ -1590,11 +1601,28 @@ const Home: FC = () => {
       id: "semio.sketchpad.app.home.toolbar.filters",
       specificity: 20,
       order: 0,
+      toolbarGroup: {
+        id: "filter",
+        labelId: "semio.sketchpad.toolbar.parent.filter",
+        order: 20,
+      },
       content: <HomeToolbarFilters />,
+    });
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.home.toolbar.create",
+      specificity: 20,
+      order: 0,
+      toolbarGroup: {
+        id: "create",
+        labelId: "semio.sketchpad.toolbar.parent.create",
+        order: 30,
+      },
+      content: <HomeToolbarCreate />,
     });
 
     return () => {
       removeSection("toolbar", "semio.sketchpad.app.home.toolbar.filters");
+      removeSection("toolbar", "semio.sketchpad.app.home.toolbar.create");
     };
   }, [appType, addSection, removeSection]);
 

@@ -174,6 +174,31 @@ Format as:
 
 ---
 
+## PROMPT F: Kit Diagram Shape Strategy and Snap-Point Routing Plan
+
+```
+Create an implementation plan to refactor the Kit diagram node visuals and edge connection logic to a shape-strategy system with snap points.
+
+Requirements:
+1. Strategy architecture:
+   - Add a shape strategy contract (geometry + render metadata + snap-point resolver).
+   - Add a registry keyed by diagram node kind for easy future extension.
+2. Initial shape map:
+   - Design: circle with 4 snap points (top/right/bottom/left).
+   - Type: rectangle with 4 snap points (middle of each edge).
+   - File: triangle with 3 snap points.
+   - All other kinds: long rectangle with 4 snap points (middle of each edge).
+3. Replace current edge intersection logic with nearest snap-point pair selection between source and target.
+4. Reuse the same snap-point resolver for connection preview/proximity-connect behavior.
+5. Keep existing selection/hover/drag behaviors and D3-force + React Flow synchronization unchanged.
+6. Include a test plan:
+   - Unit tests for shape geometry and nearest snap-point selection.
+   - Playwright checks for endpoint alignment during static layout and drag.
+7. Include concrete migration phases with touched files, risk points, and acceptance criteria.
+```
+
+---
+
 ## How to Use These Prompts
 
 1. **Copy Prompt A** and paste into your LLM (provide Kit.tsx + Design.tsx context if needed)

@@ -804,9 +804,20 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 
 // #region Avatar
 
-const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, ...props }, ref) => (
-  <AvatarPrimitive.Root ref={ref} data-slot="avatar" className={cn("relative flex size-small shrink-0 overflow-hidden rounded-full border border-element", className)} {...props} />
-));
+const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, style, ...props }, ref) => {
+  const isSizeClass = className && (className.includes("size-") || className.includes("w-") || className.includes("h-"));
+  const isFullSize = className && className.includes("size-full");
+  const hasExplicitSize = style && (style.width || style.height);
+  return (
+    <AvatarPrimitive.Root
+      ref={ref}
+      data-slot="avatar"
+      style={style}
+      className={cn("relative flex overflow-hidden rounded-full", !hasExplicitSize && "shrink-0", !isFullSize && "border border-element", !isSizeClass && !hasExplicitSize && "size-small", className)}
+      {...props}
+    />
+  );
+});
 Avatar.displayName = "Avatar";
 
 const AvatarImage = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Image>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Image>>(({ className, ...props }, ref) => (
@@ -854,14 +865,17 @@ export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarP
 DraggableAvatar.displayName = "DraggableAvatar";
 
 export interface TableAvatarProps {
+  id?: string;
   icon?: string | React.ReactNode;
   name?: string;
   className?: string;
   isSelected?: boolean;
   isHovered?: boolean;
+  style?: React.CSSProperties;
+  fallbackStyle?: React.CSSProperties;
 }
 
-export const TableAvatar: React.FC<TableAvatarProps> = ({ icon, name, className, isSelected, isHovered }) => {
+export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle }) => {
   const nameStr = typeof name === "string" ? name : String(name ?? "");
   const normalizedName = nameStr.trim();
   const initials = normalizedName
@@ -876,9 +890,9 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ icon, name, className,
   const isImageIcon = typeof icon === "string";
   const isReactIcon = icon && !isImageIcon;
   return (
-    <Avatar className={cn("shrink-0", className, isSelected && "ring-1 ring-[color:var(--active-base)]", isHovered && "ring-1 ring-[color:var(--hover-base)]")}>
+    <Avatar id={id} style={style} className={cn("shrink-0", className, isSelected && "ring-1 ring-[color:var(--active-base)]", isHovered && "ring-1 ring-[color:var(--hover-base)]")}>
       {isImageIcon ? <AvatarImage src={icon} alt={normalizedName} /> : null}
-      <AvatarFallback className={cn("text-xs", isSelected ? "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]" : isHovered ? "bg-[color:var(--hover-base)]" : "")}>
+      <AvatarFallback style={fallbackStyle} className={cn("text-xs", isSelected ? "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]" : isHovered ? "bg-[color:var(--hover-base)]" : "")}>
         {isReactIcon ? icon : initials}
       </AvatarFallback>
     </Avatar>
@@ -1229,8 +1243,8 @@ function ActionGroupItem({
   if (id) {
     return (
       <Tooltip>
-        <TooltipTrigger asChild className="flex-1 min-w-0">
-          {actionGroupItemElement}
+        <TooltipTrigger asChild>
+          <span className="contents">{actionGroupItemElement}</span>
         </TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
@@ -1317,13 +1331,48 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
 
 function Action({ className, id, icon, text, as = "button", ...props }: ActionProps) {
   const level = useLevel();
-  return (
-    <ActionGroup className={className}>
-      <ActionGroupItem as={as} id={id} text={text} {...props}>
-        {icon}
-      </ActionGroupItem>
-    </ActionGroup>
+  const borderClass = getLevelBorderElementClass(level);
+  const Comp = as;
+  const hasText = Boolean(text);
+
+  const actionElement = (
+    <Comp
+      type={Comp === "button" ? "button" : undefined}
+      role={Comp === "div" && (props as any).onClick ? "button" : undefined}
+      tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
+      id={id}
+      className={cn(
+        "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single h-medium border",
+        hasText && "aspect-auto gap-single",
+        level === "base" && "hover:bg-hover-base",
+        level === "window" && "hover:bg-hover-window",
+        level === "panel" && "hover:bg-hover-panel",
+        level === "overlay" && "hover:bg-hover-overlay",
+        level === "temporary" && "hover:bg-hover-temporary",
+        borderClass,
+        className,
+      )}
+      {...(props as any)}
+    >
+      {icon}
+      {text && <span className="text-tiny whitespace-nowrap">{text}</span>}
+    </Comp>
   );
+
+  if (id) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="contents">{actionElement}</span>
+        </TooltipTrigger>
+        <TooltipContent>
+          <DescriptionTooltipContent id={id} />
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  return actionElement;
 }
 
 export { Action, ActionDropdown, ActionGroup, ActionGroupItem, actionGroupItemVariants };
@@ -1370,7 +1419,7 @@ function ButtonGroup({ className, id, showLabel, children, ...props }: ButtonGro
   const borderClass = getLevelBorderElementClass(level);
   const divideClass = getLevelDivideElementClass(level);
   const buttonGroupElement = (
-    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)} {...props}>
+    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit shrink-0 items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)} {...props}>
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
@@ -1414,13 +1463,13 @@ function ButtonGroupItem({
           level: context.level || level,
         }),
         text ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
-        text && "flex items-center gap-0 p-single w-auto",
+        text && "flex items-center gap-single p-single w-auto aspect-auto",
         className,
       )}
       {...(props as any)}
     >
       {icon || children}
-      {text && <span className="ml-single text-xs whitespace-nowrap">{text}</span>}
+      {text && <span className="text-xs whitespace-nowrap">{text}</span>}
     </Comp>
   );
 
@@ -1428,7 +1477,7 @@ function ButtonGroupItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span>{buttonGroupItemElement}</span>
+          <span className="contents">{buttonGroupItemElement}</span>
         </TooltipTrigger>
         <TooltipContent>
           <DescriptionTooltipContent id={id} />
@@ -2441,6 +2490,7 @@ export interface ToggleItem<T extends string> {
   value: T;
   label: React.ReactNode;
   text?: string;
+  dropdownText?: string;
   id?: string;
 }
 
@@ -2471,6 +2521,14 @@ interface ToggleDropdownProps<T extends string> extends Omit<React.ComponentProp
   showLabel?: boolean;
   placeholder?: string;
   dropdownId?: string;
+  dropdownSide?: "top" | "right" | "bottom" | "left";
+  dropdownAlign?: "start" | "center" | "end";
+  dropdownSideOffset?: number;
+  dropdownAvoidCollisions?: boolean;
+  dropdownInstant?: boolean;
+  dropdownContentClassName?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleWithActionProps | ToggleDropdownProps<T>;
@@ -2506,7 +2564,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
   const divideClass = getLevelDivideElementClass(level);
 
   const toggleGroupElement = (
-    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)} {...(restProps as any)}>
+    <ToggleGroupPrimitive.Root data-slot="toggle-group" id={id} type={kind} className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden h-medium divide-x", borderClass, divideClass, className)} {...(restProps as any)}>
       <ToggleGroupContext.Provider value={{ level }}>
         {items.map((item) => (
           <ToggleGroupItem key={item.value} {...item} />
@@ -2549,7 +2607,18 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
     >
       <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{icon as React.ReactNode}</span>
       {text && <span className="ml-single text-xs whitespace-nowrap">{text}</span>}
-      {action && <div className={cn("flex items-center justify-center w-small h-small flex-shrink-0", getLevelBgClass(level), text && "ml-single")}>{action}</div>}
+      {action && (
+        <div
+          className={cn("flex items-center justify-center w-small h-small flex-shrink-0", getLevelBgClass(level), text && "ml-single")}
+          onClick={(e) => e.stopPropagation()}
+          onPointerDown={(e) => e.stopPropagation()}
+          onMouseDown={(e) => e.stopPropagation()}
+          onMouseUp={(e) => e.stopPropagation()}
+          onDoubleClick={(e) => e.stopPropagation()}
+        >
+          {action}
+        </div>
+      )}
     </ToggleGroupPrimitive.Item>
   );
 
@@ -2610,13 +2679,41 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
   if ("kind" in props && props.kind === "dropdown" && "items" in props) {
     const dropdownProps = props as ToggleDropdownProps<T>;
-    const { items, value: controlledValue, defaultValue, onValueChange, pressed, defaultPressed, onPressedChange, id, showLabel, className, dropdownId } = dropdownProps;
+    const {
+      items,
+      value: controlledValue,
+      defaultValue,
+      onValueChange,
+      pressed,
+      defaultPressed,
+      onPressedChange,
+      id,
+      showLabel,
+      className,
+      dropdownId,
+      dropdownSide = "bottom",
+      dropdownAlign = "start",
+      dropdownSideOffset = 4,
+      dropdownAvoidCollisions = true,
+      dropdownInstant = false,
+      dropdownContentClassName,
+      open: controlledOpen,
+      onOpenChange,
+    } = dropdownProps;
     const [internalValue, setInternalValue] = React.useState<T | undefined>(defaultValue);
-    const [open, setOpen] = React.useState(false);
+    const [internalOpen, setInternalOpen] = React.useState(false);
 
     const isControlled = controlledValue !== undefined;
     const value = isControlled ? controlledValue : internalValue;
     const selectedItem = items.find((item) => item.value === value) || items[0];
+    const isOpenControlled = controlledOpen !== undefined;
+    const open = isOpenControlled ? controlledOpen : internalOpen;
+    const setOpen = (nextOpen: boolean) => {
+      if (!isOpenControlled) {
+        setInternalOpen(nextOpen);
+      }
+      onOpenChange?.(nextOpen);
+    };
 
     const handleSelect = (itemValue: string) => {
       if (!isControlled) {
@@ -2640,12 +2737,26 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
         <PopoverTrigger asChild>
           <Action as="div" id={dropdownId} icon={<ChevronDownIcon className="size-small" />} />
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-single min-w-[120px]" align="start">
+        <PopoverContent
+          side={dropdownSide}
+          align={dropdownAlign}
+          sideOffset={dropdownSideOffset}
+          avoidCollisions={dropdownAvoidCollisions}
+          className={cn(
+            "w-auto p-single min-w-[120px]",
+            dropdownInstant ? "data-[state=open]:animate-none data-[state=closed]:animate-none data-[state=open]:fade-in-0 data-[state=closed]:fade-out-0 data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100" : "",
+            dropdownContentClassName,
+          )}
+        >
           <div className="flex flex-col">
             {availableItems.map((item) => {
+              const dropdownText = item.dropdownText || item.text;
               const buttonElement = (
                 <button key={item.value} onClick={() => handleSelect(item.value)} className={cn("flex items-center p-single text-xs cursor-selectable transition-colors", "hover:bg-hover-temporary outline-none focus-visible:bg-hover-temporary")}>
-                  <span className="flex-1 text-left">{addIconSize(item.label)}</span>
+                  <span className="flex flex-1 items-center gap-single text-left">
+                    <span className="flex items-center">{addIconSize(item.label)}</span>
+                    {dropdownText ? <span className="text-xs">{dropdownText}</span> : null}
+                  </span>
                 </button>
               );
 
@@ -4659,7 +4770,27 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 
 // #region Diagram
 
-export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow, ViewportPortal };
+export {
+  applyNodeChanges,
+  Background,
+  BackgroundVariant,
+  BaseEdge,
+  forceCenter,
+  forceCollide,
+  forceLink,
+  forceManyBody,
+  forceSimulation,
+  forceX,
+  forceY,
+  getBezierPath,
+  Handle,
+  Position,
+  ReactFlow,
+  ReactFlowProvider,
+  useInternalNode,
+  useReactFlow,
+  ViewportPortal,
+};
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
 export const DIAGRAM_UNIT = 48;
@@ -4851,7 +4982,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
   onSelectionChange,
   defaultViewport,
 }) => {
-  const forceConfig = useMemo(() => ({ ...defaultDiagramForceConfig, ...forceConfigProp }), [forceConfigProp]);
+  const forceConfig = React.useMemo(() => ({ ...defaultDiagramForceConfig, ...forceConfigProp }), [forceConfigProp]);
   const simulationRef = React.useRef<Simulation<any, any> | null>(null);
   const draggingNodeRef = React.useRef<string | null>(null);
   const isControlled = controlledNodes !== undefined && controlledEdges !== undefined;
@@ -5169,17 +5300,7 @@ const Diagram: React.FC<DiagramProps> = (props) => {
   );
 };
 
-export {
-  Diagram,
-  SelectionMode,
-  Position,
-  Background,
-  BaseEdge,
-  Handle,
-  ReactFlow,
-  ReactFlowProvider,
-  applyNodeChanges,
-};
+export { Diagram, SelectionMode };
 export type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, OnSelectionChangeParams };
 
 export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], layoutOptions?: DiagramLayoutOptions): { nodes: Node[]; edges: Edge[] } {

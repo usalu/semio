@@ -1460,6 +1460,12 @@
                 "normal": "Filter",
                 "beginner": "Artefakte nach Typ filtern"
               }
+            },
+            "resetFilters": {
+              "label": {
+                "normal": "Filter Zurücksetzen",
+                "beginner": "Aktive Artefaktfilter entfernen und alle Artefaktarten anzeigen"
+              }
             }
           },
           "canvas": {
@@ -3821,6 +3827,38 @@
         "label": {
           "normal": "Werkzeugleiste",
           "beginner": "Werkzeugleiste"
+        },
+        "parent": {
+          "selection": {
+            "label": {
+              "normal": "Auswahl",
+              "beginner": "Auswahl"
+            }
+          },
+          "filter": {
+            "label": {
+              "normal": "Filter",
+              "beginner": "Filter"
+            }
+          },
+          "create": {
+            "label": {
+              "normal": "Erstellen",
+              "beginner": "Erstellen"
+            }
+          },
+          "view": {
+            "label": {
+              "normal": "Ansicht",
+              "beginner": "Ansicht"
+            }
+          },
+          "actions": {
+            "label": {
+              "normal": "Aktionen",
+              "beginner": "Aktionen"
+            }
+          }
         }
       },
       "tutorial": {

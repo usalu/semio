@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import * as fs from "fs";
 
 // Simple test that verifies selection tools exist in the DOM
 test.describe("Kit App Selection Tools - Simple DOM Tests", () => {
@@ -67,7 +68,6 @@ test.describe("Kit App Selection Tools - Simple DOM Tests", () => {
   test("verify Kit.tsx compilation has selection tools exports", () => {
     // This test verifies the code is properly compiled
     // We're just checking that the file exists and has expected exports
-    const fs = require("fs");
     const kitFilePath = "/workspaces/semio/js/semio/sketchpad/Kit.tsx";
     
     if (fs.existsSync(kitFilePath)) {
@@ -88,7 +88,6 @@ test.describe("Kit App Selection Tools - Simple DOM Tests", () => {
 
   test("verify event handler registry can handle KIT.INIT", () => {
     // Load the shared module and verify event handler registry works
-    const fs = require("fs");
     const sharedPath = "/workspaces/semio/js/semio/sketchpad/shared.ts";
     
     if (fs.existsSync(sharedPath)) {
@@ -105,7 +104,6 @@ test.describe("Kit App Selection Tools - Simple DOM Tests", () => {
   });
 
   test("verify useKitAppActiveTool hook references hook system correctly", () => {
-    const fs = require("fs");
     const kitPath = "/workspaces/semio/js/semio/sketchpad/Kit.tsx";
     
     if (fs.existsSync(kitPath)) {

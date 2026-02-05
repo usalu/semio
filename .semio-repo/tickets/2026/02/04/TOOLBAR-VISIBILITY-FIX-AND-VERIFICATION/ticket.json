@@ -1,0 +1,18 @@
+{
+  "title": "Toolbar Visibility Fix And Verification",
+  "iterations": [
+    {
+      "prompt": "Toolbar is invisible. Fix with playwright",
+      "llm": "gemini-3-pro",
+      "ui": "copilot-chat",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "date": "2026-02-04T16:51:57.324614965Z",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418"
+    }
+  ],
+  "status": "open",
+  "dates": {},
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/340"
+  }
+}

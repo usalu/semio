@@ -474,6 +474,11 @@ const Feedback: FC = () => {
       id: "semio.sketchpad.app.feedback.toolbar.send",
       specificity: 20,
       order: 0,
+      toolbarGroup: {
+        id: "actions",
+        labelId: "semio.sketchpad.toolbar.parent.actions",
+        order: 50,
+      },
       content: <FeedbackToolbar />,
     });
 

@@ -1753,6 +1753,22 @@ const App: FC<AppProps> = () => {
   useEffect(() => {
     if (appType !== "quality") return;
 
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.quality.toolbar.empty",
+      specificity: 20,
+      order: 0,
+      toolbarPlaceholder: true,
+      content: () => null,
+    });
+
+    return () => {
+      removeSection("toolbar", "semio.sketchpad.app.quality.toolbar.empty");
+    };
+  }, [appType, addSection, removeSection]);
+
+  useEffect(() => {
+    if (appType !== "quality") return;
+
     addSection("workbench", {
       id: "semio.sketchpad.app.quality.functions",
       specificity: 20,

@@ -53,7 +53,7 @@ CONFIG
 #region Playwright
 echo "Installing Playwright browsers..."
 mkdir -p "$WORKSPACE/node_modules/.cache/ms-playwright"
-PLAYWRIGHT_BROWSERS_PATH="$WORKSPACE/node_modules/.cache/ms-playwright" npx playwright install --with-deps chromium
+PLAYWRIGHT_BROWSERS_PATH="$WORKSPACE/node_modules/.cache/ms-playwright" npx playwright install --with-deps chromium firefox webkit
 #endregion Playwright
 #region GitHooks
 echo "Setting up git hooks..."

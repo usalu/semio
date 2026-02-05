@@ -1,0 +1,11 @@
+# Ticket
+
+## Todos
+
+## Changes
+
+## Log
+
+## Summary
+
+Fixed navigation timeout in kit selection tests by resolving an event bubbling issue in the Toggle component's Action button. Verified that clicking the Create button now properly triggers navigation instead of toggling the parent. Updated tests to use robust selectors and confirmed all kit app tests pass.

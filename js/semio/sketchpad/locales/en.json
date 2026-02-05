@@ -1265,6 +1265,44 @@
               "normal": "Import Kit",
               "beginner": "Import Kit"
             }
+          },
+          "toolbar": {
+            "showTemporary": {
+              "label": {
+                "normal": "Temporary",
+                "beginner": "Temporary"
+              }
+            },
+            "showLocal": {
+              "label": {
+                "normal": "Local",
+                "beginner": "Local"
+              }
+            },
+            "showRemote": {
+              "label": {
+                "normal": "Remote",
+                "beginner": "Remote"
+              }
+            },
+            "createTemporary": {
+              "label": {
+                "normal": "Temporary",
+                "beginner": "Temporary"
+              }
+            },
+            "createLocal": {
+              "label": {
+                "normal": "Local",
+                "beginner": "Local"
+              }
+            },
+            "createRemote": {
+              "label": {
+                "normal": "Remote",
+                "beginner": "Remote"
+              }
+            }
           }
         },
         "kit": {
@@ -1296,6 +1334,14 @@
               "beginner": "Kit not available"
             }
           },
+          "search": {
+            "placeholder": {
+              "label": {
+                "normal": "Filter...",
+                "beginner": "Search for artifacts..."
+              }
+            }
+          },
           "dropzone": {
             "label": {
               "normal": "Drop zip file to import",
@@ -1325,8 +1371,8 @@
           "iconPlaceholder": {
             "label": {
               "label": {
-                "normal": "🎨 or URL to icon",
-                "beginner": "🎨 or URL to icon"
+                "normal": "\ud83c\udfa8 or URL to icon",
+                "beginner": "\ud83c\udfa8 or URL to icon"
               }
             }
           },
@@ -1503,75 +1549,65 @@
             },
             "showDesigns": {
               "label": {
-                "normal": "Show Designs",
-                "beginner": "Click to show all designs in this kit"
-              },
-              "manual": "manuals/semio/kit#designs",
-              "tutorial": "hello-semio/model-design"
+                "normal": "Designs",
+                "beginner": "Designs"
+              }
             },
             "createDesign": {
               "label": {
-                "normal": "Create Design",
-                "beginner": "Click to create a new design in this kit"
+                "normal": "Design",
+                "beginner": "Create Design"
               },
               "manual": "manuals/semio/kit#designs",
               "tutorial": "hello-semio/model-design"
             },
             "showTypes": {
               "label": {
-                "normal": "Show Types",
-                "beginner": "Click to show all types in this kit"
-              },
-              "manual": "manuals/semio/kit#types",
-              "tutorial": "hello-semio/model-brick-set"
+                "normal": "Types",
+                "beginner": "Types"
+              }
             },
             "createType": {
               "label": {
-                "normal": "Create Type",
-                "beginner": "Click to create a new type in this kit"
+                "normal": "Type",
+                "beginner": "Create Type"
               },
               "manual": "manuals/semio/kit#types",
               "tutorial": "hello-semio/model-brick-set"
             },
             "showQualities": {
               "label": {
-                "normal": "Show Qualities",
-                "beginner": "Click to show all qualities in this kit"
-              },
-              "manual": "manuals/semio/kit#qualities",
-              "tutorial": "getting-started/intro#quality"
+                "normal": "Qualities",
+                "beginner": "Qualities"
+              }
             },
             "createQuality": {
               "label": {
-                "normal": "Create Quality",
-                "beginner": "Click to create a new quality definition in this kit"
+                "normal": "Quality",
+                "beginner": "Create Quality"
               },
               "manual": "manuals/semio/kit#qualities",
               "tutorial": "getting-started/intro#quality"
             },
             "showPorts": {
               "label": {
-                "normal": "Show Ports",
-                "beginner": "Click to show all ports in this kit"
-              },
-              "manual": "manuals/semio/kit#ports",
-              "tutorial": "getting-started/intro#port"
+                "normal": "Ports",
+                "beginner": "Ports"
+              }
             },
             "createPort": {
               "label": {
-                "normal": "Create Port",
-                "beginner": "Click to create a new port definition in this kit"
+                "normal": "Port",
+                "beginner": "Create Port"
               },
               "manual": "manuals/semio/kit#ports",
               "tutorial": "getting-started/intro#port"
             },
             "showFiles": {
               "label": {
-                "normal": "Show Files",
-                "beginner": "Click to show all files in this kit"
-              },
-              "manual": "manuals/semio/kit#files",
-              "tutorial": "getting-started/intro#files"
+                "normal": "Files",
+                "beginner": "Files"
+              }
             },
             "createFile": {
               "label": {
@@ -1583,27 +1619,23 @@
             },
             "showFolders": {
               "label": {
-                "normal": "Show Folders",
-                "beginner": "Click to show all folders in this kit"
-              },
-              "manual": "manuals/semio/kit#folders",
-              "tutorial": "hello-semio/model-design"
+                "normal": "Folders",
+                "beginner": "Folders"
+              }
             },
             "createFolder": {
               "label": {
-                "normal": "Create Folder",
-                "beginner": "Click to create a new folder in this kit"
+                "normal": "Folder",
+                "beginner": "Create Folder"
               },
               "manual": "manuals/semio/kit#folders",
               "tutorial": "hello-semio/model-design"
             },
             "showAuthors": {
               "label": {
-                "normal": "Show Authors",
-                "beginner": "Click to show all authors of this kit"
-              },
-              "manual": "manuals/semio/kit#authors",
-              "tutorial": "getting-started/intro#authors"
+                "normal": "Authors",
+                "beginner": "Authors"
+              }
             },
             "createAuthor": {
               "label": {
@@ -1633,20 +1665,38 @@
             },
             "showTags": {
               "label": {
-                "normal": "Show Tags",
-                "beginner": "Show Tags"
+                "normal": "Tags",
+                "beginner": "Tags"
               }
             },
             "showConcepts": {
               "label": {
-                "normal": "Show Concepts",
-                "beginner": "Show Concepts"
+                "normal": "Concepts",
+                "beginner": "Concepts"
               }
             },
             "filters": {
               "label": {
                 "normal": "Filters",
                 "beginner": "Filter artifacts by type"
+              }
+            },
+            "resetFilters": {
+              "label": {
+                "normal": "Reset Filters",
+                "beginner": "Clear active artifact filters and show all artifact kinds"
+              }
+            },
+            "createTag": {
+              "label": {
+                "normal": "Tag",
+                "beginner": "Create Tag"
+              }
+            },
+            "createConcept": {
+              "label": {
+                "normal": "Concept",
+                "beginner": "Create Concept"
               }
             }
           },
@@ -1975,6 +2025,20 @@
             "label": {
               "normal": "Title",
               "beginner": "Title"
+            }
+          },
+          "tool": {
+            "pointer": {
+              "label": {
+                "normal": "Selection",
+                "beginner": "Selection"
+              }
+            },
+            "hand": {
+              "label": {
+                "normal": "Hand",
+                "beginner": "Hand"
+              }
             }
           }
         },
@@ -2400,7 +2464,7 @@
                   "unit": {
                     "label": {
                       "normal": "Unit",
-                      "beginner": "The measurement unit for this attribute's value (e.g., mm, kg, °C)."
+                      "beginner": "The measurement unit for this attribute's value (e.g., mm, kg, \u00b0C)."
                     },
                     "manual": "design#attributes"
                   },
@@ -2753,6 +2817,40 @@
             "label": {
               "normal": "Tools",
               "beginner": "Tools"
+            },
+            "select": {
+              "normal": {
+                "label": {
+                  "normal": "Normal",
+                  "beginner": "Normal Select"
+                }
+              },
+              "additive": {
+                "label": {
+                  "normal": "Additive",
+                  "beginner": "Additive Select"
+                }
+              },
+              "subtractive": {
+                "label": {
+                  "normal": "Subtractive",
+                  "beginner": "Subtractive Select"
+                }
+              }
+            },
+            "lasso": {
+              "rectangular": {
+                "label": {
+                  "normal": "Rectangular",
+                  "beginner": "Rectangular Lasso"
+                }
+              },
+              "freeform": {
+                "label": {
+                  "normal": "Freeform",
+                  "beginner": "Freeform Lasso"
+                }
+              }
             }
           },
           "windows": {
@@ -3251,6 +3349,26 @@
             "label": {
               "normal": "Tools",
               "beginner": "Tools"
+            },
+            "select": {
+              "normal": {
+                "label": {
+                  "normal": "Normal",
+                  "beginner": "Create Normal"
+                }
+              },
+              "additive": {
+                "label": {
+                  "normal": "Additive",
+                  "beginner": "Create Additive"
+                }
+              },
+              "subtractive": {
+                "label": {
+                  "normal": "Subtractive",
+                  "beginner": "Create Subtractive"
+                }
+              }
             }
           },
           "title": {
@@ -3822,6 +3940,16 @@
         "label": {
           "normal": "Toolbar",
           "beginner": "Toolbar"
+        },
+        "parent": {
+          "selection": "Selection",
+          "filter": "Filter",
+          "create": "Create",
+          "view": "View",
+          "actions": "Actions"
+        },
+        "subtool": {
+          "select": "Select"
         }
       },
       "tutorial": {

@@ -55,6 +55,7 @@ Code analysis problems MUST include reason and solution text.
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
 Playwright browser caches MUST use the workspace `node_modules` volume path so `npx playwright install` stays cached across reloads.
+Devcontainer provisioning MUST install Chromium, Firefox, and WebKit Playwright browsers into the shared cache path.
 Claude Code and Codex auth plus chat history MUST persist across devcontainer rebuilds via named volumes for CLI config and editor server state.
 Claude Code auth files MUST live in the persisted Claude volume and be linked into `$HOME`.
 Devcontainer named volume mount points MUST be pre-created in the Dockerfile with correct user ownership.
@@ -85,6 +86,12 @@ Diagram edge intersections MUST target node centers based on standard UI element
 Diagram drag interactions MUST pin dragged (and multi-selected) nodes via fx/fy and skip pinned nodes during simulation-driven position writes.
 Diagram drag lifecycle MUST reheat alphaTarget on drag start and reset alphaTarget to 0 on drag end, including pointer-leave/blur fallback cleanup.
 Diagram edge intersection math MUST use absolute node positions and measured node dimensions.
+Diagram node geometry MUST be strategy-driven per node kind with deterministic shape id, frame dimensions, render payload, snap-point generation, and nearest-point resolution against target vectors.
+Diagram edge routing MUST resolve source/target anchors from strategy snap-point pairs and derive React Flow source/target positions from resolved anchor sides.
+Connection preview and proximity-connect targeting MUST reuse the same snap-point resolver used by static edge routing.
+Port visuals MUST use deterministic color assignment by compatibility family across Kit, Type, and Design diagrams.
+Ports without explicit compatibility mappings MUST keep deterministic per-port identity colors.
+Design app diagram simulation MUST prioritize overlap prevention with minimal-force collision-only resolution, no global centering forces, and pinned existing nodes.
 
 ### Ticket
 
@@ -394,9 +401,21 @@ Stats provide computed or measured performance data for entire designs using the
 - Artifact visibility in the diagram MUST synchronize with table filtering and ancestor expansion state.
 - Physics-based diagram layouts MUST preserve node interaction states (hover, selection, dragging) across simulation cycles.
 - Node connection intersections MUST align with standard small-avatar UI element centers.
+- Kit diagram nodes MUST render by shape strategy mapping (`design` circle, `type` rectangle, `file` triangle, default long-rectangle) with strategy-defined snap points.
+- Kit diagram edge endpoints MUST align to resolved strategy snap points during static layout, dragging, and interactive connection preview.
 - Diagram dragging MUST keep edges aligned and avoid jitter by pinning dragged nodes while the simulation updates the remaining layout.
 - Kit artifact multi-selection MUST support Shift+Click for additive/subtractive selection and rectangular selection to select multiple nodes simultaneously.
 - Diagram selection MUST synchronize with the application state machine to ensure consistency across all views.
+- Kit diagram windows MUST allow direct node selection interactions (click, Shift+Click, lasso) and persist those selections through the shared Kit selection state.
+- Port avatars and connector visuals MUST share a consistent compatibility-family color language across table, diagram, and scene surfaces.
+
+#### Design Editor
+
+- Design diagram node overlap prevention MUST use low-intensity force settings so intentional manual placement remains easy.
+- Design diagram nodes MUST render at one-third of the default diagram unit size.
+- Design diagram primary-pointer selection interactions (click, Shift+Click, lasso) MUST remain independent from panning-state tracking.
+- Design scene selection MUST resolve selected piece identity from traversable object ancestry metadata (`pieceId`/`id`) so click and box-selection stay synchronized.
+- Design scene piece render wrappers MUST expose selection identity metadata on transform ancestors so loaded model meshes propagate deterministic selection identity.
 
 ### Ticket UX
 
@@ -404,13 +423,42 @@ Ticket close output MUST present semantic change lists for bundles, folders, fil
 
 #### Toolbar
 
-The toolbar is a floating panel positioned at the bottom center of the canvas. Each app registers toolbar sections via `addSection("toolbar", { id, specificity, order, content })`.
+The toolbar is a fixed bottom-center single-band control surface. Each app registers toolbar sections via `addSection("toolbar", { id, specificity, order, content })`.
 
-- **Home app**: Filter toggles for kit kinds (temporary, local, remote) with action buttons to create new kits
-- **Kit app**: Filter toggles for artifact kinds (designs, types, qualities, ports, tags, concepts, files, folders, authors) with action buttons to create new artifacts
-- **Design app**: Selection tools (normal, additive, subtractive) and lasso tools (rectangular, freeform)
-- **Type app**: Selection tools and connector creation tool
-- **Feedback app**: Send button to submit feedback form
+- Toolbar MUST render as one flat horizontal band at bottom center with category controls and a right-side Tool Setting Bar section.
+- Toolbar MUST NOT render as a floating detached panel and MUST keep tools and settings on one shared surface.
+- Toolbar MUST enforce a center-origin split where the Tool Zone grows left from center and the Tool Setting Bar grows right from center.
+- Toolbar width MUST remain content-sized from the center seam and MUST NOT stretch to full viewport width.
+- Toolbar controls MUST be clustered by category and exposed through category dropdown toggles; flat ungrouped tool spreads are forbidden.
+- Toolbar tree logic MUST expose one active `tool` and one optional active `sub-tool` per app.
+- Toolbar parent taxonomy MUST be shared across apps: `Selection`, `Filter`, `Create`, `View`, `Actions`.
+- Toolbar section registrations MUST declare parent metadata (`toolbarGroup.id`, `toolbarGroup.labelId`, `toolbarGroup.order`) so grouping is deterministic.
+- Parent activation MUST expose sub-tools through vertical upward dropdown toggles attached to the source tool button.
+- Selection MUST expose its full tool family through one upward dropdown.
+- Filter and Create MUST activate directly from toolbar buttons without dropdown expansion.
+- Dropdown expansion MUST never open downward.
+- Toolbar interaction MUST provide deterministic pointer and keyboard behavior for category activation, sub-tool dropdown selection, and focus return.
+- Filtering MUST be a first-class parent group with explicit subtools including `Filter Design`, `Filter Type`, `Filter Status`, and `Reset Filters`.
+- Selection MUST expose subtools for mode operations (including additive/subtractive options).
+- Placeholder branches (`Create`, `View`, `Actions`) MUST always exist with placeholder subtools even when app-level controls are minimal.
+- Selected filter state MUST be visible via explicit indicators and reset availability state.
+- Toolbar expansion/collapse and settings switching MUST be instantaneous with no animation, transition, easing, or fade behavior.
+- Toolbar state MUST keep a single active selection path and MUST collapse unrelated branches when selection changes.
+- Tool Setting Bar content MUST be resolved strictly from active tool path context (sub-tool → tool) and MUST remain layout-decoupled.
+- Tool Setting Bar MUST never show global or mixed settings outside the active tool path.
+- Tool Setting Bar MUST render direct named toggles/buttons only; static heading labels and group-title rows are forbidden.
+- Tool Setting Bar controls MUST include both icon and name text.
+- Tool Setting Bar MUST expose all filter controls when Filter is active and all create controls when Create is active.
+- Tool Setting Bar for Selection MUST provide selection mode switching including additive/subtractive controls; Filter/Create Tool Setting Bar content MAY use placeholder settings scaffolding.
+- Toolbar containers MUST not display scrollbars; overflow is handled by clipping without scroll UI.
+- Subtool dropdowns MUST open upward and align centered above the triggering control with no collision-driven repositioning.
+- Toolbar borders MUST remain visually clean by clipping overflow within the toolbar containers.
+- **Home app** MUST map to filter/create branches for kit kind visibility and create actions.
+- **Kit app** MUST map to filter/create/selection branches for artifact visibility, artifact creation, and selection mode tools.
+- **Design app** MUST map to selection branches for selection and lasso mode families.
+- **Type app** MUST map to selection branches for selection and connector tool families.
+- **Feedback app** MUST map to actions branches for form submit actions.
+- Apps without active toolbar controls (e.g. Docs/Quality) MUST support empty tooltree registration without breaking shared layout.
 
 Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: { toolbar: true, ... }` in default state creation.
 
@@ -1710,7 +1758,7 @@ Devcontainer configuration with VS Code customizations, container/remote env, po
 
 ## 📄 .devcontainer/post-create.sh
 
-Devcontainer provisioning steps for dependency installs, including Playwright browser install into the shared cache path.
+Devcontainer provisioning steps for dependency installs, including Playwright Chromium, Firefox, and WebKit installs into the shared cache path.
 
 ## 📄 .devcontainer/post-start.sh
 
@@ -2240,6 +2288,16 @@ Design editing (pieces, connections). Extends `KitDiffAppStore`.
 - `useDesignAppCamera()` - 3D camera
 - `useDesignAppActiveTool()` - Active tool
 - `useDesignAppDiagramCenter()` / `useDesignAppDiagramScale()` - Diagram view
+
+**Diagram Layout:**
+
+- Design diagram runs a D3 collision-only overlap pass without charge/link/center forces.
+- Overlap resolution pins existing nodes and only repositions newly added or explicitly moved nodes.
+- Overlap resolution is keyed to node position/topology changes and not selection-only updates.
+- Design diagram node rendering and connector ring geometry use a dedicated one-third node-size constant.
+- Design diagram panning pointer guards are scoped to non-primary mouse buttons so React Flow primary-button selection events always reach selection state sync.
+- Design diagram selection mapping resolves selected node guids from node payload data, and React Flow node change sync applies selection deltas in addition to position updates.
+- Design scene model piece wrappers stamp `userData.id` and `userData.pieceId` on matrix and mesh wrapper groups so three.js selection ancestry can resolve piece guids for Select onChange sync.
 
 **HoverIntentContext:**
 
@@ -4330,3 +4388,34 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 13. Image
 14. Description
 15. Attributes
+
+## js/semio/sketchpad/
+
+- Toolbar rendering is centralized in `Sketchpad.tsx` and composes app-provided toolbar data through panel sections.
+- `PanelSection` exposes `toolbarGroup` metadata with `id`, `labelId`, and `order` for toolbar-specific parent clustering.
+- `PanelSection.toolbarPlaceholder` marks empty app toolbar registrations so shared toolbar orchestration can keep app-level registration parity while skipping placeholder sections during tree grouping.
+- `Sketchpad.tsx` derives canonical `ToolbarRootNode` / `ToolbarSubtoolNode` structures (Selection, Filter, Create, View, Actions) and renders one fixed bottom-center flat toolbar band with a center-split Tool Zone and Tool Setting Bar.
+- Toolbar root ordering uses `toolbarGroup.order` with fallback canonical order.
+- Toolbar selection state is stored as app-scoped `toolbarPathByApp` (`rootId`, `subtoolId`) and normalized per app via default-root resolution and subtool validation effects.
+- Dropdown open state is controlled per app through `toolbarOpenRootByApp` so only one category dropdown is open at a time and root/subtool selection collapses all branches.
+- App modules (`Home.tsx`, `Kit.tsx`, `Design.tsx`, `Type.tsx`, `Feedback.tsx`) map their controls into shared parent groups and expose app-specific tooltree nodes.
+- Apps with no active controls (`Docs.tsx`, `Quality.tsx`) still register empty toolbar branches so shared layout and ordering logic remain stable.
+- Toolbar category toggles use `Toggle` dropdown mode with upward-only placement, collision flipping disabled, and instant (no-motion) dropdown rendering.
+- Only Selection uses toolbar dropdown mode; Filter/Create/View/Actions render as direct named icon+label toolbar toggles.
+- Toolbar layout keeps a center-origin split with left-growing tool controls and right-growing Tool Setting Bar content on the same visual surface without full-width stretching.
+- Toolbar rendering uses fixed-width rectangular tool buttons, right-aligned Tool Zone anchoring, and static layout state so dropdown selection and Tool Setting Bar swaps remain instant without motion effects.
+- Toolbar containers clamp overflow with no scrollbars so borders remain clean while wide tool sets are clipped.
+- Selection subtool dropdowns are anchored to the triggering control and open upward with centered alignment and collision avoidance disabled.
+- Tool Setting Bar control rows are rendered as direct named `Toggle`/`Button` controls without static title/group label elements.
+- Selection-mode tool families in Design/Type rely on tool definitions and group mode switching; filter/create families in Home/Kit rely on toggle + action semantics.
+- Filter branches expose explicit reset behavior and selected-state indicators while preserving URL/query synchronization where applicable; create branches use dedicated action sets.
+- Toolbar adaptation draft specifications are stored in `.semio-repo/drafts/Toolbar.md` for cross-agent alignment before implementation passes.
+- `kitSelectionHelpers.ts` defines kit diagram shape strategies, the node-kind strategy registry, geometry normalization/vector utilities, and snap-point anchor-pair/proximity resolution.
+- `Kit.tsx` renders node visuals from strategy payloads and routes floating edges plus connection preview anchors through shared snap-point resolution with side-to-ReactFlow position mapping.
+- `Kit.tsx` enables React Flow element selection/focus on the diagram canvas so diagram click/lasso selection emits `onSelectionChange` updates into `KIT.SET_SELECTION`.
+- `Kit.tsx`, `Design.tsx`, and `Type.tsx` consume a shared compatibility-family port color strategy for port avatars, handle markers, and connector scene visuals.
+- Compatibility-family grouping merges explicitly compatible ports; ports without compatibility edges keep their own deterministic identity color.
+
+## js/semio/sketchpad/portColor.ts
+
+- Exports deterministic port tone resolution keyed by compatibility-family grouping, connector-port guid extraction helpers, and compatibility-state classification for selected-versus-target port interactions.

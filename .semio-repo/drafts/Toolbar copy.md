@@ -1,0 +1,9 @@
+I want to redesign the existing global toolbar used across all applications while keeping it fixed at the bottom center of the screen, exactly where it is today. The new system consists of two distinct but synchronized toolbars aligned on the same horizontal axis.
+
+The left toolbar is the primary tool strip. It is anchored at the bottom center and expands leftward as tools are added, while tools within the strip are ordered from left to right. Only one tool can be active at a time. This tool system is hierarchical and built as a tree structure. When a tool is selected, its sub-tools expand vertically upward from that tool. When a sub-tool is selected and contains further categories, sub-sub-tools expand horizontally to the right of the selected sub-tool.
+
+The right toolbar is a contextual settings bar that displays settings for the currently selected tool, sub-tool, or sub-sub-tool. This bar expands from left to right, starting near the center of the screen and extending to the far right edge. The content of the settings bar must always stay fully synchronized with the current selection state, updating immediately whenever the selected tool level changes.
+
+The interaction model must ensure that only one node in the tool hierarchy is active at any time and that all settings shown are driven solely by that active selection. The overall design should clearly express hierarchy through spatial layout (vertical for depth, horizontal for categories) without relying on animation.
+
+Use the provided sketch as a structural reference and deconstruct it alongside this description to fully understand the intended layout, hierarchy, and interaction model. Generate a professional, extremely detailed prompt that precisely describes this toolbar system, its behavior, and its design intent.  

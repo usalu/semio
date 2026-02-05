@@ -95,7 +95,6 @@ import {
   Coord,
   Design,
   DiffStatus,
-  findAttributeValue,
   findConnectionsInDesign,
   findConnectorInType,
   findDesignInKit,
@@ -118,6 +117,7 @@ import {
   toThreeRotation,
   Type,
 } from "../semio";
+import { getConnectorPortGuid, getPortCompatibilityState, getPortTone } from "./portColor";
 import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection } from "./elements";
 import {
   applyNodeChanges,
@@ -2812,41 +2812,46 @@ export const LassoFreeformTool: Tool<DesignAppState> = {
 
 export const DesignAppTools: Tool<DesignAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, LassoRectangularTool, LassoFreeformTool];
 
-const getDesignTools = (): ToolDefinition[] => [
-  {
-    id: "selection",
-    defaultMode: ToolKind.SELECTION_NORMAL,
-    modes: DesignAppTools.filter((tool) => tool.id.startsWith("selection")).map((tool) => ({
-      id: tool.id,
-      icon: tool.icon,
-    })),
-  },
-  {
-    id: "lasso",
-    defaultMode: ToolKind.LASSO_RECTANGULAR,
-    modes: DesignAppTools.filter((tool) => tool.id.startsWith("lasso")).map((tool) => ({
-      id: tool.id,
-      icon: tool.icon,
-    })),
-  },
-];
+export const DesignSelectSettings: FC = () => {
+    const [activeTool, setActiveTool] = useDesignAppActiveTool();
+    const normalLabel = useLabel("semio.sketchpad.app.design.tools.select.normal");
+    const additiveLabel = useLabel("semio.sketchpad.app.design.tools.select.additive");
+    const subtractiveLabel = useLabel("semio.sketchpad.app.design.tools.select.subtractive");
 
-export const ToolsToggleGroup: FC = () => {
-  const kitScope = useKitScope();
-  const designScope = useDesignScope();
-  const [activeTool, setActiveTool, canSet] = useDesignAppActiveTool();
+    return (
+       <div className="flex shrink-0 items-center gap-single h-full px-single">
+         <ToggleGroup 
+            items={[
+                { value: String(ToolKind.SELECTION_NORMAL), icon: <SelectToolIcon className="size-tiny" />, text: normalLabel, id: "semio.sketchpad.app.design.tools.select.normal" },
+                { value: String(ToolKind.SELECTION_ADDITIVE), icon: <AddIcon className="size-tiny" />, text: additiveLabel, id: "semio.sketchpad.app.design.tools.select.additive" },
+                { value: String(ToolKind.SELECTION_SUBTRACTIVE), icon: <RemoveIcon className="size-tiny" />, text: subtractiveLabel, id: "semio.sketchpad.app.design.tools.select.subtractive" }
+            ]}
+            value={activeTool !== undefined ? [String(activeTool)] : []}
+            onValueChange={(vals) => vals[0] && setActiveTool && setActiveTool(Number(vals[0]) as ToolKind)}
+            kind="single"
+         />
+       </div>
+    );
+};
 
-  if (!kitScope?.guid || !designScope?.guid) return null;
+export const DesignLassoSettings: FC = () => {
+    const [activeTool, setActiveTool] = useDesignAppActiveTool();
+    const rectangularLabel = useLabel("semio.sketchpad.app.design.tools.lasso.rectangular");
+    const freeformLabel = useLabel("semio.sketchpad.app.design.tools.lasso.freeform");
 
-  return (
-    <ToolGroup
-      tools={getDesignTools()}
-      activeTool={activeTool ?? ToolKind.SELECTION_NORMAL}
-      onToolChange={(tool) => {
-        setActiveTool?.(tool as ToolKind);
-      }}
-    />
-  );
+    return (
+       <div className="flex shrink-0 items-center gap-single h-full px-single">
+          <ToggleGroup 
+            items={[
+                { value: String(ToolKind.LASSO_RECTANGULAR), icon: <DiagramIcon className="size-tiny" />, text: rectangularLabel, id: "semio.sketchpad.app.design.tools.lasso.rectangular" },
+                { value: String(ToolKind.LASSO_FREEFORM), icon: <SceneIcon className="size-tiny" />, text: freeformLabel, id: "semio.sketchpad.app.design.tools.lasso.freeform" }
+            ]}
+            value={activeTool !== undefined ? [String(activeTool)] : []}
+            onValueChange={(vals) => vals[0] && setActiveTool && setActiveTool(Number(vals[0]) as ToolKind)}
+            kind="single"
+         />
+       </div>
+    );
 };
 
 // #endregion Tools
@@ -4364,7 +4369,11 @@ const getConnectorPositionStyle = (connector: Connector): { x: number; y: number
 
 const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, selected = false, onPortClick }) => {
   const { x, y } = getConnectorPositionStyle(connector);
-  const connectorColor = findAttributeValue(connector, "semio.color", "var(--foreground)")!;
+  const kit = useKit() as Kit | undefined;
+  const selectedPortGuid = useContext(SelectedConnectorPortContext);
+  const connectorPortGuid = getConnectorPortGuid(connector);
+  const tone = getPortTone(connectorPortGuid, kit?.ports ?? []);
+  const compatibilityState = getPortCompatibilityState(connectorPortGuid, selectedPortGuid, kit?.ports ?? []);
   const [hoverPort] = useDesignAppHoverPort();
 
   const isHovered = useDesignAppIsPortHovered(undefined, pieceId, connector.guid ?? "");
@@ -4382,8 +4391,24 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
       style={{
         left: x + ICON_WIDTH / 2,
         top: y,
-        backgroundColor: selected ? "var(--active-base)" : isHovered ? "var(--hover-base)" : connectorColor,
-        border: selected || isHovered ? "2px solid var(--border-element-color)" : "0",
+        backgroundColor:
+          selected
+            ? "var(--active-base)"
+            : isHovered
+              ? "var(--hover-base)"
+              : compatibilityState === "compatible"
+                ? tone.surfaceStrong
+                : compatibilityState === "incompatible"
+                  ? "hsla(0 72% 52% / 0.32)"
+                  : tone.base,
+        border:
+          selected || isHovered
+            ? "2px solid var(--border-element-color)"
+            : compatibilityState === "compatible"
+              ? "1px solid hsl(141 57% 40%)"
+              : compatibilityState === "incompatible"
+                ? "1px solid hsl(0 74% 44%)"
+                : `1px solid ${tone.border}`,
         zIndex: selected || isHovered ? 20 : 10,
       }}
       position={Position.Top}
@@ -4507,6 +4532,7 @@ const PieceNodeComponent: React.FC<NodeProps<PieceNode>> = React.memo(({ id, dat
 }, pieceNodeAreEqual);
 
 const SelectedConnectorContext = createContext<DesignAppSelection["connector"] | undefined>(undefined);
+const SelectedConnectorPortContext = createContext<string | undefined>(undefined);
 
 type PieceNodeInnerProps = {
   id: string;
@@ -5454,6 +5480,15 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   }, [design?.pieces, selection?.pieces, transitivelyHoveredPieces, transactionStatusMap]);
 
   const selectedConnector = selection?.connector;
+  const selectedConnectorPortGuid = useMemo(() => {
+    if (!selectedConnector?.piece || !selectedConnector.connector || !design) return undefined;
+    const selectedPiece = design.pieces?.find((piece) => piece.guid === selectedConnector.piece);
+    if (!selectedPiece) return undefined;
+    if (selectedPiece.design?.guid) return "default";
+    const selectedType = selectedPiece.type?.guid ? kitTypes?.find((type) => type.guid === selectedPiece.type?.guid) : undefined;
+    const selectedTypeConnector = selectedType?.connectors?.find((connector) => connector.guid === selectedConnector.connector);
+    return selectedTypeConnector?.port?.guid;
+  }, [selectedConnector, design, kitTypes]);
 
   const { baseNodes, edges } = useMemo(() => {
     if (!design) return { baseNodes: [], edges: [] };
@@ -5471,10 +5506,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const onNodesChangeReactFlow = useCallback(
     (changes: any[]) => {
       if (isDraggingNodeRef.current || isPanningRef.current) return;
-
-      const positionChanges = changes.filter((c: any) => c.type === "position");
-      if (positionChanges.length === 0) return;
-      setNodes((nds) => applyNodeChanges(positionChanges, nds) as typeof nds);
+      if (changes.length === 0) return;
+      setNodes((nds) => applyNodeChanges(changes, nds) as typeof nds);
     },
     [isDraggingNodeRef, isPanningRef],
   );
@@ -5483,7 +5516,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     ({ nodes, edges }: { nodes: Array<Node>; edges: Array<Edge> }) => {
       if (isDraggingNodeRef.current || isPanningRef.current) return;
 
-      const selectedPieceGuids = nodes.filter((n) => n.id.startsWith("piece-")).map((n) => n.id.split("-").pop() as string);
+      const selectedPieceGuids = nodes.filter((n) => n.id.startsWith("piece-")).map((n) => getPieceIdFromNode(n as DiagramNode));
 
       const selectedConnectionGuids = edges
         .filter((e) => e.type === "SemioConnection" || e.id.startsWith("connection-") || (e as any).data?.SemioConnection)
@@ -5564,7 +5597,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 
   const handleDiagramPointerDown = useCallback(
     (e: PointerEvent) => {
-      if (e.button === 0) {
+      if (e.button === 1 || e.button === 2) {
         isPanningRef.current = true;
         const nodesContainer = document.querySelector(`[data-diagram-id="${diagramId}"] .react-flow__nodes`);
         if (nodesContainer) {
@@ -6570,7 +6603,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   return (
     <PieceRenderDataContext.Provider value={pieceRenderDataMap}>
       <SelectedConnectorContext.Provider value={selectedConnector}>
-        <div id="semio.sketchpad.app.design.canvas.diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef}>
+        <SelectedConnectorPortContext.Provider value={selectedConnectorPortGuid}>
+          <div id="semio.sketchpad.app.design.canvas.diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef}>
           <style>{`
             [data-diagram-id="${diagramId}"][data-panning="true"] .react-flow__node,
             [data-diagram-id="${diagramId}"][data-panning="true"] .react-flow__edge {
@@ -6649,7 +6683,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
           <HelperLines lines={helperLines} nodes={nodes} />
           {/* <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} /> */}
           {/* <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} /> */}
-        </div>
+          </div>
+        </SelectedConnectorPortContext.Provider>
       </SelectedConnectorContext.Provider>
     </PieceRenderDataContext.Provider>
   );
@@ -7057,7 +7092,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       </group>
     ) : null;
 
-  const userData = useMemo(() => ({ id: piece.guid }), [piece.guid]);
+  const userData = useMemo(() => ({ id: piece.guid, pieceId: piece.guid }), [piece.guid]);
 
   const diffedMeshContent = piece.design ? (
     <Geometry
@@ -7074,7 +7109,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
       userData={userData}
     />
   ) : (
-    <group onClick={onSelect} onDoubleClick={onDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
+    <group userData={userData} onClick={onSelect} onDoubleClick={onDoubleClick} onPointerEnter={handlePointerEnter} onPointerLeave={handlePointerLeave}>
       <PieceMesh highlightColor={highlightColor} />
     </group>
   );
@@ -7085,7 +7120,7 @@ const ModelPiece: FC<ModelPieceProps> = () => {
     <>
       {originalMeshContent}
       {pieceMatrix && (
-        <group matrix={pieceMatrix} matrixAutoUpdate={false}>
+        <group userData={userData} matrix={pieceMatrix} matrixAutoUpdate={false}>
           {diffedMeshContent}
         </group>
       )}
@@ -7105,8 +7140,22 @@ const ModelDesign: FC = () => {
 
   const onChange = useCallback(
     (selected: THREE.Object3D[]) => {
-      const newSelectedPieceIds = selected.map((item) => item.parent?.userData.pieceId).filter(Boolean);
-      if (newSelectedPieceIds.length !== selection.pieces?.length || newSelectedPieceIds.some((id, index) => id !== selection.pieces?.[index])) {
+      const resolvePieceGuid = (object: THREE.Object3D | undefined): string | undefined => {
+        let current: THREE.Object3D | null | undefined = object;
+        while (current) {
+          const pieceId = current.userData?.pieceId;
+          if (typeof pieceId === "string" && pieceId.length > 0) return pieceId;
+          const id = current.userData?.id;
+          if (typeof id === "string" && id.length > 0) return id;
+          current = current.parent;
+        }
+        return undefined;
+      };
+      const newSelectedPieceIds = Array.from(new Set(selected.map((item) => resolvePieceGuid(item)).filter((value): value is string => !!value)));
+      const previousSelectedPieceIds = selection.pieces ?? [];
+      const changed =
+        newSelectedPieceIds.length !== previousSelectedPieceIds.length || newSelectedPieceIds.some((id) => !previousSelectedPieceIds.includes(id)) || previousSelectedPieceIds.some((id) => !newSelectedPieceIds.includes(id));
+      if (changed) {
         if (selectPieces) selectPieces(newSelectedPieceIds);
       }
     },
@@ -8135,14 +8184,38 @@ const DesignApp: FC = () => {
     if (appType !== "design") return;
 
     addSection("toolbar", {
-      id: "semio.sketchpad.app.design.tools",
+      id: "semio.sketchpad.app.design.tools.select",
       specificity: 20,
       order: 0,
-      content: <ToolsToggleGroup />,
+      toolbarGroup: {
+        id: "selection",
+        labelId: "semio.sketchpad.toolbar.parent.selection",
+        order: 10,
+        subToolId: "select",
+        subToolLabelId: "semio.sketchpad.toolbar.subtool.select",
+        subToolIcon: <SelectToolIcon className="size-tiny" />,
+      },
+      content: <DesignSelectSettings />,
+    });
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.design.tools.lasso",
+      specificity: 20,
+      order: 10,
+      toolbarGroup: {
+        id: "selection",
+        labelId: "semio.sketchpad.toolbar.parent.selection",
+        order: 10,
+        subToolId: "lasso",
+        subToolLabelId: "semio.sketchpad.toolbar.subtool.lasso",
+        subToolIcon: <DiagramIcon className="size-tiny" />,
+      },
+      content: <DesignLassoSettings />,
     });
 
     return () => {
-      removeSection("toolbar", "semio.sketchpad.app.design.tools");
+      removeSection("toolbar", "semio.sketchpad.app.design.tools.select");
+      removeSection("toolbar", "semio.sketchpad.app.design.tools.lasso");
     };
   }, [appType, addSection, removeSection]);
 

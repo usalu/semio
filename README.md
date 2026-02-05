@@ -1158,6 +1158,12 @@ Docker Desktop environments can encounter 'No space left on device' errors when 
 If the Docker VM enters a corrupted state (reporting input/output errors), pruning the system and volumes is necessary to restore stability.
 Optimizing image layers by combining installation steps and cleaning temporary artifacts keeps the final devcontainer footprint manageable.
 
+## 🎭 Playwright Browser Provisioning [↑](#-bundles-)
+
+The devcontainer installs all Playwright browsers (Chromium, Firefox, WebKit) during provisioning so browser launch and attach workflows work out of the box.
+Browser binaries live in the workspace `node_modules/.cache/ms-playwright` volume path, keeping the cache stable across rebuilds and avoiding repeated downloads.
+Playwright tools and tests resolve the same shared cache path, so browser availability is consistent between CLI runs, editor tooling, and Playwright UI sessions.
+
 ## 🛰️ Repo Dev Server [↑](#-bundles-)
 
 The repo dev server is a stateful Go service that persists ticket state, semantic scopes, claims, and warnings so collaboration stays consistent even when the CLI is stateless.
@@ -1172,6 +1178,20 @@ When no drag is active, simulation ticks push positions into React Flow every fr
 Drag starts always reheat the simulation with alphaTarget(0.3).restart(), drag ends always cool it with alphaTarget(0), and pointer-leave/blur fallbacks prevent the simulation from staying hot or dead after interrupted drags.
 Edge endpoints are calculated from absolute node positions and measured node sizes so the intersection math lines up with the rendered avatar.
 Debug instrumentation is gated behind the `KIT_DIAGRAM_DEBUG` flag and can log alpha state plus render tiny endpoint markers for alignment verification without polluting normal output.
+
+## 🧰 Toolbar Layout Discipline [↑](#-bundles-)
+
+The toolbar renders two side-by-side bands (category + settings) with fixed-height controls and no scrollbars, so layout stays clean even when a group has many buttons.
+Dropdown subtools open upward and align directly above the triggering control so the selection menu is visually anchored to the tool you clicked.
+Toolbar containers clamp overflow and keep borders clean, preventing visible clipping or partial outlines while keeping pointer interaction intact.
+
+## 🎯 Design Diagram Overlap Guard [↑](#-bundles-)
+
+The Design diagram now runs a minimal D3 force pass focused on collision avoidance only, so overlapping pieces separate without pulling the whole graph into a new layout.
+The overlap pass uses collision force only (no charge, no links, no centering), with low alpha and high damping so displacement remains minimal.
+Existing nodes are pinned during the pass, and only newly added or explicitly repositioned nodes are allowed to move to clear collisions.
+Selection-only updates keep positions unchanged and do not trigger diagram reflow.
+Design diagram node visuals use a dedicated one-third scale of the standard diagram unit so all Design app nodes render three times smaller.
 
 ## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
 
@@ -1234,6 +1254,9 @@ The diagram integrates a D3 force-directed simulation with React Flow while pres
 Edge intersections use a 24px radius to match the standard small-avatar UI elements, ensuring clean visual landings for centered connections.
 Filtering logic is powered by multi-value URL parameters (`?kind=...`) that allow simultaneous display of multiple artifact types; both the table rows and diagram nodes are synchronized via a unified visibility check that enforces kind-based filtering and ancestor expansion state.
 Multi-node dragging and rectangular selection in the diagram feed back into the physics engine by freezing active nodes in their current coordinate space during the drag interaction, maintaining layout stability while enabling bulk manipulation.
+Diagram-origin selection uses React Flow element selection so click, Shift+Click, and lasso interactions in the diagram window write directly to the same Kit selection state machine path used by table selection.
+Port identity now uses deterministic compatibility-family colors across Kit, Type, and Design views so matching/compatible ports remain visually consistent while incompatible targets are visibly de-emphasized during connection workflows.
+Ports without explicit compatibility mappings still render with stable per-port identity colors so different port types remain distinguishable by default.
 
 **Usage:**
 
@@ -1310,6 +1333,10 @@ JSON files surface object keys as section entries so structured config files are
 ## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)
 
 The kit diagram supports standard multi-selection UX, including Shift+Click to toggle items in a selection and rectangular selection to choose multiple artifacts at once. Items can be dragged while selected, and clicking on the canvas background clears the selection.
+Kit diagram node geometry is strategy-driven: `design` uses circle anchors, `type` uses rectangle anchors, `file` uses triangle anchors, and `quality`/`port`/`tag`/`concept`/`folder`/`author` use long-rectangle anchors.
+Each strategy defines deterministic frame dimensions, render payload, and snap-point generation so node visuals and edge geometry stay synchronized.
+`js/semio/sketchpad/Kit.tsx` resolves static edges, connection preview lines, and proximity anchor targeting through one shared snap-point pair resolver instead of radius intersection math.
+Geometry utilities in `js/semio/sketchpad/kitSelectionHelpers.ts` normalize frames, resolve vectors/sides, convert local-to-absolute coordinates, and select nearest compatible anchor pairs across shape combinations.
 
 ### Borders
 
@@ -1411,6 +1438,28 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 - Hover and selection state for Home/Kit/Design/Type/Quality/Docs/Feedback is stored in the Sketchpad state machine; UI rows and diagram nodes dispatch hover events and visuals read from machine state.
 - `js/semio/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
 - `js/semio/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
+- `js/semio/sketchpad/Design.tsx` diagram selection is primary-pointer safe: click, Shift+Click, and lasso selection are not gated by panning pointer tracking.
+- `js/semio/sketchpad/Design.tsx` diagram selection maps selected node ids through node payload guid values, and scene multi-select resolves piece guid from object ancestry `userData` (`pieceId`/`id`) so selections persist across both surfaces.
+- `js/semio/sketchpad/Design.tsx` scene piece render groups stamp `userData.pieceId` on transform and mesh wrapper ancestors so loaded model meshes always bubble selection identity.
+
+#### Sketchpad toolbar tooltree
+
+- The toolbar uses a shared parent taxonomy so controls are clustered consistently across apps: `Selection`, `Filter`, `Create`, `View`, `Actions`.
+- The toolbar renders as one fixed bottom-center flat band (not a detached floating card) with a center seam split into a left Tool Zone and a right **Tool Setting Bar**.
+- Tool Zone is right-anchored to the center seam and grows left; Tool Setting Bar starts at the seam and grows right.
+- The toolbar band is content-sized (not full viewport width); both halves expand from the page center only as controls require.
+- Tool buttons are uniform rectangular dropdown toggles; only one tool is active at a time and active state is highlighted on that tool button.
+- Selection tools are grouped in one upward dropdown; Filter and Create are direct toolbar tools without dropdown expansion.
+- Toolbar registrations carry parent metadata through `PanelSection.toolbarGroup` (`id`, `labelId`, `order`) so branch grouping is declarative at app registration time.
+- Toolbar state enforces one active path per app (active tool + optional sub-tool), and selecting a new tool collapses unrelated dropdown branches.
+- Selection and Filter stay as concrete branches with their app-specific subtools; Create, View, and Actions are always present with placeholder subtool scaffolding.
+- Home maps to filter/create, Kit maps to filter/create/selection, Design/Type map to selection, Feedback maps to actions, and Docs/Quality still register empty toolbar sections without breaking the shared shell.
+- The Tool Setting Bar resolves only the active path (sub-tool first, then tool) and never mixes unrelated/global settings.
+- Tool Setting Bar content is rendered as named icon+label toggles/buttons only, without static heading rows or group-title labels.
+- Selecting `Filter` shows all filter controls in Tool Setting Bar; selecting `Create` shows all create controls in Tool Setting Bar.
+- Toolbar expansion/collapse and settings swaps are instantaneous with no motion behavior or transition effects.
+- Pointer and keyboard interactions remain deterministic through category activation + upward dropdown selection contracts.
+- Toolbar adaptation specifications for ongoing structural evolution are tracked in `.semio-repo/drafts/Toolbar.md`.
 
 #### Sketchpad windows
 

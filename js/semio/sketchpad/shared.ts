@@ -267,6 +267,7 @@ export enum ToolKind {
   LASSO_RECTANGULAR = "lasso-rectangular",
   LASSO_FREEFORM = "lasso-freeform",
   CONNECTOR = "connector",
+  HAND = "hand",
 }
 
 export enum WindowKind {
@@ -504,6 +505,15 @@ export interface PanelSection {
   specificity?: number;
   defaultOpen?: boolean;
   order?: number;
+  toolbarGroup?: {
+    id: string; // "selection", "filter", "create", "view", "actions"
+    labelId?: string;
+    order?: number;
+    subToolId?: string;
+    subToolLabelId?: string;
+    subToolIcon?: ReactNode;
+    onActivate?: () => void;
+  };
   actions?: Array<{
     id: string;
     icon: ReactNode;
