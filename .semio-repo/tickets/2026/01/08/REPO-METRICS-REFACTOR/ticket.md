@@ -17,7 +17,7 @@ Remove all metrics from the GraphQL layer and move computation purely into SQLit
    - Additional helper types: `LineMetrics`, `CountMetrics`, `AnalyzeMetrics`, `PriorityCount`
    - All entity types have `metrics` fields
 
-2. **Go Repository** (`go/repo/repo.go`):
+2. **Go Repository** (`./semio-repo/cli/cli.go`):
    - Contains corresponding Go struct types for all metrics
    - Schema builder creates GraphQL types for metrics
    - Resolver logic returns stub/computed metrics data
@@ -25,7 +25,7 @@ Remove all metrics from the GraphQL layer and move computation purely into SQLit
 3. **SQLite Schema** (`sql/sqlite/repo/schema.sql`):
    - Already has views for metrics: `repo_metrics`, `bundle_metrics_view`, `folder_metrics_view`, `file_metrics_view`, `section_metrics_view`, `contributor_metrics_view`, `ticket_metrics_view`, `violation_priority_counts`
 
-4. **Tests** (`go/repo/repo_test.go`):
+4. **Tests** (`./semio-repo/cli/cli_test.go`):
    - Tests individual collections but no comprehensive edge testing
    - No nodes and edges query test
 
@@ -65,7 +65,7 @@ Remove `metrics` fields from:
 - `Ticket`
 - `TicketCheckpoint`
 
-### 2. Go Repository (`go/repo/repo.go`)
+### 2. Go Repository (`./semio-repo/cli/cli.go`)
 
 Remove struct types:
 
@@ -87,7 +87,7 @@ Keep:
 
 Update `buildSchema()` to remove metrics field resolvers.
 
-### 3. Tests (`go/repo/repo_test.go`)
+### 3. Tests (`./semio-repo/cli/cli_test.go`)
 
 Add comprehensive test:
 
@@ -146,7 +146,7 @@ Remove model bindings for removed metrics types.
 3. **Updated gqlgen.yml**
    - Removed metrics type bindings
 
-4. **Added/Fixed GraphQL Tests** (`go/repo/repo_test.go`)
+4. **Added/Fixed GraphQL Tests** (`./semio-repo/cli/cli_test.go`)
    - Added `TestNodesAndEdgesQuick` - tests all node collections and edges without slow bundle queries (passes in ~50s)
    - Added `TestNodesAndEdges` - comprehensive test (skipped in short mode due to slow nx commands)
    - Added `TestNodeQuery` - tests Node interface with inline fragments
@@ -184,7 +184,7 @@ Remove model bindings for removed metrics types.
 **Completed Tasks:**
 
 1. **Fixed codegen.ts schema path**
-   - Changed from `../../go/repo/schema.graphql` to `../../graphql/repo/schema.graphql`
+   - Changed from `../../semio-repo/cli/schema.graphql` to `../../graphql/repo/schema.graphql`
 
 2. **Updated VS Code extension GraphQL queries** (`js/vscode/extension.ts`)
    - `TicketsDocument`: Removed `metrics { checkpoints files lines { added removed } }`
@@ -242,7 +242,7 @@ Remove model bindings for removed metrics types.
     - Updated `Range` type to use `start: Position!` and `end: Position!` (previously implicit or scalar).
     - Updated `Position` type to use `line: Int!` and `character: Int!` (renamed from `column`).
 
-2.  **Fixed Go Backend (`go/repo/repo.go`):**
+2.  **Fixed Go Backend (`./semio-repo/cli/cli.go`):**
     - Updated manual `graphql.NewObject` definition for `Position` to include `character` field mapping to `Character` struct field.
     - Updated `Position` struct to `Character int` (json `character`).
     - Updated `Range` manual definition to use the new `positionType`.
@@ -254,7 +254,7 @@ Remove model bindings for removed metrics types.
 
 4.  **Verification:**
     - **CLI**: `go run go/cli/main.go ticket list` now runs successfully.
-    - **Tests**: `go test ./...` in `go/repo` passes.
+    - **Tests**: `go test ./...` in `./semio-repo/cli` passes.
     - **Schema**: Verified backend and frontend alignment on `Range { start { line, character } }`.
 
 **Ticket Status:**
@@ -271,8 +271,8 @@ Remove model bindings for removed metrics types.
 
 ## Changes
 
-1.  **Metric Removal**: Removed all \*Metrics types and metrics fields from graphql/repo/schema.graphql and go/repo/repo.go to simplify the schema and resolve query errors in the CLI. SQLite views remain as the source of truth for metrics.
-2.  **Schema Fixes**: Updated Range and Position types in graphql/repo/schema.graphql and go/repo/repo.go:
+1.  **Metric Removal**: Removed all \*Metrics types and metrics fields from graphql/repo/schema.graphql and ./semio-repo/cli/cli.go to simplify the schema and resolve query errors in the CLI. SQLite views remain as the source of truth for metrics.
+2.  **Schema Fixes**: Updated Range and Position types in graphql/repo/schema.graphql and ./semio-repo/cli/cli.go:
     - Range now uses start: Position! and nd: Position! (previously implicit or scalar in some contexts).
     - Position struct in Go updated to use Character field (JSON character) instead of Column.
     - Position type uses character: Int!.
@@ -282,5 +282,5 @@ Remove model bindings for removed metrics types.
 ## Verification
 
 - **CLI**: go run go/cli/main.go ticket list executes successfully (previously failed on metrics).
-- **Tests**: go test ./... in go/repo passes all tests, encompassing the schema changes.
+- **Tests**: go test ./... in ./semio-repo/cli passes all tests, encompassing the schema changes.
 - **Generation**: Verified Range and Position types in js/vscode/generated/graphql.ts match the schema.

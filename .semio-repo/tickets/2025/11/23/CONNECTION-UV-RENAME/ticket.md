@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Connection Coordinate Rename: x/y → u/v
 
 **Date:** 2025-11-23  
@@ -14,7 +15,7 @@ Rename `connection.x` and `connection.y` to `connection.u` and `connection.v` to
 
 ## 2. Scope
 
-### 2.1 TypeScript (@semio/js)
+### 2.1 TypeScript (semio/js)
 
 - [x] `js/semio/semio.ts` - Schema, types, and domain logic
 - [x] `js/semio/sketchpad/App.tsx` - ConnectionStore CRDT layer
@@ -110,7 +111,7 @@ Since we don't care about backwards compatibility (per AGENTS.md), we proceed wi
 
 ### Completed:
 
-#### TypeScript (@semio/js)
+#### TypeScript (semio/js)
 
 - ✅ ConnectionSchema updated (x → u, y → v)
 - ✅ ConnectionDiffSchema updated

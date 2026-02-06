@@ -4,7 +4,7 @@
 
 When policies are fetched via GraphQL, the `violationKinds` field is returning empty arrays. This causes no violation kinds to appear as children when expanding a policy in the VS Code extension tree view.
 
-**Root Cause**: In `go/repo/main.go`, the `repoContext.GetPolicies()` function at line 11315 creates `Policy` objects but does NOT populate the `ViolationKinds` field:
+**Root Cause**: In `./semio-repo/cli/main.go`, the `repoContext.GetPolicies()` function at line 11315 creates `Policy` objects but does NOT populate the `ViolationKinds` field:
 
 ```go
 result[i] = &Policy{
@@ -31,4 +31,4 @@ Update `repoContext.GetPolicies()` to build the `ViolationKinds` field by conver
 
 ## Files to Modify
 
-- `go/repo/main.go` - Update `GetPolicies()` function around line 11324
+- `./semio-repo/cli/main.go` - Update `GetPolicies()` function around line 11324

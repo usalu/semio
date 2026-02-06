@@ -1,7 +1,7 @@
 {
   "title": "Fix VS Code Extension Tests",
   "status": "closed",
-  "prompt": "Extend @semio-repo/vscode extension.test.ts to cover Monorepo/Filter sideview behavior; fix vscode-test SIGSEGV; ensure build+tests pass; update README.md and AGENTS.md.",
+  "prompt": "Extend semio-repo/vscode extension.test.ts to cover Monorepo/Filter sideview behavior; fix vscode-test SIGSEGV; ensure build+tests pass; update README.md and AGENTS.md.",
   "summary": "Extended VS Code extension tests and stabilized headless test runner; aligned ticket interactions query; ensured build+tests pass.",
   "started": "2026-02-04T15:06:15.60368767Z",
   "finished": "2026-02-04T15:26:18.694928738Z",
@@ -17,7 +17,7 @@
         "client": "copilot-chat"
       },
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
-      "prompt": "Extend @semio-repo/vscode extension.test.ts to cover Monorepo/Filter sideview behavior; fix vscode-test SIGSEGV; ensure build+tests pass; update README.md and AGENTS.md.",
+      "prompt": "Extend semio-repo/vscode extension.test.ts to cover Monorepo/Filter sideview behavior; fix vscode-test SIGSEGV; ensure build+tests pass; update README.md and AGENTS.md.",
       "llm": "sonnet-4-5",
       "diff": {
         "bundles": {
@@ -25,7 +25,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/vscode",
+              "path": "semio-repo/vscode",
               "lines": {
                 "added": 382,
                 "removed": 0
@@ -45,21 +45,21 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts",
+              "path": "📄semio-repo/vscode/extension.test.ts",
               "lines": {
                 "added": 153,
                 "removed": 57
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts",
+              "path": "📄semio-repo/vscode/extension.ts",
               "lines": {
                 "added": 387,
                 "removed": 101
               }
             },
             {
-              "path": "📄@semio-repo/vscode/queries.ts",
+              "path": "📄semio-repo/vscode/queries.ts",
               "lines": {
                 "added": 7,
                 "removed": 6
@@ -73,56 +73,56 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts#Constants",
+              "path": "📄semio-repo/vscode/extension.test.ts#Constants",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts#Utilities",
+              "path": "📄semio-repo/vscode/extension.test.ts#Utilities",
               "lines": {
                 "added": 1,
                 "removed": 2
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts#Sidebar View Tests",
+              "path": "📄semio-repo/vscode/extension.test.ts#Sidebar View Tests",
               "lines": {
                 "added": 8,
                 "removed": 26
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts#Sections View Tests",
+              "path": "📄semio-repo/vscode/extension.test.ts#Sections View Tests",
               "lines": {
                 "added": 10,
                 "removed": 2
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts#Imports",
+              "path": "📄semio-repo/vscode/extension.test.ts#Imports",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Activation",
+              "path": "📄semio-repo/vscode/extension.ts#Activation",
               "lines": {
                 "added": 172,
                 "removed": 8
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Types",
+              "path": "📄semio-repo/vscode/extension.ts#Types",
               "lines": {
                 "added": 6,
                 "removed": 8
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Providers",
+              "path": "📄semio-repo/vscode/extension.ts#Providers",
               "lines": {
                 "added": 209,
                 "removed": 85
@@ -131,14 +131,14 @@
           ],
           "added": [
             {
-              "path": "AGENTS.md#Codebase#📄 @semio-repo/vscode/extension.test.ts",
+              "path": "AGENTS.md#Codebase#📄 semio-repo/vscode/extension.test.ts",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📄 @semio-repo/vscode/.vscode-test.mjs",
+              "path": "AGENTS.md#Codebase#📄 semio-repo/vscode/.vscode-test.mjs",
               "lines": {
                 "added": 4,
                 "removed": 0
@@ -149,7 +149,7 @@
         "definitions": {
           "deleted": [
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Types§TicketIteration",
+              "path": "📄semio-repo/vscode/extension.ts#Types§TicketIteration",
               "lines": {
                 "added": 0,
                 "removed": 10
@@ -159,168 +159,168 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_COMMANDS",
+              "path": "📄semio-repo/vscode/extension.test.ts§EXPECTED_COMMANDS",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_CONSTRAINTS",
+              "path": "📄semio-repo/vscode/extension.test.ts§EXPECTED_CONSTRAINTS",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_VIEWS",
+              "path": "📄semio-repo/vscode/extension.test.ts§EXPECTED_VIEWS",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts#Utilities§getFixturePath",
+              "path": "📄semio-repo/vscode/extension.test.ts#Utilities§getFixturePath",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_COMMANDS",
+              "path": "📄semio-repo/vscode/extension.test.ts§EXPECTED_COMMANDS",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_CONSTRAINTS",
+              "path": "📄semio-repo/vscode/extension.test.ts§EXPECTED_CONSTRAINTS",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_VIEWS",
+              "path": "📄semio-repo/vscode/extension.test.ts§EXPECTED_VIEWS",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.test.ts#Utilities§getFixturePath",
+              "path": "📄semio-repo/vscode/extension.test.ts#Utilities§getFixturePath",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Types§TicketInteraction",
+              "path": "📄semio-repo/vscode/extension.ts#Types§TicketInteraction",
               "lines": {
                 "added": 5,
                 "removed": 6
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Types§TicketData",
+              "path": "📄semio-repo/vscode/extension.ts#Types§TicketData",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
               "lines": {
                 "added": 17,
                 "removed": 50
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
               "lines": {
                 "added": 191,
                 "removed": 42
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Providers§MonorepoTreeItem",
+              "path": "📄semio-repo/vscode/extension.ts#Providers§MonorepoTreeItem",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerSidebarViews",
+              "path": "📄semio-repo/vscode/extension.ts#Activation§registerSidebarViews",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "path": "📄semio-repo/vscode/extension.ts#Activation§registerCommands",
               "lines": {
                 "added": 169,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Types§TicketIteration",
+              "path": "📄semio-repo/vscode/extension.ts#Types§TicketIteration",
               "lines": {
                 "added": 0,
                 "removed": 7
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Types§TicketData",
+              "path": "📄semio-repo/vscode/extension.ts#Types§TicketData",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
               "lines": {
                 "added": 0,
                 "removed": 64
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
               "lines": {
                 "added": 0,
                 "removed": 20
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Providers§MonorepoTreeItem",
+              "path": "📄semio-repo/vscode/extension.ts#Providers§MonorepoTreeItem",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerSidebarViews",
+              "path": "📄semio-repo/vscode/extension.ts#Activation§registerSidebarViews",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "path": "📄semio-repo/vscode/extension.ts#Activation§registerCommands",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "📄@semio-repo/vscode/queries.ts§TicketsDocument",
+              "path": "📄semio-repo/vscode/queries.ts§TicketsDocument",
               "lines": {
                 "added": 7,
                 "removed": 6
               }
             },
             {
-              "path": "📄@semio-repo/vscode/queries.ts§TicketsDocument",
+              "path": "📄semio-repo/vscode/queries.ts§TicketsDocument",
               "lines": {
                 "added": 0,
                 "removed": 6
@@ -329,7 +329,7 @@
           ],
           "added": [
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Types§TicketInteraction",
+              "path": "📄semio-repo/vscode/extension.ts#Types§TicketInteraction",
               "lines": {
                 "added": 8,
                 "removed": 0

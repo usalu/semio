@@ -26,7 +26,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio/semio-repo",
+              "path": "semio/semio-repo",
               "lines": {
                 "added": 111,
                 "removed": 0
@@ -46,14 +46,14 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio/semio-repo/extension.test.ts",
+              "path": "semio/semio-repo/extension.test.ts",
               "lines": {
                 "added": 111,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts",
+              "path": "semio/semio-repo/extension.ts",
               "lines": {
                 "added": 2,
                 "removed": 1
@@ -67,35 +67,35 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests",
               "lines": {
                 "added": 78,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Sidebar View Tests",
+              "path": "semio/semio-repo/extension.test.ts#Sidebar View Tests",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities",
+              "path": "semio/semio-repo/extension.test.ts#Utilities",
               "lines": {
                 "added": 31,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#Imports",
+              "path": "semio/semio-repo/extension.ts#Imports",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#urql Client",
+              "path": "semio/semio-repo/extension.ts#urql Client",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -117,238 +117,238 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio/semio-repo/extension.test.ts#Kit Validation Tests§codeActions",
+              "path": "semio/semio-repo/extension.test.ts#Kit Validation Tests§codeActions",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Kit Validation Tests§fixAction",
+              "path": "semio/semio-repo/extension.test.ts#Kit Validation Tests§fixAction",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§data",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§data",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§data",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§data",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§data",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§data",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§output",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§output",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§result",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§result",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§RepoEvent",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§RepoEvent",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§extractRepoResult",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§extractRepoResult",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§lastResult",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§lastResult",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§lines",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§lines",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§parseRepoEvents",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§parseRepoEvents",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts§data",
+              "path": "semio/semio-repo/extension.test.ts§data",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts§extracted",
+              "path": "semio/semio-repo/extension.test.ts§extracted",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#Imports§RepoEvent",
+              "path": "semio/semio-repo/extension.ts#Imports§RepoEvent",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#Imports§execAsync",
+              "path": "semio/semio-repo/extension.ts#Imports§execAsync",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#Imports§execFileAsync",
+              "path": "semio/semio-repo/extension.ts#Imports§execFileAsync",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#urql Client§extractRepoResult",
+              "path": "semio/semio-repo/extension.ts#urql Client§extractRepoResult",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#urql Client§extractRepoResult",
+              "path": "semio/semio-repo/extension.ts#urql Client§extractRepoResult",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#urql Client§lastResult",
+              "path": "semio/semio-repo/extension.ts#urql Client§lastResult",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#urql Client§lastResult",
+              "path": "semio/semio-repo/extension.ts#urql Client§lastResult",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#urql Client§lines",
+              "path": "semio/semio-repo/extension.ts#urql Client§lines",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio/semio-repo/extension.ts#urql Client§lines",
+              "path": "semio/semio-repo/extension.ts#urql Client§lines",
               "lines": {
                 "added": 0,
                 "removed": 1
@@ -357,84 +357,84 @@
           ],
           "added": [
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§data",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§data",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§events",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§extracted",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§output",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§output",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§result",
+              "path": "semio/semio-repo/extension.test.ts#RepoEvent Parsing Tests§result",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§RepoEvent",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§RepoEvent",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§extractRepoResult",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§extractRepoResult",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§lastResult",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§lastResult",
               "lines": {
                 "added": 9,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§lines",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§lines",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts#Utilities§parseRepoEvents",
+              "path": "semio/semio-repo/extension.test.ts#Utilities§parseRepoEvents",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts§data",
+              "path": "semio/semio-repo/extension.test.ts§data",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "@semio/semio-repo/extension.test.ts§extracted",
+              "path": "semio/semio-repo/extension.test.ts§extracted",
               "lines": {
                 "added": 17,
                 "removed": 0

@@ -12,7 +12,7 @@ The URQL client `query()` calls in the VS Code extension were missing `.toPromis
 
 ## Changes
 
-### [js/vscode/extension.ts](@semio-repo/vscode/extension.ts)
+### [js/vscode/extension.ts](semio-repo/vscode/extension.ts)
 
 - Added `.toPromise()` to all GraphQL query calls to ensure they return a `Promise<OperationResult>`.
 
@@ -32,5 +32,5 @@ The URQL client `query()` calls in the VS Code extension were missing `.toPromis
 
 ## Plan
 
-- Add `.toPromise()` to all `client.query` calls in `@semio-repo/vscode/extension.ts`.
+- Add `.toPromise()` to all `client.query` calls in `semio-repo/vscode/extension.ts`.
 - Verify that the tree view now populates all root nodes correctly.

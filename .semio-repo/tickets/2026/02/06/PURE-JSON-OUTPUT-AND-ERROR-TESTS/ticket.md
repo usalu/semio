@@ -10,8 +10,8 @@ All --json CLI commands now return pure data without {"data": ...} GraphQL wrapp
 
 ## Changes
 
-- `@semio-repo/cli/main.go`: Removed `{"data": result}` wrapper from `Engine.runGraphQL`, removed corresponding unwrap logic in `formatResult` and `formatMarkdownResult`, set `SilenceUsage`/`SilenceErrors` on root cobra command.
-- `@semio-repo/cli/main_test.go`: Updated `executeCommand` to separate stdout/stderr (3 return values). Replaced `findFirstResultData`/`parseJSONOutput`/`hasExitCode`/`mustHaveExitCode` with `firstJSONLine`. Updated parse helpers to not expect `{"data": ...}` wrapper. Updated all callers. Added 13 wrong-argument test functions covering ticket, goal, policy, folder, file, section, definition, contributor, and graphql commands. Added `TestCliJsonPureData` and `TestCliJsonErrorsToStderr` tests.
+- `semio-repo/cli/main.go`: Removed `{"data": result}` wrapper from `Engine.runGraphQL`, removed corresponding unwrap logic in `formatResult` and `formatMarkdownResult`, set `SilenceUsage`/`SilenceErrors` on root cobra command.
+- `semio-repo/cli/main_test.go`: Updated `executeCommand` to separate stdout/stderr (3 return values). Replaced `findFirstResultData`/`parseJSONOutput`/`hasExitCode`/`mustHaveExitCode` with `firstJSONLine`. Updated parse helpers to not expect `{"data": ...}` wrapper. Updated all callers. Added 13 wrong-argument test functions covering ticket, goal, policy, folder, file, section, definition, contributor, and graphql commands. Added `TestCliJsonPureData` and `TestCliJsonErrorsToStderr` tests.
 
 ## Log
 

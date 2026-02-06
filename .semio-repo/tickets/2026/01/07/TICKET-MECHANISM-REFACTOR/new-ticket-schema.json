@@ -19,7 +19,7 @@
             "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
             "ignored": false,
             "files": {
-                "go/repo/repo.go": {
+                "./semio-repo/cli/cli.go": {
                     "GraphQL Types": {
                         "range": {
                             "start": 45,
@@ -44,7 +44,7 @@
                         }
                     }
                 },
-                "go/repo/repo_test.go": {
+                "./semio-repo/cli/cli_test.go": {
                     "Collection Tests": {
                         "range": {
                             "start": 63,

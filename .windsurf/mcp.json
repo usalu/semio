@@ -9,7 +9,7 @@
       "disabled": false
     },
     "semio-repo": {
-      "command": "./@semio-repo/cli/cli",
+      "command": "./semio-repo/cli/cli",
       "args": [
         "mcp"
       ],

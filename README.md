@@ -1,33 +1,33 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="@semio/assets/logo/logo_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="@semio/assets/logo/logo.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="@semio/assets/logo/logo.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="semio/assets/logo/logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="semio/assets/logo/logo.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="semio/assets/logo/logo.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="@semio/assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
-    <a href="https://docs.semio-tech.com"><img src="@semio/assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
-    <a href="https://js.semio-tech.com"><img src="@semio/assets/badges/dev-js.svg" alt="The semio storybook for all javascript components and tests."></a>
+    <a href="https://play.semio-tech.com"><img src="semio/assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
+    <a href="https://docs.semio-tech.com"><img src="semio/assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
+    <a href="https://js.semio-tech.com"><img src="semio/assets/badges/dev-js.svg" alt="The semio storybook for all javascript components and tests."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
-     <a href="https://github.com/usalu/semio"><img src="@semio/assets/badges/repo-semio.svg" alt="The semio repository."></a>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="@semio/assets/badges/cite-zenodo.svg" alt="Cite"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="@semio/assets/badges/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
+     <a href="https://github.com/usalu/semio"><img src="semio/assets/badges/repo-semio.svg" alt="The semio repository."></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="semio/assets/badges/cite-zenodo.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="semio/assets/badges/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
-    <a href="https://eg-ice-25.semio-tech.com"><img src="@semio/assets/badges/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with semio."></a>
-    <a href="https://doi.org/10.17868/strath.00093288"><img src="@semio/assets/badges/latest-research.svg" alt="The latest research paper on LLMs with semio."></a>
-    <a href="https://eg-ice-23.semio-tech.com"><img src="@semio/assets/badges/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
+    <a href="https://eg-ice-25.semio-tech.com"><img src="semio/assets/badges/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with semio."></a>
+    <a href="https://doi.org/10.17868/strath.00093288"><img src="semio/assets/badges/latest-research.svg" alt="The latest research paper on LLMs with semio."></a>
+    <a href="https://eg-ice-23.semio-tech.com"><img src="semio/assets/badges/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="@semio/assets/badges/ui-browser.svg" alt="Browser"></a>
-    <a href="https://www.grasshopper3d.com/"><img src="@semio/assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="@semio/assets/badges/ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="@semio/assets/badges/ui-macos.svg" alt="macOS"></a>
+    <a href="https://play.semio-tech.com"><img src="semio/assets/badges/ui-browser.svg" alt="Browser"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="semio/assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="semio/assets/badges/ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="semio/assets/badges/ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.typescriptlang.org/"><img src="@semio/assets/badges/powered-by-typescript.svg" alt="Typescript"></a>
-    <a href="https://www.python.org/"><img src="@semio/assets/badges/powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="@semio/assets/badges/powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="semio/assets/badges/powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="semio/assets/badges/powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="semio/assets/badges/powered-by-csharp.svg" alt="C#"></a>
     <br/>
     <br/>
     <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘️ </i>
@@ -121,16 +121,16 @@ Let me walk you through 🚶
    - [🟪 .NET](#-net-)
    - [🐍 Python](#-python-)
 1. [📦 Bundles](#-bundles-)
-   - [🟨 @semio/js](#-semiojs-)
-   - [✏️ @semio/desktop](#️-semiodesktop-)
-   - [📚 @semio/docs](#-semiodocs-)
-   - [🎛️ @semio/play](#%EF%B8%8F-semioplay-)
-   - [🤖 @semio/assistant](#-semioassistant-)
-   - [⚙️ @semio/engine](#️-semioengine-)
-   - [🟪 @semio/net](#-semionet-)
-   - [🦗 @semio/grasshopper](#-semiograsshopper-)
+   - [🟨 semio/js](#-semiojs-)
+   - [✏️ semio/desktop](#️-semiodesktop-)
+   - [📚 semio/docs](#-semiodocs-)
+   - [🎛️ semio/play](#%EF%B8%8F-semioplay-)
+   - [🤖 semio/assistant](#-semioassistant-)
+   - [⚙️ semio/engine](#️-semioengine-)
+   - [🟪 semio/net](#-semionet-)
+   - [🦗 semio/grasshopper](#-semiograsshopper-)
      - [🪢 Scripting](#️-scripting-)
-   - [🛍️ @semio/assets](#%EF%B8%8F-semioassets-)
+   - [🛍️ semio/assets](#%EF%B8%8F-semioassets-)
      - [🏷️ Badges](#%EF%B8%8F-badges-)
      - [📄 Fonts](#-fonts-)
      - [👁️ Icons](#%EF%B8%8F-icons-)
@@ -758,7 +758,7 @@ Afterwards you can install uv with this command:
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-Then you can run `@semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
+Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 ## 🎫 Tickets [↑](#-development)
 
@@ -773,22 +773,22 @@ Contributor workflows include an automated code-quality report that highlights i
 It also enforces module boundaries and domain-neutral terminology for shared UI building blocks.
 Each reported problem includes a short reason and solution so contributors can resolve violations quickly.
 
-The `fix` command applies autofixes for all autofixable violation kinds: it removes empty sections (including one surrounding blank line, preferring the preceding one), resolves missing section end names by walking backward through nested sections to find the matching start, corrects mismatched section end names, removes contiguous inline comment blocks (including intervening blank lines), and removes block and JSDoc comments.
+The `fix` command applies autofixes for all autofixable violation kinds: it replaces wrong file header artifact IDs with the correct emoji-prefixed path (e.g. `💻︎ semio/js/src/index.ts`), removes empty sections (including one surrounding blank line, preferring the preceding one), resolves missing section end names by walking backward through nested sections to find the matching start, corrects mismatched section end names, removes contiguous inline comment blocks (including intervening blank lines), and removes block and JSDoc comments.
 After removing lines, a post-processing step collapses consecutive blank lines so the output stays clean.
-Non-autofixable violations (missing headers, unnamed region starts, orphan definitions) are reported but left for manual resolution.
+Non-autofixable violations (missing header regions, unnamed region starts, orphan definitions) are reported but left for manual resolution.
 
 ## 🔌 Port Numbers [↑](#-development-)
 
 Overview of all connectors used during development and in final packages:
 
-| Service    | Port   | Command / Package       | Notes                                                                           |
-| ---------- | ------ | ----------------------- | ------------------------------------------------------------------------------- |
-| Sketchpad  | `3000` | `dev js js sketchpad`   | Vite dev server for Sketchpad                                                   |
-| Play       | `4000` | `dev play`              | Vite dev server for Play                                                        |
-| Docs       | `4321` | `dev docs`              | Astro dev server (default)                                                      |
-| Storybook  | `6006` | `dev js js storybook`   | Storybook dev server (default)                                                  |
-| Playwright | `5173` | `npm test` (js)         | Test server for Playwright E2E tests                                            |
-| Engine     | `YYMM` | `@semio/engine` package | Connector derived from release: `rYY.MM-V` → `YYMM` (e.g., `r25.07-1` → `2507`) |
+| Service    | Port   | Command / Package      | Notes                                                                           |
+| ---------- | ------ | ---------------------- | ------------------------------------------------------------------------------- |
+| Sketchpad  | `3000` | `dev js js sketchpad`  | Vite dev server for Sketchpad                                                   |
+| Play       | `4000` | `dev play`             | Vite dev server for Play                                                        |
+| Docs       | `4321` | `dev docs`             | Astro dev server (default)                                                      |
+| Storybook  | `6006` | `dev js js storybook`  | Storybook dev server (default)                                                  |
+| Playwright | `5173` | `npm test` (js)        | Test server for Playwright E2E tests                                            |
+| Engine     | `YYMM` | `semio/engine` package | Connector derived from release: `rYY.MM-V` → `YYMM` (e.g., `r25.07-1` → `2507`) |
 
 #### Running Tasks
 
@@ -805,8 +805,8 @@ Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → "Tasks: Run Task" and selec
 - `publish:test` - Publish to test servers
 - `publish` - Publish packages
 - `dev` - Start all dev servers
-- `dev js js storybook` - Start `@semio/js` Storybook
-- `dev js js sketchpad` - Start `@semio/js` Vite Sketchpad (connector `3000`)
+- `dev js js storybook` - Start `semio/js` Storybook
+- `dev js js sketchpad` - Start `semio/js` Vite Sketchpad (connector `3000`)
 
 **Workspace-specific commands:**
 
@@ -823,7 +823,7 @@ Press `F5` or use the Run and Debug panel to launch:
 
 - `dev` - Start all services with Python debugger attached
 - `dev engine` / `dev js` / `dev play` / `dev docs` / `dev vscode` - Individual services
-- `dev js js storybook` / `dev js js sketchpad` - `@semio/js` specialized dev entrypoints
+- `dev js js storybook` / `dev js js sketchpad` - `semio/js` specialized dev entrypoints
 
 **Testing:**
 
@@ -1035,17 +1035,17 @@ This is less intuitive but more tool-friendly and everything that is easier for 
 
 ### Workspaces
 
-- `@semio/js` - Shared TypeScript/React codebase (Sketchpad UI, components, libs).
-- `@semio/desktop` - Electron desktop shell.
+- `semio/js` - Shared TypeScript/React codebase (Sketchpad UI, components, libs).
+- `semio/desktop` - Electron desktop shell.
 - `js/sketchpad` - Standalone Sketchpad web app shell.
-- `@semio/docs` - Documentation site.
-- `@semio/play` - Playground.
-- `@semio-repo/vscode` - VS Code extension.
+- `semio/docs` - Documentation site.
+- `semio/play` - Playground.
+- `semio-repo/vscode` - VS Code extension.
 
 ### Preflight
 
 ```bash
-cd @semio/js && npm run preflight
+cd semio/js && npm run preflight
 ```
 
 <details>
@@ -1082,8 +1082,8 @@ A .NET core for semio 🥜
 
 ### Workspace
 
-- `@semio/net/Semio.sln` - .NET solution.
-- `@semio/@semio/grasshopper/Semio.Grasshopper` - Grasshopper plugin.
+- `semio/net/Semio.sln` - .NET solution.
+- `semio/semio/grasshopper/Semio.Grasshopper` - Grasshopper plugin.
 
 > [!WARNING]  
 > [Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
@@ -1111,12 +1111,12 @@ A .NET core for semio 🥜
 
 </details>
 
-The monorepo uses a centralized Python environment managed by `uv` at the repository root. A single `.venv` is shared between `@semio/py` and `@semio/engine`.
+The monorepo uses a centralized Python environment managed by `uv` at the repository root. A single `.venv` is shared between `semio/py` and `semio/engine`.
 
 ### Workspace
 
-- `@semio/py` - Python library (domain models, validation).
-- `@semio/engine` - Python engine (serialization, APIs, MCP server).
+- `semio/py` - Python library (domain models, validation).
+- `semio/engine` - Python engine (serialization, APIs, MCP server).
 
 ### Preflight
 
@@ -1130,7 +1130,8 @@ A component is a piece of software which is packaged independently 🏝️
 
 ## 🧼 Code Hygiene Hooks [↑](#-bundles-)
 
-The code hygiene hook enforces comment, license, and region policies before changes are shared.
+The code hygiene hook enforces comment, license, region, and file header policies before changes are shared.
+File headers must contain the correct artifact ID (emoji-prefixed path like `💻︎ semio/js/src/index.ts`) instead of plain file paths; the `fix` command replaces wrong IDs automatically.
 It helps keep the codebase clean by removing obsolete inline or block comments, while respecting TODOs and active contiguous comment blocks following them.
 It treats empty regions as invalid structure and removes them automatically in fix mode so region blocks stay meaningful and concise.
 It ignores configuration files to avoid breaking structured data with comment prefix injections.
@@ -1148,9 +1149,22 @@ The `inferEntityKind(key)` function maps GraphQL operation names (e.g. `ticketOp
 When `--json` is active, each stdout line is pure domain data (one JSON object per line) without event wrappers or `{"data": ...}` GraphQL envelopes; errors are written to stderr only, and stdout stays empty on failure so downstream consumers can pipe output directly into `jq` or similar tools without filtering boilerplate.
 Human-readable CLI IDs normalize emoji to text presentation (U+FE0E), replacing emoji presentation selectors and appending the text variant when missing, so monospace terminals reserve stable width before adjacent symbols like `@`.
 The codebase uses a dual identification system: emoji-prefixed artifact IDs (primary, for GraphQL/logs/messages/UI) and `semiorepo://` URIs (secondary, for MCP resources and clickable links). `GetArtifactID` and `GetArtifactURI` generate these from kind+data, while `IdToUri` and `UriToId` convert between the two systems. Section and definition URIs encode hierarchy separators (`#`, `§`) as `/`-delimited UPPERCASE-SLUG path segments so URIs remain valid without fragment identifiers. Collection types (projects, bundles, folders, files, sections, definitions, tickets, goals, drafts, todos, policies, violationKinds, contributors, commits) each have dedicated ID and URI formats. The `navigate` MCP tool and `semio.navigate` VS Code command accept either an ID or URI and resolve to the target resource.
+
+## 🏷️ Artifact Kind Derivation [↑](#-bundles-)
+
+Every artifact in the repo tree (bundles, folders, files, definitions) carries a **kind** that determines its emoji icon, GraphQL enum value, and filter behavior. Kinds are derived from source metadata rather than hardcoded per bundle name.
+
+**Bundle kind** is read from the `bundleKind` field in the bundle root's `package.json` or `project.json`. If neither file exists or the field is missing, the bundle defaults to `library`. Valid values: `library`, `schema`, `binary`, `ui`, `site`, `assets`. This means adding a new bundle only requires setting `"bundleKind": "schema"` (or whichever kind) in its manifest.
+
+**Folder kind** is derived from the folder name. Folders starting with `.` (dotfiles like `.github`, `.vscode`) are `required` because they contain configuration that must be present. Folders containing package manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `*.csproj`, `*.sln`) are also `required`. Everything else is `organization`.
+
+**File kind** uses pattern matching on the file name and extension. Test files (`*.test.*`, `_test.*`, `test_*`, `*.spec.*`, `*.stories.*`, `*.benchmark.*`) are detected first. Then config files (JSON, YAML, TOML, XML, INI, and named files like `Dockerfile`, `Makefile`), docs (`.md`, `.txt`, `.rst`), resources (images, fonts, media, archives, binaries), code (a comprehensive list of ~60+ programming language extensions), scripts (`.sh`, `.bash`, `.bat`, `.ps1`), and license files (names containing `license`/`licence`).
+
+**Definition kind** is derived from the keyword that introduces the definition in source code. The `extractDefinitionKeyword` function inspects the regex match text, finds the word directly preceding the definition name (skipping access modifiers like `public`, `private`, `export`, `pub`), and returns it. `DeriveDefinitionKind` then classifies: interface-like keywords (`interface`, `type`, `trait`, `abstract`, `delegate`, `record`, `union`, `scalar`, `extend *`) → `interface`; constant-like keywords (`const`, `enum`, `var`, `let`, `static`) → `constant`; everything else (`function`, `class`, `struct`, `def`, `func`, `fn`) → `implementation`. A post-processing step `refineDefinitionKind` reclassifies `const`/`let`/`var` declarations as `implementation` when the initializer is an arrow function (`=>`), function expression, or class expression — so `const handler = () => {}` correctly maps to implementation rather than constant.
+
 The repo CLI formats timestamps (RFC3339 tickets, YYYY-MM-DD goals) into relative dates (e.g., "1 week ago", "3 weeks from now") in text and markdown outputs so you can track schedules and progress with human-readable context.
-The repo binary is consolidated into a single `@semio-repo/cli/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
-Go tests for repo tooling are consolidated into a single `@semio-repo/cli/main_test.go` so CLI behavior, tool helpers, and output format expectations live in one test suite.
+The repo binary is consolidated into a single `semio-repo/cli/cli.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
+Go tests for repo tooling are consolidated into a single `semio-repo/cli/cli_test.go` so CLI behavior, tool helpers, and output format expectations live in one test suite.
 Legacy adapter packages are removed so every command is dispatched through the same engine event stream and GraphQL executor.
 The streaming core uses a command registry with an emitter that surfaces progress, errors, items, logs, and a terminal done payload so CLI, MCP, and VS Code share one execution model.
 Registry invocation accepts JSON inputs and emits item metadata alongside data payloads so tooling can page through large result sets without rehydrating full responses.
@@ -1170,18 +1184,18 @@ Repo `tree` commands support a `--md` flag that renders the structure as a Markd
 VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
 Devcontainer attach uninstalls any existing semio-repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the freshly packaged VSIX, verifies via list-extensions, and falls back to direct installation into IDE extensions directories with extensions.json updates (including the `$mid` location key) when CLIs report WSL-only usage.
 The semio-repo extension targets a VS Code engine range compatible with Cursor (1.105.x) so Cursor can load the bundled extension without version rejections.
-VS Code extension packaging requires an unscoped extension name in `@semio-repo/vscode/package.json` so `vsce package` can build the local `.vsix`.
+VS Code extension packaging requires an unscoped extension name in `semio-repo/vscode/package.json` so `vsce package` can build the local `.vsix`.
 VS Code extension sidebar views are consolidated into exactly two views: `Monorepo` (the repo tree) and `Filter` (the global filter state).
 The Filter view is not a second tree of options; it is a compact state panel where each filter-kind is represented by one item and the available options are exposed as menu actions on that item.
 Filter items render with emoji plus a name for clarity, while filter option menu actions use emoji-only labels with no codeicons; tooltips explain the filter purpose and current search state without crowding the tree.
 The Filter view updates the shared filter state, and the Monorepo view consumes that state to hide non-matching items across all branches.
 This keeps the UI predictable: expanding nodes always shows structure, while filtering always happens in one place.
 VS Code extension tests run through `@vscode/test-cli` and require a display server on Linux; in headless environments the test script wraps `vscode-test` with `xvfb-run` so Electron can boot without a real `DISPLAY`.
-Electron launch arguments for stable CI/headless execution are configured in `@semio-repo/vscode/.vscode-test.mjs` so local runs and CI share the same test host configuration.
+Electron launch arguments for stable CI/headless execution are configured in `semio-repo/vscode/.vscode-test.mjs` so local runs and CI share the same test host configuration.
 Repo operational artifacts (tickets, contributors, reports) live in `.semio-repo/` so workflow state stays centralized and out of product bundles.
 Repo analyze only inspects considered files by honoring `.gitignore`, excluding `.semio-repo/`, and skipping `assets/repo/` fixtures.
 Repo file/folder listing and diagnostics apply `.gitignore` patterns directly (including tracked matches) alongside repo metadata exclusions, and CLI analyze/fix commands accept scope arguments so tooling stays consistent across entrypoints.
-GraphQL Relay `node(id:)` resolves the canonical IDs emitted by the schema (`@semio/...` and `@semio-repo/...`) so clients can round-trip IDs without constructing custom `kind:id` strings.
+GraphQL Relay `node(id:)` resolves the canonical IDs emitted by the schema (`semio/...` and `semio-repo/...`) so clients can round-trip IDs without constructing custom `kind:id` strings.
 Ticket close derives semantic diffs from a file list after applying the same repo exclusions and `.gitignore` filters, so tooling and tests must pass at least one considered (non-gitignored) path.
 
 ## 🧱 Devcontainer Persistence [↑](#-bundles-)
@@ -1204,7 +1218,7 @@ Webhook receivers enrich GitHub issue events, and Discord notifications format p
 
 Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every interaction records the toolchain context. Parsing is forgiving; for example, `claude-opus-4-5-20251101` resolves to `opus-4-5` by finding it as a substring of the slugified input.
 Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen actions add a prompt comment with the same heading so each interaction is surfaced in GitHub.
-Ticket closing derives bundle labels from every touched path, adds `@semio-repo` when a file falls outside bundles, and posts a semantic change list for bundles, folders, files, sections, and definitions using status icons plus `-removed`/`+added` counts.
+Ticket closing derives bundle labels from every touched path, adds `semio-repo` when a file falls outside bundles, and posts a semantic change list for bundles, folders, files, sections, and definitions using status icons plus `-removed`/`+added` counts.
 Ticket summary comments prepend a `# 🔍 Summary` heading so the close summary is visually consistent in GitHub issues.
 Ticket line metrics report full line counts for added and deleted scopes, and diff-based added/removed counts for modified scopes.
 Ticket close ignores files inside the active ticket workspace (`ticket.md`) so ticket artifacts never appear in change lists.
@@ -1213,7 +1227,7 @@ Ticket title updates rename the ticket folder to the new slug so ticket paths st
 Ticket GitHub issues are automatically linked to the usalu project 2 during create and reopen flows.
 Ticket open respects the `CONTINUE` keyword to resume the latest ticket and the `NOTICKET` keyword to skip ticket creation while still running the task.
 These signals keep GitHub issues, metrics, and bundle ownership consistent across CLI, GraphQL, and the VS Code extension.
-Ticket bundle labels come from semantic bundle diffs so README/AGENTS changes do not force `@semio-repo` labels.
+Ticket bundle labels come from semantic bundle diffs so README/AGENTS changes do not force `semio-repo` labels.
 Each ticket interaction stores its own semantic diff payload; tickets no longer keep a top-level diff snapshot.
 
 Semantic ticket diffs are computed against a full codebase snapshot exported to `.semio-repo/reports/codebase.json` when `repo analyze` runs without a scope, keeping bundle/folder/file/section/definition changes grounded in the same snapshot structure.
@@ -1246,7 +1260,7 @@ semio includes a **domain-pure validation system** built entirely in `semio.ts` 
 **Usage:**
 
 ```typescript
-import { validateSemioKit, applyKitDiff } from "@semio/js";
+import { validateSemioKit, applyKitDiff } from "semio/js";
 
 const result = validateSemioKit(kit);
 if (result.problems.length > 0) {
@@ -1259,7 +1273,7 @@ See [`AGENTS.md`](AGENTS.md#validation) for complete technical documentation.
 
 ## 🧾 Code Report [↑](#-bundles-)
 
-The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (including multi-line and JSDoc blocks, with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `@semio/js` files do not import outside the workspace unless they are the shared `elements.tsx`, flags domain-specific terminology inside those shared elements, and includes reason/solution text for each problem to make remediation explicit.
+The repository emits a machine-readable report (`reports/code.json`) that enforces a comment-free codebase (including multi-line and JSDoc blocks, with explicit exemptions), flags temporary `[DEBUG]` logs, auto-adds missing SPDX license headers in `npm run fix`, validates properly nested named regions, checks that `semio/js` files do not import outside the workspace unless they are the shared `elements.tsx`, flags domain-specific terminology inside those shared elements, and includes reason/solution text for each problem to make remediation explicit.
 Inline comment violations are grouped per contiguous inline-comment block while comment detection skips markers inside string literals and template literal text.
 
 ## 🧩 Devcontainer Extension Install [↑](#-bundles-)
@@ -1315,7 +1329,7 @@ Selecting a section navigates to its start, F2 triggers rename, drag-and-drop mo
 The view refreshes on editor focus and text changes so the tree stays aligned with the current file structure.
 JSON files surface object keys as section entries so structured config files are navigable in the same tree.
 
-## 🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)
+## 🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)
 
 ### Borders
 
@@ -1407,21 +1421,21 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 #### Sketchpad transactions
 
-- `@semio/js/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
+- `semio/js/sketchpad/elements.tsx` provides `TransactionProvider` and `useTransaction()` for UI-scoped transactions.
 - Sketchpad elements (`Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, ...) use `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps wrap their UI subtree with `TransactionProvider` using the appropriate transaction hook so all descendant elements participate in undo/redo consistently.
 
 #### Sketchpad selection + hover visuals
 
-- `@semio/js/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
+- `semio/js/sketchpad/elements.tsx` `Geometry` renders selection/hover colors even when a base `color` is provided (it is treated as the non-interactive default).
 - Hover and selection state for Home/Kit/Design/Type/Quality/Docs/Feedback is stored in the Sketchpad state machine; UI rows and diagram nodes dispatch hover events and visuals read from machine state.
-- `@semio/js/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
-- `@semio/js/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
+- `semio/js/sketchpad/elements.tsx` `Table` exposes row hover callbacks so apps can forward row enter/leave events into their state machine commands.
+- `semio/js/sketchpad/Design.tsx` diagram nodes use `ring-*` (not `ring-inset`) so hover/selection rings remain visible with `AvatarFallback` backgrounds.
 
 #### Sketchpad windows
 
 - Window spacing uses the shared unit sizing system: a single unit gap between windows and a single unit margin between windows and the canvas edge.
-- `@semio/js/sketchpad/Sketchpad.tsx` `Canvas` applies `p-single` (1 unit) and window containers (`HorizontalWindows` / `VerticalWindows`) apply `gap-single` (1 unit).
+- `semio/js/sketchpad/Sketchpad.tsx` `Canvas` applies `p-single` (1 unit) and window containers (`HorizontalWindows` / `VerticalWindows`) apply `gap-single` (1 unit).
 - GoldenLayout window gaps use splitters sized to 1 unit and window borders are applied to the stack container via an inset 1px stroke; `Window` uses `kind="layout"` inside GoldenLayout to avoid nested borders.
 - Window chrome controls are rendered as Action UI elements and forwarded to the underlying layout system when needed.
 - Window surfaces paint the only filled background surface; surrounding UI and overlays remain transparent and rely on borders/blur.
@@ -1429,19 +1443,19 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 
 #### Kit app artifact creation
 
-- `@semio/js/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the `kind` filter and selection to the newly created entity so the details panel opens immediately.
+- `semio/js/sketchpad/Kit.tsx` create actions for `ports`, `tags`, `concepts`, and `folders` set the `kind` filter and selection to the newly created entity so the details panel opens immediately.
 - Default names are resolved via i18n labels: `semio.sketchpad.app.port.defaultName`, `semio.sketchpad.app.tag.defaultName`, `semio.sketchpad.app.concept.defaultName`.
-- `@semio/js/sketchpad/Kit.tsx` details panel sections are registered dynamically; remove all possible section ids (including conditional variants) before adding the active one and mirror removals in the effect cleanup.
-- `@semio/js/sketchpad/Kit.tsx` details panel section content that uses `useKit()` is wrapped in `KitScopeProvider` so read-only detail sections can resolve kit data consistently.
-- `@semio/js/sketchpad/Kit.tsx` read-only artifact detail fields reuse the same `id` values as the corresponding app details (Type/Design) so i18n/tooltips stay centralized.
+- `semio/js/sketchpad/Kit.tsx` details panel sections are registered dynamically; remove all possible section ids (including conditional variants) before adding the active one and mirror removals in the effect cleanup.
+- `semio/js/sketchpad/Kit.tsx` details panel section content that uses `useKit()` is wrapped in `KitScopeProvider` so read-only detail sections can resolve kit data consistently.
+- `semio/js/sketchpad/Kit.tsx` read-only artifact detail fields reuse the same `id` values as the corresponding app details (Type/Design) so i18n/tooltips stay centralized.
 
 #### Sketchpad state
 
-- `@semio/js/sketchpad/Sketchpad.tsx` exposes a single `sketchpadMachine` actor that owns all Sketchpad UI state (`SketchpadState` + app slices like Home/Kit/Design/Type/Quality/Tutorial).
+- `semio/js/sketchpad/Sketchpad.tsx` exposes a single `sketchpadMachine` actor that owns all Sketchpad UI state (`SketchpadState` + app slices like Home/Kit/Design/Type/Quality/Tutorial).
 - Y.js is reserved for Kit data synchronization (per-kit `KitStore` documents).
 - Sketchpad UI state is persisted locally via `localStorage` key `semio.sketchpad.state.<id>` (no Y.js dependency for settings/navigation/panel sizes).
 - Global interaction mode is stored as `SketchpadState.device` and controlled via `useDevice()` / `SET_DEVICE` with i18n IDs `semio.sketchpad.settings.device.*`.
-- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `@semio/js/sketchpad/elements.tsx`.
+- `layout` naming is reserved for window layout configs (GoldenLayout) and the `Layout` component in `semio/js/sketchpad/elements.tsx`.
 
 KitStore keeps kit concepts in the `yConcepts` array as `ConceptStore` entries so snapshots expose full concept data (name, description, icon, attributes) and persistence rehydrates from that array instead of guid placeholders.
 
@@ -1472,7 +1486,7 @@ Panels are rendered under `LevelProvider level="panel"` so panel chrome and cont
 
 #### Size Constants
 
-All size constants are defined in `@semio/js/globals.css` and derived from `--spacing`:
+All size constants are defined in `semio/js/globals.css` and derived from `--spacing`:
 
 - **Single**: 1 unit (e.g. `gap-1`) - spacing between elements and between icon and element
 - **Tiny**: 3 units (e.g. `h-tiny`, `w-tiny`, `text-tiny`) - icon size in actions, action text size
@@ -1502,7 +1516,7 @@ The unit system automatically adapts based on the `--spacing` mode (compact vs t
 
 The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in bundles.
 
-## ✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/@semio/desktop) [↑](#-bundles-)
+## ✏️ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1518,7 +1532,7 @@ The code runs in different environments (different browsers, electron, mobile/de
 </details>
 An electron-based desktop app primarly working for with local kits 💾
 
-## 🤖 @semio/assistant [↑](#-bundles-)
+## 🤖 semio/assistant [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1533,7 +1547,7 @@ An electron-based desktop app primarly working for with local kits 💾
 
 Currently not implemented in this repo (planned component) 🧩
 
-## 📚 [@semio/docs](https://github.com/usalu/semio/tree/main/@semio/docs) [↑](#-bundles-)
+## 📚 [semio/docs](https://github.com/usalu/semio/tree/main/semio/docs) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1552,11 +1566,11 @@ Currently not implemented in this repo (planned component) 🧩
 
 </details>
 
-## 🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/@semio/play) [↑](#-bundles-)
+## 🎛️ [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
-## 💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)
+## 💻 [semio/vscode](https://github.com/usalu/semio/tree/main/semio-repo/vscode) [↑](#-bundles-)
 
 VS Code extension providing real-time violation diagnostics for semio development. Compatible with VS Code and Windsurf (VSCode OSS 1.106.0+).
 
@@ -1581,7 +1595,7 @@ Tree views for tickets, policies, contributors, and commands with search and fil
 
 Ticket tree items expose inline close or reopen actions that apply to the clicked ticket, list commit entries derived from ticket and interaction commits, and keep hover tooltips limited to the ticket description.
 
-## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/net) [↑](#-bundles-)
+## 🟪 [semio/net](https://github.com/usalu/semio/tree/main/net) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1617,7 +1631,7 @@ Ticket tree items expose inline close or reopen actions that apply to the clicke
 
 The core which is shared in the [semio .NET ecosystem](#-net-) 🥜
 
-## 🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/@semio/@semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)
+## 🦗 [semio/grasshopper](https://github.com/usalu/semio/tree/main/semio/semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1701,7 +1715,7 @@ Grasshopper is an amazing tool if you know the system that you want to create bu
 
 </details>
 
-## ⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/@semio/engine) [↑](#-bundles-)
+## ⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1772,13 +1786,13 @@ It offers two APIs to other clients:
 - A simple REST OpenAPI 🥇
 - A complex GraphQL Relay API 🥈
 
-### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/@semio/engine/engine.py#L5529)
+### {} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)
 
 If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
 ![GraphQL Query](assets/images/swagger.png)
 
-### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/@semio/engine/engine.py#L5095)
+### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)
 
 > Still a prototype ✏️
 
@@ -1786,7 +1800,7 @@ If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 ![GraphQL Query](assets/images/graphiql.png)
 
-## 🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)
+## 🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)
 
 ### 🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)
 
@@ -1817,7 +1831,7 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 ### 🧱 Kits
 
-`assets/index.ts` is the shared entry point for `@semio/assets`. It re-exports the icon layer plus the Metabolism kit fixtures and helper constants. The kit fixtures are available as `MetabolismKit`, `MetabolismKitDiff`, `MetabolismKitDiffed`, `MetabolismKitDiffInverted`, `InvalidKit`, and `InvalidKitValidation`, while each kit entity list is exposed through `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitPorts`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, and the dedicated `MetabolismKitNakaginCapsuleTowerDesigns`.
+`assets/index.ts` is the shared entry point for `semio/assets`. It re-exports the icon layer plus the Metabolism kit fixtures and helper constants. The kit fixtures are available as `MetabolismKit`, `MetabolismKitDiff`, `MetabolismKitDiffed`, `MetabolismKitDiffInverted`, `InvalidKit`, and `InvalidKitValidation`, while each kit entity list is exposed through `MetabolismKitTypes`, `MetabolismKitDesigns`, `MetabolismKitPorts`, `MetabolismKitQualities`, `MetabolismKitFiles`, `MetabolismKitFolders`, `MetabolismKitAuthors`, `MetabolismKitTags`, `MetabolismKitConcepts`, `MetabolismKitAttributes`, and the dedicated `MetabolismKitNakaginCapsuleTowerDesigns`.
 
 Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitPortsByGuid`, and `MetabolismKitPortsByName` provide direct access to every type, design, and port without filtering.
 
@@ -1974,18 +1988,18 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
-        <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
-        <a href="#-semionet-" title="🟪@semio/net"><sub>🟪<sub></a>
+        <a href="#-semiojs-" title="🟨semio/js"><sub>🟨<sub></a>
+        <a href="#-semionet-" title="🟪semio/net"><sub>🟪<sub></a>
         <a href="#-python-" title="🐍Python"><sub>🐍<sub></a>
-        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>      
+        <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>      
         <br />
-        <a href="#-semiodesktop-" title="✏️@semio/desktop"><sub>✏️<sub></a>
-        <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a>
-        <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a>
-        <a href="#%EF%B8%8F-semioplay-" title="🎛️@semio/play"><sub>🎛️<sub></a>
+        <a href="#-semiodesktop-" title="✏️semio/desktop"><sub>✏️<sub></a>
+        <a href="#-semioengine-" title="⚙️semio/engine"><sub>⚙️<sub></a>
+        <a href="#-semioassistant-" title="🤖semio/assistant"><sub>🤖<sub></a>
+        <a href="#%EF%B8%8F-semioplay-" title="🎛️semio/play"><sub>🎛️<sub></a>
         <br />
-        <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
-        <a href="#-semioassets-" title="🛍️@semio/assets"><sub>🛍️<sub></a>
+        <a href="#-semiodocs-" title="📚semio/docs"><sub>📚<sub></a>
+        <a href="#-semioassets-" title="🛍️semio/assets"><sub>🛍️<sub></a>
         <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
         <br />
         <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
@@ -2002,30 +2016,30 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
-        <a href="#-semiodocs-" title="📚@semio/docs"><sub>📚<sub></a>
+        <a href="#-semiodocs-" title="📚semio/docs"><sub>📚<sub></a>
         <a href="#-hello-semio-" title="👋 Hello semio"><sub>👋<sub></a>
-        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a> 
+        <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
         <img src=".semio-repo/contributors/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
-        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
+        <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
         <img src=".semio-repo/contributors/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
-        <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
+        <a href="#-semiojs-" title="🟨semio/js"><sub>🟨<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
         <img src=".semio-repo/contributors/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
         <sub><b>ellumpine</b></sub></a>
         <br />
-        <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
+        <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>
         <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
@@ -2033,14 +2047,14 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
-        <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a> 
+        <a href="#-semioengine-" title="⚙️semio/engine"><sub>⚙️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
         <img src=".semio-repo/contributors/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />
-        <a href="#-semioassistant-" title="🤖@semio/assistant"><sub>🤖<sub></a> 
+        <a href="#-semioassistant-" title="🤖semio/assistant"><sub>🤖<sub></a> 
       </td>
     </tr>
 </table>

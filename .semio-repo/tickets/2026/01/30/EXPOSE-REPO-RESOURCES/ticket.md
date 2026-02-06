@@ -8,8 +8,8 @@
 
 ## Changes
 
-- Modified `go/repo/main.go` to implement `handle*Resource` functions using internal GraphQL queries.
-- Updated `go/repo/main.go` to register resources and resource templates in the MCP server.
+- Modified `./semio-repo/cli/main.go` to implement `handle*Resource` functions using internal GraphQL queries.
+- Updated `./semio-repo/cli/main.go` to register resources and resource templates in the MCP server.
 - Refactored handler signatures to match `server.ResourceHandlerFunc` (`[]mcp.ResourceContents` return type).
 - Removed `mcp.WithMIMEType` from `AddResourceTemplate` calls to fix type errors.
 

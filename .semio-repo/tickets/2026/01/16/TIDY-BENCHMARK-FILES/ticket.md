@@ -1,18 +1,19 @@
 # Ticket
 
 ## Todos
+
 # Plan: Tidy Benchmark Files
 
 ## Current State
 
-| Language | Current Location | Target Location |
-|----------|------------------|-----------------|
-| Python | `py/semio/benchmark.py` | `py/semio/semio.benchmark.py` |
-| JavaScript | `js/semio/benchmark.ts` | `js/semio/semio.benchmark.ts` |
-| Rust | `rs/semio/examples/benchmark.rs` | `rs/semio/semio.benchmark.rs` |
-| Go | (none) | `go/semio/semio_benchmark.go` |
-| .NET | `net/Semio.Benchmark/Program.cs` | No change (already follows convention) |
-| Reports | `benchmark.csv` | `reports/benchmark.csv` |
+| Language   | Current Location                 | Target Location                        |
+| ---------- | -------------------------------- | -------------------------------------- |
+| Python     | `py/semio/benchmark.py`          | `py/semio/semio.benchmark.py`          |
+| JavaScript | `js/semio/benchmark.ts`          | `js/semio/semio.benchmark.ts`          |
+| Rust       | `rs/semio/examples/benchmark.rs` | `rs/semio/semio.benchmark.rs`          |
+| Go         | (none)                           | `go/semio/semio_benchmark.go`          |
+| .NET       | `net/Semio.Benchmark/Program.cs` | No change (already follows convention) |
+| Reports    | `benchmark.csv`                  | `reports/benchmark.csv`                |
 
 ## Tasks
 
@@ -30,7 +31,7 @@
    - Create `reports/` directory
    - Move `benchmark.csv` → `reports/benchmark.csv`
 
-6. **Update References**: Check and update any scripts or configs that reference the old file paths (e.g., `go/repo/cmd_benchmark.go`)
+6. **Update References**: Check and update any scripts or configs that reference the old file paths (e.g., `./semio-repo/cli/cmd_benchmark.go`)
 
 ## Notes
 
@@ -41,6 +42,7 @@
 ## Changes
 
 ## Log
+
 # Log: Tidy Benchmark Files
 
 ## Actions Performed
@@ -63,7 +65,7 @@
    - Created `reports/` directory
    - Moved `benchmark.csv` → `reports/benchmark.csv` using `git mv`
 
-6. **Updated References** in `go/repo/cmd_benchmark.go`:
+6. **Updated References** in `./semio-repo/cli/cmd_benchmark.go`:
    - TypeScript: `benchmark.ts` → `semio.benchmark.ts`
    - Python: `benchmark.py` → `semio.benchmark.py`
    - Go: `benchmark/main.go` → `semio_benchmark.go`
@@ -76,20 +78,21 @@
 - The Go benchmark file uses `//go:build ignore` to allow it to coexist in the same directory as the semio package
 
 ## Summary
+
 # Summary: Tidy Benchmark Files
 
 Reorganized benchmark files across all language implementations to follow a consistent naming convention.
 
 ## Final Structure
 
-| Language | Location |
-|----------|----------|
-| Python | `py/semio/semio.benchmark.py` |
-| JavaScript | `js/semio/semio.benchmark.ts` |
-| Rust | `rs/semio/semio.benchmark.rs` |
-| Go | `go/semio/semio_benchmark.go` |
-| .NET | `net/Semio.Benchmark/Program.cs` (unchanged) |
-| Reports | `reports/benchmark.csv` |
+| Language   | Location                                     |
+| ---------- | -------------------------------------------- |
+| Python     | `py/semio/semio.benchmark.py`                |
+| JavaScript | `js/semio/semio.benchmark.ts`                |
+| Rust       | `rs/semio/semio.benchmark.rs`                |
+| Go         | `go/semio/semio_benchmark.go`                |
+| .NET       | `net/Semio.Benchmark/Program.cs` (unchanged) |
+| Reports    | `reports/benchmark.csv`                      |
 
 ## Changes Made
 
@@ -97,4 +100,4 @@ Reorganized benchmark files across all language implementations to follow a cons
 - Moved Rust benchmark from `examples/` to root of `rs/semio/` and updated Cargo.toml
 - Moved Go benchmark from `benchmark/` subdirectory to root of `go/semio/` with `//go:build ignore` constraint
 - Created `reports/` directory for benchmark output
-- Updated `go/repo/cmd_benchmark.go` with new file paths and commands
+- Updated `./semio-repo/cli/cmd_benchmark.go` with new file paths and commands

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// vitest.config.ts
+// ⚙︎ vitest.config.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -24,7 +24,7 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   test: {
     projects: [
-      "./@semio/js/vite.config.ts",
+      "./semio/js/vite.config.ts",
     ],
   },
 });

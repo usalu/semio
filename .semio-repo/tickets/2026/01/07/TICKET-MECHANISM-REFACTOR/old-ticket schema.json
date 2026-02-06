@@ -17,12 +17,12 @@
       "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
       "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
       "files": [
-        "go/repo/repo.go",
-        "go/repo/repo_test.go"
+        "./semio-repo/cli/cli.go",
+        "./semio-repo/cli/cli_test.go"
       ],
       "sections": [
         {
-          "file": "go/repo/repo.go",
+          "file": "./semio-repo/cli/cli.go",
           "section": "GraphQL Types",
           "range": {
             "start": {
@@ -53,7 +53,7 @@
           }
         },
         {
-          "file": "go/repo/repo_test.go",
+          "file": "./semio-repo/cli/cli_test.go",
           "section": "Collection Tests",
           "range": {
             "start": {

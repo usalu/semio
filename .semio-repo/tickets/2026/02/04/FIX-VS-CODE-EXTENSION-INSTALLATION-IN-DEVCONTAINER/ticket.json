@@ -28,7 +28,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/repo",
+              "path": "semio-repo/repo",
               "lines": {
                 "added": 1,
                 "removed": 0

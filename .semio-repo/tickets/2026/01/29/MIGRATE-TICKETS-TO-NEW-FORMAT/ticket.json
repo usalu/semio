@@ -39,7 +39,7 @@
           "modified": [],
           "added": [
             {
-              "path": "@semio-repo/repo/AGENTS.md",
+              "path": "semio-repo/repo/AGENTS.md",
               "lines": {
                 "added": 4383,
                 "removed": 0
@@ -52,14 +52,14 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/repo/AGENTS.md#Codebase#📁 js/vscode/#Filters",
+              "path": "semio-repo/repo/AGENTS.md#Codebase#📁 js/vscode/#Filters",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/AGENTS.md#Using TypeScript fallback",
+              "path": "semio-repo/repo/AGENTS.md#Using TypeScript fallback",
               "lines": {
                 "added": 21,
                 "removed": 0

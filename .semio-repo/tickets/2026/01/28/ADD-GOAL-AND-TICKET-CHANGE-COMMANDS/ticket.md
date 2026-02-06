@@ -11,7 +11,7 @@
 
 ## Changes
 
-- Modified `go/repo/main.go` to add `GoalDates`, `GoalUpdateInput`, `TicketChangeInput`, `TicketChange` logic.
+- Modified `./semio-repo/cli/main.go` to add `GoalDates`, `GoalUpdateInput`, `TicketChangeInput`, `TicketChange` logic.
 - Implemented `GoalUpdate` resolver calling `ToolGoalUpdate`.
 - Implemented `TicketChange` resolver calling `ToolTicketChange`.
 - Updated `ghUpdateMilestone` to support `dueOn`.
@@ -21,7 +21,7 @@
 
 ## Log
 
-- Refactored `go/repo/main.go` to support new functionality.
+- Refactored `./semio-repo/cli/main.go` to support new functionality.
 - Fixed compilation errors regarding interface implementation and pointers.
 - Added CLI commands using `cobra`.
 - Verified build success.

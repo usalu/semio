@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan: Auto-Link Ticket Issues to GitHub Project
 
 ## Goals
@@ -19,17 +20,18 @@
 ## Changes
 
 ## Log
+
 # Log: Fix Repo Binary Ticket Path and Update AGENTS.md Documentation
 
 ## Investigation
 
-1. Confirmed the issue: tickets were being created under `go/repo/tickets/` instead of `tickets/`
-2. Found root cause in `findRepoRoot` function (line 2484 in `go/repo/main.go`)
-3. The function checked for `go.mod` at each level before walking up, causing it to find `go/repo/go.mod` before `/.git`
+1. Confirmed the issue: tickets were being created under `./semio-repo/cli/tickets/` instead of `tickets/`
+2. Found root cause in `findRepoRoot` function (line 2484 in `./semio-repo/cli/main.go`)
+3. The function checked for `go.mod` at each level before walking up, causing it to find `./semio-repo/cli/go.mod` before `/.git`
 
 ## Changes Made
 
-### go/repo/main.go
+### ./semio-repo/cli/main.go
 
 - Modified `findRepoRoot` function to prioritize `.git` over `go.mod`
 - New logic: First walk up entire tree looking for `.git`, only then fall back to looking for `go.mod`
@@ -51,7 +53,7 @@
 
 ### Cleanup
 
-- Removed incorrectly created `go/repo/tickets/` folder
+- Removed incorrectly created `./semio-repo/cli/tickets/` folder
 
 ---
 
@@ -63,7 +65,7 @@ User requested LLM and UI values to be lowercase and passed as flags like `--opu
 
 ### Changes Made
 
-### go/repo/main.go
+### ./semio-repo/cli/main.go
 
 - Refactored `ticketOpenCmd` to accept only `<title> <prompt>` as positional arguments
 - Added LLM flags: `--opus-4-5`, `--sonnet-4`, `--haiku-3-5`, `--o3`, `--gpt-4-1`, `--gemini-2-5-pro`
@@ -89,7 +91,7 @@ User requested explicit flag syntax: `--title "My Task" --prompt "Prompt" --llm 
 
 ### Changes Made
 
-### go/repo/main.go
+### ./semio-repo/cli/main.go
 
 - Refactored `ticketOpenCmd` to use named string flags instead of positional args + boolean flags
 - Flags: `--title`, `--prompt`, `--llm`, `--ui` (all string values)
@@ -156,5 +158,6 @@ User requested explicit flag syntax: `--title "My Task" --prompt "Prompt" --llm 
 - Closed ticket with updated summary and file list.
 
 ## Summary
+
 - Added GitHub project linking for ticket create/reopen and covered the args builder in tests.
 - Documented project linking in README.md and AGENTS.md.

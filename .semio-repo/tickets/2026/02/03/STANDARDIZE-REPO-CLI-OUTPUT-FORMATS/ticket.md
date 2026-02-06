@@ -6,7 +6,7 @@ Standardized markdown output formats for `ticket` and `goal` commands.
 
 ## Changes
 
-- Modified `@semio-repo/cli/main.go` to use `semiorepo://ticket/SLUG` URI format for ticket links in markdown output of `ticket tree` command.
+- Modified `semio-repo/cli/main.go` to use `semiorepo://ticket/SLUG` URI format for ticket links in markdown output of `ticket tree` command.
 
 ## Log
 

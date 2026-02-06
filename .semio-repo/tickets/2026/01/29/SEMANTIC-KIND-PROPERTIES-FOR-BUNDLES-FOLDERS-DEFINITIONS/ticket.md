@@ -20,10 +20,10 @@
 
 ## Changes
 
-1. go/repo/main.go - Added BundleKind, FolderKind, and semantic DefinitionKind enums with classification functions
-2. go/repo/main.go - Updated Bundle, Folder structs with Kind field
-3. go/repo/main.go - Added filter flags and streaming options for all new dimensions
-4. go/repo/main.go - Added IsGeneratedFolder function for detecting generated folders
+1. ./semio-repo/cli/main.go - Added BundleKind, FolderKind, and semantic DefinitionKind enums with classification functions
+2. ./semio-repo/cli/main.go - Updated Bundle, Folder structs with Kind field
+3. ./semio-repo/cli/main.go - Added filter flags and streaming options for all new dimensions
+4. ./semio-repo/cli/main.go - Added IsGeneratedFolder function for detecting generated folders
 5. js/vscode/extension.ts - Updated FilterProvider with hierarchical filter tree
 6. js/vscode/extension.ts - Added bundle, folder, definition kind toggles
 7. graphql/repo/schema.graphql - Updated schema with new enums and fields

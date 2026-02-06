@@ -35,7 +35,7 @@ Found the extension code structure:
 
 ### Root Cause Found
 
-Tested `./@semio-repo/cli/cli --json analyze "js/semio/semio.ts"` - returns violations correctly.
+Tested `./semio-repo/cli/cli --json analyze "js/semio/semio.ts"` - returns violations correctly.
 The issue is in `extractRepoResult()` function:
 
 - RepoEvent type expects `data` field

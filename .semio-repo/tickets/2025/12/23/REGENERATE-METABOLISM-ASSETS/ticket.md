@@ -1,9 +1,10 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
-The `metabolism.zip` asset contained SQL tables with the old "port" naming convention instead of "connector". The regeneration script (`scripts/regenerate-metabolism.tsx`) had import issues trying to use `MetabolismKit` from `@semio/assets`, and only wrote the zip file to `assets/semio/metabolism.zip` without copying it to public folders where it's served for development (`js/semio/public/`, `js/sketchpad/public/`, `js/play/public/`).
+The `metabolism.zip` asset contained SQL tables with the old "port" naming convention instead of "connector". The regeneration script (`scripts/regenerate-metabolism.tsx`) had import issues trying to use `MetabolismKit` from `semio/assets`, and only wrote the zip file to `assets/semio/metabolism.zip` without copying it to public folders where it's served for development (`js/semio/public/`, `js/sketchpad/public/`, `js/play/public/`).
 
 # Plan
 
@@ -16,7 +17,7 @@ The `metabolism.zip` asset contained SQL tables with the old "port" naming conve
 
 ## Fixed Import Problem
 
-Changed from importing `MetabolismKit` from `@semio/assets` (which had module resolution issues) to reading the JSON file directly:
+Changed from importing `MetabolismKit` from `semio/assets` (which had module resolution issues) to reading the JSON file directly:
 
 ```typescript
 const kitPath = join(__dirname, "..", "assets", "semio", "kit_metabolism.json");
@@ -55,6 +56,7 @@ Verified that:
 ## Log
 
 ## Summary
+
 # Summary
 
 Regenerate metabolism.zip assets with connector schema and copy to all public folders

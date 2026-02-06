@@ -31,7 +31,7 @@ uv sync
 #endregion 🔖Python
 #region 🔖Go
 echo "Building Go binaries..."
-cd go/repo
+cd ./semio-repo/cli
 go build
 cd ../..
 #endregion 🔖Go

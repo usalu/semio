@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The sketchpad tests are failing because the codebase is in a transitional state:
@@ -126,7 +127,7 @@ Added manual registration of all app configs since they're not in the auto-disco
 
 ### Fixed Build Errors
 
-1. **docs/tsconfig.json**: Changed extends from `@semio/js/tsconfig.json` to `../semio/tsconfig.json`
+1. **docs/tsconfig.json**: Changed extends from `semio/js/tsconfig.json` to `../semio/tsconfig.json`
 2. **js/package.json**: Added `"./globals.css": "./globals.css"` to exports
 
 ## Test Status
@@ -152,6 +153,7 @@ This suggests the tests may need updating, or there are CSS/layout issues preven
 The actual error is an MDX parsing error in `sketch-setup.mdx` - vite is failing to parse emojis. This is unrelated to the XState refactoring.
 
 ## Summary
+
 # Summary
 
 Refactor sketchpad to use pure XState machines with no Y.js in app state

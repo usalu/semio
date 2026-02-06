@@ -10,7 +10,7 @@ ignore: false
 
 # Plan
 
-1. Investigate the GraphQL schema definition in `go/repo/graph` and `graphql/repo`.
+1. Investigate the GraphQL schema definition in `./semio-repo/cli/graph` and `graphql/repo`.
 2. Identify why `Range.start` and `Range.end` are being treated as scalars (`Int!`) instead of `Position` objects.
 3. Fix the schema definition in the Go code or the GraphQL schema file.
 4. Rebuild the CLI if necessary.

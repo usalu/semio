@@ -1,0 +1,30 @@
+{
+  "name": "semio/engine",
+  "version": "1.0.0",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "semio/engine",
+  "projectType": "application",
+  "scripts": {
+    "dev": "uv run engine.py",
+    "build": "tsx ./build.ts",
+    "test": "tsx ./test.ts",
+    "preflight": "ruff format . && ruff check --fix ."
+  },
+  "targets": {
+    "update": {
+      "executor": "@nxlv/python:update"
+    },
+    "lock": {
+      "executor": "@nxlv/python:lock"
+    }
+  },
+  "devDependencies": {
+    "semio/assets": "*"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "bundleKind": "library"
+}

@@ -2,7 +2,7 @@
 
 ## Prompt
 
-Restore repo CLI registration and resolve consolidation regressions in go/repo/main.go.
+Restore repo CLI registration and resolve consolidation regressions in ./semio-repo/cli/main.go.
 
 ## Updates
 
@@ -22,8 +22,8 @@ Restore repo CLI registration and resolve consolidation regressions in go/repo/m
 - Updated policy checks to avoid fixture false positives.
 - Tests: `go test ./...`.
 
-
 ## Todos
+
 # Restore Repo CLI Registration Plan
 
 1. Remove leftover legacy command fragments and stabilize engine-based CLI wiring.

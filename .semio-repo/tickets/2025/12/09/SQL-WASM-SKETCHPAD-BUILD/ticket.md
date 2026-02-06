@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Production deployment of `js/sketchpad` to `https://sketchpad.semio-tech.com` failed with:
@@ -21,7 +22,7 @@ The error did not appear in `vite preview`.
 
 ## Root Cause
 
-The `sql.js` library requires a `sql-wasm.wasm` file to be available at runtime. The `@semio/js` package had a `postinstall` script that copied this file to `js/semio/public/sql-wasm.wasm`, but `@semio/sketchpad` had its own `public` folder without the wasm file.
+The `sql.js` library requires a `sql-wasm.wasm` file to be available at runtime. The `semio/js` package had a `postinstall` script that copied this file to `js/semio/public/sql-wasm.wasm`, but `semio/sketchpad` had its own `public` folder without the wasm file.
 
 During Vite build, only files from the app's own `public` folder are copied to `dist`, so the wasm file was missing in production.
 
@@ -60,6 +61,7 @@ Created `.nojekyll` file in `js/sketchpad/public/` to disable Jekyll processing 
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix sql-wasm.wasm not being included in sketchpad production build

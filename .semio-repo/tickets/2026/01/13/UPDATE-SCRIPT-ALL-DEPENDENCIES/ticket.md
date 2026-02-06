@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan: Update Script for All Dependencies
 
 ## Overview
@@ -12,14 +13,14 @@ Create a comprehensive update script (`update.ts`) that updates all dependencies
 1. **npm (package.json)**: Root + workspaces (js/semio, js/docs, js/play, js/desktop, js/vscode, etc.)
 2. **uv (pyproject.toml)**: py/engine
 3. **cargo (Cargo.toml)**: rs/semio
-4. **go (go.mod)**: go/cli, go/mcp, go/repo, go/semio
+4. **go (go.mod)**: go/cli, go/mcp, ./semio-repo/cli, go/semio
 5. **C# (.csproj)**: net/Semio, net/Semio.Grasshopper, net/Semio.Tests, net/Semio.Grasshopper.Tests
 
 ## Requirements
 
 1. Update dependencies in manifest files (not just lock files)
 2. Support excluding specific packages from updates (pinned dependencies)
-3. Preserve local workspace references (e.g., `"@semio/js": "*"`)
+3. Preserve local workspace references (e.g., `"semio/js": "*"`)
 4. Preserve local Go module replace directives
 
 ## Implementation
@@ -31,11 +32,7 @@ Define excluded dependencies per project:
 ```json
 {
   "exclude": {
-    "net/Semio.Grasshopper/Semio.Grasshopper.csproj": [
-      "Grasshopper",
-      "System.Drawing.Common",
-      "System.Resources.Extensions"
-    ]
+    "net/Semio.Grasshopper/Semio.Grasshopper.csproj": ["Grasshopper", "System.Drawing.Common", "System.Resources.Extensions"]
   },
   "preserveLocalVersions": {
     "npm": ["*"],
@@ -47,6 +44,7 @@ Define excluded dependencies per project:
 ### 2. Create Update Script (`update.ts`)
 
 Script structure:
+
 - Parse configuration
 - Update npm packages (root and workspaces)
 - Update uv/Python packages
@@ -57,19 +55,20 @@ Script structure:
 
 ### 3. Update Commands per Package Manager
 
-| Manager | Command | Notes |
-|---------|---------|-------|
-| npm | `npm update -S` | Updates package.json versions |
-| uv | `uv lock --upgrade` | Then sync pyproject.toml |
-| cargo | `cargo update` | Then update Cargo.toml versions |
-| go | `go get -u ./...` then `go mod tidy` | Per module directory |
-| dotnet | `dotnet outdated --upgrade` or manual | Respecting excludes |
+| Manager | Command                               | Notes                           |
+| ------- | ------------------------------------- | ------------------------------- |
+| npm     | `npm update -S`                       | Updates package.json versions   |
+| uv      | `uv lock --upgrade`                   | Then sync pyproject.toml        |
+| cargo   | `cargo update`                        | Then update Cargo.toml versions |
+| go      | `go get -u ./...` then `go mod tidy`  | Per module directory            |
+| dotnet  | `dotnet outdated --upgrade` or manual | Respecting excludes             |
 
 ### 4. Post-Update Restoration
 
 After running npm update:
+
 - Scan all package.json files in workspaces
-- Restore `"*"` versions for local packages like `@semio/js`, `@semio/assets`
+- Restore `"*"` versions for local packages like `semio/js`, `semio/assets`
 
 ## Files to Create/Modify
 
@@ -101,6 +100,7 @@ npm run update
 ## Changes
 
 ## Log
+
 # Log: Update Script for All Dependencies
 
 ## 2026-01-13
@@ -109,15 +109,15 @@ npm run update
 
 Explored the monorepo structure and identified all package managers in use:
 
-- **npm**: Root package.json with workspaces at js/semio, js/docs, js/play, js/desktop, js/vscode, assets/logo, assets/icons, assets, py/engine, net/Semio, net/Semio.Grasshopper, go/semio, go/repo, go/mcp, yak
+- **npm**: Root package.json with workspaces at js/semio, js/docs, js/play, js/desktop, js/vscode, assets/logo, assets/icons, assets, py/engine, net/Semio, net/Semio.Grasshopper, go/semio, ./semio-repo/cli, go/mcp, yak
 - **uv (Python)**: py/engine/pyproject.toml
 - **cargo (Rust)**: rs/semio/Cargo.toml
-- **go**: go/cli/go.mod, go/mcp/go.mod, go/repo/go.mod, go/semio/go.mod
+- **go**: go/cli/go.mod, go/mcp/go.mod, ./semio-repo/cli/go.mod, go/semio/go.mod
 - **C# (.csproj)**: net/Semio/Semio.csproj, net/Semio.Grasshopper/Semio.Grasshopper.csproj, net/Semio.Tests/Semio.Tests.csproj, net/Semio.Grasshopper.Tests/Semio.Grasshopper.Tests.csproj
 
 ### Key Findings
 
-1. Local npm packages use `"*"` for workspace dependencies (e.g., `"@semio/js": "*"` in js/docs)
+1. Local npm packages use `"*"` for workspace dependencies (e.g., `"semio/js": "*"` in js/docs)
 2. Semio.Grasshopper has pinned dependencies: Grasshopper, System.Drawing.Common, System.Resources.Extensions
 3. Go modules use `replace` directives for local packages
 
@@ -127,7 +127,7 @@ Created initial version with basic support for all package managers.
 
 ### Issues Found After Testing v1
 
-1. **Local @semio/\* packages affected**: Hardcoded package list missed packages like `@semio/logo`
+1. **Local semio/\* packages affected**: Hardcoded package list missed packages like `semio/logo`
 2. **Cargo only updates lock file**: `cargo update` doesn't update Cargo.toml versions
 3. **Semio.csproj exclusions missing**: FluentValidation and System.Collections.Immutable needed exclusion
 4. **uv only updates lock file**: `uv lock --upgrade` doesn't update pyproject.toml
@@ -135,7 +135,7 @@ Created initial version with basic support for all package managers.
 ### Fixes Applied v2
 
 1. **Dynamic workspace detection**: Now reads all workspace package.json files to detect names automatically
-   - Detected 15 packages: @semio/logo, @semio/icons, @semio/assets, @semio/engine, @semio/js, @semio/net, @semio/grasshopper, etc.
+   - Detected 15 packages: semio/logo, semio/icons, semio/assets, semio/engine, semio/js, semio/net, semio/grasshopper, etc.
 
 2. **Cargo.toml direct updates**: Added parser for Cargo.toml that fetches latest versions from crates.io API and updates the file directly
 
@@ -158,11 +158,11 @@ Created initial version with basic support for all package managers.
 **NPM** - All 15 workspace packages detected:
 
 ```
-  Detected 15 workspace packages: @semio/logo, @semio/icons, @semio/assets, @semio/engine, @semio/js, @semio/docs, @semio/play, @semio/desktop, @semio-repo/vscode, @semio/net, @semio/grasshopper, @semio/go, @semio-repo/go, @semio-repo/mcp, @semio/yak
+  Detected 15 workspace packages: semio/logo, semio/icons, semio/assets, semio/engine, semio/js, semio/docs, semio/play, semio/desktop, semio-repo/vscode, semio/net, semio/grasshopper, semio/go, semio-repo/go, semio-repo/mcp, semio/yak
   Will preserve local package versions:
-    assets/icons/package.json: devDependencies.@semio/logo = "*"
-    net/Semio.Grasshopper/package.json: devDependencies.@semio/net = "*"
-    yak/package.json: devDependencies.@semio/grasshopper = "*"
+    assets/icons/package.json: devDependencies.semio/logo = "*"
+    net/Semio.Grasshopper/package.json: devDependencies.semio/net = "*"
+    yak/package.json: devDependencies.semio/grasshopper = "*"
 ```
 
 **Cargo.toml** - Successfully updated:
@@ -186,6 +186,7 @@ Created initial version with basic support for all package managers.
 - Python updates may fail if packages have conflicting version constraints. In this case, manual intervention is needed or a smarter algorithm to resolve compatible versions.
 
 ## Summary
+
 # Summary: Update Script for All Dependencies
 
 Created a comprehensive dependency update system for the monorepo that handles all package managers (npm, uv, cargo, go, dotnet) with support for excluding specific packages, preserving local workspace references, and automatic rollback on failure.

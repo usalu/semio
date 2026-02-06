@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan - Fix npm Invalid Version error
 
 1. **Diagnose**: Analyze `npm` log for `Invalid Version` error.
@@ -13,6 +14,7 @@
 ## Changes
 
 ## Log
+
 # Log - Fix npm Invalid Version error
 
 - **Diagnostic**: Found that `npm install` failed with `TypeError: Invalid Version: `. This occurred during the placement of workspace dependencies.
@@ -20,7 +22,7 @@
 - **Action**: Added `"version": "1.0.0"` to the following files:
   - [yak/package.json](yak/package.json)
   - [go/semio/package.json](go/semio/package.json)
-  - [go/repo/package.json](go/repo/package.json)
+  - [./semio-repo/cli/package.json](./semio-repo/cli/package.json)
   - [go/mcp/package.json](go/mcp/package.json)
   - [net/Semio/package.json](net/Semio/package.json)
   - [net/Semio.Grasshopper/package.json](net/Semio.Grasshopper/package.json)
@@ -39,6 +41,7 @@
 - **Verification**: Ran `npm install` successfully.
 
 ## Summary
+
 # Summary - Fix npm Invalid Version error
 
 Fixed `npm install` failure by adding missing `version` fields to workspace member `package.json` files and resolving `vitest` dependency version conflicts. Removed conflicting lockfiles to ensure a clean dependency tree.

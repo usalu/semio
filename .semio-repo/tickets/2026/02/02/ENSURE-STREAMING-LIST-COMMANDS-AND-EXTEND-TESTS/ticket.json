@@ -52,14 +52,14 @@
           "modified": [],
           "added": [
             {
-              "path": "📄@semio-repo/go/main_commands_test.go§TestLifecycleCommands",
+              "path": "📄semio-repo/go/main_commands_test.go§TestLifecycleCommands",
               "lines": {
                 "added": 110,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/go/main_commands_test.go§TestListCommands",
+              "path": "📄semio-repo/go/main_commands_test.go§TestListCommands",
               "lines": {
                 "added": 1,
                 "removed": 0

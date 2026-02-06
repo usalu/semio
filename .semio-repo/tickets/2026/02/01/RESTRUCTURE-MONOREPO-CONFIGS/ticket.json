@@ -24,7 +24,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/cli",
+              "path": "semio-repo/cli",
               "lines": {
                 "added": 0,
                 "removed": 48
@@ -44,35 +44,35 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/cli/main.go",
+              "path": "semio-repo/cli/main.go",
               "lines": {
                 "added": 25,
                 "removed": 73
               }
             },
             {
-              "path": "@semio-repo/repo/AGENTS.md",
+              "path": "semio-repo/repo/AGENTS.md",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/repo/CLAUDE.md",
+              "path": "semio-repo/repo/CLAUDE.md",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md",
+              "path": "semio-repo/repo/README.md",
               "lines": {
                 "added": 36,
                 "removed": 36
               }
             },
             {
-              "path": "@semio-repo/repo/pyproject.toml",
+              "path": "semio-repo/repo/pyproject.toml",
               "lines": {
                 "added": 2,
                 "removed": 2
@@ -85,216 +85,216 @@
           "deleted": null,
           "renamed": [
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Guidelines",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#UI System#Guidelines",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Guidelines",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#UI System#Guidelines",
               "lines": {
                 "added": 15,
                 "removed": 15
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Borders",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Borders",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Borders",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Borders",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Tickets",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/@semio/play) [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Tickets",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🎛️ [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#UI System",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#UI System",
               "lines": {
                 "added": 53,
                 "removed": 53
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)#Sidebar",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🎛️ [semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/semio-repo/vscode) [↑](#-bundles-)#Sidebar",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Sidebar",
-              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)#Kit Validation",
+              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Sidebar",
+              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/semio-repo/vscode) [↑](#-bundles-)#Kit Validation",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#📚 [@semio/docs](https://github.com/usalu/semio/tree/main/@semio/docs) [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#📚 [semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#📚 [semio/docs](https://github.com/usalu/semio/tree/main/semio/docs) [↑](#-bundles-)",
               "lines": {
                 "added": 19,
                 "removed": 19
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/semio-repo/vscode) [↑](#-bundles-)",
               "lines": {
                 "added": 25,
                 "removed": 25
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Kit Validation",
-              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)#Tickets",
+              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Kit Validation",
+              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/semio-repo/vscode) [↑](#-bundles-)#Tickets",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#UI Levels",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#UI System#UI Levels",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#UI Levels",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#UI System#UI Levels",
               "lines": {
                 "added": 21,
                 "removed": 21
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad state",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad state",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad state",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad state",
               "lines": {
                 "added": 10,
                 "removed": 10
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/@semio/engine) [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
               "lines": {
                 "added": 85,
                 "removed": 85
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)",
               "lines": {
                 "added": 187,
                 "removed": 187
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Size Constants",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#UI System#Size Constants",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Size Constants",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#UI System#Size Constants",
               "lines": {
                 "added": 13,
                 "removed": 13
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Violation Diagnostics",
-              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)#Violation Diagnostics",
+              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Violation Diagnostics",
+              "to": "README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/semio-repo/vscode) [↑](#-bundles-)#Violation Diagnostics",
               "lines": {
                 "added": 9,
                 "removed": 9
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/@semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/@semio/engine/engine.py#L5529)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)#🪢 Scripting",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/@semio/@semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)#🪢 Scripting",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🦗 [semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)#🪢 Scripting",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🦗 [semio/grasshopper](https://github.com/usalu/semio/tree/main/semio/semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)#🪢 Scripting",
               "lines": {
                 "added": 62,
                 "removed": 62
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/@semio/desktop) [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#✏️ [semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#✏️ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)",
               "lines": {
                 "added": 16,
                 "removed": 16
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Background levels",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Background levels",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Background levels",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Background levels",
               "lines": {
                 "added": 77,
                 "removed": 77
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Platform Compatibility",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Platform Compatibility",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Platform Compatibility",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Platform Compatibility",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/@semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/@semio/engine/engine.py#L5095)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad",
               "lines": {
                 "added": 42,
                 "removed": 42
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/@semio/@semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🦗 [semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🦗 [semio/grasshopper](https://github.com/usalu/semio/tree/main/semio/semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)",
               "lines": {
                 "added": 84,
                 "removed": 84
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
               "lines": {
                 "added": 7,
                 "removed": 7
@@ -303,308 +303,308 @@
           ],
           "modified": [
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "path": "semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/@semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/@semio/engine/engine.py#L5095)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/@semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/@semio/engine/engine.py#L5529)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad state",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad state",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/@semio/play) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🎛️ [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#📚 [@semio/docs](https://github.com/usalu/semio/tree/main/@semio/docs) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#📚 [semio/docs](https://github.com/usalu/semio/tree/main/semio/docs) [↑](#-bundles-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#🧑‍💻 Development [↑](#-overview)#🪟 Windows Setup (Legacy) [↑](#-development)",
+              "path": "semio-repo/repo/README.md#🧑‍💻 Development [↑](#-overview)#🪟 Windows Setup (Legacy) [↑](#-development)",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
-              "lines": {
-                "added": 2,
-                "removed": 2
-              }
-            },
-            {
-              "path": "@semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)",
-              "lines": {
-                "added": 1,
-                "removed": 1
-              }
-            },
-            {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🧾 Code Report [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
               "lines": {
-                "added": 1,
-                "removed": 0
+                "added": 2,
+                "removed": 2
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
-              "path": "@semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🧾 Code Report [↑](#-bundles-)",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/semio-repo/vscode) [↑](#-bundles-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/@semio/@semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🦗 [semio/grasshopper](https://github.com/usalu/semio/tree/main/semio/semio/grasshopper/Semio.Grasshopper) [↑](#-bundles-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/@semio/engine) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#UI System#Size Constants",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#UI System#Size Constants",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/@semio/desktop) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#✏️ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Workspaces",
+              "path": "semio-repo/repo/README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Workspaces",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/@semio/js) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/semio/js) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#💻 [semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad state",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad state",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#📚 [semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#✏️ [semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🎛️ [semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🦗 [semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Size Constants",
+              "path": "semio-repo/repo/README.md#📦 Bundles [↑](#-overview)#🟨 [semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Size Constants",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/pyproject.toml#project",
+              "path": "semio-repo/repo/pyproject.toml#project",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/pyproject.toml#tool.uv.workspace",
+              "path": "semio-repo/repo/pyproject.toml#tool.uv.workspace",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/cli/main.go#Tickets",
+              "path": "semio-repo/cli/main.go#Tickets",
               "lines": {
                 "added": 24,
                 "removed": 72
               }
             },
             {
-              "path": "@semio-repo/cli/main.go#GraphQL Types",
+              "path": "semio-repo/cli/main.go#GraphQL Types",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/AGENTS.md#Using TypeScript fallback#MCP Server",
+              "path": "semio-repo/repo/AGENTS.md#Using TypeScript fallback#MCP Server",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/repo/AGENTS.md#Using Go binary (preferred)",
+              "path": "semio-repo/repo/AGENTS.md#Using Go binary (preferred)",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -618,42 +618,42 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/cli/main.go#GraphQL Types§normalizeBundleLabel",
+              "path": "semio-repo/cli/main.go#GraphQL Types§normalizeBundleLabel",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/cli/main.go#Tickets§LoadBundles",
+              "path": "semio-repo/cli/main.go#Tickets§LoadBundles",
               "lines": {
                 "added": 24,
                 "removed": 38
               }
             },
             {
-              "path": "@semio-repo/cli/main.go#Tickets§StreamBundles",
+              "path": "semio-repo/cli/main.go#Tickets§StreamBundles",
               "lines": {
                 "added": 0,
                 "removed": 28
               }
             },
             {
-              "path": "@semio-repo/cli/main.go#Tickets§bundleMatchesKinds",
+              "path": "semio-repo/cli/main.go#Tickets§bundleMatchesKinds",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/cli/main.go#GraphQL Types§normalizeBundleLabel",
+              "path": "semio-repo/cli/main.go#GraphQL Types§normalizeBundleLabel",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/cli/main.go#Tickets§LoadBundles",
+              "path": "semio-repo/cli/main.go#Tickets§LoadBundles",
               "lines": {
                 "added": 0,
                 "removed": 72

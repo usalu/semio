@@ -7,6 +7,7 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION
 ## Summary
 
 Refactored VSCode extension sideview to consolidate into Monorepo and Filter sections, implemented new providers, and fixed compilation issues.
+
 ## Changes
 
 - Updated `package.json` to:
@@ -35,7 +36,7 @@ Refactored VSCode extension sideview to consolidate into Monorepo and Filter sec
   - Test the new `MonorepoTreeDataProvider` and `FilterTreeDataProvider`.
   - Fix TypeScript errors and type mismatches.
   - Remove tests for deleted views.
-- Updated `tsconfig.json` with path mappings for `@semio/js` and `@semio/assets`.
+- Updated `tsconfig.json` with path mappings for `semio/js` and `semio/assets`.
 
 ## Log
 

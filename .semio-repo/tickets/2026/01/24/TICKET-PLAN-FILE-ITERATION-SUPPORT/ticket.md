@@ -61,7 +61,7 @@ Extend the ticket mechanism to support plan file interactions. When a plan is pr
 ## File Changes Summary
 
 - `graphql/repo/schema.graphql` - Add `planPath` to `TicketReopenInput`
-- `go/repo/main.go` - All implementation changes
+- `./semio-repo/cli/main.go` - All implementation changes
 
 ## Testing
 

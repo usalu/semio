@@ -1,7 +1,7 @@
 <!-- IMPORTANT -->
 
-ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or the cli `./@semio-repo/cli/cli`) for repo-specific infrastructure. ALWAYS start by listing the current goal tree with `goal_tree` (or `./@semio-repo/cli/cli goal tree`). Create a new ticket with mcp tool `ticket_open` (or `./@semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `./@semio-repo/cli/cli ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `./@semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
-Create a goal with mcp tool `goal_open`(or `./@semio-repo/cli/cli goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`./@semio-repo/cli/cli goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or `./@semio-repo/cli/cligoal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
+ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or the cli `./semio-repo/cli/cli`) for repo-specific infrastructure. ALWAYS start by listing the current goal tree with `goal_tree` (or `./semio-repo/cli/cli goal tree`). Create a new ticket with mcp tool `ticket_open` (or `./semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `./semio-repo/cli/cli ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
+Create a goal with mcp tool `goal_open`(or `./semio-repo/cli/cli goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`./semio-repo/cli/cli goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or `./semio-repo/cli/cligoal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
 A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
@@ -10,7 +10,7 @@ A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`.
 
 1. Under `# 📦 Bundles` in README.md where it is described from junior-developer perspective (mechanism explanation and reasoning behind the decision, how theory links to implementation, etc).
 2. Under `# Software Requirements Specification` in AGENTS.md where it is described from human-interface-designer perspective (concise technical terms without explanation, framework-agnostic, no implementation references). There are two sections: `# Business Logic` and `# UI/UX`.
-3. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## @semio/js/semio/sketchpad/` or `## @semio/net/Semio.cs`
+3. Under `# Codebase` in AGENTS.md where it is described from senior-developer perspective (framework-mechanisms, consice technical terms without explanation, implementation details, etc). The section has the same header structure as the files and folders. All files and folders are flat with `## PATH` e.g. `## semio/js/semio/sketchpad/` or `## semio/net/Semio.cs`
    The purpose of the dev docs is to understand the codebase. NEVER add reasoning or process related (such as what changed, why, how, … - this is part of the log) to the dev docs.
 
 This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
@@ -24,6 +24,10 @@ This document MUST ALWAYS BE followed unless explicitly asked to do otherwise.
 ### Code Hygiene
 
 Source files MUST include an SPDX license header.
+
+File headers MUST contain the correct file artifact ID (emoji-prefixed path) instead of plain file paths.
+
+File header artifact ID violations MUST be autofixable by replacing the identified line with the correct artifact ID.
 
 Source files MUST NOT include inline comments except for license headers, region markers, TODO markers (including contiguous comment blocks following them), and comments in configuration files.
 
@@ -55,7 +59,7 @@ Code analysis problems MUST include reason and solution text.
 
 Autofix MUST detect violations, filter to autofixable kinds, group by file, and apply fixes bottom-up per file.
 
-Autofixable violation kinds: empty section removal, missing section end name, section name mismatch, inline comment removal, block comment removal, JSDoc comment removal.
+Autofixable violation kinds: file header artifact ID replacement, empty section removal, missing section end name, section name mismatch, inline comment removal, block comment removal, JSDoc comment removal.
 
 Empty section autofix MUST remove the section start, end, and content lines plus one surrounding blank line (prefer preceding).
 
@@ -186,8 +190,8 @@ The repo dev server MUST send outbound notifications formatted with prompt and s
 ### Repo Tooling
 
 Ticket open inputs MUST allow optional `noIssue` and `draft` fields.
-The repo CLI binary MUST be consolidated into a single `go/repo/main.go` source file that owns engine, CLI, MCP, and rendering behavior.
-Legacy repo CLI adapter packages MUST NOT exist outside `go/repo/main.go`.
+The repo CLI binary MUST be consolidated into a single `semio-repo/cli/cli.go` source file that owns engine, CLI, MCP, and rendering behavior.
+Legacy repo CLI adapter packages MUST NOT exist outside `semio-repo/cli/cli.go`.
 Repo operational commands (benchmark, preflight, update) MUST live in the single-file repo entrypoint.
 Ticket close and reopen MUST address tickets via `YYYY/MM/DD/SLUG` path identifiers.
 Ticket close MUST support an `--all` flag to bulk close all open tickets without summary requirements or GitHub interaction.
@@ -203,7 +207,7 @@ Ticket open MUST require a Goal ID.
 Ticket open MUST require a ticket Client enum value.
 Repo CLI MUST expose an export command that emits a SQLite snapshot of projects, bundles, packages, folders, files, sections, contributors, tickets, policies, and violations.
 Repo section tooling MUST expose an integrate command that merges source files into target sections.
-Ticket close MUST apply all affected bundle labels and the `@semio-repo` label for out-of-bundle paths.
+Ticket close MUST apply all affected bundle labels and the `semio-repo` label for out-of-bundle paths.
 Ticket close MUST post a metrics comment listing semantic changes for projects, bundles, packages, folders, files, sections, and definitions with status icons and `+added`/`-removed` counts.
 Ticket issue bodies MUST prepend a `# 🤖 Prompt` heading.
 Ticket reopen MUST add a `# 🤖 Prompt` comment with the latest prompt.
@@ -225,11 +229,21 @@ Repo file/folder listing and diagnostics MUST apply `.gitignore` patterns direct
 Repo `tree` and `list` commands MUST support a `--md` flag that outputs a nested Markdown bullet list using `semiorepo://` URI schemes.
 Repo `tree` command MUST display ASCII tree view by default with colored output for tickets (blue=open, green=finished) and goals (blue=open, green=closed), including metadata (icon, date, author, summary).
 Repo CLI analyze and fix commands MUST accept scope arguments through flags or positional inputs.
-GraphQL `node(id:)` MUST accept the canonical node IDs emitted by the schema (`@semio/...`, `@semio-repo/...`).
-Ticket close MUST derive bundle labels from semantic bundle diffs and MUST NOT infer `@semio-repo` from README.md or AGENTS.md.
+GraphQL `node(id:)` MUST accept the canonical node IDs emitted by the schema (`semio/...`, `semio-repo/...`).
+Ticket close MUST derive bundle labels from semantic bundle diffs and MUST NOT infer `semio-repo` from README.md or AGENTS.md.
 Ticket interactions MUST store their own semantic diff payloads; tickets MUST NOT store diff payloads at the top level.
 
 Ticket close MUST require at least one considered file after applying repo exclusions and `.gitignore` filtering.
+
+### Artifact Kind Derivation
+
+Bundle kind MUST be derived from the `bundleKind` field in `package.json` or `project.json` at the bundle root, falling back to `library`.
+Valid bundle kinds: `library`, `schema`, `binary`, `ui`, `site`, `assets`.
+Folder kind MUST be derived from the folder name: `.`-prefixed folders and folders containing package manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `*.csproj`, `*.sln`) are `required`; all others are `organization`.
+File kind MUST be derived from the file name and extension using pattern matching: test files (`*.test.*`, `_test.*`, `*.spec.*`, `*.stories.*`, `*.benchmark.*`), config files (`.json`, `.yaml`, `.toml`, `.xml`, etc. plus named files like `Dockerfile`, `Makefile`), docs (`.md`, `.txt`, `.rst`), resources (images, fonts, media, archives, binaries), code (comprehensive language extension list), scripts (`.sh`, `.bash`, `.bat`, `.ps1`, etc.), and license files (names containing `license` or `licence`).
+Definition kind MUST be derived from the language processor keyword via `extractDefinitionKeyword` and `DeriveDefinitionKind`: interface-like keywords (`interface`, `type`, `trait`, `abstract`, `delegate`, `record`, `union`, `scalar`, `extend *`) map to `interface`; constant-like keywords (`const`, `enum`, `var`, `let`, `static`) map to `constant`; all others (including `function`, `class`, `struct`, `def`, `func`, `fn`) map to `implementation`.
+`extractDefinitionKeyword` MUST prioritize the word directly preceding the definition name over fallback keyword scanning, and MUST skip access modifiers (`public`, `private`, `protected`, `internal`, `abstract`, `sealed`, `virtual`, `override`, `async`, `partial`, `pub`, `export`).
+`refineDefinitionKind` MUST reclassify `const`/`let`/`var` definitions as `implementation` when the initializer is an arrow function (`=>`), function expression, or class expression.
 
 ### MCP Tools
 
@@ -606,9 +620,9 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ │ └── codebase.json # Codebase snapshot for semantic ticket diffs
 │ └── tickets # Repo ticket workspaces
 ├── .venv # Centralized Python virtual environment
-├── @coda
-├── @semio
-├── @semio-repo
+├── coda
+├── semio
+├── semio-repo
 ├── nx.json # Nx targets and plugin configs
 ├── package-lock.json # All javascript dependencies
 ├── package.json # Monorepo and workspace setup
@@ -638,23 +652,23 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 
 Devcontainer post-attach script that uninstalls any existing semio-repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, then writes the Windsurf MCP config for the semio-repo server.
 
-## 📁 @semio-repo/
+## 📁 semio-repo/
 
 Repo tooling, CLI, and editor integration sources.
 
-## 📁 @semio-repo/vscode/
+## 📁 semio-repo/vscode/
 
 VS Code extension source for semio-repo tooling workflows.
 
-## 📄 @semio-repo/vscode/.vscode-test.mjs
+## 📄 semio-repo/vscode/.vscode-test.mjs
 
 VS Code test-cli configuration entrypoint that defines the compiled test glob and Electron launch arguments for extension tests.
 
-## 📄 @semio-repo/vscode/extension.test.ts
+## 📄 semio-repo/vscode/extension.test.ts
 
 VS Code extension integration tests covering command registration, diagnostics, sidebar view contributions, filter state behavior, and monorepo tree provider roots.
 
-## 📄 @semio-repo/vscode/extension.ts
+## 📄 semio-repo/vscode/extension.ts
 
 Extension activation entrypoint that registers the two sidebar views (Monorepo and Filter) backed by tree data providers wired to a shared filter state source.
 The Filter view exposes one item per filter kind with emoji + name labels, tooltip descriptions, and emoji-only menu actions for option toggles.
@@ -662,17 +676,17 @@ The Monorepo view applies the shared filter state across all branches and uses G
 
 ## 📁 js/
 
-Javascript code with shared core (@semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (@semio/docs) that uses astro with starlight and mdx, and desktop (@semio/desktop) that runs in electron.
+Javascript code with shared core (semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (semio/docs) that uses astro with starlight and mdx, and desktop (semio/desktop) that runs in electron.
 
 ### Policies
 
-- NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`@semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
+- NEVER use inline styling. Use tailwindcss (v4). v4 uses a `theme.css` (`semio/js/theme.css`) for theming and not `{theme:{…}}` in `tailwindconfig`.
 - ALWAYS use colors defined in `@theme inline {…}` from `js/semio/globals.css`. NEVER use direct colors such as light, gray, …, dark, primary, secondary, tertiary outside of `js/semio/globals.css` and ALWAYS use semantic colors instead such as active, disabled, hover, …
 - Borders use semantic kinds via Tailwind color tokens: `border-element` (hover color) and `border-window` (normal border color).
 - GoldenLayout window chrome uses the window background token to match window content surfaces.
 - GoldenLayout stack frames use inset strokes so window borders remain continuous on all four sides.
 - ALWAYS add tooltips (normal and extensive) to all ui elements.
-- ALWAYS load icons via the semantic icon layer in `@semio/assets` and NEVER import icons directly from external libraries (lucide, heroicons, .). Only reexport placeholder assets from those libraries inside `@semio/assets` and consume them through its semantic exports.
+- ALWAYS load icons via the semantic icon layer in `semio/assets` and NEVER import icons directly from external libraries (lucide, heroicons, .). Only reexport placeholder assets from those libraries inside `semio/assets` and consume them through its semantic exports.
 
 ### Styling
 
@@ -2811,7 +2825,7 @@ Supported file types: TypeScript, JavaScript, JSON, Python, C#, Go.
 
 For kit documents (JSON files with `kit_` prefix, `_kit` suffix, or named `kit.json`):
 
-- Real-time validation using `validateKit()` from `@semio/js`
+- Real-time validation using `validateKit()` from `semio/js`
 - Problem-to-diagnostic mapping with entity location highlighting
 - Quick Fix code actions applying `KitDiff` fixes
 
@@ -2883,25 +2897,17 @@ SQLite schema definitions for repo exports.
 
 SQLite schema with ticket UI storage alongside LLM and commit metadata.
 
-## 📁 go/repo/
+## 📁 semio-repo/cli/
 
-Repo CLI source with GraphQL schema build/execution, ticket workflows, and MCP server mode.
+Repo CLI implementation and tests for the Go-based `semio-repo` tooling entrypoint.
 
-## 📄 go/repo/main.go
+## 📄 semio-repo/cli/cli.go
 
-Single-file repo CLI implementation with embedded engine, streaming command registry and emitter event model for CLI/MCP/VS Code adapters, CLI command definitions with GraphQL query strings for repo operations (including export and section integrate commands), analyze/fix commands accepting scope via flags or positional arguments, Relay node resolution via `node(id:)` accepting canonical `@semio/...` and `@semio-repo/...` IDs, ticket workflows with optional noIssue/draft inputs, `CONTINUE`/`NOTICKET` keyword handling, and `YYYY/MM/DD/SLUG` identifiers, TicketUI enum normalization for GraphQL inputs, `TicketInteraction` tracking with `started` and `finished` timestamps, range resolution returning line/column positions with Position subfield selections and nested section list queries for full tree hydration, ticket UI validation, MCP tool handlers with cursor/limit paging over streamed item events, ticket title updates that rename folder paths, ticket.md creation and summary injection with draft seeding, per-interaction semantic ticket diffs for bundles/folders/files/sections/definitions with full-line metrics for added/deleted scopes and diff metrics for modified scopes, ticket close requiring at least one considered (non-gitignored) file after repo exclusion filtering, ticket workspace file exclusion on close, ticket GitHub project linking on create/reopen, GitHub issue/comment prompt and `# 🔍 Summary` heading formatters, bundle label derivation from bundle diffs with README/AGENTS exclusions, semantic metrics comments with status icons and `+added`/`-removed` counts, benchmark/preflight/update operational command wiring, codebase snapshot export to `.semio-repo/reports/codebase.json` from `repo analyze`, file/folder streaming and folder file listing filtered by `.gitignore` patterns (including tracked matches) plus `.semio-repo/` and `assets/repo/` exclusions, comment policy scanning with string/template literal awareness and grouped inline comment violations, JSON section parsing, shell script language registration, GraphQL file section resolution, legacy ticket directory fallback for reads, and contributor aggregation from tickets and source headers.
+Repo CLI single-file entrypoint with command registry, GraphQL execution, and three-tier hierarchical GitHub sync where root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone, ticket issues linked to root goal milestones, repository label catalog synchronization plus repository-wide `@` label cleanup for project/bundle tags, and emoji-normalized artifact IDs. Artifact kind derivation: `DeriveBundleKind` reads `bundleKind` from `package.json`/`project.json` at bundle root (fallback `library`); `DeriveFolderKind` classifies `.`-prefixed and manifest-containing folders as `required`; `DeriveFileKind` pattern-matches file names/extensions into `code`/`test`/`config`/`docs`/`resource`/`script`/`license`; `DeriveDefinitionKind` maps language keywords to `implementation`/`interface`/`constant` via `extractDefinitionKeyword` (word-before-name priority, modifier skipping) and `refineDefinitionKind` (arrow function detection). Dual identification system: `GetArtifactID` generates emoji-prefixed primary IDs (with kind-specific emoji helpers `projectKindEmoji`, `bundleKindEmoji`, `fileKindEmoji`, `folderKindEmoji`, `definitionKindEmoji`), `GetArtifactURI` generates `semiorepo://` secondary URIs with `SectionIdValueToUriPath`/`DefinitionIdValueToUriPath` for `#`/`§`→`/SLUG` encoding, `ParseSectionUriPath` for reverse URI→file+slugs parsing. `IdToUri`/`UriToId` bidirectional conversion with emoji normalization (strip `\uFE0E`/`\uFE0F` for matching). Collection types (projects, bundles, folders, files, sections, definitions, tickets, goals, drafts, todos, policies, violationKinds, contributors, commits) have dedicated ID and URI formats. `navigate` MCP tool resolves ID or URI input to both forms. MCP resource templates use slash-based paths for sections/definitions. Relative date rendering for tickets and goals supports RFC3339 and YYYY-MM-DD input formats via a flexible parser that uses the `dustin/go-humanize` package for human-friendly scheduling and history display. `--json` outputs pure data per line (no event wrappers, no `{"data": ...}` GraphQL envelope). Errors go to stderr. Cobra root has `SilenceUsage`/`SilenceErrors` to prevent stdout pollution on errors. Three rendering modes via `--format` flag: `NDJSONRenderer` (json), `HumanRenderer` (text), `MarkdownRenderer` (md, default). `inferEntityKind(key)` maps GraphQL operation names to entity kinds via prefix matching for generic mutation/query result dispatch. `renderEntityMarkdownLink(kind, data)` produces `[<id>](<uri>) - <prop1> - <prop2>` markdown for any entity kind. `renderEntityMarkdown(kind, data)` adds `- ` list prefix. `formatMarkdownResult` and `formatResult` use generic entity-kind dispatch with `inferEntityKind` fallback — no JSON code-block or dump fallback paths. Streaming list items detected via command suffix (`" list"`, `" tree"`) to apply correct `- ` markdown prefix. `repoContext.Fix()` detects violations via `CheckPoliciesWithContext`, filters autofixable ones, groups by file, and delegates to `applyAutofixes()` which applies per-violation-kind handlers bottom-up to avoid line number shifts: empty section removal with surrounding blank cleanup, missing/mismatched section end name resolution via `findMatchingSectionStartName()` stack-based walk, inline comment contiguous block removal with blank line tracking, block/JSDoc comment removal. Post-removal blank line collapse prevents double blank lines. `extractFileFromScope()` strips `#section` and `::definition` suffixes from scope strings. `FileHeaderId` generates emoji-prefixed file artifact IDs for headers using `DeriveFileKind` and `GetArtifactID`. `ViolationCodeHeaderWrongFileId` (autofixable) replaces `ViolationCodeHeaderMissingFilename`; `headerPolicy` detects wrong/missing file IDs by scanning header lines for file extensions and emoji markers; `applyAutofixes` replaces the identified line with the correct artifact ID comment.
 
-## 📁 @semio-repo/cli/
+## 📄 semio-repo/cli/cli_test.go
 
-Repo CLI implementation and tests for the Go-based `@semio-repo` tooling entrypoint.
-
-## 📄 @semio-repo/cli/main.go
-
-Repo CLI single-file entrypoint with command registry, GraphQL execution, and three-tier hierarchical GitHub sync where root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone, ticket issues linked to root goal milestones, repository label catalog synchronization plus repository-wide `@` label cleanup for project/bundle tags, and emoji-normalized artifact IDs. Dual identification system: `GetArtifactID` generates emoji-prefixed primary IDs (with kind-specific emoji helpers `projectKindEmoji`, `bundleKindEmoji`, `fileKindEmoji`, `folderKindEmoji`, `definitionKindEmoji`), `GetArtifactURI` generates `semiorepo://` secondary URIs with `SectionIdValueToUriPath`/`DefinitionIdValueToUriPath` for `#`/`§`→`/SLUG` encoding, `ParseSectionUriPath` for reverse URI→file+slugs parsing. `IdToUri`/`UriToId` bidirectional conversion with emoji normalization (strip `\uFE0E`/`\uFE0F` for matching). Collection types (projects, bundles, folders, files, sections, definitions, tickets, goals, drafts, todos, policies, violationKinds, contributors, commits) have dedicated ID and URI formats. `navigate` MCP tool resolves ID or URI input to both forms. MCP resource templates use slash-based paths for sections/definitions. Relative date rendering for tickets and goals supports RFC3339 and YYYY-MM-DD input formats via a flexible parser that uses the `dustin/go-humanize` package for human-friendly scheduling and history display. `--json` outputs pure data per line (no event wrappers, no `{"data": ...}` GraphQL envelope). Errors go to stderr. Cobra root has `SilenceUsage`/`SilenceErrors` to prevent stdout pollution on errors. Three rendering modes via `--format` flag: `NDJSONRenderer` (json), `HumanRenderer` (text), `MarkdownRenderer` (md, default). `inferEntityKind(key)` maps GraphQL operation names to entity kinds via prefix matching for generic mutation/query result dispatch. `renderEntityMarkdownLink(kind, data)` produces `[<id>](<uri>) - <prop1> - <prop2>` markdown for any entity kind. `renderEntityMarkdown(kind, data)` adds `- ` list prefix. `formatMarkdownResult` and `formatResult` use generic entity-kind dispatch with `inferEntityKind` fallback — no JSON code-block or dump fallback paths. Streaming list items detected via command suffix (`" list"`, `" tree"`) to apply correct `- ` markdown prefix. `repoContext.Fix()` detects violations via `CheckPoliciesWithContext`, filters autofixable ones, groups by file, and delegates to `applyAutofixes()` which applies per-violation-kind handlers bottom-up to avoid line number shifts: empty section removal with surrounding blank cleanup, missing/mismatched section end name resolution via `findMatchingSectionStartName()` stack-based walk, inline comment contiguous block removal with blank line tracking, block/JSDoc comment removal. Post-removal blank line collapse prevents double blank lines. `extractFileFromScope()` strips `#section` and `::definition` suffixes from scope strings.
-
-## 📄 @semio-repo/cli/main_test.go
-
-Consolidated Go test suite for the repo CLI and tooling behavior, structured for fast/slow lane execution with explicit slow-test sharding for parallel CI distribution. `executeCommand` separates stdout/stderr with 3-return signature. Wrong-argument tests cover all command categories (ticket, goal, policy, folder, file, section, definition, contributor, graphql). `TestCliJsonPureData` validates no event wrappers or `{"data": ...}` envelopes. `TestCliJsonErrorsToStderr` validates empty stdout on errors. Fix tests cover all autofixable violation kinds (empty section, missing end name, name mismatch, inline/block/JSDoc comments), nested sections, idempotency, multiple violations per file, non-autofixable detection, GraphQL mutation, RepoContext integration, scope extraction, violation kind metadata, and fixture-based end-to-end validation via `file_fixable.tsx`/`file_fixable_expected.tsx`. GraphQL fix mutation tests are scoped to avoid fixture side effects. `TestArtifactIDAndURI` covers all artifact and collection types (repo, projects, project, bundles, bundle, folders, folder, files, file, sections, section, definitions, definition, tickets, ticket, goals, goal, drafts, draft, todos, todo, policies, policy, violationKinds, violationKind, contributors, contributor, commits, commit). `TestIdToUri`/`TestUriToId` validate bidirectional ID↔URI conversion for all types including edge cases (ticket status stripping, empty input, invalid URIs). `TestSectionIdValueToUriPath`/`TestDefinitionIdValueToUriPath`/`TestParseSectionUriPath` validate URI path encoding and parsing helpers. Markdown output tests: `TestFormatMarkdownResult_MutationKeys` (21 mutation operations), `TestFormatMarkdownResult_SingleEntities` (12 entity kinds), `TestFormatMarkdownResult_Lists` (12 list types), `TestFormatMarkdownResult_Analyze`, `TestFormatMarkdownResult_Fix`, `TestFormatMarkdownResult_FileWithSections`, `TestFormatMarkdownResult_NoJSONFallback`, `TestFormatResult_MutationKeys` (12 HumanRenderer mutations), `TestRenderEntityMarkdownLink_AllKinds` (15 entity kinds), `TestInferEntityKind` (27 operation name mappings).
+Consolidated Go test suite for the repo CLI and tooling behavior, structured for fast/slow lane execution with explicit slow-test sharding for parallel CI distribution. `executeCommand` separates stdout/stderr with 3-return signature. Wrong-argument tests cover all command categories (ticket, goal, policy, folder, file, section, definition, contributor, graphql). `TestCliJsonPureData` validates no event wrappers or `{"data": ...}` envelopes. `TestCliJsonErrorsToStderr` validates empty stdout on errors. Fix tests cover all autofixable violation kinds (empty section, missing end name, name mismatch, inline/block/JSDoc comments), nested sections, idempotency, multiple violations per file, non-autofixable detection, GraphQL mutation, RepoContext integration, scope extraction, violation kind metadata, and fixture-based end-to-end validation via `file_fixable.tsx`/`file_fixable_expected.tsx`. GraphQL fix mutation tests are scoped to avoid fixture side effects. `TestArtifactIDAndURI` covers all artifact and collection types (repo, projects, project, bundles, bundle, folders, folder, files, file, sections, section, definitions, definition, tickets, ticket, goals, goal, drafts, draft, todos, todo, policies, policy, violationKinds, violationKind, contributors, contributor, commits, commit). `TestIdToUri`/`TestUriToId` validate bidirectional ID↔URI conversion for all types including edge cases (ticket status stripping, empty input, invalid URIs). `TestSectionIdValueToUriPath`/`TestDefinitionIdValueToUriPath`/`TestParseSectionUriPath` validate URI path encoding and parsing helpers. Markdown output tests: `TestFormatMarkdownResult_MutationKeys` (21 mutation operations), `TestFormatMarkdownResult_SingleEntities` (12 entity kinds), `TestFormatMarkdownResult_Lists` (12 list types), `TestFormatMarkdownResult_Analyze`, `TestFormatMarkdownResult_Fix`, `TestFormatMarkdownResult_FileWithSections`, `TestFormatMarkdownResult_NoJSONFallback`, `TestFormatResult_MutationKeys` (12 HumanRenderer mutations), `TestRenderEntityMarkdownLink_AllKinds` (15 entity kinds), `TestInferEntityKind` (27 operation name mappings). `TestFileHeaderId` validates artifact ID generation for code, test, config, docs, and script file kinds. `TestFixHeaderWrongFileId` tests autofix line replacement. `TestFixHeaderWrongFileIdIdempotent` verifies correct IDs are not flagged. `TestFixHeaderWrongFileIdDetection` validates violation detection and autofixable status. `TestFixHeaderWrongFileIdEndToEnd` tests detect-fix-verify cycle.
 
 ## 📁net/
 
@@ -2944,7 +2950,7 @@ Components can override these to hardcode their parameter structure, ensuring st
 
 ## 📁py/
 
-Python code with the engine (@semio/engine) for schema generation and validation.
+Python code with the engine (semio/engine) for schema generation and validation.
 
 ## 📁py/engine/
 

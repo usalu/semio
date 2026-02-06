@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The state management was started with XState (`sketchpadMachine` and `uiMachine`) but:
@@ -52,7 +53,7 @@ Each hook now:
 
 ## 3. Fixed missing imports in Design.tsx
 
-- Added missing icon imports (MonitorIcon, MoonIcon, SunIcon) from @semio/assets
+- Added missing icon imports (MonitorIcon, MoonIcon, SunIcon) from semio/assets
 - Moved Theme import from Sketchpad to shared.ts (correct source)
 - Added useLanguage, useLayout imports from Sketchpad
 
@@ -81,6 +82,7 @@ This hybrid approach allows incremental migration without breaking the existing 
 ## Log
 
 ## Summary
+
 # Summary
 
 Complete state management refactor with triadic hooks pattern

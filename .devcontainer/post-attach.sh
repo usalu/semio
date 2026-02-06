@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: AGPL-3.0-only
 #region 🔖PostAttach
 set -e
-VSIX_PATH="@semio-repo/vscode/semio-repo.vsix"
+VSIX_PATH="semio-repo/vscode/semio-repo.vsix"
 EXTENSION_PUBLISHER=""
 EXTENSION_NAME=""
 EXTENSION_ID=""
@@ -122,14 +122,14 @@ mapfile -t IDE_CLIS < <(find_working_clis)
 
 #region 🔖InstallExtension
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
-  if [ ! -f "$VSIX_PATH" ] || [ "$VSIX_PATH" -ot "@semio-repo/vscode/extension.ts" ]; then
-    (cd @semio-repo/vscode && npm run package)
+  if [ ! -f "$VSIX_PATH" ] || [ "$VSIX_PATH" -ot "semio-repo/vscode/extension.ts" ]; then
+    (cd semio-repo/vscode && npm run package)
   fi
   if [ -f "$VSIX_PATH" ]; then
-    if [ -f "@semio-repo/vscode/package.json" ]; then
-      EXTENSION_PUBLISHER=$(node -p "require('./@semio-repo/vscode/package.json').publisher")
-      EXTENSION_NAME=$(node -p "require('./@semio-repo/vscode/package.json').name")
-      EXTENSION_VERSION=$(node -p "require('./@semio-repo/vscode/package.json').version")
+    if [ -f "semio-repo/vscode/package.json" ]; then
+      EXTENSION_PUBLISHER=$(node -p "require('./semio-repo/vscode/package.json').publisher")
+      EXTENSION_NAME=$(node -p "require('./semio-repo/vscode/package.json').name")
+      EXTENSION_VERSION=$(node -p "require('./semio-repo/vscode/package.json').version")
     fi
     if [ -n "$EXTENSION_PUBLISHER" ] && [ -n "$EXTENSION_NAME" ]; then
       EXTENSION_ID="${EXTENSION_PUBLISHER}.${EXTENSION_NAME}"
@@ -241,7 +241,7 @@ cat > "$WINDSURF_MCP_FILE" <<'EOF'
 {
     "mcpServers": {
         "semio-repo": {
-            "command": "./@semio-repo/cli/cli",
+            "command": "./semio-repo/cli/cli",
             "args": [
                 "mcp"
             ]

@@ -12,7 +12,7 @@
 
 ## Changes
 
-- Modified `go/repo/main.go` to remove `progress` command and deduplicate `ticket.json`.
+- Modified `./semio-repo/cli/main.go` to remove `progress` command and deduplicate `ticket.json`.
 
 ## Log
 

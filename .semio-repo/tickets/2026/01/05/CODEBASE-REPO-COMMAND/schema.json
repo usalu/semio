@@ -2,7 +2,7 @@
     "codebase": {
         "bundles": [
             {
-                "id": "@semio/js",
+                "id": "semio/js",
                 "folder": "js",
                 "uri": "file://c:/git/semio.tech/semio/js",
                 "contributors": [
@@ -34,7 +34,7 @@
         ],
         "files": [
             {
-                "id": "@semio/js.ts",
+                "id": "semio/js.ts",
                 "path": "js/semio/semio.ts",
                 "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
                 "metrics": {
@@ -54,7 +54,7 @@
         ],
         "sections": [
             {
-                "id": "@semio/js.ts#Kit",
+                "id": "semio/js.ts#Kit",
                 "path": "js/semio/semio.ts#Kit",
                 "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#Kit",
                 "metrics": {
@@ -66,7 +66,7 @@
         ],
         "definitions": [
             {
-                "id": "@semio/js.ts#KitDiff",
+                "id": "semio/js.ts#KitDiff",
                 "path": "js/semio/semio.ts#KitDiff",
                 "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts#KitDiff",
                 "metrics": {
@@ -120,7 +120,7 @@
                     ],
                     "bundles": [
                         {
-                            "id": "@semio/js",
+                            "id": "semio/js",
                             "metrics": {
                                 "folders": {
                                     "added": 1,
@@ -141,7 +141,7 @@
                     ],
                     "folders": [
                         {
-                            "id": "@semio/js",
+                            "id": "semio/js",
                             "metrics": {
                                 "files": {
                                     "added": 10,
@@ -157,7 +157,7 @@
                     ],
                     "files": [
                         {
-                            "id": "@semio/js.ts",
+                            "id": "semio/js.ts",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -168,7 +168,7 @@
                     ],
                     "sections": [
                         {
-                            "id": "@semio/js.ts#Kit",
+                            "id": "semio/js.ts#Kit",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -179,7 +179,7 @@
                     ],
                     "definitions": [
                         {
-                            "id": "@semio/js.ts#Kit§KitDiff",
+                            "id": "semio/js.ts#Kit§KitDiff",
                             "metrics": {
                                 "lines": {
                                     "added": 100,
@@ -220,7 +220,7 @@
                 "author": "usalu",
                 "bundles": [
                     {
-                        "id": "@semio/js",
+                        "id": "semio/js",
                         "metrics": {
                             "folders": {
                                 "added": 1,
@@ -277,7 +277,7 @@
                 ],
                 "files": [
                     {
-                        "id": "@semio/js.ts",
+                        "id": "semio/js.ts",
                         "metrics": {
                             "sections": {
                                 "added": 1,
@@ -298,7 +298,7 @@
                 ],
                 "sections": [
                     {
-                        "id": "@semio/js.ts#Kit",
+                        "id": "semio/js.ts#Kit",
                         "metrics": {
                             "definitions": {
                                 "added": 1,
@@ -314,7 +314,7 @@
                 ],
                 "definitions": [
                     {
-                        "id": "@semio/js.ts#KitDiff",
+                        "id": "semio/js.ts#KitDiff",
                         "metrics": {
                             "lines": {
                                 "added": 100,
@@ -330,7 +330,7 @@
                 "id": "code:header:missing-filepath",
                 "name": "Missing Filepath",
                 "scopes": [
-                    "@semio/js/sketchpad/**/*.[ts|tsx]"
+                    "semio/js/sketchpad/**/*.[ts|tsx]"
                 ],
                 "violations": [
                     {
@@ -344,7 +344,7 @@
         ],
         "violations": [
             {
-                "id": "code:header:missing-filepath#|js|@semio/js.ts#1",
+                "id": "code:header:missing-filepath#|js|semio/js.ts#1",
                 "folders": [
                     {
                         "id": "js",
@@ -354,7 +354,7 @@
                 ],
                 "files": [
                     {
-                        "id": "@semio/js.ts",
+                        "id": "semio/js.ts",
                         "path": "js/semio/semio.ts",
                         "uri": "file://c:/git/semio.tech/semio/js/semio/semio.ts",
                         "range": {
@@ -376,7 +376,7 @@
             }
         ],
         "tree": {
-            "@semio": {
+            "semio": {
                 "kind": "repo",
                 "js": {
                     "kind": "folder",
@@ -384,15 +384,15 @@
                         "kind": "file",
                     }
                 }
-        "@semio/js": {
+        "semio/js": {
                     "kind": "bundle",
-                    "@semio/js.ts": {
+                    "semio/js.ts": {
                         "kind": "file",
-                        "@semio/js.ts#Entities": {
+                        "semio/js.ts#Entities": {
                             "kind": "section",
-                            "@semio/js.ts#Entities#Kit": {
+                            "semio/js.ts#Entities#Kit": {
                                 "kind": "section",
-                                "@semio/js.ts#Entities#Kit§KitDiff": {
+                                "semio/js.ts#Entities#Kit§KitDiff": {
                                     "kind": "definition",
                                 }
                             }

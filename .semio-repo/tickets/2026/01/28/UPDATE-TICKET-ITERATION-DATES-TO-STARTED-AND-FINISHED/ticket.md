@@ -11,7 +11,7 @@
 
 ## Log
 
-- Renamed `date` to `dates` in `go/repo/main.go` and `graphql/repo/schema.graphql`.
+- Renamed `date` to `dates` in `./semio-repo/cli/main.go` and `graphql/repo/schema.graphql`.
 - Updated VS Code extension to use the renamed `dates` field in GraphQL queries and data mapping.
 
 ## Summary

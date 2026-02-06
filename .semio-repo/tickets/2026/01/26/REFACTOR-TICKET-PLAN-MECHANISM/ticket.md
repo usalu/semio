@@ -71,7 +71,7 @@ The ticket mechanism should change to no longer create `plan.md` files when no p
 
 ## Changes
 
-1. **[go/repo/main.go](go/repo/main.go)**:
+1. **[./semio-repo/cli/main.go](./semio-repo/cli/main.go)**:
    - Modified `CreateTicket` function to no longer create empty `plan.md` files when no planPath is provided
    - Fixed `GetGitAuthorGithub` function to use `ListContributors()` instead of reading a non-existent `config.json` file
    - Added `extractLLMFromArgs` and `extractUIFromArgs` helper functions
@@ -81,7 +81,7 @@ The ticket mechanism should change to no longer create `plan.md` files when no p
    - Added `toolResultToMCP` helper function to convert ToolResult to MCP CallToolResult
    - Modified MCP ticket functions (ticketOpen, ticketList, ticketRead, ticketClose, ticketReopen) to use Tool\* functions instead of GraphQL, producing CLI-style output
 
-2. **[go/repo/main_test.go](go/repo/main_test.go)**:
+2. **[./semio-repo/cli/main_test.go](./semio-repo/cli/main_test.go)**:
    - Fixed `ToolTicketOpen` calls in tests to include the missing `goal` and `parent` parameters
    - Added cleanup logic to `TestTicketOpenContinueKeyword` using `defer os.RemoveAll()` to remove created ticket folder after test
 

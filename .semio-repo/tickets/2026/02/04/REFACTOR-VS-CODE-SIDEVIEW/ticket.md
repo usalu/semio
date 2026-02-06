@@ -15,7 +15,7 @@ Refactored VS Code sidebar into two views (Monorepo + Filter), fixed repo binary
 
 - 2026-02-04: Opened ticket.
 - 2026-02-04: Consolidated semio-repo activitybar views to only `semio.monorepo` and `semio.filter` (removed `semio.todos`).
-- 2026-02-04: Fixed repo binary resolution for the VS Code extension to use `@semio-repo/cli/cli` when `go/repo/repo` is missing, unblocking GraphQL-backed tree expansion.
+- 2026-02-04: Fixed repo binary resolution for the VS Code extension to use `semio-repo/cli/cli` when `./semio-repo/cli/cli` is missing, unblocking GraphQL-backed tree expansion.
 - 2026-02-04: Refactored Filter view to expose one tree item per filter kind, with option toggles exposed via item context menus (menu button actions) instead of per-option tree nodes.
 - 2026-02-04: Implemented Monorepo tree population for Projects/Goals/Tickets/Policies/Contributors/Commits and ensured expanding root nodes yields children.
 - 2026-02-04: Implemented file -> section -> definition expansion and click navigation for sections/definitions.

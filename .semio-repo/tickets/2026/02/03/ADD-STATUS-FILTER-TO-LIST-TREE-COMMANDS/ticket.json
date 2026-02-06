@@ -26,7 +26,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/cli",
+              "path": "semio-repo/cli",
               "lines": {
                 "added": 216,
                 "removed": 0
@@ -46,7 +46,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/cli/main.go",
+              "path": "📄semio-repo/cli/main.go",
               "lines": {
                 "added": 248,
                 "removed": 32
@@ -60,35 +60,35 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter",
               "lines": {
                 "added": 240,
                 "removed": 32
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Default Context",
+              "path": "📄semio-repo/cli/main.go#Default Context",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types",
+              "path": "📄semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Schema Builder",
+              "path": "📄semio-repo/cli/main.go#Schema Builder",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Types",
+              "path": "📄semio-repo/cli/main.go#Types",
               "lines": {
                 "added": 1,
                 "removed": 0
@@ -102,91 +102,91 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§bindStatusFlags",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§bindStatusFlags",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§bundleCommand",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§bundleCommand",
               "lines": {
                 "added": 83,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§bundleCommand",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§bundleCommand",
               "lines": {
                 "added": 0,
                 "removed": 14
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§getBundlesWithOpenTickets",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§getBundlesWithOpenTickets",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§getStatusFilter",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§getStatusFilter",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§goalCommand",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§goalCommand",
               "lines": {
                 "added": 0,
                 "removed": 18
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§goalCommand",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§goalCommand",
               "lines": {
                 "added": 72,
                 "removed": 18
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§projectCommand",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§projectCommand",
               "lines": {
                 "added": 0,
                 "removed": 14
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§ticketCommand",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§ticketCommand",
               "lines": {
                 "added": 23,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Default Context§GoalCreate",
+              "path": "📄semio-repo/cli/main.go#Default Context§GoalCreate",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§GoalCreateInput",
+              "path": "📄semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§GoalCreateInput",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Schema Builder§buildSchema",
+              "path": "📄semio-repo/cli/main.go#Schema Builder§buildSchema",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Types§Goal",
+              "path": "📄semio-repo/cli/main.go#Types§Goal",
               "lines": {
                 "added": 1,
                 "removed": 0
@@ -195,21 +195,21 @@
           ],
           "added": [
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§bindStatusFlags",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§bindStatusFlags",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§getBundlesWithOpenTickets",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§getBundlesWithOpenTickets",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§getStatusFilter",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§getStatusFilter",
               "lines": {
                 "added": 18,
                 "removed": 0

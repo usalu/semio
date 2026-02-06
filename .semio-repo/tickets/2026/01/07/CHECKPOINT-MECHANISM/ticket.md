@@ -23,7 +23,7 @@
 - TicketCheckpointInput retained with required `files` parameter
 - TicketOpenInput no longer has files field
 
-## Go Repo (go/repo/repo.go)
+## Go Repo (./semio-repo/cli/cli.go)
 
 - ticketMetricsType: changed "interactions" field to "checkpoints"
 - Added "sections" and "definitions" fields to ticketMetricsType
@@ -59,7 +59,7 @@
 
 ## Build Fixes
 
-- Fixed empty go/repo/repo_test.go (added package declaration)
+- Fixed empty ./semio-repo/cli/cli_test.go (added package declaration)
 
 ## Changes
 

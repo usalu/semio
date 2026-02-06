@@ -2632,7 +2632,7 @@ wheels = [
 [[package]]
 name = "semio"
 version = "4.4.0"
-source = { editable = "@semio/py" }
+source = { editable = "semio/py" }
 dependencies = [
     { name = "fastapi" },
     { name = "graphene" },
@@ -2682,7 +2682,7 @@ test = [
 [[package]]
 name = "semio-engine"
 version = "4.4.0"
-source = { editable = "@semio/engine" }
+source = { editable = "semio/engine" }
 dependencies = [
     { name = "fastapi", extra = ["standard"] },
     { name = "graphene" },
@@ -2738,7 +2738,7 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.0" },
     { name = "pytransform3d", specifier = ">=3.14.1" },
     { name = "requests", specifier = ">=2.32.3" },
-    { name = "semio", editable = "@semio/py" },
+    { name = "semio", editable = "semio/py" },
     { name = "sqlalchemy", specifier = ">=2.0.41" },
     { name = "sqlmodel", specifier = ">=0.0.24" },
     { name = "starlette", specifier = ">=0.46.2" },

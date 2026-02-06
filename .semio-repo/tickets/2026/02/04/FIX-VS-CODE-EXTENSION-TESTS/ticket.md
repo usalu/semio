@@ -3,18 +3,19 @@
 ## Summary
 
 Extended VS Code extension tests and stabilized headless test runner; aligned ticket interactions query; ensured build+tests pass.
+
 ## Changes
 
-- @semio-repo/vscode/.vscode-test.mjs
-- @semio-repo/vscode/package.json
-- @semio-repo/vscode/extension.ts
-- @semio-repo/vscode/queries.ts
-- @semio-repo/vscode/extension.test.ts
+- semio-repo/vscode/.vscode-test.mjs
+- semio-repo/vscode/package.json
+- semio-repo/vscode/extension.ts
+- semio-repo/vscode/queries.ts
+- semio-repo/vscode/extension.test.ts
 
 ## Log
 
 - Adjusted VS Code test runner to run under Xvfb when `DISPLAY` is missing.
-- Fixed test fixtures to load from `@semio/assets`.
+- Fixed test fixtures to load from `semio/assets`.
 - Updated extension GraphQL tickets query to use `interactions` (schema-aligned).
 - Refactored Monorepo provider to accept filter provider injection for testability.
 - Registered contributed commands in activation so command availability checks pass.

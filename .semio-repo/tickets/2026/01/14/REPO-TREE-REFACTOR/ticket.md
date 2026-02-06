@@ -1,43 +1,49 @@
 # Ticket
 
 ## Todos
+
 # Plan - REPO-TREE-REFACTOR
 
 ## Backend (Go/GraphQL)
+
 - [ ] Revert `Range` type to use `Int` for `start`/`end` instead of `Position`.
 - [ ] Verify/Add `sections` field to `File` type.
 - [ ] Verify/Add `definitions` field to `Section` type.
 - [ ] Update `repo.go` resolvers for `Range`, `File.sections`, `Section.definitions`.
 
 ## Frontend (VS Code)
+
 - [ ] Regenerate GraphQL types.
 - [ ] Update `CodebaseProvider` (Tree layout):
-    - [ ] Root should be bundles (`repo.bundles`), not the repo itself.
-    - [ ] `File` items should represent children as sections.
-    - [ ] `Section` items should represent children as definitions.
+  - [ ] Root should be bundles (`repo.bundles`), not the repo itself.
+  - [ ] `File` items should represent children as sections.
+  - [ ] `Section` items should represent children as definitions.
 - [ ] Ensure `TreeItem.collapsibleState` is set to `Collapsed` for expandable items (Bundles, Folders, Files, Sections).
 - [ ] Implement `getChildren` logic to fetch deeper levels lazily if not already done.
 
 ## Verification
+
 - [ ] Check `Range` type in schema.
 - [ ] Check Tree View structure in VS Code (simulated via looking at code).
 
 ## Changes
 
 ## Log
+
 # Node ID Refactoring
 
 ## Analysis
 
 Current ID system is inconsistent:
+
 - Repo: "repo" or hardcoded
 - Bundle: `"bundle:" + name`
-- Folder: `"folder:" + path` 
+- Folder: `"folder:" + path`
 - File: `"file:" + path`
 - Section: `"section:" + name` (not unique!)
 - Definition: `"definition:" + name` (not unique!)
 - Contributor: `"contributor:" + github`
-- Ticket: `"ticket:YYYY/MM/DD/SLUG"` 
+- Ticket: `"ticket:YYYY/MM/DD/SLUG"`
 - Policy: `"policy:" + name`
 - ViolationKind: `"violationKind:" + kind` (not linked to policy!)
 - Violation: timestamp-based (not deterministic!)
@@ -47,23 +53,24 @@ Current ID system is inconsistent:
 Following semio's `@` naming convention:
 
 ```
-@semio                                          - repo
-@semio/BUNDLE                                   - bundle
-@semio/repo/FOLDER/...                          - folder outside bundle
-@semio/BUNDLE/FOLDER/...                        - folder in bundle
-@semio/repo/PATH/FILE                           - file outside bundle
-@semio/BUNDLE/PATH/FILE                         - file in bundle
-@semio/BUNDLE/PATH/FILE#SECTION#SUBSECTION      - section
-@semio/BUNDLE/PATH/FILE#SECTION§DEFINITION      - definition
-@semio/contributors/GITHUB                      - contributor
-@semio/tickets/YYYY/MM/DD/SLUG                  - ticket
-@semio/commits/SHA                              - commit
-@semio/policies/POLICY                          - policy
-@semio/policies/POLICY/violations/KIND          - violationKind
-@semio/violations/SCOPE#LINE:COL                - violation
+semio                                          - repo
+semio/BUNDLE                                   - bundle
+semio/repo/FOLDER/...                          - folder outside bundle
+semio/BUNDLE/FOLDER/...                        - folder in bundle
+semio/repo/PATH/FILE                           - file outside bundle
+semio/BUNDLE/PATH/FILE                         - file in bundle
+semio/BUNDLE/PATH/FILE#SECTION#SUBSECTION      - section
+semio/BUNDLE/PATH/FILE#SECTION§DEFINITION      - definition
+semio/contributors/GITHUB                      - contributor
+semio/tickets/YYYY/MM/DD/SLUG                  - ticket
+semio/commits/SHA                              - commit
+semio/policies/POLICY                          - policy
+semio/policies/POLICY/violations/KIND          - violationKind
+semio/violations/SCOPE#LINE:COL                - violation
 ```
 
 Benefits:
+
 - Globally unique
 - Human-readable
 - Path-based (natural hierarchy)
@@ -75,23 +82,26 @@ Benefits:
 ### Phase 1: Core GetID() Methods ✅
 
 Updated GetID() methods for:
-- `Repo` → `"@semio"`
-- `Bundle` → `"@semio/" + name`
+
+- `Repo` → `"semio"`
+- `Bundle` → `"semio/" + name`
 - `Section` → `filePath + "#" + sectionPath` (with fallback)
 - `Definition` → `filePath + "#" + sectionPath + "§" + name` (with fallback)
-- `Contributor` → `"@semio/contributors/" + github`
-- `Ticket` → `"@semio/tickets/YYYY/MM/DD/SLUG"`
-- `Commit` → `"@semio/commits/" + SHA`
-- `Policy` → `"@semio/policies/" + name`
-- `ViolationKindMeta` → `"@semio/policies/" + policyID + "/violations/" + kind`
+- `Contributor` → `"semio/contributors/" + github`
+- `Ticket` → `"semio/tickets/YYYY/MM/DD/SLUG"`
+- `Commit` → `"semio/commits/" + SHA`
+- `Policy` → `"semio/policies/" + name`
+- `ViolationKindMeta` → `"semio/policies/" + policyID + "/violations/" + kind`
 
 Added fields to support proper IDs:
+
 - `Definition.FilePath` and `Definition.SectionPath` for context
 - `ViolationKindMeta.PolicyID` to link violations to policies
 
 ### Phase 2: Helper Functions ✅
 
 Created helper functions for ID construction:
+
 - `buildFolderID(path, bundleID)` - folder IDs with bundle context
 - `buildFileID(path, bundleID)` - file IDs with bundle context
 - `buildSectionID(fileID, sectionPath)` - section IDs
@@ -101,6 +111,7 @@ Created helper functions for ID construction:
 ### Phase 3: Update ID Generation Sites ✅
 
 Updated functions to use new helper functions:
+
 - `FolderCreate()` - uses `buildFolderID()`
 - `FolderMove()` - uses `buildFolderID()`
 - `FileCreate()` - uses `buildFileID()` and `buildFolderID()`
@@ -129,7 +140,7 @@ Added bundle resolution to file/folder operations using `ResolveBundleForPath()`
 
 ### Testing Plan:
 
-1. Run Go tests: `cd go/repo && go test -v`
+1. Run Go tests: `cd ./semio-repo/cli && go test -v`
 2. Run CLI tests: `cd go/cli && go test -v`
 3. Test GraphQL queries manually
 4. Test VS Code extension integration
@@ -138,6 +149,7 @@ Added bundle resolution to file/folder operations using `ResolveBundleForPath()`
 ### Breaking Changes:
 
 This is a breaking change. All existing code that relies on node IDs will need updates:
+
 - VS Code extension queries
 - MCP server tool responses
 - Any external systems using the GraphQL API
@@ -147,6 +159,7 @@ All IDs are now deterministic based on file paths and bundle membership, making 
 ## Summary
 
 Bulk close
+
 ## Completed
 
 Successfully refactored the Node ID system to use a consistent, globally unique format based on semio's `@` naming convention.
@@ -154,20 +167,20 @@ Successfully refactored the Node ID system to use a consistent, globally unique 
 ### Changes Made:
 
 1. **Updated all GetID() methods** to return new ID format:
-   - Repo: `@semio`
-   - Bundle: `@semio/BUNDLE`
-   - Contributor: `@semio/contributors/GITHUB`
-   - Ticket: `@semio/tickets/YYYY/MM/DD/SLUG`
-   - Commit: `@semio/commits/SHA`
-   - Policy: `@semio/policies/NAME`
-   - ViolationKindMeta: `@semio/policies/POLICY/violations/KIND`
+   - Repo: `semio`
+   - Bundle: `semio/BUNDLE`
+   - Contributor: `semio/contributors/GITHUB`
+   - Ticket: `semio/tickets/YYYY/MM/DD/SLUG`
+   - Commit: `semio/commits/SHA`
+   - Policy: `semio/policies/NAME`
+   - ViolationKindMeta: `semio/policies/POLICY/violations/KIND`
 
 2. **Added new fields** for proper ID construction:
    - `Definition.FilePath` and `Definition.SectionPath`
    - `ViolationKindMeta.PolicyID`
 
 3. **Created helper functions**:
-   - `buildFolderID(path, bundleID)` 
+   - `buildFolderID(path, bundleID)`
    - `buildFileID(path, bundleID)`
    - `buildSectionID(fileID, sectionPath)`
    - `buildDefinitionID(fileID, sectionPath, name)`
@@ -197,10 +210,10 @@ Successfully refactored the Node ID system to use a consistent, globally unique 
 - **Human-readable**: IDs are clear and descriptive
 - **Deterministic**: Same codebase always generates same IDs (except ephemeral violations)
 - **Path-based hierarchy**: Natural navigation structure
-- **Consistent**: All IDs follow the same `@semio/...` pattern
+- **Consistent**: All IDs follow the same `semio/...` pattern
 
 ## Breaking Changes
 
 This is a breaking change for any code that relies on node IDs. All external systems will need to update their ID expectations.
 
-Files modified: `go/repo/repo.go`
+Files modified: `./semio-repo/cli/cli.go`

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan: Fix Devcontainer PostAttach Command
 
 ## Problem
@@ -35,6 +36,7 @@ The `postAttachCommand` in `.devcontainer/devcontainer.json` fails with exit cod
 ## Changes
 
 ## Log
+
 # Log: Fix Devcontainer PostAttach Command
 
 ## 2026-01-19
@@ -42,6 +44,7 @@ The `postAttachCommand` in `.devcontainer/devcontainer.json` fails with exit cod
 ### Initial Investigation
 
 - Received error from devcontainer startup:
+
   ```
   code or code-insiders is not installed
   postAttachCommand from devcontainer.json failed with exit code 127
@@ -55,6 +58,7 @@ The `postAttachCommand` in `.devcontainer/devcontainer.json` fails with exit cod
 ### Solution Design
 
 Creating a robust `post-attach.sh` script that gracefully handles:
+
 - Missing `code` CLI (non-VS Code environments)
 - Missing `.vsix` file (needs to be built)
 - Proper error handling and informative output
@@ -79,9 +83,10 @@ Creating a robust `post-attach.sh` script that gracefully handles:
 
 ### Note
 
-Found a pre-existing issue: The VS Code extension package.json has an npm-style scoped name (`@semio-repo/vscode`) which is invalid for VS Code extensions. This causes `npm run package` to fail. This is a separate issue from the devcontainer fix.
+Found a pre-existing issue: The VS Code extension package.json has an npm-style scoped name (`semio-repo/vscode`) which is invalid for VS Code extensions. This causes `npm run package` to fail. This is a separate issue from the devcontainer fix.
 
 ## Summary
+
 # Summary: Fix Devcontainer PostAttach Command
 
 Fixed the devcontainer `postAttachCommand` that was failing with exit code 127 when `code` CLI was unavailable.
@@ -105,5 +110,6 @@ Fixed the devcontainer `postAttachCommand` that was failing with exit code 127 w
 ## Result
 
 The devcontainer now starts successfully in all environments:
+
 - VS Code: Extension is auto-installed when available
 - Headless/CLI: Gracefully skips installation without errors

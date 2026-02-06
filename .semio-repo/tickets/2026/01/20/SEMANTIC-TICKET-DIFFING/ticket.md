@@ -13,9 +13,9 @@
 
 - User request: replace ticket close file array with semantic diff dictionary for bundles/folders/files/sections/definitions (added/modified/renamed/deleted), generate reports/codebase.json via repo analyze default, derive semantic diffs from codebase.json + git diffs, aggregate line metrics, remove general info from file diffs, and update GitHub # ✍️ Changes templates for bundle/folder/file/section/definition entries.
 
-- Located current ticket close flow in go/repo/main.go: FinishTicket uses ComputeTicketFiles (file-level diffs + sections/definitions), assigns ticket.Data.Files, and generateMetricsComment builds GitHub # ✍️ Changes from file metrics (icon-based). ToolTicketClose prints file/section/definition counts. Codebase types and ToolCodebase exist; analyze CLI uses GraphQL and does not emit reports. Reports directory exists in /reports. BuildCodebase/ToolCodebase assemble bundles/folders/files/sections/definitions.
+- Located current ticket close flow in ./semio-repo/cli/main.go: FinishTicket uses ComputeTicketFiles (file-level diffs + sections/definitions), assigns ticket.Data.Files, and generateMetricsComment builds GitHub # ✍️ Changes from file metrics (icon-based). ToolTicketClose prints file/section/definition counts. Codebase types and ToolCodebase exist; analyze CLI uses GraphQL and does not emit reports. Reports directory exists in /reports. BuildCodebase/ToolCodebase assemble bundles/folders/files/sections/definitions.
 
-- Note: code_search tool is failing; proceeding with direct grep/read in go/repo/main.go for ticket close, analyze, and codebase report logic.
+- Note: code_search tool is failing; proceeding with direct grep/read in ./semio-repo/cli/main.go for ticket close, analyze, and codebase report logic.
 
 - User instruction: continue without questions, refactor as needed, ensure it works everywhere, and remember to open/close ticket with plan/log/summary updates.
 
@@ -25,7 +25,7 @@
 
 - User instruction: continue work and fix tool call error handling per guidance.
 
-- Updated repo tooling to format GitHub # ✍️ Changes from semantic diffs (bundles/folders/files/sections/definitions), updated label derivation to use semantic file diffs while skipping README/AGENTS for @semio-repo, adjusted ticket close output counts, and aligned ticket file export with semantic file diffs.
+- Updated repo tooling to format GitHub # ✍️ Changes from semantic diffs (bundles/folders/files/sections/definitions), updated label derivation to use semantic file diffs while skipping README/AGENTS for semio-repo, adjusted ticket close output counts, and aligned ticket file export with semantic file diffs.
 - Added semantic diff formatting helpers and rename rendering for change list output. Updated README.md and AGENTS.md to document semantic diffs and codebase snapshot export (reports/codebase.json) plus ticket UX update.
 
 - User note: provided an ephemeral reminder message; continued work without responding to it.
@@ -73,7 +73,7 @@
 - User message: no memories retrieved; continue work without acknowledgement.
 - Tried repo ticket reopen after user message; command failed because ticket is already open.
 - User message: no memories retrieved; continue work without acknowledgement.
-- User request: move tickets/contributors/reports under .semio-repo; restrict analyze to considered files (gitignored excluded, .semio-repo excluded, assets/repo excluded); extend repo tests/fixtures to cover every violationKind with per-language invalid/fixed files; group inline comment violations into single violation per contiguous block; derive issue labels from semantic diff bundle paths (skip README/AGENTS from @semio-repo); auto-link GitHub issues to usalu project 2.
+- User request: move tickets/contributors/reports under .semio-repo; restrict analyze to considered files (gitignored excluded, .semio-repo excluded, assets/repo excluded); extend repo tests/fixtures to cover every violationKind with per-language invalid/fixed files; group inline comment violations into single violation per contiguous block; derive issue labels from semantic diff bundle paths (skip README/AGENTS from semio-repo); auto-link GitHub issues to usalu project 2.
 - User message: no memories retrieved; continue work without acknowledgement.
 - Updated ticket plan to cover path relocation, analyze filtering, violation/test expansion, label derivation/project linking, and documentation updates.
 
@@ -103,7 +103,7 @@
 - Message received; continued work while following user rules.
 - Message received; continued work while following user rules.
 - Message received; continued work while following user rules.
-- Added fixture-based tests in go/repo/main_test.go for grouped inline comments and per-language invalid/fixed files.
+- Added fixture-based tests in ./semio-repo/cli/main_test.go for grouped inline comments and per-language invalid/fixed files.
 - Added fixed TSX fixture and updated invalid TSX fixture to cover header, section, and comment violations.
 - Added assets/repo fixtures for invalid/fixed Python, C#, and Go files.
 - IDE lint warning persists: go list failed to initialize build cache at /home/vscode/.cache/go-build (permission denied).
@@ -124,7 +124,7 @@
 - Progress: per-interaction diff migration complete; preparing ticket close.
 - Closing ticket with per-interaction diff migration summary and updated docs/tests/fixtures.
 - Ticket closing: per-interaction diff migration completed; docs and code updated.
-- Ticket closed via repo CLI. Warning: GitHub label add failed for @semio/assets (label not found).
+- Ticket closed via repo CLI. Warning: GitHub label add failed for semio/assets (label not found).
 - Message received; continued work while following user rules.
 
 ## Summary

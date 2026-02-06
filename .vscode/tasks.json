@@ -2,107 +2,107 @@
   "version": "2.0.0",
   "tasks": [
     // ========================================
-    // @semio-repo/cli
+    // semio-repo/cli
     // ========================================
     {
-      "label": "@semio-repo/cli dev",
+      "label": "semio-repo/cli dev",
       "type": "shell",
-      "command": "npx nx dev @semio-repo/cli",
+      "command": "npx nx dev semio-repo/cli",
       "group": "none",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/cli test:unit",
+      "label": "semio-repo/cli test:unit",
       "type": "shell",
-      "command": "npx nx test:unit @semio-repo/cli",
+      "command": "npx nx test:unit semio-repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/cli test:e2e",
+      "label": "semio-repo/cli test:e2e",
       "type": "shell",
-      "command": "npx nx test:e2e @semio-repo/cli",
+      "command": "npx nx test:e2e semio-repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/cli test:coverage",
+      "label": "semio-repo/cli test:coverage",
       "type": "shell",
-      "command": "npx nx test:coverage @semio-repo/cli",
+      "command": "npx nx test:coverage semio-repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/cli test",
+      "label": "semio-repo/cli test",
       "type": "shell",
-      "command": "npx nx test @semio-repo/cli",
+      "command": "npx nx test semio-repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/cli build",
+      "label": "semio-repo/cli build",
       "type": "shell",
-      "command": "npx nx build @semio-repo/cli",
+      "command": "npx nx build semio-repo/cli",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/cli publish:test",
+      "label": "semio-repo/cli publish:test",
       "type": "shell",
-      "command": "npx nx publish:test @semio-repo/cli",
+      "command": "npx nx publish:test semio-repo/cli",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/cli publish",
+      "label": "semio-repo/cli publish",
       "type": "shell",
-      "command": "npx nx publish @semio-repo/cli",
+      "command": "npx nx publish semio-repo/cli",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/cli preflight",
+      "label": "semio-repo/cli preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio-repo/cli",
+      "command": "npx nx preflight semio-repo/cli",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio-repo/server
+    // semio-repo/server
     // ========================================
     {
-      "label": "@semio-repo/server dev",
+      "label": "semio-repo/server dev",
       "type": "shell",
-      "command": "npx nx dev @semio-repo/server",
+      "command": "npx nx dev semio-repo/server",
       "group": "none",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/server test",
+      "label": "semio-repo/server test",
       "type": "shell",
-      "command": "npx nx test @semio-repo/server",
+      "command": "npx nx test semio-repo/server",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/server build",
+      "label": "semio-repo/server build",
       "type": "shell",
-      "command": "npx nx build @semio-repo/server",
+      "command": "npx nx build semio-repo/server",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/server preflight",
+      "label": "semio-repo/server preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio-repo/server",
+      "command": "npx nx preflight semio-repo/server",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio-repo/vscode
+    // semio-repo/vscode
     // ========================================
     {
-      "label": "@semio-repo/vscode dev",
+      "label": "semio-repo/vscode dev",
       "type": "npm",
       "script": "dev",
       "path": "js/vscode",
@@ -134,111 +134,111 @@
       }
     },
     {
-      "label": "@semio-repo/vscode test",
+      "label": "semio-repo/vscode test",
       "type": "shell",
-      "command": "npx nx test @semio-repo/vscode",
+      "command": "npx nx test semio-repo/vscode",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/vscode build",
+      "label": "semio-repo/vscode build",
       "type": "shell",
-      "command": "npx nx build @semio-repo/vscode",
+      "command": "npx nx build semio-repo/vscode",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/vscode preflight",
+      "label": "semio-repo/vscode preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio-repo/vscode",
+      "command": "npx nx preflight semio-repo/vscode",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/vscode package",
+      "label": "semio-repo/vscode package",
       "type": "shell",
       "command": "npx nx package semio-repo",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/go
+    // semio/go
     // ========================================
     {
-      "label": "@semio/go test",
+      "label": "semio/go test",
       "type": "shell",
-      "command": "npx nx test @semio/go",
+      "command": "npx nx test semio/go",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/go build",
+      "label": "semio/go build",
       "type": "shell",
-      "command": "npx nx build @semio/go",
+      "command": "npx nx build semio/go",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/go preflight",
+      "label": "semio/go preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/go",
+      "command": "npx nx preflight semio/go",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/rs
+    // semio/rs
     // ========================================
     {
-      "label": "@semio/rs test",
+      "label": "semio/rs test",
       "type": "shell",
-      "command": "npx nx test @semio/rs",
+      "command": "npx nx test semio/rs",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/rs build",
+      "label": "semio/rs build",
       "type": "shell",
-      "command": "npx nx build @semio/rs",
+      "command": "npx nx build semio/rs",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/rs preflight",
+      "label": "semio/rs preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/rs",
+      "command": "npx nx preflight semio/rs",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/py
+    // semio/py
     // ========================================
     {
-      "label": "@semio/py test",
+      "label": "semio/py test",
       "type": "shell",
-      "command": "npx nx test @semio/py",
+      "command": "npx nx test semio/py",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/py build",
+      "label": "semio/py build",
       "type": "shell",
-      "command": "npx nx build @semio/py",
+      "command": "npx nx build semio/py",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/py preflight",
+      "label": "semio/py preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/py",
+      "command": "npx nx preflight semio/py",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/engine
+    // semio/engine
     // ========================================
     {
-      "label": "@semio/engine dev",
+      "label": "semio/engine dev",
       "type": "shell",
-      "command": "npx nx dev @semio/engine",
+      "command": "npx nx dev semio/engine",
       "isBackground": true,
       "problemMatcher": {
         "owner": "custom",
@@ -252,41 +252,41 @@
         ],
         "background": {
           "activeOnStart": true,
-          "beginsPattern": "nx run @semio/engine:dev",
+          "beginsPattern": "nx run semio/engine:dev",
           "endsPattern": "http://127.0.0.1:2507"
         }
       },
       "group": "none"
     },
     {
-      "label": "@semio/engine test",
+      "label": "semio/engine test",
       "type": "shell",
-      "command": "npx nx test @semio/engine",
+      "command": "npx nx test semio/engine",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/engine build",
+      "label": "semio/engine build",
       "type": "shell",
-      "command": "npx nx build @semio/engine",
+      "command": "npx nx build semio/engine",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/engine preflight",
+      "label": "semio/engine preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/engine",
+      "command": "npx nx preflight semio/engine",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/js
+    // semio/js
     // ========================================
     {
-      "label": "@semio/js dev",
+      "label": "semio/js dev",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev @semio/js",
+      "command": "npx nx dev semio/js",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -306,10 +306,10 @@
       "group": "none"
     },
     {
-      "label": "@semio/js dev:storybook",
+      "label": "semio/js dev:storybook",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev:storybook @semio/js",
+      "command": "npx nx dev:storybook semio/js",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -329,10 +329,10 @@
       "group": "none"
     },
     {
-      "label": "@semio/js dev:sketchpad",
+      "label": "semio/js dev:sketchpad",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev:sketchpad @semio/js",
+      "command": "npx nx dev:sketchpad semio/js",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -352,55 +352,55 @@
       "group": "none"
     },
     {
-      "label": "@semio/js test",
+      "label": "semio/js test",
       "type": "shell",
-      "command": "npx nx test @semio/js",
+      "command": "npx nx test semio/js",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/js test:unit",
+      "label": "semio/js test:unit",
       "type": "shell",
-      "command": "npx nx test:unit @semio/js",
+      "command": "npx nx test:unit semio/js",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/js test:e2e",
+      "label": "semio/js test:e2e",
       "type": "shell",
-      "command": "npx nx test:e2e @semio/js",
+      "command": "npx nx test:e2e semio/js",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/js test:coverage",
+      "label": "semio/js test:coverage",
       "type": "shell",
-      "command": "npx nx test:coverage @semio/js",
+      "command": "npx nx test:coverage semio/js",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/js build",
+      "label": "semio/js build",
       "type": "shell",
-      "command": "npx nx build @semio/js",
+      "command": "npx nx build semio/js",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/js preflight",
+      "label": "semio/js preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/js",
+      "command": "npx nx preflight semio/js",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/docs
+    // semio/docs
     // ========================================
     {
-      "label": "@semio/docs dev",
+      "label": "semio/docs dev",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev @semio/docs",
+      "command": "npx nx dev semio/docs",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -420,27 +420,27 @@
       "group": "none"
     },
     {
-      "label": "@semio/docs build",
+      "label": "semio/docs build",
       "type": "shell",
-      "command": "npx nx build @semio/docs",
+      "command": "npx nx build semio/docs",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/docs preflight",
+      "label": "semio/docs preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/docs",
+      "command": "npx nx preflight semio/docs",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/play
+    // semio/play
     // ========================================
     {
-      "label": "@semio/play dev",
+      "label": "semio/play dev",
       "type": "shell",
       "isBackground": true,
-      "command": "npx nx dev @semio/play",
+      "command": "npx nx dev semio/play",
       "problemMatcher": {
         "owner": "custom",
         "pattern": [
@@ -460,142 +460,142 @@
       "group": "none"
     },
     {
-      "label": "@semio/play build",
+      "label": "semio/play build",
       "type": "shell",
-      "command": "npx nx build @semio/play",
+      "command": "npx nx build semio/play",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/play preflight",
+      "label": "semio/play preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/play",
+      "command": "npx nx preflight semio/play",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/desktop
+    // semio/desktop
     // ========================================
     {
-      "label": "@semio/desktop dev",
+      "label": "semio/desktop dev",
       "type": "shell",
-      "command": "npx nx dev @semio/desktop",
+      "command": "npx nx dev semio/desktop",
       "group": "none",
       "problemMatcher": []
     },
     {
-      "label": "@semio/desktop build",
+      "label": "semio/desktop build",
       "type": "shell",
-      "command": "npx nx build @semio/desktop",
+      "command": "npx nx build semio/desktop",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/desktop preflight",
+      "label": "semio/desktop preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/desktop",
+      "command": "npx nx preflight semio/desktop",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/net
+    // semio/net
     // ========================================
     {
-      "label": "@semio/net test",
+      "label": "semio/net test",
       "type": "shell",
-      "command": "npx nx test @semio/net",
+      "command": "npx nx test semio/net",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/net build",
+      "label": "semio/net build",
       "type": "shell",
-      "command": "npx nx build @semio/net",
+      "command": "npx nx build semio/net",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/net preflight",
+      "label": "semio/net preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/net",
+      "command": "npx nx preflight semio/net",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/grasshopper
+    // semio/grasshopper
     // ========================================
     {
-      "label": "@semio/grasshopper test",
+      "label": "semio/grasshopper test",
       "type": "shell",
-      "command": "npx nx test @semio/grasshopper",
+      "command": "npx nx test semio/grasshopper",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio/grasshopper build",
+      "label": "semio/grasshopper build",
       "type": "shell",
-      "command": "npx nx build @semio/grasshopper",
+      "command": "npx nx build semio/grasshopper",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/grasshopper preflight",
+      "label": "semio/grasshopper preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/grasshopper",
+      "command": "npx nx preflight semio/grasshopper",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/assets
+    // semio/assets
     // ========================================
     {
-      "label": "@semio/assets build",
+      "label": "semio/assets build",
       "type": "shell",
-      "command": "npx nx build @semio/assets",
+      "command": "npx nx build semio/assets",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio/assets preflight",
+      "label": "semio/assets preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio/assets",
+      "command": "npx nx preflight semio/assets",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/logo
+    // semio/logo
     // ========================================
     {
-      "label": "@semio/logo dev",
+      "label": "semio/logo dev",
       "type": "shell",
-      "command": "npx nx dev @semio/logo",
+      "command": "npx nx dev semio/logo",
       "group": "none",
       "problemMatcher": []
     },
     {
-      "label": "@semio/logo build",
+      "label": "semio/logo build",
       "type": "shell",
-      "command": "npx nx build @semio/logo",
+      "command": "npx nx build semio/logo",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/icons
+    // semio/icons
     // ========================================
     {
-      "label": "@semio/icons build",
+      "label": "semio/icons build",
       "type": "shell",
-      "command": "npx nx build @semio/icons",
+      "command": "npx nx build semio/icons",
       "group": "build",
       "problemMatcher": []
     },
     // ========================================
-    // @semio/yak
+    // semio/yak
     // ========================================
     {
-      "label": "@semio/yak build",
+      "label": "semio/yak build",
       "type": "shell",
-      "command": "npx nx build @semio/yak",
+      "command": "npx nx build semio/yak",
       "group": "build",
       "problemMatcher": []
     },

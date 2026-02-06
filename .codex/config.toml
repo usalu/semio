@@ -7,6 +7,6 @@ args = ["playwright", "run-test-mcp-server"]
 enabled = true
 
 [mcp_servers.semio-repo]
-command = "./@semio-repo/cli/cli"
+command = "./semio-repo/cli/cli"
 args = ["mcp"]
 enabled = true

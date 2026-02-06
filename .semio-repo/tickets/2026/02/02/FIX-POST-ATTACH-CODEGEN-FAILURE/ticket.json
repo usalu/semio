@@ -1,7 +1,7 @@
 {
   "title": "Fix Post-Attach Codegen Failure",
   "status": "closed",
-  "prompt": "Fix post-attach codegen failure: duplicate identifier 'filterProvider' in @semio-repo/vscode/extension.ts during graphql-codegen.",
+  "prompt": "Fix post-attach codegen failure: duplicate identifier 'filterProvider' in semio-repo/vscode/extension.ts during graphql-codegen.",
   "summary": "Resolved codegen failure by consolidating sidebar view registration to a single filter provider, restoring monorepo view wiring, and documenting the sidebar registration expectations.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/310"
@@ -11,7 +11,7 @@
   "finished": "2026-02-02T20:43:44.318156429Z",
   "interactions": [
     {
-      "prompt": "Fix post-attach codegen failure: duplicate identifier 'filterProvider' in @semio-repo/vscode/extension.ts during graphql-codegen.",
+      "prompt": "Fix post-attach codegen failure: duplicate identifier 'filterProvider' in semio-repo/vscode/extension.ts during graphql-codegen.",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
       "author": {
@@ -27,7 +27,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/vscode",
+              "path": "semio-repo/vscode",
               "lines": {
                 "added": 68,
                 "removed": 0
@@ -63,7 +63,7 @@
           ],
           "added": [
             {
-              "path": "📄@semio-repo/vscode/extension.ts",
+              "path": "📄semio-repo/vscode/extension.ts",
               "lines": {
                 "added": 5321,
                 "removed": 0
@@ -76,42 +76,42 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/vscode/extension.ts#GraphQL Documents",
+              "path": "📄semio-repo/vscode/extension.ts#GraphQL Documents",
               "lines": {
                 "added": 58,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "📄AGENTS.md#Codebase#📁 @semio-repo/",
+              "path": "📄AGENTS.md#Codebase#📁 semio-repo/",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📄AGENTS.md#Codebase#📁 @semio-repo/vscode/",
+              "path": "📄AGENTS.md#Codebase#📁 semio-repo/vscode/",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/vscode/extension.ts",
+              "path": "📄AGENTS.md#Codebase#📄 semio-repo/vscode/extension.ts",
               "lines": {
                 "added": 4,
                 "removed": 0
@@ -183,28 +183,28 @@
           ],
           "added": [
             {
-              "path": "@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration",
+              "path": "semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration",
               "lines": {
                 "added": 108,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 @semio-repo/",
+              "path": "AGENTS.md#Codebase#📁 semio-repo/",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 @semio-repo/vscode/",
+              "path": "AGENTS.md#Codebase#📁 semio-repo/vscode/",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📄 @semio-repo/vscode/extension.ts",
+              "path": "AGENTS.md#Codebase#📄 semio-repo/vscode/extension.ts",
               "lines": {
                 "added": 4,
                 "removed": 0
@@ -222,28 +222,28 @@
         "definitions": {
           "deleted": [
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views§codebaseProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views§codebaseProvider",
               "lines": {
                 "added": 0,
                 "removed": 51
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views§commandsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views§commandsProvider",
               "lines": {
                 "added": 0,
                 "removed": 53
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views§filterProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views§filterProvider",
               "lines": {
                 "added": 0,
                 "removed": 50
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views§registerSidebarViews",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views§registerSidebarViews",
               "lines": {
                 "added": 0,
                 "removed": 48
@@ -252,32 +252,32 @@
           ],
           "renamed": [
             {
-              "from": "📄@semio-repo/vscode/extension.ts#Sidebar Views§ticketsProvider",
-              "to": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§codebaseProvider",
+              "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§ticketsProvider",
+              "to": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§codebaseProvider",
               "lines": {
                 "added": 56,
                 "removed": 56
               }
             },
             {
-              "from": "📄@semio-repo/vscode/extension.ts#Sidebar Views§policiesProvider",
-              "to": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§filterProvider",
+              "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§policiesProvider",
+              "to": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§filterProvider",
               "lines": {
                 "added": 54,
                 "removed": 54
               }
             },
             {
-              "from": "📄@semio-repo/vscode/extension.ts#Sidebar Views§contributorsProvider",
-              "to": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§monorepoProvider",
+              "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§contributorsProvider",
+              "to": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§monorepoProvider",
               "lines": {
                 "added": 55,
                 "removed": 55
               }
             },
             {
-              "from": "📄@semio-repo/vscode/extension.ts#Sidebar Views§sectionsProvider",
-              "to": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§registerSidebarViews",
+              "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§sectionsProvider",
+              "to": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§registerSidebarViews",
               "lines": {
                 "added": 52,
                 "removed": 52
@@ -286,77 +286,77 @@
           ],
           "modified": [
             {
-              "path": "📄@semio-repo/vscode/extension.ts#GraphQL Documents§FileContentDocument",
+              "path": "📄semio-repo/vscode/extension.ts#GraphQL Documents§FileContentDocument",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#GraphQL Documents§RepoDocument",
+              "path": "📄semio-repo/vscode/extension.ts#GraphQL Documents§RepoDocument",
               "lines": {
                 "added": 35,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§codebaseProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§codebaseProvider",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§commandsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§commandsProvider",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§contributorsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§contributorsProvider",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§filterProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§filterProvider",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§monorepoProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§monorepoProvider",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§policiesProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§policiesProvider",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§registerSidebarViews",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§registerSidebarViews",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§sectionsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§sectionsProvider",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§ticketsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§ticketsProvider",
               "lines": {
                 "added": 5,
                 "removed": 0
@@ -365,42 +365,42 @@
           ],
           "added": [
             {
-              "path": "📄@semio-repo/vscode/extension.ts#GraphQL Documents§FileContentDocument",
+              "path": "📄semio-repo/vscode/extension.ts#GraphQL Documents§FileContentDocument",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§commandsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§commandsProvider",
               "lines": {
                 "added": 58,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§contributorsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§contributorsProvider",
               "lines": {
                 "added": 60,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§policiesProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§policiesProvider",
               "lines": {
                 "added": 59,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§sectionsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§sectionsProvider",
               "lines": {
                 "added": 57,
                 "removed": 0
               }
             },
             {
-              "path": "📄@semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§ticketsProvider",
+              "path": "📄semio-repo/vscode/extension.ts#Sidebar Views#Sidebar Views Registration§ticketsProvider",
               "lines": {
                 "added": 61,
                 "removed": 0

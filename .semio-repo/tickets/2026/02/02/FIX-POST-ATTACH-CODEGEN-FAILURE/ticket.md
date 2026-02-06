@@ -8,15 +8,15 @@
 
 ## Changes
 
-- Unified sidebar registration in `@semio-repo/vscode/extension.ts` and restored monorepo view wiring alongside shared filter provider usage.
+- Unified sidebar registration in `semio-repo/vscode/extension.ts` and restored monorepo view wiring alongside shared filter provider usage.
 - Documented sidebar registration expectations in `README.md` and `AGENTS.md`.
 
 ## Log
 
-- Located duplicate `filterProvider` declarations and duplicate `registerSidebarViews` in `@semio-repo/vscode/extension.ts`.
+- Located duplicate `filterProvider` declarations and duplicate `registerSidebarViews` in `semio-repo/vscode/extension.ts`.
 - Consolidated sidebar view registration and removed obsolete filter provider block.
 - Updated dev documentation for sidebar registration constraints.
-- Verified `npm run build:codegen` in `@semio-repo/vscode`.
+- Verified `npm run build:codegen` in `semio-repo/vscode`.
 
 ## Summary
 

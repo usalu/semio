@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan - Fix VS Code Extension Infinite Loading
 
 1. [DIAGNOSE] Investigate why tree data providers are not registered.
@@ -12,6 +13,7 @@
 ## Changes
 
 ## Log
+
 - Started investigation into VS Code extension issues.
 
 ## 10:41 - Fix Diagnostics and Autofixes
@@ -20,7 +22,7 @@ I analyzed the `repo analyze` output and finding that the `kind` field is an obj
 
 To fix this:
 
-1.  **Updated Backend**: Modified `go/repo/main.go` to include the `summary` field in the analyze and fix queries.
+1.  **Updated Backend**: Modified `./semio-repo/cli/main.go` to include the `summary` field in the analyze and fix queries.
 2.  **Updated Frontend Port**: Refactored the `Violation` interface in `js/vscode/extension.ts` to align with the backend object shape.
 3.  **Refactored Logic**:
     - Updated `updateFileDiagnostics` to correctly parse the violation kind ID by stripping the prefix from the `violation.kind.id` object property.
@@ -35,8 +37,8 @@ Next: Investigate and fix Tree Views.
 
 Investigated the issue where tree views were not loading.
 Found that `js/vscode/extension.ts` was sending a JSON payload `{ "query": "...", "variables": ... }` to the `repo graphql` command.
-Verified that the `repo graphql` command in `go/repo/main.go` only accepted a raw query string as the first argument, causing it to fail with a syntax error.
-Updated `go/repo/main.go` to detect and unmarshal JSON payloads in the first argument, supporting the protocol used by the VS Code extension's `urql` client.
+Verified that the `repo graphql` command in `./semio-repo/cli/main.go` only accepted a raw query string as the first argument, causing it to fail with a syntax error.
+Updated `./semio-repo/cli/main.go` to detect and unmarshal JSON payloads in the first argument, supporting the protocol used by the VS Code extension's `urql` client.
 Rebuilt the `repo` binary.
 Verified that `repo graphql` now accepts the JSON payload and returns the correct data structure, fixing the tree views.
 
@@ -132,22 +134,26 @@ Exit code: 0 in ; all 22 tests passed.
 ## Summary
 
 Bulk close
+
 ## Changes
 
 ### 📦 VS Code Extension
+
 - Updated `js/vscode/package.json` to require `vscode` version `^1.106.0` instead of `^1.108.0`.
 - Updated `@types/vscode` to `^1.106.0` for compatibility with Windsurf.
 
 ### 🛠️ Devcontainer
+
 - Refactored `.devcontainer/post-attach.sh` to include a robust IDE CLI detection mechanism (`find_working_cli`).
 - The new script:
-    - Checks for `windsurf`, `cursor`, `code-insiders`, and `code`.
-    - Verifies that the detected binary actually works by running `--version`.
-    - Searches directly in known remote-cli locations for Windsurf and VS Code to bypass broken PATH wrappers.
-    - Added strict error checking and exit codes for the installation process.
-    - Added logic to rebuild the VSIX package if it is missing or older than the source code.
+  - Checks for `windsurf`, `cursor`, `code-insiders`, and `code`.
+  - Verifies that the detected binary actually works by running `--version`.
+  - Searches directly in known remote-cli locations for Windsurf and VS Code to bypass broken PATH wrappers.
+  - Added strict error checking and exit codes for the installation process.
+  - Added logic to rebuild the VSIX package if it is missing or older than the source code.
 
 ## Verification Results
+
 - **Installation**: Successfully verified by running `.devcontainer/post-attach.sh` manually. It detected the VS Code remote CLI and installed the extension without errors.
 - **List Extensions**: `code --list-extensions` confirms `usalu.semio-repo` is installed.
 - **Unit Tests**: Ran `npm run test` in `js/vscode`; all 22 tests passed, confirming functionality across commands, diagnostics, and views.

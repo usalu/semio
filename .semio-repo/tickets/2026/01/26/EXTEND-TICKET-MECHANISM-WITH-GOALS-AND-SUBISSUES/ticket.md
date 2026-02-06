@@ -16,14 +16,14 @@
 
 ## Tasks
 
-### 1. Repo CLI (`go/repo/main.go`) - Goals
+### 1. Repo CLI (`./semio-repo/cli/main.go`) - Goals
 
 - [ ] Implement `Goal` struct and storage (json/sqlite?).
 - [ ] Implement `gh milestone` wrappers.
 - [ ] Implement `semio repo clial list`, `create`, `update`, `delete` commands.
 - [ ] Expose via GraphQL.
 
-### 2. Repo CLI (`go/repo/main.go`) - Tickets
+### 2. Repo CLI (`./semio-repo/cli/main.go`) - Tickets
 
 - [ ] Update `TicketData` with `Goal` and `Parent`.
 - [ ] Update `repo ticket open` to accept `--goal` and `--parent`.

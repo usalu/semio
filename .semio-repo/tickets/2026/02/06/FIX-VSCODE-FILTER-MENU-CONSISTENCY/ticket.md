@@ -7,6 +7,7 @@ goal: R26-02/RUNNING-SKETCHPAD
 ## Summary
 
 Restored named filter tree labels, switched filter menu actions to emoji-only labels without codeicons, updated tests, and documented the filter label/tooltip requirement.
+
 ## Changes
 
 - Updated filter view root items to use emoji-only labels with tooltip descriptions and removed codeicon state markers for date entries.
@@ -20,7 +21,7 @@ Restored named filter tree labels, switched filter menu actions to emoji-only la
 - Aligned filter view menu items to emoji-only labels with tooltip descriptions per request.
 - Goal tree failed to load: graphql errors: [json: cannot unmarshal object into Go struct field Interaction.interactions.author of type string].
 - Implemented named filter tree labels with emoji-only menu actions and removed codeicons from filter commands.
-- Tests: `npm -w @semio-repo/vscode test`.
+- Tests: `npm -w semio-repo/vscode test`.
 
 ## Todos
 

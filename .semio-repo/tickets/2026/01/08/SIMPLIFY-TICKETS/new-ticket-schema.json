@@ -16,7 +16,7 @@
   "summary": "Simplified the ticket mechanism by removing checkpoints and interactions, and requiring summary/files on finish",
   "files": [
     {
-      "path": "go/repo/repo.go",
+      "path": "./semio-repo/cli/cli.go",
       "sections": [
         {
           "path": "Codebase",

@@ -1,9 +1,10 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
-# `@semio/js` runs both Vite and Storybook from a single `dev` entrypoint (`js/semio/dev.ts`).
+# `semio/js` runs both Vite and Storybook from a single `dev` entrypoint (`js/semio/dev.ts`).
 
 # Root and VS Code configs lacked dedicated entrypoints for running just one of these when working in parallel.
 
@@ -28,6 +29,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
-Split @semio/js dev scripts
+Split semio/js dev scripts

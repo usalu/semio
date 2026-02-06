@@ -36,7 +36,7 @@ Improved comment fix logic to support TODO preservation, config file exclusion, 
 
 ## Todos
 
-- [x] Add `InTodoBlock` to `CommentScanState` in `@semio-repo/cli/main.go`
+- [x] Add `InTodoBlock` to `CommentScanState` in `semio-repo/cli/main.go`
 - [x] Update `TypeScriptLanguage.ScanComments` to handle TODO blocks and ignore config files
 - [x] Update `CreateViolation` to include `column` (or set it manually)
 - [x] Update `applyAutofixes` to support partial line removal of comments

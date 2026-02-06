@@ -22,14 +22,14 @@ Make semio-repo MCP tool working in VSCode, Windsurf, Claude Code, Codex, and Cu
 
 ### Current State
 
-- `.mcp.json` (root): Uses `go run ./go/repo mcp` - requires go toolchain
-- `.vscode/mcp.json`: Uses `go/repo/repo mcp` - uses prebuilt binary
+- `.mcp.json` (root): Uses `go run ./semio-repo/cli mcp` - requires go toolchain
+- `.vscode/mcp.json`: Uses `./semio-repo/cli/cli mcp` - uses prebuilt binary
 
 ## Tasks
 
 1. **Standardize MCP command approach**
-   - Use prebuilt binary `./@semio-repo/cli/cli mcp` for reliability
-   - Binary already exists at `/workspaces/semio/go/repo/repo`
+   - Use prebuilt binary `./semio-repo/cli/cli mcp` for reliability
+   - Binary already exists at `/workspaces/semio/semio-repo/cli/cli`
 
 2. **Update existing configs**
    - [x] `.vscode/mcp.json` - Already configured correctly
@@ -52,7 +52,7 @@ Make semio-repo MCP tool working in VSCode, Windsurf, Claude Code, Codex, and Cu
   "mcpServers": {
     "semio-repo": {
       "type": "stdio",
-      "command": "./@semio-repo/cli/cli",
+      "command": "./semio-repo/cli/cli",
       "args": ["mcp"]
     }
   }
@@ -65,7 +65,7 @@ Make semio-repo MCP tool working in VSCode, Windsurf, Claude Code, Codex, and Cu
 {
   "mcpServers": {
     "semio-repo": {
-      "command": "./@semio-repo/cli/cli",
+      "command": "./semio-repo/cli/cli",
       "args": ["mcp"]
     }
   }
@@ -78,7 +78,7 @@ Make semio-repo MCP tool working in VSCode, Windsurf, Claude Code, Codex, and Cu
 {
   "mcpServers": {
     "semio-repo": {
-      "command": "./@semio-repo/cli/cli",
+      "command": "./semio-repo/cli/cli",
       "args": ["mcp"],
       "disabled": false
     }
@@ -90,7 +90,7 @@ Make semio-repo MCP tool working in VSCode, Windsurf, Claude Code, Codex, and Cu
 
 ```toml
 [mcp_servers.semio-repo]
-command = "./@semio-repo/cli/cli"
+command = "./semio-repo/cli/cli"
 args = ["mcp"]
 enabled = true
 ```
@@ -125,11 +125,11 @@ Researched MCP configuration formats for each IDE:
 ### Changes Made
 
 1. **Updated `.mcp.json`** (Claude Code)
-   - Changed command from `go run ./go/repo mcp` to `./@semio-repo/cli/cli mcp`
+   - Changed command from `go run ./semio-repo/cli mcp` to `./semio-repo/cli/cli mcp`
    - Uses prebuilt binary for better reliability
 
 2. **Updated `.vscode/mcp.json`** (VSCode)
-   - Standardized command to `./@semio-repo/cli/cli mcp`
+   - Standardized command to `./semio-repo/cli/cli mcp`
 
 3. **Created `.cursor/mcp.json`** (Cursor)
    - New file with semio-repo and playwright-test servers
@@ -149,7 +149,7 @@ Researched MCP configuration formats for each IDE:
 Verified MCP server works correctly:
 
 ```bash
-$ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | ./@semio-repo/cli/cli mcp
+$ echo '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"capabilities":{}}}' | ./semio-repo/cli/cli mcp
 {"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2025-03-26","capabilities":{"tools":{"listChanged":true}},"serverInfo":{"name":"semio-repo","version":"1.0.0"}}}
 ```
 
@@ -188,7 +188,7 @@ Created and configured MCP server definitions for semio-repo across five IDEs:
 
 ### Key Changes
 
-1. **Standardized command**: All configs now use `./@semio-repo/cli/cli mcp` (prebuilt binary) instead of `go run ./go/repo mcp`
+1. **Standardized command**: All configs now use `./semio-repo/cli/cli mcp` (prebuilt binary) instead of `go run ./semio-repo/cli mcp`
 2. **Format compliance**: Each config follows the IDE-specific format requirements:
    - JSON with `servers` key for VSCode
    - JSON with `mcpServers` key for Claude Code, Cursor, Windsurf

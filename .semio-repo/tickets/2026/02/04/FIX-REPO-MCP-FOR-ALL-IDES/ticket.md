@@ -6,10 +6,10 @@ Fixed MCP tool schema validation errors by adding `items` definition to array pr
 
 ## Changes
 
-- `@semio-repo/cli/main.go`:
+- `semio-repo/cli/main.go`:
   - Refactored `runMcpServer` to `createMcpServer` to enable testability of the server instance.
   - Added `mcp.WithStringItems()` to `ticket_close` and `draft_create` tool definitions.
-- `@semio-repo/cli/main_test.go`:
+- `semio-repo/cli/main_test.go`:
   - Added `TestMcpToolsSchemas` to validate that all array types in tool schemas have an `items` field.
 
 ## Log

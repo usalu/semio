@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan
 
 # Previously
@@ -12,10 +13,11 @@
 ## Changes
 
 ## Log
+
 ## 2026-01-07
 
 - Created ticket for refactoring ticket mechanism
-- Analyzed current ticket structure in `go/repo/repo.go`
+- Analyzed current ticket structure in `./semio-repo/cli/cli.go`
 - Current: Uses YAML frontmatter in `ticket.md`
 - New: Uses separate `ticket.json` + `plan.md` + `log.md` + `summary.md`
 - Key changes: title instead of slug as input, llm is free string, plan can be moved from external file
@@ -60,6 +62,7 @@ Starting implementation...
 - Updated resolver for ticketOpen mutation
 
 ## Summary
+
 # Summary
 
 Refactored the ticket mechanism with the following changes:

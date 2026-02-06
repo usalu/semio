@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Linting errors across multiple languages:
@@ -31,7 +32,7 @@ Linting errors across multiple languages:
 
 ### Quality.tsx
 
-- Added missing imports: icons from `@semio/assets`, UI components from `./elements`, types from `./shared`, hooks from `./Sketchpad`
+- Added missing imports: icons from `semio/assets`, UI components from `./elements`, types from `./shared`, hooks from `./Sketchpad`
 - Fixed `createDefaultLayout` call (removed 4th argument)
 - Fixed quality update diff key
 
@@ -112,6 +113,7 @@ The remaining errors require larger refactoring:
 ## Log
 
 ## Summary
+
 # Summary
 
 "Fix TypeScript, C# and Python linting errors"

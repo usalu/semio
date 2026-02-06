@@ -26,7 +26,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/cli",
+              "path": "semio-repo/cli",
               "lines": {
                 "added": 34,
                 "removed": 0
@@ -46,7 +46,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/cli/main.go",
+              "path": "📄semio-repo/cli/main.go",
               "lines": {
                 "added": 48,
                 "removed": 14
@@ -60,7 +60,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter",
               "lines": {
                 "added": 48,
                 "removed": 14
@@ -74,14 +74,14 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§bundleCommand",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§bundleCommand",
               "lines": {
                 "added": 48,
                 "removed": 14
               }
             },
             {
-              "path": "📄@semio-repo/cli/main.go#Cli Adapter§bundleCommand",
+              "path": "📄semio-repo/cli/main.go#Cli Adapter§bundleCommand",
               "lines": {
                 "added": 0,
                 "removed": 14

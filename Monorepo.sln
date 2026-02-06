@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio", "@semio\net\Semio\Semio.csproj", "{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio", "semio\net\Semio\Semio.csproj", "{D9AC6CCA-E96A-4F2F-BFD3-C6472FC414EF}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper", "@semio\grasshopper\Semio.Grasshopper\Semio.Grasshopper.csproj", "{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper", "semio\grasshopper\Semio.Grasshopper\Semio.Grasshopper.csproj", "{E7BD8355-59D3-42FC-8FFB-9DE37DFC4597}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Tests", "@semio\net\Semio.Tests\Semio.Tests.csproj", "{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Tests", "semio\net\Semio.Tests\Semio.Tests.csproj", "{8DEA59D0-EF55-46F2-A68F-226C98F5AF90}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper.Tests", "@semio\grasshopper\Semio.Grasshopper.Tests\Semio.Grasshopper.Tests.csproj", "{9735D68F-06FF-4A3D-B48E-C867B5F2F214}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Semio.Grasshopper.Tests", "semio\grasshopper\Semio.Grasshopper.Tests\Semio.Grasshopper.Tests.csproj", "{9735D68F-06FF-4A3D-B48E-C867B5F2F214}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

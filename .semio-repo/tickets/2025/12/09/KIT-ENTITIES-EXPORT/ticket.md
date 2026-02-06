@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - `assets/index.ts` only surfaced the Metabolism fixtures and a narrow `MetabolismKitDesigns` filter.
@@ -14,7 +15,7 @@
 # Changes
 
 - Added a local Metabolism kit import, the general collection exports, and the Nakagin Capsule Tower helper in `assets/index.ts`.
-- Expanded the `@semio/assets` section in `README.md` with a Kits subsection that enumerates the shared exports.
+- Expanded the `semio/assets` section in `README.md` with a Kits subsection that enumerates the shared exports.
 - Noted the new export surface in `AGENTS.md` so the file structure and asset guidance mention the kit tooling surface.
 
 ## Changes
@@ -22,6 +23,7 @@
 ## Log
 
 ## Summary
+
 # Summary
 
 Expose kit entities individually from assets index

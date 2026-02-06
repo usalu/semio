@@ -6,7 +6,7 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION
 
 ## Summary
 
-Refactored the @semio-repo/vscode extension sidebar into exactly two sections (Monorepo and Filter) with emoji-prefixed labels, 🆔 copy-to-clipboard support, contributor expandable children (Emails, Links, Contributions), filter none/all toggles, and comprehensive test coverage. Removed legacy Todos section and all backwards-incompatible APIs. All 63 tests passing.
+Refactored the semio-repo/vscode extension sidebar into exactly two sections (Monorepo and Filter) with emoji-prefixed labels, 🆔 copy-to-clipboard support, contributor expandable children (Emails, Links, Contributions), filter none/all toggles, and comprehensive test coverage. Removed legacy Todos section and all backwards-incompatible APIs. All 63 tests passing.
 
 ## Changes
 

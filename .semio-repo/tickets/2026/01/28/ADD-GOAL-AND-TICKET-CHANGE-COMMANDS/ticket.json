@@ -26,7 +26,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/go",
+              "path": "semio-repo/go",
               "lines": {
                 "added": 1170,
                 "removed": 0
@@ -46,7 +46,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/go/main.go",
+              "path": "semio-repo/go/main.go",
               "lines": {
                 "added": 1704,
                 "removed": 535
@@ -65,8 +65,8 @@
           "deleted": null,
           "renamed": [
             {
-              "from": "@semio-repo/go/main.go§GetDateCreated",
-              "to": "@semio-repo/go/main.go§GoalClose",
+              "from": "semio-repo/go/main.go§GetDateCreated",
+              "to": "semio-repo/go/main.go§GoalClose",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -75,1722 +75,1722 @@
           ],
           "modified": [
             {
-              "path": "@semio-repo/go/main.go§AllowedLLMs",
+              "path": "semio-repo/go/main.go§AllowedLLMs",
               "lines": {
                 "added": 2,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§AllowedLLMs",
+              "path": "semio-repo/go/main.go§AllowedLLMs",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§AllowedUIs",
+              "path": "semio-repo/go/main.go§AllowedUIs",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§AllowedUIs",
+              "path": "semio-repo/go/main.go§AllowedUIs",
               "lines": {
                 "added": 7,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§BuildCodebaseBundles",
+              "path": "semio-repo/go/main.go§BuildCodebaseBundles",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§BuildCodebaseBundlesForFiles",
+              "path": "semio-repo/go/main.go§BuildCodebaseBundlesForFiles",
               "lines": {
                 "added": 0,
                 "removed": 17
               }
             },
             {
-              "path": "@semio-repo/go/main.go§BuildCodebasePolicies",
+              "path": "semio-repo/go/main.go§BuildCodebasePolicies",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§BuildCodebaseSnapshot",
+              "path": "semio-repo/go/main.go§BuildCodebaseSnapshot",
               "lines": {
                 "added": 0,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§BuildCodebaseTickets",
+              "path": "semio-repo/go/main.go§BuildCodebaseTickets",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§BuildCodebaseTickets",
+              "path": "semio-repo/go/main.go§BuildCodebaseTickets",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§BuildCodebaseTree",
+              "path": "semio-repo/go/main.go§BuildCodebaseTree",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "@semio-repo/go/main.go§BuildCodebaseViolations",
+              "path": "semio-repo/go/main.go§BuildCodebaseViolations",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§CanCloseTicket",
+              "path": "semio-repo/go/main.go§CanCloseTicket",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§CanCloseTicket",
+              "path": "semio-repo/go/main.go§CanCloseTicket",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ComputeTicketFiles",
+              "path": "semio-repo/go/main.go§ComputeTicketFiles",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ComputeTicketFiles",
+              "path": "semio-repo/go/main.go§ComputeTicketFiles",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§CopyFile",
+              "path": "semio-repo/go/main.go§CopyFile",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§CopyFile",
+              "path": "semio-repo/go/main.go§CopyFile",
               "lines": {
                 "added": 0,
                 "removed": 15
               }
             },
             {
-              "path": "@semio-repo/go/main.go§CountMetrics",
+              "path": "semio-repo/go/main.go§CountMetrics",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§CreateTicket",
+              "path": "semio-repo/go/main.go§CreateTicket",
               "lines": {
                 "added": 24,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§CreateTicket",
+              "path": "semio-repo/go/main.go§CreateTicket",
               "lines": {
                 "added": 0,
                 "removed": 27
               }
             },
             {
-              "path": "@semio-repo/go/main.go§DiffLines",
+              "path": "semio-repo/go/main.go§DiffLines",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Executor",
+              "path": "semio-repo/go/main.go§Executor",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ExtraOrphanDefinitions",
+              "path": "semio-repo/go/main.go§ExtraOrphanDefinitions",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§FinishTicket",
+              "path": "semio-repo/go/main.go§FinishTicket",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§FinishTicket",
+              "path": "semio-repo/go/main.go§FinishTicket",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "@semio-repo/go/main.go§FlattenSections",
+              "path": "semio-repo/go/main.go§FlattenSections",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetAuthor",
+              "path": "semio-repo/go/main.go§GetAuthor",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetAuthor",
+              "path": "semio-repo/go/main.go§GetAuthor",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetCommit",
+              "path": "semio-repo/go/main.go§GetCommit",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetCommit",
+              "path": "semio-repo/go/main.go§GetCommit",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetDateCreated",
+              "path": "semio-repo/go/main.go§GetDateCreated",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetDateFinished",
+              "path": "semio-repo/go/main.go§GetDateFinished",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetDateFinished",
+              "path": "semio-repo/go/main.go§GetDateFinished",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetDateStarted",
+              "path": "semio-repo/go/main.go§GetDateStarted",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetDefinitions",
+              "path": "semio-repo/go/main.go§GetDefinitions",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetDefinitions",
+              "path": "semio-repo/go/main.go§GetDefinitions",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetFiles",
+              "path": "semio-repo/go/main.go§GetFiles",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetFiles",
+              "path": "semio-repo/go/main.go§GetFiles",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetFolderFiles",
+              "path": "semio-repo/go/main.go§GetFolderFiles",
               "lines": {
                 "added": 0,
                 "removed": 16
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetGitDiffSectionLineMetrics",
+              "path": "semio-repo/go/main.go§GetGitDiffSectionLineMetrics",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetGoals",
+              "path": "semio-repo/go/main.go§GetGoals",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetGoals",
+              "path": "semio-repo/go/main.go§GetGoals",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetGoals",
+              "path": "semio-repo/go/main.go§GetGoals",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetGoals",
+              "path": "semio-repo/go/main.go§GetGoals",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetLLM",
+              "path": "semio-repo/go/main.go§GetLLM",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetLLM",
+              "path": "semio-repo/go/main.go§GetLLM",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetLatestPrompt",
+              "path": "semio-repo/go/main.go§GetLatestPrompt",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetLatestPrompt",
+              "path": "semio-repo/go/main.go§GetLatestPrompt",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetProjects",
+              "path": "semio-repo/go/main.go§GetProjects",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetPrompt",
+              "path": "semio-repo/go/main.go§GetPrompt",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetPrompt",
+              "path": "semio-repo/go/main.go§GetPrompt",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetSections",
+              "path": "semio-repo/go/main.go§GetSections",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetSections",
+              "path": "semio-repo/go/main.go§GetSections",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetStatus",
+              "path": "semio-repo/go/main.go§GetStatus",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetStatus",
+              "path": "semio-repo/go/main.go§GetStatus",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetSummary",
+              "path": "semio-repo/go/main.go§GetSummary",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetSummary",
+              "path": "semio-repo/go/main.go§GetSummary",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetTitle",
+              "path": "semio-repo/go/main.go§GetTitle",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetTitle",
+              "path": "semio-repo/go/main.go§GetTitle",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetUI",
+              "path": "semio-repo/go/main.go§GetUI",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GetUI",
+              "path": "semio-repo/go/main.go§GetUI",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GitAuthor",
+              "path": "semio-repo/go/main.go§GitAuthor",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GitDiffStatus",
+              "path": "semio-repo/go/main.go§GitDiffStatus",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Goal",
+              "path": "semio-repo/go/main.go§Goal",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Goal",
+              "path": "semio-repo/go/main.go§Goal",
               "lines": {
                 "added": 0,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalClose",
+              "path": "semio-repo/go/main.go§GoalClose",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalClose",
+              "path": "semio-repo/go/main.go§GoalClose",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalClose",
+              "path": "semio-repo/go/main.go§GoalClose",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalCloseInput",
+              "path": "semio-repo/go/main.go§GoalCloseInput",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalCreate",
+              "path": "semio-repo/go/main.go§GoalCreate",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalCreate",
+              "path": "semio-repo/go/main.go§GoalCreate",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalCreate",
+              "path": "semio-repo/go/main.go§GoalCreate",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalCreateInput",
+              "path": "semio-repo/go/main.go§GoalCreateInput",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalDelete",
+              "path": "semio-repo/go/main.go§GoalDelete",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalDelete",
+              "path": "semio-repo/go/main.go§GoalDelete",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalDeleteInput",
+              "path": "semio-repo/go/main.go§GoalDeleteInput",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalDeleteInput",
+              "path": "semio-repo/go/main.go§GoalDeleteInput",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalReopen",
+              "path": "semio-repo/go/main.go§GoalReopen",
               "lines": {
                 "added": 40,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalReopen",
+              "path": "semio-repo/go/main.go§GoalReopen",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalReopen",
+              "path": "semio-repo/go/main.go§GoalReopen",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalReopenInput",
+              "path": "semio-repo/go/main.go§GoalReopenInput",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalUpdate",
+              "path": "semio-repo/go/main.go§GoalUpdate",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalUpdate",
+              "path": "semio-repo/go/main.go§GoalUpdate",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalUpdateInput",
+              "path": "semio-repo/go/main.go§GoalUpdateInput",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalUpdateInput",
+              "path": "semio-repo/go/main.go§GoalUpdateInput",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Integrate",
+              "path": "semio-repo/go/main.go§Integrate",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§IsValid",
+              "path": "semio-repo/go/main.go§IsValid",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§LatestTicket",
+              "path": "semio-repo/go/main.go§LatestTicket",
               "lines": {
                 "added": 1,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§LatestTicket",
+              "path": "semio-repo/go/main.go§LatestTicket",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§LineMetrics",
+              "path": "semio-repo/go/main.go§LineMetrics",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ListContributors",
+              "path": "semio-repo/go/main.go§ListContributors",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ListGoals",
+              "path": "semio-repo/go/main.go§ListGoals",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ListGoals",
+              "path": "semio-repo/go/main.go§ListGoals",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ListTickets",
+              "path": "semio-repo/go/main.go§ListTickets",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§MoveFile",
+              "path": "semio-repo/go/main.go§MoveFile",
               "lines": {
                 "added": 21,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§MoveFile",
+              "path": "semio-repo/go/main.go§MoveFile",
               "lines": {
                 "added": 0,
                 "removed": 21
               }
             },
             {
-              "path": "@semio-repo/go/main.go§NewExecutor",
+              "path": "semio-repo/go/main.go§NewExecutor",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§NewMarkdownLanguage",
+              "path": "semio-repo/go/main.go§NewMarkdownLanguage",
               "lines": {
                 "added": 0,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Node",
+              "path": "semio-repo/go/main.go§Node",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§NormalizeUISlug",
+              "path": "semio-repo/go/main.go§NormalizeUISlug",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§OpenTicket",
+              "path": "semio-repo/go/main.go§OpenTicket",
               "lines": {
                 "added": 1,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§OpenTicket",
+              "path": "semio-repo/go/main.go§OpenTicket",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§PolicyFunc",
+              "path": "semio-repo/go/main.go§PolicyFunc",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Position",
+              "path": "semio-repo/go/main.go§Position",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ProgressTicket",
+              "path": "semio-repo/go/main.go§ProgressTicket",
               "lines": {
                 "added": 31,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Range",
+              "path": "semio-repo/go/main.go§Range",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ReadTicket",
+              "path": "semio-repo/go/main.go§ReadTicket",
               "lines": {
                 "added": 0,
                 "removed": 17
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ReadTicket",
+              "path": "semio-repo/go/main.go§ReadTicket",
               "lines": {
                 "added": 16,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Render",
+              "path": "semio-repo/go/main.go§Render",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Render",
+              "path": "semio-repo/go/main.go§Render",
               "lines": {
                 "added": 4,
                 "removed": 8
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Render",
+              "path": "semio-repo/go/main.go§Render",
               "lines": {
                 "added": 1,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Render",
+              "path": "semio-repo/go/main.go§Render",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ReopenTicket",
+              "path": "semio-repo/go/main.go§ReopenTicket",
               "lines": {
                 "added": 19,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ReopenTicket",
+              "path": "semio-repo/go/main.go§ReopenTicket",
               "lines": {
                 "added": 0,
                 "removed": 16
               }
             },
             {
-              "path": "@semio-repo/go/main.go§RepoContext",
+              "path": "semio-repo/go/main.go§RepoContext",
               "lines": {
                 "added": 5,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§RepoContext",
+              "path": "semio-repo/go/main.go§RepoContext",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ResolveAllowedLLM",
+              "path": "semio-repo/go/main.go§ResolveAllowedLLM",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ResolveAllowedUI",
+              "path": "semio-repo/go/main.go§ResolveAllowedUI",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ResolveContributorContributions",
+              "path": "semio-repo/go/main.go§ResolveContributorContributions",
               "lines": {
                 "added": 23,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ResolveContributorContributions",
+              "path": "semio-repo/go/main.go§ResolveContributorContributions",
               "lines": {
                 "added": 0,
                 "removed": 23
               }
             },
             {
-              "path": "@semio-repo/go/main.go§RubyLanguage",
+              "path": "semio-repo/go/main.go§RubyLanguage",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§SaveTicket",
+              "path": "semio-repo/go/main.go§SaveTicket",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§SaveTicket",
+              "path": "semio-repo/go/main.go§SaveTicket",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamBundles",
+              "path": "semio-repo/go/main.go§StreamBundles",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamDefinitions",
+              "path": "semio-repo/go/main.go§StreamDefinitions",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamDefinitions",
+              "path": "semio-repo/go/main.go§StreamDefinitions",
               "lines": {
                 "added": 5,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamFiles",
+              "path": "semio-repo/go/main.go§StreamFiles",
               "lines": {
                 "added": 4,
                 "removed": 18
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamFiles",
+              "path": "semio-repo/go/main.go§StreamFiles",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamFolders",
+              "path": "semio-repo/go/main.go§StreamFolders",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamFolders",
+              "path": "semio-repo/go/main.go§StreamFolders",
               "lines": {
                 "added": 2,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamSections",
+              "path": "semio-repo/go/main.go§StreamSections",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamSections",
+              "path": "semio-repo/go/main.go§StreamSections",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamTickets",
+              "path": "semio-repo/go/main.go§StreamTickets",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§StreamTickets",
+              "path": "semio-repo/go/main.go§StreamTickets",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§String",
+              "path": "semio-repo/go/main.go§String",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§String",
+              "path": "semio-repo/go/main.go§String",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Ticket",
+              "path": "semio-repo/go/main.go§Ticket",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§Ticket",
+              "path": "semio-repo/go/main.go§Ticket",
               "lines": {
                 "added": 0,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketChange",
+              "path": "semio-repo/go/main.go§TicketChange",
               "lines": {
                 "added": 64,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketChange",
+              "path": "semio-repo/go/main.go§TicketChange",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketChange",
+              "path": "semio-repo/go/main.go§TicketChange",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketChangeInput",
+              "path": "semio-repo/go/main.go§TicketChangeInput",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketClose",
+              "path": "semio-repo/go/main.go§TicketClose",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketClose",
+              "path": "semio-repo/go/main.go§TicketClose",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketDelete",
+              "path": "semio-repo/go/main.go§TicketDelete",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketDelete",
+              "path": "semio-repo/go/main.go§TicketDelete",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketDeleteInput",
+              "path": "semio-repo/go/main.go§TicketDeleteInput",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketDeleteInput",
+              "path": "semio-repo/go/main.go§TicketDeleteInput",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketIteration",
+              "path": "semio-repo/go/main.go§TicketIteration",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketIteration",
+              "path": "semio-repo/go/main.go§TicketIteration",
               "lines": {
                 "added": 0,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketOpenInput",
+              "path": "semio-repo/go/main.go§TicketOpenInput",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketOpenInput",
+              "path": "semio-repo/go/main.go§TicketOpenInput",
               "lines": {
                 "added": 0,
                 "removed": 8
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketProgress",
+              "path": "semio-repo/go/main.go§TicketProgress",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketProgress",
+              "path": "semio-repo/go/main.go§TicketProgress",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketProgress",
+              "path": "semio-repo/go/main.go§TicketProgress",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketProgressInput",
+              "path": "semio-repo/go/main.go§TicketProgressInput",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketReopen",
+              "path": "semio-repo/go/main.go§TicketReopen",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketReopen",
+              "path": "semio-repo/go/main.go§TicketReopen",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketReopenInput",
+              "path": "semio-repo/go/main.go§TicketReopenInput",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolExport",
+              "path": "semio-repo/go/main.go§ToolExport",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolGoalClose",
+              "path": "semio-repo/go/main.go§ToolGoalClose",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolGoalReopen",
+              "path": "semio-repo/go/main.go§ToolGoalReopen",
               "lines": {
                 "added": 30,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolIntegrate",
+              "path": "semio-repo/go/main.go§ToolIntegrate",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolIntegrate",
+              "path": "semio-repo/go/main.go§ToolIntegrate",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolSectionList",
+              "path": "semio-repo/go/main.go§ToolSectionList",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolTicketOpen",
+              "path": "semio-repo/go/main.go§ToolTicketOpen",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolTicketOpen",
+              "path": "semio-repo/go/main.go§ToolTicketOpen",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolTicketRead",
+              "path": "semio-repo/go/main.go§ToolTicketRead",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolTicketRead",
+              "path": "semio-repo/go/main.go§ToolTicketRead",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolTicketReopen",
+              "path": "semio-repo/go/main.go§ToolTicketReopen",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolTicketReopen",
+              "path": "semio-repo/go/main.go§ToolTicketReopen",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§UpdateTicketTitle",
+              "path": "semio-repo/go/main.go§UpdateTicketTitle",
               "lines": {
                 "added": 0,
                 "removed": 7
               }
             },
             {
-              "path": "@semio-repo/go/main.go§UpdateTicketTitle",
+              "path": "semio-repo/go/main.go§UpdateTicketTitle",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ViolationKind",
+              "path": "semio-repo/go/main.go§ViolationKind",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ViolationPriority",
+              "path": "semio-repo/go/main.go§ViolationPriority",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§analyze",
+              "path": "semio-repo/go/main.go§analyze",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§benchmarkDryRun",
+              "path": "semio-repo/go/main.go§benchmarkDryRun",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§buildSchema",
+              "path": "semio-repo/go/main.go§buildSchema",
               "lines": {
                 "added": 235,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§buildSchema",
+              "path": "semio-repo/go/main.go§buildSchema",
               "lines": {
                 "added": 0,
                 "removed": 27
               }
             },
             {
-              "path": "@semio-repo/go/main.go§buildSectionDiffs",
+              "path": "semio-repo/go/main.go§buildSectionDiffs",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "@semio-repo/go/main.go§bundleCommand",
+              "path": "semio-repo/go/main.go§bundleCommand",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§bundleCommand",
+              "path": "semio-repo/go/main.go§bundleCommand",
               "lines": {
                 "added": 3,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§colorize",
+              "path": "semio-repo/go/main.go§colorize",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§computeAffectedSections",
+              "path": "semio-repo/go/main.go§computeAffectedSections",
               "lines": {
                 "added": 0,
                 "removed": 3
               }
             },
             {
-              "path": "@semio-repo/go/main.go§computeSectionLineMap",
+              "path": "semio-repo/go/main.go§computeSectionLineMap",
               "lines": {
                 "added": 0,
                 "removed": 20
               }
             },
             {
-              "path": "@semio-repo/go/main.go§contributorCommand",
+              "path": "semio-repo/go/main.go§contributorCommand",
               "lines": {
                 "added": 14,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§definitionCommand",
+              "path": "semio-repo/go/main.go§definitionCommand",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§definitionCommand",
+              "path": "semio-repo/go/main.go§definitionCommand",
               "lines": {
                 "added": 7,
                 "removed": 6
               }
             },
             {
-              "path": "@semio-repo/go/main.go§export",
+              "path": "semio-repo/go/main.go§export",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§exportContributors",
+              "path": "semio-repo/go/main.go§exportContributors",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§exportFiles",
+              "path": "semio-repo/go/main.go§exportFiles",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§exportRepo",
+              "path": "semio-repo/go/main.go§exportRepo",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§exportTickets",
+              "path": "semio-repo/go/main.go§exportTickets",
               "lines": {
                 "added": 1,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go§exportTickets",
+              "path": "semio-repo/go/main.go§exportTickets",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§fileCommand",
+              "path": "semio-repo/go/main.go§fileCommand",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§fileCommand",
+              "path": "semio-repo/go/main.go§fileCommand",
               "lines": {
                 "added": 18,
                 "removed": 7
               }
             },
             {
-              "path": "@semio-repo/go/main.go§findSectionForDefinition",
+              "path": "semio-repo/go/main.go§findSectionForDefinition",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§findSectionForLine",
+              "path": "semio-repo/go/main.go§findSectionForLine",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "@semio-repo/go/main.go§folderCommand",
+              "path": "semio-repo/go/main.go§folderCommand",
               "lines": {
                 "added": 0,
                 "removed": 9
               }
             },
             {
-              "path": "@semio-repo/go/main.go§folderCommand",
+              "path": "semio-repo/go/main.go§folderCommand",
               "lines": {
                 "added": 26,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§formatResult",
+              "path": "semio-repo/go/main.go§formatResult",
               "lines": {
                 "added": 0,
                 "removed": 42
               }
             },
             {
-              "path": "@semio-repo/go/main.go§formatResult",
+              "path": "semio-repo/go/main.go§formatResult",
               "lines": {
                 "added": 44,
                 "removed": 8
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ghAddComment",
+              "path": "semio-repo/go/main.go§ghAddComment",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ghAddLabels",
+              "path": "semio-repo/go/main.go§ghAddLabels",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ghDeleteIssue",
+              "path": "semio-repo/go/main.go§ghDeleteIssue",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ghDeleteIssue",
+              "path": "semio-repo/go/main.go§ghDeleteIssue",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ghUpdateMilestone",
+              "path": "semio-repo/go/main.go§ghUpdateMilestone",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ghUpdateMilestone",
+              "path": "semio-repo/go/main.go§ghUpdateMilestone",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalClose",
+              "path": "semio-repo/go/main.go§goalClose",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalCommand",
+              "path": "semio-repo/go/main.go§goalCommand",
               "lines": {
                 "added": 0,
                 "removed": 15
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalCommand",
+              "path": "semio-repo/go/main.go§goalCommand",
               "lines": {
                 "added": 117,
                 "removed": 12
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalList",
+              "path": "semio-repo/go/main.go§goalList",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalOpen",
+              "path": "semio-repo/go/main.go§goalOpen",
               "lines": {
                 "added": 31,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalReopen",
+              "path": "semio-repo/go/main.go§goalReopen",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§init",
+              "path": "semio-repo/go/main.go§init",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§isIgnored",
+              "path": "semio-repo/go/main.go§isIgnored",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§mcpCommand",
+              "path": "semio-repo/go/main.go§mcpCommand",
               "lines": {
                 "added": 7,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§mcpCommand",
+              "path": "semio-repo/go/main.go§mcpCommand",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§normalizeTicketKeyword",
+              "path": "semio-repo/go/main.go§normalizeTicketKeyword",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§parseGitAuthor",
+              "path": "semio-repo/go/main.go§parseGitAuthor",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§policies",
+              "path": "semio-repo/go/main.go§policies",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§policyCommand",
+              "path": "semio-repo/go/main.go§policyCommand",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§preflightDryRun",
+              "path": "semio-repo/go/main.go§preflightDryRun",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§reconcileRenamePairs",
+              "path": "semio-repo/go/main.go§reconcileRenamePairs",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "@semio-repo/go/main.go§repoPolicy",
+              "path": "semio-repo/go/main.go§repoPolicy",
               "lines": {
                 "added": 54,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§runBenchmark",
+              "path": "semio-repo/go/main.go§runBenchmark",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§runMcpServer",
+              "path": "semio-repo/go/main.go§runMcpServer",
               "lines": {
                 "added": 50,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§runPreflight",
+              "path": "semio-repo/go/main.go§runPreflight",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§runUpdate",
+              "path": "semio-repo/go/main.go§runUpdate",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§sectionCommand",
+              "path": "semio-repo/go/main.go§sectionCommand",
               "lines": {
                 "added": 45,
                 "removed": 19
               }
             },
             {
-              "path": "@semio-repo/go/main.go§sectionCommand",
+              "path": "semio-repo/go/main.go§sectionCommand",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§setDifference",
+              "path": "semio-repo/go/main.go§setDifference",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "@semio-repo/go/main.go§setIntersection",
+              "path": "semio-repo/go/main.go§setIntersection",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§shouldSkipTicket",
+              "path": "semio-repo/go/main.go§shouldSkipTicket",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ticketCommand",
+              "path": "semio-repo/go/main.go§ticketCommand",
               "lines": {
                 "added": 0,
                 "removed": 128
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ticketCommand",
+              "path": "semio-repo/go/main.go§ticketCommand",
               "lines": {
                 "added": 231,
                 "removed": 134
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ticketOpen",
+              "path": "semio-repo/go/main.go§ticketOpen",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ticketReopen",
+              "path": "semio-repo/go/main.go§ticketReopen",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ticketReopen",
+              "path": "semio-repo/go/main.go§ticketReopen",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§treeCommand",
+              "path": "semio-repo/go/main.go§treeCommand",
               "lines": {
                 "added": 0,
                 "removed": 11
               }
             },
             {
-              "path": "@semio-repo/go/main.go§treeCommand",
+              "path": "semio-repo/go/main.go§treeCommand",
               "lines": {
                 "added": 11,
                 "removed": 11
               }
             },
             {
-              "path": "@semio-repo/go/main.go§updateApply",
+              "path": "semio-repo/go/main.go§updateApply",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§updateDryRun",
+              "path": "semio-repo/go/main.go§updateDryRun",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§updateTicketSummaryFile",
+              "path": "semio-repo/go/main.go§updateTicketSummaryFile",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go§violationKindInfoTable",
+              "path": "semio-repo/go/main.go§violationKindInfoTable",
               "lines": {
                 "added": 14,
                 "removed": 0
@@ -1799,154 +1799,154 @@
           ],
           "added": [
             {
-              "path": "@semio-repo/go/main.go§GetDateStarted",
+              "path": "semio-repo/go/main.go§GetDateStarted",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GitAuthor",
+              "path": "semio-repo/go/main.go§GitAuthor",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalCloseInput",
+              "path": "semio-repo/go/main.go§GoalCloseInput",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalReopen",
+              "path": "semio-repo/go/main.go§GoalReopen",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§GoalReopenInput",
+              "path": "semio-repo/go/main.go§GoalReopenInput",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ProgressTicket",
+              "path": "semio-repo/go/main.go§ProgressTicket",
               "lines": {
                 "added": 32,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketChange",
+              "path": "semio-repo/go/main.go§TicketChange",
               "lines": {
                 "added": 64,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketChangeInput",
+              "path": "semio-repo/go/main.go§TicketChangeInput",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketProgress",
+              "path": "semio-repo/go/main.go§TicketProgress",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§TicketProgressInput",
+              "path": "semio-repo/go/main.go§TicketProgressInput",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolGoalClose",
+              "path": "semio-repo/go/main.go§ToolGoalClose",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§ToolGoalReopen",
+              "path": "semio-repo/go/main.go§ToolGoalReopen",
               "lines": {
                 "added": 30,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§benchmarkDryRun",
+              "path": "semio-repo/go/main.go§benchmarkDryRun",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§export",
+              "path": "semio-repo/go/main.go§export",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalClose",
+              "path": "semio-repo/go/main.go§goalClose",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalList",
+              "path": "semio-repo/go/main.go§goalList",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalOpen",
+              "path": "semio-repo/go/main.go§goalOpen",
               "lines": {
                 "added": 31,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§goalReopen",
+              "path": "semio-repo/go/main.go§goalReopen",
               "lines": {
                 "added": 26,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§parseGitAuthor",
+              "path": "semio-repo/go/main.go§parseGitAuthor",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§preflightDryRun",
+              "path": "semio-repo/go/main.go§preflightDryRun",
               "lines": {
                 "added": 47,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§repoPolicy",
+              "path": "semio-repo/go/main.go§repoPolicy",
               "lines": {
                 "added": 54,
                 "removed": 0
               }
             },
             {
-              "path": "@semio-repo/go/main.go§updateApply",
+              "path": "semio-repo/go/main.go§updateApply",
               "lines": {
                 "added": 8,
                 "removed": 0

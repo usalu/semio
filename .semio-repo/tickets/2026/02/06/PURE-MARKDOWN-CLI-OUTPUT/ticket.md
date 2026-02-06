@@ -7,10 +7,11 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI
 ## Summary
 
 Eliminated all JSON/NDJSON fallback from markdown and text CLI output. All commands return pure markdown or human-readable text via generic inferEntityKind dispatch. Added renderEntityMarkdownLink, formatMarkdownFile, isList streaming detection. Comprehensive unit tests (130+ subtests) covering all entity kinds, mutations, lists, and edge cases.
+
 ## Changes
 
-- `@semio-repo/cli/cli.go`: Added `inferEntityKind()`, `renderEntityMarkdownLink()`, `formatMarkdownFile()`. Rewrote `formatMarkdownResult()` and `formatResult()` to use generic entity-kind dispatch with no JSON fallback. Added `isList` streaming detection for list/tree commands.
-- `@semio-repo/cli/cli_test.go`: Added `assertValidMarkdownLink`, `TestFormatMarkdownResult_MutationKeys` (21), `TestFormatMarkdownResult_SingleEntities` (12), `TestFormatMarkdownResult_Lists` (12), `TestFormatMarkdownResult_Analyze`, `TestFormatMarkdownResult_Fix`, `TestFormatMarkdownResult_FileWithSections`, `TestFormatMarkdownResult_NoJSONFallback`, `TestFormatResult_MutationKeys` (12), `TestRenderEntityMarkdownLink_AllKinds` (15), `TestInferEntityKind` (27).
+- `semio-repo/cli/cli.go`: Added `inferEntityKind()`, `renderEntityMarkdownLink()`, `formatMarkdownFile()`. Rewrote `formatMarkdownResult()` and `formatResult()` to use generic entity-kind dispatch with no JSON fallback. Added `isList` streaming detection for list/tree commands.
+- `semio-repo/cli/cli_test.go`: Added `assertValidMarkdownLink`, `TestFormatMarkdownResult_MutationKeys` (21), `TestFormatMarkdownResult_SingleEntities` (12), `TestFormatMarkdownResult_Lists` (12), `TestFormatMarkdownResult_Analyze`, `TestFormatMarkdownResult_Fix`, `TestFormatMarkdownResult_FileWithSections`, `TestFormatMarkdownResult_NoJSONFallback`, `TestFormatResult_MutationKeys` (12), `TestRenderEntityMarkdownLink_AllKinds` (15), `TestInferEntityKind` (27).
 
 ## Log
 
@@ -21,14 +22,14 @@ Eliminated all JSON/NDJSON fallback from markdown and text CLI output. All comma
 - Rewrote `formatMarkdownResult()` eliminating all JSON fallback paths
 - Rewrote `formatResult()` (HumanRenderer) eliminating JSON dump fallback
 - Fixed streaming list regression: items lacked `- ` prefix because each arrives as individual single-entity event
-- Added `isList` detection (`strings.HasSuffix(command, " list") || " tree"`) 
+- Added `isList` detection (`strings.HasSuffix(command, " list") || " tree"`)
 - Added comprehensive unit tests (130+ subtests)
 - Pre-existing `goal tree` failure (author deserialization bug) not caused by these changes
 
 ## Todos
 
 - [x] Add `inferEntityKind()` function
-- [x] Add `renderEntityMarkdownLink()` function  
+- [x] Add `renderEntityMarkdownLink()` function
 - [x] Rewrite `formatMarkdownResult()` - no JSON fallback
 - [x] Add `formatMarkdownFile()` helper
 - [x] Rewrite `formatResult()` (HumanRenderer) - no JSON dump

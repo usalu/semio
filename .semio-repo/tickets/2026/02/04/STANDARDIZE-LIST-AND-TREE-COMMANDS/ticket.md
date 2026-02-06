@@ -29,7 +29,7 @@
 - Reopen/confirm active ticket context and keep `ticket.md` updated while working.
 - Unify ID/URI generation behind one implementation and ensure GraphQL uses `id` while MCP uses `uri`.
 - Standardize all `list` outputs (human + `--md`) to the specified formats with property coloring and width truncation.
-- Extend existing Go tests (`@semio-repo/cli/main_test.go`) to cover ID/URI + list output behavior.
+- Extend existing Go tests (`semio-repo/cli/main_test.go`) to cover ID/URI + list output behavior.
 - Update root `README.md` and `AGENTS.md` documentation sections for the new mechanism.
 
 ## Plan

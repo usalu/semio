@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The repo CLI had multiple output modes (--json, plain text), dry-run support, and interactive flags. This created complexity and inconsistency.
@@ -20,7 +21,7 @@ The repo CLI had multiple output modes (--json, plain text), dry-run support, an
 
 # Changes
 
-## go/repo/main.go
+## ./semio-repo/cli/main.go
 
 - Removed global flags: `jsonOutput`, `scopeFlag`, `dryRun`
 - All commands now output JSON via `outputResult()`
@@ -61,4 +62,5 @@ The repo CLI had multiple output modes (--json, plain text), dry-run support, an
 ## Log
 
 ## Summary
+
 # Summary

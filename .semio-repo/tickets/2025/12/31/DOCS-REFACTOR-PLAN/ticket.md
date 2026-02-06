@@ -25,22 +25,22 @@ The documentation requires fixes across several areas:
    - Ensure presence of `hooks/code.tsx`, `hooks/i18n.tsx`, `hooks/prettier.tsx`, `hooks/ruff.tsx`, `hooks/typescript.tsx`, `hooks/eslint.tsx` or update docs to use existing scripts.
 
 2. Scripts folder references
-   - Remove/replace references to `scripts/log.ts` and other `scripts/*.ts` calls in `AGENTS.md` with the `repo` CLI equivalents implemented in `go/repo`.
+   - Remove/replace references to `scripts/log.ts` and other `scripts/*.ts` calls in `AGENTS.md` with the `repo` CLI equivalents implemented in `./semio-repo/cli`.
 
 ## Phase 2: Repo CLI Documentation Alignment
 
 1. Remove non-existent `tool` command from docs and reconcile with `go/mcp`:
-   - Either implement `repo tool` in `go/repo` or remove `tool_run` from MCP and the `tool <name>` row in `AGENTS.md`.
+   - Either implement `repo tool` in `./semio-repo/cli` or remove `tool_run` from MCP and the `tool <name>` row in `AGENTS.md`.
 
-2. Document implemented commands in `go/repo/main.go`:
+2. Document implemented commands in `./semio-repo/cli/main.go`:
    - Add `update-metabolism` to the CLI table.
    - Add `definition tree <file>` to the CLI table and explain its behavior.
 
 3. Ticket status terminology
-   - Normalize the ticket status to `finished` in code or update `AGENTS.md` to accept `closed`. Prefer changing `go/repo` `TicketClosed` to `finished` for consistency.
+   - Normalize the ticket status to `finished` in code or update `AGENTS.md` to accept `closed`. Prefer changing `./semio-repo/cli` `TicketClosed` to `finished` for consistency.
 
 4. Ticket interaction file flags
-   - Either update `go/repo` to accept `--file`, `--file-created`, `--file-removed` flags, or remove these examples from `AGENTS.md`.
+   - Either update `./semio-repo/cli` to accept `--file`, `--file-created`, `--file-removed` flags, or remove these examples from `AGENTS.md`.
 
 ## Phase 3: Terminology Standardization
 
@@ -70,13 +70,13 @@ Add missing documentation entries for:
 
 - Update CI/CD and Hook Workflow sections to match actual hook file names and locations.
 - Update Repo CLI commands table: remove `tool` row, add `update-metabolism`, `definition tree`.
-- Update MCP tools list to match `go/mcp` and `go/repo` capabilities.
+- Update MCP tools list to match `go/mcp` and `./semio-repo/cli` capabilities.
 - Update Ticket System examples to use `repo` CLI and remove programmatic TypeScript usage references.
 
 ## Implementation Order (Priority)
 
 1. P0: Create hooks or update docs to remove missing references.
-2. P0: Fix ticket status mismatch in `go/repo` or docs.
+2. P0: Fix ticket status mismatch in `./semio-repo/cli` or docs.
 3. P1: Replace `scripts/log.ts` references with `repo` CLI.
 4. P1: Remove/resolve `tool` command documentation.
 5. P2: Standardize Port/Port terminology.

@@ -1,15 +1,16 @@
 # Ticket
 
 ## Todos
+
 # Plan - ADD-REPO-INTEGRATE-COMMAND
 
 Add a new command to `repo` called `integrate <source> <target-section-name> <target-file> [<target-parent-section-name>]` that takes code files and integrates the source code into a target file by wrapping it into the target section.
 
 ## Tasks
 
-1. [x] Implement `Integrate` logic in `go/repo/main.go`.
-2. [x] Add `section integrate` command to CLI in `go/repo/main.go`.
-3. [x] Expose `integrate` tool in MCP in `go/repo/main.go`.
+1. [x] Implement `Integrate` logic in `./semio-repo/cli/main.go`.
+2. [x] Add `section integrate` command to CLI in `./semio-repo/cli/main.go`.
+3. [x] Expose `integrate` tool in MCP in `./semio-repo/cli/main.go`.
 4. [x] Add `integrate` mutation to `graphql/repo/schema.graphql`.
 5. [x] Register VS Code command `semio.sectionIntegrate` in `js/vscode/package.json`.
 6. [x] Implement VS Code command logic in `js/vscode/extension.ts`.
@@ -19,6 +20,7 @@ Add a new command to `repo` called `integrate <source> <target-section-name> <ta
 ## Changes
 
 ## Log
+
 # Log - ADD-REPO-INTEGRATE-COMMAND
 
 ## 2026-01-14
@@ -26,7 +28,7 @@ Add a new command to `repo` called `integrate <source> <target-section-name> <ta
 - Started task: Add `repo integrate` command.
 - Opened ticket `ADD-REPO-INTEGRATE-COMMAND`.
 - Initialized `plan.md`.
-- Analyzed `go/repo/repo.go`, `go/cli/main.go`, and `go/mcp/main.go`.
+- Analyzed `./semio-repo/cli/cli.go`, `go/cli/main.go`, and `go/mcp/main.go`.
 - Identified necessary changes for implementation.
 
 - Added repo section integrate command to go/cli/main.go.
@@ -41,36 +43,43 @@ Add a new command to `repo` called `integrate <source> <target-section-name> <ta
 - Finalized summary.md and prepared to close ticket.
 
 ## Summary
+
 # Summary - Integrate Command for Repo Tool
 
 I have implemented the `integrate` command for the `repo` tool. This command allows for wrapping source file content into a structured section marker and integrating it into a target file.
 
 ## Changes
 
-### Core Logic (`go/repo/repo.go`)
+### Core Logic (`./semio-repo/cli/cli.go`)
+
 - Implemented `ToolIntegrate` that handles reading a source file, wrapping its content in language-appropriate section markers, and inserting it into a target file.
 - Support for target parent section: If provided, the new section is inserted inside the parent section. Otherwise, it is appended to the end of the file.
 - Updated `RepoContext` interface and its implementations (`repoContext`, `defaultContext`) to include the `Integrate` method.
 - Added `integrate` mutation to the GraphQL schema and implemented its resolver.
 
 ### CLI (`go/cli/main.go`)
+
 - Added `integrate` command to the `section` subcommand group.
 - Usage: `repo section integrate <source> <target-section-name> <target-file> [<target-parent-section-name>]`
 
 ### MCP Server (`go/mcp/main.go`)
+
 - Registered the `integrate` tool in the MCP server.
 - Implemented the `sectionIntegrate` handler to bridge MCP requests to the GraphQL mutation.
 
 ### Documentation
+
 - Updated `README.md` to include a description of the `integrate` command under the Section Tree component.
 - Updated `AGENTS.md` to include the `section integrate` command in the CLI commands table and the MCP tools list.
 
 ### VS Code Extension
+
 - Registered `semio.sectionIntegrate` command in `package.json`.
 - Implemented `sectionIntegrate` command handler in `extension.ts` using GraphQL mutation.
 - Added file picking and input prompts for integration parameters.
 
 ## Verification
+
 - Core logic handles different languages based on file extensions.
 - CLI arguments are correctly mapped to GraphQL mutations.
 - MCP tool correctly exposes the new functionality to LLM agents.

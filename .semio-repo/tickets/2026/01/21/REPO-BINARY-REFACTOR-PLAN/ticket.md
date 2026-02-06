@@ -22,10 +22,10 @@ Implement /workspaces/semio/plans/repo-binary-refactor-plan.md. Change/refactor/
 
 - Update VS Code launch configs and repo CLI tests.
 - Update README.md and AGENTS.md documentation.
-- Align AGENTS Codebase tree for go/repo cmd layout.
-
+- Align AGENTS Codebase tree for ./semio-repo/cli cmd layout.
 
 ## Todos
+
 # Repo Binary Refactor Plan
 
 1. Finalize engine/adapters wiring for CLI and MCP.

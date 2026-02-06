@@ -17,7 +17,7 @@ created: 2026-02-02
 
 ## Changes
 
-- `@semio-repo/go/main.go`: Added `Markdown` bool to `Config` struct. Added `MarkdownRenderer` struct and implementation. Added logic to switch to Markdown renderer when `--md` flag is present.
+- `semio-repo/go/main.go`: Added `Markdown` bool to `Config` struct. Added `MarkdownRenderer` struct and implementation. Added logic to switch to Markdown renderer when `--md` flag is present.
 
 ## Log
 

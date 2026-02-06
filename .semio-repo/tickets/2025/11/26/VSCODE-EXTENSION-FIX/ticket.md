@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 The VS Code extension for semio was not showing validation errors on invalid kit JSON files. The test infrastructure was also not properly set up.
@@ -44,7 +45,7 @@ Problems identified:
 ## 3. Updated `js/vscode/package.json`
 
 - Added test dependencies: `@types/mocha`, `@vscode/test-cli`, `@vscode/test-electron`
-- Added `uuid` dependency (needed by @semio/js)
+- Added `uuid` dependency (needed by semio/js)
 - Added `test` script: `vscode-test`
 - Updated `build` script to also build tests
 
@@ -63,6 +64,7 @@ Problems identified:
 ## Log
 
 ## Summary
+
 # Summary
 
 Fix VS Code extension linting and test setup

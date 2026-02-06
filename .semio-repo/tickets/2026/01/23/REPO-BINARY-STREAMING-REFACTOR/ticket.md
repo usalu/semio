@@ -30,10 +30,12 @@ Implement the plan in /workspaces/semio/plans/repo_binary_streaming_refactor_pla
 ## Summary
 
 Bulk close
+
 ## Todos
+
 # Repo Binary Streaming Refactor Plan
 
-1. Rebuild repo CLI binary from go/repo with package main and rerun Go tests. ✅
+1. Rebuild repo CLI binary from ./semio-repo/cli with package main and rerun Go tests. ✅
 2. Run repo CLI preflight subcommands (test, build, publish:test) with rebuilt binary. ⏳
 3. Run root repo test entrypoint and verify all commands complete successfully. ⏳
 4. Run VS Code extension build/test scripts and restore extension run workflow. ⏳

@@ -2,7 +2,7 @@
 
 ## Prompt
 
-Ensure go/repo/main.go includes import for github.com/usalu/semio/go/repo only once.
+Ensure ./semio-repo/cli/main.go includes import for github.com/usalu/semio/semio-repo/cli only once.
 
 ## Updates
 
@@ -13,8 +13,8 @@ Ensure go/repo/main.go includes import for github.com/usalu/semio/go/repo only o
 - Received system reminder message only; no new task details provided.
 - Latest user message contained no actionable request.
 
-
 ## Todos
+
 # Repo Import Cleanup Plan
 
 1. Confirm the exact scope of the requested repo import change.

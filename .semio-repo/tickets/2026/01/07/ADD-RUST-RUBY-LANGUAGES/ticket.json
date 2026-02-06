@@ -9,7 +9,7 @@
       "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
       "llm": "opus-4",
       "author": {
-        "name": "Ueli Saluz \u003cueli@semio.tech\u003e"
+        "name": "Ueli Saluz \u003cuelisemio.tech\u003e"
       },
       "started": "0001-01-01T00:00:00Z",
       "commit": ""

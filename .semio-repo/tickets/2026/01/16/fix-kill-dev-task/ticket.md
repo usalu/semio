@@ -89,8 +89,8 @@ Found Windows legacy configs:
 5. `assets/logo/package.json` - Changed build script from PowerShell to `tsx logo.ts`
 6. `assets/icons/package.json` - Replaced broken PowerShell build script with placeholder echo
 7. `package.json` - Changed all `repo.exe` references to `repo`
-8. `CLAUDE.md` - Changed Windows paths (`.\go\repo\repo.exe`) to Linux paths (`./@semio-repo/cli/cli`)
-9. `AGENTS.md` - Changed Windows paths (`.\go\repo\repo.exe`) to Linux paths (`./@semio-repo/cli/cli`)
+8. `CLAUDE.md` - Changed Windows paths (`.\go\repo\repo.exe`) to Linux paths (`./semio-repo/cli/cli`)
+9. `AGENTS.md` - Changed Windows paths (`.\go\repo\repo.exe`) to Linux paths (`./semio-repo/cli/cli`)
 10. `.claude/settings.local.json` - Removed Windows-specific permission entries
 11. `prompts/ueli.md` - Updated Windows paths to Linux paths, marked PowerShell migration as done
 12. `js/vscode/extension.test.ts` - Made repo binary path detection cross-platform

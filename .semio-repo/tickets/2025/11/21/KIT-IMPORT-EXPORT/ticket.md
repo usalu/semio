@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Kit Import/Export Implementation
 
 ## Plan
@@ -35,7 +36,7 @@ Extract the import/export logic from kit commands and make it reusable:
 
 Use `examples/metabolism` as test case:
 
-1. Load metabolism kit JSON from `@semio/assets`
+1. Load metabolism kit JSON from `semio/assets`
 2. Load pure files from `examples/metabolism` folder (excluding `.semio`)
 3. Export to zip blob
 4. Import from zip blob

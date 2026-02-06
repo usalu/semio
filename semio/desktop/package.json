@@ -1,0 +1,39 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "name": "semio/desktop",
+  "version": "2.0.0-alpha",
+  "description": "A sketchpad for semio 🧩",
+  "main": ".vite/build/main.js",
+  "scripts": {
+    "dev": "electron-forge start",
+    "build": "electron-forge make",
+    "publish": "electron-forge publish",
+    "preflight": "echo \"No preflight checks configured\""
+  },
+  "dependencies": {
+    "@electron/fuses": "^2.0.0",
+    "semio/js": "^0.1.0",
+    "electron-squirrel-startup": "^1.0.1"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.11.1",
+    "@electron-forge/maker-deb": "^7.11.1",
+    "@electron-forge/maker-rpm": "^7.11.1",
+    "@electron-forge/maker-squirrel": "^7.11.1",
+    "@electron-forge/maker-zip": "^7.11.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.11.1",
+    "@electron-forge/plugin-fuses": "^7.11.1",
+    "@electron-forge/plugin-vite": "^7.11.1",
+    "@electron/fuses": "^2.0.0",
+    "@types/electron-squirrel-startup": "^1.0.2",
+    "electron": "^40.0.0"
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "license": "AGPL-3.0-or-later",
+  "bundleKind": "ui"
+}
