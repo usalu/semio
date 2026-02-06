@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/aggregation/Collapsible.stories.tsx
 
@@ -17,14 +17,14 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, ChevronDown } from "lucide-react";
 import { useState } from "react";
 import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
-// #region Collapsible
+// #region 🔖Collapsible
 const meta = {
   title: "Elements/Aggregation/Collapsible",
   component: Collapsible,
@@ -120,4 +120,4 @@ export const Temporary: Story = {
   render: () => <CollapsibleDemo level="temporary" />,
 };
 
-// #endregion Collapsible
+// #endregion 🔖Collapsible

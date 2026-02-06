@@ -18,7 +18,7 @@
       "kind": "header:missing-section",
       "priority": "low",
       "autofixable": true,
-      "solution": "Add a #region Header with filename, contributors, and appropriate license",
+      "solution": "Add a #region 🔖Header with filename, contributors, and appropriate license",
       "reason": "Every source file must include a header section",
       "scope": "assets/repo/some/folder/file_invalid.tsx",
       "autofix": {
@@ -28,7 +28,7 @@
             {
               "start": 0,
               "end": 0,
-              "newText": "// #region Header\n\n// assets/repo/some/folder/file_invalid.tsx\n\n// 2025 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion Header\n\n"
+              "newText": "// #region 🔖Header\n\n// assets/repo/some/folder/file_invalid.tsx\n\n// 2025 Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e\n\n// This program is free software: you can redistribute it and/or modify\n// it under the terms of the GNU Affero General Public License as\n// published by the Free Software Foundation, either version 3 of the\n// License, or (at your option) any later version.\n//\n// This program is distributed in the hope that it will be useful,\n// but WITHOUT ANY WARRANTY; without even the implied warranty of\n// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n// GNU Affero General Public License for more details.\n//\n// You should have received a copy of the GNU Affero General Public License\n// along with this program.  If not, see \u003chttps://www.gnu.org/licenses/\u003e.\n\n// #endregion 🔖Header\n\n"
             }
           ]
         }

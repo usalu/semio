@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/Canvas.stories.tsx
 
@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Canvas, HorizontalWindows } from "../../../sketchpad/Sketchpad";
 import { Level, LevelProvider, Window, getLevelBgClass } from "../../../sketchpad/elements";
 
-// #region Canvas
+// #region 🔖Canvas
 const meta = {
   title: "Elements/Canvas",
   component: Canvas,
@@ -110,4 +110,4 @@ export const Temporary: Story = {
   render: createLevelRender("temporary"),
 };
 
-// #endregion Canvas
+// #endregion 🔖Canvas

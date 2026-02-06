@@ -1,8 +1,8 @@
 <!-- IMPORTANT -->
 
-ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or the cli `./@semio-repo/go/go --md`) for repo-specific infrastructure. ALWAYS start by listing the current goal tree with `goal_tree` (or `goal tree`). Create a new ticket with mcp tool `ticket_open` (or `ticket open <title> <prompt> <client> <llm> --draft <draft-id>? --goal <goal-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
+ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or the cli `./@semio-repo/go/go --md`) for repo-specific infrastructure. ALWAYS start by listing the current goal tree with `goal_tree` (or `goal tree`). Create a new ticket with mcp tool `ticket_open` (or `ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
 Create a goal with mcp tool `goal_open`(or`goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or`goal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
-A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
+A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -56,7 +56,7 @@ Code analysis problems MUST include reason and solution text.
 ### Devcontainer
 
 Devcontainer provisioning MUST install the workspace VS Code extension automatically after editor attach without manual installation steps.
-Devcontainer post-attach MUST install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity via IDE IPC hook CLIs, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates when CLIs report WSL-only usage.
+Devcontainer post-attach MUST uninstall any existing semio-repo extension via IDE IPC hook CLIs and extensions directory cleanup, clear stale VS Code and Cursor extension caches, install the workspace extension for VS Code, Cursor, Windsurf, and Antigravity, validate installs with list-extensions, and fall back to direct extensions directory installs with extensions.json updates that include `$mid` location keys when CLIs report WSL-only usage.
 Devcontainer post-attach MUST write the Windsurf MCP config at `~/.codeium/windsurf/mcp_config.json` to register the semio-repo MCP server.
 Semio VS Code extension engine compatibility MUST include Cursor's supported VS Code version range.
 Playwright browser caches MUST use the workspace `node_modules` volume path so `npx playwright install` stays cached across reloads.
@@ -85,7 +85,11 @@ Sidebar view providers MUST be registered once per view with a single shared fil
 VS Code extension test runners MUST support headless Linux execution by provisioning a virtual display when `DISPLAY` is missing.
 
 CLI artifact IDs MUST enforce emoji text presentation using U+FE0E to avoid terminal glyph overlap with adjacent characters.
-The `sync github` command MUST reconcile local tickets and goals with GitHub issues by closing issues for closed tickets, resolving goal milestones by title via the GitHub API before assigning them to ticket issues, updating stored milestone URLs, and removing invalid `@` labels that do not map to current projects or bundles.
+Repo tool definitions MUST be top-level only (anchored at the start of the line).
+The `sync github` command MUST reconcile local tickets and goals with GitHub by: ensuring root goals (depth 0) have milestones, ensuring first-generation child goals (depth 1) have issues with the `goal` label linked to the root goal's milestone, ensuring deeper goals (depth 2+) have issues with the `goal` label linked as sub-issues to their parent goal's issue without milestone, migrating child goals from legacy milestones to issues, processing goals in depth-first order so parents exist before children, ensuring issue titles and descriptions match local goal and ticket data, reopening GitHub issues if local tickets or goals are open, linking parent tickets as sub-issues to their parent ticket's issue, closing issues for closed tickets, resolving goal milestones by title via the GitHub API before assigning them to ticket issues, synchronizing repository label definitions for all valid project and bundle `@` labels, updating stored milestone URLs, and removing invalid `@` labels that do not map to current projects or bundles from both ticket-linked issues and repository-wide issue listings.
+Go repo-tooling tests MUST support fast and slow execution lanes, and slow-lane suites MUST be shardable across parallel jobs while preserving full command-surface coverage.
+CLI `--json` output MUST emit pure data per line without event wrappers or `{"data": ...}` GraphQL envelopes; errors MUST go to stderr; stdout MUST be empty on error.
+CLI cobra root MUST set `SilenceUsage` and `SilenceErrors` to prevent stdout pollution on errors.
 
 ### Ticket
 
@@ -140,7 +144,7 @@ Tickets can optionally be assigned to a `goal`.
 
 Tickets can optionally be assigned to a `parent-ticket` for hierarchy.
 
-GitHub milestones are used to sync `goals`.
+Root goals (depth 0) are synced as GitHub milestones. First-generation child goals (depth 1) are synced as GitHub issues with the `goal` label linked to the root goal's milestone. Deeper goals (depth 2+) are synced as GitHub issues with the `goal` label and linked as sub-issues to their parent goal's issue without milestone. Ticket issues are linked to the root ancestor goal's milestone.
 
 ### Repo Dev Server
 
@@ -430,7 +434,7 @@ Ticket close output MUST present semantic change lists for bundles, folders, fil
 ### CLI
 
 Terminal output markers MUST render emoji in text presentation (U+FE0E) to keep glyph spacing stable next to adjacent text.
-The `sync github` command MUST report issue closures, milestone reconciliation, and `@` label removals with warnings on failures.
+The `sync github` command MUST report issue closures, milestone reconciliation, repository `@` label create/delete operations, and `@` label removals with warnings on failures.
 
 #### Toolbar
 
@@ -490,7 +494,7 @@ Toolbar panel visibility defaults to `true` for all apps via `panelVisibility: {
 - The built-in Explorer hosts the Sections view; selecting a section navigates to it, F2 renames, drag-and-drop moves sections, JSON keys surface as sections, and inline actions create child sections, rename sections, and delete sections via repo commands.
 - The Sections view resolves the active file's section tree with line ranges so navigation and section actions match the current editor content.
 - Ticket tooling treats temporary artifacts as part of the active ticket workspace.
-- Devcontainer setup installs the workspace extension for VS Code, Cursor, Windsurf, and Antigravity on attach without manual installation actions, validating installs per detected editor IPC hook CLI and falling back to extensions directories with extensions.json registration on WSL-only CLI responses.
+- Devcontainer setup uninstalls any existing semio-repo extension, clears stale VS Code and Cursor caches, then installs the workspace extension for VS Code, Cursor, Windsurf, and Antigravity on attach without manual installation actions, validating installs per detected editor IPC hook CLI and falling back to extensions directories with extensions.json registration (including `$mid` location keys) on WSL-only CLI responses.
 - Extension engine compatibility targets the lowest supported editor version so Cursor accepts the packaged VSIX.
 - Sidebar view registration keeps a single filter view and monorepo view instance wired to the shared filter state.
 
@@ -552,7 +556,7 @@ The monorepo uses a devcontainer for consistent cross-platform development. The 
 - ALWAYS toolfriendly over intuitive.
 - ALWAYS expose the canonical CI/CD scripts `dev`, `build`, `test`, `update`, `prepublish`, and `publish` only at the root (which forwards them through `npx nx run-many -t <target>`). Do not add missing commands to workspace packages; keep only the scripts they already define, treat `dev` as the only long-running watch mode, and make sure the remaining commands exit so CI runners and agents can finish reliably.
 - When multiple long-running dev processes exist for a single workspace, use hierarchical naming for VS Code tasks/launch configs (e.g. `dev js js storybook`, `dev js js sketchpad`) and use `dev:<...>` for root `package.json` scripts when spaces are not possible.
-- NEVER create new files when not explicitly asked. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region RegionName` / `#endregion` in C#, or `//#region RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
+- NEVER create new files when not explicitly asked. ALWAYS add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region 🔖RegionName` / `#endregion` in C#, or `//#region 🔖RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
 - NEVER create new `README.md` files. Documentation is centralized in the dev-docs (`README.md` and `AGENTS.md`).
 - NEVER create new folders unless required by the ticket workflow; temporary data belongs in the active ticket folder.
 - NEVER create additional example files and implement it directly in the dependent parts.
@@ -649,7 +653,7 @@ npx tsx repo.tsx <command> [subcommand] [options]
 | `fix [scope]`                             | Apply autofixes for problems       |
 | `policy list`                             | List all registered policies       |
 | `policy check <id>`                       | Check a specific policy            |
-| `ticket open <slug>`                      | Create a new ticket                |
+| `ticket open <goal-id>`                   | Create a new ticket                |
 | `ticket list [year] [month] [day]`        | List tickets                       |
 | `ticket read <year> <month> <day> <slug>` | Read a ticket                      |
 | `ticket close`                            | Finish a ticket                    |
@@ -767,8 +771,8 @@ repo section tree repo.tsx                                  # Show section struc
 repo definition list js/semio/semio.ts                      # List all definitions
 repo bundle list                                            # List all Nx bundles
 repo folder tree js/semio                                   # Show folder tree
-repo ticket open <title> <prompt> <llm> <client> [--no-issue]    # Create ticket (positional syntax)
-repo ticket open --title <t> --prompt <p> --llm <l> --client <u>  # Create ticket (explicit syntax) - llm: opus-4-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; client: claude-code, cursor, copilot-chat, antigravity, codex, droid
+repo ticket open <goal-id> <title> <prompt> <llm> <client> [--no-issue]    # Create ticket (positional syntax)
+repo ticket open --goal <g> --title <t> --prompt <p> --llm <l> --client <u>  # Create ticket (explicit syntax) - llm: opus-4-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gpt-5-2, gpt-5-2-codex; client: claude-code, cursor, copilot-chat, antigravity, codex, droid
 repo ticket list [year] [month] [day]                       # List tickets (optionally filtered by date)
 repo ticket close --all                                     # Bulk close all open tickets
 repo ticket close <YYYY/MM/DD/SLUG> <summary> <files...> [--title <new-title>]  # Close ticket (--title updates GitHub issue)
@@ -867,14 +871,17 @@ repo graphql "{ analyze(scope: \"js/semio/\") { violations { id summary } } }" -
 
 **VS Code Extension Integration:**
 
-The VS Code extension (`js/vscode/extension.ts`) includes a GraphQL client that pipes queries through the CLI:
+The VS Code extension (`js/vscode/extension.ts`) includes an `urql` GraphQL client that pipes queries through the repo CLI:
 
 ```typescript
-const result = await executeGraphQL<{ repo: { bundles: GqlBundle[] } }>(BUNDLES_QUERY);
-const bundles = result.data?.repo?.bundles ?? [];
+const client = getUrqlClient();
+const result = await client.query(MyQueryDocument, variables).toPromise();
+const data = result.data;
 ```
 
-Helper functions provided:
+Async tree data providers and commands MUST use `.toPromise()` to correctly await GraphQL results.
+
+Helper functions are provided for common queries:
 
 - `executeGraphQL<TData, TVariables>(query, variables?)` - Execute any GraphQL query
 - `fetchRepoViaGraphQL()` - Fetch complete repo data
@@ -1514,7 +1521,7 @@ Devcontainer start script that fixes ownership for persisted volumes, normalizes
 
 ## 📄 .devcontainer/post-attach.sh
 
-Devcontainer post-attach script that builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration on WSL-only CLI responses, then writes the Windsurf MCP config for the semio-repo server.
+Devcontainer post-attach script that uninstalls any existing semio-repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, then writes the Windsurf MCP config for the semio-repo server.
 
 ## 📁 @semio-repo/
 
@@ -3775,11 +3782,11 @@ Repo CLI implementation and tests for the Go-based `@semio-repo` tooling entrypo
 
 ## 📄 @semio-repo/go/main.go
 
-Repo CLI single-file entrypoint with command registry, GraphQL execution, GitHub sync for ticket issues and goal milestones resolved by title via the GitHub API with stored milestone URL updates, label cleanup for `@` project/bundle tags, and emoji-normalized artifact IDs.
+Repo CLI single-file entrypoint with command registry, GraphQL execution, three-tier hierarchical GitHub sync where root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone, ticket issues linked to root goal milestones, repository label catalog synchronization plus repository-wide `@` label cleanup for project/bundle tags, and emoji-normalized artifact IDs. `--json` outputs pure data per line (no event wrappers, no `{"data": ...}` GraphQL envelope). Errors go to stderr. Cobra root has `SilenceUsage`/`SilenceErrors` to prevent stdout pollution on errors. NDJSONRenderer writes `event.Data` raw to stdout and error payloads to stderr. HumanRenderer and MarkdownRenderer consume data directly without unwrapping.
 
 ## 📄 @semio-repo/go/main_test.go
 
-Consolidated Go test suite for the repo CLI and tooling behavior.
+Consolidated Go test suite for the repo CLI and tooling behavior, structured for fast/slow lane execution with explicit slow-test sharding for parallel CI distribution. `executeCommand` separates stdout/stderr with 3-return signature. Wrong-argument tests cover all command categories (ticket, goal, policy, folder, file, section, definition, contributor, graphql). `TestCliJsonPureData` validates no event wrappers or `{"data": ...}` envelopes. `TestCliJsonErrorsToStderr` validates empty stdout on errors.
 
 ## 📁net/
 

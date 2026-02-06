@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/apps/index.ts
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 export { composePluginContributions, getAppPlugin, getAppPlugins, hasAppPlugin, registerAppPlugin } from "../shared";
 export type { AppMachineContribution, AppPlugin } from "../shared";

@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // postcss.config.ts
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 import { Config } from "postcss-load-config";
 
 const config: Config = {

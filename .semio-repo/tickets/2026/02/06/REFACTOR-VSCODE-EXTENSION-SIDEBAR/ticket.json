@@ -1,0 +1,794 @@
+{
+  "title": "Refactor Vscode Extension Sidebar",
+  "status": "closed",
+  "prompt": "Refactor and complete the @semio-repo/vscode extension sidebar into exactly two sections: Monorepo and Filter. Implement full tree views for Projects, Goals, Tickets, Policies, Contributors, Commits. Implement Filter view with search input, bundle/folder/section/definition/ticket/date filters. Extend existing test file to cover all new features. Fix all registration issues.",
+  "summary": "Refactored vscode extension sidebar into Monorepo+Filter views with emoji labels, copy-to-clipboard, contributor children, filter none/all toggles. Removed Todos. All 63 tests passing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/411"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+  "started": "2026-02-06T10:35:43.679526323Z",
+  "finished": "2026-02-06T11:51:33.599511351Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-06 10:35:43",
+        "finished": "2026-02-06 11:51:33"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "copilot-chat"
+      },
+      "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
+      "prompt": "Refactor and complete the @semio-repo/vscode extension sidebar into exactly two sections: Monorepo and Filter. Implement full tree views for Projects, Goals, Tickets, Policies, Contributors, Commits. Implement Filter view with search input, bundle/folder/section/definition/ticket/date filters. Extend existing test file to cover all new features. Fix all registration issues.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/vscode",
+              "lines": {
+                "added": 0,
+                "removed": 21
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts",
+              "lines": {
+                "added": 194,
+                "removed": 66
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts",
+              "lines": {
+                "added": 446,
+                "removed": 482
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts",
+              "lines": {
+                "added": 12,
+                "removed": 125
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Command Registration Tests",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Constants",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Extension Activation",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Header",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Imports",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Kit Validation Tests",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Refresh Diagnostics Tests",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Repo Diagnostics Tests",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#RepoEvent Parsing Tests",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Sections View Tests",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Sidebar View Tests",
+              "lines": {
+                "added": 34,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Utilities",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation",
+              "lines": {
+                "added": 102,
+                "removed": 88
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Constants",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Data Fetching",
+              "lines": {
+                "added": 36,
+                "removed": 47
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Globals",
+              "lines": {
+                "added": 2,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Header",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Helpers",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Imports",
+              "lines": {
+                "added": 15,
+                "removed": 25
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers",
+              "lines": {
+                "added": 270,
+                "removed": 296
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Types",
+              "lines": {
+                "added": 4,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities",
+              "lines": {
+                "added": 6,
+                "removed": 2
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Types§Codebase",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§cachedCodebase",
+              "lines": {
+                "added": 0,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§cachedProjects",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§codebaseLoadPromise",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§CodebaseDocument",
+              "lines": {
+                "added": 0,
+                "removed": 35
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoDocument",
+              "lines": {
+                "added": 0,
+                "removed": 93
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodoCreateDocument",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodoDeleteDocument",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodosDocument",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_COMMANDS",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_COMMANDS",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_CONSTRAINTS",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_CONSTRAINTS",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_VIEWS",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_VIEWS",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "lines": {
+                "added": 100,
+                "removed": 75
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "lines": {
+                "added": 0,
+                "removed": 86
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerSidebarViews",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Constants§DIAGNOSTIC_SOURCE",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Constants§SEMIO_KIT_LANGUAGE",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Constants§UI_STRINGS",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§allowedDotDirectories",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§ignoredDirectories",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§isInIgnoredDirectory",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§shouldAnalyzeFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Helpers§extractFilePathFromScope",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Imports§RepoEvent",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Imports§execAsync",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Imports§execFileAsync",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 0,
+                "removed": 56
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 72,
+                "removed": 54
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "lines": {
+                "added": 0,
+                "removed": 229
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "lines": {
+                "added": 182,
+                "removed": 216
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§MonorepoTreeItem",
+              "lines": {
+                "added": 13,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§MonorepoTreeItem",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Types§Codebase",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Types§GraphqlSectionRange",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Types§GraphqlSectionRange",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Types§ProjectData",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§extractRepoResult",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§log",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§logError",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§bundleCache",
+              "lines": {
+                "added": 2,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§bundleCache",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§cachedCodebase",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§cachedProjects",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§cachedRepoBaseUrl",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§cachedRepoBaseUrl",
+              "lines": {
+                "added": 2,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§codebaseLoadPromise",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§fileViolationsMap",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§fileViolationsMap",
+              "lines": {
+                "added": 2,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§filterProvider",
+              "lines": {
+                "added": 2,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§filterProvider",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§kitDiagnosticCollection",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§kitDiagnosticCollection",
+              "lines": {
+                "added": 2,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§monorepoProvider",
+              "lines": {
+                "added": 2,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§monorepoProvider",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§outputChannel",
+              "lines": {
+                "added": 2,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§outputChannel",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§repoDiagnosticCollection",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§repoDiagnosticCollection",
+              "lines": {
+                "added": 2,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§runningProcesses",
+              "lines": {
+                "added": 2,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§runningProcesses",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§urqlClient",
+              "lines": {
+                "added": 2,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts§urqlClient",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§BundlesDocument",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§CodebaseDocument",
+              "lines": {
+                "added": 0,
+                "removed": 35
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§FolderContentDocument",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoCommitsDocument",
+              "lines": {
+                "added": 6,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoDocument",
+              "lines": {
+                "added": 0,
+                "removed": 60
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoStructureDocument",
+              "lines": {
+                "added": 4,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TicketsDocument",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodoCreateDocument",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodoDeleteDocument",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodosDocument",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoCommitsDocument",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoStructureDocument",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

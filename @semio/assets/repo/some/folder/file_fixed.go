@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 //
 // assets/repo/some/folder/file_fixed.go
 //
@@ -17,18 +17,18 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 //
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Package
+// #region 🔖Package
 
 package fixed
 
-// #endregion Package
+// #endregion 🔖Package
 
-// #region Functions
+// #region 🔖Functions
 
 func FixedValue() int {
 	return 2
 }
 
-// #endregion Functions
+// #endregion 🔖Functions

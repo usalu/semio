@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad.test.ts
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import { expect, Locator, Page, test } from "@playwright/test";
 import path from "node:path";
@@ -572,7 +572,7 @@ test.describe("sketchpad", () => {
     await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
-    // #region Panel Toggles
+    // #region 🔖Panel Toggles
     console.log("[Home] Testing Home app panel toggles");
 
     const leftSidePanelToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
@@ -600,9 +600,9 @@ test.describe("sketchpad", () => {
     }
 
     console.log(`[Home] Panel toggle verification complete: left=${leftSidePanelWorked}, hud=${hudPanelWorked}, right=${rightSidePanelWorked}`);
-    // #endregion Panel Toggles
+    // #endregion 🔖Panel Toggles
 
-    // #region Toolbar and Filter Toggles
+    // #region 🔖Toolbar and Filter Toggles
     console.log("[Home] Testing toolbar visibility and filter toggles");
     const toolbar = page.locator('[id="semio.sketchpad.toolbar"]');
     const hasToolbar = await toolbar.isVisible({ timeout: 5000 }).catch(() => false);
@@ -645,9 +645,9 @@ test.describe("sketchpad", () => {
       expect(urlAfterUnclick).not.toContain("kind=temporary");
     }
     console.log("[Home] Toolbar and filter toggles test complete");
-    // #endregion Toolbar and Filter Toggles
+    // #endregion 🔖Toolbar and Filter Toggles
 
-    // #region Home Selection State
+    // #region 🔖Home Selection State
     console.log("[Home] Testing selection state");
     const zipPath = path.resolve(__dirname, "../../assets/semio/metabolism.zip");
     const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
@@ -691,7 +691,7 @@ test.describe("sketchpad", () => {
       expect(selectionKits.length).toBeGreaterThanOrEqual(0);
     }
     console.log("[Home] Selection state test complete");
-    // #endregion Home Selection State
+    // #endregion 🔖Home Selection State
   });
 
   test("Kit", async ({ page }) => {
@@ -832,7 +832,7 @@ test.describe("sketchpad", () => {
 
     console.log("[Kit] Toolbar and artifact filter toggles test complete");
 
-    // #region SidePanel Toggle
+    // #region 🔖SidePanel Toggle
     console.log("[Kit] Testing sidepanel toggles again to verify they work");
     const leftSidePanelToggleAgain = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
     const hasLeftSidePanelAgain = await leftSidePanelToggleAgain.isVisible({ timeout: 5000 }).catch(() => false);
@@ -863,9 +863,9 @@ test.describe("sketchpad", () => {
     }
 
     console.log("[Kit] SidePanel toggle test complete");
-    // #endregion SidePanel Toggle
+    // #endregion 🔖SidePanel Toggle
 
-    // #region Kit Selection State
+    // #region 🔖Kit Selection State
     console.log("[Kit] Testing selection state");
     const initialKitAppState = await page.evaluate(() => {
       const actor = (window as any).__SEMIO_ACTOR__;
@@ -909,9 +909,9 @@ test.describe("sketchpad", () => {
       expect(selectionTypes.length).toBeGreaterThanOrEqual(0);
     }
     console.log("[Kit] Selection state test complete");
-    // #endregion Kit Selection State
+    // #endregion 🔖Kit Selection State
 
-    // #region Diagram Node Icons
+    // #region 🔖Diagram Node Icons
     console.log("[Kit] Verifying diagram node icons match table avatars");
     const diagramContainerIcons = page.locator('[data-testid="kit-diagram"]');
     const hasDiagramIcons = await diagramContainerIcons.isVisible({ timeout: 5000 }).catch(() => false);
@@ -937,9 +937,9 @@ test.describe("sketchpad", () => {
       }
     }
     console.log("[Kit] Diagram node icons test complete");
-    // #endregion Diagram Node Icons
+    // #endregion 🔖Diagram Node Icons
 
-    // #region Diagram Node Dragging
+    // #region 🔖Diagram Node Dragging
     console.log("[Kit] Verifying diagram nodes are draggable");
     const diagramNodesDrag = page.locator(".react-flow__node");
     const nodeCountDrag = await diagramNodesDrag.count();
@@ -972,9 +972,9 @@ test.describe("sketchpad", () => {
         console.log(`[Kit] Node moved: X=${movedX}, Y=${movedY}`);
         console.log(`[Kit] Note: Force simulation may resist movement - this is expected behavior`);
         console.log("[Kit] Diagram node dragging test complete");
-        // #endregion Diagram Node Dragging
+        // #endregion 🔖Diagram Node Dragging
 
-        // #region Diagram Table Selection Sync
+        // #region 🔖Diagram Table Selection Sync
         console.log("[Kit] Verifying selection sync between table and diagram");
         const tambourTypeSync = page.getByRole("button", { name: "Tambour" }).first();
         const isTypeSyncVisible = await tambourTypeSync.isVisible({ timeout: 10000 }).catch(() => false);
@@ -999,9 +999,9 @@ test.describe("sketchpad", () => {
           console.log(`[Kit] Selected types count: ${selectedTypesSync.length}`);
         }
         console.log("[Kit] Diagram table selection sync test complete");
-        // #endregion Diagram Table Selection Sync
+        // #endregion 🔖Diagram Table Selection Sync
 
-        // #region Diagram Node Click Selection
+        // #region 🔖Diagram Node Click Selection
         console.log("[Kit] Verifying clicking diagram node updates selection");
         const diagramNodesClick = page.locator(".react-flow__node");
         const nodeCountClick = await diagramNodesClick.count();
@@ -1029,9 +1029,9 @@ test.describe("sketchpad", () => {
         console.log(`[Kit] Total selected: ${totalSelected} (types: ${selectedTypesClick.length}, designs: ${selectedDesignsClick.length})`);
         expect(totalSelected).toBeGreaterThan(0);
         console.log("[Kit] Diagram node click selection test complete");
-        // #endregion Diagram Node Click Selection
+        // #endregion 🔖Diagram Node Click Selection
 
-        // #region Diagram Hover Sync
+        // #region 🔖Diagram Hover Sync
         console.log("[Kit] Verifying hover sync between table and diagram");
         const diagramNodesHover = page.locator(".react-flow__node");
         const nodeCountHover = await diagramNodesHover.count();
@@ -1073,9 +1073,9 @@ test.describe("sketchpad", () => {
         });
         console.log(`[Kit] Hover state after mouse leave: ${JSON.stringify(hoverStateAfter)}`);
         console.log("[Kit] Diagram hover sync test complete");
-        // #endregion Diagram Hover Sync
+        // #endregion 🔖Diagram Hover Sync
 
-        // #region Diagram Filter Sync
+        // #region 🔖Diagram Filter Sync
         console.log("[Kit] Verifying filter sync between table and diagram");
         const initialNodeCountFilter = await page.locator(".react-flow__node").count();
         console.log(`[Kit] Initial diagram node count: ${initialNodeCountFilter}`);
@@ -1103,9 +1103,9 @@ test.describe("sketchpad", () => {
           expect(restoredNodeCount).toBeGreaterThanOrEqual(filteredNodeCount);
         }
         console.log("[Kit] Diagram filter sync test complete");
-        // #endregion Diagram Filter Sync
+        // #endregion 🔖Diagram Filter Sync
 
-        // #region Diagram All Artifact Types
+        // #region 🔖Diagram All Artifact Types
         console.log("[Kit] Verifying all artifact types are visible as nodes");
         const diagramNodesAll = page.locator(".react-flow__node");
         const nodeCountAll = await diagramNodesAll.count();
@@ -1140,9 +1140,9 @@ test.describe("sketchpad", () => {
           expect(nodeCountAll).toBe(totalArtifacts);
         }
         console.log("[Kit] Diagram all artifact types test complete");
-        // #endregion Diagram All Artifact Types
+        // #endregion 🔖Diagram All Artifact Types
 
-        // #region Diagram Edges
+        // #region 🔖Diagram Edges
         console.log("[Kit] Verifying edges connect nodes properly");
         const edges = page.locator(".react-flow__edge");
         const edgeCount = await edges.count();
@@ -1160,7 +1160,7 @@ test.describe("sketchpad", () => {
         expect(pathD).not.toBeNull();
         expect(pathD!.length).toBeGreaterThan(10);
         console.log("[Kit] Diagram edges test complete");
-        // #endregion Diagram Edges
+        // #endregion 🔖Diagram Edges
       }
     }
 
@@ -1384,7 +1384,7 @@ test.describe("sketchpad", () => {
     await expect(navbar).toBeVisible({ timeout: 10000 });
     console.log("[Design Test] Navbar is visible");
 
-    // #region Panel Toggles Check
+    // #region 🔖Panel Toggles Check
     {
       const leftToggle = page.locator('[id="semio.sketchpad.navbar.panelToggle.leftSidePanel"]');
       await expect(leftToggle).toBeVisible({ timeout: 5000 });
@@ -1703,7 +1703,7 @@ test.describe("sketchpad", () => {
       console.log("[Design Test] Skipping flat planes/centers verification - metadata not available via window or expected data empty");
     }
 
-    // #region Design Selection State
+    // #region 🔖Design Selection State
     console.log("[Design] Testing selection state");
     const initialDesignAppState = await page.evaluate(() => {
       const actor = (window as any).__SEMIO_ACTOR__;
@@ -1748,9 +1748,9 @@ test.describe("sketchpad", () => {
       }
     }
     console.log("[Design] Selection state test complete");
-    // #endregion Design Selection State
+    // #endregion 🔖Design Selection State
 
-    // #region Panel Toggle Independence
+    // #region 🔖Panel Toggle Independence
     console.log("[Design] Testing panel toggle independence");
     const verifyPanelToggleIndependence = async (toggleId: string, panelKey: string, otherPanelKeys: string[]): Promise<{ toggled: boolean; independent: boolean }> => {
       const toggle = page.locator(`[id="${toggleId}"]`);
@@ -1806,9 +1806,9 @@ test.describe("sketchpad", () => {
     const independentPanels = Object.entries(independenceResults).filter(([, r]) => r.independent);
     console.log(`[Design] ${independentPanels.length}/${allPanels.length} panels are independent`);
     console.log("[Design] Panel toggle independence test complete");
-    // #endregion Panel Toggle Independence
+    // #endregion 🔖Panel Toggle Independence
 
-    // #region Drag and Drop Setup
+    // #region 🔖Drag and Drop Setup
     console.log("[Design] Testing drag and drop setup");
     const sceneCanvasDnD = page.locator("canvas").first();
     const hasSceneDnD = await sceneCanvasDnD.isVisible({ timeout: 15000 }).catch(() => false);
@@ -1910,9 +1910,9 @@ test.describe("sketchpad", () => {
     console.log(`[Design] Note: The Nakagin Capsule Tower has rotated capsules, so most pieces have non-standard plane orientation - this is expected.`);
     expect(existingPiecesDnD.length).toBeGreaterThan(0);
     console.log("[Design] Drag and drop setup test complete");
-    // #endregion Drag and Drop Setup
+    // #endregion 🔖Drag and Drop Setup
 
-    // #region Diagram Node Drag
+    // #region 🔖Diagram Node Drag
     console.log("[Design] Testing diagram node drag to update piece center");
 
     if (hasDiagram) {
@@ -2008,7 +2008,7 @@ test.describe("sketchpad", () => {
     }
 
     console.log("[Design] Diagram node drag test complete");
-    // #endregion Diagram Node Drag
+    // #endregion 🔖Diagram Node Drag
 
     const infiniteLoopErrorsFinal = errors.filter((e) => e.includes("Maximum update depth exceeded"));
     expect(infiniteLoopErrorsFinal).toHaveLength(0);
@@ -2092,7 +2092,7 @@ test.describe("sketchpad", () => {
   });
 
   test("Feedback", async ({ page }) => {
-    // #region Navigation
+    // #region 🔖Navigation
     console.log("[Feedback] Testing navigation to feedback page");
     await page.goto("/");
     await page.waitForTimeout(500);
@@ -2106,9 +2106,9 @@ test.describe("sketchpad", () => {
     const feedbackForm = page.locator('[id*="feedback"]').first();
     await expect(feedbackForm).toBeVisible({ timeout: 5000 });
     console.log("[Feedback] Navigation test complete");
-    // #endregion Navigation
+    // #endregion 🔖Navigation
 
-    // #region Bug Report Form
+    // #region 🔖Bug Report Form
     console.log("[Feedback] Testing bug report form");
     await page.goto("/feedback");
     await page.waitForTimeout(500);
@@ -2134,9 +2134,9 @@ test.describe("sketchpad", () => {
     const submitButton = page.locator('[id="semio.sketchpad.app.feedback.form.submit"]');
     await expect(submitButton).toBeVisible();
     console.log("[Feedback] Bug report form test complete");
-    // #endregion Bug Report Form
+    // #endregion 🔖Bug Report Form
 
-    // #region Idea Form Switch
+    // #region 🔖Idea Form Switch
     console.log("[Feedback] Testing idea form switch");
     await kindSelect.click();
     await page.waitForTimeout(300);
@@ -2149,9 +2149,9 @@ test.describe("sketchpad", () => {
     await expect(descriptionInput).toBeVisible();
     await expect(submitButton).toBeVisible();
     console.log("[Feedback] Idea form switch test complete");
-    // #endregion Idea Form Switch
+    // #endregion 🔖Idea Form Switch
 
-    // #region Toolbar
+    // #region 🔖Toolbar
     console.log("[Feedback] Testing toolbar and send button");
     await page.goto("/feedback");
     await page.waitForTimeout(1000);
@@ -2161,9 +2161,9 @@ test.describe("sketchpad", () => {
     console.log(`[Feedback] Send button visible: ${hasSendButton}`);
     expect(hasSendButton).toBe(true);
     console.log("[Feedback] Toolbar test complete");
-    // #endregion Toolbar
+    // #endregion 🔖Toolbar
 
-    // #region Validation
+    // #region 🔖Validation
     console.log("[Feedback] Testing validation");
     await page.goto("/feedback");
     await page.waitForTimeout(500);
@@ -2176,9 +2176,9 @@ test.describe("sketchpad", () => {
     const errorMessage = page.locator(".text-destructive");
     await expect(errorMessage).toBeVisible();
     console.log("[Feedback] Validation test complete");
-    // #endregion Validation
+    // #endregion 🔖Validation
 
-    // #region Fill Bug Report
+    // #region 🔖Fill Bug Report
     console.log("[Feedback] Testing fill bug report");
     await page.goto("/feedback");
     await page.waitForTimeout(500);
@@ -2206,9 +2206,9 @@ test.describe("sketchpad", () => {
     expect(await nameInputFill.inputValue()).toBe("Test User");
     expect(await emailInputFill.inputValue()).toBe("test@example.com");
     console.log("[Feedback] Fill bug report test complete");
-    // #endregion Fill Bug Report
+    // #endregion 🔖Fill Bug Report
 
-    // #region Fill Feature Idea
+    // #region 🔖Fill Feature Idea
     console.log("[Feedback] Testing fill feature idea");
     await page.goto("/feedback");
     await page.waitForTimeout(500);
@@ -2237,15 +2237,15 @@ test.describe("sketchpad", () => {
     expect(await nameInputIdea.inputValue()).toBe("Idea User");
     expect(await emailInputIdea.inputValue()).toBe("idea@example.com");
     console.log("[Feedback] Fill feature idea test complete");
-    // #endregion Fill Feature Idea
+    // #endregion 🔖Fill Feature Idea
 
-    // #region Footer Action Visibility
+    // #region 🔖Footer Action Visibility
     console.log("[Feedback] Testing footer action visibility");
     await page.goto("/");
     await page.waitForTimeout(500);
     const footerFeedbackHome = page.locator('[id="semio.sketchpad.footer.feedback"]');
     await expect(footerFeedbackHome).toBeVisible({ timeout: 10000 });
     console.log("[Feedback] Footer action visibility test complete");
-    // #endregion Footer Action Visibility
+    // #endregion 🔖Footer Action Visibility
   });
 });

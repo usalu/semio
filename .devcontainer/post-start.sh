@@ -1,11 +1,11 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-only
-#region PostStart
+#region 🔖PostStart
 set -e
 WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
-#region Startup
-#endregion Startup
-#region Ownership
+#region 🔖Startup
+#endregion 🔖Startup
+#region 🔖Ownership
 sudo chown -R vscode:vscode /home/vscode/.cache 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codex 2>/dev/null || true
@@ -17,8 +17,8 @@ sudo chown -R vscode:vscode /home/vscode/.codeium 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.windsurf-server 2>/dev/null || true
 echo "✅ Fixed ownership for persisted volume mounts."
-#endregion Ownership
-#region ClaudeAuth
+#endregion 🔖Ownership
+#region 🔖ClaudeAuth
 CLAUDE_HOME="/home/vscode"
 CLAUDE_DIR="${CLAUDE_HOME}/.claude"
 CLAUDE_JSON="${CLAUDE_DIR}/.claude.json"
@@ -47,8 +47,8 @@ if [ -f "$CLAUDE_JSON_BACKUP" ] && [ ! -e "$CLAUDE_JSON_BACKUP_LINK" ]; then
   ln -s "$CLAUDE_JSON_BACKUP" "$CLAUDE_JSON_BACKUP_LINK"
 fi
 echo "✅ Normalized Claude Code auth storage."
-#endregion ClaudeAuth
-#region GitOwnership
+#endregion 🔖ClaudeAuth
+#region 🔖GitOwnership
 if [ -f "$WORKSPACE/.gitmodules" ]; then
   while IFS= read -r path; do
     [ -n "$path" ] || continue
@@ -56,8 +56,8 @@ if [ -f "$WORKSPACE/.gitmodules" ]; then
   done < <(git config -f "$WORKSPACE/.gitmodules" --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
 fi
 echo "✅ Fixed ownership for workspace + submodules."
-#endregion GitOwnership
-#region GitSafe
+#endregion 🔖GitOwnership
+#region 🔖GitSafe
 git config --global --add safe.directory "$WORKSPACE"
 if [ -f "$WORKSPACE/.gitmodules" ]; then
   while IFS= read -r path; do
@@ -66,12 +66,12 @@ if [ -f "$WORKSPACE/.gitmodules" ]; then
   done < <(git config -f "$WORKSPACE/.gitmodules" --get-regexp '^submodule\..*\.path$' | awk '{print $2}')
 fi
 echo "✅ Marked workspace + submodules as safe.directory for git."
-#endregion GitSafe
-#region PythonVenv
+#endregion 🔖GitSafe
+#region 🔖PythonVenv
 if [ -d "$WORKSPACE/.venv" ]; then
   source "$WORKSPACE/.venv/bin/activate"
 fi
 echo "✅ Activated Python virtual environment."
-#endregion PythonVenv
+#endregion 🔖PythonVenv
 echo "✅ Environment ready."
-#endregion PostStart
+#endregion 🔖PostStart

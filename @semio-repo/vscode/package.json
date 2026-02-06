@@ -42,10 +42,6 @@
           "name": "Monorepo"
         },
         {
-          "id": "semio.todos",
-          "name": "Todos"
-        },
-        {
           "id": "semio.filter",
           "name": "Filter"
         }
@@ -244,6 +240,11 @@
         "title": "Navigate to Definition"
       },
       {
+        "command": "semio.refreshMonorepo",
+        "title": "Refresh Monorepo",
+        "icon": "$(refresh)"
+      },
+      {
         "command": "semio.refreshCodebase",
         "title": "Refresh Codebase",
         "icon": "$(refresh)"
@@ -357,6 +358,11 @@
         "title": "Open Bundle"
       },
       {
+        "command": "semio.copyId",
+        "title": "Copy ID",
+        "icon": "$(tag)"
+      },
+      {
         "command": "semio.copyCommitSha",
         "title": "Copy Commit SHA",
         "icon": "$(copy)"
@@ -367,12 +373,291 @@
         "icon": "$(github)"
       },
       {
+        "command": "semio.mailto",
+        "title": "Send Email"
+      },
+      {
+        "command": "semio.openLink",
+        "title": "Open Link"
+      },
+      {
         "command": "semio.goalOpen",
         "title": "semio-repo: Open/Create Goal"
       },
       {
         "command": "semio.goalList",
         "title": "semio-repo: List Goals"
+      },
+      {
+        "command": "semio.filter.search",
+        "title": "semio-repo: Filter Search"
+      },
+      {
+        "command": "semio.filter.search.matchCase",
+        "title": "semio-repo: Toggle Match Case",
+        "icon": "$(case-sensitive)"
+      },
+      {
+        "command": "semio.filter.search.wholeWord",
+        "title": "semio-repo: Toggle Whole Word",
+        "icon": "$(whole-word)"
+      },
+      {
+        "command": "semio.filter.search.regex",
+        "title": "semio-repo: Toggle Regex",
+        "icon": "$(regex)"
+      },
+      {
+        "command": "semio.filter.toggle",
+        "title": "semio-repo: Toggle Filter"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.library",
+        "title": "📚 Library",
+        "icon": "$(library)"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.binary",
+        "title": "⌨️ Binary",
+        "icon": "$(terminal)"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.ui",
+        "title": "🖱️ UI",
+        "icon": "$(browser)"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.site",
+        "title": "📔 Site",
+        "icon": "$(book)"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.assets",
+        "title": "🌐 Assets",
+        "icon": "$(file-media)"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.default",
+        "title": "🏪 Default",
+        "icon": "$(package)"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.folder.organization",
+        "title": "🗃️ Organization"
+      },
+      {
+        "command": "semio.filter.toggle.folder.required",
+        "title": "📁 Required"
+      },
+      {
+        "command": "semio.filter.toggle.folder.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.folder.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.section.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.section.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.definition.implementation",
+        "title": "🛠️ Implementation"
+      },
+      {
+        "command": "semio.filter.toggle.definition.interface",
+        "title": "✂️ Interface"
+      },
+      {
+        "command": "semio.filter.toggle.definition.constant",
+        "title": "🪨 Constant"
+      },
+      {
+        "command": "semio.filter.toggle.definition.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.definition.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.ticket.open",
+        "title": "🔵 Open"
+      },
+      {
+        "command": "semio.filter.toggle.ticket.closed",
+        "title": "🟢 Closed"
+      },
+      {
+        "command": "semio.filter.toggle.ticket.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.ticket.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.time.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.time.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.time.year.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.time.year.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.time.month.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.time.month.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.time.day.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.time.day.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggleYear",
+        "title": "Toggle Year"
+      },
+      {
+        "command": "semio.filter.toggleMonth",
+        "title": "Toggle Month"
+      },
+      {
+        "command": "semio.filter.toggleDay",
+        "title": "Toggle Day"
+      },
+      {
+        "command": "semio.refreshItem",
+        "title": "Refresh",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "semio.filter.toggle.project.user",
+        "title": "👤 User"
+      },
+      {
+        "command": "semio.filter.toggle.project.infrastructure",
+        "title": "🧰 Infrastructure"
+      },
+      {
+        "command": "semio.filter.toggle.project.research",
+        "title": "🔬 Research"
+      },
+      {
+        "command": "semio.filter.toggle.project.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.project.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.bundle.schema",
+        "title": "🛂 Schema",
+        "icon": "$(symbol-structure)"
+      },
+      {
+        "command": "semio.filter.toggle.file.code",
+        "title": "📄 Code"
+      },
+      {
+        "command": "semio.filter.toggle.file.script",
+        "title": "🖥️ Script"
+      },
+      {
+        "command": "semio.filter.toggle.file.config",
+        "title": "⚙️ Config"
+      },
+      {
+        "command": "semio.filter.toggle.file.test",
+        "title": "🧪 Test"
+      },
+      {
+        "command": "semio.filter.toggle.file.docs",
+        "title": "📝 Docs"
+      },
+      {
+        "command": "semio.filter.toggle.file.resource",
+        "title": "🎨 Resource"
+      },
+      {
+        "command": "semio.filter.toggle.file.license",
+        "title": "📜 License"
+      },
+      {
+        "command": "semio.filter.toggle.file.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.file.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.goal.open",
+        "title": "🔵 Open"
+      },
+      {
+        "command": "semio.filter.toggle.goal.closed",
+        "title": "🟢 Closed"
+      },
+      {
+        "command": "semio.filter.toggle.goal.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.goal.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.policy.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.policy.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.contributor.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.contributor.all",
+        "title": "All"
+      },
+      {
+        "command": "semio.filter.toggle.commit.none",
+        "title": "None"
+      },
+      {
+        "command": "semio.filter.toggle.commit.all",
+        "title": "All"
       }
     ],
     "keybindings": [
@@ -385,91 +670,181 @@
     "menus": {
       "view/title": [
         {
+          "command": "semio.refreshMonorepo",
+          "when": "view == semio.monorepo",
+          "group": "navigation@1"
+        },
+        {
           "command": "semio.refreshCodebase",
           "when": "view == semio.filter",
           "group": "navigation@1"
-        },
-        {
-          "command": "semio.createTicket",
-          "when": "view == semio.tickets",
-          "group": "navigation@1"
-        },
-        {
-          "command": "semio.refreshTickets",
-          "when": "view == semio.tickets",
-          "group": "navigation@2"
-        },
-        {
-          "command": "semio.toggleTicketFilter",
-          "when": "view == semio.tickets",
-          "group": "navigation@3"
-        },
-        {
-          "command": "semio.createPolicy",
-          "when": "view == semio.policies",
-          "group": "navigation@1"
-        },
-        {
-          "command": "semio.refreshPolicies",
-          "when": "view == semio.policies",
-          "group": "navigation@2"
-        },
-        {
-          "command": "semio.createContributor",
-          "when": "view == semio.contributors",
-          "group": "navigation@1"
-        },
-        {
-          "command": "semio.refreshContributors",
-          "when": "view == semio.contributors",
-          "group": "navigation@2"
         }
       ],
       "view/item/context": [
         {
-          "command": "semio.openTicketPlan",
-          "when": "view == semio.tickets && (viewItem == ticketOpen || viewItem == ticketClosed)",
-          "group": "inline"
+          "command": "semio.refreshItem",
+          "when": "view == semio.monorepo && viewItem =~ /^(root_projects|root_goals|root_tickets|root_policies|root_contributors|root_commits|project|bundle|folder|file|section)$/",
+          "group": "inline@98"
+        },
+        {
+          "command": "semio.copyId",
+          "when": "view == semio.monorepo && viewItem =~ /^(project|bundle|folder|file|section|definition|goal|ticket|policy|violation|contributor|commit|ticket_year|ticket_month|ticket_day|contributor_email|contributor_link)$/",
+          "group": "inline@99"
         },
         {
           "command": "semio.ticketClose",
-          "when": "view == semio.tickets && viewItem == ticketOpen",
-          "group": "inline"
+          "when": "view == semio.monorepo && viewItem == ticket",
+          "group": "inline@1"
         },
         {
           "command": "semio.ticketReopen",
-          "when": "view == semio.tickets && viewItem == ticketClosed",
-          "group": "inline"
-        },
-        {
-          "command": "semio.ticketClose",
-          "when": "view == semio.contributors && viewItem == ticketOpen",
-          "group": "inline"
-        },
-        {
-          "command": "semio.ticketReopen",
-          "when": "view == semio.contributors && viewItem == ticketClosed",
-          "group": "inline"
+          "when": "view == semio.monorepo && viewItem == ticket",
+          "group": "inline@2"
         },
         {
           "command": "semio.copyCommitSha",
-          "when": "view == semio.contributors && viewItem == contributorCommit",
-          "group": "inline"
+          "when": "view == semio.monorepo && viewItem == commit",
+          "group": "inline@1"
         },
         {
           "command": "semio.openCommitInGitHub",
-          "when": "view == semio.contributors && viewItem == contributorCommit",
-          "group": "inline"
+          "when": "view == semio.monorepo && viewItem == commit",
+          "group": "inline@2"
         },
         {
           "command": "semio.checkPolicy",
-          "when": "view == semio.policies && viewItem == policy",
-          "group": "inline"
+          "when": "view == semio.monorepo && viewItem == policy",
+          "group": "inline@1"
         },
         {
-          "command": "semio.runCommand",
-          "when": "view == semio.commands && viewItem == command",
-          "group": "inline"
+          "command": "semio.filter.toggle.project.user",
+          "when": "view == semio.filter && viewItem == filter_project",
+          "group": "inline@1"
+        },
+        {
+          "command": "semio.filter.toggle.project.infrastructure",
+          "when": "view == semio.filter && viewItem == filter_project",
+          "group": "inline@2"
+        },
+        {
+          "command": "semio.filter.toggle.project.research",
+          "when": "view == semio.filter && viewItem == filter_project",
+          "group": "inline@3"
+        },
+        {
+          "command": "semio.filter.toggle.bundle.library",
+          "when": "view == semio.filter && viewItem == filter_bundle",
+          "group": "inline@1"
+        },
+        {
+          "command": "semio.filter.toggle.bundle.binary",
+          "when": "view == semio.filter && viewItem == filter_bundle",
+          "group": "inline@2"
+        },
+        {
+          "command": "semio.filter.toggle.bundle.ui",
+          "when": "view == semio.filter && viewItem == filter_bundle",
+          "group": "inline@3"
+        },
+        {
+          "command": "semio.filter.toggle.bundle.site",
+          "when": "view == semio.filter && viewItem == filter_bundle",
+          "group": "inline@4"
+        },
+        {
+          "command": "semio.filter.toggle.bundle.assets",
+          "when": "view == semio.filter && viewItem == filter_bundle",
+          "group": "inline@5"
+        },
+        {
+          "command": "semio.filter.toggle.bundle.schema",
+          "when": "view == semio.filter && viewItem == filter_bundle",
+          "group": "inline@6"
+        },
+        {
+          "command": "semio.filter.toggle.bundle.default",
+          "when": "view == semio.filter && viewItem == filter_bundle",
+          "group": "inline@7"
+        },
+        {
+          "command": "semio.filter.toggle.folder.organization",
+          "when": "view == semio.filter && viewItem == filter_folder",
+          "group": "inline@1"
+        },
+        {
+          "command": "semio.filter.toggle.folder.required",
+          "when": "view == semio.filter && viewItem == filter_folder",
+          "group": "inline@2"
+        },
+        {
+          "command": "semio.filter.toggle.file.code",
+          "when": "view == semio.filter && viewItem == filter_file",
+          "group": "inline@1"
+        },
+        {
+          "command": "semio.filter.toggle.file.script",
+          "when": "view == semio.filter && viewItem == filter_file",
+          "group": "inline@2"
+        },
+        {
+          "command": "semio.filter.toggle.file.config",
+          "when": "view == semio.filter && viewItem == filter_file",
+          "group": "inline@3"
+        },
+        {
+          "command": "semio.filter.toggle.file.test",
+          "when": "view == semio.filter && viewItem == filter_file",
+          "group": "inline@4"
+        },
+        {
+          "command": "semio.filter.toggle.file.docs",
+          "when": "view == semio.filter && viewItem == filter_file",
+          "group": "inline@5"
+        },
+        {
+          "command": "semio.filter.toggle.file.resource",
+          "when": "view == semio.filter && viewItem == filter_file",
+          "group": "inline@6"
+        },
+        {
+          "command": "semio.filter.toggle.file.license",
+          "when": "view == semio.filter && viewItem == filter_file",
+          "group": "inline@7"
+        },
+        {
+          "command": "semio.filter.toggle.definition.implementation",
+          "when": "view == semio.filter && viewItem == filter_definition",
+          "group": "inline@1"
+        },
+        {
+          "command": "semio.filter.toggle.definition.interface",
+          "when": "view == semio.filter && viewItem == filter_definition",
+          "group": "inline@2"
+        },
+        {
+          "command": "semio.filter.toggle.definition.constant",
+          "when": "view == semio.filter && viewItem == filter_definition",
+          "group": "inline@3"
+        },
+        {
+          "command": "semio.filter.toggle.goal.open",
+          "when": "view == semio.filter && viewItem == filter_goal",
+          "group": "inline@1"
+        },
+        {
+          "command": "semio.filter.toggle.goal.closed",
+          "when": "view == semio.filter && viewItem == filter_goal",
+          "group": "inline@2"
+        },
+        {
+          "command": "semio.filter.toggle.ticket.open",
+          "when": "view == semio.filter && viewItem == filter_ticket",
+          "group": "inline@1"
+        },
+        {
+          "command": "semio.filter.toggle.ticket.closed",
+          "when": "view == semio.filter && viewItem == filter_ticket",
+          "group": "inline@2"
         },
         {
           "command": "semio.sectionRename",

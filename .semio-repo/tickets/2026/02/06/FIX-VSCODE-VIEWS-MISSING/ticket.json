@@ -1,0 +1,753 @@
+{
+  "title": "Fix Vscode Views Missing",
+  "status": "closed",
+  "prompt": "Fix GraphQL query mismatches causing Goals, Tickets, and Contributors tree views to fail in the VS Code extension.",
+  "summary": "Fixed GraphQL schema mismatches between Go binary and VS Code extension. Updated schema.graphql to match binary (Goal.ui→client, Interaction system/dates types, ContributorBundle lines removal, hierarchical TicketYear), updated queries.ts, and regenerated codegen.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/419"
+  },
+  "goal": "FIX-VSCODE-VIEWS-MISSING",
+  "started": "2026-02-06T14:22:57.198773846Z",
+  "finished": "2026-02-06T14:31:25.593569622Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-06 14:22:57",
+        "finished": "2026-02-06 14:31:25"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "claude-code"
+      },
+      "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
+      "prompt": "Fix GraphQL query mismatches causing Goals, Tickets, and Contributors tree views to fail in the VS Code extension.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/graphql",
+              "lines": {
+                "added": 595,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/vscode",
+              "lines": {
+                "added": 0,
+                "removed": 89
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/queries.ts",
+              "lines": {
+                "added": 46,
+                "removed": 135
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql",
+              "lines": {
+                "added": 595,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Header",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Inputs",
+              "lines": {
+                "added": 137,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Mutation",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Ports",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Query",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Scalars",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Types",
+              "lines": {
+                "added": 360,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§CodebaseDocument",
+              "lines": {
+                "added": 0,
+                "removed": 35
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoDocument",
+              "lines": {
+                "added": 0,
+                "removed": 93
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodoCreateDocument",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodoDeleteDocument",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodosDocument",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§BundlesDocument",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§CodebaseDocument",
+              "lines": {
+                "added": 0,
+                "removed": 35
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§ContributorsDocument",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§ContributorsDocument",
+              "lines": {
+                "added": 8,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§FileContentDocument",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§FileContentDocument",
+              "lines": {
+                "added": 22,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§FixDocument",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§FolderContentDocument",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§GoalsDocument",
+              "lines": {
+                "added": 1,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§GoalsDocument",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoCommitsDocument",
+              "lines": {
+                "added": 6,
+                "removed": 11
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoDocument",
+              "lines": {
+                "added": 0,
+                "removed": 60
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoStructureDocument",
+              "lines": {
+                "added": 6,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TicketsDocument",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TicketsDocument",
+              "lines": {
+                "added": 1,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodoCreateDocument",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodoDeleteDocument",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§TodosDocument",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§BundleKind",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§ContributorAddInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§DefinitionKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FileKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FilterInput",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FolderKind",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§GoalChangeInput",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§GoalCreateInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketChangeInput",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketCloseInput",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketOpenInput",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketReopenInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TodoChangeInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TodoCreateInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Mutation§Mutation",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Ports§Node",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Query§Query",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§AnalyzeMetrics",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§AnalyzeResult",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Bundle",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Commit",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Contributor",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorBundle",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorContributions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorDefinition",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorFile",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorFolder",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorIcons",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorLink",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorSection",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Definition",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§File",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§FixResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Folder",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Goal",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Interaction",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§InteractionDates",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§LineMetrics",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Location",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Policy",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§PriorityCount",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Project",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ProjectKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Range",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Repo",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Section",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§System",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Ticket",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketBundleContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketClient",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketDay",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketFileContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketMonth",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketSectionContrib",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketStatus",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketYear",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Todo",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Violation",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ViolationKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ViolationPriority",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql§DateTime",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoCommitsDocument",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/queries.ts§RepoStructureDocument",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

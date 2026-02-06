@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/Home.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import {
   AddIcon,
@@ -83,9 +83,9 @@ import {
 
 const useHome = useHomeApp;
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Types
+// #region 🔖Types
 
 export enum HomeAppWindowKind {
   Table = "table",
@@ -140,9 +140,9 @@ export interface HomeCommandResult {
   diff?: HomeDiff;
 }
 
-// #endregion Types
+// #endregion 🔖Types
 
-// #region Home App Plugin Registration
+// #region 🔖Home App Plugin Registration
 
 const createDefaultHomeState = (): HomeState => ({
   panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
@@ -192,33 +192,33 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion Home App Plugin Registration
+// #endregion 🔖Home App Plugin Registration
 
-// #region Hooks (XState-based)
+// #region 🔖Hooks (XState-based)
 
 export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
 
 export { useHome };
 
-// #endregion Hooks (XState-based)
+// #endregion 🔖Hooks (XState-based)
 
-// #region Canvas
+// #region 🔖Canvas
 
-// #region Windows
+// #region 🔖Windows
 
-// #region Table
+// #region 🔖Table
 
 export {};
 
-// #endregion Table
+// #endregion 🔖Table
 
-// #endregion Windows
+// #endregion 🔖Windows
 
-// #region Panels
+// #region 🔖Panels
 
-// #region Right
+// #region 🔖Right
 
-// #region Details
+// #region 🔖Details
 
 export const KitSection: FC = () => {
   const home = useHome() as HomeState;
@@ -344,9 +344,9 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
   );
 };
 
-// #endregion Details
+// #endregion 🔖Details
 
-// #region Chat
+// #region 🔖Chat
 
 const ChatPlaceholder: FC = () => {
   return (
@@ -358,9 +358,9 @@ const ChatPlaceholder: FC = () => {
   );
 };
 
-// #endregion Chat
+// #endregion 🔖Chat
 
-// #region Settings
+// #region 🔖Settings
 
 const SettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
@@ -458,15 +458,15 @@ const SettingsContent: FC = () => {
   );
 };
 
-// #endregion Settings
+// #endregion 🔖Settings
 
-// #endregion Right
+// #endregion 🔖Right
 
-// #endregion Panels
+// #endregion 🔖Panels
 
-// #endregion Canvas
+// #endregion 🔖Canvas
 
-// #region Footer
+// #region 🔖Footer
 
 const HomeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -482,9 +482,9 @@ const HomeAppFooter: FC = () => {
   return null;
 };
 
-// #endregion Footer
+// #endregion 🔖Footer
 
-// #region DropZone
+// #region 🔖DropZone
 
 const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -591,9 +591,9 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-// #endregion DropZone
+// #endregion 🔖DropZone
 
-// #region App
+// #region 🔖App
 
 type KitKind = "temporary" | "local" | "remote";
 
@@ -1562,7 +1562,7 @@ const HomeTableContent: FC = () => {
   );
 };
 
-// #region Multi-Window App
+// #region 🔖Multi-Window App
 
 const TableWindow = memo(() => {
   return <HomeTableContent />;
@@ -1666,13 +1666,13 @@ const Home: FC = () => {
   );
 };
 
-// #endregion Multi-Window App
+// #endregion 🔖Multi-Window App
 
 export default Home;
 
-// #endregion App
+// #endregion 🔖App
 
-// #region Config
+// #region 🔖Config
 
 export const config: AppConfig = {
   id: "home",
@@ -1689,4 +1689,4 @@ export const config: AppConfig = {
   order: 0,
 };
 
-// #endregion Config
+// #endregion 🔖Config

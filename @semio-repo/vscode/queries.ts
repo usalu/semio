@@ -1,7 +1,7 @@
 import { graphql } from "./generated/gql";
 
-export const RepoDocument = graphql(`
-  query Repo {
+export const RepoStructureDocument = graphql(`
+  query RepoStructure {
     repo {
       id
       name
@@ -14,6 +14,7 @@ export const RepoDocument = graphql(`
         bundles {
           id
           name
+          kind
           root
           sourceRoot
           projectType
@@ -21,75 +22,28 @@ export const RepoDocument = graphql(`
           uri
         }
       }
-      commits(limit: 100) {
-        id
-        sha
-        title
-        date
-      }
       bundles {
         id
         name
+        kind
         root
         sourceRoot
         projectType
         tags
         uri
       }
-      tickets {
+    }
+  }
+`);
+
+export const RepoCommitsDocument = graphql(`
+  query RepoCommits {
+    repo {
+      commits(limit: 100) {
         id
-        year
-        month
-        day
-        slug
-        path
-        uri
-        prompt
-        summary
-        status
-        commit
-        goal
-        author {
-          name
-          github
-        }
-      }
-      goals {
-        id
+        sha
         title
-        description
-        status
-      }
-      policies {
-        id
-        name
-        description
-        scopes
-        violationKinds {
-          id
-          priority
-          autofixable
-          reason
-          solution
-        }
-      }
-      contributors {
-        id
-        github
-        name
-        emails
-        links {
-          name
-          url
-        }
-        contributions {
-           commits {
-             id 
-             sha
-             title
-             date
-           }
-        }
+        date
       }
     }
   }
@@ -131,8 +85,7 @@ export const TicketsDocument = graphql(`
         dates { started finished }
         interactions {
           prompt
-          llm
-          client
+          system { client version }
           author
           dates {
             started
@@ -165,23 +118,25 @@ export const ContributorsDocument = graphql(`
             id sha title
           }
           tickets {
-            slug year month day title summary status
+            year
+            months {
+              month
+              days {
+                day
+                tickets { id slug title status }
+              }
+            }
           }
           bundles {
             name
-            lines { added removed }
             folders {
               name
-              lines { added removed }
               files {
                 name
-                lines { added removed }
                 sections {
                   name
-                  lines { added removed }
                   definitions {
                     name
-                    lines { added removed }
                   }
                 }
               }
@@ -214,43 +169,6 @@ export const FixDocument = graphql(`
   }
 `);
 
-export const CodebaseDocument = graphql(`
-  query Codebase {
-    repo {
-      id name path
-      bundles {
-        id name root sourceRoot projectType tags uri
-      }
-      folders {
-        id path uri
-      }
-      files {
-        id path uri
-        sections {
-          id name path
-          range { start end }
-        }
-        definitions {
-          id name kind
-          range { start end }
-        }
-      }
-      contributors {
-        id github name emails
-        links { name url }
-      }
-      tickets {
-        id year month day slug path uri prompt summary status commit
-        author { github name }
-      }
-      policies {
-        id name description scopes
-        violationKinds { id priority autofixable reason solution }
-      }
-    }
-  }
-`);
-
 export const FileContentDocument = graphql(`
   query FileContent($path: String!) {
     file(path: $path) {
@@ -262,43 +180,36 @@ export const FileContentDocument = graphql(`
         name
         range { start end }
         parent { id }
+        ... on Section {
+          children {
+            id
+            name
+            range { start end }
+            ... on Section {
+              children {
+                id
+                name
+                range { start end }
+                ... on Section {
+                  children {
+                    id
+                    name
+                    range { start end }
+                  }
+                }
+              }
+            }
+          }
+        }
       }
       definitions {
         id
         name
         kind
         range { start end }
-        section { id }
+        section { id name }
       }
     }
-  }
-`);
-
-export const TodosDocument = graphql(`
-  query Todos($filter: FilterInput) {
-    todos(filter: $filter) {
-      id
-      name
-      location {
-        filePath
-        line
-        column
-      }
-    }
-  }
-`);
-
-export const TodoCreateDocument = graphql(`
-  mutation TodoCreate($input: TodoCreateInput!) {
-    todoCreate(input: $input) {
-      id
-    }
-  }
-`);
-
-export const TodoDeleteDocument = graphql(`
-  mutation TodoDelete($id: ID!) {
-    todoDelete(id: $id)
   }
 `);
 
@@ -312,7 +223,7 @@ export const GoalsDocument = graphql(`
         prompt
         status
         dueDate
-        ui
+        client
         llm
         milestone
       }

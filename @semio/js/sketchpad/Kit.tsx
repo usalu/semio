@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/Kit.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import {
@@ -167,9 +167,9 @@ import {
   Theme,
 } from "./shared";
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Design Family Helpers
+// #region 🔖Design Family Helpers
 
 const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
   const guids = new Set<string>();
@@ -193,9 +193,9 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
   return guids;
 };
 
-// #endregion Design Family Helpers
+// #endregion 🔖Design Family Helpers
 
-// #region Internal State Management
+// #region 🔖Internal State Management
 
 type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YKitApp = Y.Map<YKitAppVal>;
@@ -882,7 +882,7 @@ if (typeof window !== "undefined") {
   registerKitStoreFactory((parent, yMap, transact, id, state) => new KitStore(parent, yMap, transact, id, state as any));
 }
 
-// #region Kit App Plugin Registration
+// #region 🔖Kit App Plugin Registration
 
 const kitAppPlugin: AppPlugin = {
   id: "kit",
@@ -995,7 +995,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion Kit App Plugin Registration
+// #endregion 🔖Kit App Plugin Registration
 
 function useKitStore<T>(selector?: (controller: KitStore) => T, id?: KitAppId): T | KitStore | null {
   const orchestrator = useSketchpadStore();
@@ -1321,7 +1321,7 @@ export function useKitAppCommands(id?: KitAppId) {
   };
 }
 
-//#region Action Hooks
+//#region 🔖Action Hooks
 
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
@@ -1511,11 +1511,11 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
   return [action, canAct];
 }
 
-//#endregion Action Hooks
+//#endregion 🔖Action Hooks
 
-// #endregion Internal State Management
+// #endregion 🔖Internal State Management
 
-// #region Types
+// #region 🔖Types
 
 export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
   const typeScope = useTypeScope();
@@ -1582,9 +1582,9 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
   return [{ fill, stroke, opacity }, undefined, canRead];
 }
 
-// #endregion Types
+// #endregion 🔖Types
 
-// #region Designs
+// #region 🔖Designs
 
 export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
   const designScope = useDesignScope();
@@ -1651,9 +1651,9 @@ export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fil
   return [{ fill, stroke, opacity }, undefined, canRead];
 }
 
-// #endregion Designs
+// #endregion 🔖Designs
 
-// #region Commands
+// #region 🔖Commands
 
 export const commands = {
   "semio.kitApp.setTheme": (context: KitAppCommandContext, theme: Theme): KitAppCommandResult => {
@@ -2394,13 +2394,13 @@ export const commands = {
   },
 };
 
-// #endregion Commands
+// #endregion 🔖Commands
 
-// #region Canvas
+// #region 🔖Canvas
 
-// #region Windows
+// #region 🔖Windows
 
-// #region Table
+// #region 🔖Table
 
 type ArtifactKind = "designs" | "types" | "qualities" | "ports" | "tags" | "concepts" | "files" | "folders" | "authors";
 
@@ -4895,9 +4895,9 @@ const App: FC = () => {
   );
 };
 
-// #endregion Table
+// #endregion 🔖Table
 
-// #region Diagram
+// #region 🔖Diagram
 
 type DiagramNodeKind = "type" | "design" | "quality" | "port" | "tag" | "concept" | "file" | "folder" | "author";
 
@@ -5709,15 +5709,15 @@ const MultiWindowApp: FC = () => {
 
 export default MultiWindowApp;
 
-// #endregion Diagram
+// #endregion 🔖Diagram
 
-// #endregion Windows
+// #endregion 🔖Windows
 
-// #region Panels
+// #region 🔖Panels
 
-// #region Right
+// #region 🔖Right
 
-// #region Details
+// #region 🔖Details
 
 export const KitSection: FC = () => {
   const isInKitScope = useIsInKitScope();
@@ -6374,9 +6374,9 @@ export const MultipleArtifactsSection: FC = () => {
   );
 };
 
-// #endregion Details
+// #endregion 🔖Details
 
-// #region Settings
+// #region 🔖Settings
 
 const KitEditorSettingsContent: FC = () => {
   const [diagramForce, setDiagramForce, canSetDiagramForce] = useKitAppDiagramForce();
@@ -6536,15 +6536,15 @@ const SketchpadSettingsContent: FC = () => {
   );
 };
 
-// #endregion Settings
+// #endregion 🔖Settings
 
-// #endregion Right
+// #endregion 🔖Right
 
-// #endregion Panels
+// #endregion 🔖Panels
 
-// #endregion Canvas
+// #endregion 🔖Canvas
 
-// #region Footer
+// #region 🔖Footer
 
 export const KitAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -6564,9 +6564,9 @@ export const KitAppFooter: FC = () => {
   return null;
 };
 
-// #endregion Footer
+// #endregion 🔖Footer
 
-// #region Config
+// #region 🔖Config
 
 export const config: AppConfig = {
   id: "kit",
@@ -6591,4 +6591,4 @@ export const config: AppConfig = {
   order: 10,
 };
 
-// #endregion Config
+// #endregion 🔖Config

@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/Type.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import { arrayMove } from "@dnd-kit/sortable";
 import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
@@ -98,9 +98,9 @@ const KitSectionLazy = React.lazy(() => import("./Kit").then((module) => ({ defa
 
 import { AddIcon, AwardIcon, CheckIcon, CodeIcon, ConnectorIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Internal State Management
+// #region 🔖Internal State Management
 
 export interface TypeAppSelection {
   connectors?: Guid[];
@@ -180,9 +180,9 @@ const EMPTY_TYPE_SELECTION: TypeAppSelection = {};
 const EMPTY_OTHERS: TypeAppPresenceOther[] = [];
 const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 
-// #endregion Internal State Management
+// #endregion 🔖Internal State Management
 
-// #region Type App Plugin Registration
+// #region 🔖Type App Plugin Registration
 
 const typeAppPlugin: AppPlugin = {
   id: "type",
@@ -394,9 +394,9 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion Type App Plugin Registration
+// #endregion 🔖Type App Plugin Registration
 
-// #region XState Hooks
+// #region 🔖XState Hooks
 
 export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAppId): T | TypeAppState | null {
   const kitScope = useKitScope();
@@ -723,7 +723,7 @@ export function useTypeAppSelectedModelTags(): HookResult<string[]> {
   return conditionalHookResult(canSet, value, setter);
 }
 
-//#region Action Hooks
+//#region 🔖Action Hooks
 
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
@@ -889,7 +889,7 @@ export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: strin
   return [action, canSetSelectedModel];
 }
 
-//#endregion Action Hooks
+//#endregion 🔖Action Hooks
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
 export const TypeAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
@@ -898,9 +898,9 @@ export const TypeAppScopeProvider = (props: { id: string; children: React.ReactN
 };
 const useTypeAppScope = () => useContext(TypeAppScopeContext);
 
-// #endregion XState Hooks
+// #endregion 🔖XState Hooks
 
-// #region Commands
+// #region 🔖Commands
 
 export const commands = {
   "semio.typeApp.selectConnector": (context: TypeAppCommandContext, connectorGuid: Guid): TypeAppCommandResult => {
@@ -1056,9 +1056,9 @@ export const commands = {
   },
 };
 
-// #endregion Commands
+// #endregion 🔖Commands
 
-// #region Scene
+// #region 🔖Scene
 
 const ConnectorVisual: FC<{ connector: Connector; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void; onDoubleClick: () => void }> = ({
   connector,
@@ -1652,13 +1652,13 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
   );
 };
 
-// #endregion Scene
+// #endregion 🔖Scene
 
-// #region Panels
+// #region 🔖Panels
 
-// #region Right
+// #region 🔖Right
 
-// #region Details
+// #region 🔖Details
 
 export const TypeDetails: FC = () => {
   const isInTypeScope = useIsInTypeScope();
@@ -2770,9 +2770,9 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
   );
 };
 
-// #endregion Details
+// #endregion 🔖Details
 
-// #region Settings
+// #region 🔖Settings
 
 const TypeSettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
@@ -2870,13 +2870,13 @@ const TypeSettingsContent: FC = () => {
   );
 };
 
-// #endregion Settings
+// #endregion 🔖Settings
 
-// #endregion Right
+// #endregion 🔖Right
 
-// #endregion Panels
+// #endregion 🔖Panels
 
-// #region Tools
+// #region 🔖Tools
 
 const toolModules = import.meta.glob<Record<string, Tool<TypeAppState>>>("./*Tool.tsx", { eager: true });
 
@@ -2944,9 +2944,9 @@ export const ToolsToggleGroup: FC = () => {
   return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool && setActiveTool(tool as ToolKind)} />;
 };
 
-// #endregion Tools
+// #endregion 🔖Tools
 
-// #region App
+// #region 🔖App
 
 const App: FC = () => {
   const addSection = useAddPanelSection();
@@ -3277,9 +3277,9 @@ function useTypeAppInitialize() {
 
 export default TypeApp;
 
-// #endregion App
+// #endregion 🔖App
 
-// #region Footer
+// #region 🔖Footer
 
 export const TypeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -3360,9 +3360,9 @@ export const TypeAppFooter: FC = () => {
   return null;
 };
 
-// #endregion Footer
+// #endregion 🔖Footer
 
-// #region Config
+// #region 🔖Config
 
 export const config: AppConfig = {
   id: "type",
@@ -3396,4 +3396,4 @@ export const config: AppConfig = {
   order: 30,
 };
 
-// #endregion Config
+// #endregion 🔖Config

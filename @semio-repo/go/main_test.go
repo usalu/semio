@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // go/repo/repo_test.go
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 package main
 
@@ -35,7 +35,7 @@ import (
 	"testing"
 )
 
-// #region Helpers
+// #region 🔖Helpers
 
 func findTestRepoRoot(start string) string {
 	for _, candidate := range []string{start, func() string {
@@ -63,130 +63,96 @@ func findTestRepoRoot(start string) string {
 	return start
 }
 
-func findFirstResultData(output string) (json.RawMessage, bool) {
-	parsed, err := parseJSONOutput(output)
-	if err != nil {
-		return nil, false
-	}
-	for _, e := range parsed {
-		if e.Kind == KindResult {
-			return e.Data, true
+func firstJSONLine(output string) (json.RawMessage, bool) {
+	for _, line := range strings.Split(strings.TrimSpace(output), "\n") {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
 		}
+		return json.RawMessage(trimmed), true
 	}
 	return nil, false
 }
 
-func mustHaveExitCode(t *testing.T, output string, code int) {
-	t.Helper()
-	if !hasExitCode(output, code) {
-		t.Fatalf("expected exit code %d, got output: %s", code, output)
-	}
-}
-
 func parseTicketOpenResult(t *testing.T, output string) (int, int, int, string) {
 	t.Helper()
-	data, ok := findFirstResultData(output)
+	data, ok := firstJSONLine(output)
 	if !ok {
-		t.Fatalf("no result event in output: %s", output)
+		t.Fatalf("no result in output: %s", output)
 	}
-	var envelope struct {
-		Data struct {
-			TicketOpen struct {
-				Slug string `json:"slug"`
-				Path string `json:"path"`
-			} `json:"ticketOpen"`
-		} `json:"data"`
+	var resp struct {
+		TicketOpen struct {
+			Slug string `json:"slug"`
+			Path string `json:"path"`
+		} `json:"ticketOpen"`
 	}
-	if err := json.Unmarshal(data, &envelope); err == nil {
-		if envelope.Data.TicketOpen.Path != "" {
-			parts := strings.Split(strings.TrimPrefix(envelope.Data.TicketOpen.Path, "/"), "/")
-			for i := 0; i+3 < len(parts); i++ {
-				if parts[i] == "tickets" {
-					y, _ := strconv.Atoi(parts[i+1])
-					m, _ := strconv.Atoi(parts[i+2])
-					d, _ := strconv.Atoi(parts[i+3])
-					return y, m, d, envelope.Data.TicketOpen.Slug
-				}
+	if err := json.Unmarshal(data, &resp); err == nil && resp.TicketOpen.Path != "" {
+		parts := strings.Split(strings.TrimPrefix(resp.TicketOpen.Path, "/"), "/")
+		for i := 0; i+3 < len(parts); i++ {
+			if parts[i] == "tickets" {
+				y, _ := strconv.Atoi(parts[i+1])
+				m, _ := strconv.Atoi(parts[i+2])
+				d, _ := strconv.Atoi(parts[i+3])
+				return y, m, d, resp.TicketOpen.Slug
 			}
 		}
 	}
-
-	var resp struct {
-		TicketOpen struct {
-			Slug  string `json:"slug"`
-			Year  int    `json:"year"`
-			Month int    `json:"month"`
-			Day   int    `json:"day"`
-		} `json:"ticketOpen"`
-	}
-	if err := json.Unmarshal([]byte(output), &resp); err == nil {
-		if resp.TicketOpen.Slug != "" && resp.TicketOpen.Year != 0 {
-			return resp.TicketOpen.Year, resp.TicketOpen.Month, resp.TicketOpen.Day, resp.TicketOpen.Slug
-		}
-	}
-
 	t.Fatalf("unable to parse ticket open response: %s", output)
 	return 0, 0, 0, ""
 }
 
 func parseGoalCreateID(t *testing.T, output string) string {
 	t.Helper()
-	data, ok := findFirstResultData(output)
+	data, ok := firstJSONLine(output)
 	if !ok {
-		t.Fatalf("no result event in output: %s", output)
+		t.Fatalf("no result in output: %s", output)
 	}
-	var envelope struct {
-		Data struct {
-			GoalCreate struct {
-				ID string `json:"id"`
-			} `json:"goalCreate"`
-		} `json:"data"`
+	var resp struct {
+		GoalCreate struct {
+			ID string `json:"id"`
+		} `json:"goalCreate"`
 	}
-	if err := json.Unmarshal(data, &envelope); err != nil {
+	if err := json.Unmarshal(data, &resp); err != nil {
 		t.Fatalf("failed to parse goalCreate: %v\nOutput: %s", err, output)
 	}
-	if envelope.Data.GoalCreate.ID == "" {
+	if resp.GoalCreate.ID == "" {
 		t.Fatalf("missing goal id in output: %s", output)
 	}
-	return envelope.Data.GoalCreate.ID
+	return resp.GoalCreate.ID
 }
 
 func parseTicketCloseStatus(t *testing.T, output string) string {
 	t.Helper()
-	data, ok := findFirstResultData(output)
+	data, ok := firstJSONLine(output)
 	if !ok {
-		t.Fatalf("no result event in output: %s", output)
+		t.Fatalf("no result in output: %s", output)
 	}
-	var envelope struct {
-		Data struct {
-			TicketClose struct {
-				Status string `json:"status"`
-			} `json:"ticketClose"`
-		} `json:"data"`
+	var resp struct {
+		TicketClose struct {
+			Status string `json:"status"`
+		} `json:"ticketClose"`
 	}
-	if err := json.Unmarshal(data, &envelope); err != nil {
+	if err := json.Unmarshal(data, &resp); err != nil {
 		t.Fatalf("failed to parse ticketClose: %v\nOutput: %s", err, output)
 	}
-	return strings.ToLower(envelope.Data.TicketClose.Status)
+	return strings.ToLower(resp.TicketClose.Status)
 }
 
 func parseTicketReopenStatus(t *testing.T, output string) string {
 	t.Helper()
-	data, ok := findFirstResultData(output)
+	data, ok := firstJSONLine(output)
 	if !ok {
-		t.Fatalf("no result event in output: %s", output)
+		t.Fatalf("no result in output: %s", output)
 	}
-	var envelope struct {
-		Data struct {
-			TicketReopen struct {
-				Status string `json:"status"`
-			} `json:"ticketReopen"`
-		} `json:"data"`
+	var resp struct {
+		TicketReopen struct {
+			Status string `json:"status"`
+		} `json:"ticketReopen"`
 	}
-	if err := json.Unmarshal(data, &envelope); err != nil {
+	if err := json.Unmarshal(data, &resp); err != nil {
 		t.Fatalf("failed to parse ticketReopen: %v\nOutput: %s", err, output)
 	}
-	return strings.ToLower(envelope.Data.TicketReopen.Status)
+	return strings.ToLower(resp.TicketReopen.Status)
 }
 
 func testEngineFactory(config Config) (*Engine, error) {
@@ -220,9 +186,9 @@ func getTestExecutor(t *testing.T) *Executor {
 	return executor
 }
 
-// #endregion Helpers
+// #endregion 🔖Helpers
 
-// #region Collection Tests
+// #region 🔖Collection Tests
 
 func TestBundlesNonEmpty(t *testing.T) {
 	if testing.Short() {
@@ -591,9 +557,9 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 	}
 }
 
-// #endregion Collection Tests
+// #endregion 🔖Collection Tests
 
-// #region Nodes and Edges Tests
+// #region 🔖Nodes and Edges Tests
 
 func TestNodesAndEdges(t *testing.T) {
 	if testing.Short() {
@@ -853,7 +819,7 @@ func TestSectionsEdges(t *testing.T) {
 				children { id }
 				definitions { id name }
 				violations { id }
-				range { start { line } end { line } }
+				range { start end }
 			}
 		}
 	}`
@@ -888,12 +854,8 @@ func TestSectionsEdges(t *testing.T) {
 					ID string `json:"id"`
 				} `json:"violations"`
 				Range struct {
-					Start struct {
-						Line int `json:"line"`
-					} `json:"start"`
-					End struct {
-						Line int `json:"line"`
-					} `json:"end"`
+					Start int `json:"start"`
+					End   int `json:"end"`
 				} `json:"range"`
 			} `json:"sections"`
 		} `json:"files"`
@@ -938,7 +900,7 @@ func TestDefinitionsEdges(t *testing.T) {
 				file { id }
 				section { id name }
 				violations { id }
-				range { start { line } end { line } }
+				range { start end }
 			}
 		}
 	}`
@@ -967,12 +929,8 @@ func TestDefinitionsEdges(t *testing.T) {
 					ID string `json:"id"`
 				} `json:"violations"`
 				Range struct {
-					Start struct {
-						Line int `json:"line"`
-					} `json:"start"`
-					End struct {
-						Line int `json:"line"`
-					} `json:"end"`
+					Start int `json:"start"`
+					End   int `json:"end"`
 				} `json:"range"`
 			} `json:"definitions"`
 		} `json:"files"`
@@ -1044,9 +1002,9 @@ func TestDefinitionKind(t *testing.T) {
 
 	definitionsFound := false
 	validKinds := map[string]bool{
-		"implementation": true,
-		"interface":      true,
-		"constant":       true,
+		"IMPLEMENTATION": true,
+		"INTERFACE":      true,
+		"CONSTANT":       true,
 	}
 
 	for _, file := range resp.Files {
@@ -1065,59 +1023,30 @@ func TestDefinitionKind(t *testing.T) {
 	}
 }
 
-// #endregion Nodes and Edges Tests
+// #endregion 🔖Nodes and Edges Tests
 
-// #region Cli
+// #region 🔖Cli
 
-// #region Helpers
+// #region 🔖Helpers
 
-func executeCommand(args ...string) (string, error) {
-	buf := new(bytes.Buffer)
+func executeCommand(args ...string) (string, string, error) {
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
 	root, config := NewRootWithConfig(testEngineFactory)
-	root.SetOut(buf)
-	root.SetErr(buf)
+	root.SetOut(stdout)
+	root.SetErr(stderr)
 	root.SetArgs(args)
-	config.JSON = true
+	config.Format = "json"
 	err := root.Execute()
-	return buf.String(), err
-}
-
-func parseJSONOutput(output string) ([]Event, error) {
-	var result []Event
-	if err := json.Unmarshal([]byte(output), &result); err == nil {
-		return result, nil
-	}
-	lines := strings.Split(strings.TrimSpace(output), "\n")
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
-		}
-		var event Event
-		if err := json.Unmarshal([]byte(trimmed), &event); err != nil {
-			return nil, err
-		}
-		result = append(result, event)
-	}
-	return result, nil
-}
-
-func hasExitCode(output string, code int) bool {
-	parsed, err := parseJSONOutput(output)
 	if err != nil {
-		return false
+		fmt.Fprintln(stderr, err)
 	}
-	for _, event := range parsed {
-		if event.Kind == KindDone && event.Done != nil {
-			return event.Done.ExitCode == code
-		}
-	}
-	return false
+	return stdout.String(), stderr.String(), err
 }
 
-// #endregion Helpers
+// #endregion 🔖Helpers
 
-// #region Codebase Tests
+// #region 🔖Codebase Tests
 
 func TestCodebaseCommand(t *testing.T) {
 	result := ToolCodebase()
@@ -1129,9 +1058,9 @@ func TestCodebaseCommand(t *testing.T) {
 	}
 }
 
-// #endregion Codebase Tests
+// #endregion 🔖Codebase Tests
 
-// #region Analyze Tests
+// #region 🔖Analyze Tests
 
 func TestAnalyzeCommand(t *testing.T) {
 	result := ToolAnalyze("@semio/js", nil)
@@ -1147,9 +1076,9 @@ func TestAnalyzeFile(t *testing.T) {
 	}
 }
 
-// #endregion Analyze Tests
+// #endregion 🔖Analyze Tests
 
-// #region Fix Tests
+// #region 🔖Fix Tests
 
 func TestFixCommand(t *testing.T) {
 	result := ToolFix("@semio/js")
@@ -1158,9 +1087,9 @@ func TestFixCommand(t *testing.T) {
 	}
 }
 
-// #endregion Fix Tests
+// #endregion 🔖Fix Tests
 
-// #region Policy Tests
+// #region 🔖Policy Tests
 
 func TestPolicyListCommand(t *testing.T) {
 	result := ToolPolicyList()
@@ -1301,9 +1230,9 @@ func TestFixtureViolationsByLanguage(t *testing.T) {
 	}
 }
 
-// #endregion Policy Tests
+// #endregion 🔖Policy Tests
 
-// #region Bundle Tests
+// #region 🔖Bundle Tests
 
 func TestBundleListCommand(t *testing.T) {
 	result := ToolProjectList()
@@ -1340,9 +1269,9 @@ func TestBundleTreeCommand(t *testing.T) {
 	}
 }
 
-// #endregion Bundle Tests
+// #endregion 🔖Bundle Tests
 
-// #region Folder Tests
+// #region 🔖Folder Tests
 
 func TestFolderListCommand(t *testing.T) {
 	cwd, _ := os.Getwd()
@@ -1381,9 +1310,9 @@ func TestFolderCreateMoveDelete(t *testing.T) {
 	}
 }
 
-// #endregion Folder Tests
+// #endregion 🔖Folder Tests
 
-// #region File Tests
+// #region 🔖File Tests
 
 func TestFileListCommand(t *testing.T) {
 	result := ToolFileList("@semio/js")
@@ -1420,9 +1349,9 @@ func TestFileCreateMoveDelete(t *testing.T) {
 	}
 }
 
-// #endregion File Tests
+// #endregion 🔖File Tests
 
-// #region Section Tests
+// #region 🔖Section Tests
 
 func TestSectionListCommand(t *testing.T) {
 	result := ToolSectionList("@semio/js/semio.ts")
@@ -1459,9 +1388,9 @@ func TestSectionTreeCommand(t *testing.T) {
 	}
 }
 
-// #endregion Section Tests
+// #endregion 🔖Section Tests
 
-// #region Definition Tests
+// #region 🔖Definition Tests
 
 func TestDefinitionListCommand(t *testing.T) {
 	result := ToolDefinitionList("@semio/js/semio.ts")
@@ -1470,9 +1399,9 @@ func TestDefinitionListCommand(t *testing.T) {
 	}
 }
 
-// #endregion Definition Tests
+// #endregion 🔖Definition Tests
 
-// #region Ticket Tests
+// #region 🔖Ticket Tests
 
 func TestTicketListCommand(t *testing.T) {
 	year := 2025
@@ -1521,9 +1450,9 @@ func TestTicketOpenContinueKeyword(t *testing.T) {
 	}
 }
 
-// #endregion Ticket Tests
+// #endregion 🔖Ticket Tests
 
-// #region Goal Tests
+// #region 🔖Goal Tests
 
 func TestGoalCreateValidation(t *testing.T) {
 	// Test missing title
@@ -1756,9 +1685,9 @@ func TestGoalList(t *testing.T) {
 	}
 }
 
-// #endregion Goal Tests
+// #endregion 🔖Goal Tests
 
-// #region Contributor Tests
+// #region 🔖Contributor Tests
 
 func TestContributorListCommand(t *testing.T) {
 	result := ToolContributorList()
@@ -1770,9 +1699,9 @@ func TestContributorListCommand(t *testing.T) {
 	}
 }
 
-// #endregion Contributor Tests
+// #endregion 🔖Contributor Tests
 
-// #region GraphQL Tests
+// #region 🔖GraphQL Tests
 
 func TestGraphQLRepoQuery(t *testing.T) {
 	result, err := executor.ExecuteJSON(context.Background(), `{ repo { id name } }`, nil)
@@ -1844,9 +1773,9 @@ func TestGraphQLFixMutation(t *testing.T) {
 	}
 }
 
-// #endregion GraphQL Tests
+// #endregion 🔖GraphQL Tests
 
-// #region Tree Tests
+// #region 🔖Tree Tests
 
 func executeTreeCommand(args ...string) (string, error) {
 	buf := new(bytes.Buffer)
@@ -1925,7 +1854,7 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 
 	fileRel := filepath.ToSlash(filepath.Join("go", "repo", "main.go"))
 
-	openOut, err := executeCommand(
+	openOut, openErr, err := executeCommand(
 		"ticket", "open",
 		"E2E Ticket Positional",
 		"E2E prompt positional",
@@ -1936,13 +1865,12 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"--no-github",
 	)
 	if err != nil {
-		t.Fatalf("ticket open positional failed: %v\nOutput: %s", err, openOut)
+		t.Fatalf("ticket open positional failed: %v\nStdout: %s\nStderr: %s", err, openOut, openErr)
 	}
-	mustHaveExitCode(t, openOut, 0)
 	y, m, d, slug := parseTicketOpenResult(t, openOut)
 	defer os.RemoveAll(GetTicketPath(y, m, d, slug))
 
-	closeOut, err := executeCommand(
+	closeOut, closeErr, err := executeCommand(
 		"ticket", "close",
 		"--no-github",
 		"--year", strconv.Itoa(y),
@@ -1953,14 +1881,13 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"--files", fileRel,
 	)
 	if err != nil {
-		t.Fatalf("ticket close flags failed: %v\nOutput: %s", err, closeOut)
+		t.Fatalf("ticket close flags failed: %v\nStdout: %s\nStderr: %s", err, closeOut, closeErr)
 	}
-	mustHaveExitCode(t, closeOut, 0)
 	if status := parseTicketCloseStatus(t, closeOut); status != "closed" {
 		t.Fatalf("expected closed status, got %s", status)
 	}
 
-	reopenOut, err := executeCommand(
+	reopenOut, reopenErr, err := executeCommand(
 		"ticket", "reopen",
 		fmt.Sprintf("%04d/%02d/%02d/%s", y, m, d, slug),
 		"E2E reopen prompt",
@@ -1969,25 +1896,23 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"--no-github",
 	)
 	if err != nil {
-		t.Fatalf("ticket reopen mix failed: %v\nOutput: %s", err, reopenOut)
+		t.Fatalf("ticket reopen mix failed: %v\nStdout: %s\nStderr: %s", err, reopenOut, reopenErr)
 	}
-	mustHaveExitCode(t, reopenOut, 0)
 	if status := parseTicketReopenStatus(t, reopenOut); status != "open" {
 		t.Fatalf("expected open status, got %s", status)
 	}
 
-	listOut, err := executeCommand("ticket", "list", "--year", strconv.Itoa(y))
+	listOut, listErr, err := executeCommand("ticket", "list", "--year", strconv.Itoa(y))
 	if err != nil {
-		t.Fatalf("ticket list failed: %v\nOutput: %s", err, listOut)
+		t.Fatalf("ticket list failed: %v\nStdout: %s\nStderr: %s", err, listOut, listErr)
 	}
-	mustHaveExitCode(t, listOut, 0)
 }
 
 func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
-	openOut, err := executeCommand(
+	openOut, openErr, err := executeCommand(
 		"goal", "open",
 		"E2E Goal Title",
 		"E2E Goal Description",
@@ -1998,23 +1923,20 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 		"--no-github",
 	)
 	if err != nil {
-		t.Fatalf("goal open failed: %v\nOutput: %s", err, openOut)
+		t.Fatalf("goal open failed: %v\nStdout: %s\nStderr: %s", err, openOut, openErr)
 	}
-	mustHaveExitCode(t, openOut, 0)
 	goalID := parseGoalCreateID(t, openOut)
 	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
 
-	closeOut, err := executeCommand("goal", "close", goalID, "E2E Goal Summary", "--no-github")
+	_, closeErr, err := executeCommand("goal", "close", goalID, "E2E Goal Summary", "--no-github")
 	if err != nil {
-		t.Fatalf("goal close failed: %v\nOutput: %s", err, closeOut)
+		t.Fatalf("goal close failed: %v\nStderr: %s", err, closeErr)
 	}
-	mustHaveExitCode(t, closeOut, 0)
 
-	reopenOut, err := executeCommand("goal", "reopen", goalID, "E2E Goal Reopen Prompt", "cursor-chat", "gpt-5-mini", "--no-github")
+	_, reopenErr, err := executeCommand("goal", "reopen", goalID, "E2E Goal Reopen Prompt", "cursor-chat", "gpt-5-mini", "--no-github")
 	if err != nil {
-		t.Fatalf("goal reopen failed: %v\nOutput: %s", err, reopenOut)
+		t.Fatalf("goal reopen failed: %v\nStderr: %s", err, reopenErr)
 	}
-	mustHaveExitCode(t, reopenOut, 0)
 }
 
 func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
@@ -2022,96 +1944,397 @@ func TestCliE2E_MiscCommands_NoSideEffects(t *testing.T) {
 		t.Skip("skipping e2e cli tests in short mode")
 	}
 
-	out, err := executeCommand("bundle", "list")
-	if err != nil {
-		t.Fatalf("bundle list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("bundle", "tree")
-	if err != nil {
-		t.Fatalf("bundle tree failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("folder", "list", "go")
-	if err != nil {
-		t.Fatalf("folder list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("file", "list", "go")
-	if err != nil {
-		t.Fatalf("file list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("section", "list", "@semio/js/semio.ts")
-	if err != nil {
-		t.Fatalf("section list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("definition", "list", "@semio/js/semio.ts")
-	if err != nil {
-		t.Fatalf("definition list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("policy", "list")
-	if err != nil {
-		t.Fatalf("policy list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("policy", "check", "code", "@semio/js")
-	if err != nil {
-		t.Fatalf("policy check failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("goal", "list")
-	if err != nil {
-		t.Fatalf("goal list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("goal", "tree")
-	if err != nil {
-		t.Fatalf("goal tree failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("ticket", "list")
-	if err != nil {
-		t.Fatalf("ticket list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("ticket", "tree")
-	if err != nil {
-		t.Fatalf("ticket tree failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("contributor", "list")
-	if err != nil {
-		t.Fatalf("contributor list failed: %v\nOutput: %s", err, out)
-	}
-	mustHaveExitCode(t, out, 0)
-
-	out, err = executeCommand("mcp", "--dry-run")
-	if err != nil {
-		t.Fatalf("mcp dry-run failed: %v\nOutput: %s", err, out)
+	cmds := []struct {
+		name string
+		args []string
+	}{
+		{"bundle list", []string{"bundle", "list"}},
+		{"bundle tree", []string{"bundle", "tree"}},
+		{"folder list", []string{"folder", "list", "go"}},
+		{"file list", []string{"file", "list", "go"}},
+		{"section list", []string{"section", "list", "@semio/js/semio.ts"}},
+		{"definition list", []string{"definition", "list", "@semio/js/semio.ts"}},
+		{"policy list", []string{"policy", "list"}},
+		{"policy check", []string{"policy", "check", "code", "@semio/js"}},
+		{"goal list", []string{"goal", "list"}},
+		{"goal tree", []string{"goal", "tree"}},
+		{"ticket list", []string{"ticket", "list"}},
+		{"ticket tree", []string{"ticket", "tree"}},
+		{"contributor list", []string{"contributor", "list"}},
+		{"mcp dry-run", []string{"mcp", "--dry-run"}},
+		{"update", []string{"update"}},
 	}
 
-	out, err = executeCommand("update")
-	if err != nil {
-		t.Fatalf("update default dry-run failed: %v\nOutput: %s", err, out)
+	for _, c := range cmds {
+		t.Run(c.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(c.args...)
+			if err != nil {
+				t.Fatalf("%s failed: %v\nStdout: %s\nStderr: %s", c.name, err, stdout, stderr)
+			}
+		})
 	}
 }
 
-// #region Consolidated Tests
+// #region 🔖Wrong Argument Tests
+
+func TestCliWrongArgs_TicketOpen(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"missing client", []string{"ticket", "open", "--goal", "TEST", "--title", "Valid Title", "--opus-4-5", "--no-github"}},
+		{"missing goal", []string{"ticket", "open", "--title", "Valid Title", "--copilot-chat", "--opus-4-5", "--no-github"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			if stdout != "" {
+				t.Errorf("expected empty stdout on error, got: %s", stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_TicketClose(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing path", []string{"ticket", "close", "--no-github", "--summary", "s", "--files", "f"}},
+		{"missing summary", []string{"ticket", "close", "--no-github", "--year", "2025", "--month", "1", "--day", "1", "--slug", "NONEXISTENT", "--files", "f"}},
+		{"missing files", []string{"ticket", "close", "--no-github", "--year", "2025", "--month", "1", "--day", "1", "--slug", "NONEXISTENT", "--summary", "s"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_TicketReopen(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"invalid path format", []string{"ticket", "reopen", "bad-path", "prompt", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"missing prompt", []string{"ticket", "reopen", "2025/01/01/NONEXISTENT", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"missing client", []string{"ticket", "reopen", "2025/01/01/NONEXISTENT", "prompt", "--opus-4-5", "--no-github"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_TicketChange(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"invalid path format", []string{"ticket", "change", "bad-path", "--no-github"}},
+		{"nonexistent ticket", []string{"ticket", "change", "9999/01/01/NONEXISTENT", "--title", "New Title", "--no-github"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_GoalOpen(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing title", []string{"goal", "open", "--no-github"}},
+		{"missing description", []string{"goal", "open", "Valid Title", "--no-github", "--copilot-chat", "--opus-4-5", "--due-date", "2026-02-15"}},
+		{"missing client", []string{"goal", "open", "Valid Title", "desc", "prompt", "--opus-4-5", "--due-date", "2026-02-15", "--no-github"}},
+		{"missing llm", []string{"goal", "open", "Valid Title", "desc", "prompt", "--copilot-chat", "--due-date", "2026-02-15", "--no-github"}},
+		{"missing due-date", []string{"goal", "open", "Valid Title", "desc", "prompt", "--copilot-chat", "--opus-4-5", "--no-github"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_GoalClose(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing id", []string{"goal", "close", "--no-github"}},
+		{"missing summary", []string{"goal", "close", "NONEXISTENT-GOAL", "--no-github"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_GoalReopen(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing id", []string{"goal", "reopen", "--no-github"}},
+		{"missing prompt", []string{"goal", "reopen", "NONEXISTENT-GOAL", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"missing client", []string{"goal", "reopen", "NONEXISTENT-GOAL", "prompt", "--opus-4-5", "--no-github"}},
+		{"missing llm", []string{"goal", "reopen", "NONEXISTENT-GOAL", "prompt", "--copilot-chat", "--no-github"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_PolicyCheck(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing policy id", []string{"policy", "check"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_FolderOperations(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"create missing path", []string{"folder", "create"}},
+		{"move missing args", []string{"folder", "move"}},
+		{"move missing target", []string{"folder", "move", "src"}},
+		{"delete missing path", []string{"folder", "delete"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_FileOperations(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"create missing path", []string{"file", "create"}},
+		{"move missing args", []string{"file", "move"}},
+		{"move missing target", []string{"file", "move", "src"}},
+		{"delete missing path", []string{"file", "delete"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_SectionOperations(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"list missing file", []string{"section", "list"}},
+		{"tree missing file", []string{"section", "tree"}},
+		{"create missing args", []string{"section", "create"}},
+		{"move missing args", []string{"section", "move"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_DefinitionOperations(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"list missing file", []string{"definition", "list"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_ContributorOperations(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"add missing github", []string{"contributor", "add"}},
+		{"remove missing github", []string{"contributor", "remove"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_GraphQL(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing query", []string{"graphql"}},
+		{"invalid query syntax", []string{"graphql", "{ invalid @@@ }"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliJsonPureData(t *testing.T) {
+	cmds := []struct {
+		name string
+		args []string
+	}{
+		{"bundle list", []string{"bundle", "list"}},
+		{"ticket list", []string{"ticket", "list"}},
+		{"folder list", []string{"folder", "list", "@semio-repo/go"}},
+		{"file list", []string{"file", "list", "@semio-repo/go"}},
+		{"section list", []string{"section", "list", "@semio-repo/go/main.go"}},
+		{"definition list", []string{"definition", "list", "@semio-repo/go/main.go"}},
+		{"policy list", []string{"policy", "list"}},
+		{"contributor list", []string{"contributor", "list"}},
+		{"goal list", []string{"goal", "list"}},
+	}
+
+	for _, c := range cmds {
+		t.Run(c.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(c.args...)
+			if err != nil {
+				t.Fatalf("%s failed: %v\nStderr: %s", c.name, err, stderr)
+			}
+			lines := strings.Split(strings.TrimSpace(stdout), "\n")
+			for _, line := range lines {
+				trimmed := strings.TrimSpace(line)
+				if trimmed == "" {
+					continue
+				}
+				var data map[string]interface{}
+				if jsonErr := json.Unmarshal([]byte(trimmed), &data); jsonErr != nil {
+					t.Errorf("invalid JSON line: %s\nError: %v", trimmed, jsonErr)
+					continue
+				}
+				if _, hasKind := data["kind"]; hasKind {
+					if _, hasCmd := data["command"]; hasCmd {
+						t.Errorf("expected pure data, got event wrapper: %s", trimmed)
+					}
+				}
+				if _, hasData := data["data"]; hasData {
+					inner, ok := data["data"].(map[string]interface{})
+					if ok && len(data) == 1 {
+						_ = inner
+						t.Errorf("expected pure data without {\"data\": ...} wrapper: %s", trimmed)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestCliJsonErrorsToStderr(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"goal open missing title", []string{"goal", "open", "--no-github"}},
+		{"policy check missing id", []string{"policy", "check"}},
+		{"folder create missing path", []string{"folder", "create"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, _, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s", tt.name)
+			}
+			if stdout != "" {
+				t.Errorf("expected empty stdout on error, got: %s", stdout)
+			}
+		})
+	}
+}
+
+// #endregion 🔖Wrong Argument Tests
+
+// #region 🔖Consolidated Tests
 
 func TestFormatResult_Section(t *testing.T) {
 	payload := map[string]interface{}{
@@ -2157,7 +2380,7 @@ func TestFormatResult_Definition(t *testing.T) {
 	result := formatResult("definition list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"TEST-DEFINITION-ID",
+		"path/to/file.ts§MyDefinition",
 		"MyDefinition",
 		":30-40",
 	}
@@ -2262,8 +2485,11 @@ func TestFormatResult_Additional(t *testing.T) {
 		if !strings.Contains(output, "Sketchpad MVP") {
 			t.Error("output missing title")
 		}
-		if !strings.Contains(output, "2026-02-15") {
-			t.Error("output missing due date")
+		if strings.Contains(output, "2026-02-15") {
+			t.Error("output should not contain absolute due date")
+		}
+		if !strings.Contains(output, "in ") && !strings.Contains(output, "from now") && !strings.Contains(output, "ago") {
+			t.Error("output missing relative due date")
 		}
 		if !strings.Contains(output, "SKETCHPAD/MVP") {
 			t.Error("output missing id/slug")
@@ -2435,28 +2661,37 @@ func TestLifecycleCommands(t *testing.T) {
 		return NewEngine(executor), nil
 	}
 
-	modes := []string{"", "json", "md"}
+	modes := []string{"", "json", "md", "text"}
 
 	for _, mode := range modes {
 		t.Run("lifecycle_"+mode, func(t *testing.T) {
 			title := "Test Lifecycle " + mode
 			if mode == "" {
-				title = "Test Lifecycle human"
-			}
-
-			openArgs := []string{"ticket", "open", title, "Test Prompt", "copilot-chat", "gemini-3-pro", "--goal", "test-goal", "--no-issue", "--no-github"}
-			if mode == "json" {
-				openArgs = append(openArgs, "--json")
-			}
-			if mode == "md" {
-				openArgs = append(openArgs, "--md")
+				title = "Test Lifecycle default"
 			}
 
 			rootCmd := NewRoot(factory)
 			// Create goal first
+			goalTitle := fmt.Sprintf("Test Goal %s %s", mode, t.Name())
 			goalCmd := NewRoot(factory)
-			goalCmd.SetArgs([]string{"goal", "open", "Test Goal", "Test Goal Description", "Test Goal Prompt", "copilot-chat", "gemini-3-pro", "--due-date", "2025-12-31", "--no-github"})
-			goalCmd.Execute()
+			goalB := bytes.NewBufferString("")
+			goalCmd.SetOut(goalB)
+			goalCmd.SetErr(goalB)
+			goalCmd.SetArgs([]string{"goal", "open", goalTitle, "Test Goal Description", "Test Goal Prompt", "copilot-chat", "gemini-3-pro", "--due-date", "2025-12-31", "--no-github", "--json"})
+			if err := goalCmd.Execute(); err != nil {
+				t.Fatalf("goal open failed: %v\nOutput: %s", err, goalB.String())
+			}
+			goalID := parseGoalCreateID(t, goalB.String())
+			defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
+
+			openArgs := []string{"ticket", "open", title, "Test Prompt", "copilot-chat", "gemini-3-pro", "--goal", goalID, "--no-issue", "--no-github"}
+			if mode == "json" {
+				openArgs = append(openArgs, "--json")
+			} else if mode == "md" {
+				openArgs = append(openArgs, "--md")
+			} else if mode == "text" {
+				openArgs = append(openArgs, "--text")
+			}
 
 			b := bytes.NewBufferString("")
 			rootCmd.SetOut(b)
@@ -2475,28 +2710,28 @@ func TestLifecycleCommands(t *testing.T) {
 			listCmd.SetArgs([]string{"ticket", "list", "--json"})
 			listCmd.Execute()
 
-			events, _ := parseJSONOutput(listB.String())
 			var y, m, d int
 			var slug string
 			found := false
 
-			for _, e := range events {
-				if e.Kind == KindResult {
-					var env struct {
-						Ticket struct {
-							Year  int    `json:"year"`
-							Month int    `json:"month"`
-							Day   int    `json:"day"`
-							Slug  string `json:"slug"`
-							Title string `json:"title"`
-						} `json:"ticket"`
-					}
-					if json.Unmarshal(e.Data, &env) == nil {
-						if strings.EqualFold(env.Ticket.Title, title) {
-							y, m, d, slug = env.Ticket.Year, env.Ticket.Month, env.Ticket.Day, env.Ticket.Slug
-							found = true
-							break
-						}
+			for _, line := range strings.Split(strings.TrimSpace(listB.String()), "\n") {
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
+				var env struct {
+					Ticket struct {
+						Year  int    `json:"year"`
+						Month int    `json:"month"`
+						Day   int    `json:"day"`
+						Slug  string `json:"slug"`
+						Title string `json:"title"`
+					} `json:"ticket"`
+				}
+				if json.Unmarshal([]byte(line), &env) == nil {
+					if strings.EqualFold(env.Ticket.Title, title) {
+						y, m, d, slug = env.Ticket.Year, env.Ticket.Month, env.Ticket.Day, env.Ticket.Slug
+						found = true
+						break
 					}
 				}
 			}
@@ -2547,9 +2782,10 @@ func TestLifecycleCommands(t *testing.T) {
 			}
 			if mode == "json" {
 				closeArgs = append(closeArgs, "--json")
-			}
-			if mode == "md" {
+			} else if mode == "md" {
 				closeArgs = append(closeArgs, "--md")
+			} else if mode == "text" {
+				closeArgs = append(closeArgs, "--text")
 			}
 
 			closeCmd := NewRoot(factory)
@@ -2591,47 +2827,47 @@ func TestListCommands(t *testing.T) {
 		{
 			name:  "bundle list",
 			args:  []string{"bundle", "list"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "ticket list",
 			args:  []string{"ticket", "list"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "folder list",
 			args:  []string{"folder", "list", "@semio-repo/go"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "file list",
 			args:  []string{"file", "list", "@semio-repo/go"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "section list",
 			args:  []string{"section", "list", "@semio-repo/go/main.go"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "definition list",
 			args:  []string{"definition", "list", "@semio-repo/go/main.go"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "policy list",
 			args:  []string{"policy", "list"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "contributor list",
 			args:  []string{"contributor", "list"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 		{
 			name:  "project list",
 			args:  []string{"project", "list"},
-			modes: []string{"", "json", "md"},
+			modes: []string{"", "json", "md", "text"},
 		},
 	}
 
@@ -2641,7 +2877,7 @@ func TestListCommands(t *testing.T) {
 			if mode != "" {
 				testName += " --" + mode
 			} else {
-				testName += " (human)"
+				testName += " (default)"
 			}
 
 			t.Run(testName, func(t *testing.T) {
@@ -2653,9 +2889,10 @@ func TestListCommands(t *testing.T) {
 				args := append([]string(nil), tt.args...)
 				if mode == "json" {
 					args = append(args, "--json")
-				}
-				if mode == "md" {
+				} else if mode == "md" {
 					args = append(args, "--md")
+				} else if mode == "text" {
+					args = append(args, "--text")
 				}
 				rootCmd.SetArgs(args)
 
@@ -2671,8 +2908,19 @@ func TestListCommands(t *testing.T) {
 						if line == "" {
 							continue
 						}
-						if !strings.HasPrefix(strings.TrimSpace(line), "{") {
-							continue
+						// Verify it is pure data
+						var data map[string]interface{}
+						if err := json.Unmarshal([]byte(line), &data); err != nil {
+							t.Errorf("Invalid JSON line: %s", line)
+						}
+						// Check if it's an event wrapper
+						if kind, ok := data["kind"].(string); ok {
+							if kind == "result" || kind == "start" || kind == "done" {
+								// Extra check to avoid false positives if data item has "kind"
+								if _, hasCmd := data["command"]; hasCmd {
+									t.Errorf("Expected pure data, got Event wrapper: %s", line)
+								}
+							}
 						}
 					}
 				} else if mode == "md" {
@@ -2707,17 +2955,17 @@ func TestSectionCommands(t *testing.T) {
 		contentFmt string
 		renameTo   string
 	}{
-		{"TypeScript", ".ts", "const x = 1;\n// #region %s\nconst y = 2;\n// #endregion %s\n", "Renamed"},
-		{"Go", ".go", "package main\n// #region %s\nvar y = 2\n// #endregion %s\n", "Renamed"},
+		{"TypeScript", ".ts", "const x = 1;\n// #region 🔖%s\nconst y = 2;\n// #endregion 🔖%s\n", "Renamed"},
+		{"Go", ".go", "package main\n// #region 🔖%s\nvar y = 2\n// #endregion 🔖%s\n", "Renamed"},
 		{"Python", ".py", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
-		{"CSharp", ".cs", "#region %s\nvar y = 2;\n#endregion %s\n", "Renamed"},
-		{"Rust", ".rs", "// #region %s\nlet y = 2;\n// #endregion %s\n", "Renamed"},
+		{"CSharp", ".cs", "#region 🔖%s\nvar y = 2;\n#endregion 🔖%s\n", "Renamed"},
+		{"Rust", ".rs", "// #region 🔖%s\nlet y = 2;\n// #endregion 🔖%s\n", "Renamed"},
 		{"Ruby", ".rb", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
 		{"Shell", ".sh", "# region %s\ny=2\n# endregion %s\n", "Renamed"},
 		{"TOML", ".toml", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
 		{"YAML", ".yaml", "# region %s\ny: 2\n# endregion %s\n", "Renamed"},
-		{"SQL", ".sql", "-- #region %s\nSELECT 1;\n-- #endregion %s\n", "Renamed"},
-		{"GraphQL", ".graphql", "# #region %s\ntype Query { name: String }\n# #endregion %s\n", "Renamed"},
+		{"SQL", ".sql", "-- #region 🔖%s\nSELECT 1;\n-- #endregion 🔖%s\n", "Renamed"},
+		{"GraphQL", ".graphql", "# #region 🔖%s\ntype Query { name: String }\n# #endregion 🔖%s\n", "Renamed"},
 		{"Markdown", ".md", "## %s\nContent\n", "Renamed"},
 	}
 
@@ -3004,53 +3252,53 @@ func TestArtifactIDAndURI(t *testing.T) {
 	}
 }
 
-// #endregion Consolidated Tests
+// #endregion 🔖Consolidated Tests
 func TestMcpToolsSchemas(t *testing.T) {
-s := createMcpServer()
-tools := s.ListTools()
+	s := createMcpServer()
+	tools := s.ListTools()
 
-var validateSchema func(path string, schema map[string]any) error
-validateSchema = func(path string, schema map[string]any) error {
-typeVal, ok := schema["type"].(string)
+	var validateSchema func(path string, schema map[string]any) error
+	validateSchema = func(path string, schema map[string]any) error {
+		typeVal, ok := schema["type"].(string)
 
-// If type is "array", check for "items"
-if ok && typeVal == "array" {
-if _, hasItems := schema["items"]; !hasItems {
-return fmt.Errorf("property '%s' is of type 'array' but missing 'items' field", path)
-}
-}
+		// If type is "array", check for "items"
+		if ok && typeVal == "array" {
+			if _, hasItems := schema["items"]; !hasItems {
+				return fmt.Errorf("property '%s' is of type 'array' but missing 'items' field", path)
+			}
+		}
 
-// Recursively check properties if present
-if props, ok := schema["properties"].(map[string]any); ok {
-for k, v := range props {
-if propMap, ok := v.(map[string]any); ok {
-if err := validateSchema(path+"."+k, propMap); err != nil {
-return err
-}
-}
-}
-}
+		// Recursively check properties if present
+		if props, ok := schema["properties"].(map[string]any); ok {
+			for k, v := range props {
+				if propMap, ok := v.(map[string]any); ok {
+					if err := validateSchema(path+"."+k, propMap); err != nil {
+						return err
+					}
+				}
+			}
+		}
 
-// Recursively check items if present (for arrays)
-if items, ok := schema["items"].(map[string]any); ok {
-if err := validateSchema(path+".items", items); err != nil {
-return err
-}
-}
+		// Recursively check items if present (for arrays)
+		if items, ok := schema["items"].(map[string]any); ok {
+			if err := validateSchema(path+".items", items); err != nil {
+				return err
+			}
+		}
 
-return nil
-}
+		return nil
+	}
 
-for name, tool := range tools {
-t.Run(name, func(t *testing.T) {
-// InputSchema.Properties is map[string]any
-for propName, propSchema := range tool.Tool.InputSchema.Properties {
-if propMap, ok := propSchema.(map[string]any); ok {
-if err := validateSchema(propName, propMap); err != nil {
-t.Errorf("Invalid schema for tool '%s': %v", name, err)
-}
-}
-}
-})
-}
+	for name, tool := range tools {
+		t.Run(name, func(t *testing.T) {
+			// InputSchema.Properties is map[string]any
+			for propName, propSchema := range tool.Tool.InputSchema.Properties {
+				if propMap, ok := propSchema.(map[string]any); ok {
+					if err := validateSchema(propName, propMap); err != nil {
+						t.Errorf("Invalid schema for tool '%s': %v", name, err)
+					}
+				}
+			}
+		})
+	}
 }

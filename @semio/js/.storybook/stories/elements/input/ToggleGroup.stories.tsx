@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/input/ToggleGroup.stories.tsx
 
@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 import { Action, Level, LevelProvider, ToggleGroup, getLevelBgClass } from "../../../../sketchpad/elements";
 
-// #region ToggleGroup
+// #region 🔖ToggleGroup
 const meta = {
   title: "Elements/Input/ToggleGroup",
   component: ToggleGroup,
@@ -138,4 +138,4 @@ export const MultipleTemporary: Story = {
   render: createMultipleLevelRender("temporary", "toggle-group-multiple-temporary"),
 };
 
-// #endregion ToggleGroup
+// #endregion 🔖ToggleGroup

@@ -1,6 +1,6 @@
 #!/bin/bash
 # SPDX-License-Identifier: AGPL-3.0-only
-#region PostAttach
+#region 🔖PostAttach
 set -e
 VSIX_PATH="@semio-repo/vscode/semio-repo.vsix"
 EXTENSION_PUBLISHER=""
@@ -10,7 +10,7 @@ EXTENSION_VERSION=""
 EXTENSION_DIR_NAME=""
 WSL_ERROR="Command is only available in WSL or inside a Visual Studio Code terminal."
 
-#region DetectIDE
+#region 🔖DetectIDE
 find_working_clis() {
   shopt -s nullglob
   clis=()
@@ -118,9 +118,9 @@ find_working_clis() {
 }
 
 mapfile -t IDE_CLIS < <(find_working_clis)
-#endregion DetectIDE
+#endregion 🔖DetectIDE
 
-#region InstallExtension
+#region 🔖InstallExtension
 if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
   if [ ! -f "$VSIX_PATH" ] || [ "$VSIX_PATH" -ot "@semio-repo/vscode/extension.ts" ]; then
     (cd @semio-repo/vscode && npm run package)
@@ -137,10 +137,53 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     if [ -n "$EXTENSION_ID" ] && [ -n "$EXTENSION_VERSION" ]; then
       EXTENSION_DIR_NAME="${EXTENSION_ID}-${EXTENSION_VERSION}"
     fi
+    extensions_dirs=()
+    if [ -n "$EXTENSION_DIR_NAME" ]; then
+      if [ -d "/home/vscode/.vscode-server/extensions" ]; then
+        extensions_dirs+=("/home/vscode/.vscode-server/extensions")
+      fi
+      if [ -d "/home/vscode/.cursor-server/extensions" ]; then
+        extensions_dirs+=("/home/vscode/.cursor-server/extensions")
+      fi
+      if [ -d "/home/vscode/.windsurf-server/extensions" ]; then
+        extensions_dirs+=("/home/vscode/.windsurf-server/extensions")
+      fi
+      if [ -d "/home/vscode/.antigravity-server/extensions" ]; then
+        extensions_dirs+=("/home/vscode/.antigravity-server/extensions")
+      fi
+    fi
+    if [ -n "$EXTENSION_ID" ]; then
+      for ide_cli in "${IDE_CLIS[@]}"; do
+        uninstall_output="$("$ide_cli" --uninstall-extension "$EXTENSION_ID" --force 2>&1)" || true
+        if echo "$uninstall_output" | grep -Fq "$WSL_ERROR"; then
+          continue
+        fi
+      done
+      if [ "${#extensions_dirs[@]}" -gt 0 ]; then
+        for extensions_dir in "${extensions_dirs[@]}"; do
+          for existing_dir in "$extensions_dir"/"$EXTENSION_ID"-*; do
+            if [ -d "$existing_dir" ]; then
+              rm -rf "$existing_dir"
+            fi
+          done
+          extensions_json="${extensions_dir}/extensions.json"
+          if [ -f "$extensions_json" ]; then
+            node -e 'const fs=require("fs");const id=process.argv[1];const file=process.argv[2];const list=JSON.parse(fs.readFileSync(file,"utf8"));const next=list.filter(e=>!(e&&e.identifier&&e.identifier.id===id));fs.writeFileSync(file,JSON.stringify(next));' "$EXTENSION_ID" "$extensions_json"
+          fi
+        done
+      fi
+      if [ -d "/home/vscode/.cursor-server/data/CachedProfilesData" ]; then
+        find /home/vscode/.cursor-server/data/CachedProfilesData -name "extensions.user.cache" -delete
+        find /home/vscode/.cursor-server/data/CachedProfilesData -name "extensions.builtin.cache" -delete
+      fi
+      if [ -d "/home/vscode/.vscode-server/data/CachedProfilesData" ]; then
+        find /home/vscode/.vscode-server/data/CachedProfilesData -name "extensions.user.cache" -delete
+        find /home/vscode/.vscode-server/data/CachedProfilesData -name "extensions.builtin.cache" -delete
+      fi
+    fi
     installed_any=""
     for ide_cli in "${IDE_CLIS[@]}"; do
       install_output="$("$ide_cli" --install-extension "$VSIX_PATH" --force 2>&1)" || true
-      # Silently skip CLIs that only work in WSL/VS Code terminal
       if echo "$install_output" | grep -Fq "$WSL_ERROR"; then
         continue
       fi
@@ -158,41 +201,26 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
         installed_any="1"
       fi
     done
-    if [ -n "$EXTENSION_DIR_NAME" ]; then
-      extensions_dirs=()
-      if [ -d "/home/vscode/.vscode-server/extensions" ]; then
-        extensions_dirs+=("/home/vscode/.vscode-server/extensions")
-      fi
-      if [ -d "/home/vscode/.cursor-server/extensions" ]; then
-        extensions_dirs+=("/home/vscode/.cursor-server/extensions")
-      fi
-      if [ -d "/home/vscode/.windsurf-server/extensions" ]; then
-        extensions_dirs+=("/home/vscode/.windsurf-server/extensions")
-      fi
-      if [ -d "/home/vscode/.antigravity-server/extensions" ]; then
-        extensions_dirs+=("/home/vscode/.antigravity-server/extensions")
-      fi
-      if [ "${#extensions_dirs[@]}" -gt 0 ]; then
-        temp_dir="$(mktemp -d)"
-        unzip -q "$VSIX_PATH" -d "$temp_dir"
-        for extensions_dir in "${extensions_dirs[@]}"; do
-          target_dir="${extensions_dir}/${EXTENSION_DIR_NAME}"
+    if [ -n "$EXTENSION_DIR_NAME" ] && [ "${#extensions_dirs[@]}" -gt 0 ]; then
+      temp_dir="$(mktemp -d)"
+      unzip -q "$VSIX_PATH" -d "$temp_dir"
+      for extensions_dir in "${extensions_dirs[@]}"; do
+        target_dir="${extensions_dir}/${EXTENSION_DIR_NAME}"
+        if [ -d "$target_dir" ]; then
+          rm -rf "$target_dir"
+        fi
+        if [ -d "$temp_dir/extension" ]; then
+          mkdir -p "$extensions_dir"
+          cp -R "$temp_dir/extension" "$target_dir"
           if [ -d "$target_dir" ]; then
-            rm -rf "$target_dir"
+            extensions_json="${extensions_dir}/extensions.json"
+            node -e 'const fs=require("fs");const id=process.argv[1];const version=process.argv[2];const dir=process.argv[3];const rel=process.argv[4];const file=process.argv[5];const list=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,"utf8")):[];const next=list.filter(e=>!(e&&e.identifier&&e.identifier.id===id));next.push({identifier:{id},version,location:{$mid:1,path:dir,scheme:"file"},relativeLocation:rel,metadata:{isApplicationScoped:true,isMachineScoped:false,isBuiltin:false,installedTimestamp:Date.now(),source:"vsix",private:true}});fs.writeFileSync(file,JSON.stringify(next));' "$EXTENSION_ID" "$EXTENSION_VERSION" "$target_dir" "$EXTENSION_DIR_NAME" "$extensions_json"
+            echo "✅ Extension installed via $extensions_dir"
+            installed_any="1"
           fi
-          if [ -d "$temp_dir/extension" ]; then
-            mkdir -p "$extensions_dir"
-            cp -R "$temp_dir/extension" "$target_dir"
-            if [ -d "$target_dir" ]; then
-              extensions_json="${extensions_dir}/extensions.json"
-              node -e "const fs=require('fs');const id=process.argv[1];const version=process.argv[2];const dir=process.argv[3];const rel=process.argv[4];const file=process.argv[5];const list=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):[];const exists=list.some(e=>e&&e.identifier&&e.identifier.id===id&&e.version===version);if(!exists){list.push({identifier:{id},version,location:{'$mid':1,path:dir,scheme:'file'},relativeLocation:rel,metadata:{isApplicationScoped:true,isMachineScoped:false,isBuiltin:false,installedTimestamp:Date.now(),source:'vsix',private:true}});}fs.writeFileSync(file,JSON.stringify(list));" "$EXTENSION_ID" "$EXTENSION_VERSION" "$target_dir" "$EXTENSION_DIR_NAME" "$extensions_json"
-              echo "✅ Extension installed via $extensions_dir"
-              installed_any="1"
-            fi
-          fi
-        done
-        rm -rf "$temp_dir"
-      fi
+        fi
+      done
+      rm -rf "$temp_dir"
     fi
     if [ -z "$installed_any" ]; then
       echo "⚠️  No IDE CLI could install the extension."
@@ -203,9 +231,9 @@ if [ "${#IDE_CLIS[@]}" -gt 0 ]; then
     exit 1
   fi
 fi
-#endregion InstallExtension
+#endregion 🔖InstallExtension
 
-#region WindsurfMcpConfig
+#region 🔖WindsurfMcpConfig
 WINDSURF_MCP_DIR="/home/vscode/.codeium/windsurf"
 WINDSURF_MCP_FILE="${WINDSURF_MCP_DIR}/mcp_config.json"
 mkdir -p "$WINDSURF_MCP_DIR"
@@ -221,7 +249,7 @@ cat > "$WINDSURF_MCP_FILE" <<'EOF'
     }
 }
 EOF
-#endregion WindsurfMcpConfig
+#endregion 🔖WindsurfMcpConfig
 
 echo "✅ Post-attach setup complete."
-#endregion PostAttach
+#endregion 🔖PostAttach

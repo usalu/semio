@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-// #region Header
+// #region 🔖Header
 
 // py/engine/test.ts
 
@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import { execSync } from "child_process";
 

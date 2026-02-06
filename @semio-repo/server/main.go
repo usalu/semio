@@ -1,13 +1,13 @@
-// #region Header
+// #region 🔖Header
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Package
+// #region 🔖Package
 package main
 
-// #endregion Package
+// #endregion 🔖Package
 
-// #region Imports
+// #region 🔖Imports
 import (
 	"bufio"
 	"context"
@@ -34,9 +34,9 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Config
+// #region 🔖Config
 
 type Config struct {
 	Address          string
@@ -77,9 +77,9 @@ func envOrDefaultInt64(key string, fallback int64) int64 {
 	return fallback
 }
 
-// #endregion Config
+// #endregion 🔖Config
 
-// #region Models
+// #region 🔖Models
 
 type Ticket struct {
 	ID        string     `json:"id"`
@@ -226,9 +226,9 @@ type IndexFileRequest struct {
 	Content  string `json:"content"`
 }
 
-// #endregion Models
+// #endregion 🔖Models
 
-// #region Database
+// #region 🔖Database
 
 type Database struct {
 	db *sql.DB
@@ -478,9 +478,9 @@ func (d *Database) listConflicts(ctx context.Context) ([]struct {
 	return results, nil
 }
 
-// #endregion Database
+// #endregion 🔖Database
 
-// #region EventBus
+// #region 🔖EventBus
 
 type EventHandler func(context.Context, Event)
 
@@ -555,9 +555,9 @@ func (b *EventBus) Stop() {
 	b.wg.Wait()
 }
 
-// #endregion EventBus
+// #endregion 🔖EventBus
 
-// #region DiffParsing
+// #region 🔖DiffParsing
 
 var hunkHeader = regexp.MustCompile(`@@ -([0-9]+)(?:,([0-9]+))? \+([0-9]+)(?:,([0-9]+))? @@`)
 
@@ -621,9 +621,9 @@ func parseHunkIntWithDefault(value string, fallback int) int {
 	return parsed
 }
 
-// #endregion DiffParsing
+// #endregion 🔖DiffParsing
 
-// #region Indexing
+// #region 🔖Indexing
 
 type IndexCache struct {
 	Sections    map[string][]Scope
@@ -756,11 +756,11 @@ func parseRegionMarker(line string) (string, bool, bool) {
 	trimmed = strings.TrimPrefix(trimmed, "/*")
 	trimmed = strings.TrimSuffix(trimmed, "*/")
 	trimmed = strings.TrimSpace(trimmed)
-	if strings.HasPrefix(trimmed, "#region ") {
-		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#region ")), true, false
+	if strings.HasPrefix(trimmed, "#region 🔖") {
+		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#region 🔖")), true, false
 	}
-	if strings.HasPrefix(trimmed, "#endregion ") {
-		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#endregion ")), true, true
+	if strings.HasPrefix(trimmed, "#endregion 🔖") {
+		return strings.TrimSpace(strings.TrimPrefix(trimmed, "#endregion 🔖")), true, true
 	}
 	return "", false, false
 }
@@ -846,9 +846,9 @@ func definitionPatterns(ext string) []*regexp.Regexp {
 	}
 }
 
-// #endregion Indexing
+// #endregion 🔖Indexing
 
-// #region Claims
+// #region 🔖Claims
 
 func mapClaims(scopes []Scope, diff DiffResult) ([]string, map[string][]Scope) {
 	claimed := map[string][]Scope{}
@@ -905,9 +905,9 @@ func appendIfMissing(list []string, value string) []string {
 	return append(list, value)
 }
 
-// #endregion Claims
+// #endregion 🔖Claims
 
-// #region Warnings
+// #region 🔖Warnings
 
 func buildConflictWarnings(conflicts []struct {
 	ScopeID string
@@ -929,9 +929,9 @@ func buildConflictWarnings(conflicts []struct {
 	return warnings
 }
 
-// #endregion Warnings
+// #endregion 🔖Warnings
 
-// #region Server
+// #region 🔖Server
 
 type Server struct {
 	config      Config
@@ -1368,9 +1368,9 @@ func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, scopes)
 }
 
-// #endregion Server
+// #endregion 🔖Server
 
-// #region Processing
+// #region 🔖Processing
 
 type ProcessResult struct {
 	ChangedFiles  []string
@@ -1515,9 +1515,9 @@ func (s *Server) walkRepoFiles() ([]string, error) {
 	return files, nil
 }
 
-// #endregion Processing
+// #endregion 🔖Processing
 
-// #region Webhooks
+// #region 🔖Webhooks
 
 type GitHubComment struct {
 	Body      string
@@ -1663,9 +1663,9 @@ func extractActorLogin(payload map[string]interface{}) string {
 	return ""
 }
 
-// #endregion Webhooks
+// #endregion 🔖Webhooks
 
-// #region Discord
+// #region 🔖Discord
 
 func (s *Server) notifyDiscord(title string, body string) {
 	if s.config.DiscordWebhook == "" {
@@ -1694,17 +1694,17 @@ func (s *Server) registerNotifications() {
 	})
 }
 
-// #endregion Discord
+// #endregion 🔖Discord
 
-// #region Utilities
+// #region 🔖Utilities
 
 func newID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
 }
 
-// #endregion Utilities
+// #endregion 🔖Utilities
 
-// #region Main
+// #region 🔖Main
 
 func main() {
 	config := loadConfig()
@@ -1738,4 +1738,4 @@ func main() {
 	}
 }
 
-// #endregion Main
+// #endregion 🔖Main

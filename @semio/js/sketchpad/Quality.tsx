@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/Quality.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
@@ -80,9 +80,9 @@ import {
   useTheme,
 } from "./Sketchpad";
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Types
+// #region 🔖Types
 
 export interface FormulaNode {
   id: Guid;
@@ -163,9 +163,9 @@ export interface FormulaFunction {
   toLatex: (...operands: string[]) => string;
 }
 
-// #endregion Types
+// #endregion 🔖Types
 
-// #region Functions
+// #region 🔖Functions
 
 export const formulaFunctions: Record<string, FormulaFunction> = {
   Add: {
@@ -484,9 +484,9 @@ function inverseQualityAppSelectionDiff(selection: QualityAppSelection, diff: Qu
   return inverse;
 }
 
-// #endregion Functions
+// #endregion 🔖Functions
 
-// #region Commands
+// #region 🔖Commands
 
 const qualityAppCommands = {
   "semio.qualityApp.toggleFormulaFullscreen": (context: QualityAppCommandContext): QualityAppCommandResult => {
@@ -593,9 +593,9 @@ const qualityAppCommands = {
   },
 };
 
-// #endregion Commands
+// #endregion 🔖Commands
 
-// #region Store
+// #region 🔖Store
 
 class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDiff, QualityAppSelectionDiff, QualityAppEdit, QualityAppCommandContext, QualityAppCommandResult> {
   private readonly Guid: QualityAppId;
@@ -753,7 +753,7 @@ if (typeof window !== "undefined") {
   registerQualityAppStoreFactory((parent, id) => new QualityAppStore(parent, id));
 }
 
-// #region Quality App Plugin Registration
+// #region 🔖Quality App Plugin Registration
 
 const qualityAppPlugin: AppPlugin = {
   id: "quality",
@@ -797,7 +797,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion Quality App Plugin Registration
+// #endregion 🔖Quality App Plugin Registration
 
 type QualityAppScope = { guid: string };
 const QualityAppScopeContext = createContext<QualityAppScope | null>(null);
@@ -971,7 +971,7 @@ export function useQualityAppWindowLayout(): HookResult<any> {
   return [windowLayout, setWindowLayout, canSet];
 }
 
-//#region Action Hooks
+//#region 🔖Action Hooks
 
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
@@ -1040,11 +1040,11 @@ export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
   return [action, canSetFullscreen];
 }
 
-//#endregion Action Hooks
+//#endregion 🔖Action Hooks
 
-// #endregion Store
+// #endregion 🔖Store
 
-// #region Components
+// #region 🔖Components
 
 declare global {
   interface Window {
@@ -1592,9 +1592,9 @@ const QualityWorkbenchQualities: FC = () => {
   return <QualityTree qualities={qualities} />;
 };
 
-// #endregion Components
+// #endregion 🔖Components
 
-// #region App
+// #region 🔖App
 
 export interface AppProps {}
 
@@ -1891,9 +1891,9 @@ const App: FC<AppProps> = () => {
 
 export default App;
 
-// #endregion App
+// #endregion 🔖App
 
-// #region Config
+// #region 🔖Config
 
 export const config: AppConfig = {
   id: "quality",
@@ -1927,4 +1927,4 @@ export const config: AppConfig = {
   order: 40,
 };
 
-// #endregion Config
+// #endregion 🔖Config

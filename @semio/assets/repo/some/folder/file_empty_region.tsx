@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // assets/repo/some/folder/file_empty_region.tsx
 
@@ -17,14 +17,14 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Empty
+// #region 🔖Empty
 
-// #endregion Empty
+// #endregion 🔖Empty
 
-// #region Content
+// #region 🔖Content
 
 const CONTENT = "has content";
 
-// #endregion Content
+// #endregion 🔖Content

@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/input/Slider.stories.tsx
 
@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { useState } from "react";
 import { Level, LevelProvider, Slider, getLevelBgClass } from "../../../../sketchpad/elements";
 
-// #region Slider
+// #region 🔖Slider
 const meta = {
   title: "Elements/Input/Slider",
   component: Slider,
@@ -98,4 +98,4 @@ export const Temporary: Story = {
   render: createLevelRender("temporary", "slider-temporary"),
 };
 
-// #endregion Slider
+// #endregion 🔖Slider

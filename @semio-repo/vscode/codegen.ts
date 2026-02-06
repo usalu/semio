@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/vscode/codegen.ts
 
@@ -17,12 +17,12 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
-  schema: "../go/schema.graphql",
+  schema: "../graphql/schema.graphql",
   documents: ["queries.ts"],
   generates: {
     "./generated/": {

@@ -20,6 +20,64 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+The file kinds are not derived properly. E.g. all files with `*.test.*`, `_test.*`, `test_*`, `*.stories.*`, `.spec.*`, etc. should be test files. All `*.config.*`, `*.toml`, `*.yaml`, `*.yml`, `*.json`, `*.xml`, `*.ini`, `*.conf`, `*.env`, `*.gitignore`, `*.dockerignore`, etc. should be config files. All `*.md`, `*.txt`, `*.rst`, `*.adoc`, etc. should be docs files. All `*.png`, `*.jpg`, `*.jpeg`, `*.gif`, `*.svg`, `*.ico`, `*.webp`, `*.ttf`, `*.woff`, `*.woff2`, `*.eot`, etc. should be resource files. On code files, the kind varies depending the content. Use the 
+
+
+Currently every source code file has the path on top of the file. Replace the path with the id (from the semio repo id system). Adjust them and the policies, docs etc.
+
+The semio repo cli has currently plenty of hardcoded information.
+The kind information (project, bundle, folder, file, definition) 
+
+Dont show the tickets in the goal tree unless --show-tickets
+
+Make sure that all tree and list commands with --md and --text format never display absolute dates but only relative (yesterday, ago, etc). Use an approriate library. Onyl return date in --json.
+
+The list --text commands are not clean. They should display the id, the properties in a clean colored minimal format. Color code as much as possible. e.g. instead of displaying the status as `open` or `closed` display it blue as for open and green as for closed.
+
+$ ./@semio-repo/go/go bundle list
+```
+[<id>](<uri>) - <description>
+```
+
+```
+$ ./@semio-repo/go/go bundle list
+- [📚︎ @coda/examples](semiorepo://bundle/@coda/examples) - @coda/examples
+- [📚︎ @coda/py](semiorepo://bundle/@coda/py) - @coda/py
+- [📚︎ @semio/examples](semiorepo://bundle/@semio/examples) - @semio/examples
+```
+
+should be:
+```
+$ ./@semio-repo/go/go bundle list
+- [📔@coda/examples](semiorepo://bundle/@coda/examples) - @coda/examples
+- [⌨️@coda/py](semiorepo://bundle/@coda/py) - @coda/py
+- [📚@semio/examples](semiorepo://bundle/@semio/examples) - @semio/examples
+```
+
+All --json commands should return just pure data, no extra wrapping. If an error occurs, return it to stderr.
+All commands must be tested with semantically wrong arguments.
+
+Definitions in semio-repo are just top-level. They start on a newline and declaration/statements inside, dont count as definition.
+E.g. in python in semio.py __str__ is wrongly being identified as definition
+
+Make sure that the semio repo vscode extension is always first uninstalled to never have any stale extension.
+
+The semio repo vscode extension is not showing any section when expanding a file.
+
+All --json list commands should return just pure data in streaming ndjson.
+
+All --tree commands should return one sorted json object with all the information to render the tree.
+
+Refactor the vscode extension to be clean. It should always lazy load the tree items and only load more items when the user expands the tree item.
+
+Change the default output format of the cli to be markdown. The format options should be `--format md` for llms, `--format text` for humans and `--format json` for api or simply `-md`, `-text`, `-json`.
+
+Simplify tickets and remove the optional parent ticket field. Tickets must have a goal and no parent ticket.
+
+The github sync mechanism for goals should be extended. Currently they are linked to milestones. Instead, only the goals without parent should be milestones. All child goals should be issues with the `goal` label.
+The first generation of goals (children of root goals) should be linked to milestones. All further genenerations should be subissues of the parent goal issue and dont have any milestone.
+Migrate to the new system once but dont keep any backwards compatibility or legacy api.
+
 Make goal a required field when creating a ticket. Update code and docs.
 
 Create a new command: `sync github` that syncs the local semio-repo artifacts with the remote github artifacts. E.g. when a ticket is closes but the github issue is not closed, then close the github issue. Or when a ticket is assigned to a goal then make sure the goal issue is assigned with the milestone of goal. Check that all labels starting with `@` correspond to the list of projects and bundles (e.g. `@coda`, `@semio`, `@semio-repo`, `@semio/js`, `@semio-repo/go`, etc.). Remove the non corresponding labels (from deleted projects and bundles).
@@ -27,20 +85,76 @@ Create a new command: `sync github` that syncs the local semio-repo artifacts wi
 semio repo vscode extension:
 The current project tree view looks like this:
 ```
-├─ Projects
-│ ├─ coda
-│ ├─ semio
-│ ├─ semio-repo
-│ │ └─ @semio-repo/go
+├─ 🏗️Projects
+│ ├─ 📦coda
+│ ├─ 📦semio
+│ │ ├─ 🏪@semio/gh
+│ │ ├─ 🏪@semio/js
+│ │ │ ├─ 📁sketchpad
+│ │ │ │ ├─ 📄Design.tsx
+│ │ │ │ │ ├─ 🔖State Managment
+│ │ │ │ │ │ ├─ 🛠️DesignAppSelection
+│ │ │ │ │ │ ├─ 🛠️useDesignAppPieceStatus
+│ │ │ │ ├─ ⚙️tailwind.config.ts
+│ ├─ 📦@semio-repo
 ```
 but it should look like this:
 ```
 ├─ Projects
-│ ├─ 🔬@coda
-│ ├─ 👤@semio
+│ ├─ 🔬coda
+│ ├─ 👤semio
+│ │ ├─ 🖱️gh
+│ │ ├─ 📚js
+│ │ │ ├─ 📁sketchpad
+│ │ │ │ ├─ 💻Design.tsx
+│ │ │ │ │ ├─ 🔖State Managment
+│ │ │ │ │ │ ├─ ✂️DesignAppSelection
+│ │ │ │ │ │ ├─ 🔖Hooks
+│ │ │ │ │ │ │ ├─ 🛠️useDesignAppPieceStatus
+│ │ │ │ ├─ ⚙️tailwind.config.ts
 │ ├─ 🧰@semio-repo
-│ │ ├─ 🖱️vscode
-│ │ └─ ⌨️go
+```
+
+The emoji at the beginning of an item is part of the id. Refactor the id system if necessary.
+
+When a file is edited and saved (e.g. modified sections/definitions) and the tree item is open, then the tree item should be updated to show the new file.
+
+Add Refresh button to every tree item to refresh only the tree item and not the whole tree.
+
+Nested sections are not shown in the tree view.
+
+Only the bundles have menu items for the filters.
+Folders, Sections, Definitions, Tickets, Dates have no menu items for the filters.
+Goal, Contributor, Commit are missing in the filter menu.
+
+
+semio repo vscode extension:
+The current project tree view looks like this:
+```
+├─ Projects
+│ ├─ coda
+│ ├─ semio
+│ │ ├─ gh
+│ │ ├─ js
+│ │ │ ├─ sketchpad
+│ │ │ │ ├─ Design.tsx
+│ │ │ │ │ ├─ 🔖Settings
+│ │ │ │ │ │ ├─ DesignSettingsContent
+│ ├─ semio-repo
+│ │ └─ @semio-repo/go
+```
+but it should look something like this, always using the <kind> emoji before the name:
+```
+├─ Projects
+│ ├─ 🔬coda
+│ ├─ 👤semio
+│ │ ├─ 🖱️gh
+│ │ ├─ 📚js
+│ │ │ ├─ 📁sketchpad
+│ │ │ │ ├─ 📄Design.tsx
+│ │ │ │ │ ├─ 🔖Settings
+│ │ │ │ │ │ ├─ 🏷️DesignSettingsContent
+│ ├─ 🧰@semio-repo
 ```
 
 The preflight command should delete all empty folders (also inside subfolders).
@@ -450,51 +564,55 @@ The semio repo vscode extension should show the todos in the sideview. Additiona
 
 Extend the existing tests to cover all new features.
 
-The `@semio-repo/vscode` extension sideview should be changed/refactored/consolidated into two sections (not 3 as right now): `Monorepo` and `Filter`.
+The `@semio-repo/vscode` extension sideview should be changed/refactored/consolidated into two exactly two sections: `Monorepo` and `Filter`.
 Here the tree view (% for on click, # for menu button actions)
-├─ Monorepo
-│ ├─ Projects
-│ │ ├─ @PROJECTNAME % NAVIGATE TO PROJECT
-│ │ │ ├─ BUNDLENAME % NAVIGATE TO BUNDLE
-│ │ │ │ ├─ FOLDERNAME* % NAVIGATE TO FOLDER
-│ │ │ │ │ ├─ FILENAME % NAVIGATE TO FILE
-│ │ │ │ │ │ ├─ SECTIONNAME* % NAVIGATE TO SECTION
-│ │ │ │ │ │ │ ├─ DEFINITIONNAME % NAVIGATE TO DEFINITION
-│ ├─ Goals
-│ │ ├─ GOALNAME* % NAVIGATE TO GOAL
-│ │ │ ├─ TICKETNAME* % NAVIGATE TO TICKET
-│ ├─ Tickets % NAVIGATE TO PROJECT
-│ │ ├─ YEAR % NAVIGATE TO YEAR
-│ │ │ ├─ MONTH % NAVIGATE TO MONTH
-│ │ │ │ ├─ DAY % NAVIGATE TO DAY
-│ │ │ │ │ ├─ TICKETNAME* % NAVIGATE TO TICKET
-│ │ │ │ │ │ ├─ TICKETDETAILS* % TICKETDETAILSACTIONS
-│ ├─ Policies % NAVIGATE TO PROJECT
-│ │ ├─ POLICYNAME % NAVIGATE TO POLICY
-│ │ │ ├─ VIOLATIONKINDNAME* % NAVIGATE TO VIOLATIONKIND
-│ ├─ Contributors % NAVIGATE TO PROJECT
-│ │ ├─ CONTRIBUTORNAME % NAVIGATE TO CONTRIBUTOR
-│ │ │ ├─ Emails % MAILTO
-│ │ │ ├─ Links % NAVIGATE TO LINK
-│ │ │ ├─ Contributions % NAVIGATE TO CONTRIBUTIONS
-│ ├─ Commits % NAVIGATE TO PROJECT
-│ │ ├─ COMMITSHA % NAVIGATE TO COMMIT
+All tree items should have a 🆔 button to copy the id to the clipboard.
+├─ Monorepo # 🆔,🔄️
+│ ├─ 🏗️Projects # 🆔,🔄️
+│ │ ├─ <kind>{PROJECTNAME} % NAVIGATE TO PROJECT  # 🆔,🔄️
+│ │ │ ├─ <kind>{BUNDLENAME} % NAVIGATE TO BUNDLE # 🆔,🔄️
+│ │ │ │ ├─ <kind>{FOLDERNAME*} % NAVIGATE TO FOLDER # 🆔,🔄️
+│ │ │ │ │ ├─ <kind>{FILENAME} % NAVIGATE TO FILE # 🆔,🔄️
+│ │ │ │ │ │ ├─ 🔖{SECTIONPATH*}  % NAVIGATE TO SECTION # 🆔,🔄️
+│ │ │ │ │ │ │ ├─ <kind>{DEFINITIONNAME} % NAVIGATE TO DEFINITION # 🆔,🔄️
+│ ├─ 🎯Goals # 🆔,🔄️
+│ │ ├─ 🎯{GOALNAME*} % NAVIGATE TO GOAL # 🆔,🔄️
+│ │ │ ├─ 📅{TICKETNAME*} % NAVIGATE TO TICKET # 🆔,🔄️
+│ ├─ 📅Tickets % NAVIGATE TO PROJECT # 🆔,🔄️
+│ │ ├─ {YEAR} % NAVIGATE TO YEAR # 🆔,🔄️
+│ │ │ ├─ {MONTH} % NAVIGATE TO MONTH # 🆔,🔄️
+│ │ │ │ ├─ {DAY} % NAVIGATE TO DAY # 🆔,🔄️
+│ │ │ │ │ ├─ 📅{TICKETNAME*} % NAVIGATE TO TICKET # 🆔,🔄️
+│ ├─ 🛡️Policies % NAVIGATE TO PROJECT # 🆔,🔄️
+│ │ ├─ POLICYNAME % NAVIGATE TO POLICY # 🆔,🔄️
+│ │ │ ├─ VIOLATIONKINDNAME* % NAVIGATE TO VIOLATIONKIND # 🆔,🔄️
+│ ├─ 👤Contributors % NAVIGATE TO PROJECT # 🆔,🔄️
+│ │ ├─ 👤{CONTRIBUTORNAME} % NAVIGATE TO CONTRIBUTOR # 🆔,🔄️
+│ ├─ 🔀Commits % NAVIGATE TO PROJECT
+│ │ ├─ {COMMITTITLE} % NAVIGATE TO COMMIT
 │ │ │ ├─ Tickets % NAVIGATE TO TICKETS
-│ │ │ │ ├─ GOALNAME* % NAVIGATE TO GOAL
-│ │ │ │ │ ├─ TICKETNAME* % NAVIGATE TO TICKET
+│ │ │ │ ├─ {GOALNAME*} % NAVIGATE TO GOAL
+│ │ │ │ │ ├─ {TICKETNAME*} % NAVIGATE TO TICKET
 │ │ │ ├─ Goals % NAVIGATE TO GOALS
-│ │ │ │ ├─ GOALNAME* % NAVIGATE TO GOAL
-├─ Filter
-│ ├─ SEARCH # match case, match whole word, regex
-│ ├─ bundle # library, binary, ui, site, assets, default
-│ ├─ folder # organization, required
-│ ├─ section # none, all
-│ ├─ definition # implementation, interface, constant
-│ ├─ ticket # open, closed
-│ ├─ time # none, all
-│ │ └─ YEAR # none, all
-│ │ │ └─ MONTH # none, all
-│ │ │ │ └─ DAY # none, all
+│ │ │ │ ├─ {GOALNAME*} % NAVIGATE TO GOAL
+├─ 🔍Filter
+│ ├─ SEARCHINPUTWITHMATCHOPTIONS # match case, match whole word, regex
+│ ├─ 📅Dates # None, All
+│ │ └─ {YEAR} # None, All
+│ │ │ └─ {MONTH} # None, All
+│ │ │ │ └─ {DAY} # None, All  
+│ ├─ 🏗️Projects # 👤,🧰,🔬, None, All
+│ ├─ 📦Bundles # 📚, ⌨️, 🖱️, 📔, 🌐, 🏪, None, All
+│ ├─ 📂Folders # 🗃️, 📁, None, All
+│ ├─ 🔖Sections # None, All
+│ ├─ 🏷️Definitions # 🛠️, ✂️, 🪨, None, All
+│ ├─ 🎯Goals # 🔵,🟢, None, All
+│ ├─ 📅Tickets # 🔵,🟢, None, All
+│ ├─ 📅Policies # None, All
+│ ├─ 👤Contributors # None, All
+│ ├─ 🔀Commits # None, All
+
+
 The filter should filter all tree items in the monorepo section. The filter section currently has tree items for individual toggeling but instead it should have menu button actions for each filter on only one kind tree item. E.g. instead of 7 tree items for bundle -> library | schema | binary | ui | site | assets it should have just one bundle tree item with 6 menu button actions (one for each filter).
 The Project tree is missing. All root tree items (projects, goals, tickets, policies, contributors, commits) dont show any child tree item when uncollapsed.
 Make sure everything is tested (e.g. at least one tree item per kind should appear in the ui).
@@ -529,7 +647,7 @@ repo: `🌍`
 projects: `🏗️`
 project: `<kind>{project-code}` (<kind> - 👤:user e.g. `@semio`, 🧰:infrastructure e.g. `@semio-repo`, 🔬:research e.g. `@coda`)
 bundles: `📦{project-code}`
-bundle: `<kind>{project-code}/{code}` (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 🌐:site, 🏪:assets)
+bundle: `<kind>{project-code}/{code}` (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 📔:example, 🌐:site, 🏪:assets)
 folders: `📁{parent-path*}`
 folder: `<kind>{path*}` (<kind> - 🗃️:organization, 📁:required)
 files: `📄{folder-path*}` 
@@ -1707,7 +1825,7 @@ Make sure the commands have this api:
 
 The vscode extension commands are not matching the cli command arguments.
 E.g. ticket open requires to select at least one file although ticket open does not require any files.
-Ticket finish should show a list of open tickets and let the user select one and then ask for the summary and at least one file. The llm should be an enum from a fixed list of llms (opus-4-5, opus-4, sonnet-4-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gemini-3-flash, gpt-5-2, gpt-5-mini).
+Ticket finish should show a list of open tickets and let the user select one and then ask for the summary and at least one file. The llm should be an enum from a fixed list of llms (opus-4-6, opus-4-5, opus-4, sonnet-5, sonnet-4-5, haiku-4-5, gemini-3-pro, gemini-3-flash, gpt-5-2, gpt-5-mini, swe-1-5).
 Scan for all commands and make sure that whenever something is referenced then vscode should show the list of options to choose from (bundles, folders, files, sections, definitions, contributors, tickets, policies, violationKinds, violations).
 
 Make sure the commands have this api:
@@ -2867,7 +2985,7 @@ The code should should not be the id but the violation kind
 	"owner": "semio-repo",
 	"code": "header:missing-section-1767006050632-xwe287",
 	"severity": 4,
-	"message": "Missing header section in assets/repo/some/folder/file_invalid.tsx\n\nReason: Every source file must include a header section\nSolution: Add a #region Header with filename, contributors, and AGPL-3.0 license",
+	"message": "Missing header section in assets/repo/some/folder/file_invalid.tsx\n\nReason: Every source file must include a header section\nSolution: Add a #region 🔖Header with filename, contributors, and AGPL-3.0 license",
 	"source": "semio-repo",
 	"startLineNumber": 1,
 	"startColumn": 1,
@@ -3144,7 +3262,7 @@ Make sure that the headers of all files follow a specific scheme. Adjust analyze
 - List of contributors
 - License header
   e.g.
-  // #region Header
+  // #region 🔖Header
 
 // FILEPATH/FILENAME.EXTENSION e.g. js/semio/sketchpad/Sketchpad.tsx
 
@@ -3405,7 +3523,7 @@ The analyze script should be extended to create a report for the codebase produc
 
 - Comments in the code. Code needs to undocumented/uncommented.
 - Missing License headers.
-- Regions that dont close (every `#region REGIONNAME` needs to have a corresponding `#endregion REGIONNAME`).
+- Regions that dont close (every `#region 🔖REGIONNAME` needs to have a corresponding `#endregion 🔖REGIONNAME`).
 
 design app:
 

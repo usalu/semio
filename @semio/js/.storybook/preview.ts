@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/preview.ts
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 import type { Preview } from "@storybook/react-vite";
 import { withLevel } from "./withLevel";
 import { withTheme } from "./withTheme";

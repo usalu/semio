@@ -8,21 +8,9 @@
   },
   "client": "windsurf-chat",
   "llm": "sonnet-4-5",
+  "parent": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS",
   "github": {
-    "milestone": "https://github.com/usalu/semio/milestone/31"
+    "issue": "https://github.com/usalu/semio/issues/371"
   },
-  "iterations": [
-    {
-      "prompt": "Updated Examples",
-      "llm": "sonnet-4-5",
-      "ui": "windsurf-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-02T20:23:32.301467788Z",
-      "commit": ""
-    }
-  ],
-  "parent": "UPDATED-USER-DOCS"
+  "interactions": null
 }

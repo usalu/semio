@@ -1,7 +1,7 @@
 @startuml "software architecture"
 skinparam linetype ortho
 
-' #region Ports
+' #region 🔖Ports
 interface Id {
 }
 
@@ -33,11 +33,11 @@ interface Context {
 
 interface Prediction {
 }
-' #endregion Ports
+' #endregion 🔖Ports
 
-' #region Classes
+' #region 🔖Classes
 
-' #region Attribute
+' #region 🔖Attribute
 class Attribute {
   key: str
   value: str
@@ -68,31 +68,31 @@ class AttributesDiff {
   updated?: list[AttributeDiff]
   added?: list[Attribute]
 }
-' #endregion Attribute
+' #endregion 🔖Attribute
 
-' #region Coord
+' #region 🔖Coord
 class Coord {
   u: float
   v: float
 }
-' #endregion Coord
+' #endregion 🔖Coord
 
-' #region Vec
+' #region 🔖Vec
 class Vec {
   u: float
   v: float
 }
-' #endregion Vec
+' #endregion 🔖Vec
 
-' #region Point
+' #region 🔖Point
 class Point {
   x: float
   y: float
   z: float
 }
-' #endregion Point
+' #endregion 🔖Point
 
-' #region Vector
+' #region 🔖Vector
 class Vector {
   x: float
   y: float
@@ -101,9 +101,9 @@ class Vector {
   context Vector inv notZeroVector:
     x <> 0 or y <> 0 or z <> 0
 }
-' #endregion Vector
+' #endregion 🔖Vector
 
-' #region Plane
+' #region 🔖Plane
 class Plane {
   origin: Point
   xAxis: Vector
@@ -115,17 +115,17 @@ class Plane {
     xAxis.x * xAxis.x + xAxis.y * xAxis.y + xAxis.z * xAxis.z = 1 and
     yAxis.x * yAxis.x + yAxis.y * yAxis.y + yAxis.z * yAxis.z = 1
 }
-' #endregion Plane
+' #endregion 🔖Plane
 
-' #region Camera
+' #region 🔖Camera
 class Camera {
   position: Point
   forward: Vector
   up: Vector
 }
-' #endregion Camera
+' #endregion 🔖Camera
 
-' #region Location
+' #region 🔖Location
 class Location {
   longitude: float
   latitude: float
@@ -139,9 +139,9 @@ class LocationDiff {
   altitude?: float
   attributes?: AttributesDiff
 }
-' #endregion Location
+' #endregion 🔖Location
 
-' #region Author
+' #region 🔖Author
 class Author {
   name: str
   email: str
@@ -164,9 +164,9 @@ class AuthorsDiff {
   updated?: list[AuthorDiff]
   added?: list[Author]
 }
-' #endregion Author
+' #endregion 🔖Author
 
-' #region File
+' #region 🔖File
 class File {
   path: str
   remoteUrl: str
@@ -190,9 +190,9 @@ class FilesDiff {
   updated?: list[FileDiff]
   added?: list[File]
 }
-' #endregion File
+' #endregion 🔖File
 
-' #region Benchmark
+' #region 🔖Benchmark
 class Benchmark {
   name: str
   icon: str
@@ -229,9 +229,9 @@ class BenchmarksDiff {
   updated?: list[BenchmarkDiff]
   added?: list[Benchmark]
 }
-' #endregion Benchmark
+' #endregion 🔖Benchmark
 
-' #region QualityKind
+' #region 🔖QualityKind
 class QualityKind {
   <<enumeration>>
   General
@@ -241,9 +241,9 @@ class QualityKind {
   Connection
   Connector
 }
-' #endregion QualityKind
+' #endregion 🔖QualityKind
 
-' #region Quality
+' #region 🔖Quality
 class Quality {
   key: str
   name: str
@@ -295,9 +295,9 @@ class QualityDiff {
   definition?: str
   attributes?: AttributesDiff
 }
-' #endregion Quality
+' #endregion 🔖Quality
 
-' #region Prop
+' #region 🔖Prop
 class Prop {
   key: str
   value: str
@@ -324,9 +324,9 @@ class PropsDiff {
   updated?: list[PropDiff]
   added?: list[Prop]
 }
-' #endregion Prop
+' #endregion 🔖Prop
 
-' #region Tag
+' #region 🔖Tag
 class Tag {
   guid: str
   name: str
@@ -351,9 +351,9 @@ class TagsDiff {
   updated?: list[TagDiff]
   added?: list[Tag]
 }
-' #endregion Tag
+' #endregion 🔖Tag
 
-' #region Concept
+' #region 🔖Concept
 class Concept {
   guid: str
   name: str
@@ -378,9 +378,9 @@ class ConceptsDiff {
   updated?: list[ConceptDiff]
   added?: list[Concept]
 }
-' #endregion Concept
+' #endregion 🔖Concept
 
-' #region Model
+' #region 🔖Model
 class Model {
   guid: str
   name: str
@@ -410,9 +410,9 @@ class ModelsDiff {
   updated?: list[ModelDiff]
   added?: list[Model]
 }
-' #endregion Model
+' #endregion 🔖Model
 
-' #region Connector
+' #region 🔖Connector
 class Connector {
   id: str
   point: Point
@@ -456,9 +456,9 @@ class ConnectorsDiff {
   updated?: list[ConnectorDiff]
   added?: list[Connector]
 }
-' #endregion Connector
+' #endregion 🔖Connector
 
-' #region Type
+' #region 🔖Type
 class Type {
   name: str
   variant: str
@@ -513,9 +513,9 @@ class TypesDiff {
   updated?: list[TypeDiff]
   added?: list[Type]
 }
-' #endregion Type
+' #endregion 🔖Type
 
-' #region Layer
+' #region 🔖Layer
 class Layer {
   name: str
   path: str
@@ -544,9 +544,9 @@ class LayersDiff {
   updated?: list[LayerDiff]
   added?: list[Layer]
 }
-' #endregion Layer
+' #endregion 🔖Layer
 
-' #region Piece
+' #region 🔖Piece
 class Piece {
   id: str
   type: Type
@@ -588,9 +588,9 @@ class PiecesDiff {
   updated?: list[PieceDiff]
   added?: list[Piece]
 }
-' #endregion Piece
+' #endregion 🔖Piece
 
-' #region Group
+' #region 🔖Group
 class Group {
   name: str
   pieces: list[Piece]
@@ -616,17 +616,17 @@ class GroupsDiff {
   updated?: list[GroupDiff]
   added?: list[Group]
 }
-' #endregion Group
+' #endregion 🔖Group
 
-' #region Side
+' #region 🔖Side
 class Side {
   piece: PieceId
   designPiece: PieceId
   connector: ConnectorId
 }
-' #endregion Side
+' #endregion 🔖Side
 
-' #region Connection
+' #region 🔖Connection
 class Connection {
   connected: Side
   connecting: Side
@@ -667,9 +667,9 @@ class ConnectionsDiff {
   updated?: list[ConnectionDiff]
   added?: list[Connection]
 }
-' #endregion Connection
+' #endregion 🔖Connection
 
-' #region Stat
+' #region 🔖Stat
 class Stat {
   key: str
   unit: str
@@ -697,9 +697,9 @@ class StatsDiff {
   updated?: list[StatDiff]
   added?: list[Stat]
 }
-' #endregion Stat
+' #endregion 🔖Stat
 
-' #region Design
+' #region 🔖Design
 class Design {
   name: str
   variant: str
@@ -761,9 +761,9 @@ class DesignsDiff {
   updated?: list[DesignDiff]
   added?: list[Design]
 }
-' #endregion Design
+' #endregion 🔖Design
 
-' #region Kit
+' #region 🔖Kit
 class Kit {
   name: str
   version: str
@@ -813,11 +813,11 @@ class KitsDiff {
   updated?: list[KitDiff]
   added?: list[Kit]
 }
-' #endregion Kit
+' #endregion 🔖Kit
 
-' #endregion Classes
+' #endregion 🔖Classes
 
-' #region Relationships
+' #region 🔖Relationships
 Plane *-- "1" Point : origin >
 Plane *-- "1" Vector : xAxis >
 Plane *-- "1" Vector : yAxis >
@@ -895,9 +895,9 @@ Kit *-- "0..*" File : includes >
 
 Tag *-- "0..*" Attribute : has >
 Concept *-- "0..*" Attribute : has >
-' #endregion Relationships
+' #endregion 🔖Relationships
 
-' #region Validation
+' #region 🔖Validation
 class ValidationContext {
   kit: Kit
   typesByGuid: Map<Guid, Type>
@@ -963,6 +963,6 @@ SemioDomainLocation --> SemioEntityKind
 Problem --> Severity
 Constraint ..> ValidationContext
 Constraint ..> Problem
-' #endregion Validation
+' #endregion 🔖Validation
 
 @enduml

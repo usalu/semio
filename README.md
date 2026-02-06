@@ -1,33 +1,33 @@
 <p align="center">
     <a href="https://docs.semio-tech.com">
       <picture>
-          <source media="(prefers-color-scheme: dark)" srcset="assets/logo/logo_dark.svg">
-          <source media="(prefers-color-scheme: light)" srcset="assets/logo/logo.svg">
-          <img alt="semio" href="https://github.com/usalu/semio/" src="assets/logo/logo.svg">
+          <source media="(prefers-color-scheme: dark)" srcset="@semio/assets/logo/logo_dark.svg">
+          <source media="(prefers-color-scheme: light)" srcset="@semio/assets/logo/logo.svg">
+          <img alt="semio" href="https://github.com/usalu/semio/" src="@semio/assets/logo/logo.svg">
       </picture>
     </a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
-    <a href="https://docs.semio-tech.com"><img src="assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
-    <a href="https://js.semio-tech.com"><img src="assets/badges/dev-js.svg" alt="The semio storybook for all javascript components and tests."></a>
+    <a href="https://play.semio-tech.com"><img src="@semio/assets/badges/site-play.svg" alt="A free online playground to toy with semio without login."></a>
+    <a href="https://docs.semio-tech.com"><img src="@semio/assets/badges/site-docs.svg" alt="The documentation page to learn semio."></a>
+    <a href="https://js.semio-tech.com"><img src="@semio/assets/badges/dev-js.svg" alt="The semio storybook for all javascript components and tests."></a>
     <a href="https://discord.gg/m6nnf6pQRc"><img src="https://img.shields.io/discord/1338232508264747130?style=flat-square&color=ff344f" alt="Discord"></a>
     <br/>
-     <a href="https://github.com/usalu/semio"><img src="assets/badges/repo-semio.svg" alt="The semio repository."></a>
-    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="assets/badges/cite-zenodo.svg" alt="Cite"></a>
-    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="assets/badges/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
+     <a href="https://github.com/usalu/semio"><img src="@semio/assets/badges/repo-semio.svg" alt="The semio repository."></a>
+    <a href="https://doi.org/10.5281/zenodo.8419156"><img src="@semio/assets/badges/cite-zenodo.svg" alt="Cite"></a>
+    <a href="https://choosealicense.com/licenses/agpl-3.0/"><img src="@semio/assets/badges/license-agpl-v3.svg" alt="Affero General Public License v3.0 or later"></a>
     <br/>
-    <a href="https://eg-ice-25.semio-tech.com"><img src="assets/badges/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with semio."></a>
-    <a href="https://doi.org/10.17868/strath.00093288"><img src="assets/badges/latest-research.svg" alt="The latest research paper on LLMs with semio."></a>
-    <a href="https://eg-ice-23.semio-tech.com"><img src="assets/badges/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
+    <a href="https://eg-ice-25.semio-tech.com"><img src="@semio/assets/badges/presentation-egice25.svg" alt="The presentation of our latest research paper on LLMs with semio."></a>
+    <a href="https://doi.org/10.17868/strath.00093288"><img src="@semio/assets/badges/latest-research.svg" alt="The latest research paper on LLMs with semio."></a>
+    <a href="https://eg-ice-23.semio-tech.com"><img src="@semio/assets/badges/presentation-egice23.svg" alt="The presentation of our previous research paper on formalizing architecture."></a>
     <br/>
-    <a href="https://play.semio-tech.com"><img src="assets/badges/ui-browser.svg" alt="Browser"></a>
-    <a href="https://www.grasshopper3d.com/"><img src="assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
-    <a href="https://www.microsoft.com/windows/windows-11"><img src="assets/badges/ui-windows.svg" alt="Windows"></a>
-    <a href="https://apple.com/macos"><img src="assets/badges/ui-macos.svg" alt="macOS"></a>
+    <a href="https://play.semio-tech.com"><img src="@semio/assets/badges/ui-browser.svg" alt="Browser"></a>
+    <a href="https://www.grasshopper3d.com/"><img src="@semio/assets/badges/ui-grasshopper.svg" alt="Grasshopper"></a>
+    <a href="https://www.microsoft.com/windows/windows-11"><img src="@semio/assets/badges/ui-windows.svg" alt="Windows"></a>
+    <a href="https://apple.com/macos"><img src="@semio/assets/badges/ui-macos.svg" alt="macOS"></a>
     <br/>
-    <a href="https://www.typescriptlang.org/"><img src="assets/badges/powered-by-typescript.svg" alt="Typescript"></a>
-    <a href="https://www.python.org/"><img src="assets/badges/powered-by-python.svg" alt="Python"></a>
-    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="assets/badges/powered-by-csharp.svg" alt="C#"></a>
+    <a href="https://www.typescriptlang.org/"><img src="@semio/assets/badges/powered-by-typescript.svg" alt="Typescript"></a>
+    <a href="https://www.python.org/"><img src="@semio/assets/badges/powered-by-python.svg" alt="Python"></a>
+    <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="@semio/assets/badges/powered-by-csharp.svg" alt="C#"></a>
     <br/>
     <br/>
     <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘️ </i>
@@ -1135,6 +1135,7 @@ All code must sit inside named regions; orphan definitions outside any section a
 The repo CLI is the single source of truth for ticket workflows and the GraphQL schema that powers tooling.
 The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
 The repo CLI streams command execution as JSONL events and adapters decide whether to render compact human output, nested Markdown lists with `semiorepo://` links, or machine-readable event lines.
+When `--json` is active, each stdout line is pure domain data (one JSON object per line) without event wrappers or `{"data": ...}` GraphQL envelopes; errors are written to stderr only, and stdout stays empty on failure so downstream consumers can pipe output directly into `jq` or similar tools without filtering boilerplate.
 Human-readable CLI IDs normalize emoji to text presentation (U+FE0E), replacing emoji presentation selectors and appending the text variant when missing, so monospace terminals reserve stable width before adjacent symbols like `@`.
 The repo binary is consolidated into a single `@semio-repo/go/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
 Go tests for repo tooling are consolidated into a single `@semio-repo/go/main_test.go` so CLI behavior, tool helpers, and output format expectations live in one test suite.
@@ -1144,16 +1145,18 @@ Registry invocation accepts JSON inputs and emits item metadata alongside data p
 The MCP adapter forwards commands through the same streaming registry and supports cursor plus limit paging over item events for list-style tools.
 Benchmark, preflight, and dependency update workflows are implemented inside the same single-file entrypoint so operational commands share the unified event pipeline.
 The CLI exposes an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
-The `sync github` command reconciles local tickets/goals with GitHub by closing issues for closed tickets, resolving goal milestones by goal title via the GitHub API before applying them to ticket issues, updating stored milestone URLs, and removing `@` labels that no longer map to active projects or bundles.
+Go repo-tooling tests are organized into a fast lane and a slow lane: fast checks cover the same command families with lightweight assertions for tight feedback, while heavy graph/tree/lifecycle/e2e checks run as explicit slow shards in parallel jobs. This keeps the full behavior surface tested while reducing wall-clock time for day-to-day development.
+The `sync github` command reconciles local tickets/goals with GitHub using a three-tier hierarchy: root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone linkage. Goals are processed in depth order so parents exist before children. The command also migrates child goals from legacy milestones to issues, closes issues for closed tickets, resolves root goal milestones by title via the GitHub API before applying them to ticket issues, synchronizes the GitHub repository label catalog for all valid project and bundle `@` labels (creating missing and deleting invalid), updates stored milestone URLs, and removes invalid `@` labels from both ticket-linked issues and repository issues discovered during a global GitHub issue sweep.
 Section management includes an integrate command so source files can be merged into target sections through the same GraphQL-backed CLI surface.
 GraphQL ticket UI inputs accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) so CLI and tooling inputs map cleanly to schema enums.
 Section and definition ranges expose line/column start/end positions so editors can locate code precisely.
 Range selections always request start/end line/column subfields so Position objects satisfy schema selection requirements in CLI, MCP, and VS Code queries.
 Section list queries fetch nested children alongside ranges so tree views can render full section hierarchies.
+Repo tool definitions are top-level only (anchored at the start of the line); definitions inside classes, functions, or indents are ignored to keep the scope flat and manageable.
 Ticket listing reads from the active `.semio-repo/tickets` workspace and falls back to legacy root `tickets/` directories when needed.
 Repo `tree` commands support a `--md` flag that renders the structure as a Markdown nested bullet list with links.
 VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
-Devcontainer attach builds and installs the local extension automatically using IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity), verifies via list-extensions, and falls back to direct installation into IDE extensions directories with extensions.json updates when CLIs report WSL-only usage.
+Devcontainer attach uninstalls any existing semio-repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the freshly packaged VSIX, verifies via list-extensions, and falls back to direct installation into IDE extensions directories with extensions.json updates (including the `$mid` location key) when CLIs report WSL-only usage.
 The semio-repo extension targets a VS Code engine range compatible with Cursor (1.105.x) so Cursor can load the bundled extension without version rejections.
 VS Code extension packaging requires an unscoped extension name in `@semio-repo/vscode/package.json` so `vsce package` can build the local `.vsix`.
 VS Code extension sidebar views are consolidated into exactly two views: `Monorepo` (the repo tree) and `Filter` (the global filter state).
@@ -1173,7 +1176,7 @@ Ticket close derives semantic diffs from a file list after applying the same rep
 Devcontainer rebuilds keep AI tooling state by mounting named volumes for CLI auth folders (`~/.claude`, `~/.codex`, `~/.config/openai`) and editor servers (`~/.vscode-server`, `~/.windsurf-server`).
 Claude Code persists its auth files by storing `~/.claude.json` inside the mounted Claude volume and linking it back into `$HOME` on start.
 Post-start ownership fixes keep the mounted volumes writable so chat history and tokens survive container replacement.
-Post-attach runs the local extension installer through IDE IPC hook CLIs (VS Code, Cursor, Windsurf, Antigravity), validates installs by checking list-extensions output, and falls back to direct extensions directory installs plus extensions.json registration when CLIs report WSL-only usage.
+Post-attach uninstalls any existing semio-repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the fresh VSIX, validates installs by checking list-extensions output, and falls back to direct extensions directory installs plus extensions.json registration (with `$mid` location keys) when CLIs report WSL-only usage.
 Post-attach also writes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` so the semio-repo MCP server is ready after rebuilds without manual setup.
 Engine compatibility for the local extension is aligned to the lowest supported editor build so Cursor and VS Code accept the same VSIX.
 
@@ -1248,8 +1251,8 @@ Inline comment violations are grouped per contiguous inline-comment block while 
 
 ## 🧩 Devcontainer Extension Install [↑](#-bundles-)
 
-The devcontainer packages the workspace VS Code extension during setup, then installs the generated `.vsix` once the editor attaches so the extension is ready without manual "Install Extension From Location..." steps.
-This aligns installation with a running VS Code server, avoiding failures during container creation while keeping extension delivery automatic.
+The devcontainer packages the workspace VS Code extension during setup, uninstalls any existing semio-repo extension on attach, and installs the generated `.vsix` across supported IDEs so the extension is ready without manual "Install Extension From Location..." steps.
+This keeps the active editor clean of stale versions while aligning installation with a running IDE server, avoiding failures during container creation and preserving automatic delivery.
 
 ## 🎭 Playwright Browser Cache [↑](#-bundles-)
 
@@ -1954,7 +1957,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
   <tbody>
     <tr style="border: none;">
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
-        <img src="contributors/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src=".semio-repo/contributors/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
@@ -1982,7 +1985,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
-        <img src="contributors/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src=".semio-repo/contributors/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
@@ -1991,36 +1994,36 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src="contributors/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src=".semio-repo/contributors/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
-        <img src="contributors/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <img src=".semio-repo/contributors/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
         <a href="#-semiojs-" title="🟨@semio/js"><sub>🟨<sub></a>
       </td>
-      <td align="center" valign="top" width="145px"><a href="https://github.com/drymuzzle">
-        <img src="contributors/drymuzzle/avatar-round-90x90.png" width="90px" alt="drymuzzle" style="border-radius: 50%;"/>
+      <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
+        <img src=".semio-repo/contributors/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
-        <sub><b>drymuzzle</b></sub></a>
+        <sub><b>ellumpine</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗@semio/grasshopper"><sub>🦗<sub></a>
         <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
-        <img src="contributors/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src=".semio-repo/contributors/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="#-semioengine-" title="⚙️@semio/engine"><sub>⚙️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
-        <img src="contributors/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
+        <img src=".semio-repo/contributors/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />

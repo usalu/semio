@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/Sketchpad.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
 import {
@@ -246,9 +246,9 @@ import {
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Store
+// #region 🔖Store
 
 export function identitySelector<T>(value: T): T {
   return value;
@@ -441,7 +441,7 @@ export abstract class Store<TState> {
     return getValueAtPath(this.yMap, path);
   }
 
-  // #endregion Store
+  // #endregion 🔖Store
 }
 
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
@@ -817,7 +817,7 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
   }
 }
 
-// #region Plain App Store (No YJS)
+// #region 🔖Plain App Store (No YJS)
 
 export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
   public readonly guid: Guid;
@@ -1106,11 +1106,11 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
   }
 }
 
-// #endregion Plain App Store (No YJS)
+// #endregion 🔖Plain App Store (No YJS)
 
-// #region File Provider
+// #region 🔖File Provider
 
-// #region Memory File Provider
+// #region 🔖Memory File Provider
 
 export function createMemoryFileProvider(config?: MemoryFileProviderConfig): FileProviderFactory {
   const storage = new Map<string, Blob>();
@@ -1150,9 +1150,9 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
   };
 }
 
-// #endregion Memory File Provider
+// #endregion 🔖Memory File Provider
 
-// #region Local File Provider (IndexedDB)
+// #region 🔖Local File Provider (IndexedDB)
 
 export function createLocalFileProvider(config?: LocalFileProviderConfig): FileProviderFactory {
   const dbName = config?.dbName || "semio-files";
@@ -1246,9 +1246,9 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
   };
 }
 
-// #endregion Local File Provider (IndexedDB)
+// #endregion 🔖Local File Provider (IndexedDB)
 
-// #region Remote File Provider
+// #region 🔖Remote File Provider
 
 export function createRemoteFileProvider(config: RemoteFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
@@ -1311,9 +1311,9 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
   };
 }
 
-// #endregion Remote File Provider
+// #endregion 🔖Remote File Provider
 
-// #region Composite File Provider
+// #region 🔖Composite File Provider
 
 export function createCompositeFileProvider(config: CompositeFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
@@ -1374,11 +1374,11 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
   };
 }
 
-// #endregion Composite File Provider
+// #endregion 🔖Composite File Provider
 
-// #endregion File Provider
+// #endregion 🔖File Provider
 
-// #region Kits
+// #region 🔖Kits
 
 type YAttributeVal = string;
 type YAttribute = Y.Map<YAttributeVal>;
@@ -1454,9 +1454,9 @@ class AttributeStore {
   };
 }
 
-// #endregion Kits
+// #endregion 🔖Kits
 
-// #region Coord
+// #region 🔖Coord
 
 type YCoordVal = number;
 type YCoord = Y.Map<YCoordVal>;
@@ -1519,9 +1519,9 @@ class YCoordStore {
   };
 }
 
-// #endregion Coord
+// #endregion 🔖Coord
 
-// #region Vec
+// #region 🔖Vec
 
 type YVecVal = number;
 type YVec = Y.Map<YVecVal>;
@@ -1584,9 +1584,9 @@ class YVecStore {
   };
 }
 
-// #endregion Vec
+// #endregion 🔖Vec
 
-// #region Point
+// #region 🔖Point
 
 type YPointVal = number;
 type YPoint = Y.Map<YPointVal>;
@@ -1659,9 +1659,9 @@ class YPointStore {
   };
 }
 
-// #endregion Point
+// #endregion 🔖Point
 
-// #region Vector
+// #region 🔖Vector
 
 type YVectorVal = number;
 type YVector = Y.Map<YVectorVal>;
@@ -1734,9 +1734,9 @@ class YVectorStore {
   };
 }
 
-// #endregion Vector
+// #endregion 🔖Vector
 
-// #region Plane
+// #region 🔖Plane
 
 type YPlaneVal = YPoint | YVector;
 type YPlane = Y.Map<YPlaneVal>;
@@ -1799,9 +1799,9 @@ class YPlaneStore {
   };
 }
 
-// #endregion Plane
+// #endregion 🔖Plane
 
-// #region Camera
+// #region 🔖Camera
 
 type YCameraVal = YPoint | YVector;
 type YCamera = Y.Map<YCameraVal>;
@@ -1865,9 +1865,9 @@ class YCameraStore {
   };
 }
 
-// #endregion Camera
+// #endregion 🔖Camera
 
-// #region Location
+// #region 🔖Location
 
 type YLocationVal = number | string | YAttributes;
 type YLocation = Y.Map<YLocationVal>;
@@ -1956,9 +1956,9 @@ class YLocationStore {
   };
 }
 
-// #endregion Location
+// #endregion 🔖Location
 
-// #region Author
+// #region 🔖Author
 
 type YAuthorVal = string | YAttributes;
 type YAuthor = Y.Map<YAuthorVal>;
@@ -2089,9 +2089,9 @@ export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: 
   return synced;
 }
 
-// #endregion Author
+// #endregion 🔖Author
 
-// #region File
+// #region 🔖File
 
 type YFile = Y.Map<string | number | YAttributes>;
 type YFiles = Y.Array<YFile>;
@@ -2234,9 +2234,9 @@ class FileStore {
   };
 }
 
-// #endregion File
+// #endregion 🔖File
 
-// #region Folder
+// #region 🔖Folder
 
 type YFolder = Y.Map<string | YAttributes>;
 type YFolders = Y.Array<YFolder>;
@@ -2367,9 +2367,9 @@ class FolderStore {
   };
 }
 
-// #endregion Folder
+// #endregion 🔖Folder
 
-// #region Benchmark
+// #region 🔖Benchmark
 
 type YBenchmark = Y.Map<string | number | boolean | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
@@ -2487,9 +2487,9 @@ class BenchmarkStore {
   };
 }
 
-// #endregion Benchmark
+// #endregion 🔖Benchmark
 
-// #region Quality
+// #region 🔖Quality
 
 type YQuality = Y.Map<string | number | YAttributes>;
 type YQualities = Y.Array<YQuality>;
@@ -2604,9 +2604,9 @@ export class QualityStore {
   };
 }
 
-// #endregion Quality
+// #endregion 🔖Quality
 
-// #region Prop
+// #region 🔖Prop
 
 type YProp = Y.Map<string | number | boolean | YAttributes>;
 type YProps = Y.Array<YProp>;
@@ -2699,9 +2699,9 @@ class PropStore {
   };
 }
 
-// #endregion Prop
+// #endregion 🔖Prop
 
-// #region Model
+// #region 🔖Model
 
 type YModelVal = string | Y.Array<string> | YAttributes;
 type YModel = Y.Map<YModelVal>;
@@ -2820,9 +2820,9 @@ class ModelStore {
   };
 }
 
-// #endregion Model
+// #endregion 🔖Model
 
-// #region Connector
+// #region 🔖Connector
 
 type YConnectorVal = string | number | boolean | YAttributes | Y.Array<string> | YPoint | YVector | YProps;
 type YConnector = Y.Map<YConnectorVal>;
@@ -2945,9 +2945,9 @@ class ConnectorStore {
   };
 }
 
-// #endregion Connector
+// #endregion 🔖Connector
 
-// #region Type
+// #region 🔖Type
 
 type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YModels | YConnectors | YProps | YLocation;
 type YType = Y.Map<YTypeVal>;
@@ -3402,9 +3402,9 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
   return synced;
 }
 
-// #endregion Type
+// #endregion 🔖Type
 
-// #region Layer
+// #region 🔖Layer
 
 type YLayer = Y.Map<string | boolean | YAttributes>;
 type YLayers = Y.Array<YLayer>;
@@ -3519,9 +3519,9 @@ class LayerStore {
   };
 }
 
-// #endregion Layer
+// #endregion 🔖Layer
 
-// #region Piece
+// #region 🔖Piece
 
 type YPieceVal = string | number | boolean | YPlane | YAttributes | YCoord;
 type YPiece = Y.Map<YPieceVal>;
@@ -3944,9 +3944,9 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-// #endregion Piece
+// #endregion 🔖Piece
 
-// #region Group
+// #region 🔖Group
 
 type YGroupVal = string | Y.Array<string> | YAttributes;
 type YGroup = Y.Map<YGroupVal>;
@@ -4057,9 +4057,9 @@ class GroupStore {
   };
 }
 
-// #endregion Group
+// #endregion 🔖Group
 
-// #region Side
+// #region 🔖Side
 
 class SideStore {
   public readonly parent: DesignStore;
@@ -4195,9 +4195,9 @@ class SideStore {
   };
 }
 
-// #endregion Side
+// #endregion 🔖Side
 
-// #region Connection
+// #region 🔖Connection
 
 type YSideVal = string | number | YAttributes;
 type YSide = Y.Map<YSideVal>;
@@ -4413,9 +4413,9 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : (identitySelector as any));
 }
 
-// #endregion Connection
+// #endregion 🔖Connection
 
-// #region Stat
+// #region 🔖Stat
 
 type YStat = Y.Map<string | number | boolean>;
 type YStats = Y.Array<YStat>;
@@ -4540,9 +4540,9 @@ class StatStore {
   };
 }
 
-// #endregion Stat
+// #endregion 🔖Stat
 
-// #region Design
+// #region 🔖Design
 
 type YDesignVal = string | boolean | number | YAuthorUuids | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats | YProps | YLocation | Y.Array<string>;
 type YDesign = Y.Map<YDesignVal>;
@@ -5272,7 +5272,7 @@ export class DesignStore {
     return createFieldObserver(this.yDesign, key, subscribe, false);
   };
 
-  // #region YPath API
+  // #region 🔖YPath API
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
@@ -5310,7 +5310,7 @@ export class DesignStore {
     return getValueAtPath(this.yDesign, path);
   };
 
-  // #endregion YPath API
+  // #endregion 🔖YPath API
 }
 
 type DesignScope = { guid: string };
@@ -5517,9 +5517,9 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
   }, [nodes, selection.pieces, kitDesigns]);
 }
 
-// #endregion Design
+// #endregion 🔖Design
 
-// #region Kit
+// #region 🔖Kit
 
 type YConceptVal = string | YAttributes;
 type YConcept = Y.Map<YConceptVal>;
@@ -6482,7 +6482,7 @@ export class KitStore {
     return createObserver(this.yKit, subscribe, true);
   };
 
-  // #region YPath API
+  // #region 🔖YPath API
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
@@ -6521,7 +6521,7 @@ export class KitStore {
     return getValueAtPath(this.yKit, path);
   };
 
-  // #endregion YPath API
+  // #endregion 🔖YPath API
 
   snapshotConcepts = (): Concept[] => {
     const currentVersion = (this.yConcepts as any)._clock || this.conceptStores.size;
@@ -6823,7 +6823,7 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
   return deep ? syncedDeep : synced;
 }
 
-// #region Targeted Kit Hooks
+// #region 🔖Targeted Kit Hooks
 
 const EMPTY_TYPES: Type[] = [];
 const EMPTY_AUTHORS: Author[] = [];
@@ -7076,7 +7076,7 @@ export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } 
   return useMemo(() => ({ ports }), [ports]);
 }
 
-// #endregion Targeted Kit Hooks
+// #endregion 🔖Targeted Kit Hooks
 
 export function useFileUrls(): Map<Url, Url> {
   const kitStore = useKitStore() as KitStore | null;
@@ -7160,9 +7160,9 @@ export function useKitCommands() {
   };
 }
 
-// #endregion Kit
+// #endregion 🔖Kit
 
-// #region Commands
+// #region 🔖Commands
 
 const sqlWasmUrl = "https://sql.js.org/dist/sql-wasm.wasm";
 
@@ -7599,11 +7599,11 @@ export const kitCommands = {
   },
 };
 
-// #endregion Commands
+// #endregion 🔖Commands
 
-// #region Machine
+// #region 🔖Machine
 
-// #region Types
+// #region 🔖Types
 
 export const defaultPanelVisibility: PanelVisibility = {
   toolbar: false,
@@ -7613,7 +7613,7 @@ export const defaultPanelVisibility: PanelVisibility = {
   settings: false,
 };
 
-// #region App State Types
+// #region 🔖App State Types
 
 export interface HomeAppSelection {
   kits?: Guid[];
@@ -7782,7 +7782,7 @@ export interface TutorialContext {
   recordedEvents: any[];
 }
 
-// #endregion App State Types
+// #endregion 🔖App State Types
 
 export interface SketchpadMachineInput {
   id?: string;
@@ -7944,9 +7944,9 @@ export type SketchpadEvent =
   | { type: "FEEDBACK.SET_SUBMITTED"; isSubmitted: boolean }
   | { type: "FEEDBACK.SET_ERROR"; error: string | undefined };
 
-// #endregion Types
+// #endregion 🔖Types
 
-// #region Helpers
+// #region 🔖Helpers
 
 function migratePath(path: string): string {
   if (path.match(/^\/kit\/([^/]+)\/design\/([^/]+)/)) {
@@ -8267,9 +8267,9 @@ function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): 
   return next;
 }
 
-// #endregion Helpers
+// #endregion 🔖Helpers
 
-// #region Sketchpad Machine
+// #region 🔖Sketchpad Machine
 
 export const sketchpadMachine = setup({
   types: {
@@ -8637,7 +8637,7 @@ export const sketchpadMachine = setup({
   },
 });
 
-// #region Sketchpad Selectors
+// #region 🔖Sketchpad Selectors
 
 export type NavigationState = "home" | "kit" | "design" | "type" | "quality" | "docs";
 export const selectNavigationState = (state: { value: any }): NavigationState => {
@@ -8921,9 +8921,9 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
   return !tx.isTransactionActive && tx.redoStack.length > 0;
 };
 
-// #endregion Sketchpad Selectors
+// #endregion 🔖Sketchpad Selectors
 
-// #endregion Sketchpad Machine
+// #endregion 🔖Sketchpad Machine
 
 export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag" | "concept";
 
@@ -8954,7 +8954,7 @@ export const selectUiIsInType = selectIsInType;
 export const selectUiIsInQuality = selectIsInQuality;
 export const selectUiIsInDocs = selectIsInDocs;
 
-// #region Factory
+// #region 🔖Factory
 
 export function createSketchpadActor(input: SketchpadMachineInput) {
   return createActor(sketchpadMachine, {
@@ -8969,9 +8969,9 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
   });
 }
 
-// #endregion Factory
+// #endregion 🔖Factory
 
-// #region Legacy Type Exports
+// #region 🔖Legacy Type Exports
 
 export interface TransactionContext<TEdit = any> {
   isTransactionActive: boolean;
@@ -9091,9 +9091,9 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
   return buildKitSnapshot(context.yKit);
 }
 
-// #endregion Legacy Type Exports
+// #endregion 🔖Legacy Type Exports
 
-// #region Actor Types
+// #region 🔖Actor Types
 
 export type SketchpadActorRef = ActorRefFrom<typeof sketchpadMachine>;
 
@@ -9103,13 +9103,13 @@ export type SketchpadState$ = { context: SketchpadContext };
 
 export const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
 
-// #endregion Actor Types
+// #endregion 🔖Actor Types
 
-// #endregion Machine
+// #endregion 🔖Machine
 
-// #region Apps
+// #region 🔖Apps
 
-// #region Design
+// #region 🔖Design
 
 export function useIsPieceSelected(): boolean {
   const piece = usePieceScope();
@@ -9583,9 +9583,9 @@ export function useDiffedDesign(): Design {
   return findDesignInKit(kit, designScope.guid);
 }
 
-// #endregion Design
+// #endregion 🔖Design
 
-// #region Sketchpad
+// #region 🔖Sketchpad
 
 export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscribe, deep: boolean = false): Disposable {
   const callback = () => {
@@ -11590,7 +11590,7 @@ export function useNavigationHistory(): {
   };
 }
 
-// #region XState Hooks
+// #region 🔖XState Hooks
 
 export function useSketchpadActor(): SketchpadActorRef {
   const actor = useContext(SketchpadActorContext);
@@ -11704,7 +11704,7 @@ export function useXStateAction<TEvent extends { type: string }>(canEvent: TEven
   return useMemo(() => createActionValue(() => actor.send(event as Parameters<typeof actor.send>[0]), canExecute), [actor, event, canExecute]);
 }
 
-// #endregion XState Hooks
+// #endregion 🔖XState Hooks
 
 export function useDesignAppXState(kitGuid: Guid, designGuid: Guid): DesignAppState {
   const actor = useSketchpadActor();
@@ -12241,9 +12241,9 @@ export function useKitCommandsById(kitGuid?: string) {
   }, [kitGuid, store]);
 }
 
-// #endregion Sketchpad
+// #endregion 🔖Sketchpad
 
-// #region Commands
+// #region 🔖Commands
 
 export const commands = {
   "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
@@ -12431,9 +12431,9 @@ export const devCommands = {
   },
 };
 
-// #endregion Commands
+// #endregion 🔖Commands
 
-// #region Apps Registry
+// #region 🔖Apps Registry
 
 export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
   try {
@@ -12559,9 +12559,9 @@ async function loadAppConfigs() {
 
 export { appRegistry, loadAppConfigs };
 
-// #endregion Apps Registry
+// #endregion 🔖Apps Registry
 
-// #region Navbar
+// #region 🔖Navbar
 
 interface FocusContextValue {
   focusItems: FocusItem[];
@@ -12673,9 +12673,9 @@ export const useRemovePanelSection = () => {
   return context.removeSection;
 };
 
-// #endregion Navbar
+// #endregion 🔖Navbar
 
-// #region SidePanel Tabs
+// #region 🔖SidePanel Tabs
 
 interface SidePanelTabsState {
   left: SidePanelTab[];
@@ -12804,9 +12804,9 @@ export const useActiveHudTabId = (): [string | undefined, (tabId: string) => voi
   return [context.activeHudTabId, context.setActiveHudTabId];
 };
 
-// #endregion SidePanel Tabs
+// #endregion 🔖SidePanel Tabs
 
-// #region Origin
+// #region 🔖Origin
 
 type OriginStore = {
   subscribe: (callback: () => void) => () => void;
@@ -12876,9 +12876,9 @@ export function useOriginValue(): string {
   );
 }
 
-// #endregion Origin
+// #endregion 🔖Origin
 
-// #region Footer Items
+// #region 🔖Footer Items
 
 interface FooterItemContextValue {
   items: FooterItem[];
@@ -12925,9 +12925,9 @@ export const useRemoveFooterItem = () => {
   return context.removeItem;
 };
 
-// #endregion Footer Items
+// #endregion 🔖Footer Items
 
-// #region Global Footer Items
+// #region 🔖Global Footer Items
 
 const GlobalFooterItems: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -12950,9 +12950,9 @@ const GlobalFooterItems: FC = () => {
   return null;
 };
 
-// #endregion Global Footer Items
+// #endregion 🔖Global Footer Items
 
-// #region ConceptFilter
+// #region 🔖ConceptFilter
 
 export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = ({ allConcepts, paramName = "concepts" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13000,9 +13000,9 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
   );
 };
 
-// #endregion ConceptFilter
+// #endregion 🔖ConceptFilter
 
-// #region ToolGroup
+// #region 🔖ToolGroup
 
 export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange }) => {
   const getActiveToolDefinition = () => {
@@ -13068,9 +13068,9 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
   );
 };
 
-// #endregion ToolGroup
+// #endregion 🔖ToolGroup
 
-// #region DragDrop
+// #region 🔖DragDrop
 
 interface DragDropContextValue {
   activeDraggedType: Type | null;
@@ -13094,9 +13094,9 @@ export const useDragDrop = () => {
   return context;
 };
 
-// #endregion DragDrop
+// #endregion 🔖DragDrop
 
-// #region Hotkeys
+// #region 🔖Hotkeys
 
 export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?: { enableOnFormTags?: boolean }, deps?: React.DependencyList) {
   const hotkeyOverrides = useSketchpad((s) => s.hotkeyOverrides) as Record<string, string> | undefined;
@@ -13111,7 +13111,7 @@ export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?:
   useReactHotkeys(finalHotkey, callback, options || {}, deps || []);
 }
 
-// #endregion Hotkeys
+// #endregion 🔖Hotkeys
 
 export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
   const { t } = useI18nTranslation();
@@ -14421,7 +14421,7 @@ const PanelToggles: FC = ({}) => {
   );
 };
 
-// #region Canvas
+// #region 🔖Canvas
 
 export { createDefaultLayout } from "./shared";
 export type { AppWindowConfig, WindowControl, WindowKindDefinition } from "./shared";
@@ -15127,9 +15127,9 @@ export const LayoutCanvas: FC<{
   );
 };
 
-// #endregion Canvas
+// #endregion 🔖Canvas
 
-// #region App Router
+// #region 🔖App Router
 
 const ScopeWrapper: FC<{ ScopeProvider: ComponentType<{ guid: string; children: ReactNode }>; paramName: string; children: ReactNode }> = ({ ScopeProvider, paramName, children }) => {
   const params = useParams();
@@ -15204,9 +15204,9 @@ const AppRouter: FC = () => {
   );
 };
 
-// #endregion App Router
+// #endregion 🔖App Router
 
-// #region Sketchpad Components
+// #region 🔖Sketchpad Components
 
 const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -15901,11 +15901,11 @@ const Sketchpad = ({
   return <BrowserRouter>{routerContent}</BrowserRouter>;
 };
 
-// #endregion Sketchpad Components
+// #endregion 🔖Sketchpad Components
 
 export { SectionSpecificity, Window } from "./elements";
 
 export { Sketchpad };
 export default Sketchpad;
 
-// #endregion Apps
+// #endregion 🔖Apps

@@ -1,4 +1,4 @@
-#region Header
+#region 🔖Header
 
 // net/Semio/Semio.cs
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion Header
+#endregion 🔖Header
 
-#region TODOs
+#region 🔖TODOs
 
 // TODO: Make remote uris work for diagram.
 // TODO: Remove computeChildPlane and separate the flatten diagram and flatten planes parts.
@@ -33,7 +33,7 @@
 // TODO: Turn inplace and leave clone to the user of the function.
 // TODO: Parametrize colors for diagram
 
-#endregion TODOs
+#endregion 🔖TODOs
 
 using System.Collections;
 using System.Collections.Immutable;
@@ -61,7 +61,7 @@ using Formatting = Newtonsoft.Json.Formatting;
 
 namespace Semio;
 
-#region Constants
+#region 🔖Constants
 
 public static class Constants
 {
@@ -119,9 +119,9 @@ public enum DiffStatus
     Modified
 }
 
-#endregion Constants
+#endregion 🔖Constants
 
-#region Utility
+#region 🔖Utility
 
 public static class Utility
 {
@@ -417,7 +417,7 @@ public static class Utility
     }
 }
 
-#region Expressions
+#region 🔖Expressions
 public abstract class Symbol { }
 public abstract class Term : Symbol { }
 public abstract class Constant : Term { }
@@ -1499,11 +1499,11 @@ public class Expression
     }
 }
 
-#endregion Expressions
+#endregion 🔖Expressions
 
-#endregion Utility
+#endregion 🔖Utility
 
-#region Entitying
+#region 🔖Entitying
 
 public abstract class Entity<T> where T : Entity<T>
 {
@@ -1557,7 +1557,7 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
     }
 }
 
-#region SemioValidation
+#region 🔖SemioValidation
 
 
 
@@ -1858,7 +1858,7 @@ public static class SemioValidator
     }
 }
 
-#endregion SemioValidation
+#endregion 🔖SemioValidation
 
 public class AttributeDiffUpdate
 {
@@ -2000,7 +2000,7 @@ public class KitDiffUpdate
     public KitDiff? Diff { get; set; }
 }
 
-#region Attribute
+#region 🔖Attribute
 
 
 public class AttributeId : Entity<AttributeId>
@@ -2115,9 +2115,9 @@ public class Attribute : Entity<Attribute>
     public override string ToString() => $"Atr({ToHumanIdString()})";
 }
 
-#endregion Attribute
+#endregion 🔖Attribute
 
-#region Coord
+#region 🔖Coord
 
 
 
@@ -2135,9 +2135,9 @@ public class Coord : Entity<Coord>
     }
 }
 
-#endregion Coord
+#endregion 🔖Coord
 
-#region Point
+#region 🔖Point
 
 
 
@@ -2150,9 +2150,9 @@ public class Point : Entity<Point>
     public float Z { get; set; } = 0;
 }
 
-#endregion Point
+#endregion 🔖Point
 
-#region Vector
+#region 🔖Vector
 
 
 
@@ -2187,9 +2187,9 @@ public class Vector : Entity<Vector>
     }
 }
 
-#endregion Vector
+#endregion 🔖Vector
 
-#region Plane
+#region 🔖Plane
 
 
 
@@ -2224,9 +2224,9 @@ public class Plane : Entity<Plane>
     }
 }
 
-#endregion Plane
+#endregion 🔖Plane
 
-#region Location
+#region 🔖Location
 
 
 public class LocationId : Entity<LocationId>
@@ -2251,9 +2251,9 @@ public class Location : Entity<Location>
     public override string ToString() => $"Loc({ToHumanIdString()})";
 }
 
-#endregion Location
+#endregion 🔖Location
 
-#region Author
+#region 🔖Author
 
 
 public class AuthorId : Entity<AuthorId>
@@ -2375,9 +2375,9 @@ public class AuthorsDiff : Entity<AuthorsDiff>
     public static implicit operator AuthorsDiff(List<Author> authors) => new() { Updated = authors.Select(a => new AuthorDiffUpdate { Author = a, Diff = (AuthorDiff)a }).ToList() };
 }
 
-#endregion Author
+#endregion 🔖Author
 
-#region File
+#region 🔖File
 
 
 public class FileId : Entity<FileId>
@@ -2482,9 +2482,9 @@ public class File : Entity<File>
     public static implicit operator File(FileDiff diff) => new() { Guid = diff.Guid ?? "", Name = diff.Name ?? "", Remote = diff.Remote, Folder = diff.Folder, Size = diff.Size, Hash = diff.Hash, CreatedAt = diff.CreatedAt ?? default, CreatedBy = diff.CreatedBy, UpdatedAt = diff.UpdatedAt ?? default, UpdatedBy = diff.UpdatedBy };
     public static implicit operator FileDiff(File file) => new() { Guid = file.Guid, Name = file.Name, Remote = file.Remote, Folder = file.Folder, Size = file.Size, Hash = file.Hash, CreatedAt = file.CreatedAt, CreatedBy = file.CreatedBy, UpdatedAt = file.UpdatedAt, UpdatedBy = file.UpdatedBy };
 }
-#endregion File
+#endregion 🔖File
 
-#region Folder
+#region 🔖Folder
 
 
 public class FolderId : Entity<FolderId>
@@ -2597,9 +2597,9 @@ public class Folder : Entity<Folder>
     }
 }
 
-#endregion Folder
+#endregion 🔖Folder
 
-#region Benchmark
+#region 🔖Benchmark
 
 
 public class BenchmarkId : Entity<BenchmarkId>
@@ -2662,9 +2662,9 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion Benchmark
+#endregion 🔖Benchmark
 
-#region QualityKind
+#region 🔖QualityKind
 
 [Flags]
 public enum QualityKind
@@ -2677,9 +2677,9 @@ public enum QualityKind
     Connector = 16,
 }
 
-#endregion QualityKind
+#endregion 🔖QualityKind
 
-#region Quality
+#region 🔖Quality
 
 
 
@@ -2771,9 +2771,9 @@ public class Quality : Entity<Quality>
 
 }
 
-#endregion Quality
+#endregion 🔖Quality
 
-#region Tag
+#region 🔖Tag
 
 
 
@@ -2832,9 +2832,9 @@ public class TagsDiff : Entity<TagsDiff>
     public List<TagDiffUpdate> Updated { get; set; } = new();
 }
 
-#endregion Tag
+#endregion 🔖Tag
 
-#region Concept
+#region 🔖Concept
 
 
 
@@ -2903,9 +2903,9 @@ public class ConceptsDiff : Entity<ConceptsDiff>
     }
 }
 
-#endregion Concept
+#endregion 🔖Concept
 
-#region Port
+#region 🔖Port
 
 
 
@@ -3022,9 +3022,9 @@ public class Port : Entity<Port>
     }
 }
 
-#endregion Port
+#endregion 🔖Port
 
-#region Prop
+#region 🔖Prop
 
 
 public class PropId : Entity<PropId>
@@ -3076,9 +3076,9 @@ public class PropDiff : Entity<PropDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion Prop
+#endregion 🔖Prop
 
-#region Model
+#region 🔖Model
 
 
 public class ModelId : Entity<ModelId>
@@ -3230,9 +3230,9 @@ public class Model : Entity<Model>
     public override string ToString() => $"Mod({ToHumanIdString()})";
 }
 
-#endregion Model
+#endregion 🔖Model
 
-#region Connector
+#region 🔖Connector
 
 
 public class ConnectorId : Entity<ConnectorId>
@@ -3497,9 +3497,9 @@ public class Connector : Entity<Connector>
     }
 }
 
-#endregion Connector
+#endregion 🔖Connector
 
-#region Type
+#region 🔖Type
 
 
 public class TypeId : Entity<TypeId>
@@ -3883,9 +3883,9 @@ public class Type : Entity<Type>
     }
 }
 
-#endregion Type
+#endregion 🔖Type
 
-#region Layer
+#region 🔖Layer
 
 
 public class LayerId : Entity<LayerId>
@@ -3945,9 +3945,9 @@ public class LayerDiff : Entity<LayerDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion Layer
+#endregion 🔖Layer
 
-#region Group
+#region 🔖Group
 
 
 public class GroupId : Entity<GroupId>
@@ -4003,9 +4003,9 @@ public class GroupDiff : Entity<GroupDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-#endregion Group
+#endregion 🔖Group
 
-#region Piece
+#region 🔖Piece
 
 
 public class PieceId : Entity<PieceId>
@@ -4163,8 +4163,8 @@ public class Piece : Entity<Piece>
     }
 }
 
-#endregion Piece
-#region Side
+#endregion 🔖Piece
+#region 🔖Side
 
 
 public class SideDiff : Entity<SideDiff>
@@ -4262,9 +4262,9 @@ public class Side : Entity<Side>
     public override string ToString() => $"Sde({Piece.Guid}" + (Connector.Guid != "" ? ":" + Connector.Guid : "") + ")";
 }
 
-#endregion Side
+#endregion 🔖Side
 
-#region Connection
+#region 🔖Connection
 
 
 public class ConnectionId : Entity<ConnectionId>
@@ -4493,9 +4493,9 @@ public class Connection : Entity<Connection>
     }
 }
 
-#endregion Connection
+#endregion 🔖Connection
 
-#region Stat
+#region 🔖Stat
 
 
 public class StatId : Entity<StatId>
@@ -4555,9 +4555,9 @@ public class StatDiff : Entity<StatDiff>
     public bool ShouldSerializeMaxExcluded() => _setProperties.Contains("MaxExcluded");
 }
 
-#endregion Stat
+#endregion 🔖Stat
 
-#region Design
+#region 🔖Design
 
 
 public class DesignsDiff : Entity<DesignsDiff>
@@ -5817,9 +5817,9 @@ text {
     }
 }
 
-#endregion Design
+#endregion 🔖Design
 
-#region Kit
+#region 🔖Kit
 
 
 public class KitDiff : Entity<KitDiff>
@@ -6382,7 +6382,7 @@ public class Kit : Entity<Kit>
         };
     }
 
-    #region Design Family Helpers
+    #region 🔖Design Family Helpers
 
 
 
@@ -6475,9 +6475,9 @@ public class Kit : Entity<Kit>
             .ToList();
     }
 
-    #endregion Design Family Helpers
+    #endregion 🔖Design Family Helpers
 
-    #region Type Family Helpers
+    #region 🔖Type Family Helpers
 
 
 
@@ -6545,12 +6545,12 @@ public class Kit : Entity<Kit>
         return primitiveA.Guid == primitiveB.Guid;
     }
 
-    #endregion Type Family Helpers
+    #endregion 🔖Type Family Helpers
 }
 
-#endregion Kit
+#endregion 🔖Kit
 
-#region Api
+#region 🔖Api
 
 public class PredictDesignBody
 {
@@ -6676,9 +6676,9 @@ public class ServerException : Exception
     public ServerException(string message) : base(message) { }
 }
 
-#endregion Api
+#endregion 🔖Api
 
-#region ZipRoundtrip
+#region 🔖ZipRoundtrip
 
 public class KitImportResult
 {
@@ -6943,9 +6943,9 @@ public static class ZipRoundtrip
     }
 }
 
-#endregion ZipRoundtrip
+#endregion 🔖ZipRoundtrip
 
-#region KitImporter
+#region 🔖KitImporter
 
 public static class KitImporter
 {
@@ -6956,9 +6956,9 @@ public static class KitImporter
     }
 }
 
-#endregion KitImporter
+#endregion 🔖KitImporter
 
-#region KitExporter
+#region 🔖KitExporter
 
 public static class KitExporter
 {
@@ -6991,9 +6991,9 @@ public static class KitExporter
     }
 }
 
-#endregion KitExporter
+#endregion 🔖KitExporter
 
-#region SemioDiff
+#region 🔖SemioDiff
 
 public static class SemioDiff
 {
@@ -8535,8 +8535,8 @@ public static class SemioDiff
     }
 }
 
-#endregion SemioDiff
+#endregion 🔖SemioDiff
 
-#endregion Entitying
+#endregion 🔖Entitying
 
 

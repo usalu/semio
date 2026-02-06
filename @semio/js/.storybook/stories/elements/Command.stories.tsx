@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/Command.stories.tsx
 
@@ -17,14 +17,14 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, Circle, Cylinder, Settings, User } from "lucide-react";
 import { useState } from "react";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut, Level, LevelProvider, getLevelBgClass } from "../../../sketchpad/elements";
 
-// #region Command
+// #region 🔖Command
 const meta = {
   title: "Elements/Command",
   component: Command,
@@ -145,4 +145,4 @@ export const Temporary: Story = {
   render: createLevelRender("temporary"),
 };
 
-// #endregion Command
+// #endregion 🔖Command

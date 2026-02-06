@@ -8,18 +8,9 @@
   },
   "client": "copilot-chat",
   "llm": "gemini-3-pro",
-  "parent": "REPO-CLIENT",
-  "iterations": [
-    {
-      "prompt": "Instructions for Repo Binary",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T10:54:58.108387961Z",
-      "commit": ""
-    }
-  ]
+  "parent": "AI-OPTIMIZED-REPO/REPO-CLIENT",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/356"
+  },
+  "interactions": null
 }

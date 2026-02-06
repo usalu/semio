@@ -8,18 +8,9 @@
   },
   "client": "copilot-chat",
   "llm": "gemini-3-pro",
-  "parent": "RUNNING-GRASSHOPPER",
-  "iterations": [
-    {
-      "prompt": "Instructions for Pure C# Components",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T10:54:53.869294236Z",
-      "commit": ""
-    }
-  ]
+  "parent": "R26-03/RUNNING-NET/RUNNING-GRASSHOPPER",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/368"
+  },
+  "interactions": null
 }

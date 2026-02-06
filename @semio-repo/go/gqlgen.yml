@@ -2,7 +2,7 @@
 # See https://gqlgen.com/config/ for details
 
 schema:
-  - ../../graphql/repo/schema.graphql
+  - ../graphql/schema.graphql
 
 exec:
   filename: graph/generated.go

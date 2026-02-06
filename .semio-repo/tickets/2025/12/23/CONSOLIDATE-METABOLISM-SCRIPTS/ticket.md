@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 Three separate scripts handled Metabolism asset generation:
@@ -30,11 +31,11 @@ Created `scripts/update-metabolism.tsx` that performs all three operations in se
 
 The script uses regions to organize code:
 
-- `#region File Collection` - Shared file collection logic
-- `#region Regenerate Zip` - Zip generation and copying
-- `#region Generate Diff` - Diff file generation
-- `#region Generate Validation` - Validation JSON generation
-- `#region App` - React UI component
+- `#region 🔖File Collection` - Shared file collection logic
+- `#region 🔖Regenerate Zip` - Zip generation and copying
+- `#region 🔖Generate Diff` - Diff file generation
+- `#region 🔖Generate Validation` - Validation JSON generation
+- `#region 🔖App` - React UI component
 
 ## Updated Connector Naming
 
@@ -57,6 +58,7 @@ Deleted the three separate scripts:
 ## Log
 
 ## Summary
+
 # Summary
 
 Consolidate three Metabolism scripts into single update-metabolism.tsx

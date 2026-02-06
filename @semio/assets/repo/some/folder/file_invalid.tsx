@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -7,7 +7,7 @@
 // MIT License
 // https://www.gnu.org/licenses/
 
-// #endregion Header
+// #endregion 🔖Header
 
 // #region
 
@@ -15,23 +15,23 @@ const unnamedRegionValue = 1;
 
 // #endregion
 
-// #region MissingEnd
+// #region 🔖MissingEnd
 
 const missingEnd = 2;
 
 // #endregion
 
-// #region Alpha
+// #region 🔖Alpha
 
 const mismatchName = 3;
 
-// #endregion Beta
+// #endregion 🔖Beta
 
-// #region Empty
+// #region 🔖Empty
 
-// #endregion Empty
+// #endregion 🔖Empty
 
-// #region Comments
+// #region 🔖Comments
 
 // inline one
 
@@ -43,6 +43,6 @@ const mismatchName = 3;
 
 const insideComments = 4;
 
-// #endregion Comments
+// #endregion 🔖Comments
 
 const orphanValue = 5;

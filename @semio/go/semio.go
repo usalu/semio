@@ -15,16 +15,16 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
-// #region Constants
+// #region 🔖Constants
 
 const (
 	IconWidth = 24
 	Tolerance = 0.0001
 )
 
-// #endregion Constants
+// #endregion 🔖Constants
 
-// #region Utils
+// #region 🔖Utils
 
 func Guid() string {
 	bytes := make([]byte, 16)
@@ -50,9 +50,9 @@ func DeepEqual(a, b interface{}) bool {
 	return string(aJSON) == string(bJSON)
 }
 
-// #endregion Utils
+// #endregion 🔖Utils
 
-// #region Entity IDs
+// #region 🔖Entity IDs
 
 type AttributeId struct {
 	Guid string `json:"guid"`
@@ -144,9 +144,9 @@ type KitId struct {
 	Guid string `json:"guid"`
 }
 
-// #endregion Entity IDs
+// #endregion 🔖Entity IDs
 
-// #region Weak Entities
+// #region 🔖Weak Entities
 
 type Coord struct {
 	U float64 `json:"u"`
@@ -182,9 +182,9 @@ type Camera struct {
 	Up       Vector `json:"up"`
 }
 
-// #endregion Weak Entities
+// #endregion 🔖Weak Entities
 
-// #region Attribute
+// #region 🔖Attribute
 
 type Attribute struct {
 	Guid       string  `json:"guid"`
@@ -208,9 +208,9 @@ type AttributesDiff struct {
 	Added []Attribute `json:"added,omitempty"`
 }
 
-// #endregion Attribute
+// #endregion 🔖Attribute
 
-// #region Location
+// #region 🔖Location
 
 type Location struct {
 	Guid       string      `json:"guid"`
@@ -227,9 +227,9 @@ type LocationDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
-// #endregion Location
+// #endregion 🔖Location
 
-// #region Author
+// #region 🔖Author
 
 type Author struct {
 	Guid       string      `json:"guid"`
@@ -255,9 +255,9 @@ type AuthorsDiff struct {
 	Added []Author `json:"added,omitempty"`
 }
 
-// #endregion Author
+// #endregion 🔖Author
 
-// #region File
+// #region 🔖File
 
 type File struct {
 	Guid        string      `json:"guid"`
@@ -291,9 +291,9 @@ type FilesDiff struct {
 	Added []File `json:"added,omitempty"`
 }
 
-// #endregion File
+// #endregion 🔖File
 
-// #region Folder
+// #region 🔖Folder
 
 type Folder struct {
 	Guid        string      `json:"guid"`
@@ -321,9 +321,9 @@ type FoldersDiff struct {
 	Added []Folder `json:"added,omitempty"`
 }
 
-// #endregion Folder
+// #endregion 🔖Folder
 
-// #region Benchmark
+// #region 🔖Benchmark
 
 type Benchmark struct {
 	Guid        string      `json:"guid"`
@@ -357,9 +357,9 @@ type BenchmarksDiff struct {
 	Added []Benchmark `json:"added,omitempty"`
 }
 
-// #endregion Benchmark
+// #endregion 🔖Benchmark
 
-// #region Quality
+// #region 🔖Quality
 
 type QualityKind int
 
@@ -420,9 +420,9 @@ type QualitiesDiff struct {
 	Added []Quality `json:"added,omitempty"`
 }
 
-// #endregion Quality
+// #endregion 🔖Quality
 
-// #region Port
+// #region 🔖Port
 
 type Port struct {
 	Guid                 string        `json:"guid"`
@@ -478,9 +478,9 @@ type PortsDiff struct {
 	Added []Port `json:"added,omitempty"`
 }
 
-// #endregion Port
+// #endregion 🔖Port
 
-// #region Prop
+// #region 🔖Prop
 
 type Prop struct {
 	Guid       string      `json:"guid"`
@@ -506,9 +506,9 @@ type PropsDiff struct {
 	Added []Prop `json:"added,omitempty"`
 }
 
-// #endregion Prop
+// #endregion 🔖Prop
 
-// #region Tag
+// #region 🔖Tag
 
 type Tag struct {
 	Guid        string      `json:"guid"`
@@ -562,9 +562,9 @@ type TagsDiff struct {
 	Added []Tag `json:"added,omitempty"`
 }
 
-// #endregion Tag
+// #endregion 🔖Tag
 
-// #region Concept
+// #region 🔖Concept
 
 type Concept struct {
 	Guid        string      `json:"guid"`
@@ -618,9 +618,9 @@ type ConceptsDiff struct {
 	Added []Concept `json:"added,omitempty"`
 }
 
-// #endregion Concept
+// #endregion 🔖Concept
 
-// #region Model
+// #region 🔖Model
 
 type Model struct {
 	Guid        string      `json:"guid"`
@@ -648,9 +648,9 @@ type ModelsDiff struct {
 	Added []Model `json:"added,omitempty"`
 }
 
-// #endregion Model
+// #endregion 🔖Model
 
-// #region Connector
+// #region 🔖Connector
 
 type Connector struct {
 	Guid        string       `json:"guid"`
@@ -698,9 +698,9 @@ type ConnectorsDiff struct {
 	Added []Connector `json:"added,omitempty"`
 }
 
-// #endregion Connector
+// #endregion 🔖Connector
 
-// #region Type
+// #region 🔖Type
 
 type Type struct {
 	Guid        string      `json:"guid"`
@@ -780,9 +780,9 @@ type TypesDiff struct {
 	Added []Type `json:"added,omitempty"`
 }
 
-// #endregion Type
+// #endregion 🔖Type
 
-// #region Layer
+// #region 🔖Layer
 
 type Layer struct {
 	Guid        string      `json:"guid"`
@@ -812,9 +812,9 @@ type LayersDiff struct {
 	Added []Layer `json:"added,omitempty"`
 }
 
-// #endregion Layer
+// #endregion 🔖Layer
 
-// #region Piece
+// #region 🔖Piece
 
 type Piece struct {
 	Guid        string      `json:"guid"`
@@ -869,9 +869,9 @@ type PiecesDiff struct {
 	Added []Piece `json:"added,omitempty"`
 }
 
-// #endregion Piece
+// #endregion 🔖Piece
 
-// #region Group
+// #region 🔖Group
 
 type Group struct {
 	Guid        string      `json:"guid"`
@@ -899,9 +899,9 @@ type GroupsDiff struct {
 	Added []Group `json:"added,omitempty"`
 }
 
-// #endregion Group
+// #endregion 🔖Group
 
-// #region Side
+// #region 🔖Side
 
 type Side struct {
 	Piece       PieceId      `json:"piece"`
@@ -915,9 +915,9 @@ type SideDiff struct {
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
-// #endregion Side
+// #endregion 🔖Side
 
-// #region Connection
+// #region 🔖Connection
 
 type Connection struct {
 	Guid        string      `json:"guid"`
@@ -959,9 +959,9 @@ type ConnectionsDiff struct {
 	Added []Connection `json:"added,omitempty"`
 }
 
-// #endregion Connection
+// #endregion 🔖Connection
 
-// #region Stat
+// #region 🔖Stat
 
 type Stat struct {
 	Guid       string      `json:"guid"`
@@ -989,9 +989,9 @@ type StatsDiff struct {
 	Added []Stat `json:"added,omitempty"`
 }
 
-// #endregion Stat
+// #endregion 🔖Stat
 
-// #region Design
+// #region 🔖Design
 
 type Design struct {
 	Guid        string       `json:"guid"`
@@ -1061,9 +1061,9 @@ type DesignsDiff struct {
 	Added []Design `json:"added,omitempty"`
 }
 
-// #endregion Design
+// #endregion 🔖Design
 
-// #region Kit
+// #region 🔖Kit
 
 type Kit struct {
 	Guid        string      `json:"guid"`
@@ -1122,9 +1122,9 @@ type KitsDiff struct {
 	Added []Kit `json:"added,omitempty"`
 }
 
-// #endregion Kit
+// #endregion 🔖Kit
 
-// #region Serialization
+// #region 🔖Serialization
 
 func SerializeKit(kit Kit) ([]byte, error) {
 	return json.MarshalIndent(kit, "", "  ")
@@ -1146,9 +1146,9 @@ func DeserializeKitDiff(data []byte) (KitDiff, error) {
 	return diff, err
 }
 
-// #endregion Serialization
+// #endregion 🔖Serialization
 
-// #region Helpers
+// #region 🔖Helpers
 
 func FindTypeInKit(kit *Kit, typeGuid string) *Type {
 	for i := range kit.Types {
@@ -1258,9 +1258,9 @@ func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
 	return nil
 }
 
-// #endregion Helpers
+// #endregion 🔖Helpers
 
-// #region Factories
+// #region 🔖Factories
 
 func NewKit(name string) Kit {
 	now := ""
@@ -1387,9 +1387,9 @@ func NewAuthor(name string) Author {
 	}
 }
 
-// #endregion Factories
+// #endregion 🔖Factories
 
-// #region Kit Operations
+// #region 🔖Kit Operations
 
 func AreKitsEqual(a, b Kit) bool {
 	if a.Guid != b.Guid || a.Name != b.Name || a.Version != b.Version {
@@ -3487,9 +3487,9 @@ func FilterDesignsWithoutParent(designs []Design) []Design {
 	return result
 }
 
-// #endregion Kit Operations
+// #endregion 🔖Kit Operations
 
-// #region Kit Diff Helpers
+// #region 🔖Kit Diff Helpers
 
 func AddTypeToKit(typ Type) KitDiff {
 	return KitDiff{
@@ -3587,9 +3587,9 @@ func RemoveConceptFromKit(conceptGuid string) KitDiff {
 	}
 }
 
-// #endregion Kit Diff Helpers
+// #endregion 🔖Kit Diff Helpers
 
-// #region Validation
+// #region 🔖Validation
 
 type SemioEntityKind string
 
@@ -4430,7 +4430,7 @@ func HasErrors(result ValidationResult) bool {
 	return false
 }
 
-// #region Validation Serialization
+// #region 🔖Validation Serialization
 
 type ProblemSerialized struct {
 	ConstraintId string `json:"constraintId"`
@@ -4493,11 +4493,11 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 	return true
 }
 
-// #endregion Validation Serialization
+// #endregion 🔖Validation Serialization
 
-// #endregion Validation
+// #endregion 🔖Validation
 
-// #region Flatten Design
+// #region 🔖Flatten Design
 
 func planeToMatrix(p Plane) *mat.Dense {
 	xAxis := []float64{p.XAxis.X, p.XAxis.Y, p.XAxis.Z}
@@ -4956,4 +4956,4 @@ func ApplyDesignDiff(base Design, diff DesignDiff) Design {
 	return applyDesignDiff(base, diff)
 }
 
-// #endregion Flatten Design
+// #endregion 🔖Flatten Design

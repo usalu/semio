@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/navigation/Breadcrumb.stories.tsx
 
@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Home } from "lucide-react";
 import { Breadcrumb, BreadcrumbItemData, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
-// #region Breadcrumb
+// #region 🔖Breadcrumb
 const meta = {
   title: "Elements/Navigation/Breadcrumb",
   component: Breadcrumb,
@@ -135,4 +135,4 @@ export const Temporary: Story = {
   render: createLevelRender("temporary"),
 };
 
-// #endregion Breadcrumb
+// #endregion 🔖Breadcrumb

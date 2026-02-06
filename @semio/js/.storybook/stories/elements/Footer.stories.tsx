@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/Footer.stories.tsx
 
@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { CheckCircle2 } from "lucide-react";
 import { Footer, FooterItem, Level, LevelProvider, getLevelBgClass } from "../../../sketchpad/elements";
 
-// #region Footer
+// #region 🔖Footer
 const meta = {
   title: "Elements/Footer",
   component: Footer,
@@ -104,4 +104,4 @@ export const Temporary: Story = {
   render: createLevelRender("temporary"),
 };
 
-// #endregion Footer
+// #endregion 🔖Footer

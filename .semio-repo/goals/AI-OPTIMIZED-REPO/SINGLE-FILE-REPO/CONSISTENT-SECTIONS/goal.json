@@ -8,21 +8,9 @@
   },
   "client": "copilot-chat",
   "llm": "gemini-3-pro",
-  "parent": "SINGLE-FILE-REPO",
+  "parent": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO",
   "github": {
-    "milestone": "https://github.com/usalu/semio/milestone/70"
+    "issue": "https://github.com/usalu/semio/issues/357"
   },
-  "iterations": [
-    {
-      "prompt": "Instructions for Consistent Sections",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T10:53:54.344431363Z",
-      "commit": ""
-    }
-  ]
+  "interactions": null
 }

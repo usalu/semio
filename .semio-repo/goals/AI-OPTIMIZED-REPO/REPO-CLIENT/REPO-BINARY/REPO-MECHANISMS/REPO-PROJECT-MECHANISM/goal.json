@@ -8,21 +8,9 @@
   },
   "client": "copilot-chat",
   "llm": "gemini-3-pro",
-  "parent": "REPO-MECHANISMS",
+  "parent": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
   "github": {
-    "milestone": "https://github.com/usalu/semio/milestone/53"
+    "issue": "https://github.com/usalu/semio/issues/379"
   },
-  "iterations": [
-    {
-      "prompt": "Instructions for Repo Project Mechanism",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T10:53:13.490238312Z",
-      "commit": ""
-    }
-  ]
+  "interactions": null
 }

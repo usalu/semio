@@ -11,7 +11,7 @@ use uuid::Uuid;
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
-// #region Error Types
+// #region 🔖Error Types
 
 #[derive(Error, Debug, Clone, Serialize, Deserialize)]
 pub enum SemioError {
@@ -29,9 +29,9 @@ pub enum SemioError {
 
 pub type Result<T> = std::result::Result<T, SemioError>;
 
-// #endregion Error Types
+// #endregion 🔖Error Types
 
-// #region Utility Functions
+// #region 🔖Utility Functions
 
 pub type Guid = String;
 
@@ -69,9 +69,9 @@ pub fn generate_unique_name(base: &str, existing: &[String]) -> String {
     }
 }
 
-// #endregion Utility Functions
+// #endregion 🔖Utility Functions
 
-// #region Model Types - Attribute
+// #region 🔖Model Types - Attribute
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Attribute {
@@ -86,18 +86,18 @@ pub struct Attribute {
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct AttributeId { pub guid: Guid }
 
-// #endregion Model Types - Attribute
+// #endregion 🔖Model Types - Attribute
 
-// #region Model Types - Coord
+// #region 🔖Model Types - Coord
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct Coord { pub u: f64, pub v: f64 }
 
 impl Coord { pub fn new(u: f64, v: f64) -> Self { Self { u, v } } }
 
-// #endregion Model Types - Coord
+// #endregion 🔖Model Types - Coord
 
-// #region Model Types - Vector
+// #region 🔖Model Types - Vector
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct Vector { pub x: f64, pub y: f64, pub z: f64 }
@@ -112,9 +112,9 @@ impl Vector {
     pub fn from_nalgebra(v: &Vector3<f64>) -> Self { Self::new(v.x, v.y, v.z) }
 }
 
-// #endregion Model Types - Vector
+// #endregion 🔖Model Types - Vector
 
-// #region Model Types - Plane
+// #region 🔖Model Types - Plane
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Plane {
@@ -159,9 +159,9 @@ impl Plane {
     }
 }
 
-// #endregion Model Types - Plane
+// #endregion 🔖Model Types - Plane
 
-// #region Model Types - Camera
+// #region 🔖Model Types - Camera
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Camera {
@@ -179,9 +179,9 @@ impl Default for Camera {
     }
 }
 
-// #endregion Model Types - Camera
+// #endregion 🔖Model Types - Camera
 
-// #region Model Types - Location, Author, File, Folder
+// #region 🔖Model Types - Location, Author, File, Folder
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct LocationId { pub guid: Guid }
@@ -253,9 +253,9 @@ pub struct File {
     pub updated_at: Option<String>,
 }
 
-// #endregion Model Types - Location, Author, File, Folder
+// #endregion 🔖Model Types - Location, Author, File, Folder
 
-// #region Model Types - Quality, Port, Tag, Concept
+// #region 🔖Model Types - Quality, Port, Tag, Concept
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct QualityId { pub guid: Guid }
@@ -338,9 +338,9 @@ pub struct Concept {
     pub icon: Option<String>,
 }
 
-// #endregion Model Types - Quality, Port, Tag, Concept
+// #endregion 🔖Model Types - Quality, Port, Tag, Concept
 
-// #region Model Types - Prop, Model, Connector
+// #region 🔖Model Types - Prop, Model, Connector
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct PropId { pub guid: Guid }
@@ -396,9 +396,9 @@ pub struct Connector {
     pub attributes: Option<Vec<Attribute>>,
 }
 
-// #endregion Model Types - Prop, Model, Connector
+// #endregion 🔖Model Types - Prop, Model, Connector
 
-// #region Model Types - Type
+// #region 🔖Model Types - Type
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct TypeId { pub guid: Guid }
@@ -445,9 +445,9 @@ pub struct Type {
     pub updated_at: Option<String>,
 }
 
-// #endregion Model Types - Type
+// #endregion 🔖Model Types - Type
 
-// #region Model Types - Layer, Piece, Group, Side, Connection, Stat
+// #region 🔖Model Types - Layer, Piece, Group, Side, Connection, Stat
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct LayerId { pub guid: Guid }
@@ -581,9 +581,9 @@ pub struct Stat {
     pub unit: Option<String>,
 }
 
-// #endregion Model Types - Layer, Piece, Group, Side, Connection, Stat
+// #endregion 🔖Model Types - Layer, Piece, Group, Side, Connection, Stat
 
-// #region Model Types - Design
+// #region 🔖Model Types - Design
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Design {
@@ -633,9 +633,9 @@ pub struct Design {
     pub updated_at: Option<String>,
 }
 
-// #endregion Model Types - Design
+// #endregion 🔖Model Types - Design
 
-// #region Model Types - Kit
+// #region 🔖Model Types - Kit
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Kit {
@@ -683,9 +683,9 @@ pub struct Kit {
     pub updated_at: Option<String>,
 }
 
-// #endregion Model Types - Kit
+// #endregion 🔖Model Types - Kit
 
-// #region Finder Functions
+// #region 🔖Finder Functions
 
 pub fn find_type_in_kit<'a>(kit: &'a Kit, guid: &str) -> Option<&'a Type> {
     kit.types.as_ref()?.iter().find(|t| t.guid == guid)
@@ -763,9 +763,9 @@ pub fn find_stat_in_design<'a>(design: &'a Design, guid: &str) -> Option<&'a Sta
     design.stats.as_ref()?.iter().find(|s| s.guid == guid)
 }
 
-// #endregion Finder Functions
+// #endregion 🔖Finder Functions
 
-// #region Serialization
+// #region 🔖Serialization
 
 pub fn serialize_kit(kit: &Kit) -> Result<String> {
     serde_json::to_string_pretty(kit).map_err(|e| SemioError::Serialization { message: e.to_string() })
@@ -801,9 +801,9 @@ pub fn is_supported_model_extension(ext: &str) -> bool {
     SUPPORTED_MODEL_EXTENSIONS.contains(&ext.to_lowercase().as_str())
 }
 
-// #endregion Serialization
+// #endregion 🔖Serialization
 
-// #region Diff Types
+// #region 🔖Diff Types
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 pub struct RemovedItem { pub guid: Guid }
@@ -1310,9 +1310,9 @@ pub struct KitDiff {
     pub attributes: Option<CollectionDiff<Attribute, AttributeDiff>>,
 }
 
-// #endregion Diff Types
+// #endregion 🔖Diff Types
 
-// #region HasGuid Trait
+// #region 🔖HasGuid Trait
 
 pub trait HasGuid {
     fn guid(&self) -> &str;
@@ -1362,9 +1362,9 @@ impl DiffHasGuid for FolderDiff { fn guid(&self) -> &str { &self.guid } }
 impl DiffHasGuid for AuthorDiff { fn guid(&self) -> &str { &self.guid } }
 impl DiffHasGuid for KitDiff { fn guid(&self) -> &str { &self.guid } }
 
-// #endregion HasGuid Trait
+// #endregion 🔖HasGuid Trait
 
-// #region ApplyDiff
+// #region 🔖ApplyDiff
 
 pub fn apply_collection_diff<T, D>(
     collection: &mut Option<Vec<T>>,
@@ -1623,9 +1623,9 @@ pub fn apply_kit_diff(item: &mut Kit, diff: &KitDiff) {
     apply_collection_diff(&mut item.attributes, &diff.attributes, apply_attribute_diff);
 }
 
-// #endregion ApplyDiff
+// #endregion 🔖ApplyDiff
 
-// #region FlattenDesign
+// #region 🔖FlattenDesign
 
 pub struct FlattenedPiece {
     pub piece: Piece,
@@ -2019,9 +2019,9 @@ fn connector_to_plane(connector: &Connector) -> Plane {
     Plane::new(origin, x_axis, y_axis)
 }
 
-// #endregion FlattenDesign
+// #endregion 🔖FlattenDesign
 
-// #region Validation Types
+// #region 🔖Validation Types
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Default)]
 #[serde(rename_all = "camelCase")]
@@ -2388,9 +2388,9 @@ fn check_folder_name_uniqueness(kit: &Kit, problems: &mut Vec<ValidationProblem>
     }
 }
 
-// #endregion Validation Types
+// #endregion 🔖Validation Types
 
-// #region SQLite Import/Export
+// #region 🔖SQLite Import/Export
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod sqlite {
@@ -2862,9 +2862,9 @@ pub mod sqlite {
     }
 }
 
-// #endregion SQLite Import/Export
+// #endregion 🔖SQLite Import/Export
 
-// #region Zip Import/Export
+// #region 🔖Zip Import/Export
 
 #[cfg(not(target_arch = "wasm32"))]
 pub mod zip_roundtrip {
@@ -2977,9 +2977,9 @@ pub mod zip_roundtrip {
     }
 }
 
-// #endregion Zip Import/Export
+// #endregion 🔖Zip Import/Export
 
-// #region WASM Bindings
+// #region 🔖WASM Bindings
 
 #[cfg(target_arch = "wasm32")]
 pub mod wasm {
@@ -3107,9 +3107,9 @@ pub mod wasm {
     }
 }
 
-// #endregion WASM Bindings
+// #endregion 🔖WASM Bindings
 
-// #region Tests
+// #region 🔖Tests
 
 #[cfg(test)]
 mod tests {
@@ -3228,7 +3228,7 @@ mod tests {
         }
     }
 
-    // #region Roundtrip Tests
+    // #region 🔖Roundtrip Tests
 
     mod roundtrip {
         use super::*;
@@ -3266,9 +3266,9 @@ mod tests {
         }
     }
 
-    // #endregion Roundtrip Tests
+    // #endregion 🔖Roundtrip Tests
 
-    // #region Flatten Tests
+    // #region 🔖Flatten Tests
 
     mod flatten {
         use super::*;
@@ -3324,9 +3324,9 @@ mod tests {
         }
     }
 
-    // #endregion Flatten Tests
+    // #endregion 🔖Flatten Tests
 
-    // #region Diff Tests
+    // #region 🔖Diff Tests
 
     mod diff {
         use super::*;
@@ -3345,9 +3345,9 @@ mod tests {
         }
     }
 
-    // #endregion Diff Tests
+    // #endregion 🔖Diff Tests
 
-    // #region Validation Tests
+    // #region 🔖Validation Tests
 
     mod validation {
         use super::*;
@@ -3376,7 +3376,7 @@ mod tests {
         }
     }
 
-    // #endregion Validation Tests
+    // #endregion 🔖Validation Tests
 }
 
-// #endregion Tests
+// #endregion 🔖Tests

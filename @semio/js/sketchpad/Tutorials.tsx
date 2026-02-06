@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/Tutorials.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import { CloseIcon, PauseIcon, PlayIcon, RecordIcon, SkipBackIcon, SkipForwardIcon, StopIcon } from "@semio/assets";
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
@@ -28,11 +28,11 @@ import { useAddFooterItem, useMode, useRemoveFooterItem } from "./Sketchpad";
 import { Button, Slider } from "./elements";
 import { Mode } from "./shared";
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Components
+// #region 🔖Components
 
-// #region Tutorial Controls
+// #region 🔖Tutorial Controls
 
 export const TutorialControls: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -107,9 +107,9 @@ const TutorialControlsContent: FC = () => {
   );
 };
 
-// #endregion Tutorial Controls
+// #endregion 🔖Tutorial Controls
 
-// #region Recording Controls
+// #region 🔖Recording Controls
 
 export const RecordingControls: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -180,9 +180,9 @@ const RecordingControlsContent: FC = () => {
   );
 };
 
-// #endregion Recording Controls
+// #endregion 🔖Recording Controls
 
-// #region Record Button
+// #region 🔖Record Button
 
 export const RecordButton: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -222,9 +222,9 @@ export const RecordButton: FC = () => {
   return null;
 };
 
-// #endregion Record Button
+// #endregion 🔖Record Button
 
-// #region Tutorial Overlay
+// #region 🔖Tutorial Overlay
 
 export const TutorialOverlay: FC = () => {
   const isTutorialActive = useIsTutorialActive();
@@ -359,10 +359,10 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
   );
 };
 
-// #endregion Tutorial Overlay
+// #endregion 🔖Tutorial Overlay
 
-// #endregion Components
-// #region Built-in Tutorials
+// #endregion 🔖Components
+// #region 🔖Built-in Tutorials
 
 export const helloTutorial: Tutorial = {
   id: guid(),
@@ -496,9 +496,9 @@ export const sketchpadTour: Tutorial = {
   ],
 };
 
-// #endregion Built-in Tutorials
+// #endregion 🔖Built-in Tutorials
 
-// #region Commands
+// #region 🔖Commands
 
 export interface TutorialCommandContext {
   tutorialStore: any;
@@ -571,9 +571,9 @@ export const devCommands = {
   },
 };
 
-// #endregion Commands
+// #endregion 🔖Commands
 
-// #region Command Interceptor
+// #region 🔖Command Interceptor
 
 export const useTutorialCommandInterceptor = (onCommandExecute: (command: string, origin?: string, args?: any) => void) => {
   const store = useTutorialStore();
@@ -593,9 +593,9 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
   );
 };
 
-// #endregion Command Interceptor
+// #endregion 🔖Command Interceptor
 
-// #region Hooks
+// #region 🔖Hooks
 
 export const useTutorialStore = () => useTutorialContext().store;
 export const useTutorialState = () => useTutorialContext().state;
@@ -624,9 +624,9 @@ export const useTutorialProgress = () => {
   return { current, total, percentage };
 };
 
-// #endregion Hooks
+// #endregion 🔖Hooks
 
-// #region Context
+// #region 🔖Context
 
 interface TutorialContextValue {
   store: TutorialStore;
@@ -664,11 +664,11 @@ const useTutorialContext = () => {
   return context;
 };
 
-// #endregion Context
+// #endregion 🔖Context
 
-// #region Types
+// #region 🔖Types
 
-// #region Tutorial Entities
+// #region 🔖Tutorial Entities
 
 export interface TutorialMilestone {
   id: Guid;
@@ -764,11 +764,11 @@ export interface TutorialDiff {
   activeRecording?: TutorialRecording | null;
 }
 
-// #endregion Tutorial Entities
+// #endregion 🔖Tutorial Entities
 
-// #endregion Types
+// #endregion 🔖Types
 
-// #region Store
+// #region 🔖Store
 
 export class TutorialStore {
   private state: TutorialState;
@@ -1031,4 +1031,4 @@ export class TutorialStore {
   }
 }
 
-// #endregion Store
+// #endregion 🔖Store

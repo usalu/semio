@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Sketchpad Apps Refactoring Proposal
 
 ## Executive Summary
@@ -286,74 +287,74 @@ export class DocsAppStore extends AppStore<DocsState, DocsDiff, DocsSelectionDif
 **Mandatory region order for ALL apps:**
 
 ```typescript
-// #region Header
+// #region 🔖Header
 //   License, copyright, etc.
 // #endregion
 
-// #region Imports
+// #region 🔖Imports
 //   All imports, including React, libraries, and internal
 // #endregion
 
-// #region Types
+// #region 🔖Types
 //   Y.js type aliases (YAppVal, YApp, YApps)
 //   Enums
 //   Port definitions (State, Selection, Diff, Edit, Context, Result, etc.)
 // #endregion
 
-// #region Store
+// #region 🔖Store
 //   Store class definition
 //   Store registration
 //   Hooks (useStore, useState, useCommands)
 //   Scope provider (if applicable)
 // #endregion
 
-// #region Commands
+// #region 🔖Commands
 //   Command implementations
 //   Helper functions for commands
 // #endregion
 
-// #region Components
-//   // #region Navbar
+// #region 🔖Components
+//   // #region 🔖Navbar
 //   // #endregion
 //
-//   // #region Canvas
-//     // #region Windows
-//       // #region Scene
+//   // #region 🔖Canvas
+//     // #region 🔖Windows
+//       // #region 🔖Scene
 //       // #endregion
-//       // #region Diagram
+//       // #region 🔖Diagram
 //       // #endregion
-//       // #region Table
+//       // #region 🔖Table
 //       // #endregion
-//     // #endregion Windows
-//   // #endregion Canvas
+//     // #endregion 🔖Windows
+//   // #endregion 🔖Canvas
 //
-//   // #region Panels
-//     // #region Left
+//   // #region 🔖Panels
+//     // #region 🔖Left
 //     // #endregion
-//     // #region Right
-//       // #region Details
+//     // #region 🔖Right
+//       // #region 🔖Details
 //       // #endregion
-//       // #region Chat
+//       // #region 🔖Chat
 //       // #endregion
-//       // #region Settings
+//       // #region 🔖Settings
 //       // #endregion
-//     // #endregion Right
-//     // #region Bottom
+//     // #endregion 🔖Right
+//     // #region 🔖Bottom
 //     // #endregion
-//   // #endregion Panels
+//   // #endregion 🔖Panels
 //
-//   // #region Tools
+//   // #region 🔖Tools
 //   // #endregion
 //
-//   // #region Footer
+//   // #region 🔖Footer
 //   // #endregion
-// #endregion Components
+// #endregion 🔖Components
 
-// #region App
+// #region 🔖App
 //   Main App component
 // #endregion
 
-// #region Config
+// #region 🔖Config
 //   export const config: AppConfig
 // #endregion
 ```
@@ -382,7 +383,7 @@ export class DocsAppStore extends AppStore<DocsState, DocsDiff, DocsSelectionDif
 **Policy:** All stores MUST use the same registration pattern:
 
 ```typescript
-// #region Store
+// #region 🔖Store
 
 // ... Store class definition ...
 
@@ -393,7 +394,7 @@ if (typeof window !== "undefined") {
   );
 }
 
-// #endregion Store
+// #endregion 🔖Store
 ```
 
 **No more:**
@@ -482,7 +483,7 @@ if (typeof window !== "undefined" && (window as any).__KIT_APP_MODULE_CACHE__) {
 ```typescript
 // js/semio/sketchpad/App.tsx
 
-// #region Module Cache
+// #region 🔖Module Cache
 const MODULE_CACHE = {
   design: null as any,
   type: null as any,
@@ -509,7 +510,7 @@ export function setLazyModule(appName: keyof typeof MODULE_CACHE, module: any) {
     (window as any).__SKETCHPAD_MODULE_CACHE__ = MODULE_CACHE;
   }
 }
-// #endregion Module Cache
+// #endregion 🔖Module Cache
 ```
 
 **Then in apps:**
@@ -532,7 +533,7 @@ const KitSectionLazy = React.lazy(async () => {
 ```typescript
 // apps/[app]/App.tsx
 
-// #region Store
+// #region 🔖Store
 
 // ... Store definition ...
 
@@ -547,7 +548,7 @@ export const [App]ScopeProvider: FC<{ guid: string; children: ReactNode }> =
 
 export const use[App]Scope = () => useContext([App]ScopeContext);
 
-// #endregion Store
+// #endregion 🔖Store
 ```
 
 **Action Items:**
@@ -563,7 +564,7 @@ export const use[App]Scope = () => useContext([App]ScopeContext);
 **Policy:** ALL apps (even home and docs) MUST define commands in Commands region:
 
 ```typescript
-// #region Commands
+// #region 🔖Commands
 
 export const [app]Commands = {
   "semio.[app].command": async (
@@ -575,7 +576,7 @@ export const [app]Commands = {
   },
 };
 
-// #endregion Commands
+// #endregion 🔖Commands
 ```
 
 **Even for simple apps:**
@@ -604,7 +605,7 @@ export const homeCommands = {
 **Proposed:** Keep both patterns but make explicit:
 
 ```typescript
-// #region Config
+// #region 🔖Config
 
 export const config: AppConfig = {
   // ...
@@ -621,12 +622,12 @@ export const config: AppConfig = {
   ],
 };
 
-// #endregion Config
+// #endregion 🔖Config
 
-// #region Components
-// #region Panels
-// #region Right
-// #region Details
+// #region 🔖Components
+// #region 🔖Panels
+// #region 🔖Right
+// #region 🔖Details
 
 const DetailsSection: FC = () => {
   const { addSection, removeSection } = useAddPanelSection();
@@ -645,10 +646,10 @@ const DetailsSection: FC = () => {
   return null; // Section registration only
 };
 
-// #endregion Details
-// #endregion Right
-// #endregion Panels
-// #endregion Components
+// #endregion 🔖Details
+// #endregion 🔖Right
+// #endregion 🔖Panels
+// #endregion 🔖Components
 ```
 
 **Policy:**
@@ -665,34 +666,34 @@ const DetailsSection: FC = () => {
 **Solution:** Use more granular subregions:
 
 ```typescript
-// #region Components
+// #region 🔖Components
 
-// #region Navbar
-// #endregion Navbar
+// #region 🔖Navbar
+// #endregion 🔖Navbar
 
-// #region Canvas
+// #region 🔖Canvas
 
-  // #region Windows
+  // #region 🔖Windows
 
-    // #region Scene
+    // #region 🔖Scene
 
-      // #region Scene Components
-        // #region PieceComponent
+      // #region 🔖Scene Components
+        // #region 🔖PieceComponent
         const PieceComponent: FC<...> = ...
-        // #endregion PieceComponent
+        // #endregion 🔖PieceComponent
 
-        // #region ConnectionComponent
+        // #region 🔖ConnectionComponent
         const ConnectionComponent: FC<...> = ...
-        // #endregion ConnectionComponent
-      // #endregion Scene Components
+        // #endregion 🔖ConnectionComponent
+      // #endregion 🔖Scene Components
 
-    // #endregion Scene
+    // #endregion 🔖Scene
 
-  // #endregion Windows
+  // #endregion 🔖Windows
 
-// #endregion Canvas
+// #endregion 🔖Canvas
 
-// #endregion Components
+// #endregion 🔖Components
 ```
 
 **Benefits:**
@@ -1125,21 +1126,21 @@ export class HomeStore extends AppStore<
 **Before (design/App.tsx):**
 
 ```typescript
-// #region Header
+// #region 🔖Header
 // ...
 // #endregion
 
-// #region Commands
+// #region 🔖Commands
 // (empty, defined later)
 // #endregion
 
-// #region Store
+// #region 🔖Store
 import * as Y from "yjs";
 import { ... } from "../../App";
 // ... types and store class
 // #endregion
 
-// #region Imports
+// #region 🔖Imports
 import { DragEndEvent, ... } from "@dnd-kit/core";
 import { BarChart3, ... } from "lucide-react";
 // ... more imports
@@ -1147,7 +1148,7 @@ import { BarChart3, ... } from "lucide-react";
 
 // ... rest of file
 
-// #region Commands
+// #region 🔖Commands
 // (actual commands here)
 // #endregion
 ```
@@ -1155,20 +1156,20 @@ import { BarChart3, ... } from "lucide-react";
 **After (design/App.tsx):**
 
 ```typescript
-// #region Header
+// #region 🔖Header
 // ...
 // #endregion
 
-// #region Imports
+// #region 🔖Imports
 import * as Y from "yjs";
 import { DragEndEvent, ... } from "@dnd-kit/core";
 import { BarChart3, ... } from "lucide-react";
 import { ... } from "../../App";
 import { ... } from "../../elements";
 import { ... } from "../../../semio";
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Types
+// #region 🔖Types
 type YDesignAppVal = string | number | boolean | ...;
 type YDesignApp = Y.Map<YDesignAppVal>;
 type YDesignApps = Y.Map<Y.Map<YDesignApp>>;
@@ -1180,9 +1181,9 @@ export interface DesignAppEdit extends KitDiffAppEdit<...> {}
 export interface DesignAppState { ... }
 export interface DesignAppCommandContext extends KitCommandContext { ... }
 export interface DesignAppCommandResult { ... }
-// #endregion Types
+// #endregion 🔖Types
 
-// #region Store
+// #region 🔖Store
 export class DesignAppStore extends KitDiffAppStore<...> { ... }
 
 if (typeof window !== "undefined") {
@@ -1194,27 +1195,27 @@ if (typeof window !== "undefined") {
 export function useDesignAppStore<T>(...): T | DesignAppStore | null { ... }
 export function useDesignApp<T>(...): T | DesignAppState | null { ... }
 // ... other hooks
-// #endregion Store
+// #endregion 🔖Store
 
-// #region Commands
+// #region 🔖Commands
 export const designCommands = {
   "semio.designApp.selectPiece": async (context, pieceId) => { ... },
   // ... more commands
 };
-// #endregion Commands
+// #endregion 🔖Commands
 
-// #region Components
+// #region 🔖Components
 // ... all components
-// #endregion Components
+// #endregion 🔖Components
 
-// #region App
+// #region 🔖App
 const App: FC = () => { ... };
 export default App;
-// #endregion App
+// #endregion 🔖App
 
-// #region Config
+// #region 🔖Config
 export const config: AppConfig = { ... };
-// #endregion Config
+// #endregion 🔖Config
 ```
 
 ### B.3 Before/After: Store Registration
@@ -1242,7 +1243,7 @@ registerHomeStoreFactory((parent, yMap, transact) => new HomeStore(parent, yMap,
 ```typescript
 // ALL apps use this pattern in Store region
 
-// #region Store
+// #region 🔖Store
 
 export class [App]Store extends [Base]Store<...> {
   // ... implementation
@@ -1260,7 +1261,7 @@ export function use[App]Store<T>(...) { ... }
 export function use[App]<T>(...) { ... }
 // ... more hooks
 
-// #endregion Store
+// #endregion 🔖Store
 ```
 
 ---

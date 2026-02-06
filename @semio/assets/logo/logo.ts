@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// #region Header
+// #region 🔖Header
 
 // assets/logo/logo.ts
 
@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
@@ -181,188 +181,188 @@ function parseTransform(transformStr: string): TransformData {
     result.rotate.cx = values[1] || 0;
     result.rotate.cy = values[2] || 0;
 
-    
+
     // SVG animation can handle rotation centers directly, so don't convert to translate
- nsformStr.match(/scale\(([^)]+)\)/);
-  if (scaleMatch) {
-    const values = scaleMatch[1 values[0] || 1;
-    const scaleY = values[1] || values[0] || 1;
+    nsformStr.match(/scale\(([^)]+)\)/);
+    if (scaleMatch) {
+      const values = scaleMatch[1 values[0] || 1;
+      const scaleY = values[1] || values[0] || 1;
 
-    result.scale.x = scaleX === 0 ? 1 : scaleX;
-    result.scale.y = scaleY === 0 ? 1 : scaleY;
-  }
-
-  return result;
-}
-
-function parseSVGFile(filePath: string): KeyframeData {
-  const svgContent = fs.readFileSync(filePath, "utf-8");
-  const dom = new JSDOM(svgContent, { contentType: "text/xml" });
-  const document = dom.window.document;
-
-  const groups: GroupData[] = [];
-  const gElements = document.querySelectorAll("g[id]");
-
-  gElements.forEach((g) => {
-    const id = g.getAttribute("id")!;
-    const transformStr = g.getAttribute("transform") || "";
-    const pathElement = g.querySelector("path");
-
-    if (pathElement) {
-      const transform = parseTransform(transformStr);
-      const groupData: GroupData = {
-        id,
-        transform,
-        path: {
-          d: pathElement.getAttribute("d") || "",
-          fill: pathElement.getAttribute("fill") || "#000000",
-          stroke: pathElement.getAttribute("stroke") || "none",
-          strokeWidth: pathElement.getAttribute("stroke-width") || "0",
-        },
-      };
-
-      groups.push(groupData);
+      result.scale.x = scaleX === 0 ? 1 : scaleX;
+      result.scale.y = scaleY === 0 ? 1 : scaleY;
     }
-  });
 
-  return { groups };
-}
-
-function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
-  const sequence: KeyframeData[] = [];
-
-  for (let i = 0; i < keyframes.length; i++) {
-    sequence.push(keyframes[i]);
-    sequence.push(keyframes[i]);
-    sequence.push(keyframes[i]);
+    return result;
   }
 
-  for (let i = keyframes.length - 2; i > 0; i--) {
-    sequence.push(keyframes[i]);
-    sequence.push(keyframes[i]);
-    sequence.push(keyframes[i]);
+  function parseSVGFile(filePath: string): KeyframeData {
+    const svgContent = fs.readFileSync(filePath, "utf-8");
+    const dom = new JSDOM(svgContent, { contentType: "text/xml" });
+    const document = dom.window.document;
+
+    const groups: GroupData[] = [];
+    const gElements = document.querySelectorAll("g[id]");
+
+    gElements.forEach((g) => {
+      const id = g.getAttribute("id")!;
+      const transformStr = g.getAttribute("transform") || "";
+      const pathElement = g.querySelector("path");
+
+      if (pathElement) {
+        const transform = parseTransform(transformStr);
+        const groupData: GroupData = {
+          id,
+          transform,
+          path: {
+            d: pathElement.getAttribute("d") || "",
+            fill: pathElement.getAttribute("fill") || "#000000",
+            stroke: pathElement.getAttribute("stroke") || "none",
+            strokeWidth: pathElement.getAttribute("stroke-width") || "0",
+          },
+        };
+
+        groups.push(groupData);
+      }
+    });
+
+    return { groups };
   }
 
-  sequence.push(keyframes[0]);
+  function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
+    const sequence: KeyframeData[] = [];
 
-  return sequence;
-}
-
-function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void {
-  const sequence = generateKeyframeSequence(keyframes);
-  const totalFrames = sequence.length;
-
-  const transitionDuration = 0.5;
-  const holdDuration = 1.5;
-  const totalDuration = keyframes.length * (transitionDuration + holdDuration) * 2;
-
-  const keyTimes: string[] = [];
-  let currentTime = 0;
-  const timeStep = 1 / (totalFrames - 1);
-
-  for (let i = 0; i < totalFrames; i++) {
-    keyTimes.push((i * timeStep).toFixed(3));
-  }
-  const keyTimesStr = keyTimes.join(";");
-
-  const keySplines: string[] = [];
-  for (let i = 0; i < totalFrames - 1; i++) {
-    const currentFrame = sequence[i];
-    const nextFrame = sequence[i + 1];
-    const isSameFrame = JSON.stringify(currentFrame) === JSON.stringify(nextFrame);
-
-    if (isSameFrame) {
-      keySplines.push("0 0 1 1");
-    } else {
-      keySplines.push("0.25 0.1 0.75 0.9");
+    for (let i = 0; i < keyframes.length; i++) {
+      sequence.push(keyframes[i]);
+      sequence.push(keyframes[i]);
+      sequence.push(keyframes[i]);
     }
+
+    for (let i = keyframes.length - 2; i > 0; i--) {
+      sequence.push(keyframes[i]);
+      sequence.push(keyframes[i]);
+      sequence.push(keyframes[i]);
+    }
+
+    sequence.push(keyframes[0]);
+
+    return sequence;
   }
-  const keySplinesStr = keySplines.join(";");
 
-  const allGroupIds = new Set<string>();
-  keyframes.forEach((kf) => kf.groups.forEach((g) => allGroupIds.add(g.id)));
+  function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void {
+    const sequence = generateKeyframeSequence(keyframes);
+    const totalFrames = sequence.length;
 
-  let svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+    const transitionDuration = 0.5;
+    const holdDuration = 1.5;
+    const totalDuration = keyframes.length * (transitionDuration + holdDuration) * 2;
+
+    const keyTimes: string[] = [];
+    let currentTime = 0;
+    const timeStep = 1 / (totalFrames - 1);
+
+    for (let i = 0; i < totalFrames; i++) {
+      keyTimes.push((i * timeStep).toFixed(3));
+    }
+    const keyTimesStr = keyTimes.join(";");
+
+    const keySplines: string[] = [];
+    for (let i = 0; i < totalFrames - 1; i++) {
+      const currentFrame = sequence[i];
+      const nextFrame = sequence[i + 1];
+      const isSameFrame = JSON.stringify(currentFrame) === JSON.stringify(nextFrame);
+
+      if (isSameFrame) {
+        keySplines.push("0 0 1 1");
+      } else {
+        keySplines.push("0.25 0.1 0.75 0.9");
+      }
+    }
+    const keySplinesStr = keySplines.join(";");
+
+    const allGroupIds = new Set<string>();
+    keyframes.forEach((kf) => kf.groups.forEach((g) => allGroupIds.add(g.id)));
+
+    let svgContent = `<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg viewBox="0 0 410 140" style="background: #001117;" version="1.1" xmlns="http://www.w3.org/2000/svg">
     <title>semio</title>
     <rect id="background" width="100%" height="100%" fill="#001117" />
 `;
 
-  Array.from(allGroupIds).forEach((groupId) => {
-    const groupFrames = sequence.map((kf) => {
-      const group = kf.groups.find((g) => g.id === groupId);
-      return group || null;
-    });
+    Array.from(allGroupIds).forEach((groupId) => {
+      const groupFrames = sequence.map((kf) => {
+        const group = kf.groups.find((g) => g.id === groupId);
+        return group || null;
+      });
 
-    if (groupFrames.every((gf) => gf === null)) return;
+      if (groupFrames.every((gf) => gf === null)) return;
 
-    const firstGroup = groupFrames.find((gf) => gf !== null);
-    if (!firstGroup) return;
+      const firstGroup = groupFrames.find((gf) => gf !== null);
+      if (!firstGroup) return;
 
-    svgContent += `    <g id="${groupId}">
+      svgContent += `    <g id="${groupId}">
 `;
 
-    const translateValues = groupFrames
-      .map((gf) => {
-        if (gf) {
-          return `${gf.transform.translate.x} ${gf.transform.translate.y}`;
-        }
-        return `${firstGroup.transform.translate.x} ${firstGroup.transform.translate.y}`;
-      })
-      .join(";");
+      const translateValues = groupFrames
+        .map((gf) => {
+          if (gf) {
+            return `${gf.transform.translate.x} ${gf.transform.translate.y}`;
+          }
+          return `${firstGroup.transform.translate.x} ${firstGroup.transform.translate.y}`;
+        })
+        .join(";");
 
-    svgContent += `        <animateTransform attributeName="transform" type="translate" dur="${totalDuration}s" repeatCount="indefinite"
+      svgContent += `        <animateTransform attributeName="transform" type="translate" dur="${totalDuration}s" repeatCount="indefinite"
             keyTimes="${keyTimesStr}" values="${translateValues}" calcMode="spline" keySplines="${keySplinesStr}" />
 `;
 
-    const rotateValues = groupFrames
-      .map((gf) => {
-        if (gf) {
-          return `${gf.transform.rotate.angle} ${gf.transform.rotate.cx} ${gf.transform.rotate.cy}`;
-        }
-        return `${firstGroup.transform.rotate.angle} ${firstGroup.transform.rotate.cx} ${firstGroup.transform.rotate.cy}`;
-      })
-      .join(";");
+      const rotateValues = groupFrames
+        .map((gf) => {
+          if (gf) {
+            return `${gf.transform.rotate.angle} ${gf.transform.rotate.cx} ${gf.transform.rotate.cy}`;
+          }
+          return `${firstGroup.transform.rotate.angle} ${firstGroup.transform.rotate.cx} ${firstGroup.transform.rotate.cy}`;
+        })
+        .join(";");
 
-    svgContent += `        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="${totalDuration}s" repeatCount="indefinite"
+      svgContent += `        <animateTransform attributeName="transform" type="rotate" additive="sum" dur="${totalDuration}s" repeatCount="indefinite"
             keyTimes="${keyTimesStr}" values="${rotateValues}" calcMode="spline" keySplines="${keySplinesStr}" />
 `;
 
-    const scaleValues = groupFrames
-      .map((gf) => {
-        if (gf) {
-          const scaleX = gf.transform.scale.x === 0 ? 1 : gf.transform.scale.x;
-          const scaleY = gf.transform.scale.y === 0 ? 1 : gf.transform.scale.y;
-          return `${scaleX} ${scaleY}`;
-        }
+      const scaleValues = groupFrames
+        .map((gf) => {
+          if (gf) {
+            const scaleX = gf.transform.scale.x === 0 ? 1 : gf.transform.scale.x;
+            const scaleY = gf.transform.scale.y === 0 ? 1 : gf.transform.scale.y;
+            return `${scaleX} ${scaleY}`;
+          }
 
-        return `1 1`;
-      })
-      .join(";");
+          return `1 1`;
+        })
+        .join(";");
 
-    svgContent += `        <animateTransform attributeName="transform" type="scale" additive="sum" dur="${totalDuration}s" repeatCount="indefinite"
+      svgContent += `        <animateTransform attributeName="transform" type="scale" additive="sum" dur="${totalDuration}s" repeatCount="indefinite"
             keyTimes="${keyTimesStr}" values="${scaleValues}" calcMode="spline" keySplines="${keySplinesStr}" />
 `;
 
-    const fillValues = groupFrames
-      .map((gf) => {
-        return gf ? gf.path.fill : firstGroup.path.fill;
-      })
-      .join(";");
+      const fillValues = groupFrames
+        .map((gf) => {
+          return gf ? gf.path.fill : firstGroup.path.fill;
+        })
+        .join(";");
 
-    const strokeValues = groupFrames
-      .map((gf) => {
-        return gf ? gf.path.stroke : firstGroup.path.stroke;
-      })
-      .join(";");
+      const strokeValues = groupFrames
+        .map((gf) => {
+          return gf ? gf.path.stroke : firstGroup.path.stroke;
+        })
+        .join(";");
 
-    const strokeWidthValues = groupFrames
-      .map((gf) => {
-        return gf ? gf.path.strokeWidth : firstGroup.path.strokeWidth;
-      })
-      .join(";");
+      const strokeWidthValues = groupFrames
+        .map((gf) => {
+          return gf ? gf.path.strokeWidth : firstGroup.path.strokeWidth;
+        })
+        .join(";");
 
-    svgContent += `        <path d="${firstGroup.path.d}">
+      svgContent += `        <path d="${firstGroup.path.d}">
             <animate attributeName="fill" dur="${totalDuration}s" repeatCount="indefinite" keyTimes="${keyTimesStr}"
                 values="${fillValues}" calcMode="spline" keySplines="${keySplinesStr}" />
             <animate attributeName="stroke" dur="${totalDuration}s" repeatCount="indefinite" keyTimes="${keyTimesStr}"
@@ -372,42 +372,42 @@ function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void 
         </path>
     </g>
 `;
-  });
+    });
 
-  svgContent += `</svg>`;
+    svgContent += `</svg>`;
 
-  fs.writeFileSync(outputPath, svgContent);
-  console.log(`Animated SVG created: ${outputPath}`);
-}
+    fs.writeFileSync(outputPath, svgContent);
+    console.log(`Animated SVG created: ${outputPath}`);
+  }
 
-function main(): void {
-  const logoDir = path.dirname(__filename);
+  function main(): void {
+    const logoDir = path.dirname(__filename);
 
-  const keyframes: KeyframeData[] = [];
-  for (let i = 1; i <= 6; i++) {
-    const filePath = path.join(logoDir, `logo_${i}.svg`);
-    if (fs.existsSync(filePath)) {
-      console.log(`Parsing ${filePath}...`);
-      keyframes.push(parseSVGFile(filePath));
-    } else {
-      console.warn(`Warning: ${filePath} not found`);
+    const keyframes: KeyframeData[] = [];
+    for (let i = 1; i <= 6; i++) {
+      const filePath = path.join(logoDir, `logo_${i}.svg`);
+      if (fs.existsSync(filePath)) {
+        console.log(`Parsing ${filePath}...`);
+        keyframes.push(parseSVGFile(filePath));
+      } else {
+        console.warn(`Warning: ${filePath} not found`);
+      }
     }
+
+    if (keyframes.length === 0) {
+      console.error("No keyframe files found!");
+      process.exit(1);
+    }
+
+    console.log(`Found ${keyframes.length} keyframes`);
+    console.log(`Will generate ${generateKeyframeSequence(keyframes).length} animation frames`);
+
+    const outputPath = path.join(logoDir, "logo_generated.svg");
+    createAnimatedSVG(keyframes, outputPath);
   }
 
-  if (keyframes.length === 0) {
-    console.error("No keyframe files found!");
-    process.exit(1);
+  if (require.main === module) {
+    main();
   }
 
-  console.log(`Found ${keyframes.length} keyframes`);
-  console.log(`Will generate ${generateKeyframeSequence(keyframes).length} animation frames`);
-
-  const outputPath = path.join(logoDir, "logo_generated.svg");
-  createAnimatedSVG(keyframes, outputPath);
-}
-
-if (require.main === module) {
-  main();
-}
-
-export { createAnimatedSVG, generateKeyframeSequence, parseSVGFile };
+  export { createAnimatedSVG, generateKeyframeSequence, parseSVGFile };

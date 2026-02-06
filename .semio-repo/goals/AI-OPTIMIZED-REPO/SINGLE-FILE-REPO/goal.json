@@ -10,19 +10,7 @@
   "llm": "gemini-3-pro",
   "parent": "AI-OPTIMIZED-REPO",
   "github": {
-    "milestone": "https://github.com/usalu/semio/milestone/69"
+    "issue": "https://github.com/usalu/semio/issues/405"
   },
-  "iterations": [
-    {
-      "prompt": "Instructions for Single File Repo",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T10:53:52.345772688Z",
-      "commit": ""
-    }
-  ]
+  "interactions": null
 }

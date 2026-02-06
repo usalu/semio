@@ -1,4 +1,4 @@
--- #region Header
+-- #region 🔖Header
 
 -- sql/sqlite/repo/schema.sql
 
@@ -17,11 +17,11 @@
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
--- #endregion Header
+-- #endregion 🔖Header
 
--- #region Tables
+-- #region 🔖Tables
 
--- #region Repo
+-- #region 🔖Repo
 
 CREATE TABLE IF NOT EXISTS repo (
     id TEXT PRIMARY KEY,
@@ -30,9 +30,9 @@ CREATE TABLE IF NOT EXISTS repo (
     exported_at TEXT NOT NULL
 );
 
--- #endregion Repo
+-- #endregion 🔖Repo
 
--- #region Bundle
+-- #region 🔖Bundle
 
 CREATE TABLE IF NOT EXISTS bundle (
     id TEXT PRIMARY KEY,
@@ -49,9 +49,9 @@ CREATE TABLE IF NOT EXISTS bundle_tag (
     PRIMARY KEY (bundle_id, tag)
 );
 
--- #endregion Bundle
+-- #endregion 🔖Bundle
 
--- #region Folder
+-- #region 🔖Folder
 
 CREATE TABLE IF NOT EXISTS folder (
     id TEXT PRIMARY KEY,
@@ -65,9 +65,9 @@ CREATE TABLE IF NOT EXISTS folder (
 CREATE INDEX IF NOT EXISTS idx_folder_parent ON folder(parent_id);
 CREATE INDEX IF NOT EXISTS idx_folder_bundle ON folder(bundle_id);
 
--- #endregion Folder
+-- #endregion 🔖Folder
 
--- #region File
+-- #region 🔖File
 
 CREATE TABLE IF NOT EXISTS file (
     id TEXT PRIMARY KEY,
@@ -84,9 +84,9 @@ CREATE INDEX IF NOT EXISTS idx_file_folder ON file(folder_id);
 CREATE INDEX IF NOT EXISTS idx_file_bundle ON file(bundle_id);
 CREATE INDEX IF NOT EXISTS idx_file_extension ON file(extension);
 
--- #endregion File
+-- #endregion 🔖File
 
--- #region Section
+-- #region 🔖Section
 
 CREATE TABLE IF NOT EXISTS section (
     id TEXT PRIMARY KEY,
@@ -103,9 +103,9 @@ CREATE TABLE IF NOT EXISTS section (
 CREATE INDEX IF NOT EXISTS idx_section_file ON section(file_id);
 CREATE INDEX IF NOT EXISTS idx_section_parent ON section(parent_id);
 
--- #endregion Section
+-- #endregion 🔖Section
 
--- #region Definition
+-- #region 🔖Definition
 
 CREATE TABLE IF NOT EXISTS definition (
     id TEXT PRIMARY KEY,
@@ -123,9 +123,9 @@ CREATE INDEX IF NOT EXISTS idx_definition_file ON definition(file_id);
 CREATE INDEX IF NOT EXISTS idx_definition_section ON definition(section_id);
 CREATE INDEX IF NOT EXISTS idx_definition_kind ON definition(kind);
 
--- #endregion Definition
+-- #endregion 🔖Definition
 
--- #region Contributor
+-- #region 🔖Contributor
 
 CREATE TABLE IF NOT EXISTS contributor (
     id TEXT PRIMARY KEY,
@@ -149,9 +149,9 @@ CREATE TABLE IF NOT EXISTS contributor_link (
     PRIMARY KEY (contributor_id, name)
 );
 
--- #endregion Contributor
+-- #endregion 🔖Contributor
 
--- #region Commit
+-- #region 🔖Commit
 
 CREATE TABLE IF NOT EXISTS commit_record (
     id TEXT PRIMARY KEY,
@@ -173,9 +173,9 @@ CREATE TABLE IF NOT EXISTS commit_file (
     PRIMARY KEY (commit_id, file_id)
 );
 
--- #endregion Commit
+-- #endregion 🔖Commit
 
--- #region Ticket
+-- #region 🔖Ticket
 
 CREATE TABLE IF NOT EXISTS ticket (
     id TEXT PRIMARY KEY,
@@ -203,9 +203,9 @@ CREATE INDEX IF NOT EXISTS idx_ticket_status ON ticket(status);
 CREATE INDEX IF NOT EXISTS idx_ticket_date ON ticket(year, month, day);
 CREATE INDEX IF NOT EXISTS idx_ticket_author ON ticket(author_id);
 
--- #endregion Ticket
+-- #endregion 🔖Ticket
 
--- #region Ticket Checkpoint
+-- #region 🔖Ticket Checkpoint
 
 CREATE TABLE IF NOT EXISTS ticket_checkpoint (
     id TEXT PRIMARY KEY,
@@ -245,9 +245,9 @@ CREATE TABLE IF NOT EXISTS checkpoint_definition (
     PRIMARY KEY (checkpoint_section_id, definition_name)
 );
 
--- #endregion Ticket Checkpoint
+-- #endregion 🔖Ticket Checkpoint
 
--- #region Policy
+-- #region 🔖Policy
 
 CREATE TABLE IF NOT EXISTS policy (
     id TEXT PRIMARY KEY,
@@ -261,9 +261,9 @@ CREATE TABLE IF NOT EXISTS policy_scope (
     PRIMARY KEY (policy_id, scope)
 );
 
--- #endregion Policy
+-- #endregion 🔖Policy
 
--- #region Violation Kind
+-- #region 🔖Violation Kind
 
 CREATE TABLE IF NOT EXISTS violation_kind (
     id TEXT PRIMARY KEY,
@@ -277,9 +277,9 @@ CREATE TABLE IF NOT EXISTS violation_kind (
 CREATE INDEX IF NOT EXISTS idx_violation_kind_policy ON violation_kind(policy_id);
 CREATE INDEX IF NOT EXISTS idx_violation_kind_priority ON violation_kind(priority);
 
--- #endregion Violation Kind
+-- #endregion 🔖Violation Kind
 
--- #region Violation
+-- #region 🔖Violation
 
 CREATE TABLE IF NOT EXISTS violation (
     id TEXT PRIMARY KEY,
@@ -299,9 +299,9 @@ CREATE INDEX IF NOT EXISTS idx_violation_kind ON violation(kind_id);
 CREATE INDEX IF NOT EXISTS idx_violation_file ON violation(file_id);
 CREATE INDEX IF NOT EXISTS idx_violation_folder ON violation(folder_id);
 
--- #endregion Violation
+-- #endregion 🔖Violation
 
--- #region Contribution
+-- #region 🔖Contribution
 
 CREATE TABLE IF NOT EXISTS contribution_bundle (
     contributor_id TEXT NOT NULL REFERENCES contributor(id) ON DELETE CASCADE,
@@ -345,9 +345,9 @@ CREATE TABLE IF NOT EXISTS contribution_definition (
     PRIMARY KEY (contributor_id, definition_id)
 );
 
--- #endregion Contribution
+-- #endregion 🔖Contribution
 
--- #region Ticket Bundle
+-- #region 🔖Ticket Bundle
 
 CREATE TABLE IF NOT EXISTS ticket_bundle (
     ticket_id TEXT NOT NULL REFERENCES ticket(id) ON DELETE CASCADE,
@@ -361,9 +361,9 @@ CREATE TABLE IF NOT EXISTS ticket_file (
     PRIMARY KEY (ticket_id, file_id)
 );
 
--- #endregion Ticket Bundle
+-- #endregion 🔖Ticket Bundle
 
--- #region Contributor Bundle
+-- #region 🔖Contributor Bundle
 
 CREATE TABLE IF NOT EXISTS contributor_bundle (
     contributor_id TEXT NOT NULL REFERENCES contributor(id) ON DELETE CASCADE,
@@ -389,11 +389,11 @@ CREATE TABLE IF NOT EXISTS contributor_commit (
     PRIMARY KEY (contributor_id, commit_id)
 );
 
--- #endregion Contributor Bundle
+-- #endregion 🔖Contributor Bundle
 
--- #endregion Tables
+-- #endregion 🔖Tables
 
--- #region Views
+-- #region 🔖Views
 
 CREATE VIEW IF NOT EXISTS repo_metrics AS
 SELECT
@@ -472,4 +472,4 @@ SELECT
     (SELECT COALESCE(SUM(cs.lines_removed), 0) FROM ticket_checkpoint tc JOIN checkpoint_section cs ON cs.checkpoint_id = tc.id WHERE tc.ticket_id = t.id) AS lines_removed
 FROM ticket t;
 
--- #endregion Views
+-- #endregion 🔖Views

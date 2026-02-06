@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/desktop/renderer.tsx
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";

@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/aggregation/Accordion.stories.tsx
 
@@ -17,12 +17,12 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
-// #region Accordion
+// #region 🔖Accordion
 const meta = {
   title: "Elements/Aggregation/Accordion",
   component: Accordion,
@@ -111,4 +111,4 @@ export const Temporary: Story = {
   render: createLevelRender("temporary"),
 };
 
-// #endregion Accordion
+// #endregion 🔖Accordion

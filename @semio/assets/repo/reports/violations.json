@@ -4,8 +4,15 @@
   "scope": "@semio",
   "summary": {
     "total": 2,
-    "byPriority": { "high": 1, "medium": 0, "low": 1 },
-    "byKind": { "header:missing-region": 1, "region:empty": 1 }
+    "byPriority": {
+      "high": 1,
+      "medium": 0,
+      "low": 1
+    },
+    "byKind": {
+      "header:missing-region": 1,
+      "region:empty": 1
+    }
   },
   "violations": [
     {
@@ -14,7 +21,7 @@
       "kind": "header:missing-region",
       "priority": "high",
       "autofixable": true,
-      "solution": "Add a #region Header with filename, contributors, and AGPL-3.0 license",
+      "solution": "Add a #region 🔖Header with filename, contributors, and AGPL-3.0 license",
       "reason": "Every source file must include a header region",
       "scope": "assets/repo/some/folder/file.cs",
       "line": 1

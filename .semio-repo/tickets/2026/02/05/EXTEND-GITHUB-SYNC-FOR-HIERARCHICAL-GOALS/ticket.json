@@ -1,0 +1,3547 @@
+{
+  "title": "Extend Github Sync for Hierarchical Goals",
+  "status": "closed",
+  "prompt": "Extend the GitHub sync mechanism for goals. Currently all goals are linked to milestones. Instead, only top-level goals (without parent) should be milestones. All child goals should be GitHub issues with the goal label. Migrate existing goals to the new system. No backwards compatibility needed.",
+  "summary": "Implemented three-tier hierarchical GitHub sync: root goals as milestones, first-gen children as issues with milestone, deeper goals as sub-issues without milestone. Fixed milestone lookup bug (gh CLI needs title not number). Migrated all existing goals, cleaned non-root goal.json files, deleted orphaned milestones.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "started": "2026-02-05T11:03:29.04550353Z",
+  "finished": "2026-02-05T11:53:47.656329184Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-05 11:03:29",
+        "finished": "2026-02-05 11:13:17"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "claude-code"
+      },
+      "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
+      "prompt": "Extend the GitHub sync mechanism for goals. Currently all goals are linked to milestones. Instead, only top-level goals (without parent) should be milestones. All child goals should be GitHub issues with the goal label. Migrate existing goals to the new system. No backwards compatibility needed.",
+      "llm": "opus-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/go",
+              "lines": {
+                "added": 354,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql",
+              "lines": {
+                "added": 584,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go",
+              "lines": {
+                "added": 493,
+                "removed": 139
+              }
+            },
+            {
+              "path": "📄AGENTS.md",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄README.md",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql",
+              "lines": {
+                "added": 584,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context",
+              "lines": {
+                "added": 177,
+                "removed": 38
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder",
+              "lines": {
+                "added": 15,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals",
+              "lines": {
+                "added": 65,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Todos#Entity Rendering",
+              "lines": {
+                "added": 12,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter",
+              "lines": {
+                "added": 6,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers",
+              "lines": {
+                "added": 117,
+                "removed": 75
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Types",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets",
+              "lines": {
+                "added": 100,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#Business Logic#Tooling",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#Business Logic#Goal",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#UI/UX#CLI",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/go/main.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Inputs",
+              "lines": {
+                "added": 137,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Scalars",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Header",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Query",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Types",
+              "lines": {
+                "added": 349,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Ports",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Mutation",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghLinkParent",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§ticketCommand",
+              "lines": {
+                "added": 6,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatResult",
+              "lines": {
+                "added": 60,
+                "removed": 62
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatMarkdownResult",
+              "lines": {
+                "added": 57,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Types§GoalGithubData",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§CreateTicket",
+              "lines": {
+                "added": 1,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghLabel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListIssuesForLabelSync",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListRepoLabels",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghCreateRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghDeleteRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghSyncRepoLabelCatalog",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolTicketRead",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetSections",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalCreate",
+              "lines": {
+                "added": 24,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§parseMilestoneNumber",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalChange",
+              "lines": {
+                "added": 9,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalClose",
+              "lines": {
+                "added": 9,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalReopen",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalDelete",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§FileDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SectionCreate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SectionDelete",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§ensureGoalMilestone",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SyncGithub",
+              "lines": {
+                "added": 112,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§TicketReopen",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§FolderCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder§buildSchema",
+              "lines": {
+                "added": 15,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Update Command§updateRust",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghCreateGoalIssue",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghUpdateGoalIssue",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isRootGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalMilestone",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§parseIssueNumber",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Todos§TodoToTicket",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§ticketCommand",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatResult",
+              "lines": {
+                "added": 0,
+                "removed": 62
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatMarkdownResult",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§CreateTicket",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalChange",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalClose",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalReopen",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalDelete",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SyncGithub",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghLinkParent",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Contributor",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghCreateGoalIssue",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorIcons",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FilterInput",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§DefinitionKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Query§Query",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Todo",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketStatus",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§InteractionDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§parseIssueNumber",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Repo",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorContributions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketFileContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketClient",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Folder",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§BundleKind",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql§DateTime",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorLink",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghDeleteRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Range",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketBundleContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§GoalCreateInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FileKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorFolder",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§PriorityCount",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketReopenInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FolderKind",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghLabel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TodoChangeInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Violation",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§File",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Location",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketCloseInput",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Section",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListRepoLabels",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Goal",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§AnalyzeResult",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghCreateRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketSectionContrib",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ViolationKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketOpenInput",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorDefinition",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Interaction",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§ContributorAddInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§GoalChangeInput",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ViolationPriority",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Commit",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Ports§Node",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§LineMetrics",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorFile",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isRootGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Definition",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Ticket",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Bundle",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§AnalyzeMetrics",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListIssuesForLabelSync",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketChangeInput",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Project",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ProjectKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Mutation§Mutation",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghUpdateGoalIssue",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§FixResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorBundle",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghSyncRepoLabelCatalog",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalMilestone",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TodoCreateInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorSection",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Policy",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-02-05 11:15:55",
+        "finished": "2026-02-05 11:20:41"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "claude-code"
+      },
+      "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
+      "prompt": "Refine hierarchical goal sync: root goals = milestones, first-generation children = issues linked to parent milestone, deeper generations = sub-issues of parent goal issue without milestone.",
+      "llm": "opus-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/graphql",
+              "lines": {
+                "added": 584,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/go",
+              "lines": {
+                "added": 468,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄AGENTS.md",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄README.md",
+              "lines": {
+                "added": 20,
+                "removed": 20
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go",
+              "lines": {
+                "added": 607,
+                "removed": 139
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql",
+              "lines": {
+                "added": 584,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets",
+              "lines": {
+                "added": 100,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context",
+              "lines": {
+                "added": 221,
+                "removed": 38
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder",
+              "lines": {
+                "added": 15,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals",
+              "lines": {
+                "added": 135,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Todos#Entity Rendering",
+              "lines": {
+                "added": 12,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter",
+              "lines": {
+                "added": 6,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers",
+              "lines": {
+                "added": 117,
+                "removed": 75
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Types",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#UI/UX#CLI",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#Business Logic#Tooling",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#Business Logic#Goal",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/go/main.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Query",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Ports",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Types",
+              "lines": {
+                "added": 349,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Scalars",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Inputs",
+              "lines": {
+                "added": 137,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Mutation",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Header",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghLinkParent",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§ticketCommand",
+              "lines": {
+                "added": 6,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatResult",
+              "lines": {
+                "added": 60,
+                "removed": 62
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatMarkdownResult",
+              "lines": {
+                "added": 57,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Types§GoalGithubData",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§CreateTicket",
+              "lines": {
+                "added": 1,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghLabel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListIssuesForLabelSync",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListRepoLabels",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghCreateRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghDeleteRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghSyncRepoLabelCatalog",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolTicketRead",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetSections",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalCreate",
+              "lines": {
+                "added": 37,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§getGhRepoUrl",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalChange",
+              "lines": {
+                "added": 9,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalClose",
+              "lines": {
+                "added": 9,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalReopen",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalDelete",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§FileMove",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§FileDelete",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SectionMove",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§ensureGoalMilestone",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SyncGithub",
+              "lines": {
+                "added": 143,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetCommits",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetFiles",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder§buildSchema",
+              "lines": {
+                "added": 15,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Update Command§runCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghCreateGoalIssue",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghUpdateGoalIssue",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§goalDepth",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isRootGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isFirstGenGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isDeeperGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getParentGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalMilestone",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getParentGoalIssueNodeID",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghGetIssueNodeID",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghAddSubIssue",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§parseIssueNumber",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Todos§ParseTodoComments",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§ticketCommand",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatResult",
+              "lines": {
+                "added": 0,
+                "removed": 62
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatMarkdownResult",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§CreateTicket",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalChange",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalClose",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalReopen",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalDelete",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SyncGithub",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghLinkParent",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorDefinition",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§AnalyzeResult",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getParentGoalIssueNodeID",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§GoalCreateInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isRootGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql§DateTime",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Bundle",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghSyncRepoLabelCatalog",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Query§Query",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketStatus",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghCreateRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§DefinitionKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorLink",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getParentGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§parseIssueNumber",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§goalDepth",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FilterInput",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghUpdateGoalIssue",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListRepoLabels",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorSection",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ViolationKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Mutation§Mutation",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghCreateGoalIssue",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Ports§Node",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Commit",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketBundleContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Project",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ProjectKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§LineMetrics",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isDeeperGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghLabel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Folder",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Section",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Ticket",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ViolationPriority",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Violation",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorFile",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Definition",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Goal",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketSectionContrib",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Interaction",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorFolder",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§AnalyzeMetrics",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Todo",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§InteractionDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isFirstGenGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§GoalChangeInput",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorContributions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListIssuesForLabelSync",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§ContributorAddInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorBundle",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketClient",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghGetIssueNodeID",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Policy",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalMilestone",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Range",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TodoCreateInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketReopenInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FolderKind",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§File",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Contributor",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketCloseInput",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghAddSubIssue",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TodoChangeInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§BundleKind",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Location",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorIcons",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketOpenInput",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghDeleteRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Repo",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketChangeInput",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§FixResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§PriorityCount",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketFileContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FileKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-02-05 11:25:17",
+        "finished": "2026-02-05 11:53:47"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "claude-code"
+      },
+      "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
+      "prompt": "Run the migration: execute sync github to convert existing child goal milestones to issues. Clean up any leftover milestone fields from non-root goal.json files.",
+      "llm": "opus-4-5",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/go",
+              "lines": {
+                "added": 482,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql",
+              "lines": {
+                "added": 584,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄README.md",
+              "lines": {
+                "added": 29,
+                "removed": 29
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go",
+              "lines": {
+                "added": 624,
+                "removed": 142
+              }
+            },
+            {
+              "path": "📄AGENTS.md",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql",
+              "lines": {
+                "added": 584,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#Business Logic#Tooling",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/go/main.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#Business Logic#Goal",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#UI/UX#CLI",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄README.md#✨ [Contributors](https://github.com/usalu/semio/pulse/monthly) [↑](#-overview)",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder",
+              "lines": {
+                "added": 15,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals",
+              "lines": {
+                "added": 139,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Todos#Entity Rendering",
+              "lines": {
+                "added": 12,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter",
+              "lines": {
+                "added": 6,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers",
+              "lines": {
+                "added": 117,
+                "removed": 77
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Types",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets",
+              "lines": {
+                "added": 113,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context",
+              "lines": {
+                "added": 221,
+                "removed": 38
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Scalars",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Header",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Types",
+              "lines": {
+                "added": 349,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Inputs",
+              "lines": {
+                "added": 137,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Mutation",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Ports",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "@semio-repo/graphql/schema.graphql#Query",
+              "lines": {
+                "added": 30,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghLinkParent",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§ticketCommand",
+              "lines": {
+                "added": 6,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatResult",
+              "lines": {
+                "added": 60,
+                "removed": 62
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatMarkdownResult",
+              "lines": {
+                "added": 57,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Types§GoalGithubData",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§CreateTicket",
+              "lines": {
+                "added": 1,
+                "removed": 14
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghGetMilestoneTitle",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghCreateIssue",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghLabel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListIssuesForLabelSync",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListRepoLabels",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghCreateRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghDeleteRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghSyncRepoLabelCatalog",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolTicketRead",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetDefinitions",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetSections",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalCreate",
+              "lines": {
+                "added": 37,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalChange",
+              "lines": {
+                "added": 9,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalClose",
+              "lines": {
+                "added": 9,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalReopen",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalDelete",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§FileCreate",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§FileMove",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SectionCreate",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§ensureGoalMilestone",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SyncGithub",
+              "lines": {
+                "added": 143,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§_",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GetRootDir",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder§buildSchema",
+              "lines": {
+                "added": 15,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Update Command§findCsprojFiles",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghCreateGoalIssue",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghUpdateGoalIssue",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§goalDepth",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isRootGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isFirstGenGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isDeeperGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getParentGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalMilestone",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getParentGoalIssueNodeID",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghGetIssueNodeID",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghAddSubIssue",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§parseIssueNumber",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Todos§ParseTodoMarkdown",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§treeCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter§ticketCommand",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatResult",
+              "lines": {
+                "added": 0,
+                "removed": 62
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli Adapter#CLI Renderers§formatMarkdownResult",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§CreateTicket",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghCreateIssue",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ToolGoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalCreate",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalChange",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalClose",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalReopen",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§GoalDelete",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Default Context§SyncGithub",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Schema Builder§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghLinkParent",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isDeeperGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§FixResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§PriorityCount",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§BundleKind",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Interaction",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Location",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§goalDepth",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Range",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghUpdateGoalIssue",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListIssuesForLabelSync",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghCreateGoalIssue",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Policy",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Ports§Node",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isRootGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Todo",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§DefinitionKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketOpenInput",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TodoChangeInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getParentGoalIssueNodeID",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketSectionContrib",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§AnalyzeResult",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorLink",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorIcons",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Ticket",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketStatus",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§isFirstGenGoal",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§LineMetrics",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Commit",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghGetIssueNodeID",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghSyncRepoLabelCatalog",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorContributions",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ViolationPriority",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Goal",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketFileContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghCreateRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketClient",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§ghAddSubIssue",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketChangeInput",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghLabel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§File",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FilterInput",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§GoalChangeInput",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Bundle",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FolderKind",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalMilestone",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getRootGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§GoalCreateInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ProjectKind",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Query§Query",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Contributor",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Definition",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§InteractionDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Project",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§FileKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§ContributorAddInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql§DateTime",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorFolder",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorBundle",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorFile",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorSection",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghListRepoLabels",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Folder",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ContributorDefinition",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Mutation§Mutation",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketCloseInput",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§parseIssueNumber",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Repo",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TicketReopenInput",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Violation",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketBundleContrib",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§TicketDate",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§AnalyzeMetrics",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghGetMilestoneTitle",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Inputs§TodoCreateInput",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§Section",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Tickets§ghDeleteRepoLabel",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/graphql/schema.graphql#Types§ViolationKind",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄@semio-repo/go/main.go#Cli#Goals§getParentGoalID",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

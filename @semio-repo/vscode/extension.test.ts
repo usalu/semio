@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/vscode/extension.test.ts
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import * as assert from "assert";
 import * as fs from "fs";
@@ -27,17 +27,17 @@ import * as path from "path";
 import * as vscode from "vscode";
 import { FilterTreeDataProvider, FilterTreeItem, MonorepoTreeDataProvider, MonorepoTreeItem, TicketData, TicketInteraction } from "./extension";
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Constants
+// #region 🔖Constants
 
-const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.refreshTickets", "semio.refreshContributors", "semio.refreshPolicies", "semio.toggleTicketFilter", "semio.openTicket", "semio.checkPolicy", "semio.runCommand"];
+const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem"];
 const EXPECTED_CONSTRAINTS = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
 const EXPECTED_VIEWS = ["semio.monorepo", "semio.filter"];
 
-// #endregion Constants
+// #endregion 🔖Constants
 
-// #region Utilities
+// #region 🔖Utilities
 
 function getWorkspaceRoot(): string {
   return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? path.join(__dirname, "../../../..");
@@ -93,9 +93,9 @@ function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
   return { data: lastResult };
 }
 
-// #endregion Utilities
+// #endregion 🔖Utilities
 
-// #region Extension Activation
+// #region 🔖Extension Activation
 
 suiteSetup(async function () {
   this.timeout(30000);
@@ -103,9 +103,9 @@ suiteSetup(async function () {
   await new Promise((resolve) => setTimeout(resolve, 2000));
 });
 
-// #endregion Extension Activation
+// #endregion 🔖Extension Activation
 
-// #region RepoEvent Parsing Tests
+// #region 🔖RepoEvent Parsing Tests
 
 suite("RepoEvent Parsing Test Suite", () => {
   test("parseRepoEvents handles result field correctly", () => {
@@ -182,9 +182,9 @@ suite("RepoEvent Parsing Test Suite", () => {
   });
 });
 
-// #endregion RepoEvent Parsing Tests
+// #endregion 🔖RepoEvent Parsing Tests
 
-// #region Command Registration Tests
+// #region 🔖Command Registration Tests
 
 suite("Command Registration Test Suite", () => {
   test("All expected commands are registered", async () => {
@@ -199,9 +199,9 @@ suite("Command Registration Test Suite", () => {
   });
 });
 
-// #endregion Command Registration Tests
+// #endregion 🔖Command Registration Tests
 
-// #region Kit Validation Tests
+// #region 🔖Kit Validation Tests
 
 suite("Kit Validation Test Suite", function () {
   this.timeout(15000);
@@ -285,9 +285,9 @@ suite("Kit Validation Test Suite", function () {
   });
 });
 
-// #endregion Kit Validation Tests
+// #endregion 🔖Kit Validation Tests
 
-// #region Repo Diagnostics Tests
+// #region 🔖Repo Diagnostics Tests
 
 suite("Repo Diagnostics Test Suite", function () {
   this.timeout(30000);
@@ -357,9 +357,9 @@ suite("Repo Diagnostics Test Suite", function () {
   });
 });
 
-// #endregion Repo Diagnostics Tests
+// #endregion 🔖Repo Diagnostics Tests
 
-// #region Refresh Diagnostics Tests
+// #region 🔖Refresh Diagnostics Tests
 
 suite("Refresh Diagnostics Test Suite", function () {
   this.timeout(15000);
@@ -377,9 +377,9 @@ suite("Refresh Diagnostics Test Suite", function () {
   });
 });
 
-// #endregion Refresh Diagnostics Tests
+// #endregion 🔖Refresh Diagnostics Tests
 
-// #region Sidebar View Tests
+// #region 🔖Sidebar View Tests
 
 suite("Sidebar View Test Suite", function () {
   this.timeout(15000);
@@ -421,15 +421,77 @@ suite("Sidebar View Test Suite", function () {
     assert.ok(commands.includes("semio.filter.toggle"), "semio.filter.toggle command should be registered");
   });
 
-  test("Run command is available", async function () {
+  test("Copy ID command is available", async function () {
     const commands = await vscode.commands.getCommands(true);
-    assert.ok(commands.includes("semio.runCommand"), "runCommand command should be registered");
+    assert.ok(commands.includes("semio.copyId"), "copyId command should be registered");
+  });
+
+  test("Mailto command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.mailto"), "mailto command should be registered");
+  });
+
+  test("Open link command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.openLink"), "openLink command should be registered");
+  });
+
+  test("Refresh monorepo command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.refreshMonorepo"), "refreshMonorepo command should be registered");
+  });
+
+  test("Copy commit SHA command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.copyCommitSha"), "copyCommitSha command should be registered");
+  });
+
+  test("Open commit in GitHub command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.openCommitInGitHub"), "openCommitInGitHub command should be registered");
+  });
+
+  test("Ticket reopen command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.ticketReopen"), "ticketReopen command should be registered");
+  });
+
+  test("Refresh item command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.refreshItem"), "refreshItem command should be registered");
+  });
+
+  test("New filter toggle commands are available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    const newFilterCommands = [
+      "semio.filter.toggle.project.user",
+      "semio.filter.toggle.project.infrastructure",
+      "semio.filter.toggle.project.research",
+      "semio.filter.toggle.file.code",
+      "semio.filter.toggle.file.script",
+      "semio.filter.toggle.file.config",
+      "semio.filter.toggle.file.test",
+      "semio.filter.toggle.file.docs",
+      "semio.filter.toggle.file.resource",
+      "semio.filter.toggle.file.license",
+      "semio.filter.toggle.goal.open",
+      "semio.filter.toggle.goal.closed",
+      "semio.filter.toggle.bundle.schema",
+      "semio.filter.toggle.policy.none",
+      "semio.filter.toggle.policy.all",
+      "semio.filter.toggle.contributor.none",
+      "semio.filter.toggle.contributor.all",
+      "semio.filter.toggle.commit.none",
+      "semio.filter.toggle.commit.all",
+    ];
+    const missing = newFilterCommands.filter(cmd => !commands.includes(cmd));
+    assert.strictEqual(missing.length, 0, `Missing new filter commands: ${missing.join(", ")}`);
   });
 });
 
-// #endregion Sidebar View Tests
+// #endregion 🔖Sidebar View Tests
 
-// #region Sections View Tests
+// #region 🔖Sections View Tests
 
 suite("Sections View Test Suite", function () {
   this.timeout(30000);
@@ -508,7 +570,7 @@ suite("Sections View Test Suite", function () {
   });
 });
 
-// #endregion Sections View Tests
+// #endregion 🔖Sections View Tests
 
 suite("Filter Provider Test Suite", () => {
   test("FilterProvider initializes correctly", () => {
@@ -519,65 +581,168 @@ suite("Filter Provider Test Suite", () => {
   test("Root elements include expected categories", async () => {
     const provider = new FilterTreeDataProvider();
     const children = await provider.getChildren();
-    assert.strictEqual(children.length, 7, "Should have 7 root elements (search + 6 filters)");
+    assert.strictEqual(children.length, 13, "Should have 13 root elements (search + 12 filters)");
     const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
-    assert.ok(labels.some(l => l.startsWith("SEARCH")), "Should have Search");
-    assert.ok(labels.includes("bundle"), "Should have bundle");
-    assert.ok(labels.includes("folder"), "Should have folder");
-    assert.ok(labels.includes("section"), "Should have section");
-    assert.ok(labels.includes("definition"), "Should have definition");
-    assert.ok(labels.includes("ticket"), "Should have ticket");
-    assert.ok(labels.includes("time"), "Should have time");
+    assert.ok(labels.some(l => l.startsWith("🔍")), "Should have Search");
+    assert.ok(labels.some(l => l.startsWith("🏗️Projects")), "Should have Projects");
+    assert.ok(labels.some(l => l.startsWith("📦Bundles")), "Should have Bundles");
+    assert.ok(labels.some(l => l.startsWith("📂Folders")), "Should have Folders");
+    assert.ok(labels.some(l => l.startsWith("📄Files")), "Should have Files");
+    assert.ok(labels.some(l => l.startsWith("🔖Sections")), "Should have Sections");
+    assert.ok(labels.some(l => l.startsWith("🏷️Definitions")), "Should have Definitions");
+    assert.ok(labels.some(l => l.startsWith("🎯Goals")), "Should have Goals");
+    assert.ok(labels.some(l => l.startsWith("📅Tickets")), "Should have Tickets");
+    assert.ok(labels.some(l => l.startsWith("📅Dates")), "Should have Dates");
+    assert.ok(labels.some(l => l.startsWith("🛡️Policies")), "Should have Policies");
+    assert.ok(labels.some(l => l.startsWith("👤Contributors")), "Should have Contributors");
+    assert.ok(labels.some(l => l.startsWith("🔄Commits")), "Should have Commits");
   });
 
-  test("Time category returns YEAR selector", async () => {
+  test("Time category returns year values when available", async () => {
     const provider = new FilterTreeDataProvider();
-    const timeItem = new FilterTreeItem("time", "filter", vscode.TreeItemCollapsibleState.Collapsed, "filter_time");
+    provider.availableYears = [2024, 2025];
+    const timeItem = new FilterTreeItem("📅Dates", "filter", vscode.TreeItemCollapsibleState.Collapsed, "filter_time");
     const children = await provider.getChildren(timeItem);
-    assert.strictEqual(children.length, 1);
-    assert.ok(children.some((c: FilterTreeItem) => c.label === "YEAR"));
+    assert.strictEqual(children.length, 2, "Should have 2 year items");
+    const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : '');
+    assert.ok(labels.includes("2024"), "Should have 2024");
+    assert.ok(labels.includes("2025"), "Should have 2025");
   });
 
-  test("YEAR selector returns YEAR values", async () => {
+  test("Year item returns month values when available", async () => {
     const provider = new FilterTreeDataProvider();
-    const yearSelector = new FilterTreeItem("YEAR", "time", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_year");
-    const children = await provider.getChildren(yearSelector);
-    assert.strictEqual(children.length, 1);
-    assert.ok(children.some((c: FilterTreeItem) => c.label === "MONTH"));
+    provider.availableMonths = [1, 6, 12];
+    const yearItem = new FilterTreeItem("2024", "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_year", "year", 2024);
+    const children = await provider.getChildren(yearItem);
+    assert.strictEqual(children.length, 3, "Should have 3 month items");
   });
 
-  test("MONTH selector returns DAY selector", async () => {
+  test("Month item returns day values when available", async () => {
     const provider = new FilterTreeDataProvider();
-    const monthSelector = new FilterTreeItem("MONTH", "time", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_month");
-    const children = await provider.getChildren(monthSelector);
-    assert.strictEqual(children.length, 1);
-    assert.ok(children.some((c: FilterTreeItem) => c.label === "DAY"));
+    provider.availableDays = [1, 15, 28];
+    const monthItem = new FilterTreeItem("January", "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_month", "month", 1);
+    const children = await provider.getChildren(monthItem);
+    assert.strictEqual(children.length, 3, "Should have 3 day items");
   });
 
   test("Toggle methods update filter state", () => {
     const provider = new FilterTreeDataProvider();
 
-    // Toggle bundle
     provider.toggle("bundle", "library");
     assert.strictEqual(provider.filters.bundle.library, false);
     provider.toggle("bundle", "library");
     assert.strictEqual(provider.filters.bundle.library, true);
 
-    // Toggle folder
     provider.toggle("folder", "organization");
     assert.strictEqual(provider.filters.folder.organization, false);
 
-    // Toggle section
     provider.toggle("section", "all");
     assert.strictEqual(provider.filters.section.all, false);
 
-    // Toggle definition
     provider.toggle("definition", "implementation");
     assert.strictEqual(provider.filters.definition.implementation, false);
 
-    // Toggle ticket
     provider.toggle("ticket", "open");
     assert.strictEqual(provider.filters.ticket.open, false);
+
+    provider.toggle("project", "user");
+    assert.strictEqual(provider.filters.project.user, false);
+    provider.toggle("project", "user");
+    assert.strictEqual(provider.filters.project.user, true);
+
+    provider.toggle("file", "code");
+    assert.strictEqual(provider.filters.file.code, false);
+    provider.toggle("file", "code");
+    assert.strictEqual(provider.filters.file.code, true);
+
+    provider.toggle("goal", "open");
+    assert.strictEqual(provider.filters.goal.open, false);
+    provider.toggle("goal", "open");
+    assert.strictEqual(provider.filters.goal.open, true);
+  });
+
+  test("Bundle none/all toggles set all bundle filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("bundle", "none");
+    for (const key of Object.keys(provider.filters.bundle)) {
+      assert.strictEqual(provider.filters.bundle[key], false, `bundle.${key} should be false after none`);
+    }
+    provider.toggle("bundle", "all");
+    for (const key of Object.keys(provider.filters.bundle)) {
+      assert.strictEqual(provider.filters.bundle[key], true, `bundle.${key} should be true after all`);
+    }
+  });
+
+  test("Folder none/all toggles set all folder filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("folder", "none");
+    for (const key of Object.keys(provider.filters.folder)) {
+      assert.strictEqual(provider.filters.folder[key], false, `folder.${key} should be false after none`);
+    }
+    provider.toggle("folder", "all");
+    for (const key of Object.keys(provider.filters.folder)) {
+      assert.strictEqual(provider.filters.folder[key], true, `folder.${key} should be true after all`);
+    }
+  });
+
+  test("Definition none/all toggles set all definition filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("definition", "none");
+    for (const key of Object.keys(provider.filters.definition)) {
+      assert.strictEqual(provider.filters.definition[key], false, `definition.${key} should be false after none`);
+    }
+    provider.toggle("definition", "all");
+    for (const key of Object.keys(provider.filters.definition)) {
+      assert.strictEqual(provider.filters.definition[key], true, `definition.${key} should be true after all`);
+    }
+  });
+
+  test("Ticket none/all toggles set all ticket filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("ticket", "none");
+    for (const key of Object.keys(provider.filters.ticket)) {
+      assert.strictEqual(provider.filters.ticket[key], false, `ticket.${key} should be false after none`);
+    }
+    provider.toggle("ticket", "all");
+    for (const key of Object.keys(provider.filters.ticket)) {
+      assert.strictEqual(provider.filters.ticket[key], true, `ticket.${key} should be true after all`);
+    }
+  });
+
+  test("Project none/all toggles set all project filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("project", "none");
+    for (const key of Object.keys(provider.filters.project)) {
+      assert.strictEqual(provider.filters.project[key], false, `project.${key} should be false after none`);
+    }
+    provider.toggle("project", "all");
+    for (const key of Object.keys(provider.filters.project)) {
+      assert.strictEqual(provider.filters.project[key], true, `project.${key} should be true after all`);
+    }
+  });
+
+  test("File none/all toggles set all file filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("file", "none");
+    for (const key of Object.keys(provider.filters.file)) {
+      assert.strictEqual(provider.filters.file[key], false, `file.${key} should be false after none`);
+    }
+    provider.toggle("file", "all");
+    for (const key of Object.keys(provider.filters.file)) {
+      assert.strictEqual(provider.filters.file[key], true, `file.${key} should be true after all`);
+    }
+  });
+
+  test("Goal none/all toggles set all goal filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("goal", "none");
+    for (const key of Object.keys(provider.filters.goal)) {
+      assert.strictEqual(provider.filters.goal[key], false, `goal.${key} should be false after none`);
+    }
+    provider.toggle("goal", "all");
+    for (const key of Object.keys(provider.filters.goal)) {
+      assert.strictEqual(provider.filters.goal[key], true, `goal.${key} should be true after all`);
+    }
   });
 
   test("Time filter toggle updates state", () => {
@@ -586,25 +751,21 @@ suite("Filter Provider Test Suite", () => {
     provider.availableMonths = [1];
     provider.availableDays = [15];
 
-    // Toggle specific year
     provider.toggleYear(2024);
     assert.ok(provider.excludedYears.includes(2024));
     provider.toggleYear(2024);
     assert.ok(!provider.excludedYears.includes(2024));
 
-    // Toggle specific month
     provider.toggleMonth(1);
     assert.ok(provider.excludedMonths.includes(1));
 
-    // Toggle specific day
     provider.toggleDay(15);
     assert.ok(provider.excludedDays.includes(15));
 
-    // Toggle all/none
     provider.toggle("time", "none");
     assert.strictEqual(provider.timeFilter.none, true);
     assert.strictEqual(provider.timeFilter.all, false);
-    assert.ok(provider.excludedYears.includes(2024)); // Should exclude all available
+    assert.ok(provider.excludedYears.includes(2024));
     assert.ok(provider.excludedMonths.includes(1));
     assert.ok(provider.excludedDays.includes(15));
 
@@ -612,6 +773,40 @@ suite("Filter Provider Test Suite", () => {
     assert.strictEqual(provider.timeFilter.none, false);
     assert.strictEqual(provider.timeFilter.all, true);
     assert.strictEqual(provider.excludedYears.length, 0);
+  });
+
+  test("setTimeMode sets year/month/day modes", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.availableYears = [2024, 2025];
+    provider.availableMonths = [3, 6];
+    provider.availableDays = [1, 15];
+
+    provider.setTimeMode("year", "none");
+    assert.deepStrictEqual(provider.excludedYears, [2024, 2025]);
+    provider.setTimeMode("year", "all");
+    assert.deepStrictEqual(provider.excludedYears, []);
+
+    provider.setTimeMode("month", "none");
+    assert.deepStrictEqual(provider.excludedMonths, [3, 6]);
+    provider.setTimeMode("month", "all");
+    assert.deepStrictEqual(provider.excludedMonths, []);
+
+    provider.setTimeMode("day", "none");
+    assert.deepStrictEqual(provider.excludedDays, [1, 15]);
+    provider.setTimeMode("day", "all");
+    assert.deepStrictEqual(provider.excludedDays, []);
+  });
+
+  test("Search query update updates search state", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.searchQuery = "test";
+    assert.strictEqual(provider.searchQuery, "test");
+    provider.matchCase = true;
+    assert.strictEqual(provider.matchCase, true);
+    provider.matchWholeWord = true;
+    assert.strictEqual(provider.matchWholeWord, true);
+    provider.useRegex = true;
+    assert.strictEqual(provider.useRegex, true);
   });
 });
 
@@ -622,17 +817,40 @@ suite("Monorepo Provider Test Suite", () => {
     assert.ok(provider);
   });
 
-  test("Root elements include expected categories", async () => {
+  test("Root elements include expected emoji-prefixed categories", async () => {
     const provider = new MonorepoTreeDataProvider();
     const children = await provider.getChildren();
     assert.strictEqual(children.length, 6);
     const labels = children.map(c => c.label);
-    assert.ok(labels.includes("Projects"));
-    assert.ok(labels.includes("Goals"));
-    assert.ok(labels.includes("Tickets"));
-    assert.ok(labels.includes("Policies"));
-    assert.ok(labels.includes("Contributors"));
-    assert.ok(labels.includes("Commits"));
+    assert.ok(labels.includes("🏗️Projects"), "Should have 🏗️Projects");
+    assert.ok(labels.includes("🎯Goals"), "Should have 🎯Goals");
+    assert.ok(labels.includes("📅Tickets"), "Should have 📅Tickets");
+    assert.ok(labels.includes("🛡️Policies"), "Should have 🛡️Policies");
+    assert.ok(labels.includes("👤Contributors"), "Should have 👤Contributors");
+    assert.ok(labels.includes("🔀Commits"), "Should have 🔀Commits");
+  });
+
+  test("Root elements have correct contextValues", async () => {
+    const provider = new MonorepoTreeDataProvider();
+    const roots = await provider.getChildren();
+    const contextValues = roots.map((r: MonorepoTreeItem) => r.contextValue);
+    assert.ok(contextValues.includes("root_projects"));
+    assert.ok(contextValues.includes("root_goals"));
+    assert.ok(contextValues.includes("root_tickets"));
+    assert.ok(contextValues.includes("root_policies"));
+    assert.ok(contextValues.includes("root_contributors"));
+    assert.ok(contextValues.includes("root_commits"));
+  });
+
+  test("MonorepoTreeItem stores nodeId for copy support", () => {
+    const item = new MonorepoTreeItem("Test", vscode.TreeItemCollapsibleState.None, "test_ctx", undefined, "test-node-id");
+    assert.strictEqual(item.nodeId, "test-node-id");
+    assert.strictEqual(item.tooltip, "test-node-id");
+  });
+
+  test("MonorepoTreeItem without nodeId defaults tooltip to label", () => {
+    const item = new MonorepoTreeItem("Label", vscode.TreeItemCollapsibleState.None, "ctx");
+    assert.strictEqual(item.nodeId, undefined);
   });
 
   test("Projects root expands to at least one project when repo CLI is available", async function () {
@@ -647,7 +865,6 @@ suite("Monorepo Provider Test Suite", () => {
 
     const expanded = await provider.getChildren(projectsRoot);
     if (expanded.length === 0) {
-      // In CI/test env repo binary might be missing; treat as skip.
       return;
     }
     assert.ok(expanded.length > 0);

@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // assets/repo/some/folder/file_fixed.tsx
 
@@ -17,23 +17,23 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Types
+// #region 🔖Types
 
 interface FixedType {
-    name: string;
-    value: number;
+  name: string;
+  value: number;
 }
 
 type FixedKind = "alpha" | "beta";
 
-// #endregion Types
+// #endregion 🔖Types
 
-// #region Components
+// #region 🔖Components
 
 export function FixedComponent(props: FixedType): string {
-    return props.name;
+  return props.name;
 }
 
-// #endregion Components
+// #endregion 🔖Components

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan
 
 1. Add RustLanguage struct with:
@@ -21,6 +22,7 @@
 ## Changes
 
 ## Log
+
 # Log
 
 ## 2026-01-07 21:45
@@ -28,13 +30,15 @@
 Added Rust and Ruby language support to `go/repo/repo.go`:
 
 ### Rust (`RustLanguage`)
+
 - Extensions: `.rs`
-- Regions: `// #region Name` / `// #endregion Name`
+- Regions: `// #region 🔖Name` / `// #endregion 🔖Name`
 - Definitions: `fn`, `struct`, `enum`, `trait`, `impl`, `type`, `const`, `static`, `mod` (with optional `pub`)
 - Uses brace scoping (not indent)
 - Extra orphan definitions for external module declarations (`mod name;`)
 
 ### Ruby (`RubyLanguage`)
+
 - Extensions: `.rb`, `.rake`, `.gemspec`
 - Regions: `# region Name` / `# endregion Name`
 - Definitions: `def`, `class`, `module` (with namespace support like `Foo::Bar`)
@@ -44,6 +48,7 @@ Added Rust and Ruby language support to `go/repo/repo.go`:
 Both registered in `languageRegistry`.
 
 ## Summary
+
 # Summary
 
 Added Rust and Ruby language plugins to the repo CLI language registry in `go/repo/repo.go`. Both languages support regions (`// #region` for Rust, `# region` for Ruby), definition parsing, and headers. Ruby includes custom `end`-based block scoping for accurate definition range tracking.

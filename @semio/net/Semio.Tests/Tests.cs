@@ -1,4 +1,4 @@
-#region Header
+#region 🔖Header
 
 // net/Semio.Tests/Tests.cs
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#endregion Header
+#endregion 🔖Header
 
 using Newtonsoft.Json;
 using Xunit;
@@ -71,7 +71,7 @@ public class Tests
         return Math.Abs(c1.U - c2.U) < Tolerance && Math.Abs(c1.V - c2.V) < Tolerance;
     }
 
-    // #region Roundtrip
+    // #region 🔖Roundtrip
 
     public class Roundtrip
     {
@@ -116,9 +116,9 @@ public class Tests
         }
     }
 
-    // #endregion Roundtrip
+    // #endregion 🔖Roundtrip
 
-    // #region Flatten
+    // #region 🔖Flatten
 
     public class Flatten
     {
@@ -195,9 +195,9 @@ public class Tests
         }
     }
 
-    // #endregion Flatten
+    // #endregion 🔖Flatten
 
-    // #region Diff
+    // #region 🔖Diff
 
     public class Diff
     {
@@ -225,9 +225,9 @@ public class Tests
         }
     }
 
-    // #endregion Diff
+    // #endregion 🔖Diff
 
-    // #region Validation
+    // #region 🔖Validation
 
     public class Validation
     {
@@ -252,5 +252,5 @@ public class Tests
         }
     }
 
-    // #endregion Validation
+    // #endregion 🔖Validation
 }

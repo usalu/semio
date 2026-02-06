@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/Feedback.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
 import { useSelector } from "@xstate/react";
@@ -32,9 +32,9 @@ import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared
 import { conditionalHookResult, createPanelDefinition, deduplicateWindowLayout, EMPTY_PANEL_VISIBILITY, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, stringifyWindowLayout, type AppWindowConfig } from "./shared";
 import { Canvas, createDefaultLayout, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, LayoutCanvas, useAddPanelSection, useAppType, useRemovePanelSection, useSettings, useSketchpadActor, useSketchpadCommands } from "./Sketchpad";
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Feedback App Plugin Registration
+// #region 🔖Feedback App Plugin Registration
 
 const createDefaultFeedbackState = (): FeedbackAppState => ({
   panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
@@ -125,9 +125,9 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion Feedback App Plugin Registration
+// #endregion 🔖Feedback App Plugin Registration
 
-// #region Triadic Hooks
+// #region 🔖Triadic Hooks
 
 const DEFAULT_FORM_DATA: FeedbackFormData = {
   kind: "bug",
@@ -207,11 +207,11 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
   return [reset, canReset];
 }
 
-// #endregion Triadic Hooks
+// #endregion 🔖Triadic Hooks
 
-// #region Components
+// #region 🔖Components
 
-// #region Form
+// #region 🔖Form
 
 const FeedbackForm: FC = () => {
   const { t } = useTranslation();
@@ -425,11 +425,11 @@ const FeedbackForm: FC = () => {
   );
 };
 
-// #endregion Form
+// #endregion 🔖Form
 
-// #endregion Components
+// #endregion 🔖Components
 
-// #region App
+// #region 🔖App
 
 const FeedbackToolbar: FC = () => {
   const { t } = useTranslation();
@@ -521,9 +521,9 @@ const Feedback: FC = () => {
 
 export default Feedback;
 
-// #endregion App
+// #endregion 🔖App
 
-// #region Config
+// #region 🔖Config
 
 export const config: AppConfig = {
   id: "feedback",
@@ -534,10 +534,10 @@ export const config: AppConfig = {
   order: 10,
 };
 
-// #endregion Config
+// #endregion 🔖Config
 
-// #region Global Footer Item
+// #region 🔖Global Footer Item
 
 export { FeedbackIcon };
 
-// #endregion Global Footer Item
+// #endregion 🔖Global Footer Item

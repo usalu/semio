@@ -15,10 +15,10 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-#region Header
-#endregion Header
+#region 🔖Header
+#endregion 🔖Header
 
-#region Classes
+#region 🔖Classes
 
 public class TestClass
 {
@@ -30,4 +30,4 @@ public class TestClass
     }
 }
 
-#endregion Classes
+#endregion 🔖Classes

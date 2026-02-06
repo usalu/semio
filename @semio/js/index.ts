@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/index.ts
 
@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import "./i18n";
 
 export type { TooltipConfig } from "./sketchpad/elements";
 export type { AppConfig, CompositeFileProviderConfig, FileProvider, FileProviderFactory, LocalFileProviderConfig, MemoryFileProviderConfig, RemoteFileProviderConfig, YProviderFactory } from "./sketchpad/shared";
-export { default as Sketchpad, appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs } from "./sketchpad/Sketchpad";
+export { appRegistry, createCompositeFileProvider, createLocalFileProvider, createMemoryFileProvider, createRemoteFileProvider, loadAppConfigs, default as Sketchpad } from "./sketchpad/Sketchpad";
 
 export { config as designConfig } from "./sketchpad/Design";
 export { config as docsConfig } from "./sketchpad/Docs";

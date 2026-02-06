@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // assets/repo/some/folder/file.tsx
 
@@ -17,11 +17,11 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import { JSX } from "react";
 
-// #region Types
+// #region 🔖Types
 
 interface TestType {
   name: string;
@@ -30,9 +30,9 @@ interface TestType {
 
 type TestKind = "a" | "b" | "c";
 
-// #endregion Types
+// #endregion 🔖Types
 
-// #region Components
+// #region 🔖Components
 
 function TestComponent(): JSX.Element {
   return <div>Test</div>;
@@ -48,9 +48,9 @@ class TestClass {
   }
 }
 
-// #endregion Components
+// #endregion 🔖Components
 
-// #region Constants
+// #region 🔖Constants
 
 const TEST_CONSTANT = "test";
 
@@ -59,4 +59,4 @@ enum TestEnum {
   B = "b",
 }
 
-// #endregion Constants
+// #endregion 🔖Constants

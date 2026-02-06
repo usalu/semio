@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/display/Tooltip.stories.tsx
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Plus, Settings, Trash2 } from "lucide-react";
@@ -72,7 +72,7 @@ const TooltipExamples = () => (
   </div>
 );
 
-// #region Tooltip
+// #region 🔖Tooltip
 const meta = {
   title: "Elements/Display/Tooltip",
   component: TooltipExamples,
@@ -118,4 +118,4 @@ export const Temporary: Story = {
   render: createLevelRender("temporary"),
 };
 
-// #endregion Tooltip
+// #endregion 🔖Tooltip

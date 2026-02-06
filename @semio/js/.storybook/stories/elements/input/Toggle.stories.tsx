@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/input/Toggle.stories.tsx
 
@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, List, Lock, Network, Plus, Settings } from "lucide-react";
 import { Level, LevelProvider, Toggle, getLevelBgClass } from "../../../../sketchpad/elements";
 
-// #region Toggle
+// #region 🔖Toggle
 const meta = {
   title: "Elements/Input/Toggle",
   component: Toggle,
@@ -179,4 +179,4 @@ export const DropdownTemporary: Story = {
   render: createDropdownLevelRender("temporary", "toggle-dropdown-temporary"),
 };
 
-// #endregion Toggle
+// #endregion 🔖Toggle

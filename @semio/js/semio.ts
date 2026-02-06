@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/semio.ts
 
@@ -17,14 +17,14 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region TODOs
+// #region 🔖TODOs
 
 // TODOs
 // TODO: Conventionalize error throwing and logging
 
-// #endregion TODOs
+// #endregion 🔖TODOs
 
 import { default as adjectives } from "@semio/assets/lists/adjectives.json";
 import { default as animals } from "@semio/assets/lists/animals.json";
@@ -36,12 +36,12 @@ import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 import CONSTANTS from "./constants.json";
 
-// #region Constants
+// #region 🔖Constants
 
 export const ICON_WIDTH = CONSTANTS.icon.width;
 export const TOLERANCE = CONSTANTS.tolerance;
 
-// #endregion Constants
+// #endregion 🔖Constants
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -145,7 +145,7 @@ export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vec
 
 export type Guid = string;
 
-// #region Entity IDs
+// #region 🔖Entity IDs
 
 export type AttributeId = { guid: Guid };
 export type LocationId = { guid: Guid };
@@ -257,11 +257,11 @@ export const getKitGuid = (id: KitId): Guid => id.guid;
 export const getTagGuid = (id: TagId): Guid => id.guid;
 export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 
-// #endregion Entity IDs
+// #endregion 🔖Entity IDs
 
 const DateProperty = () => z.string().optional();
 
-// #region Attribute
+// #region 🔖Attribute
 
 export const AttributeSchema = z.object({
   guid: z.string(),
@@ -365,9 +365,9 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
   return result;
 };
 
-// #endregion Attribute
+// #endregion 🔖Attribute
 
-// #region Coord (weak entity)
+// #region 🔖Coord (weak entity)
 
 export const CoordSchema = z.object({ u: z.number(), v: z.number() });
 export type Coord = z.infer<typeof CoordSchema>;
@@ -405,9 +405,9 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
   };
 };
 
-// #endregion Coord (weak entity)
+// #endregion 🔖Coord (weak entity)
 
-// #region Vec (weak entity)
+// #region 🔖Vec (weak entity)
 
 export const VecSchema = z.object({ u: z.number(), v: z.number() });
 export type Vec = z.infer<typeof VecSchema>;
@@ -445,9 +445,9 @@ export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
   };
 };
 
-// #endregion Vec (weak entity)
+// #endregion 🔖Vec (weak entity)
 
-// #region Point (weak entity)
+// #region 🔖Point (weak entity)
 
 export const PointSchema = z.object({
   x: z.number(),
@@ -495,9 +495,9 @@ export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
   };
 };
 
-// #endregion Point (weak entity)
+// #endregion 🔖Point (weak entity)
 
-// #region Vector (weak entity)
+// #region 🔖Vector (weak entity)
 
 export const VectorSchema = z.object({
   x: z.number(),
@@ -545,9 +545,9 @@ export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
   };
 };
 
-// #endregion Vector (weak entity)
+// #endregion 🔖Vector (weak entity)
 
-// #region Plane (weak entity)
+// #region 🔖Plane (weak entity)
 
 export const PlaneSchema = z.object({
   origin: PointSchema,
@@ -660,9 +660,9 @@ export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
   };
 };
 
-// #endregion Plane (weak entity)
+// #endregion 🔖Plane (weak entity)
 
-// #region Camera (weak entity)
+// #region 🔖Camera (weak entity)
 
 export const CameraSchema = z.object({
   position: PointSchema,
@@ -710,9 +710,9 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
   };
 };
 
-// #endregion Camera (weak entity)
+// #endregion 🔖Camera (weak entity)
 
-// #region Location
+// #region 🔖Location
 
 export const LocationSchema = z.object({
   guid: z.string(),
@@ -763,9 +763,9 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
   return result;
 };
 
-// #endregion Location
+// #endregion 🔖Location
 
-// #region Author
+// #region 🔖Author
 
 export const AuthorSchema = z.object({ guid: z.string(), name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
 export type Author = z.infer<typeof AuthorSchema>;
@@ -814,9 +814,9 @@ export const AuthorsDiffSchema = z.object({
 });
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
-// #endregion Author
+// #endregion 🔖Author
 
-// #region File
+// #region 🔖File
 
 export const FileSchema = z.object({
   guid: z.string(),
@@ -894,9 +894,9 @@ export const FilesDiffSchema = z.object({
 });
 export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
-// #endregion File
+// #endregion 🔖File
 
-// #region Folder
+// #region 🔖Folder
 
 export const FolderSchema = z.object({
   guid: z.string(),
@@ -970,9 +970,9 @@ export const FoldersDiffSchema = z.object({
 });
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
-// #endregion Folder
+// #endregion 🔖Folder
 
-// #region Benchmark
+// #region 🔖Benchmark
 
 export const BenchmarkSchema = z.object({
   guid: z.string(),
@@ -1103,9 +1103,9 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
   return result;
 };
 
-// #endregion Benchmark
+// #endregion 🔖Benchmark
 
-// #region Quality
+// #region 🔖Quality
 
 export const QualitySchema = z.object({
   guid: z.string(),
@@ -1231,9 +1231,9 @@ export const QualitiesDiffSchema = z.object({
   added: z.array(QualitySchema).optional(),
 });
 
-// #endregion Quality
+// #endregion 🔖Quality
 
-// #region Port
+// #region 🔖Port
 
 export const PortSchema = z.object({
   guid: z.string(),
@@ -1381,9 +1381,9 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
   return iface1Compatible.some((c) => c.guid === iface2.guid) || iface2Compatible.some((c) => c.guid === iface1.guid);
 };
 
-// #endregion Port
+// #endregion 🔖Port
 
-// #region Prop
+// #region 🔖Prop
 
 export const PropSchema = z.object({
   guid: z.string(),
@@ -1500,9 +1500,9 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
   return result;
 };
 
-// #endregion Prop
+// #endregion 🔖Prop
 
-// #region Tag
+// #region 🔖Tag
 
 export const TagSchema = z.object({
   guid: z.string(),
@@ -1645,9 +1645,9 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
   return tag;
 };
 
-// #endregion Tag
+// #endregion 🔖Tag
 
-// #region Concept
+// #region 🔖Concept
 
 export const ConceptSchema = z.object({
   guid: z.string(),
@@ -1790,9 +1790,9 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
   return concept;
 };
 
-// #endregion Concept
+// #endregion 🔖Concept
 
-// #region Model
+// #region 🔖Model
 
 export const ModelSchema = z.object({
   guid: z.string(),
@@ -1989,9 +1989,9 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
   return { isValid: true, extension: ext };
 };
 
-// #endregion Model
+// #endregion 🔖Model
 
-// #region Connector
+// #region 🔖Connector
 
 export const ConnectorSchema = z.object({
   guid: z.string(),
@@ -2247,9 +2247,9 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
   return connector;
 };
 
-// #endregion Connector
+// #endregion 🔖Connector
 
-// #region Type
+// #region 🔖Type
 
 export const TypeSchema = z.object({
   guid: z.string(),
@@ -2400,9 +2400,9 @@ export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 
 export const findConnectorInType = (type: Type, connectorGuid: string): Connector => findConnector(type.connectors ?? [], connectorGuid);
 
-// #endregion Type
+// #endregion 🔖Type
 
-// #region Layer
+// #region 🔖Layer
 
 export const LayerSchema = z.object({
   guid: z.string(),
@@ -2469,9 +2469,9 @@ export const LayersDiffSchema = z.object({
 });
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
-// #endregion Layer
+// #endregion 🔖Layer
 
-// #region Piece
+// #region 🔖Piece
 
 export const PieceSchema = z.object({
   guid: z.string(),
@@ -2640,9 +2640,9 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
   return piece;
 };
 
-// #endregion Piece
+// #endregion 🔖Piece
 
-// #region Group
+// #region 🔖Group
 
 export const GroupSchema = z.object({
   guid: z.string(),
@@ -2706,9 +2706,9 @@ export const GroupsDiffSchema = z.object({
 export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
 export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.parse(json));
 
-// #endregion Group
+// #endregion 🔖Group
 
-// #region Side
+// #region 🔖Side
 
 export const SideSchema = z.object({
   piece: PieceIdSchema,
@@ -2757,9 +2757,9 @@ export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.p
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
 export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
-// #endregion Side
+// #endregion 🔖Side
 
-// #region Connection
+// #region 🔖Connection
 
 export const ConnectionSchema = z.object({
   guid: z.string(),
@@ -2890,9 +2890,9 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
   return findConnectorInType(type, connectorGuid);
 };
 
-// #endregion Connection
+// #endregion 🔖Connection
 
-// #region Stat
+// #region 🔖Stat
 
 export const StatSchema = z.object({
   guid: z.string(),
@@ -2951,9 +2951,9 @@ export const StatsDiffSchema = z.object({
 export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.parse(stat));
 export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.parse(json));
 
-// #endregion Stat
+// #endregion 🔖Stat
 
-// #region Design
+// #region 🔖Design
 
 export const DesignSchema = z.object({
   guid: z.string(),
@@ -3920,9 +3920,9 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
   );
 };
 
-// #endregion Design
+// #endregion 🔖Design
 
-// #region Kit
+// #region 🔖Kit
 
 export const KitSchema = z.object({
   guid: z.string(),
@@ -4336,7 +4336,7 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
   return design;
 };
 
-// #region Design Family Helpers
+// #region 🔖Design Family Helpers
 
 export const getPrimitiveDesign = (kit: Kit, designGuid: string): Design => {
   let current = findDesignInKit(kit, designGuid);
@@ -4387,9 +4387,9 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
   });
 };
 
-// #endregion Design Family Helpers
+// #endregion 🔖Design Family Helpers
 
-// #region Type Family Helpers
+// #region 🔖Type Family Helpers
 
 export const getPrimitiveType = (kit: Kit, typeGuid: string): Type => {
   let current = findTypeInKit(kit, typeGuid);
@@ -4428,7 +4428,7 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
   return primitiveA.guid === primitiveB.guid;
 };
 
-// #endregion Type Family Helpers
+// #endregion 🔖Type Family Helpers
 
 export const findPortInKit = (kit: Kit, portGuid: string): Port => {
   const iface = kit.ports?.find((i) => i.guid === portGuid);
@@ -4688,7 +4688,7 @@ export const parseDesignIdFromVariant = (variant: string): string => {
   return variant.split("-")[0];
 };
 
-// #region File Tree Utilities
+// #region 🔖File Tree Utilities
 
 export interface FileTreeNode {
   name: string;
@@ -4769,7 +4769,7 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
   return result;
 };
 
-// #endregion File Tree Utilities
+// #endregion 🔖File Tree Utilities
 
 export const createFileFromDataUri = (name: string, dataUri: string): File => {
   const sizeMatch = dataUri.match(/data:([^;]+)(;base64)?,(.+)/);
@@ -4800,7 +4800,7 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
   };
 };
 
-// #region Kit Import/Export
+// #region 🔖Kit Import/Export
 
 export interface KitImportResult {
   kit: Kit;
@@ -7018,11 +7018,11 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
   });
 };
 
-// #endregion Kit Import/Export
+// #endregion 🔖Kit Import/Export
 
-// #region Validation
+// #region 🔖Validation
 
-// #region Validation core types
+// #region 🔖Validation core types
 
 export type EntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 
@@ -7051,9 +7051,9 @@ export interface ValidationResult {
 
 export const hasErrors = (res: ValidationResult) => res.problems.length > 0;
 
-// #endregion Validation core types
+// #endregion 🔖Validation core types
 
-// #region Validation context & engine
+// #region 🔖Validation context & engine
 
 export interface ValidationContext {
   kit: Kit;
@@ -7096,9 +7096,9 @@ export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationRes
   return { problems: constraints.flatMap((constraint) => constraint(ctx)) };
 };
 
-// #endregion Validation context & engine
+// #endregion 🔖Validation context & engine
 
-// #region Fix helper
+// #region 🔖Fix helper
 
 export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clone: Kit) => void): Fix => {
   const clone = JSON.parse(serializeKit(ctx.kit)) as Kit;
@@ -7107,9 +7107,9 @@ export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clo
   return { title, diff };
 };
 
-// #endregion Fix helper
+// #endregion 🔖Fix helper
 
-// #region GUID update helper
+// #region 🔖GUID update helper
 
 const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
   const update = (obj: any) => {
@@ -7140,9 +7140,9 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
   update(kit);
 };
 
-// #endregion GUID update helper
+// #endregion 🔖GUID update helper
 
-// #region Constraint: GUID uniqueness
+// #region 🔖Constraint: GUID uniqueness
 
 export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7182,9 +7182,9 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: GUID uniqueness
+// #endregion 🔖Constraint: GUID uniqueness
 
-// #region Constraint: Type name uniqueness
+// #region 🔖Constraint: Type name uniqueness
 
 export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7225,9 +7225,9 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Type name uniqueness
+// #endregion 🔖Constraint: Type name uniqueness
 
-// #region Constraint: Design name uniqueness
+// #region 🔖Constraint: Design name uniqueness
 
 export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7268,9 +7268,9 @@ export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Design name uniqueness
+// #endregion 🔖Constraint: Design name uniqueness
 
-// #region Constraint: Piece name uniqueness
+// #region 🔖Constraint: Piece name uniqueness
 
 export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7309,9 +7309,9 @@ export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Piece name uniqueness
+// #endregion 🔖Constraint: Piece name uniqueness
 
-// #region Constraint: Quality name uniqueness
+// #region 🔖Constraint: Quality name uniqueness
 
 export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7344,9 +7344,9 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Quality name uniqueness
+// #endregion 🔖Constraint: Quality name uniqueness
 
-// #region Constraint: Port name uniqueness
+// #region 🔖Constraint: Port name uniqueness
 
 export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7379,9 +7379,9 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Port name uniqueness
+// #endregion 🔖Constraint: Port name uniqueness
 
-// #region Constraint: File name uniqueness
+// #region 🔖Constraint: File name uniqueness
 
 export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7414,9 +7414,9 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: File name uniqueness
+// #endregion 🔖Constraint: File name uniqueness
 
-// #region Constraint: Folder name uniqueness
+// #region 🔖Constraint: Folder name uniqueness
 
 export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7457,9 +7457,9 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Folder name uniqueness
+// #endregion 🔖Constraint: Folder name uniqueness
 
-// #region Constraint: Connector name uniqueness within type
+// #region 🔖Constraint: Connector name uniqueness within type
 
 export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7498,9 +7498,9 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Connector name uniqueness within type
+// #endregion 🔖Constraint: Connector name uniqueness within type
 
-// #region Constraint: Model name uniqueness within type
+// #region 🔖Constraint: Model name uniqueness within type
 
 export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7539,9 +7539,9 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Model name uniqueness within type
+// #endregion 🔖Constraint: Model name uniqueness within type
 
-// #region Constraint: Layer path uniqueness within design
+// #region 🔖Constraint: Layer path uniqueness within design
 
 export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7579,9 +7579,9 @@ export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
   return problems;
 };
 
-// #endregion Constraint: Layer path uniqueness within design
+// #endregion 🔖Constraint: Layer path uniqueness within design
 
-// #region Constraint: Design piece same family constraint
+// #region 🔖Constraint: Design piece same family constraint
 
 export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
@@ -7633,9 +7633,9 @@ const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: strin
   return currentGuid;
 };
 
-// #endregion Constraint: Design piece same family constraint
+// #endregion 🔖Constraint: Design piece same family constraint
 
-// #region Constraint registration
+// #region 🔖Constraint registration
 
 defaultConstraints = [
   semioGuidUniquenessConstraint,
@@ -7652,9 +7652,9 @@ defaultConstraints = [
   semioDesignPieceSameFamilyConstraint,
 ];
 
-// #endregion Constraint registration
+// #endregion 🔖Constraint registration
 
-// #region Validation serialization
+// #region 🔖Validation serialization
 
 export interface SerializableValidationFix {
   title: string;
@@ -7735,8 +7735,8 @@ export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResu
   });
 };
 
-// #endregion Validation serialization
+// #endregion 🔖Validation serialization
 
-// #endregion Validation
+// #endregion 🔖Validation
 
-// #endregion Kit
+// #endregion 🔖Kit

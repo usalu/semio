@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/Design.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Internal State Management
+// #region 🔖Imports
 
 import { useSelector } from "@xstate/react";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
@@ -66,10 +66,6 @@ import {
   useSketchpadActorSafe,
   useTheme,
 } from "./Sketchpad";
-
-// #endregion Internal State Management
-
-// #region Imports
 
 import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
@@ -212,6 +208,10 @@ import {
   useTooltip,
   useType,
 } from "./Sketchpad";
+
+// #endregion 🔖Imports
+
+// #region 🔖 State Management
 
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
 
@@ -1129,7 +1129,7 @@ export function initializeDesignStore() {
   registerDesignAppStoreFactory((parent: any, id: any, state: any) => new DesignStore(parent, id, state));
 }
 
-// #region Design App Plugin Registration
+// #region 🔖Design App Plugin Registration
 
 const designAppPlugin: AppPlugin = {
   id: "design",
@@ -1276,7 +1276,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion Design App Plugin Registration
+// #endregion 🔖Design App Plugin Registration
 
 type DesignAppScope = { id: string };
 const DesignAppScopeContext = createContext<DesignAppScope | null>(null);
@@ -1287,6 +1287,8 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
   useDesignAppInitialize();
   return <>{children}</>;
 };
+
+// #region 🔖 Hooks
 
 function useDesignAppInitialize() {
   const actor = useSketchpadActor();
@@ -1586,7 +1588,7 @@ export function useDesignAppPanelVisibility(): HookResult<PanelVisibility> {
   return fieldToHookResult(useDesignAppPanelVisibilityField());
 }
 
-//#region Action Hooks
+//#region 🔖Action Hooks
 
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
@@ -2043,7 +2045,7 @@ export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id
   return [action, !!store];
 }
 
-//#endregion Action Hooks
+//#endregion 🔖Action Hooks
 
 const EMPTY_COMMANDS = {
   togglePanel: () => {},
@@ -2231,6 +2233,8 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
     });
   }, [actor, state, kitGuid, designGuid]);
 }
+
+// #endregion 🔖 Hooks
 
 function getTransactionAffectedPieces(store: DesignStore | null): { changedPieces: Set<string>; statusMap: Map<string, DiffStatus> } {
   const changedPieces = new Set<string>();
@@ -2660,9 +2664,9 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
   return finalPieceId ? metadata.get(finalPieceId)?.plane : undefined;
 }
 
-// #endregion Imports
+// #endregion 🔖State Management
 
-// #region Footer
+// #region 🔖Footer
 
 export const DesignAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -2776,9 +2780,9 @@ export const DesignAppFooter: FC = () => {
   return null;
 };
 
-// #endregion Footer
+// #endregion 🔖Footer
 
-// #region Tools
+// #region 🔖Tools
 
 export const SelectionNormalTool: Tool<DesignAppState> = {
   id: ToolKind.SELECTION_NORMAL,
@@ -2849,11 +2853,11 @@ export const ToolsToggleGroup: FC = () => {
   );
 };
 
-// #endregion Tools
+// #endregion 🔖Tools
 
-// #region Panels
+// #region 🔖Panels
 
-// #region WindowLibrary
+// #region 🔖WindowLibrary
 
 interface WindowTemplate {
   id: string;
@@ -2983,9 +2987,9 @@ export const WindowLibrary: FC = () => {
   );
 };
 
-// #endregion WindowLibrary
+// #endregion 🔖WindowLibrary
 
-// #region Details
+// #region 🔖Details
 
 export const DesignSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();
@@ -4079,13 +4083,13 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
   );
 };
 
-// #endregion Details
+// #endregion 🔖Details
 
-// #endregion Panels
+// #endregion 🔖Panels
 
-// #region Canvas
+// #region 🔖Canvas
 
-// #region Hover Intent Context
+// #region 🔖Hover Intent Context
 
 interface HoverIntentContextValue {
   hoverClearTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
@@ -4119,7 +4123,7 @@ function useHoverIntent(): HoverIntentContextValue {
   return context;
 }
 
-// #endregion Hover Intent Context
+// #endregion 🔖Hover Intent Context
 
 type SemioConnection = Connection;
 
@@ -4150,7 +4154,7 @@ function usePieceRenderData(pieceGuid: string): PieceRenderData {
   return dataMap.get(pieceGuid) ?? EMPTY_PIECE_RENDER_DATA;
 }
 
-// #region Diagram
+// #region 🔖Diagram
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -6643,9 +6647,9 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 };
 
-// #endregion Diagram
+// #endregion 🔖Diagram
 
-// #region Scene
+// #region 🔖Scene
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 const applyHighlightToLoadedScene = (scene: THREE.Object3D, highlightThreeColor: THREE.Color | null, plasterColor: THREE.Color, plasterEdgeColor: THREE.Color): void => {
@@ -7281,9 +7285,9 @@ const DesignAppScene: FC = () => {
   );
 };
 
-// #endregion Scene
+// #endregion 🔖Scene
 
-// #endregion Canvas
+// #endregion 🔖Canvas
 
 export interface AppProps {}
 
@@ -8012,7 +8016,7 @@ const App: FC<AppProps> = () => {
   );
 };
 
-// #region Settings
+// #region 🔖Settings
 
 const DesignSettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
@@ -8110,7 +8114,7 @@ const DesignSettingsContent: FC = () => {
   );
 };
 
-// #endregion Settings
+// #endregion 🔖Settings
 
 const DesignApp: FC = () => {
   initializeDesignStore();
@@ -8147,7 +8151,7 @@ const DesignApp: FC = () => {
   );
 };
 
-// #region Config
+// #region 🔖Config
 
 export const config: AppConfig = {
   id: "design",
@@ -8181,6 +8185,6 @@ export const config: AppConfig = {
   order: 20,
 };
 
-// #endregion Config
+// #endregion 🔖Config
 
 export default DesignApp;

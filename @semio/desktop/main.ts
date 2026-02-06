@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/desktop/main.ts
 
@@ -17,7 +17,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import { app, BrowserWindow, ipcMain } from "electron";
 import started from "electron-squirrel-startup";
@@ -49,7 +49,7 @@ const createWindow = () => {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 
-  
+
 };
 
 app.on("ready", createWindow);

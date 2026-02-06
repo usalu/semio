@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/.storybook/stories/elements/input/ActionGroup.stories.tsx
 
@@ -17,13 +17,13 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { Copy, Download, ExternalLink } from "lucide-react";
 import { ActionGroup, ActionGroupItem, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
 
-// #region ActionGroup
+// #region 🔖ActionGroup
 const meta = {
   title: "Elements/Input/ActionGroup",
   component: ActionGroup,
@@ -89,4 +89,4 @@ export const Temporary: Story = {
   render: createLevelRender("temporary"),
 };
 
-// #endregion ActionGroup
+// #endregion 🔖ActionGroup

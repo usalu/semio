@@ -1,4 +1,4 @@
-// #region Header
+// #region 🔖Header
 
 // js/semio/sketchpad/elements.tsx
 
@@ -17,9 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
-// #region Imports
+// #region 🔖Imports
 
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -85,9 +85,9 @@ import * as THREE from "three";
 import { Expertise, setExpertiseProvider, useLabel } from "../i18n";
 import { Camera, cn, Plane, Point, Vector } from "../semio";
 
-// #endregion Imports
+// #endregion 🔖Imports
 
-// #region Section Specificity
+// #region 🔖Section Specificity
 
 export enum SectionSpecificity {
   SKETCHPAD = 0,
@@ -99,9 +99,9 @@ export enum SectionSpecificity {
   SELECTION = 30,
 }
 
-// #endregion Section Specificity
+// #endregion 🔖Section Specificity
 
-// #region Interaction Context
+// #region 🔖Interaction Context
 
 interface InteractionCommands {
   setActiveInteraction: (elementId?: string, interactionId?: string) => void;
@@ -125,9 +125,9 @@ export const InteractionProvider: React.FC<{
 const useInteractionCommands = () => React.useContext(InteractionContext);
 const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 
-// #endregion Interaction Context
+// #endregion 🔖Interaction Context
 
-// #region Level Context
+// #region 🔖Level Context
 
 export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
 
@@ -142,9 +142,9 @@ export const LevelProvider: React.FC<{
 
 export const useLevel = () => React.useContext(LevelContext);
 
-// #endregion Level Context
+// #endregion 🔖Level Context
 
-// #region Element
+// #region 🔖Element
 
 export interface Transaction {
   start?: () => void;
@@ -259,9 +259,9 @@ export const getLevelDivideElementClass = (level: Level): string => {
   }
 };
 
-// #endregion Element
+// #endregion 🔖Element
 
-// #region Command
+// #region 🔖Command
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return <CommandPrimitive data-slot="command" className={cn("bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
@@ -346,11 +346,11 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) 
   return <span data-slot="command-shortcut" className={cn("text-muted-foreground ml-auto text-xs tracking-widest", className)} {...props} />;
 }
 
-// #endregion Command
+// #endregion 🔖Command
 
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };
 
-// #region Footer
+// #region 🔖Footer
 
 export interface FooterItem {
   id: string;
@@ -390,9 +390,9 @@ const Footer: React.FC<FooterProps> = ({ items = [], className = "", isVisible =
 
 export { Footer };
 
-// #endregion Footer
+// #endregion 🔖Footer
 
-// #region Layout
+// #region 🔖Layout
 
 export interface LayoutProps {
   navbar?: React.ReactNode;
@@ -437,9 +437,9 @@ const Layout: React.FC<LayoutProps> = ({ navbar, footer, leftPanel, middlePanel,
 
 export { Layout };
 
-// #endregion Layout
+// #endregion 🔖Layout
 
-// #region Popover
+// #region 🔖Popover
 
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
@@ -472,9 +472,9 @@ function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitiv
 
 export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 
-// #endregion Popover
+// #endregion 🔖Popover
 
-// #region Tooltip
+// #region 🔖Tooltip
 
 export interface TooltipConfig {
   labelKey: string;
@@ -673,9 +673,9 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   );
 }
 
-// #endregion Tooltip
+// #endregion 🔖Tooltip
 
-// #region Base Components
+// #region 🔖Base Components
 
 interface LabelProps {
   id: string;
@@ -703,9 +703,9 @@ function Label({ id, children, className, labelElementId }: LabelProps) {
   );
 }
 
-// #endregion Base Components
+// #endregion 🔖Base Components
 
-// #region Display Components
+// #region 🔖Display Components
 
 interface SemioTooltipProps {
   children: React.ReactElement;
@@ -745,7 +745,7 @@ function IdSemioTooltip({ children, id }: IdSemioTooltipProps) {
 
 export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
 
-// #region Aside
+// #region 🔖Aside
 
 export interface AsideProps {
   kind?: "note" | "tip" | "caution" | "danger";
@@ -784,9 +784,9 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
   );
 };
 
-// #endregion Aside
+// #endregion 🔖Aside
 
-// #region Avatar
+// #region 🔖Avatar
 
 const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, ...props }, ref) => (
   <AvatarPrimitive.Root ref={ref} data-slot="avatar" className={cn("relative flex size-small shrink-0 overflow-hidden rounded-full border border-element", className)} {...props} />
@@ -868,9 +868,9 @@ TableAvatar.displayName = "TableAvatar";
 
 export { Avatar, AvatarFallback, AvatarImage };
 
-// #endregion Avatar
+// #endregion 🔖Avatar
 
-// #region Card
+// #region 🔖Card
 
 export interface CardProps {
   title: string;
@@ -903,9 +903,9 @@ export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, c
   return <div className={`grid grid-cols-1 md:grid-cols-2 gap-medium my-medium ${className}`}>{children}</div>;
 };
 
-// #endregion Card
+// #endregion 🔖Card
 
-// #region Spinner
+// #region 🔖Spinner
 
 export interface SpinnerProps {
   size?: "small" | "medium" | "large";
@@ -922,9 +922,9 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
   );
 };
 
-// #endregion Spinner
+// #endregion 🔖Spinner
 
-// #region NotFound
+// #region 🔖NotFound
 
 export interface NotFoundProps {
   title: string;
@@ -951,9 +951,9 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
   );
 };
 
-// #endregion NotFound
+// #endregion 🔖NotFound
 
-// #region LoadingRow
+// #region 🔖LoadingRow
 
 export interface LoadingRowProps {
   name: string;
@@ -971,9 +971,9 @@ export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = 
   );
 };
 
-// #endregion LoadingRow
+// #endregion 🔖LoadingRow
 
-// #region DiagramNode
+// #region 🔖DiagramNode
 
 export interface DiagramNodeProps {
   content: React.ReactNode;
@@ -1019,9 +1019,9 @@ export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => voi
   return <DiagramNode content={useLabel(id)} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />;
 };
 
-// #endregion DiagramNode
+// #endregion 🔖DiagramNode
 
-// #region HoverCard
+// #region 🔖HoverCard
 
 function HoverCard({ ...props }: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
@@ -1050,9 +1050,9 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
 
 export { HoverCard, HoverCardContent, HoverCardTrigger };
 
-// #endregion HoverCard
+// #endregion 🔖HoverCard
 
-// #region Icons
+// #region 🔖Icons
 
 interface CursorProps {
   color: string;
@@ -1082,9 +1082,9 @@ const Cursor: React.FC<CursorProps> = ({ color, x = 0, y = 0 }) => {
 
 export { Cursor };
 
-// #endregion Icons
+// #endregion 🔖Icons
 
-// #region Section
+// #region 🔖Section
 
 export interface SectionProps {
   id?: string;
@@ -1108,9 +1108,9 @@ const Section: React.FC<SectionProps> = ({ id, title, children, className = "" }
 
 export { Section };
 
-// #endregion Section
+// #endregion 🔖Section
 
-// #region Steps
+// #region 🔖Steps
 
 export interface StepsProps {
   children: React.ReactNode;
@@ -1121,13 +1121,13 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
   return <div className={`steps-container space-y-medium my-medium ${className}`}>{children}</div>;
 };
 
-// #endregion Steps
+// #endregion 🔖Steps
 
-// #endregion Display Components
+// #endregion 🔖Display Components
 
-// #region Input Components
+// #region 🔖Input Components
 
-// #region ActionGroup
+// #region 🔖ActionGroup
 
 const actionGroupItemVariants = cva(
   "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:!size-[tiny] [&_svg]:!max-w-tiny [&_svg]:!max-h-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single",
@@ -1309,7 +1309,7 @@ function Action({ className, id, icon, text, as = "button", ...props }: ActionPr
 export { Action, ActionDropdown, ActionGroup, ActionGroupItem, actionGroupItemVariants };
 export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
 
-// #endregion ActionGroup
+// #endregion 🔖ActionGroup
 
 const buttonGroupItemVariants = cva(
   "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap h-medium aspect-square p-single overflow-hidden",
@@ -1474,7 +1474,7 @@ function ButtonCycle<T extends string = string>({ className, id, showLabel, valu
 export { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVariants };
 export type { ButtonCycleProps, ButtonProps };
 
-// #region Combobox
+// #region 🔖Combobox
 
 interface ComboboxOption {
   value: string;
@@ -1564,9 +1564,9 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
   return comboboxElement;
 };
 
-// #endregion Combobox
+// #endregion 🔖Combobox
 
-// #region Input
+// #region 🔖Input
 
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;
@@ -1680,9 +1680,9 @@ function Input({ className, type, lazy, value: externalValue, onChange, onLazyCh
 
 export { Input };
 
-// #endregion Input
+// #endregion 🔖Input
 
-// #region Select
+// #region 🔖Select
 
 function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
   const transaction = useTransaction();
@@ -1852,9 +1852,9 @@ const ChevronUpIcon = ChevronDownIconAlt;
 
 export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue };
 
-// #endregion Select
+// #endregion 🔖Select
 
-// #region Slider
+// #region 🔖Slider
 
 function Slider({
   className,
@@ -2070,9 +2070,9 @@ function Slider({
 
 export { Slider };
 
-// #endregion Slider
+// #endregion 🔖Slider
 
-// #region Stepper
+// #region 🔖Stepper
 
 interface StepperProps extends ElementProps {
   value?: number;
@@ -2300,9 +2300,9 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   return <Label id={id}>{stepperElement}</Label>;
 };
 
-// #endregion Stepper
+// #endregion 🔖Stepper
 
-// #region Textarea
+// #region 🔖Textarea
 
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;
@@ -2395,9 +2395,9 @@ function Textarea({ className, lazy, value: externalValue, onChange, onLazyChang
 
 export { Textarea };
 
-// #endregion Textarea
+// #endregion 🔖Textarea
 
-// #region Toggle
+// #region 🔖Toggle
 
 const toggleVariants = cva(
   "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden",
@@ -2457,9 +2457,9 @@ type ToggleProps<T extends string = string> = ToggleStandardProps | ToggleWithAc
 
 export type { ToggleProps };
 
-// #endregion Toggle
+// #endregion 🔖Toggle
 
-// #region ToggleGroup
+// #region 🔖ToggleGroup
 
 const ToggleGroupContext = React.createContext<{ level: Level }>({
   level: "base",
@@ -2700,13 +2700,13 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
 
 export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 
-// #endregion ToggleGroup
+// #endregion 🔖ToggleGroup
 
-// #endregion Input Components
+// #endregion 🔖Input Components
 
-// #region Aggregation Components
+// #region 🔖Aggregation Components
 
-// #region Accordion
+// #region 🔖Accordion
 
 function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
@@ -2744,9 +2744,9 @@ function AccordionContent({ className, children, ...props }: React.ComponentProp
 
 export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
 
-// #endregion Accordion
+// #endregion 🔖Accordion
 
-// #region Collapsible
+// #region 🔖Collapsible
 
 function Collapsible({ ...props }: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
   return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />;
@@ -2762,9 +2762,9 @@ function CollapsibleContent({ ...props }: React.ComponentProps<typeof Collapsibl
 
 export { Collapsible, CollapsibleContent, CollapsibleTrigger };
 
-// #endregion Collapsible
+// #endregion 🔖Collapsible
 
-// #region Dialog
+// #region 🔖Dialog
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -2844,9 +2844,9 @@ function DialogDescription({ className, ...props }: React.ComponentProps<typeof 
 
 export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogOverlay, DialogPortal, DialogTitle, DialogTrigger };
 
-// #endregion Dialog
+// #endregion 🔖Dialog
 
-// #region Resizable
+// #region 🔖Resizable
 
 function ResizablePanelGroup({ className, ...props }: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) {
   return <ResizablePrimitive.PanelGroup data-slot="resizable-panel-group" className={cn("flex h-full w-full data-[panel-group-direction=vertical]:flex-col", className)} {...props} />;
@@ -2911,9 +2911,9 @@ function ResizableHandle({ className, onMouseDown: externalOnMouseDown, onMouseE
 
 export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 
-// #endregion Resizable
+// #endregion 🔖Resizable
 
-// #region Scrollable
+// #region 🔖Scrollable
 
 const Scrollable = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(({ className, children, orientation = "vertical", ...props }, ref) => {
   return (
@@ -2951,9 +2951,9 @@ function ScrollBar({ className, orientation = "vertical", ...props }: React.Comp
 
 export { Scrollable, ScrollBar };
 
-// #endregion Scrollable
+// #endregion 🔖Scrollable
 
-// #region Band
+// #region 🔖Band
 
 export interface BandItem {
   content: React.ReactNode;
@@ -2993,9 +2993,9 @@ function Band({ items, scrollable = true, className, id }: BandProps) {
 
 export { Band as Band };
 
-// #endregion Band
+// #endregion 🔖Band
 
-// #region Strip
+// #region 🔖Strip
 
 export interface StripItem {
   content: React.ReactNode;
@@ -3035,9 +3035,9 @@ function Strip({ items, scrollable = true, className, id }: StripProps) {
 
 export { Strip };
 
-// #endregion Strip
+// #endregion 🔖Strip
 
-// #region Navbar
+// #region 🔖Navbar
 
 export interface NavbarItem {
   content: React.ReactNode;
@@ -3068,9 +3068,9 @@ function Navbar({ items, className }: NavbarProps) {
 
 export { Navbar };
 
-// #endregion Navbar
+// #endregion 🔖Navbar
 
-// #region Tabs
+// #region 🔖Tabs
 
 function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
   return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-single", className)} {...props} />;
@@ -3106,9 +3106,9 @@ function TabsContent({ className, ...props }: React.ComponentProps<typeof TabsPr
 
 export { Tabs, TabsContent, TabsList, TabsTrigger };
 
-// #endregion Tabs
+// #endregion 🔖Tabs
 
-// #region Tree
+// #region 🔖Tree
 
 interface TreeStateContextValue {
   openStates: Record<string, boolean>;
@@ -3820,13 +3820,13 @@ Tree.Section = Tree.Files;
 
 export const FileTree = Tree.Files;
 
-// #endregion Tree
+// #endregion 🔖Tree
 
-// #endregion Aggregation Components
+// #endregion 🔖Aggregation Components
 
-// #region Navigation Components
+// #region 🔖Navigation Components
 
-// #region Breadcrumb
+// #region 🔖Breadcrumb
 
 export interface BreadcrumbItemData {
   id?: string;
@@ -3993,9 +3993,9 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
 
 export { Breadcrumb, BreadcrumbItem };
 
-// #endregion Breadcrumb
+// #endregion 🔖Breadcrumb
 
-// #region PageNavigation
+// #region 🔖PageNavigation
 
 export interface PageNavigationLink {
   path: string;
@@ -4044,13 +4044,13 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ prev, next }) => {
 
 export { PageNavigation };
 
-// #endregion PageNavigation
+// #endregion 🔖PageNavigation
 
-// #endregion Navigation Components
+// #endregion 🔖Navigation Components
 
-// #region Panel Components
+// #region 🔖Panel Components
 
-// #region Panel
+// #region 🔖Panel
 
 export type ResizeSide = "left" | "right" | "top" | "bottom";
 
@@ -4202,9 +4202,9 @@ const PanelSectionWrapper: React.FC<{ section: PanelSection; defaultOpen: boolea
 
 export { Panel };
 
-// #endregion Panel
+// #endregion 🔖Panel
 
-// #region PanelGroup
+// #region 🔖PanelGroup
 
 export interface PanelGroupProps {
   children: React.ReactNode;
@@ -4220,9 +4220,9 @@ const PanelGroup: React.FC<PanelGroupProps> = ({ children, className = "", posit
 
 export { PanelGroup };
 
-// #endregion PanelGroup
+// #endregion 🔖PanelGroup
 
-// #region LeftPanel
+// #region 🔖LeftPanel
 
 export type LeftPanelProps = Omit<PanelProps, "resizeSide">;
 
@@ -4230,9 +4230,9 @@ const LeftPanel: React.FC<LeftPanelProps> = (props) => <Panel {...props} resizeS
 
 export { LeftPanel };
 
-// #endregion LeftPanel
+// #endregion 🔖LeftPanel
 
-// #region RightPanel
+// #region 🔖RightPanel
 
 export type RightPanelProps = Omit<PanelProps, "resizeSide">;
 
@@ -4240,9 +4240,9 @@ const RightPanel: React.FC<RightPanelProps> = (props) => <Panel {...props} resiz
 
 export { RightPanel };
 
-// #endregion RightPanel
+// #endregion 🔖RightPanel
 
-// #region MiddlePanel
+// #region 🔖MiddlePanel
 
 export type MiddlePanelProps = Omit<PanelProps, "resizeSide"> & {
   resizeSide?: "left" | "right";
@@ -4252,9 +4252,9 @@ const MiddlePanel: React.FC<MiddlePanelProps> = ({ resizeSide = "right", ...prop
 
 export { MiddlePanel };
 
-// #endregion MiddlePanel
+// #endregion 🔖MiddlePanel
 
-// #region BottomPanel
+// #region 🔖BottomPanel
 
 export type BottomPanelProps = Omit<PanelProps, "resizeSide">;
 
@@ -4262,9 +4262,9 @@ const BottomPanel: React.FC<BottomPanelProps> = (props) => <Panel {...props} res
 
 export { BottomPanel };
 
-// #endregion BottomPanel
+// #endregion 🔖BottomPanel
 
-// #region SidePanel
+// #region 🔖SidePanel
 
 export interface SidePanelTabConfig {
   id: string;
@@ -4375,9 +4375,9 @@ const SidePanel: React.FC<SidePanelProps> = ({ position, visible = true, size = 
 
 export { SidePanel };
 
-// #endregion SidePanel
+// #endregion 🔖SidePanel
 
-// #region HudPanel
+// #region 🔖HudPanel
 
 export interface HudPanelTabConfig {
   id: string;
@@ -4483,13 +4483,13 @@ const HudPanel: React.FC<HudPanelProps> = ({ visible = true, size = 400, onSizeC
 
 export { HudPanel };
 
-// #endregion HudPanel
+// #endregion 🔖HudPanel
 
-// #endregion Panel Components
+// #endregion 🔖Panel Components
 
-// #region Window Components
+// #region 🔖Window Components
 
-// #region Window
+// #region 🔖Window
 
 export interface WindowConfig {
   id: string;
@@ -4588,9 +4588,9 @@ const Window: React.FC<WindowProps> = ({ id, children, onDoubleClick, className 
 
 export { Window };
 
-// #endregion Window
+// #endregion 🔖Window
 
-// #region Page
+// #region 🔖Page
 
 export interface PageFrontmatter {
   title?: string;
@@ -4635,9 +4635,9 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
     </Scrollable>
   );
 };
-// #endregion Page
+// #endregion 🔖Page
 
-// #region Diagram
+// #region 🔖Diagram
 
 export { applyNodeChanges, Background, BackgroundVariant, BaseEdge, forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, getBezierPath, Handle, Position, ReactFlow, ReactFlowProvider, useInternalNode, useReactFlow, ViewportPortal };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
@@ -5024,9 +5024,9 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
   );
 };
 
-// #endregion Diagram
+// #endregion 🔖Diagram
 
-// #region Scene
+// #region 🔖Scene
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
@@ -5550,9 +5550,9 @@ export const SceneSkeleton: React.FC = () => (
   </div>
 );
 
-// #endregion Scene
+// #endregion 🔖Scene
 
-// #region Table
+// #region 🔖Table
 
 export type SortDirection = "asc" | "desc";
 
@@ -5901,6 +5901,6 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount 
   </Scrollable>
 );
 
-// #endregion Table
+// #endregion 🔖Table
 
-// #endregion Window Components
+// #endregion 🔖Window Components

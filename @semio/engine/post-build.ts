@@ -1,5 +1,5 @@
 #!/usr/bin/env tsx
-// #region Header
+// #region 🔖Header
 
 // py/engine/post-build.ts
 
@@ -18,7 +18,7 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion Header
+// #endregion 🔖Header
 
 import { existsSync, renameSync, rmSync } from "fs";
 import { join } from "path";
