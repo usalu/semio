@@ -4,7 +4,7 @@
   "prompt": "Optimize TypeApp state management to fix overfetching and overrendering",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.86Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Optimize TypeApp state management to fix overfetching and overrendering",
       "llm": "sonnet-4-5",

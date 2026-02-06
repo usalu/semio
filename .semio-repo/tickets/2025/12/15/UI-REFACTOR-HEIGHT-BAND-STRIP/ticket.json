@@ -4,7 +4,7 @@
   "prompt": "\"The ui system needs to be more tightly integrated with itself. Bands horizontal only, optionally scrollable. New Strip component. Standardized heights: tiny/small/medium/large.\"",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.963Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "\"The ui system needs to be more tightly integrated with itself. Bands horizontal only, optionally scrollable. New Strip component. Standardized heights: tiny/small/medium/large.\"",
       "llm": "opus-4-5",

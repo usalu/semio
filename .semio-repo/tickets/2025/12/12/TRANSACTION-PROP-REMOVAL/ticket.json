@@ -4,7 +4,7 @@
   "prompt": "Remove transaction props from elements",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-16T17:06:07.92Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Remove transaction props from elements",
       "llm": "sonnet-4-5",

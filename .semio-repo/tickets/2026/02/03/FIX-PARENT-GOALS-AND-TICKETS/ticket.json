@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-02-03T08:54:16.508931666Z",
   "finished": "2026-02-03T10:03:04.930721236Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix parent goal/ticket functionality, restructure goal tree, and assign tickets.",
       "llm": "gemini-3-pro",

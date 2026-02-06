@@ -4,7 +4,7 @@
   "prompt": "Migration from 2025-11-21_KIT-IMPORT-EXPORT.md",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "started": "2025-12-16T17:06:07.684Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migration from 2025-11-21_KIT-IMPORT-EXPORT.md",
       "llm": "sonnet-4",

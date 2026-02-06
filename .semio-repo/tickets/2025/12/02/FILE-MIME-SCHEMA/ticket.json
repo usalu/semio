@@ -4,7 +4,7 @@
   "prompt": "Add mime field to File schema and migrate kit_metabolism.json",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "started": "2025-12-16T17:06:07.803Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Add mime field to File schema and migrate kit_metabolism.json",
       "llm": "sonnet-4-5",

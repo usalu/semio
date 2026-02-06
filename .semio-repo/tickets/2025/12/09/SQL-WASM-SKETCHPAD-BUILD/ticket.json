@@ -4,7 +4,7 @@
   "prompt": "Fix sql-wasm.wasm not being included in sketchpad production build",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.901Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix sql-wasm.wasm not being included in sketchpad production build",
       "llm": "sonnet-4-5",

@@ -6,7 +6,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-29T19:44:05.302393Z",
   "finished": "2026-02-03T08:49:39.986270315Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migrated from legacy files",
       "llm": "",

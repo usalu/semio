@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/SANDBOXED-REPO/ZERO-TOUCH-DEVCONTAINER",
   "started": "2026-01-28T14:08:03.230808637Z",
   "finished": "2026-01-28T14:09:56.918733579Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Windsurf MCP config at ~/.codeium/windsurf/mcp_config.json after rebuild.",
       "llm": "gpt-5-2",

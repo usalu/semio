@@ -4,7 +4,7 @@
   "prompt": "Remove reflection from Grasshopper components and hardcode inputs/outputs",
   "goal": "R26-03/RUNNING-NET/RUNNING-GRASSHOPPER",
   "started": "2025-12-16T17:06:07.84Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Remove reflection from Grasshopper components and hardcode inputs/outputs",
       "llm": "sonnet-4-5",

@@ -4,7 +4,7 @@
   "prompt": "Migrated from legacy files",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-29T19:44:03.9672Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migrated from legacy files",
       "llm": "",

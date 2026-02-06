@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-SECTION-MECHANISM",
   "started": "2026-01-29T11:15:50.340551584Z",
   "finished": "2026-01-29T11:16:19.392915079Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The definitions tree item icon should be different compared to the section tree item icon.",
       "llm": "sonnet-4-5",

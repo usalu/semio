@@ -4,7 +4,7 @@
   "prompt": "Hooks auto-inject command origins via useOrigin",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2025-12-16T17:06:07.911Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Hooks auto-inject command origins via useOrigin",
       "llm": "sonnet-4-5",

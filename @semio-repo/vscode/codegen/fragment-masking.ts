@@ -3,7 +3,6 @@ import { ResultOf, DocumentTypeDecoration, TypedDocumentNode } from '@graphql-ty
 import { FragmentDefinitionNode } from 'graphql';
 import { Incremental } from './graphql';
 
-
 export type FragmentType<TDocumentType extends DocumentTypeDecoration<any, any>> = TDocumentType extends DocumentTypeDecoration<
   infer TType,
   any

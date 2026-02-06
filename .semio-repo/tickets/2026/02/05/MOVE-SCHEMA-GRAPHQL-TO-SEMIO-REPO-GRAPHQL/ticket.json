@@ -1,7 +1,7 @@
 {
   "title": "Move Schema Graphql to Semio Repo Graphql",
   "status": "closed",
-  "prompt": "Move schema.graphql and queries from @semio-repo/go to @semio-repo/graphql. Fix the typo directory @semio-repo/grapqhl. Update all references.",
+  "prompt": "Move schema.graphql and queries from @semio-repo/cli to @semio-repo/graphql. Fix the typo directory @semio-repo/grapqhl. Update all references.",
   "summary": "Also fixed VSCode extension codegen.ts schema path reference.",
   "goal": "AI-OPTIMIZED-REPO/REPO-SERVER",
   "started": "2026-02-05T10:50:51.006084564Z",
@@ -18,7 +18,7 @@
         "client": "claude-code"
       },
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
-      "prompt": "Move schema.graphql and queries from @semio-repo/go to @semio-repo/graphql. Fix the typo directory @semio-repo/grapqhl. Update all references.",
+      "prompt": "Move schema.graphql and queries from @semio-repo/cli to @semio-repo/graphql. Fix the typo directory @semio-repo/grapqhl. Update all references.",
       "llm": "opus-4-5",
       "diff": {
         "bundles": {
@@ -38,7 +38,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/go/gqlgen.yml",
+              "path": "📄@semio-repo/cli/gqlgen.yml",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -563,7 +563,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/go/gqlgen.yml",
+              "path": "📄@semio-repo/cli/gqlgen.yml",
               "lines": {
                 "added": 1,
                 "removed": 1

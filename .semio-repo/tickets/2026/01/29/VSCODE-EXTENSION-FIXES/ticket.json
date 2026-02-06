@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-29T21:09:40.387526517Z",
   "finished": "2026-02-03T08:50:03.131685742Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "vscode-extension-fixes",
       "llm": "gemini-3-pro",

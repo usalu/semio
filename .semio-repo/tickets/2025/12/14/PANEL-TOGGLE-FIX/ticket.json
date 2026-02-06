@@ -4,7 +4,7 @@
   "prompt": "Fix navbar panel dropdown toggles to work independently for left/right groups",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.943Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix navbar panel dropdown toggles to work independently for left/right groups",
       "llm": "sonnet-4-5",

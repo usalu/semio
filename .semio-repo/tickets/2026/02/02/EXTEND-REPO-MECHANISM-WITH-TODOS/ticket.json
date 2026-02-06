@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TODO-MECHANISM",
   "started": "2026-02-02T21:22:30.692347687Z",
   "finished": "2026-02-03T08:50:09.597106847Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The semio repo mechanism should be extanded with: todos...",
       "llm": "gemini-3-pro",

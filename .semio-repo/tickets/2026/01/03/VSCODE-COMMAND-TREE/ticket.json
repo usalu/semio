@@ -4,7 +4,7 @@
   "prompt": "Show VS Code extension commands in a command/subcommand tree",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-03T02:39:23Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Show VS Code extension commands in a command/subcommand tree",
       "llm": "sonnet-4-5",

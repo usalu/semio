@@ -5,7 +5,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2025-12-31T00:00:00Z",
   "finished": "2025-12-31T00:00:00Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Debug report for VS Code extension tickets section appearing empty",
       "llm": "sonnet-4-5",

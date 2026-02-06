@@ -4,7 +4,7 @@
   "prompt": "The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.956Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The dev docs are significantly incomplete with the implementation. All apps in sketchpad are missing. The core mechanisms are not explained etc.",
       "llm": "opus-4-5",

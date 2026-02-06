@@ -1070,8 +1070,6 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
         <MDXProvider>
           <Suspense fallback={<div className="text-muted-foreground">Loading...</div>}>{MDXContent ? <MDXContent /> : <p className="text-muted-foreground">No content available</p>}</Suspense>
         </MDXProvider>
-
-        {/* Auto-inject section tree on index pages */}
         {treeData && (
           <TreeStateProvider>
             <div className="not-prose my-8 p-6 rounded-lg border border-element bg-card">
@@ -1104,7 +1102,6 @@ export const DocsAppFooter: FC = () => {
     // TODO: Add docs-specific footer items here
 
     return () => {
-      // Cleanup
     };
   }, [appType, addFooterItem, removeFooterItem]);
 

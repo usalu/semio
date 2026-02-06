@@ -4,7 +4,7 @@
   "prompt": "Simplified panel tests to verify toggle existence",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.868Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Simplified panel tests to verify toggle existence",
       "llm": "sonnet-4-5",

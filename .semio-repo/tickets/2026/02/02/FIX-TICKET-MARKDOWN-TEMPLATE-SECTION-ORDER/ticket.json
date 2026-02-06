@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-02-02T21:31:17.046234186Z",
   "finished": "2026-02-02T21:36:20.998027236Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The ticket.md template when creating a new ticket shows sections in wrong order. Current: Ticket, Plan, Todos, Changes, Log, Summary. Expected: Ticket, Summary, Changes, Log, Todos, Plan.",
       "llm": "opus-4-5",

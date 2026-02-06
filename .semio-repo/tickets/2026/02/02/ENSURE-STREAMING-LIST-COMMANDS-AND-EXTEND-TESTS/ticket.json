@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-02-02T19:33:28.636156242Z",
   "finished": "2026-02-02T20:13:15.398081345Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Make sure all list commands are streaming and extend tests to cover all commands in normal, json and markdown mode.",
       "llm": "gemini-3-pro",

@@ -3,54 +3,54 @@
   "version": "0.2.0",
   "configurations": [
     // ========================================
-    // @semio-repo/go
+    // @semio-repo/cli
     // ========================================
     {
-      "name": "@semio-repo/go dev",
+      "name": "@semio-repo/cli dev",
       "type": "go",
       "request": "launch",
       "mode": "debug",
-      "program": "${workspaceFolder}/@semio-repo/go",
+      "program": "${workspaceFolder}/@semio-repo/cli",
       "cwd": "${workspaceFolder}",
       "args": [
         "help"
       ]
     },
     {
-      "name": "@semio-repo/go test",
+      "name": "@semio-repo/cli test",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
         "test",
-        "@semio-repo/go"
+        "@semio-repo/cli"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
     {
-      "name": "@semio-repo/go build",
+      "name": "@semio-repo/cli build",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
         "build",
-        "@semio-repo/go"
+        "@semio-repo/cli"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
     {
-      "name": "@semio-repo/go preflight",
+      "name": "@semio-repo/cli preflight",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
         "nx",
         "preflight",
-        "@semio-repo/go"
+        "@semio-repo/cli"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"

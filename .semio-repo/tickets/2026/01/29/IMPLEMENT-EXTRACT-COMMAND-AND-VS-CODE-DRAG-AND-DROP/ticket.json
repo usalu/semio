@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-29T09:25:37.141338953Z",
   "finished": "2026-01-29T09:26:06.846062658Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Add extract command to repo CLI/GraphQL and implement drag and drop in VS Code extension codebase view",
       "llm": "gemini-3-pro",

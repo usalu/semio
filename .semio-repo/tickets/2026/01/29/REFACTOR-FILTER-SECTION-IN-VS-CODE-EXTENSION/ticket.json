@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-29T19:16:40.146697683Z",
   "finished": "2026-02-03T08:50:00.799004362Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Refactor the filter section in the semio-repo sideview of vscode to match the specified structure. Toggles should be menu items, not tree items. update tests.",
       "llm": "gemini-3-pro",

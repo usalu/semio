@@ -328,7 +328,6 @@ async function initHome(page: Page) {
   const { errors, warnings, messages } = await initConsole(page);
 
   await page.goto("/");
-  // await page.waitForLoadState("networkidle");
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(2000);
 
@@ -1398,7 +1397,7 @@ test.describe("sketchpad", () => {
       await expect(rightToggle).toBeVisible({ timeout: 5000 });
       console.log("[Design Test] Right toggle is visible");
     }
-    // #endregion
+// #endregion 🔖Panel Toggles Check
 
     const footer = page.locator("footer").first();
     await expect(footer).toBeVisible({ timeout: 10000 });

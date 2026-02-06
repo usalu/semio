@@ -11,7 +11,7 @@
   "github": {
     "milestone": "https://github.com/usalu/semio/milestone/10"
   },
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Create a comprehensive plan for the r26-02 release that focuses on:\n1. Sketchpad MVP functionality - core features needed for basic operation\n2. Updated documentation - getting started guides, API docs, and examples\n3. Example projects - demonstrative implementations showcasing key capabilities\n4. Quality assurance - testing and validation of MVP features\n5. Release preparation - packaging, deployment, and distribution considerations\n\nThe goal should ensure sketchpad is functional and usable for early adopters with proper documentation support.",
       "llm": "sonnet-4-5",

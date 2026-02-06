@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-02-03T17:28:19.164406822Z",
   "finished": "2026-02-03T19:30:14.41809036Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Refactor the @semio-repo/vscode extension sideview to consolidate into 'Monorepo' and 'Filter' sections with specific navigation hierarchy and filtering capabilities. Extend tests to cover new features.",
       "llm": "sonnet-4-5",

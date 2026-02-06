@@ -8,7 +8,7 @@
   },
   "started": "2026-02-03T19:11:51.693765705Z",
   "finished": "2026-02-03T19:13:34.392795273Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The bundle tree command is not showing properly as a tree of project-\u003ebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
       "llm": "opus-4-5",
@@ -26,7 +26,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/go",
+              "path": "@semio-repo/cli",
               "lines": {
                 "added": 34,
                 "removed": 0
@@ -46,7 +46,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/go/main.go",
+              "path": "📄@semio-repo/cli/main.go",
               "lines": {
                 "added": 48,
                 "removed": 14
@@ -60,7 +60,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/go/main.go#Cli Adapter",
+              "path": "📄@semio-repo/cli/main.go#Cli Adapter",
               "lines": {
                 "added": 48,
                 "removed": 14
@@ -74,14 +74,14 @@
           "renamed": [],
           "modified": [
             {
-              "path": "📄@semio-repo/go/main.go#Cli Adapter§bundleCommand",
+              "path": "📄@semio-repo/cli/main.go#Cli Adapter§bundleCommand",
               "lines": {
                 "added": 48,
                 "removed": 14
               }
             },
             {
-              "path": "📄@semio-repo/go/main.go#Cli Adapter§bundleCommand",
+              "path": "📄@semio-repo/cli/main.go#Cli Adapter§bundleCommand",
               "lines": {
                 "added": 0,
                 "removed": 14

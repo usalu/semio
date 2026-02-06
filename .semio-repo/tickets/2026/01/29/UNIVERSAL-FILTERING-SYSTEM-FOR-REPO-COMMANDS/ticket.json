@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-29T11:40:11.004712157Z",
   "finished": "2026-01-29T12:24:22.627979859Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Add --only-<kind> flags for every --no-<kind> flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
       "llm": "sonnet-4-5",

@@ -4,7 +4,7 @@
   "prompt": "Migrated from legacy files",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-29T19:44:04.586399Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migrated from legacy files",
       "llm": "",

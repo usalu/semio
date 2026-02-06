@@ -208,8 +208,8 @@ The assistant helps you on every step in the design process with semio ✍️
 
 The VS Code extension keeps tickets close to daily work with inline close or reopen actions that act on the selected ticket, commit visibility, and concise hover descriptions for quick scanning.
 Automation tooling rejects invalid arguments and non-file paths so MCP-driven workflows surface mistakes immediately.
-Ticket creation MUST require a Goal ID and iteration starts ALWAYS request a description, while file lists can be added later when needed.
-Ticket iteration and finish actions attach git-derived file lists and line totals scoped to the ticket files so progress and impact are visible from the ticket view.
+Ticket creation MUST require a Goal ID and interaction starts ALWAYS request a description, while file lists can be added later when needed.
+Ticket interaction and finish actions attach git-derived file lists and line totals scoped to the ticket files so progress and impact are visible from the ticket view.
 Code hygiene diagnostics ignore comment markers inside string literals so snippets and URLs stay clean of false comment warnings.
 Code hygiene diagnostics flag orphan definitions outside named sections so the file structure stays consistent.
 The command browser mirrors the repo command and subcommand hierarchy so discovery follows the same structure as the CLI.
@@ -758,20 +758,24 @@ Afterwards you can install uv with this command:
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-Then you can run `@semio-repo/go/go preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
+Then you can run `@semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 ## 🎫 Tickets [↑](#-development)
 
-Contributor workflows use tickets to track each task across iterations.
-A ticket iteration records a prompt, author, and is bounded by `{started, finished}` timestamps.
+Contributor workflows use tickets to track each task across interactions.
+A ticket interaction records a prompt, author, and is bounded by `{started, finished}` timestamps.
 Ticket workflows record file touch lists and per-file line diffs so work is auditable and easy to continue.
 Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and summary sections so all task context stays in one place, and an `important.md` file for compulsory actions that must be completed before the ticket can be finished.
 
 ## 🧰 Violations [↑](#-development)
 
 Contributor workflows include an automated code-quality report that highlights inline and multi-line comments (including JSDoc blocks), missing license headers, malformed region blocks, and empty regions before changes are shared.
-It also enforces module boundaries and domain-neutral terminology for shared UI building blocks, while automated fixes remove empty regions to keep region structure meaningful.
+It also enforces module boundaries and domain-neutral terminology for shared UI building blocks.
 Each reported problem includes a short reason and solution so contributors can resolve violations quickly.
+
+The `fix` command applies autofixes for all autofixable violation kinds: it removes empty sections (including one surrounding blank line, preferring the preceding one), resolves missing section end names by walking backward through nested sections to find the matching start, corrects mismatched section end names, removes contiguous inline comment blocks (including intervening blank lines), and removes block and JSDoc comments.
+After removing lines, a post-processing step collapses consecutive blank lines so the output stays clean.
+Non-autofixable violations (missing headers, unnamed region starts, orphan definitions) are reported but left for manual resolution.
 
 ## 🔌 Port Numbers [↑](#-development-)
 
@@ -913,7 +917,7 @@ Good for larger experiments due to more generous free quota 🧪
 
 </details>
 
-Copilot is our default for most tickets because request-based billing makes fast iteration cheap 💳
+Copilot is our default for most tickets because request-based billing makes fast interaction cheap 💳
 
 #### 🖱️ [Cursor](.cursor) [↑](#-ai-)
 
@@ -1127,18 +1131,26 @@ A component is a piece of software which is packaged independently 🏝️
 ## 🧼 Code Hygiene Hooks [↑](#-bundles-)
 
 The code hygiene hook enforces comment, license, and region policies before changes are shared.
+It helps keep the codebase clean by removing obsolete inline or block comments, while respecting TODOs and active contiguous comment blocks following them.
 It treats empty regions as invalid structure and removes them automatically in fix mode so region blocks stay meaningful and concise.
+It ignores configuration files to avoid breaking structured data with comment prefix injections.
 All code must sit inside named regions; orphan definitions outside any section are reported as code:section:orphan-definition so you can relocate them as full definition blocks.
+Wait, I should also mention the partial removal of comments.
+Inline and block comment fixes are precise: they only remove the comment portion of a line when code is present, preserving the logic integrity.
 
 ## 🧩 Repo Tooling Sync [↑](#-bundles-)
 
 The repo CLI is the single source of truth for ticket workflows and the GraphQL schema that powers tooling.
 The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
-The repo CLI streams command execution as JSONL events and adapters decide whether to render compact human output, nested Markdown lists with `semiorepo://` links, or machine-readable event lines.
+The repo CLI streams command execution as JSONL events and three rendering adapters decide output format: `NDJSONRenderer` (json) emits raw data lines, `HumanRenderer` (text) renders colored terminal output, and `MarkdownRenderer` (md, default) produces pure markdown links.
+Markdown output uses the format `[<id>](<uri>) - <prop1> - <prop2>` for single entities, `- [<id>](<uri>) - <prop1> - <prop2>` for list items, and nested `- ` indentation for tree views. There are no JSON code-block or dump fallback paths — all output resolves to entity-kind-specific renderers.
+The `inferEntityKind(key)` function maps GraphQL operation names (e.g. `ticketOpen`, `goalCreate`) to entity kinds via prefix matching, enabling generic dispatch for mutation results without per-operation switch cases. `renderEntityMarkdownLink(kind, data)` produces the base markdown link format, and `renderEntityMarkdown(kind, data)` wraps it with the `- ` list prefix. Streaming list detection (`" list"` / `" tree"` command suffixes) ensures streamed single-entity events get the correct `- ` prefix in markdown mode.
 When `--json` is active, each stdout line is pure domain data (one JSON object per line) without event wrappers or `{"data": ...}` GraphQL envelopes; errors are written to stderr only, and stdout stays empty on failure so downstream consumers can pipe output directly into `jq` or similar tools without filtering boilerplate.
 Human-readable CLI IDs normalize emoji to text presentation (U+FE0E), replacing emoji presentation selectors and appending the text variant when missing, so monospace terminals reserve stable width before adjacent symbols like `@`.
-The repo binary is consolidated into a single `@semio-repo/go/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
-Go tests for repo tooling are consolidated into a single `@semio-repo/go/main_test.go` so CLI behavior, tool helpers, and output format expectations live in one test suite.
+The codebase uses a dual identification system: emoji-prefixed artifact IDs (primary, for GraphQL/logs/messages/UI) and `semiorepo://` URIs (secondary, for MCP resources and clickable links). `GetArtifactID` and `GetArtifactURI` generate these from kind+data, while `IdToUri` and `UriToId` convert between the two systems. Section and definition URIs encode hierarchy separators (`#`, `§`) as `/`-delimited UPPERCASE-SLUG path segments so URIs remain valid without fragment identifiers. Collection types (projects, bundles, folders, files, sections, definitions, tickets, goals, drafts, todos, policies, violationKinds, contributors, commits) each have dedicated ID and URI formats. The `navigate` MCP tool and `semio.navigate` VS Code command accept either an ID or URI and resolve to the target resource.
+The repo CLI formats timestamps (RFC3339 tickets, YYYY-MM-DD goals) into relative dates (e.g., "1 week ago", "3 weeks from now") in text and markdown outputs so you can track schedules and progress with human-readable context.
+The repo binary is consolidated into a single `@semio-repo/cli/main.go` entrypoint that embeds the engine, CLI command wiring, MCP server mode, and renderers in one place.
+Go tests for repo tooling are consolidated into a single `@semio-repo/cli/main_test.go` so CLI behavior, tool helpers, and output format expectations live in one test suite.
 Legacy adapter packages are removed so every command is dispatched through the same engine event stream and GraphQL executor.
 The streaming core uses a command registry with an emitter that surfaces progress, errors, items, logs, and a terminal done payload so CLI, MCP, and VS Code share one execution model.
 Registry invocation accepts JSON inputs and emits item metadata alongside data payloads so tooling can page through large result sets without rehydrating full responses.
@@ -1161,6 +1173,7 @@ The semio-repo extension targets a VS Code engine range compatible with Cursor (
 VS Code extension packaging requires an unscoped extension name in `@semio-repo/vscode/package.json` so `vsce package` can build the local `.vsix`.
 VS Code extension sidebar views are consolidated into exactly two views: `Monorepo` (the repo tree) and `Filter` (the global filter state).
 The Filter view is not a second tree of options; it is a compact state panel where each filter-kind is represented by one item and the available options are exposed as menu actions on that item.
+Filter items render with emoji plus a name for clarity, while filter option menu actions use emoji-only labels with no codeicons; tooltips explain the filter purpose and current search state without crowding the tree.
 The Filter view updates the shared filter state, and the Monorepo view consumes that state to hide non-matching items across all branches.
 This keeps the UI predictable: expanding nodes always shows structure, while filtering always happens in one place.
 VS Code extension tests run through `@vscode/test-cli` and require a display server on Linux; in headless environments the test script wraps `vscode-test` with `xvfb-run` so Electron can boot without a real `DISPLAY`.
@@ -1189,8 +1202,8 @@ Webhook receivers enrich GitHub issue events, and Discord notifications format p
 
 ## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
 
-Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every iteration records the toolchain context. Parsing is forgiving; for example, `claude-opus-4-5-20251101` resolves to `opus-4-5` by finding it as a substring of the slugified input.
-Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen actions add a prompt comment with the same heading so each iteration is surfaced in GitHub.
+Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every interaction records the toolchain context. Parsing is forgiving; for example, `claude-opus-4-5-20251101` resolves to `opus-4-5` by finding it as a substring of the slugified input.
+Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen actions add a prompt comment with the same heading so each interaction is surfaced in GitHub.
 Ticket closing derives bundle labels from every touched path, adds `@semio-repo` when a file falls outside bundles, and posts a semantic change list for bundles, folders, files, sections, and definitions using status icons plus `-removed`/`+added` counts.
 Ticket summary comments prepend a `# 🔍 Summary` heading so the close summary is visually consistent in GitHub issues.
 Ticket line metrics report full line counts for added and deleted scopes, and diff-based added/removed counts for modified scopes.
@@ -1201,7 +1214,7 @@ Ticket GitHub issues are automatically linked to the usalu project 2 during crea
 Ticket open respects the `CONTINUE` keyword to resume the latest ticket and the `NOTICKET` keyword to skip ticket creation while still running the task.
 These signals keep GitHub issues, metrics, and bundle ownership consistent across CLI, GraphQL, and the VS Code extension.
 Ticket bundle labels come from semantic bundle diffs so README/AGENTS changes do not force `@semio-repo` labels.
-Each ticket iteration stores its own semantic diff payload; tickets no longer keep a top-level diff snapshot.
+Each ticket interaction stores its own semantic diff payload; tickets no longer keep a top-level diff snapshot.
 
 Semantic ticket diffs are computed against a full codebase snapshot exported to `.semio-repo/reports/codebase.json` when `repo analyze` runs without a scope, keeping bundle/folder/file/section/definition changes grounded in the same snapshot structure.
 
@@ -1272,10 +1285,10 @@ Shell files follow the same `# region` and `# endregion` markers as other hash-c
 
 ## 🎫 Ticket System [↑](#-bundles-)
 
-Development work is tracked as tickets composed of iterations. Ticket creation does not create an iteration; iterations are explicitly started and finished, require file lists (`updated`, `created`, `removed`), and iteration finish derives the per-file lists and line stats from git diffs between the last iteration commit (or ticket base) and the current commit. Ticket finish aggregates all iteration files and recomputes total line stats from git against the ticket base commit.
-Ticket entry points require prompt text for ticket creation and iteration start, while file arrays can be omitted at entry and still enforced by iteration rules.
+Development work is tracked as tickets composed of interactions. Ticket creation does not create an interaction; interactions are explicitly started and finished, require file lists (`updated`, `created`, `removed`), and interaction finish derives the per-file lists and line stats from git diffs between the last interaction commit (or ticket base) and the current commit. Ticket finish aggregates all interaction files and recomputes total line stats from git against the ticket base commit.
+Ticket entry points require prompt text for ticket creation and interaction start, while file arrays can be omitted at entry and still enforced by interaction rules.
 Each ticket workspace stores a single `ticket.md` that holds todos, changes, log, and summary sections; closing a ticket writes the summary into the `ticket.md` summary block.
-Line totals only include the files declared in the ticket iterations so unrelated diffs stay out of ticket reports.
+Line totals only include the files declared in the ticket interactions so unrelated diffs stay out of ticket reports.
 Section line metrics map added lines using current file sections, map removed lines using base-commit section ranges, and determine affected definitions from added lines only so edits stay attributed to the right sections.
 Ticket section ranges are stored as line-only start/end integers with no column data so tooling treats them as line spans.
 Temporary scripts, fixtures, and data stay inside the active ticket folder so work-in-progress artifacts remain scoped to the task.
@@ -1566,7 +1579,7 @@ Tree views for tickets, policies, contributors, and commands with search and fil
 
 ### Tickets
 
-Ticket tree items expose inline close or reopen actions that apply to the clicked ticket, list commit entries derived from ticket and iteration commits, and keep hover tooltips limited to the ticket description.
+Ticket tree items expose inline close or reopen actions that apply to the clicked ticket, list commit entries derived from ticket and interaction commits, and keep hover tooltips limited to the ticket description.
 
 ## 🟪 [@semio/net](https://github.com/usalu/semio/tree/main/net) [↑](#-bundles-)
 

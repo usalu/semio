@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 # Plan
@@ -1171,7 +1172,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
 }
 ```
 
-In the **first iteration**, you can:
+In the **first interaction**, you can:
 
 - Keep complex selection logic (`selectConnector`, `deselectConnector`, `selectAll`, `deselectAll`) inside the store (commands), and simply send a generic `TYPE.SYNC` when the store changes.
 - Or, better, mirror what you plan for Design: add a `TYPE.EXECUTE_CMD` event that takes command name + args and uses the returned `TypeAppDiff` to update the XState context.
@@ -1301,6 +1302,7 @@ To keep it manageable (and in sync with your Design work):
 ## Log
 
 ## Summary
+
 # Summary
 
 Document full xstate transition process

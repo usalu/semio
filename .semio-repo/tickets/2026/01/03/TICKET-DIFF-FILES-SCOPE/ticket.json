@@ -4,7 +4,7 @@
   "prompt": "Limit ticket line recomputation to ticket files only",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-01-03T02:54:13Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Limit ticket line recomputation to ticket files only",
       "llm": "gpt-5",

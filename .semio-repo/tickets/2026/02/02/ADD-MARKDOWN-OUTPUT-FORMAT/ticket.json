@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-02-02T18:35:37.524566499Z",
   "finished": "2026-02-02T18:42:29.434170976Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Introduce a global --md flag that outputs the result in markdown format. Markdown should be used by the mcp server. Make sure every command has three different output formats: human colored text with ids used by the cli, markdown with uris used by mcp and json mode that has all information.",
       "llm": "gemini-3-pro",

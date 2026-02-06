@@ -4,7 +4,7 @@
   "prompt": ">-",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-22T20:43:22.25Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": ">-",
       "llm": "sonnet-4",

@@ -3058,7 +3058,7 @@ const App: FC = () => {
       id: "semio.sketchpad.app.type.settings",
       specificity: 30,
       order: 0,
-      content: () => <>{/* Type-specific settings can be added here in the future */}</>,
+      content: () => <>{ }</>,
     });
 
     addSection("settings", {
@@ -3193,14 +3193,12 @@ const App: FC = () => {
 
   const handleLayoutChange = useCallback((_config: any) => {
     // TODO: Add TYPE.SET_WINDOW_LAYOUT event to XState machine
-    // Layout changes are currently not persisted via XState
   }, []);
 
   return (
     <>
       <TypeAppFooter />
       <Canvas>
-        {/* PERF: Always use default layout to prevent window accumulation performance issues */}
         <LayoutCanvas windowConfig={windowConfig} layoutState={undefined} onLayoutChange={handleLayoutChange} />
       </Canvas>
     </>

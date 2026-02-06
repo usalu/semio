@@ -4,7 +4,7 @@
   "prompt": "Fix apps not working after wildcard refactor - state not changing",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.96Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix apps not working after wildcard refactor - state not changing",
       "llm": "sonnet-4.5",

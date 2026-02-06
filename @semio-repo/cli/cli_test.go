@@ -19,7 +19,7 @@
 
 // #endregion 🔖Header
 
-package main
+package cli
 
 import (
 	"bytes"
@@ -1085,9 +1085,876 @@ func TestFixCommand(t *testing.T) {
 	if result.Error != "" {
 		t.Errorf("ToolFix returned error: %s", result.Error)
 	}
+	res, ok := result.Data.(*FixResult)
+	if !ok || res == nil {
+		t.Fatal("ToolFix returned nil or wrong type data")
+	}
+	if res.Fixed < 0 {
+		t.Error("fixed count should not be negative")
+	}
+	if res.Remaining < 0 {
+		t.Error("remaining count should not be negative")
+	}
+	if len(res.Violations) != res.Remaining {
+		t.Errorf("violations length %d != remaining %d", len(res.Violations), res.Remaining)
+	}
 }
 
+func TestFileHeaderId(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{"code ts", "@semio/js/src/index.ts", "\U0001F4BB\uFE0E @semio/js/src/index.ts"},
+		{"code tsx", "@semio/js/src/App.tsx", "\U0001F4BB\uFE0E @semio/js/src/App.tsx"},
+		{"code go", "@semio-repo/cli/cli.go", "\U0001F4BB\uFE0E @semio-repo/cli/cli.go"},
+		{"code cs", "@semio/gh/Semio.cs", "\U0001F4BB\uFE0E @semio/gh/Semio.cs"},
+		{"code py", "@semio/engine/main.py", "\U0001F4BB\uFE0E @semio/engine/main.py"},
+		{"test ts", "@semio/js/src/index.test.ts", "\U0001F9EA\uFE0E @semio/js/src/index.test.ts"},
+		{"test go", "@semio-repo/cli/cli_test.go", "\U0001F9EA\uFE0E @semio-repo/cli/cli_test.go"},
+		{"config json", "tsconfig.json", "\u2699\uFE0E tsconfig.json"},
+		{"docs md", "README.md", "\U0001F4C3\uFE0E README.md"},
+		{"script sh", "build.sh", "\U0001F4C4\uFE0E build.sh"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := FileHeaderId(tt.path)
+			if got != tt.want {
+				t.Errorf("FileHeaderId(%q) = %q, want %q", tt.path, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestFixHeaderWrongFileId(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	filePath := "some/folder/code.ts"
+	absPath := filepath.Join(tmpDir, filePath)
+	os.MkdirAll(filepath.Dir(absPath), 0755)
+	content := "// #region \U0001F516Header\n\n// old/wrong/path.ts\n\n// 2025 Test <t@t.com>\n\n// AGPL-3.0-or-later\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	os.WriteFile(absPath, []byte(content), 0644)
+
+	expectedId := FileHeaderId(filePath)
+	violations := []Violation{{
+		Kind:    ViolationCodeHeaderWrongFileId,
+		Scope:   filePath + "#Header",
+		Line:    3,
+		Excerpt: expectedId,
+	}}
+	fixed, err := applyAutofixes(filePath, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Errorf("expected 1 fix, got %d", fixed)
+	}
+
+	fixedContent, _ := ReadTextFile(absPath)
+	if !strings.Contains(fixedContent, expectedId) {
+		t.Errorf("fixed content should contain %q, got:\n%s", expectedId, fixedContent)
+	}
+	if strings.Contains(fixedContent, "old/wrong/path.ts") {
+		t.Error("fixed content should not contain old path")
+	}
+}
+
+func TestFixHeaderWrongFileIdIdempotent(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	filePath := "some/folder/code.ts"
+	absPath := filepath.Join(tmpDir, filePath)
+	os.MkdirAll(filepath.Dir(absPath), 0755)
+	correctId := FileHeaderId(filePath)
+	content := "// #region \U0001F516Header\n\n// " + correctId + "\n\n// 2025 Test <t@t.com>\n\n// AGPL-3.0-or-later\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	os.WriteFile(absPath, []byte(content), 0644)
+
+	bundles := LoadBundles()
+	scope := Scope{Kind: ScopeFile, FilePath: filePath}
+	ctx := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check failed: %v", err)
+	}
+	for _, v := range violations {
+		if v.Kind == ViolationCodeHeaderWrongFileId {
+			t.Errorf("should not detect wrong file ID when correct ID is present, got: %s", v.Summary)
+		}
+	}
+}
+
+func TestFixHeaderWrongFileIdDetection(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	filePath := "some/folder/code.ts"
+	absPath := filepath.Join(tmpDir, filePath)
+	os.MkdirAll(filepath.Dir(absPath), 0755)
+	content := "// #region \U0001F516Header\n\n// wrong/path.ts\n\n// 2025 Test <t@t.com>\n\n// AGPL-3.0-or-later\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	os.WriteFile(absPath, []byte(content), 0644)
+
+	bundles := LoadBundles()
+	scope := Scope{Kind: ScopeFile, FilePath: filePath}
+	ctx := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check failed: %v", err)
+	}
+	found := false
+	for _, v := range violations {
+		if v.Kind == ViolationCodeHeaderWrongFileId {
+			found = true
+			if !v.Autofixable() {
+				t.Error("ViolationCodeHeaderWrongFileId should be autofixable")
+			}
+			if v.Excerpt != FileHeaderId(filePath) {
+				t.Errorf("excerpt should be expected file ID, got %q", v.Excerpt)
+			}
+		}
+	}
+	if !found {
+		t.Error("expected ViolationCodeHeaderWrongFileId violation")
+	}
+}
+
+func TestFixHeaderWrongFileIdEndToEnd(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	filePath := "some/folder/code.ts"
+	absPath := filepath.Join(tmpDir, filePath)
+	os.MkdirAll(filepath.Dir(absPath), 0755)
+	content := "// #region \U0001F516Header\n\n// wrong/path.ts\n\n// 2025 Test <t@t.com>\n\n// AGPL-3.0-or-later\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	os.WriteFile(absPath, []byte(content), 0644)
+
+	bundles := LoadBundles()
+	scope := Scope{Kind: ScopeFile, FilePath: filePath}
+	ctx := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check failed: %v", err)
+	}
+
+	var autofixable []Violation
+	for _, v := range violations {
+		if v.Autofixable() {
+			autofixable = append(autofixable, v)
+		}
+	}
+
+	fixed, err := applyAutofixes(filePath, autofixable)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed == 0 {
+		t.Error("expected at least one fix")
+	}
+
+	fixedContent, _ := ReadTextFile(absPath)
+	expectedId := FileHeaderId(filePath)
+	if !strings.Contains(fixedContent, expectedId) {
+		t.Errorf("fixed content should contain %q", expectedId)
+	}
+
+	ctx2 := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
+	violations2, _ := CheckPoliciesWithContext(ctx2, nil)
+	for _, v := range violations2 {
+		if v.Kind == ViolationCodeHeaderWrongFileId {
+			t.Error("after fix, should not detect wrong file ID")
+		}
+	}
+}
+
+func TestFixApplyAutofixes(t *testing.T) {
+	cwd, _ := os.Getwd()
+	oldRoot := rootDir
+	rootDir = findTestRepoRoot(cwd)
+	defer func() { rootDir = oldRoot }()
+
+	fixtureSrc := "@semio/assets/repo/some/folder/file_fixable.tsx"
+	expectedSrc := "@semio/assets/repo/some/folder/file_fixable_expected.tsx"
+
+	srcAbs := filepath.Join(rootDir, fixtureSrc)
+	expectedAbs := filepath.Join(rootDir, expectedSrc)
+
+	originalContent, err := ReadTextFile(srcAbs)
+	if err != nil {
+		t.Fatalf("failed to read fixture: %v", err)
+	}
+	defer WriteTextFile(srcAbs, originalContent)
+
+	expectedContent, err := ReadTextFile(expectedAbs)
+	if err != nil {
+		t.Fatalf("failed to read expected: %v", err)
+	}
+
+	bundles := LoadBundles()
+	scope := Scope{Kind: ScopeFile, FilePath: fixtureSrc}
+	ctx := NewPolicyContextWithFiles(scope, bundles, []string{fixtureSrc})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check failed: %v", err)
+	}
+
+	autofixableCount := 0
+	for _, v := range violations {
+		if v.Autofixable() {
+			autofixableCount++
+		}
+	}
+	if autofixableCount == 0 {
+		t.Fatal("expected autofixable violations in fixture")
+	}
+
+	var autofixable []Violation
+	for _, v := range violations {
+		if v.Autofixable() {
+			autofixable = append(autofixable, v)
+		}
+	}
+
+	fixed, err := applyAutofixes(fixtureSrc, autofixable)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed == 0 {
+		t.Error("expected at least one fix applied")
+	}
+
+	fixedContent, err := ReadTextFile(srcAbs)
+	if err != nil {
+		t.Fatalf("failed to read fixed file: %v", err)
+	}
+
+	if strings.TrimSpace(fixedContent) != strings.TrimSpace(expectedContent) {
+		t.Errorf("fixed content does not match expected.\nGot:\n%s\n\nExpected:\n%s", fixedContent, expectedContent)
+	}
+}
+
+func TestFixSectionMissingEndName(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖MySection\n\nconst x = 1;\n\n// #endregion\n"
+	expected := "// #region 🔖MySection\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+
+	testFile := "test_missing_end.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{
+		{Kind: ViolationCodeSectionMissingEndName, Scope: testFile, Line: 5},
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Errorf("expected 1 fix, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if result != expected {
+		t.Errorf("unexpected result:\nGot: %q\nWant: %q", result, expected)
+	}
+}
+
+func TestFixSectionNameMismatch(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖Alpha\n\nconst x = 1;\n\n// #endregion 🔖Beta\n"
+	expected := "// #region 🔖Alpha\n\nconst x = 1;\n\n// #endregion 🔖Alpha\n"
+
+	testFile := "test_mismatch.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{
+		{Kind: ViolationCodeSectionNameMismatch, Scope: testFile, Line: 5},
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Errorf("expected 1 fix, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if result != expected {
+		t.Errorf("unexpected result:\nGot: %q\nWant: %q", result, expected)
+	}
+}
+
+func TestFixSectionEmpty(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖Keep\n\nconst x = 1;\n\n// #endregion 🔖Keep\n\n// #region 🔖Empty\n\n// #endregion 🔖Empty\n\n// #region 🔖Also\n\nconst y = 2;\n\n// #endregion 🔖Also\n"
+	expected := "// #region 🔖Keep\n\nconst x = 1;\n\n// #endregion 🔖Keep\n\n// #region 🔖Also\n\nconst y = 2;\n\n// #endregion 🔖Also\n"
+
+	testFile := "test_empty.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{
+		{Kind: ViolationCodeSectionEmpty, Scope: testFile + "#Empty", Line: 7},
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Errorf("expected 1 fix, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if result != expected {
+		t.Errorf("unexpected result:\nGot: %q\nWant: %q", result, expected)
+	}
+}
+
+func TestFixInlineComment(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖Section\n\n// inline one\n\n// inline two\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+	expected := "// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+
+	testFile := "test_inline.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{
+		{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 3},
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Errorf("expected 1 fix, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if result != expected {
+		t.Errorf("unexpected result:\nGot: %q\nWant: %q", result, expected)
+	}
+}
+
+func TestFixBlockComment(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖Section\n\n/* block comment */\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+	expected := "// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+
+	testFile := "test_block.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{
+		{Kind: ViolationCodeCommentBlock, Scope: testFile, Line: 3},
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Errorf("expected 1 fix, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if result != expected {
+		t.Errorf("unexpected result:\nGot: %q\nWant: %q", result, expected)
+	}
+}
+
+func TestFixJSDocComment(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖Section\n\n/** jsdoc comment */\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+	expected := "// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+
+	testFile := "test_jsdoc.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{
+		{Kind: ViolationCodeCommentJSDoc, Scope: testFile, Line: 3},
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 1 {
+		t.Errorf("expected 1 fix, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if result != expected {
+		t.Errorf("unexpected result:\nGot: %q\nWant: %q", result, expected)
+	}
+}
+
+func TestFixMultipleViolationsSameFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖A\n\n// bad comment\n\nconst a = 1;\n\n// #endregion\n\n// #region 🔖B\n\n// another bad\n\nconst b = 2;\n\n// #endregion 🔖Wrong\n"
+	testFile := "test_multi.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{
+		{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 3},
+		{Kind: ViolationCodeSectionMissingEndName, Scope: testFile, Line: 7},
+		{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 11},
+		{Kind: ViolationCodeSectionNameMismatch, Scope: testFile, Line: 15},
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 4 {
+		t.Errorf("expected 4 fixes, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if !strings.Contains(result, "// #endregion 🔖A") {
+		t.Error("expected missing end name to be fixed to A")
+	}
+	if !strings.Contains(result, "// #endregion 🔖B") {
+		t.Error("expected mismatch to be fixed to B")
+	}
+	if strings.Contains(result, "// bad comment") {
+		t.Error("expected inline comment to be removed")
+	}
+	if strings.Contains(result, "// another bad") {
+		t.Error("expected second inline comment to be removed")
+	}
+}
+
+func TestFixImprovedCommentLogic(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	// Test content with various comment scenarios
+	content := `// #region 🔖Section
+const x = 1; // trailing comment
+// TODO: fix this
+// this line is part of the todo description
+
+// another normal comment
+/* TODO: block todo */
+const y = 2; // normal trailing
 // #endregion 🔖Fix Tests
+`
+	// Expected result after fixes
+	// 1. trailing comment removed (partial line)
+	// 2. TODO line and its description description kept
+	// 3. normal comment removed
+	// 4. block todo kept
+
+	testFile := "test_improved.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	// We'll use ScanComments to generate violations
+	ctx := &PolicyContext{}
+	lang := &TypeScriptLanguage{}
+	violations := lang.ScanComments(ctx, testFile, content, strings.Split(content, "\n"))
+
+	// Verify ScanComments logic
+	// We expect:
+	// Line 2: trailing (col 14)
+	// Line 5: another normal comment (col 1)
+	// Line 7: normal trailing (col 14)
+
+	expectedViolations := 3
+	if len(violations) != expectedViolations {
+		t.Errorf("expected %d violations, got %d", expectedViolations, len(violations))
+		for i, v := range violations {
+			t.Logf("Violation %d: %s at %d:%d", i, v.Kind, v.Line, v.Column)
+		}
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+
+	// trailing comment + normal comment + mid-line block
+	if fixed != 3 {
+		t.Errorf("expected 3 fixes, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+
+	// Verification of content
+	if strings.Contains(result, "trailing comment") {
+		t.Errorf("trailing comment should be removed")
+	}
+	if !strings.Contains(result, "const x = 1;") {
+		t.Errorf("code 'const x = 1;' should be kept")
+	}
+	if !strings.Contains(result, "// TODO: fix this") {
+		t.Errorf("TODO comment should be kept")
+	}
+	if !strings.Contains(result, "// this line is part of the todo description") {
+		t.Errorf("TODO description should be kept")
+	}
+	if strings.Contains(result, "// another normal comment") {
+		t.Errorf("normal comment should be removed")
+	}
+	if !strings.Contains(result, "/* TODO: block todo */") {
+		t.Errorf("block TODO should be kept")
+	}
+
+	// Check partial line removal for line 2
+	lines := strings.Split(result, "\n")
+	foundX := false
+	for _, l := range lines {
+		if strings.HasPrefix(l, "const x = 1;") {
+			foundX = true
+			if strings.Contains(l, "//") {
+				t.Errorf("line 2 should not contain comment: %q", l)
+			}
+			if strings.HasSuffix(l, " ") {
+				t.Errorf("line 2 should be trimmed right: %q", l)
+			}
+		}
+	}
+	if !foundX {
+		t.Errorf("did not find 'const x = 1;' line in result")
+	}
+}
+
+func TestFixConfigIgnored(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// comment in config\nconst x = 1;\n"
+	testFile := "package.json" // Config file extension
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	ctx := &PolicyContext{}
+	lang := &TypeScriptLanguage{}
+	violations := lang.ScanComments(ctx, testFile, content, strings.Split(content, "\n"))
+
+	if len(violations) != 0 {
+		t.Errorf("expected 0 violations for config file, got %d", len(violations))
+	}
+}
+
+func TestFixNonAutofixableNotFixed(t *testing.T) {
+	cwd, _ := os.Getwd()
+	oldRoot := rootDir
+	rootDir = findTestRepoRoot(cwd)
+	defer func() { rootDir = oldRoot }()
+
+	bundles := LoadBundles()
+	path := "@semio/assets/repo/some/folder/file_invalid.tsx"
+	scope := Scope{Kind: ScopeFile, FilePath: path}
+	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check failed: %v", err)
+	}
+
+	for _, v := range violations {
+		info := v.Kind.Info()
+		if v.Autofixable() != info.Autofixable {
+			t.Errorf("violation %s: Autofixable() = %v, Info().Autofixable = %v", v.Kind, v.Autofixable(), info.Autofixable)
+		}
+	}
+
+	autofixableKinds := []ViolationKind{
+		ViolationCodeHeaderWrongFileId,
+	}
+	counts := map[ViolationKind]int{}
+	for _, v := range violations {
+		counts[v.Kind]++
+	}
+	for _, kind := range autofixableKinds {
+		if counts[kind] == 0 {
+			t.Errorf("expected autofixable violation kind %s to be detected", kind)
+		}
+		if !kind.Info().Autofixable {
+			t.Errorf("violation kind %s should be autofixable", kind)
+		}
+	}
+	nonAutofixableKinds := []ViolationKind{
+		ViolationCodeHeaderMissingContributors,
+		ViolationCodeHeaderWrongLicense,
+		ViolationCodeSectionMissingStartName,
+		ViolationCodeSectionOrphanDefinition,
+	}
+	for _, kind := range nonAutofixableKinds {
+		if counts[kind] == 0 {
+			t.Errorf("expected non-autofixable violation kind %s to be detected", kind)
+		}
+		if kind.Info().Autofixable {
+			t.Errorf("violation kind %s should not be autofixable", kind)
+		}
+	}
+}
+
+func TestFixViaGraphQL(t *testing.T) {
+	executor := getTestExecutor(t)
+	ctx := context.Background()
+
+	result, err := executor.ExecuteJSON(ctx, `mutation { fix(scope: "@semio-repo/go/main_test.go") { fixed remaining violations { id summary } } }`, nil)
+	if err != nil {
+		t.Fatalf("fix mutation failed: %v", err)
+	}
+
+	var resp struct {
+		Fix struct {
+			Fixed      int `json:"fixed"`
+			Remaining  int `json:"remaining"`
+			Violations []struct {
+				ID      string `json:"id"`
+				Summary string `json:"summary"`
+			} `json:"violations"`
+		} `json:"fix"`
+	}
+	if err := json.Unmarshal([]byte(result), &resp); err != nil {
+		t.Fatalf("failed to parse fix response: %v\nResult: %s", err, result)
+	}
+	if resp.Fix.Remaining < 0 {
+		t.Error("remaining should not be negative")
+	}
+	if len(resp.Fix.Violations) != resp.Fix.Remaining {
+		t.Errorf("violations length %d != remaining %d", len(resp.Fix.Violations), resp.Fix.Remaining)
+	}
+}
+
+func TestFixViaRepoContext(t *testing.T) {
+	cwd, _ := os.Getwd()
+	oldRoot := rootDir
+	rootDir = findTestRepoRoot(cwd)
+	defer func() { rootDir = oldRoot }()
+
+	ctx := NewRepoContext(rootDir)
+	scope := "@semio-repo/go/main_test.go"
+	res, err := ctx.Fix(&scope)
+	if err != nil {
+		t.Fatalf("Fix failed: %v", err)
+	}
+	if res == nil {
+		t.Fatal("Fix returned nil result")
+	}
+	if res.Violations == nil {
+		t.Error("Violations should not be nil")
+	}
+	if res.Remaining != len(res.Violations) {
+		t.Errorf("remaining %d != violations length %d", res.Remaining, len(res.Violations))
+	}
+}
+
+func TestFixIdempotent(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+	testFile := "test_clean.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{}
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 0 {
+		t.Errorf("expected 0 fixes on clean file, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if result != content {
+		t.Error("clean file should not be modified")
+	}
+}
+
+func TestFixNestedSections(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	content := "// #region 🔖Outer\n\n// #region 🔖Inner\n\nconst x = 1;\n\n// #endregion\n\nconst y = 2;\n\n// #endregion\n"
+	testFile := "test_nested.tsx"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write test file: %v", err)
+	}
+
+	violations := []Violation{
+		{Kind: ViolationCodeSectionMissingEndName, Scope: testFile, Line: 7},
+		{Kind: ViolationCodeSectionMissingEndName, Scope: testFile, Line: 11},
+	}
+
+	fixed, err := applyAutofixes(testFile, violations)
+	if err != nil {
+		t.Fatalf("applyAutofixes failed: %v", err)
+	}
+	if fixed != 2 {
+		t.Errorf("expected 2 fixes, got %d", fixed)
+	}
+
+	result, _ := ReadTextFile(absPath)
+	if !strings.Contains(result, "// #endregion 🔖Inner") {
+		t.Error("expected inner endregion to get name Inner")
+	}
+	if !strings.Contains(result, "// #endregion 🔖Outer") {
+		t.Error("expected outer endregion to get name Outer")
+	}
+}
+
+func TestFixExtractFileFromScope(t *testing.T) {
+	tests := []struct {
+		scope    string
+		expected string
+	}{
+		{"file.ts", "file.ts"},
+		{"file.ts#Section", "file.ts"},
+		{"file.ts::definition", "file.ts"},
+		{"path/to/file.ts#Section/Sub", "path/to/file.ts"},
+		{"path/to/file.ts::myFunc", "path/to/file.ts"},
+	}
+	for _, tt := range tests {
+		result := extractFileFromScope(tt.scope)
+		if result != tt.expected {
+			t.Errorf("extractFileFromScope(%q) = %q, want %q", tt.scope, result, tt.expected)
+		}
+	}
+}
+
+func TestFixViolationKindMeta(t *testing.T) {
+	autofixableKinds := []ViolationKind{
+		ViolationCodeHeaderWrongFileId,
+		ViolationCodeSectionEmpty,
+		ViolationCodeSectionMissingEndName,
+		ViolationCodeSectionNameMismatch,
+		ViolationCodeCommentInline,
+		ViolationCodeCommentBlock,
+		ViolationCodeCommentJSDoc,
+	}
+	for _, kind := range autofixableKinds {
+		info := kind.Info()
+		if !info.Autofixable {
+			t.Errorf("violation kind %s should be autofixable", kind)
+		}
+		if info.Reason == "" {
+			t.Errorf("violation kind %s has empty reason", kind)
+		}
+		if info.Solution == "" {
+			t.Errorf("violation kind %s has empty solution", kind)
+		}
+	}
+
+	nonAutofixableKinds := []ViolationKind{
+		ViolationCodeHeaderMissingRegion,
+		ViolationCodeHeaderMissingContributors,
+		ViolationCodeHeaderMissingLicense,
+		ViolationCodeHeaderWrongLicense,
+		ViolationCodeSectionMissingStartName,
+		ViolationCodeSectionOrphanDefinition,
+	}
+	for _, kind := range nonAutofixableKinds {
+		info := kind.Info()
+		if info.Autofixable {
+			t.Errorf("violation kind %s should NOT be autofixable", kind)
+		}
+	}
+}
+
+func TestFindMatchingSectionStartName(t *testing.T) {
+	lines := []string{
+		"// #region 🔖Outer",
+		"",
+		"// #region 🔖Inner",
+		"const x = 1;",
+		"// #endregion 🔖Inner",
+		"",
+		"// #endregion",
+	}
+	language := NewTypeScriptLanguage()
+
+	name := findMatchingSectionStartName(lines, 6, language)
+	if name != "Outer" {
+		t.Errorf("expected Outer, got %q", name)
+	}
+
+	name = findMatchingSectionStartName(lines, 4, language)
+	if name != "Inner" {
+		t.Errorf("expected Inner, got %q", name)
+	}
+}
+
+// #endregion 🔖Cli
 
 // #region 🔖Policy Tests
 
@@ -1150,7 +2017,7 @@ func TestFixtureViolationsGroupedInline(t *testing.T) {
 		counts[v.Kind]++
 	}
 	required := []ViolationKind{
-		ViolationCodeHeaderMissingFilename,
+		ViolationCodeHeaderWrongFileId,
 		ViolationCodeHeaderMissingContributors,
 		ViolationCodeHeaderWrongLicense,
 		ViolationCodeSectionMissingStartName,
@@ -1167,8 +2034,8 @@ func TestFixtureViolationsGroupedInline(t *testing.T) {
 			t.Fatalf("expected violation kind %s", kind)
 		}
 	}
-	if counts[ViolationCodeCommentInline] != 1 {
-		t.Fatalf("expected 1 inline comment violation, got %d", counts[ViolationCodeCommentInline])
+	if counts[ViolationCodeCommentInline] != 2 {
+		t.Fatalf("expected 2 inline comment violations, got %d", counts[ViolationCodeCommentInline])
 	}
 }
 
@@ -1764,7 +2631,7 @@ func TestGraphQLContributorsQuery(t *testing.T) {
 }
 
 func TestGraphQLFixMutation(t *testing.T) {
-	result, err := executor.ExecuteJSON(context.Background(), `mutation { fix { fixed remaining } }`, nil)
+	result, err := executor.ExecuteJSON(context.Background(), `mutation { fix(scope: "@semio-repo/go/main_test.go") { fixed remaining } }`, nil)
 	if err != nil {
 		t.Errorf("ExecuteGraphQL fix mutation returned error: %v", err)
 	}
@@ -2579,6 +3446,546 @@ func TestFormatResult_Additional(t *testing.T) {
 	})
 }
 
+func assertValidMarkdownLink(t *testing.T, output string) {
+	t.Helper()
+	trimmed := strings.TrimSpace(output)
+	if trimmed == "" {
+		t.Error("output is empty")
+		return
+	}
+	for _, line := range strings.Split(trimmed, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		stripped := strings.TrimLeft(line, " ")
+		if strings.HasPrefix(stripped, "- ") {
+			stripped = strings.TrimPrefix(stripped, "- ")
+		}
+		if strings.HasPrefix(stripped, "**") {
+			continue
+		}
+		if !strings.Contains(stripped, "[") || !strings.Contains(stripped, "](") {
+			t.Errorf("line missing markdown link syntax [...](...): %q", line)
+		}
+		if strings.Contains(line, "```json") || strings.Contains(line, "```\n") {
+			t.Errorf("output contains JSON code block: %q", line)
+		}
+	}
+}
+
+func TestFormatMarkdownResult_MutationKeys(t *testing.T) {
+	mutations := []struct {
+		name string
+		key  string
+		data map[string]interface{}
+	}{
+		{"ticketOpen", "ticketOpen", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "open", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+			"date": map[string]interface{}{"created": "2026-02-06T00:00:00Z"},
+		}},
+		{"ticketClose", "ticketClose", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "closed", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+			"date": map[string]interface{}{"created": "2026-02-06T00:00:00Z"},
+		}},
+		{"ticketReopen", "ticketReopen", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "open", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+			"date": map[string]interface{}{"created": "2026-02-06T00:00:00Z"},
+		}},
+		{"ticketChange", "ticketChange", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "open", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+		}},
+		{"goalCreate", "goalCreate", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "open",
+		}},
+		{"goalClose", "goalClose", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "closed",
+		}},
+		{"goalReopen", "goalReopen", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "open",
+		}},
+		{"goalChange", "goalChange", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "open",
+		}},
+		{"folderCreate", "folderCreate", map[string]interface{}{
+			"path": "new/folder", "kind": "custom",
+		}},
+		{"folderDelete", "folderDelete", map[string]interface{}{
+			"path": "old/folder", "kind": "custom",
+		}},
+		{"folderMove", "folderMove", map[string]interface{}{
+			"path": "moved/folder", "kind": "custom",
+		}},
+		{"fileCreate", "fileCreate", map[string]interface{}{
+			"id": "new/file.ts",
+		}},
+		{"fileDelete", "fileDelete", map[string]interface{}{
+			"id": "old/file.ts",
+		}},
+		{"fileMove", "fileMove", map[string]interface{}{
+			"id": "moved/file.ts",
+		}},
+		{"sectionCreate", "sectionCreate", map[string]interface{}{
+			"name": "NewSection", "filePath": "file.ts", "startLine": float64(1), "endLine": float64(10),
+		}},
+		{"sectionDelete", "sectionDelete", map[string]interface{}{
+			"name": "OldSection", "filePath": "file.ts", "startLine": float64(1), "endLine": float64(5),
+		}},
+		{"sectionMove", "sectionMove", map[string]interface{}{
+			"name": "MovedSection", "filePath": "file.ts", "startLine": float64(1), "endLine": float64(5),
+		}},
+		{"contributorRemove", "contributorRemove", map[string]interface{}{
+			"github": "octocat", "name": "The Octocat",
+		}},
+		{"todoCreate", "todoCreate", map[string]interface{}{
+			"name": "My Todo",
+		}},
+		{"todoChange", "todoChange", map[string]interface{}{
+			"name": "Changed Todo",
+		}},
+		{"todoDelete", "todoDelete", map[string]interface{}{
+			"name": "Deleted Todo",
+		}},
+	}
+
+	for _, tt := range mutations {
+		t.Run(tt.name, func(t *testing.T) {
+			payload := map[string]interface{}{tt.key: tt.data}
+			jsonBytes, _ := json.Marshal(payload)
+			output := formatMarkdownResult(tt.name, json.RawMessage(jsonBytes))
+			assertValidMarkdownLink(t, output)
+			if strings.Contains(output, "```") {
+				t.Errorf("markdown output contains code fence for %s:\n%s", tt.name, output)
+			}
+		})
+	}
+}
+
+func TestFormatMarkdownResult_SingleEntities(t *testing.T) {
+	entities := []struct {
+		name string
+		key  string
+		data map[string]interface{}
+	}{
+		{"ticket", "ticket", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "open", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+		}},
+		{"goal", "goal", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "open",
+		}},
+		{"bundle", "bundle", map[string]interface{}{
+			"name": "MyBundle", "root": "/path/to/bundle",
+		}},
+		{"folder", "folder", map[string]interface{}{
+			"path": "some/folder", "kind": "custom",
+		}},
+		{"file", "file", map[string]interface{}{
+			"id": "some/file.ts",
+		}},
+		{"definition", "definition", map[string]interface{}{
+			"name": "myFunc", "kind": "function", "filePath": "file.ts",
+			"startLine": float64(10), "endLine": float64(20),
+		}},
+		{"contributor", "contributor", map[string]interface{}{
+			"github": "octocat", "name": "The Octocat",
+		}},
+		{"policy", "policy", map[string]interface{}{
+			"id": "code", "description": "Code policy",
+		}},
+		{"project", "project", map[string]interface{}{
+			"id": "myProject", "description": "My project",
+		}},
+		{"draft", "draft", map[string]interface{}{
+			"id": "some-draft",
+		}},
+		{"todo", "todo", map[string]interface{}{
+			"name": "My Todo",
+		}},
+		{"commit", "commit", map[string]interface{}{
+			"sha": "abc123", "message": "Initial commit",
+		}},
+	}
+
+	for _, tt := range entities {
+		t.Run(tt.name, func(t *testing.T) {
+			payload := map[string]interface{}{tt.key: tt.data}
+			jsonBytes, _ := json.Marshal(payload)
+			output := formatMarkdownResult(tt.name+" get", json.RawMessage(jsonBytes))
+			assertValidMarkdownLink(t, output)
+		})
+	}
+}
+
+func TestFormatMarkdownResult_Lists(t *testing.T) {
+	repoLists := []struct {
+		name string
+		key  string
+		kind string
+		data map[string]interface{}
+	}{
+		{"tickets", "tickets", "ticket", map[string]interface{}{
+			"slug": "T1", "status": "open", "title": "Ticket One",
+			"year": float64(2026), "month": float64(1), "day": float64(1),
+		}},
+		{"bundles", "bundles", "bundle", map[string]interface{}{
+			"name": "MyBundle", "root": "/path",
+		}},
+		{"folders", "folders", "folder", map[string]interface{}{
+			"path": "some/folder", "kind": "custom",
+		}},
+		{"files", "files", "file", map[string]interface{}{
+			"id": "some/file.ts",
+		}},
+		{"contributors", "contributors", "contributor", map[string]interface{}{
+			"github": "octocat", "name": "Cat",
+		}},
+		{"policies", "policies", "policy", map[string]interface{}{
+			"id": "code", "description": "Code policy",
+		}},
+		{"projects", "projects", "project", map[string]interface{}{
+			"id": "proj", "description": "Project",
+		}},
+		{"violationKinds", "violationKinds", "violationKind", map[string]interface{}{
+			"id": "vk1", "description": "Violation kind",
+		}},
+	}
+
+	for _, tt := range repoLists {
+		t.Run(tt.name, func(t *testing.T) {
+			payload := map[string]interface{}{
+				"repo": map[string]interface{}{
+					tt.key: []interface{}{tt.data, tt.data},
+				},
+			}
+			jsonBytes, _ := json.Marshal(payload)
+			output := formatMarkdownResult(tt.key+" list", json.RawMessage(jsonBytes))
+			lines := strings.Split(strings.TrimSpace(output), "\n")
+			if len(lines) < 2 {
+				t.Errorf("expected at least 2 lines for list of 2 items, got %d: %s", len(lines), output)
+			}
+			for _, line := range lines {
+				line = strings.TrimSpace(line)
+				if line == "" {
+					continue
+				}
+				if !strings.HasPrefix(line, "- [") {
+					t.Errorf("list line missing '- [' prefix: %q", line)
+				}
+				if !strings.Contains(line, "](") {
+					t.Errorf("list line missing markdown link: %q", line)
+				}
+			}
+		})
+	}
+
+	topLists := []struct {
+		name string
+		key  string
+		data map[string]interface{}
+	}{
+		{"todos", "todos", map[string]interface{}{"name": "Todo 1"}},
+		{"sections", "sections", map[string]interface{}{"name": "Sec1", "filePath": "f.ts", "startLine": float64(1), "endLine": float64(5)}},
+		{"definitions", "definitions", map[string]interface{}{"name": "def1", "filePath": "f.ts", "startLine": float64(1), "endLine": float64(5)}},
+		{"drafts", "drafts", map[string]interface{}{"id": "draft1"}},
+	}
+	for _, tt := range topLists {
+		t.Run(tt.name, func(t *testing.T) {
+			payload := map[string]interface{}{
+				tt.key: []interface{}{tt.data},
+			}
+			jsonBytes, _ := json.Marshal(payload)
+			output := formatMarkdownResult(tt.key+" list", json.RawMessage(jsonBytes))
+			assertValidMarkdownLink(t, output)
+			if !strings.Contains(output, "- [") {
+				t.Errorf("list output missing '- [' prefix: %s", output)
+			}
+		})
+	}
+}
+
+func TestFormatMarkdownResult_Analyze(t *testing.T) {
+	payload := map[string]interface{}{
+		"analyze": map[string]interface{}{
+			"metrics": map[string]interface{}{
+				"total":       float64(3),
+				"autofixable": float64(1),
+			},
+			"violations": []interface{}{
+				map[string]interface{}{
+					"kind":    map[string]interface{}{"id": "inline-comment"},
+					"scope":   "file.ts",
+					"line":    float64(10),
+					"summary": "Remove inline comment",
+				},
+			},
+		},
+	}
+	jsonBytes, _ := json.Marshal(payload)
+	output := formatMarkdownResult("analyze", json.RawMessage(jsonBytes))
+	if !strings.Contains(output, "Total Violations") {
+		t.Error("analyze output missing 'Total Violations'")
+	}
+	if !strings.Contains(output, "inline-comment") {
+		t.Error("analyze output missing violation kind")
+	}
+}
+
+func TestFormatMarkdownResult_Fix(t *testing.T) {
+	payload := map[string]interface{}{
+		"fix": map[string]interface{}{
+			"fixed":     float64(3),
+			"remaining": float64(1),
+		},
+	}
+	jsonBytes, _ := json.Marshal(payload)
+	output := formatMarkdownResult("fix", json.RawMessage(jsonBytes))
+	if strings.Contains(output, "```") {
+		t.Errorf("fix output contains code fence: %s", output)
+	}
+}
+
+func TestFormatMarkdownResult_FileWithSections(t *testing.T) {
+	payload := map[string]interface{}{
+		"file": map[string]interface{}{
+			"id": "src/main.ts",
+			"sections": []interface{}{
+				map[string]interface{}{
+					"name": "Header", "path": "src/main.ts#Header", "filePath": "src/main.ts",
+					"startLine": float64(1), "endLine": float64(5),
+					"children": []interface{}{
+						map[string]interface{}{
+							"name": "SubHeader", "path": "src/main.ts#Header#SubHeader", "filePath": "src/main.ts",
+							"startLine": float64(2), "endLine": float64(4),
+						},
+					},
+				},
+			},
+			"definitions": []interface{}{
+				map[string]interface{}{
+					"name": "myFunc", "kind": "function", "filePath": "src/main.ts",
+					"id":        "src/main.ts§myFunc",
+					"startLine": float64(10), "endLine": float64(20),
+				},
+			},
+		},
+	}
+	jsonBytes, _ := json.Marshal(payload)
+	output := formatMarkdownResult("file get", json.RawMessage(jsonBytes))
+	assertValidMarkdownLink(t, output)
+	if !strings.Contains(output, "Header") {
+		t.Errorf("output missing section name 'Header', got: %s", output)
+	}
+	if !strings.Contains(output, "myFunc") {
+		t.Errorf("output missing definition name 'myFunc', got: %s", output)
+	}
+}
+
+func TestFormatMarkdownResult_NoJSONFallback(t *testing.T) {
+	payload := map[string]interface{}{
+		"unknownKey": map[string]interface{}{
+			"id": "test",
+		},
+	}
+	jsonBytes, _ := json.Marshal(payload)
+	output := formatMarkdownResult("unknown", json.RawMessage(jsonBytes))
+	if strings.Contains(output, "```") {
+		t.Errorf("output contains JSON code block: %s", output)
+	}
+	if strings.Contains(output, "{") && strings.Contains(output, "}") {
+		trimmed := strings.TrimSpace(output)
+		if trimmed[0] == '{' {
+			t.Errorf("output is raw JSON: %s", output)
+		}
+	}
+}
+
+func TestFormatResult_MutationKeys(t *testing.T) {
+	mutations := []struct {
+		name string
+		key  string
+		data map[string]interface{}
+	}{
+		{"ticketOpen", "ticketOpen", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "open", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+		}},
+		{"ticketClose", "ticketClose", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "closed", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+		}},
+		{"ticketReopen", "ticketReopen", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "open", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+		}},
+		{"goalCreate", "goalCreate", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "open",
+		}},
+		{"goalClose", "goalClose", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "closed",
+		}},
+		{"goalReopen", "goalReopen", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "open",
+		}},
+		{"folderCreate", "folderCreate", map[string]interface{}{
+			"path": "new/folder", "kind": "custom",
+		}},
+		{"folderDelete", "folderDelete", map[string]interface{}{
+			"path": "old/folder", "kind": "custom",
+		}},
+		{"fileCreate", "fileCreate", map[string]interface{}{
+			"id": "new/file.ts",
+		}},
+		{"fileDelete", "fileDelete", map[string]interface{}{
+			"id": "old/file.ts",
+		}},
+		{"sectionCreate", "sectionCreate", map[string]interface{}{
+			"name": "NewSection", "filePath": "file.ts", "startLine": float64(1), "endLine": float64(10),
+		}},
+		{"contributorRemove", "contributorRemove", map[string]interface{}{
+			"github": "octocat", "name": "The Octocat",
+		}},
+	}
+
+	for _, tt := range mutations {
+		t.Run(tt.name, func(t *testing.T) {
+			payload := map[string]interface{}{tt.key: tt.data}
+			jsonBytes, _ := json.Marshal(payload)
+			output := formatResult(tt.name, json.RawMessage(jsonBytes), false)
+			trimmed := strings.TrimSpace(output)
+			if trimmed == "" {
+				t.Errorf("output is empty for %s", tt.name)
+			}
+			if trimmed[0] == '{' {
+				t.Errorf("output is raw JSON for %s: %s", tt.name, output)
+			}
+			if strings.Contains(output, "\""+tt.key+"\"") {
+				t.Errorf("output contains raw key %q for %s: %s", tt.key, tt.name, output)
+			}
+		})
+	}
+}
+
+func TestRenderEntityMarkdownLink_AllKinds(t *testing.T) {
+	entities := []struct {
+		kind string
+		data map[string]interface{}
+	}{
+		{"ticket", map[string]interface{}{
+			"slug": "MY-TICKET", "status": "open", "title": "My Ticket",
+			"year": float64(2026), "month": float64(2), "day": float64(6),
+		}},
+		{"goal", map[string]interface{}{
+			"id": "MY-GOAL", "title": "My Goal", "status": "open",
+		}},
+		{"bundle", map[string]interface{}{
+			"name": "MyBundle", "root": "/path",
+		}},
+		{"folder", map[string]interface{}{
+			"path": "some/folder", "kind": "custom",
+		}},
+		{"file", map[string]interface{}{
+			"id": "file.ts",
+		}},
+		{"section", map[string]interface{}{
+			"name": "Sec", "filePath": "file.ts", "startLine": float64(1), "endLine": float64(5),
+		}},
+		{"definition", map[string]interface{}{
+			"name": "def", "filePath": "file.ts", "startLine": float64(1), "endLine": float64(5),
+		}},
+		{"contributor", map[string]interface{}{
+			"github": "octocat", "name": "Cat",
+		}},
+		{"todo", map[string]interface{}{
+			"name": "Todo",
+		}},
+		{"draft", map[string]interface{}{
+			"id": "draft1",
+		}},
+		{"policy", map[string]interface{}{
+			"id": "code", "description": "Code policy",
+		}},
+		{"violationKind", map[string]interface{}{
+			"id": "vk1", "description": "Desc",
+		}},
+		{"project", map[string]interface{}{
+			"id": "proj", "description": "Desc",
+		}},
+		{"commit", map[string]interface{}{
+			"sha": "abc123", "message": "msg",
+		}},
+		{"repo", map[string]interface{}{
+			"name": "myrepo",
+		}},
+	}
+
+	for _, tt := range entities {
+		t.Run(tt.kind, func(t *testing.T) {
+			output := renderEntityMarkdownLink(tt.kind, tt.data)
+			if !strings.HasPrefix(output, "[") {
+				t.Errorf("link for %s missing '[' prefix: %s", tt.kind, output)
+			}
+			if !strings.Contains(output, "](") {
+				t.Errorf("link for %s missing '](': %s", tt.kind, output)
+			}
+			if !strings.Contains(output, "semiorepo://") {
+				t.Errorf("link for %s missing 'semiorepo://' URI: %s", tt.kind, output)
+			}
+			if strings.Contains(output, "```") {
+				t.Errorf("link for %s contains code fence: %s", tt.kind, output)
+			}
+		})
+	}
+}
+
+func TestInferEntityKind(t *testing.T) {
+	cases := []struct {
+		key      string
+		expected string
+	}{
+		{"ticketOpen", "ticket"},
+		{"ticketClose", "ticket"},
+		{"ticketReopen", "ticket"},
+		{"ticketChange", "ticket"},
+		{"goalCreate", "goal"},
+		{"goalClose", "goal"},
+		{"goalReopen", "goal"},
+		{"goalChange", "goal"},
+		{"folderCreate", "folder"},
+		{"folderDelete", "folder"},
+		{"folderMove", "folder"},
+		{"fileCreate", "file"},
+		{"fileDelete", "file"},
+		{"fileMove", "file"},
+		{"sectionCreate", "section"},
+		{"sectionDelete", "section"},
+		{"sectionMove", "section"},
+		{"definitionList", "definition"},
+		{"contributorRemove", "contributor"},
+		{"todoCreate", "todo"},
+		{"todoChange", "todo"},
+		{"todoDelete", "todo"},
+		{"syncGithub", "repo"},
+		{"integrate", "file"},
+		{"extract", "file"},
+		{"fix", "repo"},
+		{"unknownKey", ""},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.key, func(t *testing.T) {
+			got := inferEntityKind(tt.key)
+			if got != tt.expected {
+				t.Errorf("inferEntityKind(%q) = %q, want %q", tt.key, got, tt.expected)
+			}
+		})
+	}
+}
+
 func TestMarkdownOutput(t *testing.T) {
 	cwd, _ := os.Getwd()
 	repoRoot := findTestRepoRoot(cwd)
@@ -3215,6 +4622,181 @@ func TestArtifactIDAndURI(t *testing.T) {
 			wantURI: "semiorepo://repo",
 		},
 		{
+			name:    "projects collection",
+			kind:    "projects",
+			data:    map[string]interface{}{},
+			wantID:  "🏗\ufe0e",
+			wantURI: "semiorepo://projects",
+		},
+		{
+			name:    "project user",
+			kind:    "project",
+			data:    map[string]interface{}{"name": "semio", "kind": "user"},
+			wantID:  "👤\ufe0e @semio",
+			wantURI: "semiorepo://project/@semio",
+		},
+		{
+			name:    "project infrastructure",
+			kind:    "project",
+			data:    map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"},
+			wantID:  "🧰\ufe0e @semio-repo",
+			wantURI: "semiorepo://project/@semio-repo",
+		},
+		{
+			name:    "project research",
+			kind:    "project",
+			data:    map[string]interface{}{"name": "coda", "kind": "research"},
+			wantID:  "🔬\ufe0e @coda",
+			wantURI: "semiorepo://project/@coda",
+		},
+		{
+			name:    "bundles collection",
+			kind:    "bundles",
+			data:    map[string]interface{}{"projectCode": "@semio"},
+			wantID:  "📦\ufe0e @semio",
+			wantURI: "semiorepo://bundles",
+		},
+		{
+			name:    "bundle library",
+			kind:    "bundle",
+			data:    map[string]interface{}{"name": "@semio/js", "kind": "library"},
+			wantID:  "📚\ufe0e @semio/js",
+			wantURI: "semiorepo://bundle/@semio/js",
+		},
+		{
+			name:    "bundle example",
+			kind:    "bundle",
+			data:    map[string]interface{}{"name": "@coda/examples", "kind": "library"},
+			wantID:  "📚\ufe0e @coda/examples",
+			wantURI: "semiorepo://bundle/@coda/examples",
+		},
+		{
+			name:    "bundle ui",
+			kind:    "bundle",
+			data:    map[string]interface{}{"name": "@semio/desktop", "kind": "ui"},
+			wantID:  "🖱\ufe0e @semio/desktop",
+			wantURI: "semiorepo://bundle/@semio/desktop",
+		},
+		{
+			name:    "folders collection empty",
+			kind:    "folders",
+			data:    map[string]interface{}{},
+			wantID:  "📁\ufe0e",
+			wantURI: "semiorepo://folders",
+		},
+		{
+			name:    "folders collection with parent",
+			kind:    "folders",
+			data:    map[string]interface{}{"parentPath": "@semio/js/src"},
+			wantID:  "📁\ufe0e @semio/js/src",
+			wantURI: "semiorepo://folders/@semio/js/src",
+		},
+		{
+			name:    "folder required",
+			kind:    "folder",
+			data:    map[string]interface{}{"path": "@semio/js/src", "kind": "required"},
+			wantID:  "📁\ufe0e @semio/js/src",
+			wantURI: "semiorepo://folder/@semio/js/src",
+		},
+		{
+			name:    "folder organization",
+			kind:    "folder",
+			data:    map[string]interface{}{"path": "@semio/js/utils", "kind": "organization"},
+			wantID:  "🗃\ufe0e @semio/js/utils",
+			wantURI: "semiorepo://folder/@semio/js/utils",
+		},
+		{
+			name:    "files collection empty",
+			kind:    "files",
+			data:    map[string]interface{}{},
+			wantID:  "📄\ufe0e",
+			wantURI: "semiorepo://files",
+		},
+		{
+			name:    "file docs",
+			kind:    "file",
+			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
+			wantID:  "📃\ufe0e test.txt",
+			wantURI: "semiorepo://file/test.txt",
+		},
+		{
+			name:    "file code",
+			kind:    "file",
+			data:    map[string]interface{}{"path": "@semio/js/src/index.ts", "kind": "code"},
+			wantID:  "💻\ufe0e @semio/js/src/index.ts",
+			wantURI: "semiorepo://file/@semio/js/src/index.ts",
+		},
+		{
+			name:    "file test",
+			kind:    "file",
+			data:    map[string]interface{}{"path": "@semio/js/src/index.test.ts", "kind": "test"},
+			wantID:  "🧪\ufe0e @semio/js/src/index.test.ts",
+			wantURI: "semiorepo://file/@semio/js/src/index.test.ts",
+		},
+		{
+			name:    "file config",
+			kind:    "file",
+			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
+			wantID:  "⚙\ufe0e tsconfig.json",
+			wantURI: "semiorepo://file/tsconfig.json",
+		},
+		{
+			name:    "sections collection",
+			kind:    "sections",
+			data:    map[string]interface{}{"filePath": "@semio/js/src/index.ts"},
+			wantID:  "🔖\ufe0e @semio/js/src/index.ts",
+			wantURI: "semiorepo://sections/@semio/js/src/index.ts",
+		},
+		{
+			name:    "section",
+			kind:    "section",
+			data:    map[string]interface{}{"path": "@semio/js/src/Design.tsx#State Management#Design Store"},
+			wantID:  "🔖\ufe0e @semio/js/src/Design.tsx#State Management#Design Store",
+			wantURI: "semiorepo://section/@semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE",
+		},
+		{
+			name:    "section single level",
+			kind:    "section",
+			data:    map[string]interface{}{"path": "@semio/js/src/file.ts#Imports"},
+			wantID:  "🔖\ufe0e @semio/js/src/file.ts#Imports",
+			wantURI: "semiorepo://section/@semio/js/src/file.ts/IMPORTS",
+		},
+		{
+			name:    "definitions collection",
+			kind:    "definitions",
+			data:    map[string]interface{}{"filePath": "@semio/js/src/index.ts"},
+			wantID:  "🏷\ufe0e @semio/js/src/index.ts",
+			wantURI: "semiorepo://definitions/@semio/js/src/index.ts",
+		},
+		{
+			name:    "definition with id",
+			kind:    "definition",
+			data:    map[string]interface{}{"kind": "implementation", "id": "@semio/js/src/file.ts#Section§myFunc"},
+			wantID:  "🛠\ufe0e @semio/js/src/file.ts#Section§myFunc",
+			wantURI: "semiorepo://definition/@semio/js/src/file.ts/SECTION/MYFUNC",
+		},
+		{
+			name:    "definition interface",
+			kind:    "definition",
+			data:    map[string]interface{}{"kind": "interface", "filePath": "@semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
+			wantID:  "✂\ufe0e @semio/js/src/file.ts#Types§MyInterface",
+			wantURI: "semiorepo://definition/@semio/js/src/file.ts/TYPES/MYINTERFACE",
+		},
+		{
+			name:    "definition constant",
+			kind:    "definition",
+			data:    map[string]interface{}{"kind": "constant", "filePath": "@semio/js/src/file.ts", "name": "MAX_SIZE"},
+			wantID:  "🪨\ufe0e @semio/js/src/file.ts§MAX_SIZE",
+			wantURI: "semiorepo://definition/@semio/js/src/file.ts/MAX-SIZE",
+		},
+		{
+			name:    "tickets collection",
+			kind:    "tickets",
+			data:    map[string]interface{}{},
+			wantID:  "📅\ufe0e",
+			wantURI: "semiorepo://tickets",
+		},
+		{
 			name: "ticket",
 			kind: "ticket",
 			data: map[string]interface{}{
@@ -3227,14 +4809,115 @@ func TestArtifactIDAndURI(t *testing.T) {
 			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
-			name: "file",
-			kind: "file",
+			name: "ticket with status",
+			kind: "ticket",
 			data: map[string]interface{}{
-				"path": "test.txt",
-				"kind": "docs",
+				"year":   float64(2025),
+				"month":  float64(2),
+				"day":    float64(4),
+				"slug":   "test-ticket",
+				"status": "open",
 			},
-			wantID:  "📃\ufe0e test.txt",
-			wantURI: "semiorepo://file/test.txt",
+			wantID:  "📅\ufe0e 2025/02/04/test-ticket?open",
+			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
+		},
+		{
+			name:    "goals collection",
+			kind:    "goals",
+			data:    map[string]interface{}{},
+			wantID:  "🎯\ufe0e",
+			wantURI: "semiorepo://goals",
+		},
+		{
+			name:    "goal",
+			kind:    "goal",
+			data:    map[string]interface{}{"id": "R26-02/RUNNING-SKETCHPAD"},
+			wantID:  "🎯\ufe0e R26-02/RUNNING-SKETCHPAD",
+			wantURI: "semiorepo://goal/R26-02/RUNNING-SKETCHPAD",
+		},
+		{
+			name:    "drafts collection",
+			kind:    "drafts",
+			data:    map[string]interface{}{},
+			wantID:  "✍\ufe0e",
+			wantURI: "semiorepo://drafts",
+		},
+		{
+			name:    "draft",
+			kind:    "draft",
+			data:    map[string]interface{}{"slug": "my-draft"},
+			wantID:  "✍\ufe0e my-draft",
+			wantURI: "semiorepo://draft/my-draft",
+		},
+		{
+			name:    "todos collection",
+			kind:    "todos",
+			data:    map[string]interface{}{},
+			wantID:  "📝\ufe0e",
+			wantURI: "semiorepo://todos",
+		},
+		{
+			name:    "todo",
+			kind:    "todo",
+			data:    map[string]interface{}{"id": "my-todo"},
+			wantID:  "📝\ufe0e my-todo",
+			wantURI: "semiorepo://todo/my-todo",
+		},
+		{
+			name:    "policies collection",
+			kind:    "policies",
+			data:    map[string]interface{}{},
+			wantID:  "🛡\ufe0e",
+			wantURI: "semiorepo://policies",
+		},
+		{
+			name:    "policy",
+			kind:    "policy",
+			data:    map[string]interface{}{"id": "/code-hygiene"},
+			wantID:  "🛡\ufe0e /code-hygiene",
+			wantURI: "semiorepo://policy//code-hygiene",
+		},
+		{
+			name:    "violationKinds collection",
+			kind:    "violationKinds",
+			data:    map[string]interface{}{},
+			wantID:  "🚫\ufe0e",
+			wantURI: "semiorepo://violationKinds",
+		},
+		{
+			name:    "violationKind",
+			kind:    "violationKind",
+			data:    map[string]interface{}{"id": "code-hygiene/inline-comment"},
+			wantID:  "🚫\ufe0e code-hygiene/inline-comment",
+			wantURI: "semiorepo://violationKind/code-hygiene/inline-comment",
+		},
+		{
+			name:    "contributors collection",
+			kind:    "contributors",
+			data:    map[string]interface{}{},
+			wantID:  "👤\ufe0e",
+			wantURI: "semiorepo://contributors",
+		},
+		{
+			name:    "contributor",
+			kind:    "contributor",
+			data:    map[string]interface{}{"github": "usalu"},
+			wantID:  "👤\ufe0e usalu",
+			wantURI: "semiorepo://contributor/usalu",
+		},
+		{
+			name:    "commits collection",
+			kind:    "commits",
+			data:    map[string]interface{}{},
+			wantID:  "🔀\ufe0e",
+			wantURI: "semiorepo://commits",
+		},
+		{
+			name:    "commit",
+			kind:    "commit",
+			data:    map[string]interface{}{"sha": "abc123"},
+			wantID:  "🔀\ufe0e abc123",
+			wantURI: "semiorepo://commit/abc123",
 		},
 	}
 
@@ -3242,11 +4925,166 @@ func TestArtifactIDAndURI(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			gotID := GetArtifactID(tt.kind, tt.data)
 			if gotID != tt.wantID {
-				t.Errorf("GetArtifactID() = %v, want %v", gotID, tt.wantID)
+				t.Errorf("GetArtifactID() = %q, want %q", gotID, tt.wantID)
 			}
 			gotURI := GetArtifactURI(tt.kind, tt.data)
 			if gotURI != tt.wantURI {
-				t.Errorf("GetArtifactURI() = %v, want %v", gotURI, tt.wantURI)
+				t.Errorf("GetArtifactURI() = %q, want %q", gotURI, tt.wantURI)
+			}
+		})
+	}
+}
+
+func TestIdToUri(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want string
+	}{
+		{"repo", "🌍\ufe0e", "semiorepo://repo"},
+		{"projects", "🏗\ufe0e", "semiorepo://projects"},
+		{"project user", "👤\ufe0e @semio", "semiorepo://project/@semio"},
+		{"project infra", "🧰\ufe0e @semio-repo", "semiorepo://project/@semio-repo"},
+		{"bundle", "📚\ufe0e @semio/js", "semiorepo://bundle/@semio/js"},
+		{"folder", "📁\ufe0e @semio/js/src", "semiorepo://folder/@semio/js/src"},
+		{"file", "📃\ufe0e test.txt", "semiorepo://file/test.txt"},
+		{"section", "🔖\ufe0e @semio/js/src/Design.tsx#State Management#Design Store", "semiorepo://section/@semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE"},
+		{"definition", "🛠\ufe0e @semio/js/src/file.ts#Section§myFunc", "semiorepo://definition/@semio/js/src/file.ts/SECTION/MYFUNC"},
+		{"ticket", "📅\ufe0e 2025/02/04/test-ticket", "semiorepo://ticket/2025/02/04/test-ticket"},
+		{"ticket with status", "📅\ufe0e 2025/02/04/test-ticket?open", "semiorepo://ticket/2025/02/04/test-ticket"},
+		{"goal", "🎯\ufe0e R26-02/RUNNING-SKETCHPAD", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD"},
+		{"draft", "✍\ufe0e my-draft", "semiorepo://draft/my-draft"},
+		{"todo", "📝\ufe0e my-todo", "semiorepo://todo/my-todo"},
+		{"policy", "🛡\ufe0e /code-hygiene", "semiorepo://policy/code-hygiene"},
+		{"violationKind", "🚫\ufe0e code-hygiene/inline-comment", "semiorepo://violationKind/code-hygiene/inline-comment"},
+		{"contributor", "👤\ufe0e usalu", "semiorepo://contributor/usalu"},
+		{"commit", "🔀\ufe0e abc123", "semiorepo://commit/abc123"},
+		{"tickets collection", "📅\ufe0e", "semiorepo://tickets"},
+		{"goals collection", "🎯\ufe0e", "semiorepo://goals"},
+		{"empty string", "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := IdToUri(tt.id)
+			if got != tt.want {
+				t.Errorf("IdToUri(%q) = %q, want %q", tt.id, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestUriToId(t *testing.T) {
+	tests := []struct {
+		name string
+		uri  string
+		want string
+	}{
+		{"repo", "semiorepo://repo", "🌍\ufe0e"},
+		{"projects", "semiorepo://projects", "🏗\ufe0e"},
+		{"project", "semiorepo://project/@semio", "👤\ufe0e @semio"},
+		{"bundles", "semiorepo://bundles", "📦\ufe0e"},
+		{"bundle", "semiorepo://bundle/@semio/js", "📚\ufe0e @semio/js"},
+		{"folders", "semiorepo://folders", "📁\ufe0e"},
+		{"folder", "semiorepo://folder/@semio/js/src", "📁\ufe0e @semio/js/src"},
+		{"files", "semiorepo://files", "📄\ufe0e"},
+		{"file", "semiorepo://file/test.txt", "📄\ufe0e test.txt"},
+		{"section", "semiorepo://section/@semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "🔖\ufe0e @semio/js/src/Design.tsx#STATE-MANAGEMENT#DESIGN-STORE"},
+		{"definition single", "semiorepo://definition/@semio/js/src/file.ts/MY-FUNC", "🛠\ufe0e @semio/js/src/file.ts§MY-FUNC"},
+		{"definition with section", "semiorepo://definition/@semio/js/src/file.ts/SECTION/MY-FUNC", "🛠\ufe0e @semio/js/src/file.ts#SECTION§MY-FUNC"},
+		{"tickets", "semiorepo://tickets", "📅\ufe0e"},
+		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", "📅\ufe0e 2025/02/04/test-ticket"},
+		{"goals", "semiorepo://goals", "🎯\ufe0e"},
+		{"goal", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", "🎯\ufe0e R26-02/RUNNING-SKETCHPAD"},
+		{"drafts", "semiorepo://drafts", "✍\ufe0e"},
+		{"draft", "semiorepo://draft/my-draft", "✍\ufe0e my-draft"},
+		{"todos", "semiorepo://todos", "📝\ufe0e"},
+		{"todo", "semiorepo://todo/my-todo", "📝\ufe0e my-todo"},
+		{"policies", "semiorepo://policies", "🛡\ufe0e"},
+		{"policy", "semiorepo://policy/code-hygiene", "🛡\ufe0e /code-hygiene"},
+		{"violationKinds", "semiorepo://violationKinds", "🚫\ufe0e"},
+		{"violationKind", "semiorepo://violationKind/code-hygiene/inline-comment", "🚫\ufe0e code-hygiene/inline-comment"},
+		{"contributors", "semiorepo://contributors", "👤\ufe0e"},
+		{"contributor", "semiorepo://contributor/usalu", "👤\ufe0e usalu"},
+		{"commits", "semiorepo://commits", "🔀\ufe0e"},
+		{"commit", "semiorepo://commit/abc123", "🔀\ufe0e abc123"},
+		{"invalid", "https://example.com", ""},
+		{"empty", "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := UriToId(tt.uri)
+			if got != tt.want {
+				t.Errorf("UriToId(%q) = %q, want %q", tt.uri, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestSectionIdValueToUriPath(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  string
+	}{
+		{"no hash", "@semio/js/src/file.ts", "@semio/js/src/file.ts"},
+		{"single section", "@semio/js/src/file.ts#Imports", "@semio/js/src/file.ts/IMPORTS"},
+		{"nested sections", "@semio/js/src/Design.tsx#State Management#Design Store", "@semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := SectionIdValueToUriPath(tt.value)
+			if got != tt.want {
+				t.Errorf("SectionIdValueToUriPath(%q) = %q, want %q", tt.value, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDefinitionIdValueToUriPath(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  string
+	}{
+		{"no hash", "@semio/js/src/file.ts", "@semio/js/src/file.ts"},
+		{"with section and def", "@semio/js/src/file.ts#Section§myFunc", "@semio/js/src/file.ts/SECTION/MYFUNC"},
+		{"def only", "@semio/js/src/file.ts§myFunc", "@semio/js/src/file.ts/MYFUNC"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := DefinitionIdValueToUriPath(tt.value)
+			if got != tt.want {
+				t.Errorf("DefinitionIdValueToUriPath(%q) = %q, want %q", tt.value, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestParseSectionUriPath(t *testing.T) {
+	tests := []struct {
+		name      string
+		uriPath   string
+		wantFile  string
+		wantSlugs []string
+	}{
+		{"file only", "@semio/js/src/file.ts", "@semio/js/src/file.ts", nil},
+		{"file with sections", "@semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "@semio/js/src/Design.tsx", []string{"STATE-MANAGEMENT", "DESIGN-STORE"}},
+		{"file with one section", "@semio/js/src/file.ts/IMPORTS", "@semio/js/src/file.ts", []string{"IMPORTS"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotFile, gotSlugs := ParseSectionUriPath(tt.uriPath)
+			if gotFile != tt.wantFile {
+				t.Errorf("ParseSectionUriPath(%q) filePath = %q, want %q", tt.uriPath, gotFile, tt.wantFile)
+			}
+			if len(gotSlugs) != len(tt.wantSlugs) {
+				t.Errorf("ParseSectionUriPath(%q) slugs len = %d, want %d", tt.uriPath, len(gotSlugs), len(tt.wantSlugs))
+			} else {
+				for i, s := range gotSlugs {
+					if s != tt.wantSlugs[i] {
+						t.Errorf("ParseSectionUriPath(%q) slug[%d] = %q, want %q", tt.uriPath, i, s, tt.wantSlugs[i])
+					}
+				}
 			}
 		})
 	}

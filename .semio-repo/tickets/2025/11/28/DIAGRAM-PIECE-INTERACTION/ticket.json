@@ -4,7 +4,7 @@
   "prompt": "Fix piece hover and selection in diagram after drag and drop",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.758Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix piece hover and selection in diagram after drag and drop",
       "llm": "sonnet-4",

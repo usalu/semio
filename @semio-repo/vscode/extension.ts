@@ -314,11 +314,9 @@ function getRepoBinaryPath(): string | undefined {
 
   const candidates: string[] = [];
   if (isWindows) {
-    candidates.push(path.join(root, "@semio-repo", "go", "go.exe"));
-    candidates.push(path.join(root, "go", "repo", "repo.exe"));
+    candidates.push(path.join(root, "@semio-repo", "cli", "cli.exe"));
   } else {
-    candidates.push(path.join(root, "@semio-repo", "go", "go"));
-    candidates.push(path.join(root, "go", "repo", "repo"));
+    candidates.push(path.join(root, "@semio-repo", "cli", "cli"));
   }
 
   for (const candidate of candidates) {
@@ -437,7 +435,6 @@ function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
     }
   }
 
-  // Handle aggregated section results
   if (results.length > 0 && results.some(r => r && typeof r === 'object' && 'section' in r)) {
     const sections = results.map(r => (r as any).section).filter(s => s);
     if (sections.length > 0) {
@@ -565,7 +562,7 @@ async function fetchBundlesViaGraphQL(): Promise<Bundle[]> {
   return result.data?.repo?.bundles ?? [];
 }
 
-async function fetchFolderContent(path: string): Promise<any | null> { // Simplified return type
+async function fetchFolderContent(path: string): Promise<any | null> {
   const client = getUrqlClient();
   if (!client) return null;
   const result = await client.query(FolderContentDocument as TypedDocumentNode<any, any>, { path }).toPromise();
@@ -620,7 +617,6 @@ async function fetchGoalsViaGraphQL(): Promise<any[]> {
   return result.data?.repo?.goals ?? [];
 }
 
-
 async function getProjectList(): Promise<ProjectData[]> {
   if (cachedProjects) return cachedProjects;
   if (!hasRepoAccess()) return [];
@@ -640,7 +636,6 @@ async function getProjectList(): Promise<ProjectData[]> {
   return [];
 }
 
-// Commits
 async function fetchCommitsViaGraphQL(limit = 100): Promise<any[]> {
   const client = getUrqlClient();
   if (!client) return [];
@@ -658,7 +653,6 @@ function extractFilePathFromScope(scope: string): string | undefined {
     cleanScope = cleanScope.replace("@semio/violations/", "");
   }
 
-  // Handle hierarchical IDs: BUNDLE/RELATIVEPATH
   let bestBundle: Bundle | undefined;
   for (const b of bundleCache) {
     if (cleanScope.startsWith(b.id + "/")) {
@@ -681,7 +675,6 @@ function extractFilePathFromScope(scope: string): string | undefined {
     return filePath.endsWith("/") ? filePath.slice(0, -1) : filePath;
   }
 
-  // Fallback
   if (cleanScope.startsWith("@semio/") || cleanScope.startsWith("@semio-repo/")) {
     const parts = cleanScope.split("/");
     if (parts.length > 2) {
@@ -893,7 +886,7 @@ function validateKitDocument(document: vscode.TextDocument): void {
   }
 }
 
-// #endregion 🔖File Analysis
+// #endregion 🔖File Analysis & Diagnostics
 
 // #region 🔖Providers
 
@@ -959,18 +952,18 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     if (!element) {
       return [
         this.createSearchItem(),
-        this.createFilterItem("🏗️Projects", "filter_project", "👤, 🧰, 🔬, None, All"),
-        this.createFilterItem("📦Bundles", "filter_bundle", "📚, ⌨️, 🖱️, 🛂, 🌐, 🏪, None, All"),
-        this.createFilterItem("📂Folders", "filter_folder", "🗃️, 📁, None, All"),
-        this.createFilterItem("📄Files", "filter_file", "Code, Script, Config, Test, Docs, Resource, License"),
-        this.createFilterItem("🔖Sections", "filter_section", "None, All"),
-        this.createFilterItem("🏷️Definitions", "filter_definition", "🛠️, ✂️, 🪨, None, All"),
-        this.createFilterItem("🎯Goals", "filter_goal", "🔵Open, 🟢Closed, None, All"),
-        this.createFilterItem("📅Tickets", "filter_ticket", "🔵, 🟢, None, All"),
-        new FilterTreeItem("📅Dates", "filter", vscode.TreeItemCollapsibleState.Collapsed, "filter_time"),
-        this.createFilterItem("🛡️Policies", "filter_policy", "None, All"),
-        this.createFilterItem("👤Contributors", "filter_contributor", "None, All"),
-        this.createFilterItem("🔄Commits", "filter_commit", "None, All"),
+        this.createFilterItem("🏗️Projects", "filter_project", "Projects filter"),
+        this.createFilterItem("📦Bundles", "filter_bundle", "Bundles filter"),
+        this.createFilterItem("📂Folders", "filter_folder", "Folders filter"),
+        this.createFilterItem("📄Files", "filter_file", "Files filter"),
+        this.createFilterItem("🔖Sections", "filter_section", "Sections filter"),
+        this.createFilterItem("🏷️Definitions", "filter_definition", "Definitions filter"),
+        this.createFilterItem("🎯Goals", "filter_goal", "Goals filter"),
+        this.createFilterItem("📅Tickets", "filter_ticket", "Tickets filter"),
+        this.createFilterItem("📅Dates", "filter_time", "Dates filter", vscode.TreeItemCollapsibleState.Collapsed),
+        this.createFilterItem("🛡️Policies", "filter_policy", "Policies filter"),
+        this.createFilterItem("👤Contributors", "filter_contributor", "Contributors filter"),
+        this.createFilterItem("🔄Commits", "filter_commit", "Commits filter"),
       ];
     }
 
@@ -980,7 +973,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         const item = new FilterTreeItem(
           String(y), "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_year", "year", y
         );
-        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.tooltip = excluded ? `Excluded year ${y}` : `Included year ${y}`;
         item.command = { command: "semio.filter.toggleYear", title: "Toggle Year", arguments: [y] };
         return item;
       });
@@ -994,7 +987,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         const item = new FilterTreeItem(
           label, "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_month", "month", m
         );
-        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.tooltip = excluded ? `Excluded month ${label}` : `Included month ${label}`;
         item.command = { command: "semio.filter.toggleMonth", title: "Toggle Month", arguments: [m] };
         return item;
       });
@@ -1006,7 +999,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         const item = new FilterTreeItem(
           String(d).padStart(2, "0"), "timeValue", vscode.TreeItemCollapsibleState.None, "filter_time_day", "day", d
         );
-        item.iconPath = new vscode.ThemeIcon(excluded ? "circle-slash" : "check");
+        item.tooltip = excluded ? `Excluded day ${d}` : `Included day ${d}`;
         item.command = { command: "semio.filter.toggleDay", title: "Toggle Day", arguments: [d] };
         return item;
       });
@@ -1016,16 +1009,26 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
   }
 
   private createSearchItem(): FilterTreeItem {
-    const label = `🔍${this.searchQuery || "Search"}`;
-    const item = new FilterTreeItem(label, "search", vscode.TreeItemCollapsibleState.None, "filter_search");
-    item.description = `[${this.matchCase ? "Aa" : "  "}] [${this.matchWholeWord ? "Ab" : "  "}] [${this.useRegex ? ".*" : "  "}]`;
+    const item = new FilterTreeItem("🔍Search", "search", vscode.TreeItemCollapsibleState.None, "filter_search");
+    const details = [
+      this.searchQuery ? `Query: ${this.searchQuery}` : "No query set",
+      this.matchCase ? "Match case on" : "Match case off",
+      this.matchWholeWord ? "Whole word on" : "Whole word off",
+      this.useRegex ? "Regex on" : "Regex off",
+    ];
+    item.tooltip = `Search filter\n${details.join("\n")}`;
     item.command = { command: "semio.filter.search", title: "Search" };
     return item;
   }
 
-  private createFilterItem(label: string, contextValue: string, description: string): FilterTreeItem {
-    const item = new FilterTreeItem(label, "filter", vscode.TreeItemCollapsibleState.None, contextValue);
-    item.description = description;
+  private createFilterItem(
+    label: string,
+    contextValue: string,
+    tooltip: string,
+    collapsibleState: vscode.TreeItemCollapsibleState = vscode.TreeItemCollapsibleState.None
+  ): FilterTreeItem {
+    const item = new FilterTreeItem(label, "filter", collapsibleState, contextValue);
+    item.tooltip = tooltip;
     return item;
   }
 
@@ -1719,6 +1722,74 @@ function registerCommands(context: vscode.ExtensionContext): void {
     return openFileAtLine(filePath, d.range.start, d.range.end ?? undefined);
   });
 
+  register("semio.navigate", async (target: string) => {
+    if (!target) return;
+    let uri = target;
+    if (!target.startsWith("semiorepo://")) {
+      const binaryPath = getRepoBinaryPath();
+      if (!binaryPath) return;
+      const cp = require("child_process");
+      try {
+        const result = cp.execSync(`${binaryPath} navigate "${target}" --json`, { cwd: getWorkspaceRoot(), encoding: "utf-8" });
+        const parsed = JSON.parse(result.trim());
+        uri = parsed.uri || target;
+      } catch {
+        return;
+      }
+    }
+    const uriPath = uri.replace("semiorepo://", "");
+    const wsRoot = getWorkspaceRoot();
+    if (!wsRoot) return;
+    if (uriPath.startsWith("folder/") || uriPath.startsWith("bundle/")) {
+      const p = uriPath.replace(/^(folder|bundle)\//, "");
+      const abs = path.isAbsolute(p) ? p : path.join(wsRoot, p);
+      return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs));
+    }
+    if (uriPath.startsWith("file/")) {
+      const p = uriPath.replace(/^file\//, "");
+      return vscode.commands.executeCommand("semio.navigateToFile", p);
+    }
+    if (uriPath.startsWith("section/")) {
+      const p = uriPath.replace(/^section\//, "");
+      const parts = p.split("/");
+      let fileEnd = -1;
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i].includes(".")) fileEnd = i;
+      }
+      if (fileEnd >= 0) {
+        const filePath = parts.slice(0, fileEnd + 1).join("/");
+        return vscode.commands.executeCommand("semio.navigateToFile", filePath);
+      }
+    }
+    if (uriPath.startsWith("definition/")) {
+      const p = uriPath.replace(/^definition\//, "");
+      const parts = p.split("/");
+      let fileEnd = -1;
+      for (let i = 0; i < parts.length; i++) {
+        if (parts[i].includes(".")) fileEnd = i;
+      }
+      if (fileEnd >= 0) {
+        const filePath = parts.slice(0, fileEnd + 1).join("/");
+        return vscode.commands.executeCommand("semio.navigateToFile", filePath);
+      }
+    }
+    if (uriPath.startsWith("ticket/")) {
+      const ticketPath = uriPath.replace(/^ticket\//, "");
+      const ticketMdPath = path.join(wsRoot, ".semio-repo", "tickets", ticketPath, "ticket.md");
+      return vscode.commands.executeCommand("semio.navigateToFile", ticketMdPath);
+    }
+    if (uriPath.startsWith("goal/")) {
+      const goalPath = uriPath.replace(/^goal\//, "");
+      const goalJsonPath = path.join(wsRoot, ".semio-repo", "goals", goalPath, "goal.json");
+      return vscode.commands.executeCommand("semio.navigateToFile", goalJsonPath);
+    }
+    if (uriPath.startsWith("project/")) {
+      const code = uriPath.replace(/^project\//, "");
+      const abs = path.join(wsRoot, code);
+      return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs));
+    }
+  });
+
   register("semio.ticketOpen", (ticket: any) => {
     const t = resolveTicketData(ticket);
     if (!t) return;
@@ -1790,7 +1861,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList",
     "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree",
     "semio.refreshDiagnostics", "semio.fixViolation",
-    "semio.navigateToRepo", "semio.goalOpen", "semio.goalList",
+    "semio.navigateToRepo", "semio.navigate", "semio.goalOpen", "semio.goalList",
   ];
 
   for (const command of contributedCommands) {
@@ -1844,7 +1915,6 @@ export function activate(context: vscode.ExtensionContext) {
     registerSidebarViews(context);
     registerCommands(context);
 
-    // Diagnostics
     repoDiagnosticCollection = vscode.languages.createDiagnosticCollection("semio");
     kitDiagnosticCollection = vscode.languages.createDiagnosticCollection("semio-kit");
     context.subscriptions.push(repoDiagnosticCollection, kitDiagnosticCollection);
@@ -1853,7 +1923,6 @@ export function activate(context: vscode.ExtensionContext) {
       monorepoProvider?.refresh();
     }));
 
-    // Initial diagnostics run
     setTimeout(() => {
       vscode.workspace.textDocuments.forEach((document) => {
         if (shouldAnalyzeFile(document)) {

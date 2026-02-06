@@ -1,12 +1,12 @@
 {
   "title": "TICKET-ITERATION-FILE-FILTER",
   "status": "closed",
-  "prompt": "Scope iteration and ticket line diffs to declared ticket files",
+  "prompt": "Scope interaction and ticket line diffs to declared ticket files",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-01-03T03:33:11Z",
-  "iterations": [
+  "interactions": [
     {
-      "prompt": "Scope iteration and ticket line diffs to declared ticket files",
+      "prompt": "Scope interaction and ticket line diffs to declared ticket files",
       "llm": "gpt-5",
       "author": {
         "name": "uelisaluz"

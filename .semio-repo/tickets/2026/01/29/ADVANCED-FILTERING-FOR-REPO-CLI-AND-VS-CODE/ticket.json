@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-29T10:24:25.979118739Z",
   "finished": "2026-01-29T11:05:21.283204189Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "For every --no-<kind> flag, there should be a --only-<kind> flag to show only the kind. Add to every list and tree command --filter <filter-string>, --regex, --match-case, --match-whole-word. The filter flags for file kinds (--no-<kind>, --only-<kind>) should work for every single list and tree command. Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles.",
       "llm": "",

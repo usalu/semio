@@ -1,16 +1,19 @@
 # Ticket
 
 ## Summary
+
 Fixed MCP tool schema validation errors by adding `items` definition to array properties and added comprehensive tests to prevent regression.
 
 ## Changes
-- `@semio-repo/go/main.go`:
-    - Refactored `runMcpServer` to `createMcpServer` to enable testability of the server instance.
-    - Added `mcp.WithStringItems()` to `ticket_close` and `draft_create` tool definitions.
-- `@semio-repo/go/main_test.go`:
-    - Added `TestMcpToolsSchemas` to validate that all array types in tool schemas have an `items` field.
+
+- `@semio-repo/cli/main.go`:
+  - Refactored `runMcpServer` to `createMcpServer` to enable testability of the server instance.
+  - Added `mcp.WithStringItems()` to `ticket_close` and `draft_create` tool definitions.
+- `@semio-repo/cli/main_test.go`:
+  - Added `TestMcpToolsSchemas` to validate that all array types in tool schemas have an `items` field.
 
 ## Log
+
 - Refactored `main.go` to separate server creation from execution.
 - Added missing `items` configuration to `files` array in `ticket_close` and `draft_create` tools.
 - Implemented `TestMcpToolsSchemas` in `main_test.go` recursively checking JSON schemas of all registered tools.

@@ -7432,7 +7432,6 @@ export const kitCommands = {
               files.set(path, blob);
             }
           } catch (error) {
-            // File not accessible, skip
           }
         }
 
@@ -7820,7 +7819,6 @@ export type SketchpadEvent =
   | { type: "CREATE_KIT"; kit: Kit; local?: boolean; remote?: boolean }
   | { type: "DELETE_KIT"; guid: Guid }
   | { type: "CHANGE"; diff: SketchpadDiff }
-  // Home app events
   | { type: "HOME.TOGGLE_PANEL"; panel: keyof PanelVisibility }
   | { type: "HOME.SET_PANEL_VISIBILITY"; panelVisibility: PanelVisibility }
   | { type: "HOME.SET_SORT"; column: string; direction: "asc" | "desc" }
@@ -7829,7 +7827,6 @@ export type SketchpadEvent =
   | { type: "HOME.CLEAR_SELECTION" }
   | { type: "HOME.SET_HOVER"; kits?: Guid[] }
   | { type: "HOME.CLEAR_HOVER" }
-  // Kit app events (scoped by kitGuid)
   | { type: "KIT.INIT"; kitGuid: Guid; state: KitAppState }
   | { type: "KIT.SYNC"; kitGuid: Guid; state: Partial<KitAppState> }
   | { type: "KIT.TOGGLE_PANEL"; kitGuid: Guid; panel: keyof PanelVisibility }
@@ -7849,7 +7846,6 @@ export type SketchpadEvent =
   | { type: "KIT.SET_FULLSCREEN"; kitGuid: Guid; window: KitAppFullscreenWindow }
   | { type: "KIT.SET_WINDOW_LAYOUT"; kitGuid: Guid; windowLayout: any }
   | { type: "KIT.SET_DIAGRAM_FORCE"; kitGuid: Guid; diagramForce: Partial<DiagramForceSettings> }
-  // Type app events (scoped by kitGuid:typeGuid)
   | { type: "TYPE.INIT"; kitGuid: Guid; typeGuid: Guid; state: TypeAppState }
   | { type: "TYPE.SYNC"; kitGuid: Guid; typeGuid: Guid; state: Partial<TypeAppState> }
   | { type: "TYPE.TOGGLE_PANEL"; kitGuid: Guid; typeGuid: Guid; panel: keyof PanelVisibility }
@@ -7878,7 +7874,6 @@ export type SketchpadEvent =
   | { type: "TYPE.ADD_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
   | { type: "TYPE.REMOVE_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
   | { type: "TYPE.CLEAR_MODEL_TAGS"; kitGuid: Guid; typeGuid: Guid }
-  // Design app events (scoped by kitGuid:designGuid)
   | { type: "DESIGN.INIT"; kitGuid: Guid; designGuid: Guid; state: DesignAppState }
   | { type: "DESIGN.SYNC"; kitGuid: Guid; designGuid: Guid; state: Partial<DesignAppState> }
   | { type: "DESIGN.TOGGLE_PANEL"; kitGuid: Guid; designGuid: Guid; panel: keyof PanelVisibility }
@@ -7901,42 +7896,35 @@ export type SketchpadEvent =
   | { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: any }
   | { type: "DESIGN.SELECT_ALL"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.DELETE_SELECTED"; kitGuid: Guid; designGuid: Guid }
-  // Design transaction events (scoped to design app)
   | { type: "DESIGN.TRANSACTION.START"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.COMMIT"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.ABORT"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.UNDO"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.REDO"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; designGuid: Guid; edit: any }
-  // Type transaction events (scoped to type app)
   | { type: "TYPE.TRANSACTION.START"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.COMMIT"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.ABORT"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.UNDO"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.REDO"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; typeGuid: Guid; edit: any }
-  // Kit transaction events (scoped to kit app)
   | { type: "KIT.TRANSACTION.START"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.COMMIT"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.ABORT"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.UNDO"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.REDO"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; edit: any }
-  // Background operation events (for async operations that continue when navigating away)
   | { type: "BACKGROUND.START"; operationId: string; operationType: string }
   | { type: "BACKGROUND.COMPLETE"; operationId: string }
   | { type: "BACKGROUND.FAIL"; operationId: string; error: string }
-  // Quality app events (scoped by kitGuid:qualityGuid)
   | { type: "QUALITY.TOGGLE_PANEL"; kitGuid: Guid; qualityGuid: Guid; panel: keyof PanelVisibility }
   | { type: "QUALITY.TOGGLE_BENCHMARK"; kitGuid: Guid; qualityGuid: Guid; benchmarkGuid: Guid }
-  // Tutorial events
   | { type: "TUTORIAL.START"; tutorialId: string; steps: TutorialStep[] }
   | { type: "TUTORIAL.END" }
   | { type: "TUTORIAL.NEXT_STEP" }
   | { type: "TUTORIAL.PREV_STEP" }
   | { type: "TUTORIAL.GO_TO_STEP"; index: number }
   | { type: "TUTORIAL.COMPLETE_STEP"; stepId: string }
-  // Feedback app events
   | { type: "FEEDBACK.TOGGLE_PANEL"; panel: keyof PanelVisibility }
   | { type: "FEEDBACK.SET_FORM_DATA"; data: Partial<FeedbackFormData> }
   | { type: "FEEDBACK.RESET_FORM" }
@@ -15606,7 +15594,7 @@ const LayoutWrapper: FC = () => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // 8px of movement required before drag starts
+        distance: 8,
       },
     }),
   );

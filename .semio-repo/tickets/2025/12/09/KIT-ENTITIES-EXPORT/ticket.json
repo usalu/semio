@@ -4,7 +4,7 @@
   "prompt": "Expose kit entities individually from assets index",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "started": "2025-12-16T17:06:07.897Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Expose kit entities individually from assets index",
       "llm": "sonnet-4-5",

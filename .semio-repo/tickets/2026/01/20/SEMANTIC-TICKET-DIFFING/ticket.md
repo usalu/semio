@@ -1,14 +1,16 @@
 # Ticket
 
 ## Todos
-1. Move ticket-level diff storage into per-iteration diff fields and remove the ticket-level diff payloads.
-2. Update ticket diff generation, serialization, and any GraphQL or CLI outputs to reference iteration diffs.
-3. Adjust tests and fixtures to validate per-iteration diffs and the absence of ticket-level diffs.
-4. Update README.md and AGENTS.md to document per-iteration diff storage.
+
+1. Move ticket-level diff storage into per-interaction diff fields and remove the ticket-level diff payloads.
+2. Update ticket diff generation, serialization, and any GraphQL or CLI outputs to reference interaction diffs.
+3. Adjust tests and fixtures to validate per-interaction diffs and the absence of ticket-level diffs.
+4. Update README.md and AGENTS.md to document per-interaction diff storage.
 
 ## Changes
 
 ## Log
+
 - User request: replace ticket close file array with semantic diff dictionary for bundles/folders/files/sections/definitions (added/modified/renamed/deleted), generate reports/codebase.json via repo analyze default, derive semantic diffs from codebase.json + git diffs, aggregate line metrics, remove general info from file diffs, and update GitHub # ✍️ Changes templates for bundle/folder/file/section/definition entries.
 
 - Located current ticket close flow in go/repo/main.go: FinishTicket uses ComputeTicketFiles (file-level diffs + sections/definitions), assigns ticket.Data.Files, and generateMetricsComment builds GitHub # ✍️ Changes from file metrics (icon-based). ToolTicketClose prints file/section/definition counts. Codebase types and ToolCodebase exist; analyze CLI uses GraphQL and does not emit reports. Reports directory exists in /reports. BuildCodebase/ToolCodebase assemble bundles/folders/files/sections/definitions.
@@ -107,25 +109,26 @@
 - IDE lint warning persists: go list failed to initialize build cache at /home/vscode/.cache/go-build (permission denied).
 - User message: no memories retrieved; continue work without acknowledgement.
 - Message received; continued work while following user rules.
-- User request: move ticket-level diff to per-iteration diff field and remove from ticket level; ticket already open on reopen attempt.
+- User request: move ticket-level diff to per-interaction diff field and remove from ticket level; ticket already open on reopen attempt.
 - Message received; continued work while following user rules.
 - Message received; continued work while following user rules.
 - Message received; continued work while following user rules.
 - User message: no memories retrieved; continue work without acknowledgement.
-- User request: ensure per-iteration diffs and remove ticket-level diff; patch attempt failed due to missing target strings.
-- Updated ticket diff storage: added per-iteration diff field, removed ticket-level diff, aggregated diffs in GetFiles, and assigned diff to latest iteration on close. Updated codebase usage to rely on GetFiles.
-- Updated README.md and AGENTS.md to document per-iteration diff storage.
+- User request: ensure per-interaction diffs and remove ticket-level diff; patch attempt failed due to missing target strings.
+- Updated ticket diff storage: added per-interaction diff field, removed ticket-level diff, aggregated diffs in GetFiles, and assigned diff to latest interaction on close. Updated codebase usage to rely on GetFiles.
+- Updated README.md and AGENTS.md to document per-interaction diff storage.
 - Message received; continued work while following user rules.
-- Progress: moved ticket diff storage fully to per-iteration `diff` and removed ticket-level diff usage across codebase; docs updated.
+- Progress: moved ticket diff storage fully to per-interaction `diff` and removed ticket-level diff usage across codebase; docs updated.
 - Message received; continued work while following user rules.
 - User message: no memories retrieved; continue work without acknowledgement.
-- Progress: per-iteration diff migration complete; preparing ticket close.
-- Closing ticket with per-iteration diff migration summary and updated docs/tests/fixtures.
-- Ticket closing: per-iteration diff migration completed; docs and code updated.
+- Progress: per-interaction diff migration complete; preparing ticket close.
+- Closing ticket with per-interaction diff migration summary and updated docs/tests/fixtures.
+- Ticket closing: per-interaction diff migration completed; docs and code updated.
 - Ticket closed via repo CLI. Warning: GitHub label add failed for @semio/assets (label not found).
 - Message received; continued work while following user rules.
 
 ## Summary
-- Migrated ticket diff storage to per-iteration `diff` payloads, removed ticket-level diff fields, and updated aggregated diff access and ticket close behavior.
-- Updated codebase usage to aggregate diffs via `GetFiles` across iterations and stored close diff on the latest iteration.
-- Documented per-iteration diff storage in README.md and AGENTS.md.
+
+- Migrated ticket diff storage to per-interaction `diff` payloads, removed ticket-level diff fields, and updated aggregated diff access and ticket close behavior.
+- Updated codebase usage to aggregate diffs via `GetFiles` across interactions and stored close diff on the latest interaction.
+- Documented per-interaction diff storage in README.md and AGENTS.md.

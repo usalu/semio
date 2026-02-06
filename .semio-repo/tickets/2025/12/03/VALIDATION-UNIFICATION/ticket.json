@@ -4,7 +4,7 @@
   "prompt": "\"Unify validation mechanism across TypeScript, Python and C#\"",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
   "started": "2025-12-16T17:06:07.863Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "\"Unify validation mechanism across TypeScript, Python and C#\"",
       "llm": "sonnet-4-5",

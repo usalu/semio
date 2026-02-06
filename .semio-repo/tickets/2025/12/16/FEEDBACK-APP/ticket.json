@@ -5,7 +5,7 @@
   "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS/UPDATED-AGENTS-MD",
   "started": "2025-12-16T18:12:47.861Z",
   "finished": "2025-12-16T18:26:49.262Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Complete Feedback app implementation including German translations, global footer action, documentation, and Playwright tests",
       "llm": "opus-4-5",

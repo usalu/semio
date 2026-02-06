@@ -4,7 +4,7 @@
   "prompt": "Refactor panels to introduce SidePanel and HudPanel components. SidePanel is left/right with scrollable tabs. HudPanel is center. Replace dropdown toggles with simple panel toggles. Apps register tabs to panels.",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-20T16:01:35.453Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Refactor panels to introduce SidePanel and HudPanel components. SidePanel is left/right with scrollable tabs. HudPanel is center. Replace dropdown toggles with simple panel toggles. Apps register tabs to panels.",
       "llm": "opus-4-5",

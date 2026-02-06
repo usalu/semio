@@ -5,7 +5,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-03T02:57:08Z",
   "finished": "2026-01-03T02:59:45Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "When clicking on violations under problems in vscode it only opens the file preview and not the tab of the file. Pressing ctrl+s then doesnt work. Fix it.",
       "llm": "sonnet-4-5",

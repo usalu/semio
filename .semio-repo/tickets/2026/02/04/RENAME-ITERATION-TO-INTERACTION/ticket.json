@@ -1,14 +1,14 @@
 {
   "title": "Rename Iteration to Interaction",
   "status": "open",
-  "prompt": "Rename iteration to interaction and standardize structure",
+  "prompt": "Rename interaction to interaction and standardize structure",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/333"
   },
   "started": "2026-02-04T08:57:55.318813171Z",
-  "iterations": [
+  "interactions": [
     {
-      "prompt": "Rename iteration to interaction and standardize structure",
+      "prompt": "Rename interaction to interaction and standardize structure",
       "llm": "gemini-3-pro",
       "ui": "copilot-chat",
       "author": {

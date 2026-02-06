@@ -6,7 +6,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-02-01T13:59:36.720378767Z",
   "finished": "2026-02-01T14:04:45.371944902Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Adjust configs for Project/Bundle layout",
       "llm": "gemini-3-pro",
@@ -24,7 +24,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/go",
+              "path": "@semio-repo/cli",
               "lines": {
                 "added": 0,
                 "removed": 48
@@ -44,7 +44,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/go/main.go",
+              "path": "@semio-repo/cli/main.go",
               "lines": {
                 "added": 25,
                 "removed": 73
@@ -583,14 +583,14 @@
               }
             },
             {
-              "path": "@semio-repo/go/main.go#Tickets",
+              "path": "@semio-repo/cli/main.go#Tickets",
               "lines": {
                 "added": 24,
                 "removed": 72
               }
             },
             {
-              "path": "@semio-repo/go/main.go#GraphQL Types",
+              "path": "@semio-repo/cli/main.go#GraphQL Types",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -618,42 +618,42 @@
           "renamed": [],
           "modified": [
             {
-              "path": "@semio-repo/go/main.go#GraphQL Types§normalizeBundleLabel",
+              "path": "@semio-repo/cli/main.go#GraphQL Types§normalizeBundleLabel",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go#Tickets§LoadBundles",
+              "path": "@semio-repo/cli/main.go#Tickets§LoadBundles",
               "lines": {
                 "added": 24,
                 "removed": 38
               }
             },
             {
-              "path": "@semio-repo/go/main.go#Tickets§StreamBundles",
+              "path": "@semio-repo/cli/main.go#Tickets§StreamBundles",
               "lines": {
                 "added": 0,
                 "removed": 28
               }
             },
             {
-              "path": "@semio-repo/go/main.go#Tickets§bundleMatchesKinds",
+              "path": "@semio-repo/cli/main.go#Tickets§bundleMatchesKinds",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "@semio-repo/go/main.go#GraphQL Types§normalizeBundleLabel",
+              "path": "@semio-repo/cli/main.go#GraphQL Types§normalizeBundleLabel",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "@semio-repo/go/main.go#Tickets§LoadBundles",
+              "path": "@semio-repo/cli/main.go#Tickets§LoadBundles",
               "lines": {
                 "added": 0,
                 "removed": 72

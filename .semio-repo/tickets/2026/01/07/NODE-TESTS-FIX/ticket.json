@@ -4,7 +4,7 @@
   "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-07T11:23:05Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
       "llm": "OPUS",

@@ -5,7 +5,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-PROJECT-MECHANISM",
   "started": "2026-01-12T23:10:17Z",
   "finished": "2026-01-12T23:13:02Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Investigate Vitest multiple projects warning and suggest solutions",
       "llm": "opus-4-5",

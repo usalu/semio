@@ -4,7 +4,7 @@
   "prompt": "Update state writes handling",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.885Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Update state writes handling",
       "llm": "sonnet-4-5",

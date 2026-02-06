@@ -4,7 +4,7 @@
   "prompt": "The vscode extension shouldnt log anything from stdout",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-02T23:38:52Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The vscode extension shouldnt log anything from stdout",
       "llm": "opus-4-5-20251101",

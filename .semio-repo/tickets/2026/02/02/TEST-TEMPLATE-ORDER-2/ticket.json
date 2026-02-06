@@ -6,7 +6,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-02-02T21:35:50.269763804Z",
   "finished": "2026-02-02T21:36:02.722459606Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Testing section order",
       "llm": "opus-4-5",

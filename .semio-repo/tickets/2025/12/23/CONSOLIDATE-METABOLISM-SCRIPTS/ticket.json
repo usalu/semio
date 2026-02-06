@@ -5,7 +5,7 @@
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-KIT-APP",
   "started": "2025-12-23T13:42:09.548Z",
   "finished": "2025-12-23T13:42:09.548Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": ">-",
       "llm": "composer-1",

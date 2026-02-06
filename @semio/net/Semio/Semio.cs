@@ -311,7 +311,6 @@ public static class Utility
         }
     }
 
-
     public static T? Deserialize<T>(this string json) => JsonConvert.DeserializeObject<T>(json, new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() });
 
     public static string GenerateRandomId(int seed)
@@ -337,10 +336,6 @@ public static class Utility
             if (results.Count() == 0) return float.NaN;
             return (float)results.First().ConvertedValue;
         }
-
-
-
-
 
         private class PowerToysRunUnitConverter
         {
@@ -492,7 +487,6 @@ public abstract class Operator : Symbol
         return nonEmptyUnits[0].Unit;
     }
 }
-
 
 public class Sum : Operator
 {
@@ -712,7 +706,6 @@ public class Modulo : Operator
     }
 }
 
-
 public class And : Operator
 {
     public override string Keyword => "and";
@@ -755,7 +748,6 @@ public class Invert : Operator
         return new UnitValue(value.Value == 0f ? 1f : 0f);
     }
 }
-
 
 public class Equal : Operator
 {
@@ -822,7 +814,6 @@ public class LessThanOrEqual : Operator
     }
 }
 
-
 public class If : Operator
 {
     public override string Keyword => "if";
@@ -832,7 +823,6 @@ public class If : Operator
         return (float)args[0] != 0f ? args[1] : args[2];
     }
 }
-
 
 public class Absolute : Operator
 {
@@ -874,7 +864,6 @@ public class Round : Operator
         return (float)Math.Round((float)args[0]);
     }
 }
-
 
 public class Length : Operator
 {
@@ -982,7 +971,6 @@ public class Replace : Operator
     }
 }
 
-
 public class ToNumber : Operator
 {
     public override string Keyword => "number";
@@ -1024,7 +1012,6 @@ public class ToBoolean : Operator
         return 0f;
     }
 }
-
 
 public class Clamp : Operator
 {
@@ -1137,12 +1124,10 @@ public class Expression
             { "average", () => new Average() },
             { "mod", () => new Modulo() },
 
-
             { "and", () => new And() },
             { "or", () => new Or() },
             { "xor", () => new ExclusiveOr() },
             { "not", () => new Invert() },
-
 
             { "equal", () => new Equal() },
             { "greater", () => new GreaterThan() },
@@ -1150,9 +1135,7 @@ public class Expression
             { "greater-equal", () => new GreaterThanOrEqual() },
             { "less-equal", () => new LessThanOrEqual() },
 
-
             { "if", () => new If() },
-
 
             { "length", () => new Length() },
             { "startswith", () => new StartsWith() },
@@ -1165,11 +1148,9 @@ public class Expression
             { "trim", () => new Trim() },
             { "replace", () => new Replace() },
 
-
             { "number", () => new ToNumber() },
             { "text", () => new ToText() },
             { "boolean", () => new ToBoolean() },
-
 
             { "clamp", () => new Clamp() },
             { "lerp", () => new Lerp() },
@@ -1224,8 +1205,6 @@ public class Expression
         return this;
     }
 
-
-
     private void SerializeTerm(Term term, StringBuilder sb)
     {
         switch (term)
@@ -1256,8 +1235,6 @@ public class Expression
         }
     }
 
-
-
     private enum TokenKind { Identifier, Number, String, UnitLiteral, LeftParenthesis, RightParenthesis }
 
     private readonly struct Token
@@ -1279,12 +1256,10 @@ public class Expression
         {
             char c = input[i];
 
-
             if (char.IsWhiteSpace(c)) { i++; continue; }
 
             if (c == '(') { tokens.Add(new Token(TokenKind.LeftParenthesis, "(", i)); i++; continue; }
             if (c == ')') { tokens.Add(new Token(TokenKind.RightParenthesis, ")", i)); i++; continue; }
-
 
             if (c == '"')
             {
@@ -1318,7 +1293,6 @@ public class Expression
                 continue;
             }
 
-
             if (c == '\'')
             {
                 int start = i;
@@ -1351,7 +1325,6 @@ public class Expression
                 continue;
             }
 
-
             if (char.IsDigit(c) || (c == '.' && i + 1 < input.Length && char.IsDigit(input[i + 1])))
             {
                 int start = i;
@@ -1370,7 +1343,6 @@ public class Expression
                 continue;
             }
 
-
             if (char.IsLetter(c) || c == '_')
             {
                 int start = i;
@@ -1385,17 +1357,10 @@ public class Expression
                 continue;
             }
 
-
             throw new FormatException($"Unexpected character '{c}' at position {i}.");
         }
         return tokens;
     }
-
-
-
-
-
-
 
     private Term ParseExpr(List<Token> tokens, ref int index)
     {
@@ -1559,17 +1524,11 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 
 #region 🔖SemioValidation
 
-
-
-
 public class SemioValidationFix
 {
     public string Title { get; set; } = "";
     public object? Diff { get; set; }
 }
-
-
-
 
 public class Issue
 {
@@ -1579,9 +1538,6 @@ public class Issue
     public string EntityGuid { get; set; } = "";
     public List<SemioValidationFix> Fixes { get; set; } = new();
 }
-
-
-
 
 public class ValidationResult
 {
@@ -1642,15 +1598,10 @@ public class ValidationResult
             if (ia.ConstraintId != ib.ConstraintId || ia.Message != ib.Message || ia.EntityKind != ib.EntityKind || ia.EntityGuid != ib.EntityGuid)
                 return false;
 
-
         }
         return true;
     }
 }
-
-
-
-
 
 public static class SemioValidator
 {
@@ -1690,7 +1641,6 @@ public static class SemioValidator
         foreach (var f in kit.Files) CheckGuid("File", f.Guid);
         foreach (var fo in kit.Folders) CheckGuid("Folder", fo.Guid);
 
-
         var typesByParent = kit.Types.GroupBy(t => t.Parent?.Guid);
         foreach (var group in typesByParent)
         {
@@ -1707,7 +1657,6 @@ public static class SemioValidator
                 }
             }
         }
-
 
         var designsByParent = kit.Designs.GroupBy(d => d.Parent?.Guid);
         foreach (var group in designsByParent)
@@ -1726,7 +1675,6 @@ public static class SemioValidator
             }
         }
 
-
         foreach (var design in kit.Designs)
         {
             var nameGroups = design.Pieces.Where(p => !string.IsNullOrEmpty(p.Name)).GroupBy(p => p.Name);
@@ -1742,7 +1690,6 @@ public static class SemioValidator
                 }
             }
         }
-
 
         foreach (var t in kit.Types)
         {
@@ -1760,7 +1707,6 @@ public static class SemioValidator
             }
         }
 
-
         foreach (var t in kit.Types)
         {
             var nameGroups = t.Models.Where(m => !string.IsNullOrEmpty(m.Name)).GroupBy(m => m.Name);
@@ -1777,7 +1723,6 @@ public static class SemioValidator
             }
         }
 
-
         var qualityNameGroups = kit.Qualities.GroupBy(q => q.Name ?? "");
         foreach (var nameGroup in qualityNameGroups)
         {
@@ -1790,7 +1735,6 @@ public static class SemioValidator
                 }
             }
         }
-
 
         var portNameGroups = kit.Ports.GroupBy(i => i.Name ?? "");
         foreach (var nameGroup in portNameGroups)
@@ -1805,7 +1749,6 @@ public static class SemioValidator
             }
         }
 
-
         var fileNameGroups = kit.Files.GroupBy(f => f.Name ?? "");
         foreach (var nameGroup in fileNameGroups)
         {
@@ -1818,7 +1761,6 @@ public static class SemioValidator
                 }
             }
         }
-
 
         var foldersByParent = kit.Folders.GroupBy(f => f.Parent);
         foreach (var group in foldersByParent)
@@ -1836,7 +1778,6 @@ public static class SemioValidator
                 }
             }
         }
-
 
         foreach (var design in kit.Designs)
         {
@@ -2002,7 +1943,6 @@ public class KitDiffUpdate
 
 #region 🔖Attribute
 
-
 public class AttributeId : Entity<AttributeId>
 {
     public string Guid { get; set; } = "";
@@ -2010,7 +1950,6 @@ public class AttributeId : Entity<AttributeId>
     public static implicit operator AttributeId(Attribute attribute) => new() { Guid = attribute.Guid };
     public static implicit operator AttributeId(AttributeDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
-
 
 public class AttributeDiff : Entity<AttributeDiff>
 {
@@ -2045,7 +1984,6 @@ public class AttributeDiff : Entity<AttributeDiff>
     }
 }
 
-
 public class AttributesDiff : Entity<AttributesDiff>
 {
     public List<AttributeId> Removed { get; set; } = new();
@@ -2064,10 +2002,6 @@ public class AttributesDiff : Entity<AttributesDiff>
 
     public static implicit operator AttributesDiff(List<Attribute> attributes) => new() { Updated = attributes.Select(a => new AttributeDiffUpdate { Attribute = a, Diff = (AttributeDiff)a }).ToList() };
 }
-
-
-
-
 
 public class Attribute : Entity<Attribute>
 {
@@ -2119,10 +2053,6 @@ public class Attribute : Entity<Attribute>
 
 #region 🔖Coord
 
-
-
-
-
 public class Coord : Entity<Coord>
 {
     public float U { get; set; }
@@ -2139,10 +2069,6 @@ public class Coord : Entity<Coord>
 
 #region 🔖Point
 
-
-
-
-
 public class Point : Entity<Point>
 {
     public float X { get; set; } = 0;
@@ -2153,10 +2079,6 @@ public class Point : Entity<Point>
 #endregion 🔖Point
 
 #region 🔖Vector
-
-
-
-
 
 public class Vector : Entity<Vector>
 {
@@ -2191,16 +2113,11 @@ public class Vector : Entity<Vector>
 
 #region 🔖Plane
 
-
-
-
-
 public class Plane : Entity<Plane>
 {
     public Point Origin { get; set; } = new();
     public Vector XAxis { get; set; } = new() { X = 1 };
     public Vector YAxis { get; set; } = new() { Y = 1 };
-
 
     public override (bool, List<string>) Validate()
     {
@@ -2228,7 +2145,6 @@ public class Plane : Entity<Plane>
 
 #region 🔖Location
 
-
 public class LocationId : Entity<LocationId>
 {
     public string Guid { get; set; } = "";
@@ -2237,7 +2153,6 @@ public class LocationId : Entity<LocationId>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"LocI({ToHumanIdString()})";
 }
-
 
 public class Location : Entity<Location>
 {
@@ -2255,7 +2170,6 @@ public class Location : Entity<Location>
 
 #region 🔖Author
 
-
 public class AuthorId : Entity<AuthorId>
 {
     public string Guid { get; set; } = "";
@@ -2264,7 +2178,6 @@ public class AuthorId : Entity<AuthorId>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Aut({ToHumanIdString()})";
 }
-
 
 public class ArtifactAuthor : Entity<ArtifactAuthor>
 {
@@ -2294,7 +2207,6 @@ public class ArtifactAuthor : Entity<ArtifactAuthor>
         return (isValid, errors);
     }
 }
-
 
 public class AuthorDiff : Entity<AuthorDiff>
 {
@@ -2328,7 +2240,6 @@ public class AuthorDiff : Entity<AuthorDiff>
     }
 }
 
-
 public class Author : Entity<Author>
 {
     public string Guid { get; set; } = "";
@@ -2355,7 +2266,6 @@ public class Author : Entity<Author>
     }
 }
 
-
 public class AuthorsDiff : Entity<AuthorsDiff>
 {
     public List<AuthorId> Removed { get; set; } = new();
@@ -2379,7 +2289,6 @@ public class AuthorsDiff : Entity<AuthorsDiff>
 
 #region 🔖File
 
-
 public class FileId : Entity<FileId>
 {
     public string Guid { get; set; } = "";
@@ -2392,7 +2301,6 @@ public class FileId : Entity<FileId>
     public static implicit operator FileId(File file) => new() { Guid = file.Guid };
     public static implicit operator FileId(FileDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
-
 
 public class FileDiff : Entity<FileDiff>
 {
@@ -2448,7 +2356,6 @@ public class FileDiff : Entity<FileDiff>
     }
 }
 
-
 public class FilesDiff : Entity<FilesDiff>
 {
     public List<FileId> Removed { get; set; } = new();
@@ -2457,7 +2364,6 @@ public class FilesDiff : Entity<FilesDiff>
 
     public static implicit operator FilesDiff(List<File> files) => new() { Updated = files.Select(f => new FileDiffUpdate { File = f, Diff = (FileDiff)f }).ToList() };
 }
-
 
 public class File : Entity<File>
 {
@@ -2486,7 +2392,6 @@ public class File : Entity<File>
 
 #region 🔖Folder
 
-
 public class FolderId : Entity<FolderId>
 {
     public string Guid { get; set; } = "";
@@ -2497,7 +2402,6 @@ public class FolderId : Entity<FolderId>
     public static implicit operator FolderId(Folder folder) => new() { Guid = folder.Guid };
     public static implicit operator FolderId(FolderDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
-
 
 public class FolderDiff : Entity<FolderDiff>
 {
@@ -2549,7 +2453,6 @@ public class FolderDiff : Entity<FolderDiff>
     }
 }
 
-
 public class FoldersDiff : Entity<FoldersDiff>
 {
     public List<FolderId> Removed { get; set; } = new();
@@ -2558,7 +2461,6 @@ public class FoldersDiff : Entity<FoldersDiff>
 
     public static implicit operator FoldersDiff(List<Folder> folders) => new() { Updated = folders.Select(f => new FolderDiffUpdate { Folder = f, Diff = (FolderDiff)f }).ToList() };
 }
-
 
 public class Folder : Entity<Folder>
 {
@@ -2601,7 +2503,6 @@ public class Folder : Entity<Folder>
 
 #region 🔖Benchmark
 
-
 public class BenchmarkId : Entity<BenchmarkId>
 {
     public string Guid { get; set; } = "";
@@ -2610,10 +2511,6 @@ public class BenchmarkId : Entity<BenchmarkId>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"BmI({ToHumanIdString()})";
 }
-
-
-
-
 
 public class Benchmark : Entity<Benchmark>
 {
@@ -2629,7 +2526,6 @@ public class Benchmark : Entity<Benchmark>
     public string ToHumanIdString() => $"{Name}";
     public override string ToString() => $"Bmk({ToHumanIdString()})";
 }
-
 
 public class BenchmarkDiff : Entity<BenchmarkDiff>
 {
@@ -2681,10 +2577,6 @@ public enum QualityKind
 
 #region 🔖Quality
 
-
-
-
-
 public class QualityId : Entity<QualityId>
 {
     public string Guid { get; set; } = "";
@@ -2692,7 +2584,6 @@ public class QualityId : Entity<QualityId>
     public static implicit operator QualityId(Quality quality) => new() { Guid = quality.Guid };
     public static implicit operator QualityId(QualityDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
-
 
 public class QualityDiff : Entity<QualityDiff>
 {
@@ -2718,10 +2609,6 @@ public class QualityDiff : Entity<QualityDiff>
 
     public static implicit operator QualityDiff(Quality quality) => new() { Guid = quality.Guid, Key = quality.Key, Name = quality.Name, Description = quality.Description, Uri = quality.Uri, Scalable = quality.Scalable, Kind = quality.Kind, SI = quality.SI, Imperial = quality.Imperial, Min = quality.Min, MinExcluded = quality.MinExcluded, Max = quality.Max, MaxExcluded = quality.MaxExcluded, Default = quality.Default, Formula = quality.Formula, Benchmarks = quality.Benchmarks, Attributes = quality.Attributes };
 }
-
-
-
-
 
 public class Quality : Entity<Quality>
 {
@@ -2775,20 +2662,12 @@ public class Quality : Entity<Quality>
 
 #region 🔖Tag
 
-
-
-
-
 public class TagId : Entity<TagId>
 {
     public string Guid { get; set; } = "";
 
     public static implicit operator TagId(Tag tag) => new() { Guid = tag.Guid };
 }
-
-
-
-
 
 public class Tag : Entity<Tag>
 {
@@ -2800,7 +2679,6 @@ public class Tag : Entity<Tag>
 
     public static implicit operator Tag(TagId id) => new() { Guid = id.Guid };
 }
-
 
 public class TagDiff : Entity<TagDiff>
 {
@@ -2824,7 +2702,6 @@ public class TagDiff : Entity<TagDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-
 public class TagsDiff : Entity<TagsDiff>
 {
     public List<TagId> Removed { get; set; } = new();
@@ -2836,20 +2713,12 @@ public class TagsDiff : Entity<TagsDiff>
 
 #region 🔖Concept
 
-
-
-
-
 public class ConceptId : Entity<ConceptId>
 {
     public string Guid { get; set; } = "";
 
     public static implicit operator ConceptId(Concept concept) => new() { Guid = concept.Guid };
 }
-
-
-
-
 
 public class Concept : Entity<Concept>
 {
@@ -2861,7 +2730,6 @@ public class Concept : Entity<Concept>
 
     public static implicit operator Concept(ConceptId id) => new() { Guid = id.Guid };
 }
-
 
 public class ConceptDiff : Entity<ConceptDiff>
 {
@@ -2885,7 +2753,6 @@ public class ConceptDiff : Entity<ConceptDiff>
     public bool ShouldSerializeAttributes() => _setProperties.Contains("Attributes");
 }
 
-
 public class ConceptsDiff : Entity<ConceptsDiff>
 {
     public List<ConceptId> Removed { get; set; } = new();
@@ -2907,10 +2774,6 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 
 #region 🔖Port
 
-
-
-
-
 public class PortId : Entity<PortId>
 {
     public string Guid { get; set; } = "";
@@ -2918,7 +2781,6 @@ public class PortId : Entity<PortId>
     public static implicit operator PortId(Port iface) => new() { Guid = iface.Guid };
     public static implicit operator PortId(PortDiff diff) => new() { Guid = diff.Guid };
 }
-
 
 public class PortDiff : Entity<PortDiff>
 {
@@ -2948,7 +2810,6 @@ public class PortDiff : Entity<PortDiff>
     public static implicit operator PortDiff(Port iface) => new() { Guid = iface.Guid, Name = iface.Name, Description = iface.Description, Icon = iface.Icon, CompatiblePorts = iface.CompatiblePorts?.Select(i => (PortId)i).ToList(), Attributes = iface.Attributes };
 }
 
-
 public class PortsDiff : Entity<PortsDiff>
 {
     public List<PortId> Removed { get; set; } = new();
@@ -2957,10 +2818,6 @@ public class PortsDiff : Entity<PortsDiff>
 
     public static implicit operator PortsDiff(List<Port> ports) => new() { Updated = ports.Select(i => new PortDiffUpdate { Port = i, Diff = (PortDiff)i }).ToList() };
 }
-
-
-
-
 
 public class Port : Entity<Port>
 {
@@ -3026,7 +2883,6 @@ public class Port : Entity<Port>
 
 #region 🔖Prop
 
-
 public class PropId : Entity<PropId>
 {
     public string Guid { get; set; } = "";
@@ -3035,10 +2891,6 @@ public class PropId : Entity<PropId>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"PrpI({ToHumanIdString()})";
 }
-
-
-
-
 
 public class Prop : Entity<Prop>
 {
@@ -3052,7 +2904,6 @@ public class Prop : Entity<Prop>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Prp({ToHumanIdString()})";
 }
-
 
 public class PropDiff : Entity<PropDiff>
 {
@@ -3080,7 +2931,6 @@ public class PropDiff : Entity<PropDiff>
 
 #region 🔖Model
 
-
 public class ModelId : Entity<ModelId>
 {
     public string Guid { get; set; } = "";
@@ -3090,7 +2940,6 @@ public class ModelId : Entity<ModelId>
     public string ToHumanIdString() => $"{Guid}";
     public override string ToString() => $"Rep({ToHumanIdString()})";
 }
-
 
 public class ModelDiff : Entity<ModelDiff>
 {
@@ -3133,7 +2982,6 @@ public class ModelDiff : Entity<ModelDiff>
     }
 }
 
-
 public class ModelsDiff : Entity<ModelsDiff>
 {
     public List<ModelId> Removed { get; set; } = new();
@@ -3152,9 +3000,6 @@ public class ModelsDiff : Entity<ModelsDiff>
 
     public static implicit operator ModelsDiff(List<Model> models) => new() { Updated = models.Select(r => new ModelDiffUpdate { Model = r, Diff = (ModelDiff)r }).ToList() };
 }
-
-
-
 
 public class Model : Entity<Model>
 {
@@ -3234,7 +3079,6 @@ public class Model : Entity<Model>
 
 #region 🔖Connector
 
-
 public class ConnectorId : Entity<ConnectorId>
 {
     public string Guid { get; set; } = "";
@@ -3246,7 +3090,6 @@ public class ConnectorId : Entity<ConnectorId>
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"Por({ToHumanIdString()})";
 }
-
 
 public class ConnectorDiff : Entity<ConnectorDiff>
 {
@@ -3304,7 +3147,6 @@ public class ConnectorDiff : Entity<ConnectorDiff>
     }
 }
 
-
 public class ConnectorsDiff : Entity<ConnectorsDiff>
 {
     public List<ConnectorId> Removed { get; set; } = new();
@@ -3323,10 +3165,6 @@ public class ConnectorsDiff : Entity<ConnectorsDiff>
 
     public static implicit operator ConnectorsDiff(List<Connector> connectors) => new() { Updated = connectors.Select(p => new ConnectorDiffUpdate { Connector = p, Diff = (ConnectorDiff)p }).ToList() };
 }
-
-
-
-
 
 public class Connector : Entity<Connector>
 {
@@ -3399,7 +3237,6 @@ public class Connector : Entity<Connector>
             Attributes = appliedDiff.Attributes?.Any() == true ? Attributes : new List<Attribute>()
         };
     }
-
 
     public override (bool, List<string>) Validate()
     {
@@ -3501,7 +3338,6 @@ public class Connector : Entity<Connector>
 
 #region 🔖Type
 
-
 public class TypeId : Entity<TypeId>
 {
     public string Guid { get; set; } = "";
@@ -3511,7 +3347,6 @@ public class TypeId : Entity<TypeId>
     public static implicit operator TypeId(Type type) => new() { Guid = type.Guid };
     public static implicit operator TypeId(TypeDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
-
 
 public class TypeDiff : Entity<TypeDiff>
 {
@@ -3604,7 +3439,6 @@ public class TypeDiff : Entity<TypeDiff>
     public static implicit operator TypeDiff(Type type) => new() { Name = type.Name, Description = type.Description, Icon = type.Icon, Image = type.Image, Stock = type.Stock, Virtual = type.Virtual, Uri = type.Uri, Unit = type.Unit, Location = type.Location, Models = new ModelsDiff { Added = new List<Model>(), Removed = new List<ModelId>(), Updated = type.Models.Select(m => new ModelDiffUpdate { Model = m, Diff = m.CreateDiff() }).ToList() }, Connectors = new ConnectorsDiff { Added = new List<Connector>(), Removed = new List<ConnectorId>(), Updated = type.Connectors.Select(p => new ConnectorDiffUpdate { Connector = p, Diff = p.CreateDiff() }).ToList() }, Authors = type.Authors, Attributes = type.Attributes, Concepts = type.Concepts };
 }
 
-
 public class TypesDiff : Entity<TypesDiff>
 {
     public List<TypeId> Removed { get; set; } = new();
@@ -3613,10 +3447,6 @@ public class TypesDiff : Entity<TypesDiff>
 
     public static implicit operator TypesDiff(List<Type> types) => new() { Updated = types.Select(t => new TypeDiffUpdate { Type = t, Diff = (TypeDiff)t }).ToList() };
 }
-
-
-
-
 
 public class Type : Entity<Type>
 {
@@ -3776,7 +3606,6 @@ public class Type : Entity<Type>
         };
     }
 
-
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
@@ -3887,7 +3716,6 @@ public class Type : Entity<Type>
 
 #region 🔖Layer
 
-
 public class LayerId : Entity<LayerId>
 {
     public string Guid { get; set; } = "";
@@ -3896,10 +3724,6 @@ public class LayerId : Entity<LayerId>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"LyrI({ToHumanIdString()})";
 }
-
-
-
-
 
 public class Layer : Entity<Layer>
 {
@@ -3915,7 +3739,6 @@ public class Layer : Entity<Layer>
     public string ToHumanIdString() => $"{Path}";
     public override string ToString() => $"Lyr({ToHumanIdString()})";
 }
-
 
 public class LayerDiff : Entity<LayerDiff>
 {
@@ -3949,7 +3772,6 @@ public class LayerDiff : Entity<LayerDiff>
 
 #region 🔖Group
 
-
 public class GroupId : Entity<GroupId>
 {
     public string Guid { get; set; } = "";
@@ -3958,10 +3780,6 @@ public class GroupId : Entity<GroupId>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"GrpI({ToHumanIdString()})";
 }
-
-
-
-
 
 public class Group : Entity<Group>
 {
@@ -3976,7 +3794,6 @@ public class Group : Entity<Group>
     public string ToHumanIdString() => $"{Name ?? Guid}";
     public override string ToString() => $"Grp({ToHumanIdString()})";
 }
-
 
 public class GroupDiff : Entity<GroupDiff>
 {
@@ -4007,7 +3824,6 @@ public class GroupDiff : Entity<GroupDiff>
 
 #region 🔖Piece
 
-
 public class PieceId : Entity<PieceId>
 {
     public string Guid { get; set; } = "";
@@ -4018,7 +3834,6 @@ public class PieceId : Entity<PieceId>
     public static implicit operator PieceId(PieceDiff diff) => new() { Guid = diff.Guid ?? "" };
     public static implicit operator PieceId(Piece piece) => new() { Guid = piece.Guid };
 }
-
 
 public class PiecesDiff : Entity<PiecesDiff>
 {
@@ -4038,7 +3853,6 @@ public class PiecesDiff : Entity<PiecesDiff>
 
     public static implicit operator PiecesDiff(List<Piece> pieces) => new() { Updated = pieces.Select(p => new PieceDiffUpdate { Piece = p, Diff = p.CreateDiff() }).ToList() };
 }
-
 
 public class PieceDiff : Entity<PieceDiff>
 {
@@ -4091,10 +3905,6 @@ public class PieceDiff : Entity<PieceDiff>
     public static implicit operator PieceDiff(PieceId id) => new() { Guid = id.Guid };
     public static implicit operator PieceDiff(Piece piece) => new() { Guid = piece.Guid, Name = piece.Name, Description = piece.Description, Type = piece.Type, Design = piece.Design, Plane = piece.Plane, Center = piece.Center, Scale = piece.Scale, MirrorPlane = piece.MirrorPlane, IsHidden = piece.IsHidden, IsLocked = piece.IsLocked, Color = piece.Color, Props = piece.Props, Attributes = piece.Attributes };
 }
-
-
-
-
 
 public class Piece : Entity<Piece>
 {
@@ -4166,7 +3976,6 @@ public class Piece : Entity<Piece>
 #endregion 🔖Piece
 #region 🔖Side
 
-
 public class SideDiff : Entity<SideDiff>
 {
     private readonly HashSet<string> _setProperties = new();
@@ -4198,10 +4007,6 @@ public class SideDiff : Entity<SideDiff>
         };
     }
 }
-
-
-
-
 
 public class Side : Entity<Side>
 {
@@ -4266,7 +4071,6 @@ public class Side : Entity<Side>
 
 #region 🔖Connection
 
-
 public class ConnectionId : Entity<ConnectionId>
 {
     public string Guid { get; set; } = "";
@@ -4280,7 +4084,6 @@ public class ConnectionId : Entity<ConnectionId>
     public static implicit operator ConnectionId(Connection connection) => new() { Connected = connection.Connected, Connecting = connection.Connecting };
     public static implicit operator ConnectionId(ConnectionDiff diff) => new() { Connected = diff.Connected ?? new(), Connecting = diff.Connecting ?? new() };
 }
-
 
 public class ConnectionDiff : Entity<ConnectionDiff>
 {
@@ -4347,7 +4150,6 @@ public class ConnectionDiff : Entity<ConnectionDiff>
     }
 }
 
-
 public class ConnectionsDiff : Entity<ConnectionsDiff>
 {
     public List<ConnectionId> Removed { get; set; } = new();
@@ -4366,10 +4168,6 @@ public class ConnectionsDiff : Entity<ConnectionsDiff>
         };
     }
 }
-
-
-
-
 
 public class Connection : Entity<Connection>
 {
@@ -4497,7 +4295,6 @@ public class Connection : Entity<Connection>
 
 #region 🔖Stat
 
-
 public class StatId : Entity<StatId>
 {
     public string Guid { get; set; } = "";
@@ -4506,10 +4303,6 @@ public class StatId : Entity<StatId>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"SttI({ToHumanIdString()})";
 }
-
-
-
-
 
 public class Stat : Entity<Stat>
 {
@@ -4525,7 +4318,6 @@ public class Stat : Entity<Stat>
     public string ToHumanIdString() => $"{ToIdString()}";
     public override string ToString() => $"Stt({ToHumanIdString()})";
 }
-
 
 public class StatDiff : Entity<StatDiff>
 {
@@ -4559,7 +4351,6 @@ public class StatDiff : Entity<StatDiff>
 
 #region 🔖Design
 
-
 public class DesignsDiff : Entity<DesignsDiff>
 {
     public List<DesignId> Removed { get; set; } = new();
@@ -4568,7 +4359,6 @@ public class DesignsDiff : Entity<DesignsDiff>
 
     public static implicit operator DesignsDiff(List<Design> designs) => new() { Updated = designs.Select(d => new DesignDiffUpdate { Design = d, Diff = (DesignDiff)d }).ToList() };
 }
-
 
 public class DesignDiff : Entity<DesignDiff>
 {
@@ -4683,7 +4473,6 @@ public class DesignDiff : Entity<DesignDiff>
     }
 }
 
-
 public class DesignId : Entity<DesignId>
 {
     public string Guid { get; set; } = "";
@@ -4696,10 +4485,6 @@ public class DesignId : Entity<DesignId>
     public string ToHumanId() => ToHumanIdString();
     public override string ToString() => $"DsnId({ToHumanIdString()})";
 }
-
-
-
-
 
 public class Design : Entity<Design>
 {
@@ -5352,7 +5137,6 @@ public class Design : Entity<Design>
             if (connection.V.HasValue) connection.V = -(connection.V * iconWidth);
         }
 
-
         var maxIconOffset = iconWidthMax - iconWidth;
         var minX = Pieces.Where(p => p.Center is not null).Min(piece => piece.Center!.U) - (margin + maxIconOffset);
         var minY = Pieces.Where(p => p.Center is not null).Min(piece => piece.Center!.V) - (margin + maxIconOffset);
@@ -5369,9 +5153,6 @@ public class Design : Entity<Design>
 
         return this;
     }
-
-
-
 
     public string Diagram(
         IEnumerable<Type> types,
@@ -5586,8 +5367,6 @@ text {
         xml.DocumentElement.PrependChild(styleElement);
         return xml.OuterXml.Replace(" xmlns=\"\"", "");
     }
-
-
 
     public override (bool, List<string>) Validate()
     {
@@ -5821,7 +5600,6 @@ text {
 
 #region 🔖Kit
 
-
 public class KitDiff : Entity<KitDiff>
 {
     private readonly HashSet<string> _setProperties = new();
@@ -5936,7 +5714,6 @@ public class KitDiff : Entity<KitDiff>
     };
 }
 
-
 public class KitId : Entity<KitId>
 {
     public string Guid { get; set; } = "";
@@ -5948,7 +5725,6 @@ public class KitId : Entity<KitId>
     public static implicit operator KitId(KitDiff diff) => new() { Guid = diff.Guid ?? "" };
 }
 
-
 public class KitsDiff : Entity<KitsDiff>
 {
     public List<KitId> Removed { get; set; } = new();
@@ -5957,10 +5733,6 @@ public class KitsDiff : Entity<KitsDiff>
 
     public static implicit operator KitsDiff(List<Kit> kits) => new() { Updated = kits.Select(k => new KitDiffUpdate { Kit = k, Diff = (KitDiff)k }).ToList() };
 }
-
-
-
-
 
 public class Kit : Entity<Kit>
 {
@@ -6183,25 +5955,9 @@ public class Kit : Entity<Kit>
         return result;
     }
 
-
     public override (bool, List<string>) Validate()
     {
         var (isValid, errors) = base.Validate();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         foreach (var type in Types)
         {
@@ -6384,24 +6140,12 @@ public class Kit : Entity<Kit>
 
     #region 🔖Design Family Helpers
 
-
-
-
-
-
-
     public Design FindDesignByGuid(string designGuid)
     {
         var design = Designs.FirstOrDefault(d => d.Guid == designGuid);
         if (design is null) throw new ArgumentException($"Design {designGuid} not found in kit {Name}");
         return design;
     }
-
-
-
-
-
-
 
     public Design GetPrimitiveDesign(string designGuid)
     {
@@ -6412,11 +6156,6 @@ public class Kit : Entity<Kit>
         }
         return current;
     }
-
-
-
-
-
 
     public List<Design> GetDesignFamily(string designGuid)
     {
@@ -6437,12 +6176,6 @@ public class Kit : Entity<Kit>
         }
     }
 
-
-
-
-
-
-
     public bool AreDesignsInSameFamily(string designGuidA, string designGuidB)
     {
         var primitiveA = GetPrimitiveDesign(designGuidA);
@@ -6450,22 +6183,10 @@ public class Kit : Entity<Kit>
         return primitiveA.Guid == primitiveB.Guid;
     }
 
-
-
-
-
-
-
-
     public bool CanUseDesignAsPiece(string containerDesignGuid, string pieceDesignGuid)
     {
         return !AreDesignsInSameFamily(containerDesignGuid, pieceDesignGuid);
     }
-
-
-
-
-
 
     public List<Piece> FindSameFamilyDesignPieces(string designGuid)
     {
@@ -6479,24 +6200,12 @@ public class Kit : Entity<Kit>
 
     #region 🔖Type Family Helpers
 
-
-
-
-
-
-
     public Type FindTypeByGuid(string typeGuid)
     {
         var type = Types.FirstOrDefault(t => t.Guid == typeGuid);
         if (type is null) throw new ArgumentException($"Type {typeGuid} not found in kit {Name}");
         return type;
     }
-
-
-
-
-
-
 
     public Type GetPrimitiveType(string typeGuid)
     {
@@ -6507,11 +6216,6 @@ public class Kit : Entity<Kit>
         }
         return current;
     }
-
-
-
-
-
 
     public List<Type> GetTypeFamily(string typeGuid)
     {
@@ -6531,12 +6235,6 @@ public class Kit : Entity<Kit>
             CollectTypeDescendants(child.Guid, family);
         }
     }
-
-
-
-
-
-
 
     public bool AreTypesInSameFamily(string typeGuidA, string typeGuidB)
     {
@@ -6570,7 +6268,6 @@ public interface IApi
 
     [Delete("/api/kits/{encodedKitUri}")]
     Task<ApiResponse<bool>> DeleteKit(string encodedKitUri);
-
 
     [Put("/api/kits/{encodedKitUri}/types/{encodedTypeName}")]
     Task<ApiResponse<bool>> PutType(string encodedKitUri, string encodedTypeName, [Body]
@@ -6653,7 +6350,6 @@ public static class Api
     public static void PutDesign(string kitUrl, Design input) => HandleErrors(GetApi().PutDesign(Utility.Encode(kitUrl), Utility.Encode(input.Name), input).Result);
 
     public static void RemoveDesign(string kitUrl, DesignId id) => HandleErrors(GetApi().RemoveDesign(Utility.Encode(kitUrl), Utility.Encode(id.Guid)).Result);
-
 
     public static Design? PredictDesign(string description, Type[] types, Design design)
     {
@@ -8538,5 +8234,3 @@ public static class SemioDiff
 #endregion 🔖SemioDiff
 
 #endregion 🔖Entitying
-
-

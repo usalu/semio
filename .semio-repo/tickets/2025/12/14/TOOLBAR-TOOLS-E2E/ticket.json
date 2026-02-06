@@ -4,7 +4,7 @@
   "prompt": "Implement toolbar in apps and extend Type app E2E test for connector tool",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
   "started": "2025-12-16T17:06:07.946Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Implement toolbar in apps and extend Type app E2E test for connector tool",
       "llm": "sonnet-4-5",

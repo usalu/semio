@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "0001-01-01T00:00:00Z",
   "finished": "2026-02-03T08:49:44.317130247Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "",
       "llm": "",

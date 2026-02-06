@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan
 
 1. Inspect devcontainer mounts and startup scripts to locate Claude Code and Codex persistence gaps.
@@ -11,6 +12,7 @@
 ## Changes
 
 ## Log
+
 # Log: Persist Claude Code and Codex Auth
 
 ## Investigation
@@ -18,10 +20,12 @@
 Checked current devcontainer mount configuration and discovered the mounts were targeting wrong directories:
 
 **Current (broken) mounts:**
+
 - `/home/vscode/.config/claude` - empty, not used by Claude Code
 - `/home/vscode/.config/codex` - empty, not used by Codex
 
 **Actual data locations:**
+
 - Claude Code: `/home/vscode/.claude/` (contains `.credentials.json`, projects, sessions, chat history)
 - Codex: `/home/vscode/.codex/` (contains skills, tmp)
 
@@ -79,7 +83,7 @@ After rebuilding the devcontainer, you will need to sign in **once** to Claude C
 ## 2026-01-20
 
 - Continued ticket: persist Codex and Claude Code auth across devcontainer rebuilds.
-- Observed ticket reopen blocked by missing UI metadata; updated ticket.json iterations with ui to proceed.
+- Observed ticket reopen blocked by missing UI metadata; updated ticket.json interactions with ui to proceed.
 - Reopened ticket and updated plan.
 - Added devcontainer mounts for Codex/Claude-related config and editor server persistence; normalized Claude auth file storage in post-start.
 - Updated README.md and AGENTS.md to document devcontainer persistence requirements and implementation.
@@ -88,4 +92,5 @@ After rebuilding the devcontainer, you will need to sign in **once** to Claude C
 - Closed ticket via repo CLI; GitHub issue 150 could not be updated by CLI in this environment.
 
 ## Summary
+
 Persisted Codex and Claude Code state across devcontainer rebuilds by adding volumes for editor server storage and OpenAI config, and normalizing Claude auth files into the persisted Claude volume with symlinks on start. Updated devcontainer scripts to use region markers and removed inline comments for code hygiene compliance. Documented the persistence mechanism in README.md and AGENTS.md.

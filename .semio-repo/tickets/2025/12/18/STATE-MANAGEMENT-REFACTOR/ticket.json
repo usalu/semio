@@ -4,7 +4,7 @@
   "prompt": "Analyze js/semio codebase for state management inconsistencies and refactor to triadic hooks pattern",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-18T07:25:30.399Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Analyze js/semio codebase for state management inconsistencies and refactor to triadic hooks pattern",
       "llm": "gpt-5.2-codex",

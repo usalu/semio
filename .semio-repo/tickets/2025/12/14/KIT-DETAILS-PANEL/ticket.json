@@ -4,7 +4,7 @@
   "prompt": "Fix Kit app details panel rendering",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.927Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix Kit app details panel rendering",
       "llm": "sonnet-4-5",

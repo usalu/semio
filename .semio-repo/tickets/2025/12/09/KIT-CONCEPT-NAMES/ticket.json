@@ -4,7 +4,7 @@
   "prompt": "Display concept names in kit app rows",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.896Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Display concept names in kit app rows",
       "llm": "sonnet-4-5",

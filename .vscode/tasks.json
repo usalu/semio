@@ -2,68 +2,68 @@
   "version": "2.0.0",
   "tasks": [
     // ========================================
-    // @semio-repo/go
+    // @semio-repo/cli
     // ========================================
     {
-      "label": "@semio-repo/go dev",
+      "label": "@semio-repo/cli dev",
       "type": "shell",
-      "command": "npx nx dev @semio-repo/go",
+      "command": "npx nx dev @semio-repo/cli",
       "group": "none",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/go test:unit",
+      "label": "@semio-repo/cli test:unit",
       "type": "shell",
-      "command": "npx nx test:unit @semio-repo/go",
+      "command": "npx nx test:unit @semio-repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/go test:e2e",
+      "label": "@semio-repo/cli test:e2e",
       "type": "shell",
-      "command": "npx nx test:e2e @semio-repo/go",
+      "command": "npx nx test:e2e @semio-repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/go test:coverage",
+      "label": "@semio-repo/cli test:coverage",
       "type": "shell",
-      "command": "npx nx test:coverage @semio-repo/go",
+      "command": "npx nx test:coverage @semio-repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/go test",
+      "label": "@semio-repo/cli test",
       "type": "shell",
-      "command": "npx nx test @semio-repo/go",
+      "command": "npx nx test @semio-repo/cli",
       "group": "test",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/go build",
+      "label": "@semio-repo/cli build",
       "type": "shell",
-      "command": "npx nx build @semio-repo/go",
+      "command": "npx nx build @semio-repo/cli",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/go publish:test",
+      "label": "@semio-repo/cli publish:test",
       "type": "shell",
-      "command": "npx nx publish:test @semio-repo/go",
+      "command": "npx nx publish:test @semio-repo/cli",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/go publish",
+      "label": "@semio-repo/cli publish",
       "type": "shell",
-      "command": "npx nx publish @semio-repo/go",
+      "command": "npx nx publish @semio-repo/cli",
       "group": "build",
       "problemMatcher": []
     },
     {
-      "label": "@semio-repo/go preflight",
+      "label": "@semio-repo/cli preflight",
       "type": "shell",
-      "command": "npx nx preflight @semio-repo/go",
+      "command": "npx nx preflight @semio-repo/cli",
       "group": "build",
       "problemMatcher": []
     },

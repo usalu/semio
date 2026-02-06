@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan
 
 # Previously
@@ -8,7 +9,7 @@
 # Plan
 
 1. Update GraphQL schema - remove FileListInput, keep TicketCheckpointInput with required files
-2. Update Go repo TicketMetrics - change iterations to checkpoints, add sections/definitions counts
+2. Update Go repo TicketMetrics - change interactions to checkpoints, add sections/definitions counts
 3. Update CLI commands - rename ticketProgressCmd to ticketCheckpointCmd, remove files from create
 4. Update MCP handlers - rename ticket_progress to ticket_checkpoint
 5. Update VSCode extension - rename types and update command registrations
@@ -24,7 +25,7 @@
 
 ## Go Repo (go/repo/repo.go)
 
-- ticketMetricsType: changed "iterations" field to "checkpoints"
+- ticketMetricsType: changed "interactions" field to "checkpoints"
 - Added "sections" and "definitions" fields to ticketMetricsType
 - Updated metrics resolver to compute checkpoints/sections/definitions counts from ticket data
 
@@ -45,7 +46,7 @@
 ## VSCode Extension (js/vscode/extension.ts)
 
 - Renamed TicketIteration type to TicketCheckpointData
-- Updated TicketFrontmatter.iterations to checkpoints
+- Updated TicketFrontmatter.interactions to checkpoints
 - Updated GraphQL query mappings (2 locations)
 - Updated TicketItem children loop
 - Updated SIDEBAR_COMMANDS: ticketProgress -> ticketCheckpoint
@@ -65,4 +66,5 @@
 ## Log
 
 ## Summary
+
 # Summary

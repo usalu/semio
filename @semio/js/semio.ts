@@ -1940,7 +1940,7 @@ export const SUPPORTED_3D_EXTENSIONS = [
   "ldr",
   "mpd",
 
-  "json", // Lottie animations
+  "json",
 
   "pmd",
   "pmx",
@@ -2102,143 +2102,10 @@ const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsD
 
 export const unifyConnectorPortsAndCompatiblePortsForTypes = (types: Type[]): TypesDiff => {
   return { updated: [] };
-  /*
-  const allPorts = new Set<string>();
-  for (const type of types) {
-    for (const connector of type.connectors || []) {
-      if (connector.port && connector.port !== "") allPorts.add(connector.port);
-      for (const compatiblePort of connector.compatiblePorts || []) {
-        if (compatiblePort && compatiblePort !== "") allPorts.add(compatiblePort);
-      }
-    }
-  }
-
-  // Union-Find data structure
-  const parent = new Map<string, string>();
-  const rank = new Map<string, number>();
-
-  // Initialize each port as its own parent
-  for (const port_ of Array.from(allPorts)) {
-    parent.set(port_, port_);
-    rank.set(port_, 0);
-  }
-
-  // Find with path compression
-  const find = (port_: string): string => {
-    if (parent.get(port_) !== port_) parent.set(port_, find(parent.get(port_)!));
-    return parent.get(port_)!;
-  };
-
-  // Union by rank
-  const union = (port1: string, port2: string): void => {
-    const root1 = find(port1);
-    const root2 = find(port2);
-
-    if (root1 === root2) return;
-
-    const rank1 = rank.get(root1)!;
-    const rank2 = rank.get(root2)!;
-
-    if (rank1 < rank2) {
-      parent.set(root1, root2);
-    } else if (rank1 > rank2) {
-      parent.set(root2, root1);
-    } else {
-      parent.set(root2, root1);
-      rank.set(root1, rank1 + 1);
-    }
-  };
-
-  // Build compatibility groups by examining all connectors
-  for (const type of types) {
-    for (const connector of type.connectors || []) {
-      const connectorPort = connector.port;
-      const compatiblePorts = connector.compatiblePorts || [];
-
-      if (connectorPort && connectorPort !== "") {
-        // Union connector's port with all its compatible ports
-        for (const compatiblePort of compatiblePorts) {
-          if (compatiblePort && compatiblePort !== "") {
-            union(connectorPort, compatiblePort);
-          }
-        }
-      }
-
-      // Also union all compatible ports with each other
-      for (let i = 0; i < compatiblePorts.length; i++) {
-        for (let j = i + 1; j < compatiblePorts.length; j++) {
-          const port1 = compatiblePorts[i];
-          const port2 = compatiblePorts[j];
-          if (port1 && port1 !== "" && port2 && port2 !== "") {
-            union(port1, port2);
-          }
-        }
-      }
-    }
-  }
-
-  // Create mapping from any port to its representative
-  const portToRepresentative = new Map<string, string>();
-  for (const port_ of Array.from(allPorts)) {
-    portToRepresentative.set(port_, find(port_));
-  }
-
-  // Update all types with unified connector ports
-  const updated: { id: string; diff: TypeDiff }[] = [];
-
-  for (const type of types) {
-    const updatedConnectors = type.connectors?.map((connector) => {
-      const connectorPort = connector.port;
-      const compatiblePorts = connector.compatiblePorts || [];
-
-      // Determine the representative port for this connector
-      let representative: string | undefined;
-
-      if (connectorPort && connectorPort !== "") {
-        representative = portToRepresentative.get(connectorPort);
-      } else if (compatiblePorts.length > 0) {
-        // If no port but has compatible ports, use the first one's representative
-        const firstCompatible = compatiblePorts.find((f) => f && f !== "");
-        if (firstCompatible) {
-          representative = portToRepresentative.get(firstCompatible);
-        }
-      }
-
-      if (representative) {
-        return {
-          ...connector,
-          port: representative,
-          compatiblePorts: [representative],
-        };
-      } else {
-        // No port information, keep as is
-        return connector;
-      }
-    });
-
-    if (updatedConnectors) {
-      const connectorsDiff = getConnectorsDiff(type.connectors ?? [], updatedConnectors);
-      updated.push({
-        id: type.guid,
-        diff: {
-          connectors: connectorsDiff,
-        },
-      });
-    }
-  }
-
-  return { updated };
-  */
 };
 
 export const areConnectorsCompatible = (connector: Connector, otherPort: Connector): boolean => {
   return true;
-  /*
-  const normalizedConnectorPort = normalize(connector.port);
-  const normalizedOtherPortPort = normalize(otherPort.port);
-  if (normalizedConnectorPort === "" || normalizedOtherPortPort === "") return true;
-  return (connector.compatiblePorts ?? []).includes(normalizedOtherPortPort) || (otherPort.compatiblePorts ?? []).includes(normalizedConnectorPort);
-  */
 };
 
 export const findConnector = (connectors: Connector[], connectorGuid: string): Connector => {
@@ -3692,7 +3559,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
         ...connection,
         connected: {
           ...connection.connected,
-          designPiece: { guid: connection.connected.piece.guid }, // Reference to the piece within nested design
+          designPiece: { guid: connection.connected.piece.guid },
         },
       };
     } else if (connectingInCluster) {
@@ -3700,7 +3567,7 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
         ...connection,
         connecting: {
           ...connection.connecting,
-          designPiece: { guid: connection.connecting.piece.guid }, // Reference to the piece within nested design
+          designPiece: { guid: connection.connecting.piece.guid },
         },
       };
     }
@@ -3816,7 +3683,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
           ...connection,
           connecting: {
             ...connection.connecting,
-            designPiece: undefined, // Remove designPiece since we've expanded
+            designPiece: undefined,
           },
         };
       }
@@ -7009,7 +6876,6 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
         design.guid,
       ]);
 
-      // Stat.attributes not in schema
     });
 
     toArray(design.attributes).forEach((attr) => {
@@ -7613,7 +7479,6 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
           });
         }
       } catch {
-        // Ignore errors (e.g., design not found)
       }
     });
   });
@@ -7622,13 +7487,13 @@ export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
 
 const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: string): string => {
   let currentGuid = designGuid;
-  let iterations = 0;
+  let interactions = 0;
   const maxIterations = 1000;
-  while (iterations < maxIterations) {
+  while (interactions < maxIterations) {
     const design = ctx.designsByGuid.get(currentGuid);
     if (!design || !design.parent?.guid) return currentGuid;
     currentGuid = design.parent.guid;
-    iterations++;
+    interactions++;
   }
   return currentGuid;
 };

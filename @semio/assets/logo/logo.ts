@@ -181,8 +181,6 @@ function parseTransform(transformStr: string): TransformData {
     result.rotate.cx = values[1] || 0;
     result.rotate.cy = values[2] || 0;
 
-
-    // SVG animation can handle rotation centers directly, so don't convert to translate
     nsformStr.match(/scale\(([^)]+)\)/);
     if (scaleMatch) {
       const values = scaleMatch[1 values[0] || 1;

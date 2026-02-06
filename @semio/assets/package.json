@@ -14,5 +14,6 @@
   },
   "dependencies": {
     "lucide-react": "^0.536.0"
-  }
+  },
+  "bundleKind": "assets"
 }

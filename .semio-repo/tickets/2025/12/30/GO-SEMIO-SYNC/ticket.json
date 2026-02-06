@@ -4,7 +4,7 @@
   "prompt": "Synchronize Go Library with TypeScript - extend Go tests to match TS/C# tests for validation, import/export, and flatten, then implement missing features",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-30T21:43:58Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Synchronize Go Library with TypeScript - extend Go tests to match TS/C# tests for validation, import/export, and flatten, then implement missing features",
       "llm": "sonnet-4-5",

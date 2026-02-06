@@ -5,7 +5,7 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-17T18:00:50.599Z",
   "finished": "2025-12-17T18:12:12.439Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Every window should have a single unit margin between the window and the border of the canvas or between windows. Every window has a continuous border around it.",
       "llm": "gpt-5.2-codex",

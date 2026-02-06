@@ -1,7 +1,7 @@
 go 1.24.0
 
 use (
-	./@semio-repo/go
+	./@semio-repo/cli
 	./@semio-repo/server
 	./@semio/go
 )

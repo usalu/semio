@@ -4,7 +4,7 @@
   "prompt": "Fix Tambour model warning by regenerating metabolism.zip with models",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
   "started": "2025-12-16T17:06:07.815Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix Tambour model warning by regenerating metabolism.zip with models",
       "llm": "sonnet-4-5",

@@ -4,7 +4,7 @@
   "prompt": "Fix drop coordinates for diagram and scene",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.728Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix drop coordinates for diagram and scene",
       "llm": "sonnet-4",

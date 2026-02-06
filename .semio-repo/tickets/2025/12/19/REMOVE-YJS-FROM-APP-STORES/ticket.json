@@ -4,7 +4,7 @@
   "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-19T22:05:57.199Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
       "llm": "opus-4-5",

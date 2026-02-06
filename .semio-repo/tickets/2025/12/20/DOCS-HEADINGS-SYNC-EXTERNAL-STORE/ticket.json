@@ -5,7 +5,7 @@
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-20T13:31:45.583Z",
   "finished": "2025-12-20T13:32:01.797Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Refactor Docs.tsx useHeadings hook to use useSyncExternalStore instead of useState + useEffect + manual subscribe pattern",
       "llm": "opus-4-5",

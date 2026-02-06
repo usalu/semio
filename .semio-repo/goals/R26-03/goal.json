@@ -11,7 +11,7 @@
   "github": {
     "milestone": "https://github.com/usalu/semio/milestone/38"
   },
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Release cycle for Mar 2026",
       "llm": "sonnet-4-5",

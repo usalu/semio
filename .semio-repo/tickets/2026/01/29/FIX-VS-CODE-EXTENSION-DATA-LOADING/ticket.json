@@ -6,7 +6,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-29T20:00:29.560096904Z",
   "finished": "2026-02-03T08:49:57.475634581Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix failures in codebase, ticket, and contributor loading in VS Code extension",
       "llm": "",

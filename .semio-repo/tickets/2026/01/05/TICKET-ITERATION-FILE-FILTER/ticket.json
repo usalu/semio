@@ -1,12 +1,12 @@
 {
   "title": "TICKET-ITERATION-FILE-FILTER",
   "status": "closed",
-  "prompt": "Fix ticket iteration end to only calculate lines for files that were declared when the iteration started, not all files from git.",
+  "prompt": "Fix ticket interaction end to only calculate lines for files that were declared when the interaction started, not all files from git.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-01-05T11:41:39Z",
-  "iterations": [
+  "interactions": [
     {
-      "prompt": "Fix ticket iteration end to only calculate lines for files that were declared when the iteration started, not all files from git.",
+      "prompt": "Fix ticket interaction end to only calculate lines for files that were declared when the interaction started, not all files from git.",
       "llm": "opus-4-5",
       "author": {
         "name": "uelisaluz"

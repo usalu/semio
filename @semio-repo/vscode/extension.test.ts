@@ -31,7 +31,7 @@ import { FilterTreeDataProvider, FilterTreeItem, MonorepoTreeDataProvider, Monor
 
 // #region 🔖Constants
 
-const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem"];
+const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem", "semio.navigate"];
 const EXPECTED_CONSTRAINTS = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
 const EXPECTED_VIEWS = ["semio.monorepo", "semio.filter"];
 
@@ -296,7 +296,6 @@ suite("Repo Diagnostics Test Suite", function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      // Analyze might return 0 violations if the file is ignored or policy is different
       console.log("Skipping: no violations found (analyze returned 0)");
       return;
     }
@@ -387,13 +386,11 @@ suite("Sidebar View Test Suite", function () {
   test("All expected views are registered", async function () {
     const extension = vscode.extensions.getExtension("usalu.semio-repo");
     assert.ok(extension, "Extension should be found");
-    // Ensure the extension is active to register check views
     if (!extension.isActive) {
       await extension.activate();
     }
     assert.ok(extension.isActive, "Extension should be active");
 
-    // Verify views are contributed in package.json (static check)
     const packageJSON = extension.packageJSON;
     const views = packageJSON.contributes.views;
     assert.ok(views, "Views contribution should exist");
@@ -583,7 +580,7 @@ suite("Filter Provider Test Suite", () => {
     const children = await provider.getChildren();
     assert.strictEqual(children.length, 13, "Should have 13 root elements (search + 12 filters)");
     const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
-    assert.ok(labels.some(l => l.startsWith("🔍")), "Should have Search");
+    assert.ok(labels.some(l => l.startsWith("🔍Search")), "Should have Search");
     assert.ok(labels.some(l => l.startsWith("🏗️Projects")), "Should have Projects");
     assert.ok(labels.some(l => l.startsWith("📦Bundles")), "Should have Bundles");
     assert.ok(labels.some(l => l.startsWith("📂Folders")), "Should have Folders");

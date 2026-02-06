@@ -6,7 +6,7 @@
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2026-01-29T11:33:05.852316932Z",
   "finished": "2026-02-03T08:50:01.813844829Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Replace Search view with Filter view and restore Codebase view functionality",
       "llm": "gemini-3-pro",

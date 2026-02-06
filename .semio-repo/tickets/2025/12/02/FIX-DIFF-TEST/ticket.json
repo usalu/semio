@@ -4,7 +4,7 @@
   "prompt": "\"Fix diff test - schema changed, concepts now objects\"",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-16T17:06:07.807Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "\"Fix diff test - schema changed, concepts now objects\"",
       "llm": "sonnet-4-5",

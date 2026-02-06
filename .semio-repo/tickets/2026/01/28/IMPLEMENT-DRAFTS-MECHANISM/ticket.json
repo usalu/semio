@@ -6,7 +6,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-DRAFT-MECHANISM",
   "started": "2026-01-28T16:50:58.053517969Z",
   "finished": "2026-02-03T08:49:52.361514196Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Extend repo mechanism to introduce drafts replacing plans",
       "llm": "gemini-3-pro",

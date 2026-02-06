@@ -241,7 +241,7 @@ cat > "$WINDSURF_MCP_FILE" <<'EOF'
 {
     "mcpServers": {
         "semio-repo": {
-            "command": "./go/repo/repo",
+            "command": "./@semio-repo/cli/cli",
             "args": [
                 "mcp"
             ]

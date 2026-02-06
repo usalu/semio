@@ -4,7 +4,7 @@
   "prompt": "",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "0001-01-01T00:00:00Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "",
       "llm": "",

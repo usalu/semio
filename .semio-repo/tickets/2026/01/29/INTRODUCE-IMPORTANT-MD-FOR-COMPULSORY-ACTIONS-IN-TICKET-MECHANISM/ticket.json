@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "started": "2026-01-29T10:58:29.547846004Z",
   "finished": "2026-01-29T11:04:06.702277601Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Extend the ticket mechanism to include an `important.md` file for compulsory actions. This file must be created on ticket open, and ticket close must fail if the file is not empty.",
       "llm": "sonnet-4-5",

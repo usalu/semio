@@ -4,7 +4,7 @@
   "prompt": "Copilot MCP ticket open fails with tool parameters array type must have items",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MCP",
   "started": "2026-01-03T03:07:08Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Copilot MCP ticket open fails with tool parameters array type must have items",
       "llm": "sonnet-4-5",

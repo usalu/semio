@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "started": "2026-01-29T11:10:40.701747188Z",
   "finished": "2026-01-29T11:15:20.056578963Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The file tree items should have different codeicons according the file kind (code, script, config, test, docs, resource, license).",
       "llm": "sonnet-4-5",

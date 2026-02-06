@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-29T10:19:01.415152363Z",
   "finished": "2026-01-29T10:20:29.550439192Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Extend all list and tree commands to receive --show-ignored and --show-generated flags",
       "llm": "gemini-3-pro",

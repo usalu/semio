@@ -155,5 +155,6 @@
     "type": "git",
     "url": "https://github.com/usalu/semio.git",
     "directory": "js/play"
-  }
+  },
+  "bundleKind": "library"
 }

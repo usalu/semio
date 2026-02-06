@@ -4,7 +4,7 @@
   "prompt": "Implement settings panel hierarchy",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.778Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Implement settings panel hierarchy",
       "llm": "sonnet-4",

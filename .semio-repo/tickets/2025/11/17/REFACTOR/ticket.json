@@ -4,7 +4,7 @@
   "prompt": "Migration from REFACTOR.md",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-16T17:06:07.669Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migration from REFACTOR.md",
       "llm": "sonnet-4",

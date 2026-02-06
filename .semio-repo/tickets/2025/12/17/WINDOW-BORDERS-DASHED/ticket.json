@@ -5,7 +5,7 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-17T18:15:25.407Z",
   "finished": "2025-12-17T18:20:11.814Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The windows dont have a border on the bottom and on the right. Make the window border dashed.",
       "llm": "gpt-5.2-codex",

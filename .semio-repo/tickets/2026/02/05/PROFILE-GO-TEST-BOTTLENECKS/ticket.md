@@ -6,10 +6,12 @@ goal: AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI
 
 ## Summary
 
-Profiled per-test runtimes in @semio-repo/go, identified dominant bottlenecks (tree/markdown/nodes/lifecycle/list/e2e paths), and documented a fast-lane + slow-sharded strategy that preserves full behavioral coverage while reducing wall-clock feedback time.
+Profiled per-test runtimes in @semio-repo/cli, identified dominant bottlenecks (tree/markdown/nodes/lifecycle/list/e2e paths), and documented a fast-lane + slow-sharded strategy that preserves full behavioral coverage while reducing wall-clock feedback time.
+
 ## Changes
-- Measured module-level test runtimes for `@semio/go` and `@semio-repo/go`.
-- Ran each `Test*` in `@semio-repo/go` individually via compiled test binary and ranked by elapsed time.
+
+- Measured module-level test runtimes for `@semio/go` and `@semio-repo/cli`.
+- Ran each `Test*` in `@semio-repo/cli` individually via compiled test binary and ranked by elapsed time.
 - Identified top bottlenecks:
   - `TestTreeCommands` ~33.0s
   - `TestMarkdownOutput` ~19.4s
@@ -28,22 +30,25 @@ Profiled per-test runtimes in @semio-repo/go, identified dominant bottlenecks (t
 - Documented the execution strategy in `README.md` and `AGENTS.md`.
 
 ## Log
-- Listed current goal tree using `./@semio-repo/go/go --md goal tree`.
+
+- Listed current goal tree using `./@semio-repo/cli/cli --md goal tree`.
 - Opened ticket `2026/02/05/PROFILE-GO-TEST-BOTTLENECKS`.
 - Attempted ticket reopen on follow-up prompt; command returned `ticket is already open`.
 - Enumerated Go modules and test files.
-- Timed `go test ./...` in `@semio/go` and `@semio-repo/go`.
+- Timed `go test ./...` in `@semio/go` and `@semio-repo/cli`.
 - Generated full test list with `go test -list .`.
 - Built test binary once with `go test -c`.
 - Executed each test individually with `/tmp/semio-test-prof/repo_go.test -test.run '^TestName$'`.
 - Sorted elapsed timings from `/tmp/semio-test-prof/per_test.tsv`.
 - Ran a focused slow-test shard with `go test -run 'Test(...)' -count=1`.
-- Inspected slow test implementations in `@semio-repo/go/main_test.go`.
+- Inspected slow test implementations in `@semio-repo/cli/main_test.go`.
 
 ## Todos
+
 - None.
 
 ## Plan
+
 - Keep full behavioral coverage but split execution into:
   1. Fast lane for local/dev and PR checks (`go test -short ./...` + explicitly maintained fast subset).
   2. Slow lane for heavy graph/tree/e2e/lifecycle tests.

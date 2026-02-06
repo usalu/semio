@@ -1,7 +1,7 @@
 {
   "title": "Change Default Output Format to Markdown",
   "status": "open",
-  "prompt": "Change the default output format of the semio repo go cli to be markdown. The format options should be --format md for llms, --format text for humans and --format json for api or simply -md, -text, -json.",
+  "prompt": "Change the default output format of the semio repo cli cli to be markdown. The format options should be --format md for llms, --format text for humans and --format json for api or simply -md, -text, -json.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/417"
   },
@@ -18,7 +18,7 @@
         "client": "claude-code"
       },
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
-      "prompt": "Change the default output format of the semio repo go cli to be markdown. The format options should be --format md for llms, --format text for humans and --format json for api or simply -md, -text, -json.",
+      "prompt": "Change the default output format of the semio repo cli cli to be markdown. The format options should be --format md for llms, --format text for humans and --format json for api or simply -md, -text, -json.",
       "llm": "opus-4-6"
     }
   ]

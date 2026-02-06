@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-02-02T17:49:17.002455262Z",
   "finished": "2026-02-03T08:50:10.998635185Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The  extension sideview should be changed/refactored/consolidated into two sections: Monorepo and Filter.",
       "llm": "gemini-3-pro",

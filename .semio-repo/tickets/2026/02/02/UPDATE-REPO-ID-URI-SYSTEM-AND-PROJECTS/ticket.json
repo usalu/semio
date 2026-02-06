@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-PROJECT-MECHANISM",
   "started": "2026-02-02T10:51:01.122959639Z",
   "finished": "2026-02-03T08:50:13.321832652Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Update ID/URI system, implement project commands, support multi-package bundles, and update vscode extension projects view.",
       "llm": "gemini-3-pro",

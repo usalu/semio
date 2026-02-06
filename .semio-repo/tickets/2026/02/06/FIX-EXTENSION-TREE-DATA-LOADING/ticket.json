@@ -154,14 +154,14 @@
               }
             },
             {
-              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/go/main.go",
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/cli/main.go",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/go/main_test.go",
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/cli/main_test.go",
               "lines": {
                 "added": 1,
                 "removed": 1

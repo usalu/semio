@@ -5,7 +5,7 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-18T15:34:11.986Z",
   "finished": "2025-12-18T16:32:26.549Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Every app has windows and there is always one active window. Make sure that the background of the table is set to active background color.",
       "llm": "gpt-5.2-codex",

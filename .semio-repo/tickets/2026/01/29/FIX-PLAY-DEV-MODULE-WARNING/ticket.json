@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-29T22:12:04.693048494Z",
   "finished": "2026-02-03T08:49:57.461577742Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Add \"type\": \"module\" to js/play/package.json to fix the MODULE_TYPELESS_PACKAGE_JSON warning when running play dev.",
       "llm": "opus-4-5",

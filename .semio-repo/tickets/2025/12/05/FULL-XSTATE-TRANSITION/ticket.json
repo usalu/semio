@@ -4,7 +4,7 @@
   "prompt": "Document full xstate transition process",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.872Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Document full xstate transition process",
       "llm": "sonnet-4-5",

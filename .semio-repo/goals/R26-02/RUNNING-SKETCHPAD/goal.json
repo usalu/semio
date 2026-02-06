@@ -1,7 +1,6 @@
 {
   "title": "Running Sketchpad",
-  "description": "Goal for Running Sketchpad",
-  "prompt": "Instructions for Running Sketchpad",
+  "description": "Running sketchpad infrastructure and apps with MVP functionality.",
   "status": "open",
   "dates": {
     "due": "2026-02-15"

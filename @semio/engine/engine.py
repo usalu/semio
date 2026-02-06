@@ -164,7 +164,6 @@ from semio import (
 
 # region Store
 
-
 codeGrammar = (
     """
     code: (ENCODED_STRING)? ("/" (design | type))?
@@ -176,7 +175,6 @@ codeGrammar = (
 )
 
 codeParser = lark.Lark(codeGrammar, start="code")
-
 
 class OperationBuilder(lark.Transformer):
     def code(self, children):
@@ -208,14 +206,12 @@ class OperationBuilder(lark.Transformer):
             "typeVariant": (decode(children[1].value) if len(children) == 2 else ""),
         }
 
-
 class StoreKind(enum.Enum):
     """🏪 The kind of the store."""
 
     DATABASE = "database"
     REST = "rest"
     GRAPHQL = "graphql"
-
 
 class CommandKind(enum.Enum):
     """🔧 The kind of the command."""
@@ -224,7 +220,6 @@ class CommandKind(enum.Enum):
     PUT = "put"
     UPDATE = "update"
     DELETE = "delete"
-
 
 class Store(abc.ABC):
     uri: str
@@ -271,7 +266,6 @@ class Store(abc.ABC):
     def delete(cls: "Store", operation: dict) -> typing.Any:
         """🗑️ Delete an entity from the store."""
         pass
-
 
 class DatabaseStore(Store, abc.ABC):
     engine: sqlalchemy.engine.Engine
@@ -517,7 +511,6 @@ class DatabaseStore(Store, abc.ABC):
             case _:
                 raise FeatureNotYetSupported()
 
-
 class SSLMode(enum.Enum):
     """🔒 The security level of the session"""
 
@@ -528,12 +521,10 @@ class SSLMode(enum.Enum):
     VERIFY_CA = "verify-ca"
     VERIFY_FULL = "verify-full"
 
-
 def cacheDir(remoteUri: str) -> str:
     cacheDir = os.path.expanduser("~/.semio/cache")
     encodedUri = encode(remoteUri)
     return os.path.join(cacheDir, encodedUri)
-
 
 def cache(remoteUri: str) -> str:
     """📦 Cache a remote kit and delete the existing cache if it was already cached."""
@@ -569,7 +560,6 @@ def cache(remoteUri: str) -> str:
             paths = os.listdir(path)
 
     return path
-
 
 class SqliteStore(DatabaseStore):
     path: pathlib.Path
@@ -612,7 +602,6 @@ class SqliteStore(DatabaseStore):
     def postDeleteKit(self: "SqliteStore") -> None:
         os.kill(os.getpid(), signal.SIGTERM)
 
-
 class PostgresStore(DatabaseStore):
     @classmethod
     def fromUri(cls, uri: str):
@@ -622,7 +611,6 @@ class PostgresStore(DatabaseStore):
 
     def initialize(self: "DatabaseStore") -> None:
         sqlmodel.SQLModel.metadata.create_all(self.engine)
-
 
 @functools.lru_cache
 def StoreFactory(uri: str) -> Store:
@@ -638,46 +626,38 @@ def StoreFactory(uri: str) -> Store:
         raise RemoteKitsNotYetSupported(uri)
     raise LocalKitUriIsNotAbsolute(uri)
 
-
 def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
     codeTree = codeParser.parse(code)
     operation = OperationBuilder().transform(codeTree)
     store = StoreFactory(operation["kitUri"])
     return store, operation
 
-
 def get(code: str, cache=False) -> typing.Any:
     """🔍 Get an entity from the store."""
     store, operation = storeAndOperationFromCode(code)
     return store.get(operation)
-
 
 def put(code: str, input: str) -> typing.Any:
     """📥 Put an entity in the store."""
     store, operation = storeAndOperationFromCode(code)
     return store.put(operation, input)
 
-
 def delete(code: str) -> typing.Any:
     """🗑️ Delete an entity from the store."""
     store, operation = storeAndOperationFromCode(code)
     return store.delete(operation)
 
-
 # endregion Store
 
 # region Assistant
 
-
 def encodeForPrompt(context: str):
     return context.replace(";", ",").replace("\n", " ")
-
 
 def replaceDefault(context: str, default: str):
     if context == "":
         return context.replace("", default)
     return context
-
 
 def encodeType(type: TypeContext):
     typeClone = type.model_copy(deep=True)
@@ -687,7 +667,6 @@ def encodeType(type: TypeContext):
         connector.id_ = replaceDefault(connector.id_, "DEFAULT")
 
     return typeClone
-
 
 def decodeDesign(design: dict):
     decodedDesign = {
@@ -732,7 +711,6 @@ def decodeDesign(design: dict):
         ],
     }
     return DesignPrediction.parse(decodedDesign)
-
 
 # TODO: Replace prototype healing with one that makes more for every single property.
 def healDesign(design: DesignPrediction, types: list[TypeContext]):
@@ -800,7 +778,6 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
     designClone.pieces = [p for p in designClone.pieces if any(c for c in designClone.connections if c.connected.piece.id_ == p.id_ or c.connecting.piece.id_ == p.id_)]
     return designClone
 
-
 try:
     openaiClient = openai.Client()
 except openai.OpenAIError:
@@ -823,7 +800,6 @@ Rotation, tilt, gap, shift SHOULD NOT be added unless specifically instructed.
 The diagram is only a nice 2D model of the design and does not change the design.
 When a piece is [on, next to, above, below, ...] another piece, there SHOULD be a connected between the pieces.
 When a piece fits to a connector of another piece, there SHOULD be a connecting between the pieces."""
-
 
 designGenerationPromptTemplate = jinja2.Template(
     """Your task is to help to puzzle together a design.
@@ -962,7 +938,6 @@ designResponseFormat = json.loads(
 }"""
 )
 
-
 def predictDesign(description: str, types: list[TypeContext], design: DesignInput | None = None) -> DesignPrediction:
     """🔮 Predict a design based on a description, the types that should be used and an optional base design."""
     if openaiClient is None:
@@ -1051,11 +1026,9 @@ def predictDesign(description: str, types: list[TypeContext], design: DesignInpu
 
     raise FeatureNotYetSupported("OpenAI response was invalid or incomplete")
 
-
 # endregion Assistant
 
 # region Graphql
-
 
 GRAPHQLTYPES = {
     "str": graphene.NonNull(graphene.String),
@@ -1120,7 +1093,6 @@ GRAPHQLTYPES = {
     "Kit": graphene.NonNull(lambda: KitNode),
 }
 
-
 class Query(graphene.ObjectType):
     node = RelayNode.Field()
     kit = graphene.Field(KitNode, uri=graphene.String(required=True))
@@ -1128,10 +1100,8 @@ class Query(graphene.ObjectType):
     def resolve_kit(self, info, uri):
         return get(encode(uri))
 
-
 class Mutation(graphene.ObjectType):
     createKit = graphene.Field(KitNode, kit=KitInputNode(required=True))
-
 
 graphqlSchema = graphene.Schema(
     query=Query,
@@ -1143,7 +1113,6 @@ graphqlSchema = graphene.Schema(
 # region Rest
 
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
-
 
 @rest.get("/kits/{encodedKitUri}")
 async def kit(
@@ -1159,7 +1128,6 @@ async def kit(
         statusCode = 500
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
-
 
 @rest.put("/kits/{encodedKitUri}")
 async def create_kit(
@@ -1178,7 +1146,6 @@ async def create_kit(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
-
 @rest.delete("/kits/{encodedKitUri}")
 async def delete_kit(
     request: fastapi.Request,
@@ -1194,7 +1161,6 @@ async def delete_kit(
         statusCode = 500
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
-
 
 @rest.put("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
 async def put_type(
@@ -1214,7 +1180,6 @@ async def put_type(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
-
 @rest.delete("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
 async def delete_type(
     request: fastapi.Request,
@@ -1231,7 +1196,6 @@ async def delete_type(
         statusCode = 500
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
-
 
 @rest.put("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")
 async def put_design(
@@ -1251,7 +1215,6 @@ async def put_design(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
-
 @rest.delete("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")
 async def delete_design(
     request: fastapi.Request,
@@ -1268,7 +1231,6 @@ async def delete_design(
         statusCode = 500
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
-
 
 @rest.get("/assistant/predictDesign")
 async def predict_design(
@@ -1287,7 +1249,6 @@ async def predict_design(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
-
 @rest.post("/prepare/kit")
 async def prepare_kit(request: fastapi.Request, kit: KitInput = fastapi.Body(...)) -> KitContext:
     try:
@@ -1300,7 +1261,6 @@ async def prepare_kit(request: fastapi.Request, kit: KitInput = fastapi.Body(...
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
-
 class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
@@ -1308,7 +1268,6 @@ class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeValues(json_schema, "title", lambda x: x.removesuffix("Context"))
         changeKeys(json_schema, lambda x: x.removesuffix("Context"))
         return json_schema
-
 
 class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     def generate(self, schema, mode="validation"):
@@ -1318,7 +1277,6 @@ class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeKeys(json_schema, lambda x: x.removesuffix("Output"))
         return json_schema
 
-
 class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
@@ -1326,7 +1284,6 @@ class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeValues(json_schema, "title", lambda x: x.removesuffix("Prediction"))
         changeKeys(json_schema, lambda x: x.removesuffix("Prediction"))
         return json_schema
-
 
 def custom_openapi():
     if rest.openapi_schema:
@@ -1344,7 +1301,6 @@ def custom_openapi():
     rest.openapi_schema = openapi_schema
     return rest.openapi_schema
 
-
 rest.openapi = custom_openapi
 
 # endregion Rest
@@ -1352,7 +1308,6 @@ rest.openapi = custom_openapi
 # region Mcp
 
 mcp = FastMCP("semio", stateless_http=True, json_response=True)
-
 
 @mcp.tool()
 def get_kit(uri: str) -> dict:
@@ -1362,7 +1317,6 @@ def get_kit(uri: str) -> dict:
         return result.model_dump() if hasattr(result, "model_dump") else result
     except Exception as e:
         return {"error": str(e)}
-
 
 @mcp.tool()
 def put_kit(uri: str, kit: dict) -> dict:
@@ -1374,7 +1328,6 @@ def put_kit(uri: str, kit: dict) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
-
 @mcp.tool()
 def mcp_delete_kit(uri: str) -> dict:
     """Delete a kit at a URI."""
@@ -1383,7 +1336,6 @@ def mcp_delete_kit(uri: str) -> dict:
         return {"success": True}
     except Exception as e:
         return {"error": str(e)}
-
 
 @mcp.tool()
 def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
@@ -1394,7 +1346,6 @@ def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
         return result.model_dump() if hasattr(result, "model_dump") else result
     except Exception as e:
         return {"error": str(e)}
-
 
 @mcp.tool()
 def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
@@ -1407,7 +1358,6 @@ def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
-
 @mcp.tool()
 def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
     """Delete a type from a kit."""
@@ -1417,7 +1367,6 @@ def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
         return {"success": True}
     except Exception as e:
         return {"error": str(e)}
-
 
 @mcp.tool()
 def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
@@ -1433,7 +1382,6 @@ def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") 
         return result.model_dump() if hasattr(result, "model_dump") else result
     except Exception as e:
         return {"error": str(e)}
-
 
 @mcp.tool()
 def put_design_in_kit(uri: str, name: str, variant: str, view: str, design_data: dict) -> dict:
@@ -1451,7 +1399,6 @@ def put_design_in_kit(uri: str, name: str, variant: str, view: str, design_data:
     except Exception as e:
         return {"error": str(e)}
 
-
 @mcp.tool()
 def delete_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
     """Delete a design from a kit."""
@@ -1467,7 +1414,6 @@ def delete_design_from_kit(uri: str, name: str, variant: str = "", view: str = "
     except Exception as e:
         return {"error": str(e)}
 
-
 @mcp.tool()
 def validate_kit(kit: dict) -> dict:
     """Validate a kit and return any validation problems."""
@@ -1477,7 +1423,6 @@ def validate_kit(kit: dict) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
-
 @mcp.tool()
 def flatten_design(kit: dict, design_guid: str) -> dict:
     """Flatten a design by computing absolute planes for all pieces."""
@@ -1485,7 +1430,6 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
         return flattenDesignDict(kit, design_guid)
     except Exception as e:
         return {"error": str(e)}
-
 
 @mcp.tool()
 def get_kit_diff(before: dict, after: dict) -> dict:
@@ -1495,7 +1439,6 @@ def get_kit_diff(before: dict, after: dict) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
-
 @mcp.tool()
 def apply_kit_diff(base: dict, diff: dict) -> dict:
     """Apply a diff to a kit."""
@@ -1503,7 +1446,6 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
         return applyKitDiffDict(base, diff)
     except Exception as e:
         return {"error": str(e)}
-
 
 @mcp.tool()
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
@@ -1513,17 +1455,14 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
     except Exception as e:
         return {"error": str(e)}
 
-
 # endregion Mcp
 
 # region Engine
-
 
 @contextlib.asynccontextmanager
 async def engineLifespan(app):
     async with mcp.session_manager.run():
         yield
-
 
 mcp.settings.streamable_http_path = "/"
 engine = starlette.applications.Starlette(lifespan=engineLifespan)
@@ -1533,7 +1472,6 @@ engine.mount(
     starlette_graphene3.GraphQLApp(graphqlSchema, on_get=starlette_graphene3.make_graphiql_handler()),
 )
 engine.mount("/mcp", mcp.streamable_http_app())
-
 
 def generateSchemas():
     if os.path.exists("temp"):
@@ -1607,12 +1545,10 @@ def generateSchemas():
     with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
         f.write(str(graphqlSchema))
 
-
 def start_engine():
     # TODO: Make loguru work on extra uvicorn engine process.
     logging.basicConfig(level=logging.INFO)
     uvicorn.run(engine, host=HOST, port=PORT, log_level="info", access_log=False, log_config=None)
-
 
 def restart_engine():
     import PySide6.QtWidgets
@@ -1623,7 +1559,6 @@ def restart_engine():
         engine_process.terminate()
     ui_instance.engine_process = multiprocessing.Process(target=start_engine)
     ui_instance.engine_process.start()
-
 
 def run(dev_mode: bool | None = None):
     logger.debug("Starting engine")
@@ -1686,14 +1621,11 @@ def run(dev_mode: bool | None = None):
 
     sys.exit(ui.exec())
 
-
 def preDev():
     """Runs before dev()"""
 
-
 def dev():
     run(dev_mode=True)
-
 
 if __name__ == "__main__":
     run()

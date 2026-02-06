@@ -4,7 +4,7 @@
   "prompt": "Fix kit import and design app infinite loop",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "started": "2025-12-16T17:06:07.813Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix kit import and design app infinite loop",
       "llm": "sonnet-4-5",

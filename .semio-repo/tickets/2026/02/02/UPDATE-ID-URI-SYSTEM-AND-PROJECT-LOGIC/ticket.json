@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-PROJECT-MECHANISM",
   "started": "2026-02-02T13:39:28.036876534Z",
   "finished": "2026-02-03T08:50:12.330002114Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Update ID/URI system and Project Logic",
       "llm": "gemini-3-pro",

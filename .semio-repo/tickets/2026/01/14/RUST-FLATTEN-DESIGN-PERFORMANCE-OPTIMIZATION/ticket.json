@@ -4,7 +4,7 @@
   "prompt": "Migrated from legacy files",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DESIGN-APP",
   "started": "2026-01-29T19:44:04.037365Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migrated from legacy files",
       "llm": "",

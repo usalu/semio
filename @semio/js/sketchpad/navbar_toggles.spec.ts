@@ -18,11 +18,9 @@ test.describe("Navbar Panel Toggles", () => {
   });
 
   test("should show all toggles in Design app", async ({ page }) => {
-    // Navigate to a design
     await page.goto("http://localhost:3000/kits/00000000-0000-0000-0000-000000000000/designs/00000000-0000-0000-0000-000000000000");
     await page.waitForLoadState("networkidle");
 
-    // Check for toggles
     const leftToggle = page.locator("#semio\\.sketchpad\\.navbar\\.panelToggle\\.leftSidePanel");
     const middleToggle = page.locator("#semio\\.sketchpad\\.navbar\\.panelToggle\\.hudPanel");
     const rightToggle = page.locator("#semio\\.sketchpad\\.navbar\\.panelToggle\\.rightSidePanel");
@@ -31,13 +29,7 @@ test.describe("Navbar Panel Toggles", () => {
     await expect(middleToggle).toBeVisible({ timeout: 5000 });
     await expect(rightToggle).toBeVisible({ timeout: 5000 });
 
-    // Test toggle functionality - Left Panel
     await leftToggle.click();
-    // Assuming the panel opens and has some identifiable element or width change. 
-    // Checking for aria-pressed or visual indication if possible, or side panel visibility.
-    // The test description asks to check for functionality.
-    
-    // Check if aria-checked is now true (since it uses ToggleGroup single which renders as radio) or check side panel visibility
     await expect(leftToggle).toHaveAttribute("aria-checked", "true");
     
     await leftToggle.click();

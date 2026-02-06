@@ -3197,7 +3197,7 @@ const AppContent: FC = () => {
             level,
             parentId: parentRowId,
             hasChildren,
-            isExpanded: false, // Computed in visibleRows
+            isExpanded: false,
             data: design,
             concepts: designConceptNames,
           });
@@ -3254,7 +3254,7 @@ const AppContent: FC = () => {
             level,
             parentId: parentRowId,
             hasChildren,
-            isExpanded: false, // Computed in visibleRows
+            isExpanded: false,
             data: type,
           });
 
@@ -3408,7 +3408,7 @@ const AppContent: FC = () => {
             createdAt: formatDate(folder.createdAt),
             level,
             hasChildren: folderedArtifacts > 0,
-            isExpanded: false, // Computed in visibleRows
+            isExpanded: false,
             data: folder,
             folderId: folder.parent?.guid,
             parentId: parentRowId,
@@ -3431,7 +3431,7 @@ const AppContent: FC = () => {
                 createdAt: formatDate(design.createdAt),
                 level: level + 1,
                 hasChildren,
-                isExpanded: false, // Computed in visibleRows
+                isExpanded: false,
                 data: design,
                 folderId: folder.guid,
                 parentId: folderId,
@@ -3454,7 +3454,7 @@ const AppContent: FC = () => {
                       createdAt: formatDate(childDesign.createdAt),
                       level: childLevel,
                       hasChildren: hasGrandChildren,
-                      isExpanded: false, // Computed in visibleRows
+                      isExpanded: false,
                       data: childDesign,
                       folderId: folder.guid,
                       parentId: parentRowId,
@@ -3485,7 +3485,7 @@ const AppContent: FC = () => {
                 createdAt: formatDate(type.createdAt),
                 level: level + 1,
                 hasChildren,
-                isExpanded: false, // Computed in visibleRows
+                isExpanded: false,
                 data: type,
                 folderId: folder.guid,
                 parentId: folderId,
@@ -3508,7 +3508,7 @@ const AppContent: FC = () => {
                       createdAt: formatDate(childType.createdAt),
                       level: childLevel,
                       hasChildren: hasGrandChildren,
-                      isExpanded: false, // Computed in visibleRows
+                      isExpanded: false,
                       data: childType,
                       folderId: folder.guid,
                       parentId: parentRowId,
@@ -4443,7 +4443,6 @@ const AppContent: FC = () => {
           }
         }}
       >
-        {/* Mobile table using general Table component */}
         <Table
           className="flex-1 min-h-0"
           columns={[
@@ -6557,7 +6556,6 @@ export const KitAppFooter: FC = () => {
     // TODO: Add kit-specific footer items here
 
     return () => {
-      // Cleanup
     };
   }, [appType, addFooterItem, removeFooterItem]);
 

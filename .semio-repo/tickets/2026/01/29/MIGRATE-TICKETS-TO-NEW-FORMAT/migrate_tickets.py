@@ -24,7 +24,7 @@ def migrate_ticket(ticket_dir):
     if (
         "dates" in data
         or isinstance(data.get("author"), str)
-        or "iterations" not in data
+        or "interactions" not in data
     ):
         is_old_json = True
 
@@ -57,8 +57,8 @@ def migrate_ticket(ticket_dir):
         llm = data.get("llm")
         ui = data.get("client")
 
-        # Construct iterations
-        iteration = {
+        # Construct interactions
+        interaction = {
             "prompt": prompt,
             "llm": llm,
             "client": ui,
@@ -67,14 +67,14 @@ def migrate_ticket(ticket_dir):
             "commit": commit,
         }
         if finished:
-            iteration["finished"] = finished
+            interaction["finished"] = finished
 
         new_data = {
             "title": title,
             "status": status,
             "prompt": prompt,
             "started": created,
-            "iterations": [iteration],
+            "interactions": [interaction],
         }
 
         if finished:

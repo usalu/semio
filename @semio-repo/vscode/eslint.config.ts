@@ -19,8 +19,5 @@
 
 // #endregion 🔖Header
 
-
 export default [
-  // { files: ["**/*.{js,mjs,cjs,ts,jsx,tsx}"] },s.browser, ...globals.node } } },
-  // pluginJs.configs.flat.recommended,
 ];

@@ -4,7 +4,7 @@
   "prompt": "Cleanup diagnostic artifacts",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-16T17:06:07.903Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Cleanup diagnostic artifacts",
       "llm": "sonnet-4-5",

@@ -4,7 +4,7 @@
   "prompt": "Rename layout in useLayout to device and useDevice, etc. All types enums etc. Not the Layout component.",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.957Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Rename layout in useLayout to device and useDevice, etc. All types enums etc. Not the Layout component.",
       "llm": "opus-4-5",

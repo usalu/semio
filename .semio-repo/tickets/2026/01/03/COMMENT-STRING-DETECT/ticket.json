@@ -4,7 +4,7 @@
   "prompt": "inside strings are wrongly identified as comments.",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-03T02:11:20Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "inside strings are wrongly identified as comments.",
       "llm": "sonnet-4-5",

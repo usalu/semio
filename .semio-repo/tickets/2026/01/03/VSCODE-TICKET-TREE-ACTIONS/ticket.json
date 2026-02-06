@@ -5,7 +5,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-03T00:11:53Z",
   "finished": "2026-01-03T00:33:52Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "\"vscode extension: Remove Open Ticket button from tickets. Instead add reopen and close icons and execute the command once pressed. Remove status emoji from ticket. Add commit tree item. Just show description on ticket tree item hover.\"",
       "llm": "sonnet-4-5",

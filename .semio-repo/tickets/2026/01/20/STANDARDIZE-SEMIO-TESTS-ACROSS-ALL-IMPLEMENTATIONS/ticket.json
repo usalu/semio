@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "0001-01-01T00:00:00Z",
   "finished": "2026-02-03T08:49:32.848147865Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "",
       "llm": "",

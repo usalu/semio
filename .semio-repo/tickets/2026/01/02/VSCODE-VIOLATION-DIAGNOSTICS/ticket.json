@@ -5,7 +5,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-02T19:59:01Z",
   "finished": "2026-01-02T20:03:29Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The vscode extension should show the violation diagnostics of every open file and rerun the targeted analyze command when saved again.",
       "llm": "opus-4-5-20251101",

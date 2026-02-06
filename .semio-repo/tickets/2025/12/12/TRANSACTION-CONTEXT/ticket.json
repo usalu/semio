@@ -4,7 +4,7 @@
   "prompt": "\u003e-",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-16T17:06:07.918Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "\u003e-",
       "llm": "sonnet-4-5",

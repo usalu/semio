@@ -5,7 +5,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-13T10:30:42Z",
   "finished": "2026-01-13T12:33:35Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Add a dev flag to engine to run in dev mode in py/engine/engine.py.",
       "llm": "gpt-5",

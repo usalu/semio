@@ -1,13 +1,13 @@
 {
   "title": "ITERATION-LINES",
   "status": "closed",
-  "prompt": "Compute git line stats on iteration and ticket end; derive files and lines instead of null.",
+  "prompt": "Compute git line stats on interaction and ticket end; derive files and lines instead of null.",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-03T01:16:15Z",
   "finished": "2026-01-03T01:23:31Z",
-  "iterations": [
+  "interactions": [
     {
-      "prompt": "Compute git line stats on iteration and ticket end; derive files and lines instead of null.",
+      "prompt": "Compute git line stats on interaction and ticket end; derive files and lines instead of null.",
       "llm": "sonnet-4-5",
       "author": {
         "name": "uelisaluz"

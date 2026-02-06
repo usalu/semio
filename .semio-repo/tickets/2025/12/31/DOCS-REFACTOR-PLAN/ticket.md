@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Previously
 
 - Initial analysis compared `AGENTS.md` and other docs with current implementation.
@@ -38,7 +39,7 @@ The documentation requires fixes across several areas:
 3. Ticket status terminology
    - Normalize the ticket status to `finished` in code or update `AGENTS.md` to accept `closed`. Prefer changing `go/repo` `TicketClosed` to `finished` for consistency.
 
-4. Ticket iteration file flags
+4. Ticket interaction file flags
    - Either update `go/repo` to accept `--file`, `--file-created`, `--file-removed` flags, or remove these examples from `AGENTS.md`.
 
 ## Phase 3: Terminology Standardization
@@ -100,6 +101,7 @@ Add missing documentation entries for:
 ## Log
 
 ## Summary
+
 # Summary
 
 "Restore formatted refactor plan for outdated documentation"

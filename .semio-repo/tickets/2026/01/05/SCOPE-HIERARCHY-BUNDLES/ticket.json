@@ -4,7 +4,7 @@
   "prompt": "Add hierarchical scope mechanism, ignore flag, bundles structure for contribution tracking",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-BUNDLE-MECHANISM",
   "started": "2026-01-05T15:54:12Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Add hierarchical scope mechanism, ignore flag, bundles structure for contribution tracking",
       "llm": "sonnet-4-5",

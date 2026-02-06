@@ -4,7 +4,7 @@
   "prompt": "Extend the analyze and fix code hook to check and remove empty regions.",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-22T22:16:35.062Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Extend the analyze and fix code hook to check and remove empty regions.",
       "llm": "sonnet-4-5",

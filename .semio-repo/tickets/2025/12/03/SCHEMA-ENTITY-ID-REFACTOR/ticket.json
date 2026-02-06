@@ -4,7 +4,7 @@
   "prompt": "Refactor IDs and diffs to use typed EntityId objects",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
   "started": "2025-12-16T17:06:07.855Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Refactor IDs and diffs to use typed EntityId objects",
       "llm": "sonnet-4-5",

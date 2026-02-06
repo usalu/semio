@@ -1,8 +1,6 @@
 // #region 🔖 Header
 
-// SPDX-License-Identifier: AGPL-3.0-or-later
-
-// 💻@semio-repo/go/main.go
+// 💻@semio-repo/cli/cli.go
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +19,7 @@
 
 // #endregion 🔖 Header
 
-package main
+package cli
 
 import (
 	"bufio"
@@ -2893,7 +2891,7 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 		excludeBundleKinds = append(excludeBundleKinds, BundleKindBinary)
 	}
 	if v, _ := cmd.Flags().GetBool("no-client"); v {
-		excludeBundleKinds = append(excludeBundleKinds, BundleKindClient)
+		excludeBundleKinds = append(excludeBundleKinds, BundleKindUI)
 	}
 	if v, _ := cmd.Flags().GetBool("no-site"); v {
 		excludeBundleKinds = append(excludeBundleKinds, BundleKindSite)
@@ -2913,7 +2911,7 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 		includeBundleKinds = append(includeBundleKinds, BundleKindBinary)
 	}
 	if v, _ := cmd.Flags().GetBool("only-client"); v {
-		includeBundleKinds = append(includeBundleKinds, BundleKindClient)
+		includeBundleKinds = append(includeBundleKinds, BundleKindUI)
 	}
 	if v, _ := cmd.Flags().GetBool("only-site"); v {
 		includeBundleKinds = append(includeBundleKinds, BundleKindSite)
@@ -3668,8 +3666,25 @@ func tmplColorStatus(status string, s string) string {
 	return c + s + ColorReset
 }
 
+func parseFlexibleTime(t string) (time.Time, error) {
+	if t == "" {
+		return time.Time{}, fmt.Errorf("empty time string")
+	}
+	layouts := []string{
+		time.RFC3339,
+		"2006-01-02",
+		"2006-01-02 15:04:05",
+	}
+	for _, layout := range layouts {
+		if parsed, err := time.Parse(layout, t); err == nil {
+			return parsed, nil
+		}
+	}
+	return time.Time{}, fmt.Errorf("could not parse time: %s", t)
+}
+
 func tmplTimeAgo(t string) string {
-	parsed, err := time.Parse(time.RFC3339, t)
+	parsed, err := parseFlexibleTime(t)
 	if err != nil {
 		return t
 	}
@@ -3677,7 +3692,7 @@ func tmplTimeAgo(t string) string {
 }
 
 func tmplTimeLeft(t string) string {
-	parsed, err := time.Parse(time.RFC3339, t)
+	parsed, err := parseFlexibleTime(t)
 	if err != nil {
 		return t
 	}
@@ -4279,26 +4294,20 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	var sb strings.Builder
 	prefix := colorize("→", ColorBlue, isTTY)
 
-	// Case 0: Raw Markdown result
 	if output, ok := payload["markdown"].(string); ok {
 		return output
 	}
 
-	// Case 1: Analyze result
 	if analyze, ok := payload["analyze"].(map[string]interface{}); ok {
-		// metrics
 		if metrics, ok := analyze["metrics"].(map[string]interface{}); ok {
 			total := metrics["total"]
 			autofixable := metrics["autofixable"]
-
 			summaryText := fmt.Sprintf("found %v violations", total)
 			if autofixable != nil {
 				summaryText += fmt.Sprintf(" (%v autofixable)", autofixable)
 			}
 			sb.WriteString(fmt.Sprintf("%s %s\n", prefix, summaryText))
 		}
-
-		// violations
 		if violations, ok := analyze["violations"].([]interface{}); ok {
 			for _, v := range violations {
 				if vio, ok := v.(map[string]interface{}); ok {
@@ -4308,14 +4317,10 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 					} else if kStr, ok := vio["kind"].(string); ok {
 						kind = kStr
 					}
-
 					scope := fmt.Sprintf("%v", vio["scope"])
 					line := fmt.Sprintf("%v", vio["line"])
 					summary := fmt.Sprintf("%v", vio["summary"])
-
 					loc := fmt.Sprintf("%s:%s", scope, line)
-
-					// Indented violation line
 					lineStr := fmt.Sprintf("  %s %s %s %s\n",
 						colorize("violation", ColorRed, isTTY),
 						kind,
@@ -4330,7 +4335,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		}
 	}
 
-	// Case 2: Fix result
 	if fix, ok := payload["fix"].(map[string]interface{}); ok {
 		fixed := fix["fixed"]
 		remaining := fix["remaining"]
@@ -4338,7 +4342,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		return sb.String()
 	}
 
-	// Case 3: Goal Tree
 	if repo, ok := payload["repo"].(map[string]interface{}); ok {
 		goals, goalsOk := repo["goals"].([]interface{})
 		tickets, _ := repo["tickets"].([]interface{})
@@ -4370,135 +4373,61 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		return b.String(), true
 	}
 
-	// Case 6: Repo result (Lists)
 	if repo, ok := payload["repo"].(map[string]interface{}); ok {
-		if tickets, ok := repo["tickets"].([]interface{}); ok {
-			out, _ := renderList("ticket", tickets)
-			return out
+		listKindPairs := []struct {
+			key  string
+			kind string
+		}{
+			{"tickets", "ticket"},
+			{"goals", "goal"},
+			{"bundles", "bundle"},
+			{"projects", "project"},
+			{"folders", "folder"},
+			{"files", "file"},
+			{"contributors", "contributor"},
+			{"policies", "policy"},
+			{"violationKinds", "violationKind"},
 		}
-		if goals, ok := repo["goals"].([]interface{}); ok {
-			out, _ := renderList("goal", goals)
-			return out
-		}
-		if bundles, ok := repo["bundles"].([]interface{}); ok {
-			out, _ := renderList("bundle", bundles)
-			return out
-		}
-		if projects, ok := repo["projects"].([]interface{}); ok {
-			out, _ := renderList("project", projects)
-			return out
-		}
-		if folders, ok := repo["folders"].([]interface{}); ok {
-			out, _ := renderList("folder", folders)
-			return out
-		}
-		if files, ok := repo["files"].([]interface{}); ok {
-			out, _ := renderList("file", files)
-			return out
-		}
-		if contributors, ok := repo["contributors"].([]interface{}); ok {
-			out, _ := renderList("contributor", contributors)
-			return out
-		}
-		if policies, ok := repo["policies"].([]interface{}); ok {
-			out, _ := renderList("policy", policies)
-			return out
-		}
-		if violationKinds, ok := repo["violationKinds"].([]interface{}); ok {
-			out, _ := renderList("violationKind", violationKinds)
-			return out
-		}
-	}
-
-	// Case 4: Ticket operations (Handle "ticket*", "ticketOpen" fields)
-	for k, v := range payload {
-		if strings.HasPrefix(k, "ticket") || k == "ticket" {
-			if tMap, ok := v.(map[string]interface{}); ok {
-				// Don't double print if it's the exact same object as checked below
-				if k == "ticket" {
-					continue
-				}
-				// e.g. ticketOpen: { slug: ... }
-				return renderEntityHuman("ticket", tMap, isTTY) + "\n"
+		for _, lk := range listKindPairs {
+			if items, ok := repo[lk.key].([]interface{}); ok {
+				out, _ := renderList(lk.kind, items)
+				return out
 			}
 		}
 	}
-	// Direct ticket object check
-	if _, ok := payload["slug"].(string); ok {
-		if _, ok := payload["status"].(string); ok {
-			// Likley a ticket
-			return renderEntityHuman("ticket", payload, isTTY) + "\n"
+
+	topListPairs := []struct {
+		key  string
+		kind string
+	}{
+		{"todos", "todo"},
+		{"sections", "section"},
+		{"definitions", "definition"},
+		{"drafts", "draft"},
+	}
+	for _, lk := range topListPairs {
+		if items, ok := payload[lk.key].([]interface{}); ok {
+			out, _ := renderList(lk.kind, items)
+			return out
 		}
 	}
 
-	// Case 16: Todos (List)
-	if todos, ok := payload["todos"].([]interface{}); ok {
-		out, _ := renderList("todo", todos)
-		return out
+	singleKeys := []string{
+		"ticket", "goal", "bundle", "folder", "policy",
+		"contributor", "draft", "todo", "project", "definition",
+	}
+	for _, key := range singleKeys {
+		if entity, ok := payload[key].(map[string]interface{}); ok {
+			return renderEntityHuman(key, entity, isTTY) + "\n"
+		}
 	}
 
-	// Case 16b: Sections (List)
-	if sections, ok := payload["sections"].([]interface{}); ok {
-		out, _ := renderList("section", sections)
-		return out
-	}
-
-	// Case 16c: Definitions (List)
-	if definitions, ok := payload["definitions"].([]interface{}); ok {
-		out, _ := renderList("definition", definitions)
-		return out
-	}
-
-	// Case 17: Drafts (List)
-	if drafts, ok := payload["drafts"].([]interface{}); ok {
-		out, _ := renderList("draft", drafts)
-		return out
-	}
-
-	// Case 17b: Single Draft
-	if draft, ok := payload["draft"].(map[string]interface{}); ok {
-		return renderEntityHuman("draft", draft, isTTY) + "\n"
-	}
-
-	// Case 6b: Single Ticket
-	if ticket, ok := payload["ticket"].(map[string]interface{}); ok {
-		return renderEntityHuman("ticket", ticket, isTTY) + "\n"
-	}
-
-	// Case 13: Single Goal
-	if goal, ok := payload["goal"].(map[string]interface{}); ok {
-		return renderEntityHuman("goal", goal, isTTY) + "\n"
-	}
-
-	// Case 6c: Single Bundle
-	if bundle, ok := payload["bundle"].(map[string]interface{}); ok {
-		return renderEntityHuman("bundle", bundle, isTTY) + "\n"
-	}
-
-	// Case 11: Single Folder
-	if folder, ok := payload["folder"].(map[string]interface{}); ok {
-		return renderEntityHuman("folder", folder, isTTY) + "\n"
-	}
-
-	// Case 15: Single Policy
-	if policy, ok := payload["policy"].(map[string]interface{}); ok {
-		return renderEntityHuman("policy", policy, isTTY) + "\n"
-	}
-
-	// Case 14: Contributor
-	if contrib, ok := payload["contributor"].(map[string]interface{}); ok {
-		return renderEntityHuman("contributor", contrib, isTTY) + "\n"
-	}
-
-	// Case 7/12: File
 	if file, ok := payload["file"].(map[string]interface{}); ok {
 		line := renderEntityHuman("file", file, isTTY)
 		if termWidth > 0 {
 			line = truncateANSI(line, termWidth)
 		}
 		sb.WriteString(line + "\n")
-
-		// Sections
 		if sections, ok := file["sections"].([]interface{}); ok {
 			var printSections func(items []interface{}, indent string)
 			printSections = func(items []interface{}, indent string) {
@@ -4517,8 +4446,6 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 			}
 			printSections(sections, "  ")
 		}
-
-		// Definitions
 		if definitions, ok := file["definitions"].([]interface{}); ok {
 			for _, d := range definitions {
 				if def, ok := d.(map[string]interface{}); ok {
@@ -4535,26 +4462,22 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		}
 	}
 
-	// Case 8: Section
 	if sec, ok := payload["section"].(map[string]interface{}); ok {
-		// Use renderSectionTree for hierarchical output
 		b, _ := json.Marshal(sec)
 		var s Section
 		json.Unmarshal(b, &s)
 		return renderSectionTree(&s, isTTY, false)
 	}
 
-	// Case 9: Definition
-	if def, ok := payload["definition"].(map[string]interface{}); ok {
-		return renderEntityHuman("definition", def, isTTY) + "\n"
+	for key, val := range payload {
+		if entityMap, ok := val.(map[string]interface{}); ok {
+			kind := inferEntityKind(key)
+			if kind != "" {
+				return renderEntityHuman(kind, entityMap, isTTY) + "\n"
+			}
+		}
 	}
 
-	// Case Project?
-	if project, ok := payload["project"].(map[string]interface{}); ok {
-		return renderEntityHuman("project", project, isTTY) + "\n"
-	}
-
-	// Generic ID/Path fallback (Case 5)
 	if id, ok := payload["id"].(string); ok {
 		if path, ok := payload["path"].(string); ok {
 			return fmt.Sprintf("%s %s %s\n", prefix, id, path)
@@ -4562,13 +4485,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		return fmt.Sprintf("%s item %s\n", prefix, id)
 	}
 
-	// Default: JSON dump
-	jsonBytes, _ := json.Marshal(payload) // Remove whitespace
-	jsonStr := string(jsonBytes)
-	if len(jsonStr) > 120 {
-		jsonStr = jsonStr[:117] + "..."
-	}
-	return fmt.Sprintf("%s %s\n", prefix, jsonStr)
+	return renderEntityHuman("repo", payload, isTTY) + "\n"
 }
 
 type MarkdownRenderer struct{}
@@ -4596,22 +4513,18 @@ func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, str
 func formatMarkdownResult(command string, data json.RawMessage) string {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(data, &raw); err != nil {
-		return fmt.Sprintf("```json\n%s\n```\n", string(data))
+		return renderEntityMarkdownLink("repo", map[string]interface{}{"name": string(data)}) + "\n"
 	}
 
 	var payload map[string]interface{} = raw
 
 	var sb strings.Builder
 
-	// Case 0: Direct Markdown
 	if markdown, ok := payload["markdown"].(string); ok {
 		return markdown
 	}
 
-	// Case 1: Analyze result
 	if analyze, ok := payload["analyze"].(map[string]interface{}); ok {
-		sb.WriteString("## Analysis Result\n\n")
-		// metrics
 		if metrics, ok := analyze["metrics"].(map[string]interface{}); ok {
 			total := metrics["total"]
 			autofixable := metrics["autofixable"]
@@ -4619,10 +4532,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 			if autofixable != nil {
 				sb.WriteString(fmt.Sprintf("- **Autofixable**: %v\n", autofixable))
 			}
-			sb.WriteString("\n")
 		}
-
-		// violations
 		if violations, ok := analyze["violations"].([]interface{}); ok {
 			for _, v := range violations {
 				if vio, ok := v.(map[string]interface{}); ok {
@@ -4632,19 +4542,16 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 					} else if kStr, ok := vio["kind"].(string); ok {
 						kind = kStr
 					}
-
 					scope := fmt.Sprintf("%v", vio["scope"])
 					line := fmt.Sprintf("%v", vio["line"])
 					summary := fmt.Sprintf("%v", vio["summary"])
-
-					sb.WriteString(fmt.Sprintf("- **[%s](semiorepo://violation/%s)** in `%s:%s`: %s\n", kind, Slugify(kind), scope, line, summary))
+					sb.WriteString(fmt.Sprintf("- [%s](semiorepo://violationKind/%s) - %s:%s - %s\n", kind, Slugify(kind), scope, line, summary))
 				}
 			}
 		}
 		return sb.String()
 	}
 
-	// Case 3: Goal Tree
 	if repo, ok := payload["repo"].(map[string]interface{}); ok {
 		goals, goalsOk := repo["goals"].([]interface{})
 		tickets, _ := repo["tickets"].([]interface{})
@@ -4653,103 +4560,71 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		}
 	}
 
-	// Case 6: Repo result (Lists)
-	if repo, ok := payload["repo"].(map[string]interface{}); ok {
-		if tickets, ok := repo["tickets"].([]interface{}); ok {
-			for _, t := range tickets {
-				if tMap, ok := t.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("ticket", tMap) + "\n")
-				}
+	listKeys := []struct {
+		wrap string
+		key  string
+		kind string
+	}{
+		{"repo", "tickets", "ticket"},
+		{"repo", "goals", "goal"},
+		{"repo", "bundles", "bundle"},
+		{"repo", "projects", "project"},
+		{"repo", "folders", "folder"},
+		{"repo", "files", "file"},
+		{"repo", "contributors", "contributor"},
+		{"repo", "policies", "policy"},
+		{"repo", "violationKinds", "violationKind"},
+		{"", "todos", "todo"},
+		{"", "sections", "section"},
+		{"", "definitions", "definition"},
+		{"", "drafts", "draft"},
+	}
+	for _, lk := range listKeys {
+		var container map[string]interface{}
+		if lk.wrap != "" {
+			if w, ok := payload[lk.wrap].(map[string]interface{}); ok {
+				container = w
 			}
-			return sb.String()
+		} else {
+			container = payload
 		}
-		if goals, ok := repo["goals"].([]interface{}); ok {
-			for _, g := range goals {
-				if gMap, ok := g.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("goal", gMap) + "\n")
-				}
-			}
-			return sb.String()
+		if container == nil {
+			continue
 		}
-		if bundles, ok := repo["bundles"].([]interface{}); ok {
-			for _, b := range bundles {
-				if bMap, ok := b.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("bundle", bMap) + "\n")
-				}
-			}
-			return sb.String()
-		}
-		if projects, ok := repo["projects"].([]interface{}); ok {
-			for _, p := range projects {
-				if pMap, ok := p.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("project", pMap) + "\n")
-				}
-			}
-			return sb.String()
-		}
-		if folders, ok := repo["folders"].([]interface{}); ok {
-			for _, f := range folders {
-				if fMap, ok := f.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("folder", fMap) + "\n")
-				}
-			}
-			return sb.String()
-		}
-		if files, ok := repo["files"].([]interface{}); ok {
-			for _, f := range files {
-				if fMap, ok := f.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("file", fMap) + "\n")
-				}
-			}
-			return sb.String()
-		}
-		if contributors, ok := repo["contributors"].([]interface{}); ok {
-			for _, c := range contributors {
-				if cMap, ok := c.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("contributor", cMap) + "\n")
-				}
-			}
-			return sb.String()
-		}
-		if policies, ok := repo["policies"].([]interface{}); ok {
-			for _, p := range policies {
-				if pMap, ok := p.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("policy", pMap) + "\n")
-				}
-			}
-			return sb.String()
-		}
-		if violationKinds, ok := repo["violationKinds"].([]interface{}); ok {
-			for _, v := range violationKinds {
-				if vMap, ok := v.(map[string]interface{}); ok {
-					sb.WriteString(renderEntityMarkdown("violationKind", vMap) + "\n")
+		if items, ok := container[lk.key].([]interface{}); ok {
+			for _, item := range items {
+				if m, ok := item.(map[string]interface{}); ok {
+					sb.WriteString(renderEntityMarkdown(lk.kind, m) + "\n")
 				}
 			}
 			return sb.String()
 		}
 	}
 
-	// Case 6b: Single Ticket Stream Item
-	if ticket, ok := payload["ticket"].(map[string]interface{}); ok {
-		return renderEntityMarkdown("ticket", ticket) + "\n"
+	isList := strings.HasSuffix(command, " list") || strings.HasSuffix(command, " tree")
+
+	singleKeys := []string{
+		"ticket", "goal", "bundle", "folder", "file", "definition",
+		"contributor", "policy", "project", "draft", "todo", "commit",
+	}
+	for _, key := range singleKeys {
+		if entity, ok := payload[key].(map[string]interface{}); ok {
+			if key == "file" && !isList {
+				return formatMarkdownFile(entity)
+			}
+			if key == "section" {
+				b, _ := json.Marshal(entity)
+				var s Section
+				json.Unmarshal(b, &s)
+				return renderSectionTree(&s, false, true)
+			}
+			if isList {
+				return renderEntityMarkdown(key, entity) + "\n"
+			}
+			return renderEntityMarkdownLink(key, entity) + "\n"
+		}
 	}
 
-	// Case 13: Single Goal
-	if goal, ok := payload["goal"].(map[string]interface{}); ok {
-		return renderEntityMarkdown("goal", goal) + "\n"
-	}
-
-	// Case 6c: Single Bundle Stream Item
-	if bundle, ok := payload["bundle"].(map[string]interface{}); ok {
-		return renderEntityMarkdown("bundle", bundle) + "\n"
-	}
-
-	// Case 11: Single Folder Result
-	if folder, ok := payload["folder"].(map[string]interface{}); ok {
-		return renderEntityMarkdown("folder", folder) + "\n"
-	}
-
-	// Case 8: Section
 	if sec, ok := payload["section"].(map[string]interface{}); ok {
 		b, _ := json.Marshal(sec)
 		var s Section
@@ -4757,114 +4632,57 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		return renderSectionTree(&s, false, true)
 	}
 
-	// Case 9: Definition
-	if def, ok := payload["definition"].(map[string]interface{}); ok {
-		return renderEntityMarkdown("definition", def) + "\n"
+	for key, val := range payload {
+		if entityMap, ok := val.(map[string]interface{}); ok {
+			kind := inferEntityKind(key)
+			if kind != "" {
+				return renderEntityMarkdownLink(kind, entityMap) + "\n"
+			}
+		}
 	}
 
-	// Case 12: Single File Result
-	if file, ok := payload["file"].(map[string]interface{}); ok {
-		sb.WriteString(renderEntityMarkdown("file", file) + "\n")
+	return renderEntityMarkdownLink("repo", payload) + "\n"
+}
 
-		filePath, _ := file["path"].(string)
-		if id, ok := file["id"].(string); ok && id != "" {
-			filePath = id
-		}
+func formatMarkdownFile(file map[string]interface{}) string {
+	var sb strings.Builder
+	sb.WriteString(renderEntityMarkdownLink("file", file) + "\n")
 
-		// Sections
-		if sections, ok := file["sections"].([]interface{}); ok {
-			var printSections func(items []interface{}, indent string)
-			printSections = func(items []interface{}, indent string) {
-				for _, item := range items {
-					if sec, ok := item.(map[string]interface{}); ok {
-						if _, hasPath := sec["filePath"]; !hasPath {
-							sec["filePath"] = filePath
-						}
-						line := renderEntityMarkdown("section", sec)
-						sb.WriteString(fmt.Sprintf("%s%s\n", indent, line))
+	filePath, _ := file["path"].(string)
+	if id, ok := file["id"].(string); ok && id != "" {
+		filePath = id
+	}
 
-						if children, ok := sec["children"].([]interface{}); ok && len(children) > 0 {
-							printSections(children, indent+"  ")
-						}
+	if sections, ok := file["sections"].([]interface{}); ok {
+		var printSections func(items []interface{}, indent string)
+		printSections = func(items []interface{}, indent string) {
+			for _, item := range items {
+				if sec, ok := item.(map[string]interface{}); ok {
+					if _, hasPath := sec["filePath"]; !hasPath {
+						sec["filePath"] = filePath
+					}
+					line := renderEntityMarkdown("section", sec)
+					sb.WriteString(fmt.Sprintf("%s%s\n", indent, line))
+					if children, ok := sec["children"].([]interface{}); ok && len(children) > 0 {
+						printSections(children, indent+"  ")
 					}
 				}
 			}
-			printSections(sections, "")
 		}
-
-		// Definitions
-		if definitions, ok := file["definitions"].([]interface{}); ok {
-			for _, d := range definitions {
-				if def, ok := d.(map[string]interface{}); ok {
-					if _, hasPath := def["filePath"]; !hasPath {
-						def["filePath"] = filePath
-					}
-					sb.WriteString(renderEntityMarkdown("definition", def) + "\n")
-				}
-			}
-		}
-		return sb.String()
+		printSections(sections, "  ")
 	}
 
-	// Case 14: Contributor
-	if contrib, ok := payload["contributor"].(map[string]interface{}); ok {
-		return renderEntityMarkdown("contributor", contrib) + "\n"
-	}
-
-	// Case 15: Policy (inline)
-	if policy, ok := payload["policy"].(map[string]interface{}); ok {
-		id, _ := policy["id"].(string)
-		desc, _ := policy["description"].(string)
-		uri := fmt.Sprintf("semiorepo://policy/%s", Slugify(id))
-		return fmt.Sprintf("- [%s](%s) - %s\n", id, uri, desc)
-	}
-
-	// Case 16: Todos (List)
-	if todos, ok := payload["todos"].([]interface{}); ok {
-		for _, t := range todos {
-			if tMap, ok := t.(map[string]interface{}); ok {
-				sb.WriteString(renderEntityMarkdown("todo", tMap) + "\n")
-			}
-		}
-		return sb.String()
-	}
-
-	// Case 16b: Sections (List)
-	if sections, ok := payload["sections"].([]interface{}); ok {
-		for _, s := range sections {
-			if sMap, ok := s.(map[string]interface{}); ok {
-				sb.WriteString(renderEntityMarkdown("section", sMap) + "\n")
-			}
-		}
-		return sb.String()
-	}
-
-	// Case 16c: Definitions (List)
-	if definitions, ok := payload["definitions"].([]interface{}); ok {
+	if definitions, ok := file["definitions"].([]interface{}); ok {
 		for _, d := range definitions {
-			if dMap, ok := d.(map[string]interface{}); ok {
-				sb.WriteString(renderEntityMarkdown("definition", dMap) + "\n")
+			if def, ok := d.(map[string]interface{}); ok {
+				if _, hasPath := def["filePath"]; !hasPath {
+					def["filePath"] = filePath
+				}
+				sb.WriteString("  " + renderEntityMarkdown("definition", def) + "\n")
 			}
 		}
-		return sb.String()
 	}
-
-	// Case 17: Drafts (List)
-	if drafts, ok := payload["drafts"].([]interface{}); ok {
-		for _, d := range drafts {
-			if dMap, ok := d.(map[string]interface{}); ok {
-				sb.WriteString(renderEntityMarkdown("draft", dMap) + "\n")
-			}
-		}
-		return sb.String()
-	}
-
-	// Case 17b: Single Draft
-	if draft, ok := payload["draft"].(map[string]interface{}); ok {
-		return renderEntityMarkdown("draft", draft) + "\n"
-	}
-
-	return fmt.Sprintf("```json\n%s\n```\n", string(data))
+	return sb.String()
 }
 
 func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error {
@@ -4940,10 +4758,13 @@ func (e DefinitionKind) String() string {
 }
 
 func DeriveDefinitionKind(rawKind string) DefinitionKind {
-	switch rawKind {
-	case "interface", "type", "trait":
+	switch strings.ToLower(rawKind) {
+	case "interface", "type", "trait", "abstract",
+		"extend type", "extend interface", "extend enum", "extend union", "extend input",
+		"input", "union", "scalar",
+		"delegate", "record":
 		return DefinitionKindInterface
-	case "constant", "enum":
+	case "const", "constant", "enum", "var", "let", "static":
 		return DefinitionKindConstant
 	default:
 		return DefinitionKindImplementation
@@ -5147,17 +4968,17 @@ func (e ProjectKind) String() string {
 type BundleKind string
 
 const (
-	BundleKindLibrary BundleKind = "📚"
-	BundleKindSchema  BundleKind = "🛂"
-	BundleKindBinary  BundleKind = "⌨️"
-	BundleKindClient  BundleKind = "🖱️"
-	BundleKindSite    BundleKind = "🌐"
-	BundleKindAssets  BundleKind = "🏪"
+	BundleKindLibrary BundleKind = "library"
+	BundleKindSchema  BundleKind = "schema"
+	BundleKindBinary  BundleKind = "binary"
+	BundleKindUI      BundleKind = "ui"
+	BundleKindSite    BundleKind = "site"
+	BundleKindAssets  BundleKind = "assets"
 )
 
 func (e BundleKind) IsValid() bool {
 	switch e {
-	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindClient, BundleKindSite, BundleKindAssets:
+	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindUI, BundleKindSite, BundleKindAssets:
 		return true
 	}
 	return false
@@ -5183,26 +5004,26 @@ func DeriveProjectKind(name string) ProjectKind {
 }
 
 func DeriveBundleKind(name string, root string) BundleKind {
-	normalized := normalizeBundleLabel(name)
-	switch normalized {
-	case "@semio/sqlite", "@semio/graphql", "@semio/json-schema", "@semio/openapi", "@semio/rdf":
-		return BundleKindSchema
-	case "@semio-repo/go", "@semio-repo/server":
-		return BundleKindBinary
-	case "@semio-repo/vscode", "@semio/grasshopper", "@semio/desktop", "@semio/sketchpad":
-		return BundleKindClient
-	case "@semio/play", "@semio/docs":
-		return BundleKindSite
-	case "@semio/icons", "@semio/assets", "@semio/logo", "@semio/images":
-		return BundleKindAssets
-	case "@semio/js", "@semio/go", "@semio/py", "@semio/rs", "@semio/net", "@semio/engine", "@semio/semio", "@semio/rb":
-		return BundleKindLibrary
+	absRoot := root
+	if !filepath.IsAbs(absRoot) {
+		absRoot = filepath.Join(GetRootDir(), root)
 	}
-	if strings.Contains(root, "sql/") || strings.Contains(root, "graphql/") || strings.Contains(root, "jsonschema/") || strings.Contains(root, "openapi/") || strings.Contains(root, "rdf/") {
-		return BundleKindSchema
-	}
-	if strings.Contains(root, "assets/") || strings.Contains(root, "icons/") || strings.Contains(root, "images/") || strings.Contains(root, "logo/") {
-		return BundleKindAssets
+	for _, configName := range []string{"package.json", "project.json"} {
+		configPath := filepath.Join(absRoot, configName)
+		if FileExists(configPath) {
+			content, err := ReadTextFile(configPath)
+			if err == nil {
+				var meta struct {
+					BundleKind string `json:"bundleKind"`
+				}
+				if json.Unmarshal([]byte(content), &meta) == nil && meta.BundleKind != "" {
+					kind := BundleKind(strings.ToLower(meta.BundleKind))
+					if kind.IsValid() {
+						return kind
+					}
+				}
+			}
+		}
 	}
 	return BundleKindLibrary
 }
@@ -5296,14 +5117,8 @@ func (e FolderKind) String() string {
 
 func DeriveFolderKind(path string) FolderKind {
 	base := filepath.Base(path)
-	parent := filepath.Dir(path)
-	if parent == "." || parent == "" {
-		orgFolders := []string{"js", "go", "py", "rs", "net", "rb", "sql", "graphql", "jsonschema", "openapi", "rdf", "assets", "examples", "scripts", "reports", "yak", "antlr", "peg", "liveblocks", "meta", "temp", "engineering", "dotnet"}
-		for _, org := range orgFolders {
-			if base == org {
-				return FolderKindOrganization
-			}
-		}
+	if strings.HasPrefix(base, ".") {
+		return FolderKindRequired
 	}
 	requiredIndicators := []string{"package.json", "pyproject.toml", "go.mod", "Cargo.toml", "*.csproj", "*.sln"}
 	for _, indicator := range requiredIndicators {
@@ -5378,37 +5193,87 @@ const (
 func DeriveFileKind(name string) string {
 	ext := strings.ToLower(filepath.Ext(name))
 	nameLower := strings.ToLower(name)
+	nameNoExt := strings.TrimSuffix(nameLower, ext)
 
-	if strings.Contains(nameLower, "license") {
+	if strings.Contains(nameLower, "license") || strings.Contains(nameLower, "licence") {
 		return FileKindLicense
 	}
 
-	if nameLower == "package-lock.json" || nameLower == "yarn.lock" || nameLower == "pnpm-lock.yaml" || nameLower == "go.sum" || nameLower == "uv.lock" {
-		return FileKindConfig // Or Generated? Kind is usually about content type.
-	}
-
-	if strings.HasSuffix(nameLower, ".test.ts") || strings.HasSuffix(nameLower, "_test.go") || strings.HasSuffix(nameLower, ".spec.ts") || strings.HasPrefix(nameLower, "test_") {
+	if strings.HasSuffix(nameNoExt, ".test") || strings.HasSuffix(nameNoExt, ".spec") ||
+		strings.HasSuffix(nameNoExt, ".tests") || strings.HasSuffix(nameNoExt, ".specs") ||
+		strings.HasSuffix(nameNoExt, "_test") || strings.HasSuffix(nameNoExt, "_tests") ||
+		strings.HasSuffix(nameNoExt, "_spec") || strings.HasSuffix(nameNoExt, "_benchmark") ||
+		strings.HasSuffix(nameNoExt, ".benchmark") ||
+		strings.HasSuffix(nameNoExt, ".stories") || strings.HasSuffix(nameNoExt, ".story") ||
+		strings.HasPrefix(nameLower, "test_") || strings.HasPrefix(nameLower, "test.") {
 		return FileKindTest
 	}
 
-	switch ext {
-	case ".sh", ".bat", ".ps1":
-		return FileKindScript
-	case ".json", ".yaml", ".yml", ".toml", ".xml", ".ini", ".conf", ".config", ".gitignore", ".dockerignore", ".env":
+	if strings.HasSuffix(nameNoExt, ".config") || strings.HasSuffix(nameNoExt, ".conf") ||
+		strings.HasSuffix(nameNoExt, ".rc") || strings.HasSuffix(nameNoExt, ".cfg") {
 		return FileKindConfig
-	case ".md", ".txt", ".rst", ".adoc":
-		return FileKindDocs
-	case ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".ttf", ".woff", ".woff2", ".eot":
-		return FileKindResource
-	case ".ts", ".tsx", ".js", ".jsx", ".py", ".cs", ".go", ".c", ".cpp", ".h", ".hpp", ".rs", ".java", ".kt", ".swift":
-		return FileKindCode
-	case ".css", ".scss", ".less", ".sass", ".html", ".htm":
-		return FileKindCode
-	case ".sql", ".graphql", ".gql":
-		return FileKindCode // Schema code
 	}
 
-	if strings.HasPrefix(nameLower, "dockerfile") || nameLower == "makefile" || nameLower == "justfile" || nameLower == "rakefile" {
+	switch ext {
+	case ".sh", ".bash", ".zsh", ".fish", ".bat", ".cmd", ".ps1", ".psm1":
+		return FileKindScript
+	case ".json", ".yaml", ".yml", ".toml", ".xml", ".ini", ".conf", ".config",
+		".env", ".properties", ".cfg", ".hcl", ".tf", ".tfvars":
+		return FileKindConfig
+	case ".gitignore", ".gitattributes", ".gitmodules",
+		".dockerignore", ".editorconfig", ".eslintignore",
+		".prettierignore", ".npmignore", ".browserslistrc":
+		return FileKindConfig
+	case ".md", ".txt", ".rst", ".adoc", ".asciidoc", ".org", ".rdoc":
+		return FileKindDocs
+	case ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".bmp", ".tiff", ".tif",
+		".ttf", ".woff", ".woff2", ".eot", ".otf",
+		".mp3", ".mp4", ".wav", ".ogg", ".webm", ".avi", ".mov",
+		".pdf", ".zip", ".tar", ".gz", ".bz2", ".xz", ".7z", ".rar",
+		".bin", ".dat", ".db", ".sqlite", ".sqlite3",
+		".wasm", ".map":
+		return FileKindResource
+	case ".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs", ".mts", ".cts",
+		".py", ".pyi", ".pyw",
+		".cs", ".csx",
+		".go",
+		".c", ".cpp", ".cc", ".cxx", ".h", ".hpp", ".hxx",
+		".rs",
+		".java", ".kt", ".kts", ".scala",
+		".swift", ".m", ".mm",
+		".rb", ".erb",
+		".php",
+		".lua",
+		".r", ".R",
+		".jl",
+		".ex", ".exs",
+		".hs", ".lhs",
+		".ml", ".mli",
+		".clj", ".cljs", ".cljc",
+		".dart", ".v", ".sv", ".vhd", ".vhdl",
+		".zig", ".nim", ".cr", ".d",
+		".f", ".f90", ".f95", ".f03",
+		".pl", ".pm",
+		".css", ".scss", ".less", ".sass", ".styl",
+		".html", ".htm", ".vue", ".svelte", ".astro",
+		".sql", ".graphql", ".gql",
+		".proto", ".thrift", ".avsc",
+		".g4":
+		return FileKindCode
+	}
+
+	if strings.HasPrefix(nameLower, "dockerfile") || nameLower == "makefile" || nameLower == "justfile" ||
+		nameLower == "rakefile" || nameLower == "gemfile" || nameLower == "vagrantfile" ||
+		nameLower == "procfile" || nameLower == "brewfile" || nameLower == "cmakelists.txt" ||
+		nameLower == ".babelrc" || nameLower == ".eslintrc" || nameLower == ".prettierrc" ||
+		nameLower == ".stylelintrc" || nameLower == ".nycrc" || nameLower == ".npmrc" ||
+		nameLower == ".nvmrc" || nameLower == ".yarnrc" || nameLower == ".ruby-version" ||
+		nameLower == ".python-version" || nameLower == ".node-version" ||
+		nameLower == ".tool-versions" || nameLower == ".cursorrules" || nameLower == ".clinerules" ||
+		nameLower == "nx.json" || nameLower == "tsconfig.json" || nameLower == "tslint.json" ||
+		nameLower == "composer.json" || nameLower == "cargo.lock" ||
+		nameLower == "package-lock.json" || nameLower == "yarn.lock" || nameLower == "pnpm-lock.yaml" ||
+		nameLower == "go.sum" || nameLower == "uv.lock" {
 		return FileKindConfig
 	}
 
@@ -5763,30 +5628,30 @@ func (t *Ticket) GetDateFinished() *time.Time {
 
 func (t *Ticket) GetFiles() *TicketDiffs {
 	result := newTicketDiffs()
-	for _, iteration := range t.Interactions {
-		if iteration.Diff == nil {
+	for _, interaction := range t.Interactions {
+		if interaction.Diff == nil {
 			continue
 		}
-		result.Bundles.Added = append(result.Bundles.Added, iteration.Diff.Bundles.Added...)
-		result.Bundles.Modified = append(result.Bundles.Modified, iteration.Diff.Bundles.Modified...)
-		result.Bundles.Deleted = append(result.Bundles.Deleted, iteration.Diff.Bundles.Deleted...)
-		result.Bundles.Renamed = append(result.Bundles.Renamed, iteration.Diff.Bundles.Renamed...)
-		result.Folders.Added = append(result.Folders.Added, iteration.Diff.Folders.Added...)
-		result.Folders.Modified = append(result.Folders.Modified, iteration.Diff.Folders.Modified...)
-		result.Folders.Deleted = append(result.Folders.Deleted, iteration.Diff.Folders.Deleted...)
-		result.Folders.Renamed = append(result.Folders.Renamed, iteration.Diff.Folders.Renamed...)
-		result.Files.Added = append(result.Files.Added, iteration.Diff.Files.Added...)
-		result.Files.Modified = append(result.Files.Modified, iteration.Diff.Files.Modified...)
-		result.Files.Deleted = append(result.Files.Deleted, iteration.Diff.Files.Deleted...)
-		result.Files.Renamed = append(result.Files.Renamed, iteration.Diff.Files.Renamed...)
-		result.Sections.Added = append(result.Sections.Added, iteration.Diff.Sections.Added...)
-		result.Sections.Modified = append(result.Sections.Modified, iteration.Diff.Sections.Modified...)
-		result.Sections.Deleted = append(result.Sections.Deleted, iteration.Diff.Sections.Deleted...)
-		result.Sections.Renamed = append(result.Sections.Renamed, iteration.Diff.Sections.Renamed...)
-		result.Definitions.Added = append(result.Definitions.Added, iteration.Diff.Definitions.Added...)
-		result.Definitions.Modified = append(result.Definitions.Modified, iteration.Diff.Definitions.Modified...)
-		result.Definitions.Deleted = append(result.Definitions.Deleted, iteration.Diff.Definitions.Deleted...)
-		result.Definitions.Renamed = append(result.Definitions.Renamed, iteration.Diff.Definitions.Renamed...)
+		result.Bundles.Added = append(result.Bundles.Added, interaction.Diff.Bundles.Added...)
+		result.Bundles.Modified = append(result.Bundles.Modified, interaction.Diff.Bundles.Modified...)
+		result.Bundles.Deleted = append(result.Bundles.Deleted, interaction.Diff.Bundles.Deleted...)
+		result.Bundles.Renamed = append(result.Bundles.Renamed, interaction.Diff.Bundles.Renamed...)
+		result.Folders.Added = append(result.Folders.Added, interaction.Diff.Folders.Added...)
+		result.Folders.Modified = append(result.Folders.Modified, interaction.Diff.Folders.Modified...)
+		result.Folders.Deleted = append(result.Folders.Deleted, interaction.Diff.Folders.Deleted...)
+		result.Folders.Renamed = append(result.Folders.Renamed, interaction.Diff.Folders.Renamed...)
+		result.Files.Added = append(result.Files.Added, interaction.Diff.Files.Added...)
+		result.Files.Modified = append(result.Files.Modified, interaction.Diff.Files.Modified...)
+		result.Files.Deleted = append(result.Files.Deleted, interaction.Diff.Files.Deleted...)
+		result.Files.Renamed = append(result.Files.Renamed, interaction.Diff.Files.Renamed...)
+		result.Sections.Added = append(result.Sections.Added, interaction.Diff.Sections.Added...)
+		result.Sections.Modified = append(result.Sections.Modified, interaction.Diff.Sections.Modified...)
+		result.Sections.Deleted = append(result.Sections.Deleted, interaction.Diff.Sections.Deleted...)
+		result.Sections.Renamed = append(result.Sections.Renamed, interaction.Diff.Sections.Renamed...)
+		result.Definitions.Added = append(result.Definitions.Added, interaction.Diff.Definitions.Added...)
+		result.Definitions.Modified = append(result.Definitions.Modified, interaction.Diff.Definitions.Modified...)
+		result.Definitions.Deleted = append(result.Definitions.Deleted, interaction.Diff.Definitions.Deleted...)
+		result.Definitions.Renamed = append(result.Definitions.Renamed, interaction.Diff.Definitions.Renamed...)
 	}
 	return result
 }
@@ -6645,6 +6510,8 @@ type LanguagePlugin interface {
 	SupportsHeaders() bool
 	UsesIndentScoping() bool
 	CommentPrefix() string
+	BlockCommentStart() string
+	BlockCommentEnd() string
 	ParseSections(content string) []Section
 	ParseDefinitions(content string, lines []string) []DefinitionRange
 	FormatSectionStart(name string) string
@@ -6675,6 +6542,8 @@ type BaseLanguage struct {
 	sectionEnd         *regexp.Regexp
 	definitionRegexp   *regexp.Regexp
 	commentPrefix      string
+	blockCommentStart  string
+	blockCommentEnd    string
 	sectionStartFmt    string
 	sectionEndFmt      string
 	sectionBothFmt     string
@@ -6687,6 +6556,8 @@ type BaseLanguage struct {
 func (l *BaseLanguage) Name() string              { return l.name }
 func (l *BaseLanguage) Extensions() []string      { return l.extensions }
 func (l *BaseLanguage) CommentPrefix() string     { return l.commentPrefix }
+func (l *BaseLanguage) BlockCommentStart() string { return l.blockCommentStart }
+func (l *BaseLanguage) BlockCommentEnd() string   { return l.blockCommentEnd }
 func (l *BaseLanguage) UsesIndentScoping() bool   { return l.usesIndentScoping }
 func (l *BaseLanguage) SupportsSections() bool    { return l.sectionStart != nil }
 func (l *BaseLanguage) SupportsDefinitions() bool { return l.definitionRegexp != nil }
@@ -6901,7 +6772,7 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 		}
 		defRanges = append(defRanges, DefinitionRange{
 			Name:    defStarts[i].name,
-			Kind:    defStarts[i].kind,
+			Kind:    refineDefinitionKind(defStarts[i].kind, lines[start-1]),
 			Start:   start,
 			End:     end,
 			Excerpt: defStarts[i].name,
@@ -6910,22 +6781,66 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 	return defRanges
 }
 
+var arrowFuncPattern = regexp.MustCompile(`=\s*(?:\([^)]*\)|[A-Za-z_][A-Za-z0-9_]*)\s*(?::\s*[^=]+)?\s*=>\s*`)
+var funcExprPattern = regexp.MustCompile(`=\s*(?:async\s+)?function\b`)
+var classExprPattern = regexp.MustCompile(`=\s*class\b`)
+
+func refineDefinitionKind(rawKind string, line string) string {
+	lower := strings.ToLower(rawKind)
+	if lower == "const" || lower == "let" || lower == "var" {
+		if arrowFuncPattern.MatchString(line) || funcExprPattern.MatchString(line) || classExprPattern.MatchString(line) {
+			return "function"
+		}
+	}
+	return rawKind
+}
+
 func extractDefinitionKeyword(fullMatch, name string) string {
-	keywords := []string{
+	modifiers := map[string]bool{
+		"public": true, "private": true, "protected": true, "internal": true,
+		"abstract": true, "sealed": true, "virtual": true, "override": true,
+		"async": true, "partial": true, "pub": true, "export": true, "static": true,
+	}
+	keywords := map[string]bool{
+		"function": true, "class": true, "interface": true, "type": true, "enum": true,
+		"const": true, "let": true, "var": true, "func": true, "fn": true,
+		"struct": true, "trait": true, "impl": true, "mod": true, "static": true,
+		"def": true, "module": true, "delegate": true, "record": true, "union": true,
+		"scalar": true, "query": true, "mutation": true, "subscription": true, "fragment": true,
+		"input": true,
+	}
+	multiWordKeywords := []string{
 		"async def", "async function",
-		"function", "class", "interface", "type", "enum", "const", "let", "var",
-		"func", "struct", "trait", "impl", "mod",
-		"def", "module",
-		"public", "private", "protected", "internal", "abstract", "sealed", "virtual", "override",
-		"delegate", "record", "union", "scalar", "query", "mutation", "subscription", "fragment",
+		"extend type", "extend interface", "extend enum", "extend union", "extend input",
 		"CREATE TABLE", "CREATE VIEW", "CREATE PROCEDURE", "CREATE FUNCTION", "CREATE TRIGGER",
 		"CREATE INDEX", "CREATE TYPE", "CREATE SCHEMA", "CREATE DATABASE", "CREATE SEQUENCE",
-		"input", "extend type", "extend interface", "extend enum", "extend union", "extend input",
 	}
 	lower := strings.ToLower(fullMatch)
-	for _, kw := range keywords {
+	for _, kw := range multiWordKeywords {
 		if strings.Contains(lower, strings.ToLower(kw)) {
 			return kw
+		}
+	}
+	words := strings.Fields(lower)
+	lowerName := strings.ToLower(name)
+	var prevWord string
+	for _, word := range words {
+		clean := strings.TrimRight(word, "(<{[")
+		if clean == lowerName {
+			break
+		}
+		prevWord = clean
+	}
+	if prevWord != "" && keywords[prevWord] {
+		return prevWord
+	}
+	for _, word := range words {
+		clean := strings.TrimRight(word, "(<{[")
+		if clean == lowerName || modifiers[clean] {
+			continue
+		}
+		if keywords[clean] {
+			return clean
 		}
 	}
 	return "definition"
@@ -6966,6 +6881,8 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 			sectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
 			definitionRegexp:   regexp.MustCompile(`^(?:export\s+)?(?:const|let|var|function|class|interface|type|enum)\s+([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "//",
+			blockCommentStart:  "/*",
+			blockCommentEnd:    "*/",
 			sectionStartFmt:    "// #region 🔖%s",
 			sectionEndFmt:      "// #endregion 🔖%s",
 			sectionBothFmt:     "\n// #region 🔖%s\n\n// #endregion 🔖%s\n",
@@ -6978,6 +6895,9 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 }
 
 func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation {
+	if DeriveFileKind(file) == FileKindConfig {
+		return nil
+	}
 	var violations []Violation
 	// Find header section to exclude comments within it
 	sections := l.ParseSections(content)
@@ -6998,24 +6918,33 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 			charIndex += len(line) + 1
 			continue
 		}
+		if scanState.InTodoBlock && strings.TrimSpace(line) == "" {
+			scanState.InTodoBlock = false
+		}
 		lineStart := charIndex
 		j := 0
 		foundInline := false
 		for j < len(line) {
 			if scanState.InBlockComment {
+				if !scanState.BlockCommentHasTodo && strings.Contains(line, "TODO") {
+					scanState.BlockCommentHasTodo = true
+				}
 				if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
-					if scanState.BlockCommentIsJsDoc {
-						violations = append(violations, ctx.CreateViolation(
-							fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
-							ViolationCodeCommentJSDoc,
-							file, scanState.BlockCommentStartLine, ""))
-					} else {
-						violations = append(violations, ctx.CreateViolation(
-							fmt.Sprintf("Block comment in %s:%d", file, scanState.BlockCommentStartLine),
-							ViolationCodeCommentBlock,
-							file, scanState.BlockCommentStartLine, ""))
+					if !scanState.BlockCommentHasTodo {
+						if scanState.BlockCommentIsJsDoc {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
+								ViolationCodeCommentJSDoc,
+								file, scanState.BlockCommentStartLine, scanState.BlockCommentStartColumn, ""))
+						} else {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("Block comment in %s:%d", file, scanState.BlockCommentStartLine),
+								ViolationCodeCommentBlock,
+								file, scanState.BlockCommentStartLine, scanState.BlockCommentStartColumn, ""))
+						}
 					}
 					scanState.InBlockComment = false
+					scanState.BlockCommentHasTodo = false
 					j += 2
 					continue
 				}
@@ -7092,7 +7021,9 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 				scanState.InBlockComment = true
 				scanState.BlockCommentStartLine = lineNum
 				scanState.BlockCommentStartIndex = lineStart + j
+				scanState.BlockCommentStartColumn = j + 1
 				scanState.BlockCommentIsJsDoc = isJsDoc
+				scanState.BlockCommentHasTodo = strings.Contains(line[j:], "TODO")
 				j += 2
 				continue
 			}
@@ -7112,8 +7043,19 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					break
 				}
 				if strings.HasPrefix(trimmed, "// eslint-") || strings.HasPrefix(trimmed, "// @ts-") || strings.HasPrefix(trimmed, "// noinspection") || strings.HasPrefix(trimmed, "// TODO") || strings.HasPrefix(trimmed, "// semio-ignore-") {
+					if strings.HasPrefix(trimmed, "// TODO") {
+						scanState.InTodoBlock = true
+					}
+					foundInline = true
+					inlineCommentActive = true
 					break
 				}
+				if scanState.InTodoBlock && strings.HasPrefix(trimmed, "//") {
+					foundInline = true // Mark as found so we don't reset InTodoBlock, but don't report violation
+					inlineCommentActive = true
+					break
+				}
+				scanState.InTodoBlock = false
 				debugMarker := strings.Contains(line, "[DEBUG]")
 				if !debugMarker {
 					foundInline = true
@@ -7121,7 +7063,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 						violations = append(violations, ctx.CreateViolation(
 							fmt.Sprintf("Inline comment in %s:%d", file, lineNum),
 							ViolationCodeCommentInline,
-							file, lineNum, strings.TrimSpace(line[j:])))
+							file, lineNum, j+1, strings.TrimSpace(line[j:])))
 						inlineCommentActive = true
 					}
 				}
@@ -7130,9 +7072,8 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 			j++
 		}
 		if !foundInline {
-			if strings.TrimSpace(line) != "" {
-				inlineCommentActive = false
-			}
+			scanState.InTodoBlock = false
+			inlineCommentActive = false
 		}
 		charIndex += len(line) + 1
 	}
@@ -7197,6 +7138,8 @@ func NewGoLanguage() *GoLanguage {
 			sectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
 			definitionRegexp:   regexp.MustCompile(`^(?:func|type|var|const)\s+(?:\([^)]+\)\s+)?([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "//",
+			blockCommentStart:  "/*",
+			blockCommentEnd:    "*/",
 			sectionStartFmt:    "// #region 🔖%s",
 			sectionEndFmt:      "// #endregion 🔖%s",
 			sectionBothFmt:     "\n// #region 🔖%s\n\n// #endregion 🔖%s\n",
@@ -7387,6 +7330,8 @@ func NewCSharpLanguage() *CSharpLanguage {
 			sectionEnd:         regexp.MustCompile(`(?i)^\s*#endregion(?:\s+(.+?))?\s*$`),
 			definitionRegexp:   regexp.MustCompile(`^(?:(?:public|private|protected|internal|static|partial|abstract|sealed|virtual|override|async)\s+)*(?:class|struct|interface|enum|delegate|record|void|string|int|bool|[A-Z][A-Za-z0-9_<>]*)\s+([A-Z][A-Za-z0-9_]*)\s*[<({]`),
 			commentPrefix:      "//",
+			blockCommentStart:  "/*",
+			blockCommentEnd:    "*/",
 			sectionStartFmt:    "#region 🔖%s",
 			sectionEndFmt:      "#endregion 🔖%s",
 			sectionBothFmt:     "\n#region 🔖%s\n\n#endregion 🔖%s\n",
@@ -7508,6 +7453,8 @@ func NewRustLanguage() *RustLanguage {
 			sectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
 			definitionRegexp:   regexp.MustCompile(`^(?:pub\s+)?(?:fn|struct|enum|trait|impl|type|const|static|mod)\s+([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "//",
+			blockCommentStart:  "/*",
+			blockCommentEnd:    "*/",
 			sectionStartFmt:    "// #region 🔖%s",
 			sectionEndFmt:      "// #endregion 🔖%s",
 			sectionBothFmt:     "\n// #region 🔖%s\n\n// #endregion 🔖%s\n",
@@ -7548,6 +7495,8 @@ func NewRubyLanguage() *RubyLanguage {
 			sectionEnd:         regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(.+?))?\s*$`),
 			definitionRegexp:   regexp.MustCompile(`^(?:def|class|module)\s+([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)`),
 			commentPrefix:      "#",
+			blockCommentStart:  "=begin",
+			blockCommentEnd:    "=end",
 			sectionStartFmt:    "# region %s",
 			sectionEndFmt:      "# endregion %s",
 			sectionBothFmt:     "\n# region %s\n\n# endregion %s\n",
@@ -7958,7 +7907,7 @@ type ViolationKind string
 
 const (
 	ViolationCodeHeaderMissingRegion        ViolationKind = "code:header:missing-region"
-	ViolationCodeHeaderMissingFilename      ViolationKind = "code:header:missing-filename"
+	ViolationCodeHeaderWrongFileId          ViolationKind = "code:header:wrong-file-id"
 	ViolationCodeHeaderMissingContributors  ViolationKind = "code:header:missing-contributors"
 	ViolationCodeHeaderMissingLicense       ViolationKind = "code:header:missing-license"
 	ViolationCodeHeaderWrongLicense         ViolationKind = "code:header:wrong-license"
@@ -8013,12 +7962,12 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Solution:    "Add header region with SPDX license, filename, and contributors",
 		Autofixable: false,
 	},
-	ViolationCodeHeaderMissingFilename: {
-		Kind:        ViolationCodeHeaderMissingFilename,
+	ViolationCodeHeaderWrongFileId: {
+		Kind:        ViolationCodeHeaderWrongFileId,
 		Priority:    ViolationPriorityLow,
-		Reason:      "Filename must be documented in header",
-		Solution:    "Add filename comment in header region",
-		Autofixable: false,
+		Reason:      "File header must contain the correct artifact ID",
+		Solution:    "Replace file identifier line with the correct artifact ID",
+		Autofixable: true,
 	},
 	ViolationCodeHeaderMissingContributors: {
 		Kind:        ViolationCodeHeaderMissingContributors,
@@ -9439,9 +9388,10 @@ func ParseDefinitions(content string, filePath string) []Definition {
 	ranges := language.ParseDefinitions(content, lines)
 	definitions := make([]Definition, len(ranges))
 	for i, r := range ranges {
+		kind := DeriveDefinitionKind(r.Kind)
 		definitions[i] = Definition{
 			Name:      r.Name,
-			Kind:      DefinitionKindImplementation,
+			Kind:      kind,
 			StartLine: r.Start,
 			EndLine:   r.End,
 			FilePath:  filePath,
@@ -9783,7 +9733,7 @@ var policies = []PolicyDef{
 		Priority:    ViolationPriorityLow,
 		Kinds: []ViolationKind{
 			ViolationCodeHeaderMissingRegion,
-			ViolationCodeHeaderMissingFilename,
+			ViolationCodeHeaderWrongFileId,
 			ViolationCodeHeaderMissingContributors,
 			ViolationCodeHeaderMissingLicense,
 			ViolationCodeHeaderWrongLicense,
@@ -10020,13 +9970,14 @@ func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind Vio
 	return false
 }
 
-func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, excerpt string) Violation {
+func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, col int, excerpt string) Violation {
 	return Violation{
-		ID:      buildViolationID(scope, line, 0),
+		ID:      buildViolationID(scope, line, col),
 		Summary: summary,
 		Kind:    kind,
 		Scope:   scope,
 		Line:    line,
+		Column:  col,
 		Excerpt: excerpt,
 	}
 }
@@ -10151,30 +10102,47 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
 					ViolationCodeHeaderMissingRegion,
-					file, 0, ""))
+					file, 0, 0, ""))
 			} else {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
 					ViolationCodeHeaderMissingRegion,
-					file, 0, ""))
+					file, 0, 0, ""))
 			}
 			continue
 		}
 		headerContent := content[headerSection.StartIndex:headerSection.EndIndex]
 		headerLines := strings.Split(headerContent, "\n")
-		filename := filepath.Base(file)
-		hasFilename := false
-		for _, line := range headerLines {
-			if strings.Contains(line, filename) {
-				hasFilename = true
+		expectedFileId := FileHeaderId(file)
+		hasFileId := false
+		wrongFileIdLine := 0
+		for lineIdx, line := range headerLines {
+			if strings.Contains(line, expectedFileId) {
+				hasFileId = true
 				break
 			}
+			trimmed := strings.TrimSpace(line)
+			if trimmed != "" {
+				prefix := language.CommentPrefix()
+				stripped := strings.TrimSpace(strings.TrimPrefix(trimmed, prefix))
+				if stripped != "" && !strings.HasPrefix(trimmed, prefix+" #region") && !strings.HasPrefix(trimmed, prefix+" #endregion") && !strings.HasPrefix(trimmed, "#region") && !strings.HasPrefix(trimmed, "#endregion") {
+					hasExt := strings.Contains(stripped, ".ts") || strings.Contains(stripped, ".tsx") || strings.Contains(stripped, ".go") || strings.Contains(stripped, ".cs") || strings.Contains(stripped, ".py") || strings.Contains(stripped, ".sh") || strings.Contains(stripped, ".sql")
+					hasEmoji := strings.ContainsAny(stripped, "💻🧪📃⚙💾⚖")
+					if (hasExt || hasEmoji) && wrongFileIdLine == 0 {
+						wrongFileIdLine = headerSection.StartLine + lineIdx
+					}
+				}
+			}
 		}
-		if !hasFilename {
+		if !hasFileId {
+			line := wrongFileIdLine
+			if line == 0 {
+				line = headerSection.StartLine
+			}
 			violations = append(violations, ctx.CreateViolation(
-				fmt.Sprintf("Missing filename in header of %s", file),
-				ViolationCodeHeaderMissingFilename,
-				fmt.Sprintf("%s#Header", file), headerSection.StartLine, ""))
+				fmt.Sprintf("Wrong file ID in header of %s (expected %s)", file, expectedFileId),
+				ViolationCodeHeaderWrongFileId,
+				fmt.Sprintf("%s#Header", file), line, 0, expectedFileId))
 		}
 		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
 		hasContributors := false
@@ -10188,7 +10156,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing contributors in header of %s", file),
 				ViolationCodeHeaderMissingContributors,
-				fmt.Sprintf("%s#Header", file), headerSection.StartLine, ""))
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		}
 		hasLicense := false
 		for _, marker := range agplMarkers {
@@ -10201,7 +10169,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing license in header of %s", file),
 				ViolationCodeHeaderMissingLicense,
-				fmt.Sprintf("%s#Header", file), headerSection.StartLine, ""))
+				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		} else {
 			wrongLicenses := []string{"MIT", "Apache", "BSD"}
 			hasWrongLicense := false
@@ -10218,7 +10186,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Wrong license in header of %s", file),
 					ViolationCodeHeaderWrongLicense,
-					fmt.Sprintf("%s#Header", file), headerSection.StartLine, ""))
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 			}
 		}
 	}
@@ -10254,7 +10222,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Missing section name at %s:%d", file, lineNum),
 						ViolationCodeSectionMissingStartName,
-						file, lineNum, strings.TrimSpace(line)))
+						file, lineNum, 0, strings.TrimSpace(line)))
 				}
 				stack = append(stack, stackItem{name: name, line: lineNum})
 				continue
@@ -10268,12 +10236,12 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("Missing end section name at %s:%d", file, lineNum),
 								ViolationCodeSectionMissingEndName,
-								file, lineNum, strings.TrimSpace(line)))
+								file, lineNum, 0, strings.TrimSpace(line)))
 						} else if endName != open.name {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("Section name mismatch at %s:%d", file, lineNum),
 								ViolationCodeSectionNameMismatch,
-								file, lineNum, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName)))
+								file, lineNum, 0, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName)))
 						}
 					}
 				}
@@ -10295,7 +10263,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
 					ViolationCodeSectionEmpty,
-					fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, ""))
+					fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
 			}
 			for _, child := range s.Children {
 				checkSection(child)
@@ -10435,7 +10403,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 							fmt.Sprintf("Orphan definition outside sections at %s:%d", file, defRange.start),
 							ViolationCodeSectionOrphanDefinition,
 							fmt.Sprintf("%s::%s", file, defRange.name),
-							defRange.start,
+							defRange.start, 0,
 							excerpt))
 					}
 					matched = true
@@ -10449,7 +10417,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				fmt.Sprintf("Orphan definition outside sections at %s:%d", file, orphanRange.start),
 				ViolationCodeSectionOrphanDefinition,
 				fmt.Sprintf("%s::%s", file, name),
-				orphanRange.start,
+				orphanRange.start, 0,
 				orphanRange.firstLine))
 		}
 	}
@@ -10461,14 +10429,17 @@ type CommentTemplateState struct {
 }
 
 type CommentScanState struct {
-	InBlockComment         bool
-	BlockCommentStartLine  int
-	BlockCommentStartIndex int
-	BlockCommentIsJsDoc    bool
-	InSingleQuote          bool
-	InDoubleQuote          bool
-	Templates              []CommentTemplateState
-	Escaped                bool
+	InBlockComment          bool
+	BlockCommentStartLine   int
+	BlockCommentStartIndex  int
+	BlockCommentStartColumn int
+	BlockCommentIsJsDoc     bool
+	BlockCommentHasTodo     bool
+	InSingleQuote           bool
+	InDoubleQuote           bool
+	Templates               []CommentTemplateState
+	Escaped                 bool
+	InTodoBlock             bool
 }
 
 func (state *CommentScanState) InTemplateRaw() bool {
@@ -10567,7 +10538,7 @@ func devDocsPolicy(ctx *PolicyContext) []Violation {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("File section '%s' should come after '%s' (alphabetical order)", fileSections[i].path, fileSections[i+1].path),
 				ViolationDevDocsWrongFileOrder,
-				"AGENTS.md", fileSections[i+1].line, ""))
+				"AGENTS.md", fileSections[i+1].line, 0, ""))
 		}
 	}
 	for i := 0; i < len(folderSections)-1; i++ {
@@ -10575,7 +10546,7 @@ func devDocsPolicy(ctx *PolicyContext) []Violation {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Folder section '%s' should come after '%s' (alphabetical order)", folderSections[i].path, folderSections[i+1].path),
 				ViolationDevDocsWrongFolderOrder,
-				"AGENTS.md", folderSections[i+1].line, ""))
+				"AGENTS.md", folderSections[i+1].line, 0, ""))
 		}
 	}
 	return ctx.FilterIgnored(violations)
@@ -10630,7 +10601,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 						violations = append(violations, ctx.CreateViolation(
 							fmt.Sprintf("Third party import '%s' must only be in elements.tsx", pkg),
 							ViolationSketchpadImportThirdParty,
-							file, lineNumber, strings.TrimSpace(line)))
+							file, lineNumber, 0, strings.TrimSpace(line)))
 						break
 					}
 				}
@@ -10641,14 +10612,14 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 					violations = append(violations, ctx.CreateViolation(
 						"createMachine can only be used once in sketchpad",
 						ViolationSketchpadStateMultipleMachines,
-						file, lineNumber, strings.TrimSpace(line)))
+						file, lineNumber, 0, strings.TrimSpace(line)))
 				}
 			}
 			if strings.Contains(line, "createActor(") || strings.Contains(line, "createActor<") {
 				violations = append(violations, ctx.CreateViolation(
 					"createActor is forbidden in sketchpad",
 					ViolationSketchpadStateCreateActor,
-					file, lineNumber, strings.TrimSpace(line)))
+					file, lineNumber, 0, strings.TrimSpace(line)))
 			}
 			yjsAppStatePatterns := []string{"Y.Doc(", "new Doc(", "Y.Map(", "Y.Array(", "Y.Text("}
 			for _, pattern := range yjsAppStatePatterns {
@@ -10658,7 +10629,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 						violations = append(violations, ctx.CreateViolation(
 							"Yjs should only be used for kit data synchronization, not app state",
 							ViolationSketchpadStateYjsAppState,
-							file, lineNumber, strings.TrimSpace(line)))
+							file, lineNumber, 0, strings.TrimSpace(line)))
 					}
 				}
 			}
@@ -10669,7 +10640,7 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 						violations = append(violations, ctx.CreateViolation(
 							"Stores outside of State Management sections are forbidden",
 							ViolationSketchpadStateForbiddenStore,
-							file, lineNumber, strings.TrimSpace(line)))
+							file, lineNumber, 0, strings.TrimSpace(line)))
 					}
 				}
 			}
@@ -10705,7 +10676,7 @@ func repoPolicy(ctx *PolicyContext) []Violation {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing MCP registration for %s in go/repo/main.go", cmd),
 					ViolationRepoMissingCommand,
-					mainGoPath, 1, cmd))
+					mainGoPath, 1, 0, cmd))
 			}
 		}
 
@@ -10720,14 +10691,14 @@ func repoPolicy(ctx *PolicyContext) []Violation {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing ticket tracking function %s in go/repo/main.go", token),
 					ViolationRepoMissingTicketTracking,
-					mainGoPath, 1, token))
+					mainGoPath, 1, 0, token))
 			}
 		}
 	} else {
 		violations = append(violations, ctx.CreateViolation(
 			"Could not read go/repo/main.go for parity check",
 			ViolationRepoMissingCommand,
-			mainGoPath, 1, ""))
+			mainGoPath, 1, 0, ""))
 	}
 
 	return ctx.FilterIgnored(violations)
@@ -14239,7 +14210,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		return fmt.Errorf("client is required")
 	}
 
-	iteration := Interaction{
+	interaction := Interaction{
 		Prompt: prompt,
 		LLM:    llmSlug,
 		Author: gitAuthor,
@@ -14253,7 +14224,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		Commit: gitCommit,
 	}
 
-	// Handle draft for this iteration
+	// Handle draft for this interaction
 	if draft != "" {
 		draftPath := filepath.Join(GetDraftsPath(), draft)
 		if IsDir(draftPath) {
@@ -14284,7 +14255,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		}
 	}
 
-	ticket.Interactions = append(ticket.Interactions, iteration)
+	ticket.Interactions = append(ticket.Interactions, interaction)
 	ticket.Status = TicketStatusOpen
 	ticket.Finished = nil
 
@@ -14821,6 +14792,12 @@ func ToolFileCreate(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+func FileHeaderId(path string) string {
+	kind := DeriveFileKind(filepath.Base(path))
+	data := map[string]interface{}{"path": path, "kind": kind}
+	return GetArtifactID("file", data)
+}
+
 func generateFileHeader(path string, language LanguagePlugin) string {
 	if language == nil || !language.SupportsHeaders() {
 		return ""
@@ -14839,7 +14816,7 @@ GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.`
-	return language.FormatHeader(path, year, gitAuthor, formatLicenseLines(license, language.CommentPrefix()))
+	return language.FormatHeader(FileHeaderId(path), year, gitAuthor, formatLicenseLines(license, language.CommentPrefix()))
 }
 
 func formatLicenseLines(license, prefix string) string {
@@ -16687,7 +16664,7 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 		}
 		changed = true
 	}
-	// Update iterations for LLM/Client
+	// Update interactions for LLM/Client
 	if len(ticket.Interactions) > 0 {
 		if input.LLM != nil {
 			llmSlug, err := ResolveAllowedLLM(*input.LLM)
@@ -16857,7 +16834,260 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 }
 
 func (c *repoContext) Fix(scope *string) (*FixResult, error) {
-	return &FixResult{Violations: []*Violation{}}, nil
+	scopeStr := "@semio"
+	if scope != nil {
+		scopeStr = *scope
+	}
+	violations, err := CheckPolicies(ParseScope(scopeStr), c.bundles, nil)
+	if err != nil {
+		return nil, err
+	}
+	var autofixable []Violation
+	var remaining []Violation
+	for _, v := range violations {
+		if v.Autofixable() {
+			autofixable = append(autofixable, v)
+		} else {
+			remaining = append(remaining, v)
+		}
+	}
+	fixed := 0
+	fileViolations := map[string][]Violation{}
+	for _, v := range autofixable {
+		file := extractFileFromScope(v.Scope)
+		fileViolations[file] = append(fileViolations[file], v)
+	}
+	for file, vs := range fileViolations {
+		n, fixErr := applyAutofixes(file, vs)
+		if fixErr != nil {
+			for _, v := range vs {
+				remaining = append(remaining, v)
+			}
+			continue
+		}
+		fixed += n
+	}
+	remainingPtrs := make([]*Violation, len(remaining))
+	for i := range remaining {
+		remainingPtrs[i] = &remaining[i]
+	}
+	return &FixResult{Fixed: fixed, Remaining: len(remaining), Violations: remainingPtrs}, nil
+}
+
+func applyAutofixes(file string, violations []Violation) (int, error) {
+	absPath := filepath.Join(rootDir, file)
+	content, err := ReadTextFile(absPath)
+	if err != nil {
+		return 0, err
+	}
+	language := GetLanguage(file)
+	fixed := 0
+	lines := strings.Split(content, "\n")
+	sort.Slice(violations, func(i, j int) bool {
+		return violations[i].Line > violations[j].Line
+	})
+	linesToRemove := map[int]bool{}
+	for _, v := range violations {
+		switch v.Kind {
+		case ViolationCodeHeaderWrongFileId:
+			if v.Line > 0 && v.Line <= len(lines) && language != nil {
+				expectedId := v.Excerpt
+				if expectedId == "" {
+					expectedId = FileHeaderId(file)
+				}
+				prefix := language.CommentPrefix()
+				newLine := prefix + " " + expectedId
+				lines[v.Line-1] = newLine
+				fixed++
+			}
+		case ViolationCodeSectionEmpty:
+			sectionStartLine := 0
+			sectionEndLine := 0
+			for i := v.Line - 1; i >= 0; i-- {
+				if language != nil {
+					if matched, _ := language.PolicySectionStartMatch(lines[i]); matched {
+						sectionStartLine = i + 1
+						break
+					}
+				}
+			}
+			for i := v.Line - 1; i < len(lines); i++ {
+				if language != nil {
+					if matched, _ := language.PolicySectionEndMatch(lines[i]); matched {
+						sectionEndLine = i + 1
+						break
+					}
+				}
+			}
+			if sectionStartLine > 0 && sectionEndLine > 0 {
+				for i := sectionStartLine; i <= sectionEndLine; i++ {
+					linesToRemove[i] = true
+				}
+				hasPrecedingBlank := sectionStartLine > 1 && strings.TrimSpace(lines[sectionStartLine-2]) == ""
+				hasFollowingBlank := sectionEndLine < len(lines) && strings.TrimSpace(lines[sectionEndLine]) == ""
+				if hasPrecedingBlank {
+					linesToRemove[sectionStartLine-1] = true
+				}
+				if hasFollowingBlank && !hasPrecedingBlank {
+					linesToRemove[sectionEndLine+1] = true
+				}
+				fixed++
+			}
+		case ViolationCodeSectionMissingEndName:
+			if v.Line > 0 && v.Line <= len(lines) && language != nil {
+				line := lines[v.Line-1]
+				if matched, _ := language.PolicySectionEndMatch(line); matched {
+					startName := findMatchingSectionStartName(lines, v.Line-1, language)
+					if startName != "" {
+						lines[v.Line-1] = language.FormatSectionEnd(startName)
+						fixed++
+					}
+				}
+			}
+		case ViolationCodeSectionNameMismatch:
+			if v.Line > 0 && v.Line <= len(lines) && language != nil {
+				startName := findMatchingSectionStartName(lines, v.Line-1, language)
+				if startName != "" {
+					lines[v.Line-1] = language.FormatSectionEnd(startName)
+					fixed++
+				}
+			}
+		case ViolationCodeCommentInline:
+			if v.Line > 0 && v.Line <= len(lines) && language != nil {
+				startLine := v.Line
+				prefix := language.CommentPrefix()
+				var pendingBlanks []int
+				for i := startLine; i <= len(lines); i++ {
+					line := lines[i-1]
+					trimmed := strings.TrimSpace(line)
+					if trimmed == "" {
+						pendingBlanks = append(pendingBlanks, i)
+						continue
+					}
+					if i == startLine && v.Column > 1 {
+						if v.Column <= len(line) {
+							lines[i-1] = strings.TrimRight(line[:v.Column-1], " \t")
+							pendingBlanks = nil
+							continue
+						}
+					}
+					if !strings.HasPrefix(trimmed, prefix) {
+						break
+					}
+					if strings.HasPrefix(trimmed, prefix+" #region") || strings.HasPrefix(trimmed, prefix+" #endregion") {
+						break
+					}
+					if strings.HasPrefix(trimmed, prefix+" eslint-") || strings.HasPrefix(trimmed, prefix+" @ts-") || strings.HasPrefix(trimmed, prefix+" noinspection") || strings.HasPrefix(trimmed, prefix+" TODO") || strings.HasPrefix(trimmed, prefix+" semio-ignore-") {
+						break
+					}
+					if strings.Contains(lines[i-1], "[DEBUG]") {
+						break
+					}
+					for _, bl := range pendingBlanks {
+						linesToRemove[bl] = true
+					}
+					pendingBlanks = nil
+					linesToRemove[i] = true
+				}
+				fixed++
+			}
+		case ViolationCodeCommentBlock, ViolationCodeCommentJSDoc:
+			if v.Line > 0 && v.Line <= len(lines) && language != nil {
+				startLine := v.Line
+				endPrefix := language.BlockCommentEnd()
+				startPrefix := language.BlockCommentStart()
+				for i := startLine; i <= len(lines); i++ {
+					line := lines[i-1]
+					if i == startLine && v.Column > 1 {
+						idx := strings.Index(line[v.Column-1:], startPrefix)
+						if idx >= 0 {
+							idx += v.Column - 1
+							left := strings.TrimRight(line[:idx], " \t")
+							if strings.Contains(line[idx:], endPrefix) {
+								// Single line block
+								endIdx := strings.Index(line[idx:], endPrefix) + idx
+								right := ""
+								if endIdx+len(endPrefix) < len(line) {
+									right = line[endIdx+len(endPrefix):]
+								}
+								if left != "" && strings.TrimSpace(right) != "" {
+									lines[i-1] = left + " " + strings.TrimLeft(right, " \t")
+								} else {
+									lines[i-1] = left + right
+								}
+								if strings.TrimSpace(lines[i-1]) == "" {
+									linesToRemove[i] = true
+								}
+								break
+							}
+							if left != "" {
+								lines[i-1] = left
+							} else {
+								linesToRemove[i] = true
+							}
+							continue
+						}
+					}
+					if strings.Contains(line, endPrefix) {
+						idx := strings.Index(line, endPrefix)
+						if idx+len(endPrefix) < len(line) {
+							lines[i-1] = strings.TrimLeft(line[idx+len(endPrefix):], " \t")
+							if strings.TrimSpace(lines[i-1]) == "" {
+								linesToRemove[i] = true
+							}
+						} else {
+							linesToRemove[i] = true
+						}
+						break
+					}
+					linesToRemove[i] = true
+				}
+				fixed++
+			}
+		}
+	}
+	if len(linesToRemove) > 0 {
+		var newLines []string
+		for i, line := range lines {
+			if !linesToRemove[i+1] {
+				newLines = append(newLines, line)
+			}
+		}
+		var collapsed []string
+		for i, line := range newLines {
+			if strings.TrimSpace(line) == "" && i > 0 && strings.TrimSpace(newLines[i-1]) == "" {
+				continue
+			}
+			collapsed = append(collapsed, line)
+		}
+		content = strings.Join(collapsed, "\n")
+	} else {
+		content = strings.Join(lines, "\n")
+	}
+	if fixed > 0 {
+		if err := WriteTextFile(absPath, content); err != nil {
+			return 0, err
+		}
+	}
+	return fixed, nil
+}
+
+func findMatchingSectionStartName(lines []string, endLineIdx int, language LanguagePlugin) string {
+	depth := 0
+	for i := endLineIdx - 1; i >= 0; i-- {
+		if matched, _ := language.PolicySectionEndMatch(lines[i]); matched {
+			depth++
+			continue
+		}
+		if matched, name := language.PolicySectionStartMatch(lines[i]); matched {
+			if depth > 0 {
+				depth--
+				continue
+			}
+			return name
+		}
+	}
+	return ""
 }
 
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
@@ -17649,7 +17879,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"LIBRARY": &graphql.EnumValueConfig{Value: BundleKindLibrary},
 			"SCHEMA":  &graphql.EnumValueConfig{Value: BundleKindSchema},
 			"BINARY":  &graphql.EnumValueConfig{Value: BundleKindBinary},
-			"Client":  &graphql.EnumValueConfig{Value: BundleKindClient},
+			"UI":      &graphql.EnumValueConfig{Value: BundleKindUI},
 			"SITE":    &graphql.EnumValueConfig{Value: BundleKindSite},
 			"ASSETS":  &graphql.EnumValueConfig{Value: BundleKindAssets},
 		},
@@ -17659,7 +17889,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "FolderKind",
 		Values: graphql.EnumValueConfigMap{
 			"ORGANIZATION": &graphql.EnumValueConfig{Value: FolderKindOrganization},
-			"REQClientRED": &graphql.EnumValueConfig{Value: FolderKindRequired},
+			"REQUIRED": &graphql.EnumValueConfig{Value: FolderKindRequired},
 		},
 	})
 
@@ -18540,8 +18770,8 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						if len(ticket.Interactions) == 0 {
 							return nil, nil
 						}
-						iteration := ticket.Interactions[len(ticket.Interactions)-1]
-						parsed := parseGitAuthor(iteration.Author)
+						interaction := ticket.Interactions[len(ticket.Interactions)-1]
+						parsed := parseGitAuthor(interaction.Author)
 						author := parsed.Email
 						if author == "" {
 							author = parsed.Name
@@ -22836,6 +23066,27 @@ func graphqlQuery(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 	return textResult(result), nil
 }
 
+func navigateTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	target, err := requireStringArg(args, "target")
+	if err != nil {
+		return nil, err
+	}
+	var uri string
+	if strings.HasPrefix(target, "semiorepo://") {
+		uri = target
+	} else {
+		uri = IdToUri(target)
+		if uri == "" {
+			return nil, fmt.Errorf("could not resolve target: %s", target)
+		}
+	}
+	id := UriToId(uri)
+	result := map[string]string{"uri": uri, "id": id}
+	bytes, _ := json.Marshal(result)
+	return textResult(string(bytes)), nil
+}
+
 // #region 🔖Mcp Resources Handlers
 
 func handleRepoResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -23069,7 +23320,7 @@ func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceReque
 }
 
 func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Tickets { repo { tickets { id slug title status prompt iteration { prompt } } } }`
+	query := `query Tickets { repo { tickets { id slug title status prompt interaction { prompt } } } }`
 	result, err := gql(query, nil)
 	if err != nil {
 		return nil, err
@@ -23097,7 +23348,7 @@ func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	day, _ := strconv.Atoi(parts[2])
 	slug := parts[3]
 
-	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) { ticket(year: $year, month: $month, day: $day, slug: $slug) { id slug title status prompt iteration { prompt started finished } } }`
+	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) { ticket(year: $year, month: $month, day: $day, slug: $slug) { id slug title status prompt interaction { prompt started finished } } }`
 	result, err := gql(query, map[string]interface{}{"year": year, "month": month, "day": day, "slug": slug})
 	if err != nil {
 		return nil, err
@@ -23116,7 +23367,10 @@ func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) 
 }
 
 func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	goals := ToolGoalList()
+	goals, err := ListGoals()
+	if err != nil {
+		return nil, err
+	}
 	bytes, err := json.Marshal(goals)
 	if err != nil {
 		return nil, err
@@ -23135,7 +23389,31 @@ func handleGoalsResource(ctx context.Context, request mcp.ReadResourceRequest) (
 }
 
 func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	return nil, fmt.Errorf("goal resource not implemented")
+	goalPath := strings.TrimPrefix(request.Params.URI, "semiorepo://goal/")
+	goals, err := ListGoals()
+	if err != nil {
+		return nil, err
+	}
+	for _, g := range goals {
+		if g.ID == goalPath {
+			bytes, err := json.Marshal(g)
+			if err != nil {
+				return nil, err
+			}
+			yaml, err := jsonToYaml(string(bytes))
+			if err != nil {
+				return nil, err
+			}
+			return []mcp.ResourceContents{
+				mcp.TextResourceContents{
+					URI:      request.Params.URI,
+					MIMEType: "text/plain",
+					Text:     yaml,
+				},
+			}, nil
+		}
+	}
+	return nil, fmt.Errorf("goal not found: %s", goalPath)
 }
 
 func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -23285,9 +23563,6 @@ func handleCommitResource(ctx context.Context, request mcp.ReadResourceRequest) 
 // #endregion 🔖Mcp
 
 // #region 🔖Cli
-
-// #region 🔖Init
-// #endregion 🔖Init
 
 // #region 🔖GraphQL Helpers
 
@@ -23474,7 +23749,7 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 		return nil, fmt.Errorf("ticket data is nil")
 	}
 	if len(ticket.Interactions) == 0 {
-		return nil, fmt.Errorf("no iterations found for ticket")
+		return nil, fmt.Errorf("no interactions found for ticket")
 	}
 	baseCommit := ticket.Interactions[0].Commit
 	if baseCommit == "" {
@@ -25732,159 +26007,268 @@ func emojiText(emoji string) string {
 }
 
 func (s SemanticId) String() string {
+	if s.Value == "" {
+		return emojiText(s.Emoji)
+	}
 	return fmt.Sprintf("%s %s", emojiText(s.Emoji), s.Value)
+}
+
+func projectKindEmoji(data map[string]interface{}) string {
+	if val, ok := data["kind"].(string); ok {
+		switch val {
+		case "infrastructure":
+			return "🧰"
+		case "research":
+			return "🔬"
+		case "user":
+			return "👤"
+		}
+	}
+	name, _ := data["name"].(string)
+	if strings.Contains(name, "repo") {
+		return "🧰"
+	}
+	if strings.HasPrefix(name, "coda") {
+		return "🔬"
+	}
+	return "👤"
+}
+
+func bundleKindEmoji(data map[string]interface{}) string {
+	bKind, _ := data["kind"].(string)
+	switch bKind {
+	case "schema":
+		return "🛂"
+	case "binary":
+		return "⌨️"
+	case "ui":
+		return "🖱️"
+	case "site":
+		return "🌐"
+	case "assets":
+		return "🏪"
+	case "library":
+		return "📚"
+	}
+	return "📚"
+}
+
+func fileKindEmoji(data map[string]interface{}) string {
+	fkind, _ := data["kind"].(string)
+	switch fkind {
+	case "code":
+		return "💻"
+	case "test":
+		return "🧪"
+	case "docs":
+		return "📃"
+	case "config":
+		return "⚙️"
+	case "resource":
+		return "💾"
+	case "license":
+		return "⚖️"
+	}
+	return "📄"
+}
+
+func folderKindEmoji(data map[string]interface{}) string {
+	fkind, _ := data["kind"].(string)
+	if fkind == "organization" {
+		return "🗃️"
+	}
+	return "📁"
+}
+
+func definitionKindEmoji(data map[string]interface{}) string {
+	kind, _ := data["kind"].(string)
+	switch kind {
+	case "interface":
+		return "✂️"
+	case "constant":
+		return "🪨"
+	}
+	return "🛠️"
+}
+
+func SectionIdValueToUriPath(value string) string {
+	hashIdx := strings.Index(value, "#")
+	if hashIdx < 0 {
+		return value
+	}
+	filePath := value[:hashIdx]
+	rest := value[hashIdx+1:]
+	sectionParts := strings.Split(rest, "#")
+	result := filePath
+	for _, p := range sectionParts {
+		result += "/" + Slugify(p)
+	}
+	return result
+}
+
+func DefinitionIdValueToUriPath(value string) string {
+	hashIdx := strings.Index(value, "#")
+	paragraphIdx := strings.Index(value, "§")
+	if hashIdx < 0 && paragraphIdx < 0 {
+		return value
+	}
+	if hashIdx < 0 && paragraphIdx >= 0 {
+		filePath := value[:paragraphIdx]
+		defName := value[paragraphIdx+len("§"):]
+		return filePath + "/" + Slugify(defName)
+	}
+	filePath := value[:hashIdx]
+	rest := value[hashIdx+1:]
+	parts := strings.Split(rest, "§")
+	result := filePath
+	for _, p := range parts {
+		subParts := strings.Split(p, "#")
+		for _, sp := range subParts {
+			result += "/" + Slugify(sp)
+		}
+	}
+	return result
+}
+
+func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string) {
+	parts := strings.Split(uriPath, "/")
+	fileEnd := -1
+	for i, p := range parts {
+		if strings.Contains(p, ".") {
+			fileEnd = i
+		}
+	}
+	if fileEnd < 0 {
+		return uriPath, nil
+	}
+	filePath = strings.Join(parts[:fileEnd+1], "/")
+	if fileEnd+1 < len(parts) {
+		sectionSlugs = parts[fileEnd+1:]
+	}
+	return
 }
 
 func GetArtifactID(kind string, data map[string]interface{}) string {
 	switch kind {
 	case "repo":
 		return emojiText("🌍")
+	case "projects":
+		return emojiText("🏗️")
 	case "project":
-		name, _ := data["name"].(string)
-		// Based on prompt:
-		// <kind> - 👤:user e.g. semio, 🧰:infrastructure e.g. semio-repo, 🔬:research e.g. coda
-		k := "👤"
-		if strings.Contains(name, "repo") {
-			k = "🧰"
-		}
-		if strings.HasPrefix(name, "coda") {
-			k = "🔬"
-		}
-		if val, ok := data["kind"].(string); ok {
-			switch val {
-			case "infrastructure":
-				k = "🧰"
-			case "research":
-				k = "🔬"
-			case "user":
-				k = "👤"
-			}
-		}
-		return fmt.Sprintf("%s @%s", emojiText(k), name)
-
+		return fmt.Sprintf("%s @%s", emojiText(projectKindEmoji(data)), data["name"])
+	case "bundles":
+		code, _ := data["projectCode"].(string)
+		return fmt.Sprintf("%s %s", emojiText("📦"), code)
 	case "bundle":
 		name, _ := data["name"].(string)
-		// (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 🌐:site, 🏪:assets)
-		bType, _ := data["type"].(string)
-		k := "📚" // Default to library
-		switch bType {
-		case "schema":
-			k = "🛂"
-		case "binary", "app":
-			k = "⌨️"
-		case "ui":
-			k = "🖱️"
-		case "site":
-			k = "🌐"
-		case "assets":
-			k = "🏪"
-		case "library":
-			k = "📚"
+		return fmt.Sprintf("%s %s", emojiText(bundleKindEmoji(data)), name)
+	case "folders":
+		parentPath, _ := data["parentPath"].(string)
+		if parentPath == "" {
+			return emojiText("📁")
 		}
-		return fmt.Sprintf("%s %s", emojiText(k), name)
-
+		return fmt.Sprintf("%s %s", emojiText("📁"), parentPath)
 	case "folder":
 		path, _ := data["path"].(string)
-		fkind, _ := data["kind"].(string)
-		// (<kind> - 🗃️:organization, 📁:required)
-		k := "📁"
-		if fkind == "organization" {
-			k = "🗃️"
+		return fmt.Sprintf("%s %s", emojiText(folderKindEmoji(data)), path)
+	case "files":
+		folderPath, _ := data["folderPath"].(string)
+		if folderPath == "" {
+			return emojiText("📄")
 		}
-		return fmt.Sprintf("%s %s", emojiText(k), path)
-
+		return fmt.Sprintf("%s %s", emojiText("📄"), folderPath)
 	case "file":
 		path, _ := data["id"].(string)
 		if path == "" {
 			path, _ = data["path"].(string)
 		}
-		fkind, _ := data["kind"].(string)
-		// (<kind> - 💻:code, 🧪:test, 📃:docs, ⚙️:config, 💾:resource, ⚖️:license)
-		k := "📄" // Fallback
-		switch fkind {
-		case "code":
-			k = "💻"
-		case "test":
-			k = "🧪"
-		case "docs":
-			k = "📃"
-		case "config":
-			k = "⚙️"
-		case "resource":
-			k = "💾"
-		case "license":
-			k = "⚖️"
+		return fmt.Sprintf("%s %s", emojiText(fileKindEmoji(data)), path)
+	case "sections":
+		filePath, _ := data["filePath"].(string)
+		parentPath, _ := data["parentPath"].(string)
+		val := filePath
+		if parentPath != "" {
+			val += "#" + parentPath
 		}
-		return fmt.Sprintf("%s %s", emojiText(k), path)
-
+		return fmt.Sprintf("%s %s", emojiText("🔖"), val)
 	case "section":
 		path, _ := data["path"].(string)
 		return fmt.Sprintf("%s %s", emojiText("🔖"), path)
-
-	case "definition":
-		// (<kind> - 🛠️:implementation, ✂️:interface, 🪨:constant)
-		kind, _ := data["kind"].(string)
-		k := "🛠️"
-		switch kind {
-		case "interface":
-			k = "✂️"
-		case "constant":
-			k = "🪨"
+	case "definitions":
+		filePath, _ := data["filePath"].(string)
+		sectionPath, _ := data["sectionPath"].(string)
+		val := filePath
+		if sectionPath != "" {
+			val += "#" + sectionPath
 		}
+		return fmt.Sprintf("%s %s", emojiText("🏷️"), val)
+	case "definition":
+		k := definitionKindEmoji(data)
 		id, _ := data["id"].(string)
 		if id != "" {
 			return fmt.Sprintf("%s %s", emojiText(k), id)
 		}
 		filePath, _ := data["filePath"].(string)
+		sectionPath, _ := data["sectionPath"].(string)
 		name, _ := data["name"].(string)
-		return fmt.Sprintf("%s %s§%s", emojiText(k), filePath, name)
-
+		val := filePath
+		if sectionPath != "" {
+			val += "#" + sectionPath
+		}
+		val += "§" + name
+		return fmt.Sprintf("%s %s", emojiText(k), val)
+	case "tickets":
+		return emojiText("📅")
 	case "ticket":
-		// ticket: 📅{year}/{month}/{day}/{slug}
 		year, _ := data["year"].(float64)
 		month, _ := data["month"].(float64)
 		day, _ := data["day"].(float64)
 		slug, _ := data["slug"].(string)
-		return fmt.Sprintf("%s %04d/%02d/%02d/%s", emojiText("📅"), int(year), int(month), int(day), slug)
-
+		status, _ := data["status"].(string)
+		id := fmt.Sprintf("%s %04d/%02d/%02d/%s", emojiText("📅"), int(year), int(month), int(day), slug)
+		if status != "" {
+			id += "?" + status
+		}
+		return id
+	case "goals":
+		return emojiText("🎯")
 	case "goal":
-		// goal: 🎯{path*}
 		id, _ := data["id"].(string)
 		return fmt.Sprintf("%s %s", emojiText("🎯"), id)
-
+	case "drafts":
+		return emojiText("✍️")
 	case "draft":
-		// draft: ✍️{slug}
 		slug, _ := data["slug"].(string)
 		if slug == "" {
 			slug, _ = data["id"].(string)
 		}
 		return fmt.Sprintf("%s %s", emojiText("✍️"), slug)
-
+	case "todos":
+		return emojiText("📝")
 	case "todo":
-		// todo: 📝{slug}
 		slug, _ := data["id"].(string)
 		return fmt.Sprintf("%s %s", emojiText("📝"), slug)
-
+	case "policies":
+		return emojiText("🛡️")
 	case "policy":
-		// policy: 🛡️/{slug}
 		slug, _ := data["id"].(string)
 		if !strings.HasPrefix(slug, "/") {
 			slug = "/" + slug
 		}
 		return fmt.Sprintf("%s %s", emojiText("🛡️"), slug)
-
+	case "violationKinds":
+		return emojiText("🚫")
 	case "violationKind":
-		// violationKind: 🚫{policy-slug}/{slug}
 		id, _ := data["id"].(string)
 		return fmt.Sprintf("%s %s", emojiText("🚫"), id)
-
+	case "contributors":
+		return emojiText("👤")
 	case "contributor":
-		// contributor: 👤{github}
 		github, _ := data["github"].(string)
 		return fmt.Sprintf("%s %s", emojiText("👤"), github)
-
+	case "commits":
+		return emojiText("🔀")
 	case "commit":
-		// commit: 🔀{sha}
 		sha, _ := data["sha"].(string)
 		return fmt.Sprintf("%s %s", emojiText("🔀"), sha)
 	}
@@ -25895,62 +26279,331 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 	switch kind {
 	case "repo":
 		return "semiorepo://repo"
+	case "projects":
+		return "semiorepo://projects"
 	case "project":
 		name, _ := data["name"].(string)
-		return fmt.Sprintf("semiorepo://project/%s", name)
+		return fmt.Sprintf("semiorepo://project/@%s", name)
+	case "bundles":
+		return "semiorepo://bundles"
 	case "bundle":
 		name, _ := data["name"].(string)
 		return fmt.Sprintf("semiorepo://bundle/%s", name)
+	case "folders":
+		parentPath, _ := data["parentPath"].(string)
+		if parentPath == "" {
+			return "semiorepo://folders"
+		}
+		return fmt.Sprintf("semiorepo://folders/%s", parentPath)
 	case "folder":
 		path, _ := data["path"].(string)
 		return fmt.Sprintf("semiorepo://folder/%s", path)
+	case "files":
+		folderPath, _ := data["folderPath"].(string)
+		if folderPath == "" {
+			return "semiorepo://files"
+		}
+		return fmt.Sprintf("semiorepo://files/%s", folderPath)
 	case "file":
 		path, _ := data["id"].(string)
 		if path == "" {
 			path, _ = data["path"].(string)
 		}
 		return fmt.Sprintf("semiorepo://file/%s", path)
+	case "sections":
+		filePath, _ := data["filePath"].(string)
+		return fmt.Sprintf("semiorepo://sections/%s", filePath)
 	case "section":
 		path, _ := data["path"].(string)
-		return fmt.Sprintf("semiorepo://section/%s", path)
+		return fmt.Sprintf("semiorepo://section/%s", SectionIdValueToUriPath(path))
+	case "definitions":
+		filePath, _ := data["filePath"].(string)
+		return fmt.Sprintf("semiorepo://definitions/%s", filePath)
 	case "definition":
 		id, _ := data["id"].(string)
 		if id == "" {
 			filePath, _ := data["filePath"].(string)
+			sectionPath, _ := data["sectionPath"].(string)
 			name, _ := data["name"].(string)
-			return fmt.Sprintf("semiorepo://definition/%s/%s", filePath, name)
+			val := filePath
+			if sectionPath != "" {
+				val += "#" + sectionPath
+			}
+			val += "§" + name
+			id = val
 		}
-		return fmt.Sprintf("semiorepo://definition/%s", id)
+		return fmt.Sprintf("semiorepo://definition/%s", DefinitionIdValueToUriPath(id))
+	case "tickets":
+		return "semiorepo://tickets"
 	case "ticket":
 		year, _ := data["year"].(float64)
 		month, _ := data["month"].(float64)
 		day, _ := data["day"].(float64)
 		slug, _ := data["slug"].(string)
-		return fmt.Sprintf("semiorepo://ticket/%d/%02d/%02d/%s", int(year), int(month), int(day), slug)
+		return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", int(year), int(month), int(day), slug)
+	case "goals":
+		return "semiorepo://goals"
 	case "goal":
 		id, _ := data["id"].(string)
 		return fmt.Sprintf("semiorepo://goal/%s", id)
+	case "drafts":
+		return "semiorepo://drafts"
 	case "draft":
 		slug, _ := data["slug"].(string)
 		if slug == "" {
 			slug, _ = data["id"].(string)
 		}
 		return fmt.Sprintf("semiorepo://draft/%s", slug)
+	case "todos":
+		return "semiorepo://todos"
 	case "todo":
 		slug, _ := data["id"].(string)
 		return fmt.Sprintf("semiorepo://todo/%s", slug)
+	case "policies":
+		return "semiorepo://policies"
 	case "policy":
 		id, _ := data["id"].(string)
 		return fmt.Sprintf("semiorepo://policy/%s", id)
+	case "violationKinds":
+		return "semiorepo://violationKinds"
 	case "violationKind":
 		id, _ := data["id"].(string)
 		return fmt.Sprintf("semiorepo://violationKind/%s", id)
+	case "contributors":
+		return "semiorepo://contributors"
 	case "contributor":
 		id, _ := data["github"].(string)
 		return fmt.Sprintf("semiorepo://contributor/%s", id)
+	case "commits":
+		return "semiorepo://commits"
 	case "commit":
 		sha, _ := data["sha"].(string)
 		return fmt.Sprintf("semiorepo://commit/%s", sha)
+	}
+	return ""
+}
+
+func IdToUri(id string) string {
+	type emojiMapping struct {
+		emoji      string
+		artifact   string
+		collection string
+	}
+	mappings := []emojiMapping{
+		{"🌍", "repo", ""},
+		{"🏗️", "", "projects"},
+		{"🧰", "project", ""},
+		{"🔬", "project", ""},
+		{"📦", "", "bundles"},
+		{"📚", "bundle", ""},
+		{"🛂", "bundle", ""},
+		{"⌨️", "bundle", ""},
+		{"🖱️", "bundle", ""},
+		{"📔", "bundle", ""},
+		{"🌐", "bundle", ""},
+		{"🏪", "bundle", ""},
+		{"🗃️", "folder", ""},
+		{"📁", "folder", "folders"},
+		{"💻", "file", ""},
+		{"🧪", "file", ""},
+		{"📃", "file", ""},
+		{"⚙️", "file", ""},
+		{"💾", "file", ""},
+		{"⚖️", "file", ""},
+		{"📄", "file", "files"},
+		{"🔖", "section", ""},
+		{"🏷️", "", "definitions"},
+		{"🛠️", "definition", ""},
+		{"✂️", "definition", ""},
+		{"🪨", "definition", ""},
+		{"📅", "ticket", "tickets"},
+		{"🎯", "goal", "goals"},
+		{"✍️", "draft", "drafts"},
+		{"📝", "todo", "todos"},
+		{"🛡️", "policy", "policies"},
+		{"🚫", "violationKind", "violationKinds"},
+		{"👤", "contributor", "contributors"},
+		{"🔀", "commit", "commits"},
+	}
+
+	normalized := strings.ReplaceAll(id, "\uFE0E", "\uFE0F")
+	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
+	normalized = strings.TrimSpace(normalized)
+
+	for _, m := range mappings {
+		baseEmoji := strings.ReplaceAll(m.emoji, "\uFE0F", "")
+		baseEmoji = strings.ReplaceAll(baseEmoji, "\uFE0E", "")
+		if !strings.HasPrefix(normalized, baseEmoji) {
+			continue
+		}
+		value := strings.TrimSpace(strings.TrimPrefix(normalized, baseEmoji))
+
+		if value == "" {
+			if m.collection != "" {
+				return "semiorepo://" + m.collection
+			}
+			if m.artifact == "repo" {
+				return "semiorepo://repo"
+			}
+			continue
+		}
+
+		if m.emoji == "👤" {
+			if strings.HasPrefix(value, "@") {
+				return "semiorepo://project/" + value
+			}
+			return "semiorepo://contributor/" + value
+		}
+
+		if m.emoji == "📁" {
+			return "semiorepo://folder/" + value
+		}
+		if m.emoji == "📄" {
+			return "semiorepo://file/" + value
+		}
+
+		switch m.artifact {
+		case "project":
+			return "semiorepo://project/" + value
+		case "bundle":
+			return "semiorepo://bundle/" + value
+		case "folder":
+			return "semiorepo://folder/" + value
+		case "file":
+			return "semiorepo://file/" + value
+		case "section":
+			return "semiorepo://section/" + SectionIdValueToUriPath(value)
+		case "definition":
+			return "semiorepo://definition/" + DefinitionIdValueToUriPath(value)
+		case "ticket":
+			clean := strings.SplitN(value, "?", 2)[0]
+			return "semiorepo://ticket/" + clean
+		case "goal":
+			return "semiorepo://goal/" + value
+		case "draft":
+			return "semiorepo://draft/" + value
+		case "todo":
+			return "semiorepo://todo/" + value
+		case "policy":
+			return "semiorepo://policy" + value
+		case "violationKind":
+			return "semiorepo://violationKind/" + value
+		case "contributor":
+			return "semiorepo://contributor/" + value
+		case "commit":
+			return "semiorepo://commit/" + value
+		}
+	}
+	return ""
+}
+
+func UriToId(uri string) string {
+	if !strings.HasPrefix(uri, "semiorepo://") {
+		return ""
+	}
+	p := strings.TrimPrefix(uri, "semiorepo://")
+
+	switch {
+	case p == "repo":
+		return emojiText("🌍")
+	case p == "projects":
+		return emojiText("🏗️")
+	case strings.HasPrefix(p, "project/"):
+		code := strings.TrimPrefix(p, "project/")
+		return fmt.Sprintf("%s %s", emojiText("👤"), code)
+	case p == "bundles":
+		return emojiText("📦")
+	case strings.HasPrefix(p, "bundle/"):
+		name := strings.TrimPrefix(p, "bundle/")
+		return fmt.Sprintf("%s %s", emojiText("📚"), name)
+	case p == "folders" || strings.HasPrefix(p, "folders/"):
+		v := strings.TrimPrefix(p, "folders")
+		v = strings.TrimPrefix(v, "/")
+		if v == "" {
+			return emojiText("📁")
+		}
+		return fmt.Sprintf("%s %s", emojiText("📁"), v)
+	case strings.HasPrefix(p, "folder/"):
+		v := strings.TrimPrefix(p, "folder/")
+		return fmt.Sprintf("%s %s", emojiText("📁"), v)
+	case p == "files" || strings.HasPrefix(p, "files/"):
+		v := strings.TrimPrefix(p, "files")
+		v = strings.TrimPrefix(v, "/")
+		if v == "" {
+			return emojiText("📄")
+		}
+		return fmt.Sprintf("%s %s", emojiText("📄"), v)
+	case strings.HasPrefix(p, "file/"):
+		v := strings.TrimPrefix(p, "file/")
+		return fmt.Sprintf("%s %s", emojiText("📄"), v)
+	case strings.HasPrefix(p, "sections/"):
+		v := strings.TrimPrefix(p, "sections/")
+		return fmt.Sprintf("%s %s", emojiText("🔖"), v)
+	case strings.HasPrefix(p, "section/"):
+		v := strings.TrimPrefix(p, "section/")
+		filePath, slugs := ParseSectionUriPath(v)
+		if len(slugs) == 0 {
+			return fmt.Sprintf("%s %s", emojiText("🔖"), filePath)
+		}
+		return fmt.Sprintf("%s %s#%s", emojiText("🔖"), filePath, strings.Join(slugs, "#"))
+	case strings.HasPrefix(p, "definitions/"):
+		v := strings.TrimPrefix(p, "definitions/")
+		return fmt.Sprintf("%s %s", emojiText("🏷️"), v)
+	case strings.HasPrefix(p, "definition/"):
+		v := strings.TrimPrefix(p, "definition/")
+		filePath, slugs := ParseSectionUriPath(v)
+		if len(slugs) == 0 {
+			return fmt.Sprintf("%s %s", emojiText("🛠️"), filePath)
+		}
+		if len(slugs) == 1 {
+			return fmt.Sprintf("%s %s§%s", emojiText("🛠️"), filePath, slugs[0])
+		}
+		sectionPart := strings.Join(slugs[:len(slugs)-1], "#")
+		defPart := slugs[len(slugs)-1]
+		return fmt.Sprintf("%s %s#%s§%s", emojiText("🛠️"), filePath, sectionPart, defPart)
+	case p == "tickets":
+		return emojiText("📅")
+	case strings.HasPrefix(p, "ticket/"):
+		v := strings.TrimPrefix(p, "ticket/")
+		return fmt.Sprintf("%s %s", emojiText("📅"), v)
+	case p == "goals":
+		return emojiText("🎯")
+	case strings.HasPrefix(p, "goal/"):
+		v := strings.TrimPrefix(p, "goal/")
+		return fmt.Sprintf("%s %s", emojiText("🎯"), v)
+	case p == "drafts":
+		return emojiText("✍️")
+	case strings.HasPrefix(p, "draft/"):
+		v := strings.TrimPrefix(p, "draft/")
+		return fmt.Sprintf("%s %s", emojiText("✍️"), v)
+	case p == "todos":
+		return emojiText("📝")
+	case strings.HasPrefix(p, "todo/"):
+		v := strings.TrimPrefix(p, "todo/")
+		return fmt.Sprintf("%s %s", emojiText("📝"), v)
+	case p == "policies":
+		return emojiText("🛡️")
+	case strings.HasPrefix(p, "policy/"):
+		v := strings.TrimPrefix(p, "policy/")
+		if !strings.HasPrefix(v, "/") {
+			v = "/" + v
+		}
+		return fmt.Sprintf("%s %s", emojiText("🛡️"), v)
+	case p == "violationKinds":
+		return emojiText("🚫")
+	case strings.HasPrefix(p, "violationKind/"):
+		v := strings.TrimPrefix(p, "violationKind/")
+		return fmt.Sprintf("%s %s", emojiText("🚫"), v)
+	case p == "contributors":
+		return emojiText("👤")
+	case strings.HasPrefix(p, "contributor/"):
+		v := strings.TrimPrefix(p, "contributor/")
+		return fmt.Sprintf("%s %s", emojiText("👤"), v)
+	case p == "commits":
+		return emojiText("🔀")
+	case strings.HasPrefix(p, "commit/"):
+		v := strings.TrimPrefix(p, "commit/")
+		return fmt.Sprintf("%s %s", emojiText("🔀"), v)
 	}
 	return ""
 }
@@ -25975,11 +26628,19 @@ func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) str
 			}
 		}
 		if createdStr == "" {
+			if dates, ok := data["date"].(map[string]interface{}); ok {
+				createdStr, _ = dates["created"].(string)
+				if createdStr == "" {
+					createdStr, _ = dates["started"].(string)
+				}
+			}
+		}
+		if createdStr == "" {
 			createdStr, _ = data["createdAt"].(string)
 		}
 		dateDisplay := createdStr
 		if createdStr != "" {
-			if tParsed, err := time.Parse(time.RFC3339, createdStr); err == nil {
+			if tParsed, err := parseFlexibleTime(createdStr); err == nil {
 				dateDisplay = humanize.Time(tParsed)
 			}
 		}
@@ -25996,7 +26657,7 @@ func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) str
 			}
 		}
 		if dueDate != "" {
-			if tParsed, err := time.Parse("2006-01-02", dueDate); err == nil {
+			if tParsed, err := parseFlexibleTime(dueDate); err == nil {
 				dueDate = humanize.Time(tParsed)
 			}
 		}
@@ -26080,7 +26741,41 @@ func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) str
 	return out
 }
 
-func renderEntityMarkdown(kind string, data map[string]interface{}) string {
+func inferEntityKind(key string) string {
+	key = strings.ToLower(key)
+	prefixes := []struct {
+		prefix string
+		kind   string
+	}{
+		{"ticket", "ticket"},
+		{"goal", "goal"},
+		{"file", "file"},
+		{"folder", "folder"},
+		{"section", "section"},
+		{"definition", "definition"},
+		{"contributor", "contributor"},
+		{"todo", "todo"},
+		{"draft", "draft"},
+		{"policy", "policy"},
+		{"violationkind", "violationKind"},
+		{"bundle", "bundle"},
+		{"project", "project"},
+		{"commit", "commit"},
+		{"repo", "repo"},
+		{"syncgithub", "repo"},
+		{"integrate", "file"},
+		{"extract", "file"},
+		{"fix", "repo"},
+	}
+	for _, p := range prefixes {
+		if strings.HasPrefix(key, p.prefix) {
+			return p.kind
+		}
+	}
+	return ""
+}
+
+func renderEntityMarkdownLink(kind string, data map[string]interface{}) string {
 	id := GetArtifactID(kind, data)
 	uri := GetArtifactURI(kind, data)
 	prop1 := ""
@@ -26099,11 +26794,19 @@ func renderEntityMarkdown(kind string, data map[string]interface{}) string {
 			}
 		}
 		if createdStr == "" {
+			if dates, ok := data["date"].(map[string]interface{}); ok {
+				createdStr, _ = dates["created"].(string)
+				if createdStr == "" {
+					createdStr, _ = dates["started"].(string)
+				}
+			}
+		}
+		if createdStr == "" {
 			createdStr, _ = data["createdAt"].(string)
 		}
 		dateDisplay := createdStr
 		if createdStr != "" {
-			if tParsed, err := time.Parse(time.RFC3339, createdStr); err == nil {
+			if tParsed, err := parseFlexibleTime(createdStr); err == nil {
 				dateDisplay = humanize.Time(tParsed)
 			}
 		}
@@ -26120,7 +26823,7 @@ func renderEntityMarkdown(kind string, data map[string]interface{}) string {
 			}
 		}
 		if dueDate != "" {
-			if tParsed, err := time.Parse("2006-01-02", dueDate); err == nil {
+			if tParsed, err := parseFlexibleTime(dueDate); err == nil {
 				dueDate = humanize.Time(tParsed)
 			}
 		}
@@ -26157,7 +26860,6 @@ func renderEntityMarkdown(kind string, data map[string]interface{}) string {
 		name, _ := data["name"].(string)
 		prop1 = name
 	case "draft":
-		// no extra props
 	case "policy":
 		prop1, _ = data["description"].(string)
 	case "violationKind":
@@ -26182,11 +26884,15 @@ func renderEntityMarkdown(kind string, data map[string]interface{}) string {
 		props = append(props, prop3)
 	}
 
-	out := fmt.Sprintf("- [%s](%s)", id, uri)
+	out := fmt.Sprintf("[%s](%s)", id, uri)
 	for _, p := range props {
 		out += fmt.Sprintf(" - %s", p)
 	}
 	return out
+}
+
+func renderEntityMarkdown(kind string, data map[string]interface{}) string {
+	return "- " + renderEntityMarkdownLink(kind, data)
 }
 
 func getTerminalWidth() int {

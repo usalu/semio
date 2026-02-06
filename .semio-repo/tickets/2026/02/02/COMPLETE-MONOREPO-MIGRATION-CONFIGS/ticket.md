@@ -12,9 +12,9 @@
 - [ ] Fix `.github/workflows/gh-pages.yml` — `path: ./js/docs` should be `@semio/docs`; npm version `10.8.2` is old
 - [ ] Fix `.github/workflows/playwright.yml` — generic `npx playwright test` with no path context
 - [ ] Fix `devcontainer.json` — `dotnet.defaultSolution` = `net/Semio.sln` (should be `Monorepo.sln` or `@semio/net/...`); `rust-analyzer.linkedProjects` = `rs/semio/Cargo.toml` (should be `@semio/rs/Cargo.toml`); `sqltools.connections.database` = `./examples/metabolism/.semio/kit.db` (should be `@semio/examples/...`)
-- [ ] Fix `post-attach.sh` — `VSIX_PATH` = `@semio-repo/vscode/semio-repo.vsix` (OK); but checks `js/vscode/extension.ts` and `js/vscode/package.json` (old paths); `cd js/vscode` (old); Windsurf MCP command `./go/repo/repo` should be `./@semio-repo/go/repo`
+- [ ] Fix `post-attach.sh` — `VSIX_PATH` = `@semio-repo/vscode/semio-repo.vsix` (OK); but checks `js/vscode/extension.ts` and `js/vscode/package.json` (old paths); `cd js/vscode` (old); Windsurf MCP command `./@semio-repo/cli/cli` should be `./@semio-repo/go/repo`
 - [ ] Fix `post-create.sh` — `cd go/repo` (should be `cd @semio-repo/go`); `go build -o repo` should be just `go build` (default binary name from module path is already `repo`); `dotnet restore net/Semio.sln` (should be `Monorepo.sln` or `@semio/net/...`); `cd js/vscode` (should be `cd @semio-repo/vscode`)
-- [ ] Fix all MCP configs — `.mcp.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json`, `.codex/config.toml` all reference `./go/repo/repo` (should be `./@semio-repo/go/repo`); `.vscode/mcp.json` references `py/engine` (should be `@semio/engine`)
+- [ ] Fix all MCP configs — `.mcp.json`, `.vscode/mcp.json`, `.cursor/mcp.json`, `.windsurf/mcp.json`, `.codex/config.toml` all reference `./@semio-repo/cli/cli` (should be `./@semio-repo/go/repo`); `.vscode/mcp.json` references `py/engine` (should be `@semio/engine`)
 - [ ] Fix `.claude/settings.json` — all permission paths use old format: `net/Semio.Grasshopper/...`, `net/Semio/...`, `py/engine.py`, `js/semio/...`, `js/js/...` (should all be `@semio/...`)
 - [ ] Fix `package-lock.json` — regenerate after package.json workspace paths are confirmed correct (currently has old `js/semio`, `js/docs`, `go/repo`, etc.)
 - [ ] Fix `.vscode/tasks.json` — references `js/vscode` path (line 108)
@@ -29,6 +29,7 @@
 Audited all config files in the monorepo after the restructuring from flat paths (`js/`, `py/`, `go/`, `net/`, `rs/`, `examples/`) to scoped `@`-prefixed paths (`@semio/`, `@semio-repo/`, `@coda/`).
 
 **Path mapping (old → new):**
+
 - `js/semio` → `@semio/js`
 - `js/docs` → `@semio/docs`
 - `js/play` → `@semio/play`
@@ -45,6 +46,7 @@ Audited all config files in the monorepo after the restructuring from flat paths
 - `examples/metabolism` → `@semio/examples/metabolism`
 
 **Files with outdated paths:**
+
 1. `.gitmodules` — submodule path
 2. `.gitignore` — Go binary paths, JS exception paths
 3. `tsconfig.json` — include/exclude paths
@@ -54,7 +56,7 @@ Audited all config files in the monorepo after the restructuring from flat paths
 7. `devcontainer.json` — dotnet solution, rust-analyzer, sqltools
 8. `post-attach.sh` — vsix build paths, Windsurf MCP command
 9. `post-create.sh` — Go build, dotnet restore, vscode build paths
-10. All MCP configs (6 files) — `./go/repo/repo` command, `py/engine` path
+10. All MCP configs (6 files) — `./@semio-repo/cli/cli` command, `py/engine` path
 11. `.claude/settings.json` — all permission paths
 12. `package-lock.json` — needs regeneration
 13. `.vscode/tasks.json` — js/vscode path

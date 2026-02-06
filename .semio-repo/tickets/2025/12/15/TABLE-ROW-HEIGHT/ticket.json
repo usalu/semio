@@ -4,7 +4,7 @@
   "prompt": "\"Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...\"",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.962Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "\"Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...\"",
       "llm": "gpt-5-2",

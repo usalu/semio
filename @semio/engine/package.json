@@ -25,5 +25,6 @@
     "name": "Ueli Saluz",
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
-  }
+  },
+  "bundleKind": "library"
 }

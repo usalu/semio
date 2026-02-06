@@ -4,7 +4,7 @@
   "prompt": "CI/CD automation and canonical commands",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2025-12-16T17:06:07.709Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "CI/CD automation and canonical commands",
       "llm": "sonnet-4",

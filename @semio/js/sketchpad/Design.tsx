@@ -4397,7 +4397,6 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
         if (connector.guid && hoverPort) hoverPort(pieceId, connector.guid);
       }}
       onPointerLeave={() => {
-        // Do nothing - let parent handle hover clear
       }}
     />
   );
@@ -6639,8 +6638,6 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             }
           />
           <HelperLines lines={helperLines} nodes={nodes} />
-          {/* <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} /> */}
-          {/* <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} /> */}
         </div>
       </SelectedConnectorContext.Provider>
     </PieceRenderDataContext.Provider>

@@ -4,7 +4,7 @@
   "prompt": "Complete pure XState migration by removing all legacy controller code",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.88Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Complete pure XState migration by removing all legacy controller code",
       "llm": "sonnet-4-5",

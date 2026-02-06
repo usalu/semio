@@ -4,7 +4,7 @@
   "prompt": "Schema extraction and synchronization script",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-16T17:06:07.856Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Schema extraction and synchronization script",
       "llm": "sonnet-4-5",

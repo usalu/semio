@@ -90,10 +90,6 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 
 #endregion 🔖Constants
 
-#region 🔖Metadata
-
-#endregion 🔖Metadata
-
 #region 🔖Utility
 
 public static class Utility
@@ -145,12 +141,7 @@ public static class Utility
         var turnRad = RhinoMath.ToRadians(turn);
         var tiltRad = RhinoMath.ToRadians(tilt);
 
-
-
-
         var areDirectionsSame = parentDirectionR.IsParallelTo(childDirection.Convert(), Semio.Constants.Tolerance) == 1;
-
-
 
         Transform directionT;
         if (areDirectionsSame)
@@ -189,21 +180,15 @@ public static class Utility
         turnAxis.Transform(rotateT);
         tiltAxis.Transform(rotateT);
 
-
         var turnT = Transform.Rotation(turnRad, turnAxis, new Point3d());
         orientationT = turnT * orientationT;
-
 
         var tiltT = Transform.Rotation(tiltRad, tiltAxis, new Point3d());
         orientationT = tiltT * orientationT;
 
-
-
-
         var centerChild = Transform.Translation(revertedChildPointR);
         var moveToParent = Transform.Translation(parentPointR);
         var transform = orientationT * centerChild;
-
 
         var gapTransform = Transform.Translation(gapDirection * gap);
         var shiftTransform = Transform.Translation(shiftDirection * shift);
@@ -216,8 +201,6 @@ public static class Utility
         transform = moveToParent * transform;
         var childPlaneR = Rhino.Geometry.Plane.WorldXY;
         childPlaneR.Transform(transform);
-
-
 
         var parentPlaneR = parentPlane.Convert();
         var parentPlaneT = Transform.PlaneToPlane(Rhino.Geometry.Plane.WorldXY, parentPlaneR);
@@ -859,7 +842,6 @@ public class AttributeIdParam : IdParam<AttributeIdGoo, AttributeId>
     public override Guid ComponentGuid => new("431125C0-B98C-4122-9598-F72714AC9B93");
 }
 
-
 public class AttributeDiffGoo : DiffGoo<AttributeDiff>
 {
     public AttributeDiffGoo() { }
@@ -1284,7 +1266,6 @@ public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
     public override Guid ComponentGuid => new("96775DC9-9079-4A22-8376-6AB8F58C8B1C");
 }
 
-
 #endregion 🔖Author
 
 #region 🔖File
@@ -1416,7 +1397,6 @@ public class FileIdParam : IdParam<FileIdGoo, FileId>
     protected override string IdIconResourceName => "fileid_24x24";
     public override Guid ComponentGuid => new("50C3D4E5-F6A7-B8C9-D0E1-F2A3B4C5D6E7");
 }
-
 
 public class FileDiffGoo : DiffGoo<FileDiff>
 {
@@ -2059,7 +2039,6 @@ public class QualityIdParam : IdParam<QualityIdGoo, QualityId>
     public override Guid ComponentGuid => new("50A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C4");
 }
 
-
 public class SerializeQualityIdComponent : SerializeIdComponent<QualityIdParam, QualityIdGoo, QualityId>
 {
     public SerializeQualityIdComponent() { }
@@ -2540,7 +2519,6 @@ public class ModelIdParam : IdParam<ModelIdGoo, ModelId>
     public override Guid ComponentGuid => new("30A1B2C3-D4E5-F6A7-B8C9-D0E1F2A3B4C5");
 }
 
-
 public class ModelDiffGoo : DiffGoo<ModelDiff>
 {
     public ModelDiffGoo() { }
@@ -2875,7 +2853,6 @@ public class ConnectorIdParam : IdParam<ConnectorIdGoo, ConnectorId>
     protected override string IdIconResourceName => "connectorid_24x24";
     public override Guid ComponentGuid => new("C1D2E3F4-A5B6-C7D8-E9F0-A1B2C3D4E5F6");
 }
-
 
 public class ConnectorDiffGoo : DiffGoo<ConnectorDiff>
 {
@@ -3559,7 +3536,6 @@ public class TypeIdParam : IdParam<TypeIdGoo, TypeId>
     public override Guid ComponentGuid => new("A1B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
 }
 
-
 public class TypeDiffGoo : DiffGoo<TypeDiff>
 {
     public TypeDiffGoo() { }
@@ -4133,7 +4109,6 @@ public class PieceIdParam : IdParam<PieceIdGoo, PieceId>
     public override Guid ComponentGuid => new("F6A7B8C9-D0E1-F2A3-B4C5-D6E7F8A9B0C1");
 }
 
-
 public class PieceDiffGoo : DiffGoo<PieceDiff>
 {
     public PieceDiffGoo() { }
@@ -4664,7 +4639,6 @@ public class ConnectionIdParam : IdParam<ConnectionIdGoo, ConnectionId>
     public override Guid ComponentGuid => new("40B2C3D4-E5F6-A7B8-C9D0-E1F2A3B4C5D6");
 }
 
-
 public class ConnectionDiffGoo : DiffGoo<ConnectionDiff>
 {
     public ConnectionDiffGoo() { }
@@ -5135,7 +5109,6 @@ public class DesignIdParam : IdParam<DesignIdGoo, DesignId>
     public override Guid ComponentGuid => new("D0E1F2A3-B4C5-D6E7-F8A9-B0C1D2E3F4A6");
 }
 
-
 public class DesignDiffGoo : DiffGoo<DesignDiff>
 {
     public DesignDiffGoo() { }
@@ -5483,7 +5456,6 @@ public class KitIdParam : IdParam<KitIdGoo, KitId>
     public override Guid ComponentGuid => new("40F8A9B0-C1D2-E3F4-A5B6-C7D8E9F0A1B0");
 }
 
-
 public class KitDiffGoo : DiffGoo<KitDiff>
 {
     public KitDiffGoo() { }
@@ -5801,7 +5773,6 @@ public class TruncateTextComponent : ScriptingComponent
     }
 }
 
-
 #endregion 🔖Scripting
 
 #region 🔖Engine
@@ -5869,7 +5840,6 @@ public abstract class EngineComponent : Component
             var path = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? string.Empty,
                 "semio-engine.exe");
             var engine = Process.Start(path);
-
 
             AppDomain.CurrentDomain.DomainUnload += (s, e) =>
             {
@@ -5971,7 +5941,3 @@ public class LoadKitComponent : PersistenceComponent
 #endregion 🔖Persistence
 
 #endregion 🔖Engine
-
-
-
-

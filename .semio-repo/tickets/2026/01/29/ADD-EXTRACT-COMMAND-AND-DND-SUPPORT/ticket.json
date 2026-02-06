@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2026-01-29T09:12:36.223114292Z",
   "finished": "2026-02-03T08:49:55.286971498Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Add a new command: extract <source-file> <-source-section-id> <target-file>. Implement drag and drop of file tree items and section tree items in the codebase section in the side view of the vscode extension.",
       "llm": "gemini-3-pro",

@@ -1,6 +1,7 @@
 # Ticket
 
 ## Todos
+
 # Plan: REPO-METRICS-REFACTOR
 
 ## Objective
@@ -39,6 +40,7 @@ Remove all metrics from the GraphQL layer and move computation purely into SQLit
 ### 1. GraphQL Schema (`graphql/repo/schema.graphql`)
 
 Remove types:
+
 - `RepoMetrics`
 - `BundleMetrics`
 - `FolderMetrics`
@@ -52,6 +54,7 @@ Remove types:
 - `AnalyzeMetrics` and `PriorityCount` (keep for analyze query)
 
 Remove `metrics` fields from:
+
 - `Repo`
 - `Bundle`
 - `Folder`
@@ -65,6 +68,7 @@ Remove `metrics` fields from:
 ### 2. Go Repository (`go/repo/repo.go`)
 
 Remove struct types:
+
 - `RepoMetrics`
 - `BundleMetrics`
 - `FolderMetrics`
@@ -76,6 +80,7 @@ Remove struct types:
 - `TicketMetrics`
 
 Keep:
+
 - `LineMetrics` (used for ticket/checkpoint line stats)
 - `CountMetrics` (used for contributions)
 - `AnalyzeMetrics` and `PriorityCount` (used for analyze query)
@@ -85,6 +90,7 @@ Update `buildSchema()` to remove metrics field resolvers.
 ### 3. Tests (`go/repo/repo_test.go`)
 
 Add comprehensive test:
+
 ```go
 func TestNodesAndEdges(t *testing.T) {
     // Query all node types and verify IDs are non-empty
@@ -118,6 +124,7 @@ Remove model bindings for removed metrics types.
 ## Changes
 
 ## Log
+
 # Log
 
 ## 2026-01-08
@@ -134,7 +141,7 @@ Remove model bindings for removed metrics types.
 2. **Removed metrics from repo.go**
    - Removed corresponding Go struct fields and type definitions
    - Removed resolver implementations for metrics fields
-   - Added `Violation.kind` resolver to fix type mismatch (was returning ViolationKind enum, now returns *ViolationKindMeta)
+   - Added `Violation.kind` resolver to fix type mismatch (was returning ViolationKind enum, now returns \*ViolationKindMeta)
 
 3. **Updated gqlgen.yml**
    - Removed metrics type bindings
@@ -157,6 +164,7 @@ Remove model bindings for removed metrics types.
    - `Contributor.commits` - schema has it but resolver may be incomplete
 
 **Test Results (short mode):**
+
 - PASS: TestTicketsNonEmpty, TestPoliciesNonEmpty, TestViolationKindsNonEmpty
 - PASS: TestFoldersNonEmpty, TestFilesNonEmpty, TestViolationsNonEmpty
 - PASS: TestNodesAndEdgesQuick, TestNodeQuery
@@ -165,8 +173,9 @@ Remove model bindings for removed metrics types.
 - SKIP: TestSectionsEdges, TestDefinitionsEdges (no data in test repo)
 
 **Remaining Work:**
+
 - CLI tests review
-- MCP handlers review  
+- MCP handlers review
 - VS Code extension review
 - Summary.md finalization
 
@@ -205,12 +214,14 @@ Remove model bindings for removed metrics types.
    - No changes needed
 
 **Build Status:**
+
 - VS Code extension TypeScript compiles successfully
 - Errors in `semio.ts` are unrelated (Problem type structure changes from separate work)
 
 **All Work Complete:**
+
 - ✅ GraphQL schema updated
-- ✅ repo.go updated  
+- ✅ repo.go updated
 - ✅ gqlgen.yml updated
 - ✅ Go tests pass in short mode
 - ✅ MCP handlers verified
@@ -220,6 +231,7 @@ Remove model bindings for removed metrics types.
 ### Session 3: Range and Position Schema Fixes
 
 **Issues Identified:**
+
 1.  **Ticket List Crash**: `repo ticket list` CLI command failed due to internal usage of obsolete `metrics` fields in `RangePosition` or similar structs within `repo.go` (resolved by schema cleanup in Session 1/2, but verified here).
 2.  **GraphQL Schema Error**: `Field 'start' of type 'Int!' must not have a sub selection` error reported by user. Caused by `Range` type previously using explicit scalars or implicit `Int!` for start/end, while VS Code client queries expected logic `start { line }`.
 3.  **Type Mismatch**: `Position` type mismatch between backend (`Column`) and frontend/LSP (`Character`).
@@ -227,46 +239,48 @@ Remove model bindings for removed metrics types.
 **Completed Tasks:**
 
 1.  **Fixed GraphQL Schema (`graphql/repo/schema.graphql`):**
-    *   Updated `Range` type to use `start: Position!` and `end: Position!` (previously implicit or scalar).
-    *   Updated `Position` type to use `line: Int!` and `character: Int!` (renamed from `column`).
+    - Updated `Range` type to use `start: Position!` and `end: Position!` (previously implicit or scalar).
+    - Updated `Position` type to use `line: Int!` and `character: Int!` (renamed from `column`).
 
 2.  **Fixed Go Backend (`go/repo/repo.go`):**
-    *   Updated manual `graphql.NewObject` definition for `Position` to include `character` field mapping to `Character` struct field.
-    *   Updated `Position` struct to `Character int` (json `character`).
-    *   Updated `Range` manual definition to use the new `positionType`.
-    *   Ensured `CodebaseQuery` resolvers populate `Range` with `Position` objects correctly.
+    - Updated manual `graphql.NewObject` definition for `Position` to include `character` field mapping to `Character` struct field.
+    - Updated `Position` struct to `Character int` (json `character`).
+    - Updated `Range` manual definition to use the new `positionType`.
+    - Ensured `CodebaseQuery` resolvers populate `Range` with `Position` objects correctly.
 
 3.  **Regenerated Frontend Types:**
-    *   Ran `graphql-codegen` for `js/vscode`.
-    *   Verified `generated/graphql.ts` contains `Range` with `Position` sub-selection strings and `Position` with `character` field.
+    - Ran `graphql-codegen` for `js/vscode`.
+    - Verified `generated/graphql.ts` contains `Range` with `Position` sub-selection strings and `Position` with `character` field.
 
 4.  **Verification:**
-    *   **CLI**: `go run go/cli/main.go ticket list` now runs successfully.
-    *   **Tests**: `go test ./...` in `go/repo` passes.
-    *   **Schema**: Verified backend and frontend alignment on `Range { start { line, character } }`.
+    - **CLI**: `go run go/cli/main.go ticket list` now runs successfully.
+    - **Tests**: `go test ./...` in `go/repo` passes.
+    - **Schema**: Verified backend and frontend alignment on `Range { start { line, character } }`.
 
 **Ticket Status:**
-*   Attempted to close ticket via CLI but failed due to missing `ticket progress` implementation in CLI (cannot add iterations).
-*   Summary.md created with full details.
-*   Work is complete and verified.
 
-*   Successfully closed ticket via CLI `go run cli/main.go ticket close` after manually fixing missing iterations in `ticket.json`.
+- Attempted to close ticket via CLI but failed due to missing `ticket progress` implementation in CLI (cannot add interactions).
+- Summary.md created with full details.
+- Work is complete and verified.
+
+- Successfully closed ticket via CLI `go run cli/main.go ticket close` after manually fixing missing interactions in `ticket.json`.
 
 ## Summary
+
 # Summary: REPO-METRICS-REFACTOR
 
 ## Changes
 
-1.  **Metric Removal**: Removed all *Metrics types and metrics fields from graphql/repo/schema.graphql and go/repo/repo.go to simplify the schema and resolve query errors in the CLI. SQLite views remain as the source of truth for metrics.
+1.  **Metric Removal**: Removed all \*Metrics types and metrics fields from graphql/repo/schema.graphql and go/repo/repo.go to simplify the schema and resolve query errors in the CLI. SQLite views remain as the source of truth for metrics.
 2.  **Schema Fixes**: Updated Range and Position types in graphql/repo/schema.graphql and go/repo/repo.go:
-    *   Range now uses start: Position! and nd: Position! (previously implicit or scalar in some contexts).
-    *   Position struct in Go updated to use Character field (JSON character) instead of Column.
-    *   Position type uses character: Int!.
+    - Range now uses start: Position! and nd: Position! (previously implicit or scalar in some contexts).
+    - Position struct in Go updated to use Character field (JSON character) instead of Column.
+    - Position type uses character: Int!.
 3.  **Frontend Generation**: Regenerated VS Code extension GraphQL types (js/vscode/generated/graphql.ts) to match the updated schema.
 4.  **Reference Implementation**: Range usage in CodebaseQuery (VS Code) is now compatible with the schema, validating start { line } selection.
 
 ## Verification
 
-*   **CLI**: go run go/cli/main.go ticket list executes successfully (previously failed on metrics).
-*   **Tests**: go test ./... in go/repo passes all tests, encompassing the schema changes.
-*   **Generation**: Verified Range and Position types in js/vscode/generated/graphql.ts match the schema.
+- **CLI**: go run go/cli/main.go ticket list executes successfully (previously failed on metrics).
+- **Tests**: go test ./... in go/repo passes all tests, encompassing the schema changes.
+- **Generation**: Verified Range and Position types in js/vscode/generated/graphql.ts match the schema.

@@ -23,23 +23,28 @@
 ## Log
 
 ### Investigation Phase
+
 Starting investigation of VSCode extension diagnostics display.
 
 Found the extension code structure:
+
 - `analyzeFile()` calls `runRepoCommandJson` with analyze command
 - `updateFileDiagnostics()` sets diagnostics on the collection
 - Both kitDiagnosticCollection and repoDiagnosticCollection use same source name "semio"
 - Potential issue: Two collections with same name might cause conflicts
 
 ### Root Cause Found
-Tested `./go/repo/repo --json analyze "js/semio/semio.ts"` - returns violations correctly.
+
+Tested `./@semio-repo/cli/cli --json analyze "js/semio/semio.ts"` - returns violations correctly.
 The issue is in `extractRepoResult()` function:
+
 - RepoEvent type expects `data` field
 - Actual repo output has `result` field: `{"kind":"result","result":{"data":{"violations":[...]}}}`
 - Code at line 62 gets `event.data` which is undefined
 - Should get `event.result` instead
 
 ### Build and Test
+
 - Extension builds successfully
 - Tests fail due to headless environment (no X server), not code issues
 - Added 7 comprehensive unit tests for RepoEvent parsing

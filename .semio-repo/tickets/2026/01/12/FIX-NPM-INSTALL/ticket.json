@@ -5,7 +5,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-12T13:20:33Z",
   "finished": "2026-01-12T13:21:50Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix npm Invalid Version error on npm install",
       "llm": "gemini-3-flash-preview",

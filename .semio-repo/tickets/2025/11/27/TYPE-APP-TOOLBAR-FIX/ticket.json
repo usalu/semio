@@ -4,7 +4,7 @@
   "prompt": "Add missing toolbar rendering and test for connector tool",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
   "started": "2025-12-16T17:06:07.732Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Add missing toolbar rendering and test for connector tool",
       "llm": "sonnet-4",

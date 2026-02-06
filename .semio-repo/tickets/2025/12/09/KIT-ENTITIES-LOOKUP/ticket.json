@@ -4,7 +4,7 @@
   "prompt": "Export individual kit entities",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "started": "2025-12-16T17:06:07.897Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Export individual kit entities",
       "llm": "sonnet-4-5",

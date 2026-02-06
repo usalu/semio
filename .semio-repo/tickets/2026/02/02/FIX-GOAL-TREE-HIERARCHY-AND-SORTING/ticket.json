@@ -9,7 +9,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-GOAL-MECHANISM",
   "started": "2026-02-02T20:23:56.263271239Z",
   "finished": "2026-02-02T20:28:10.127564521Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The goal tree command shows all goals flat without parent-child hierarchy. Goals stored in nested directories (e.g. R26-02/RUNNING-SKETCHPAD) should be rendered as children. Also sort goals by due date, then by creation date.",
       "llm": "opus-4-5",

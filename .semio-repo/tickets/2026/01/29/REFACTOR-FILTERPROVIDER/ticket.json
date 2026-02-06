@@ -6,7 +6,7 @@
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2026-01-29T19:46:19.428576563Z",
   "finished": "2026-01-29T19:52:09.147100888Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Refactor FilterProvider to use menus instead of tree items and fix tests",
       "llm": "",

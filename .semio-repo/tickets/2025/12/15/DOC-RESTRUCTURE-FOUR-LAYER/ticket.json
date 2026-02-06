@@ -4,7 +4,7 @@
   "prompt": "Migrate all existing docs and code to the new structure. Update outdated docs.",
   "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS/UPDATED-AGENTS-MD",
   "started": "2025-12-16T17:06:07.955Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migrate all existing docs and code to the new structure. Update outdated docs.",
       "llm": "opus-4-5",

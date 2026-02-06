@@ -1,0 +1,1240 @@
+{
+  "title": "Fix Vscode Filter Menu Consistency",
+  "status": "closed",
+  "prompt": "The menu items on the filter are not consistent. Dont use codeicons. Dont use text. Just use the emoji and show as tooltip what the filter does. Dont show the static emoji text.",
+  "summary": "Restored named filter tree labels, switched filter menu actions to emoji-only labels without codeicons, updated tests, and documented the filter label/tooltip requirement.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/423"
+  },
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "started": "2026-02-06T15:27:58.357159849Z",
+  "finished": "2026-02-06T17:12:55.816789645Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-06 15:27:58",
+        "finished": "2026-02-06 15:39:52"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "claude-code"
+      },
+      "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
+      "prompt": "The menu items on the filter are not consistent. Dont use codeicons. Dont use text. Just use the emoji and show as tooltip what the filter does. Dont show the static emoji text.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/vscode",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts",
+              "lines": {
+                "added": 15,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts",
+              "lines": {
+                "added": 32,
+                "removed": 29
+              }
+            },
+            {
+              "path": "📄AGENTS.md",
+              "lines": {
+                "added": 4,
+                "removed": 2
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📄README.md",
+              "lines": {
+                "added": 2046,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Repo Diagnostics Tests",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Sidebar View Tests",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Data Fetching",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Helpers",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers",
+              "lines": {
+                "added": 31,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/cli/main.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/vscode/extension.ts",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#UI/UX#CLI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#UI/UX#VS Code Extension",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation§activate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation§activate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Helpers§extractFilePathFromScope",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Helpers§extractFilePathFromScope",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 31,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 0,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeItem",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§extractRepoResult",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§extractRepoResult",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    },
+    {
+      "dates": {
+        "started": "2026-02-06 17:08:13",
+        "finished": "2026-02-06 17:12:55"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "codex"
+      },
+      "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
+      "prompt": "The filter tree items should have a name. Just the menu buttons should just have the emoji. Dont use codeicons (e.g. bundles). Dont use text (most such as projects, etc)",
+      "llm": "gpt-5-2-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "@semio-repo/vscode",
+              "lines": {
+                "added": 67,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts",
+              "lines": {
+                "added": 3,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts",
+              "lines": {
+                "added": 103,
+                "removed": 34
+              }
+            },
+            {
+              "path": "📄AGENTS.md",
+              "lines": {
+                "added": 37,
+                "removed": 922
+              }
+            },
+            {
+              "path": "📄README.md",
+              "lines": {
+                "added": 27,
+                "removed": 16
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": [
+            {
+              "path": "AGENTS.md#1. Run validation",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "AGENTS.md#2. Check report",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "AGENTS.md#3. Fix problems in locale files",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "AGENTS.md#4. Re-run validation",
+              "lines": {
+                "added": 0,
+                "removed": 67
+              }
+            },
+            {
+              "path": "AGENTS.md#4. Re-run validation#Action Components",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#4. Re-run validation#Horizontal Containers",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "AGENTS.md#4. Re-run validation#Internationalization (i18n)",
+              "lines": {
+                "added": 0,
+                "removed": 30
+              }
+            },
+            {
+              "path": "AGENTS.md#4. Re-run validation#Internationalization (i18n)#Tooltip Integration",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "AGENTS.md#4. Re-run validation#Internationalization (i18n)#Using i18n in Components",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "AGENTS.md#4. Re-run validation#Internationalization (i18n)#i18n Key Convention",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "AGENTS.md#4. Re-run validation#Styling",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📁 @semio-repo/go/",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "AGENTS.md#Codebase#📄 @semio-repo/go/main.go",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "AGENTS.md#Monorepo#CI/CD",
+              "lines": {
+                "added": 0,
+                "removed": 36
+              }
+            },
+            {
+              "path": "AGENTS.md#Monorepo#CI/CD#Commands",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "AGENTS.md#Monorepo#CI/CD#Repo CLI",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "AGENTS.md#Monorepo#CI/CD#Reports",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "AGENTS.md#Monorepo#Git",
+              "lines": {
+                "added": 0,
+                "removed": 49
+              }
+            },
+            {
+              "path": "AGENTS.md#Monorepo#Keywords",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "AGENTS.md#Using Go binary (preferred)",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback",
+              "lines": {
+                "added": 0,
+                "removed": 745
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#GraphQL API",
+              "lines": {
+                "added": 0,
+                "removed": 62
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#MCP Server",
+              "lines": {
+                "added": 0,
+                "removed": 50
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing",
+              "lines": {
+                "added": 0,
+                "removed": 493
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#E2E Tests (Playwright)",
+              "lines": {
+                "added": 0,
+                "removed": 81
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#Overview",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System",
+              "lines": {
+                "added": 0,
+                "removed": 372
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Component Authoring",
+              "lines": {
+                "added": 0,
+                "removed": 58
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#ID Convention",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points",
+              "lines": {
+                "added": 0,
+                "removed": 240
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#1. Internationalization (i18n)",
+              "lines": {
+                "added": 0,
+                "removed": 48
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#2. Tooltips",
+              "lines": {
+                "added": 0,
+                "removed": 41
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#3. Hotkeys",
+              "lines": {
+                "added": 0,
+                "removed": 24
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#4. Command Origins",
+              "lines": {
+                "added": 0,
+                "removed": 54
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#5. Tutorial Recording",
+              "lines": {
+                "added": 0,
+                "removed": 27
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#6. E2E Testing",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#i18n Management",
+              "lines": {
+                "added": 0,
+                "removed": 42
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#Unit Tests",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#VS Code Extension Tests",
+              "lines": {
+                "added": 0,
+                "removed": 17
+              }
+            }
+          ],
+          "renamed": [
+            {
+              "from": "AGENTS.md#4. Re-run validation#Internationalization (i18n)#Translation Files",
+              "to": "AGENTS.md#Codebase#📁 @semio-repo/cli/",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "AGENTS.md#Codebase#📄 @semio-repo/go/main_test.go",
+              "to": "AGENTS.md#Codebase#📄 @semio-repo/cli/main.go",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "AGENTS.md#Monorepo#CI/CD#Reports#Reports Directory",
+              "to": "AGENTS.md#Codebase#📄 @semio-repo/cli/main_test.go",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Constants",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Repo Diagnostics Tests",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts#Sidebar View Tests",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation",
+              "lines": {
+                "added": 69,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Data Fetching",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Helpers",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers",
+              "lines": {
+                "added": 31,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities",
+              "lines": {
+                "added": 2,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📄AGENTS.md#1. Run validation",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄AGENTS.md#2. Check report",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄AGENTS.md#3. Fix problems in locale files",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation#Action Components",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation#Horizontal Containers",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation#Internationalization (i18n)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation#Internationalization (i18n)#Tooltip Integration",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation#Internationalization (i18n)#Translation Files",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation#Internationalization (i18n)#Using i18n in Components",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation#Internationalization (i18n)#i18n Key Convention",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "📄AGENTS.md#4. Re-run validation#Styling",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📁 @semio-repo/cli/",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📁 @semio-repo/go/",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/cli/main.go",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/cli/main_test.go",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/go/main.go",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/go/main_test.go",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Codebase#📄 @semio-repo/vscode/extension.ts",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Monorepo#CI/CD",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Monorepo#CI/CD#Commands",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Monorepo#CI/CD#Repo CLI",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Monorepo#CI/CD#Reports",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Monorepo#CI/CD#Reports#Reports Directory",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Monorepo#Devcontainer",
+              "lines": {
+                "added": 0,
+                "removed": 30
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Monorepo#Git",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Monorepo#Keywords",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#Business Logic#Code Hygiene",
+              "lines": {
+                "added": 17,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#Business Logic#Tooling",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#UI/UX#CLI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Software Requirements Specification#UI/UX#VS Code Extension",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using Go binary (preferred)",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback",
+              "lines": {
+                "added": 0,
+                "removed": 140
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#GraphQL API",
+              "lines": {
+                "added": 0,
+                "removed": 62
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#MCP Server",
+              "lines": {
+                "added": 0,
+                "removed": 50
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#E2E Tests (Playwright)",
+              "lines": {
+                "added": 0,
+                "removed": 81
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#Overview",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Component Authoring",
+              "lines": {
+                "added": 0,
+                "removed": 58
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#ID Convention",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#1. Internationalization (i18n)",
+              "lines": {
+                "added": 0,
+                "removed": 48
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#2. Tooltips",
+              "lines": {
+                "added": 0,
+                "removed": 41
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#3. Hotkeys",
+              "lines": {
+                "added": 0,
+                "removed": 24
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#4. Command Origins",
+              "lines": {
+                "added": 0,
+                "removed": 54
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#5. Tutorial Recording",
+              "lines": {
+                "added": 0,
+                "removed": 27
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#6. E2E Testing",
+              "lines": {
+                "added": 0,
+                "removed": 28
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#i18n Management",
+              "lines": {
+                "added": 0,
+                "removed": 42
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#Unit Tests",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#VS Code Extension Tests",
+              "lines": {
+                "added": 0,
+                "removed": 17
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#🎟️ Ticket Workflow Signals [↑](#-bundles-)",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#🎫 Ticket System [↑](#-bundles-)",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/@semio-repo/vscode) [↑](#-bundles-)#Tickets",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 5,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄README.md#📦 Bundles [↑](#-overview)#🧼 Code Hygiene Hooks [↑](#-bundles-)",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📄README.md#🛍️ Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄README.md#🧑‍💻 Development [↑](#-overview)#🎫 Tickets [↑](#-development)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄README.md#🧑‍💻 Development [↑](#-overview)#🧰 Violations [↑](#-development)",
+              "lines": {
+                "added": 5,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄README.md#🧑‍💻 Development [↑](#-overview)#🪟 Windows Setup (Legacy) [↑](#-development)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_COMMANDS",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.test.ts§EXPECTED_COMMANDS",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation§activate",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "lines": {
+                "added": 69,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Helpers§extractFilePathFromScope",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Helpers§extractFilePathFromScope",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 31,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "lines": {
+                "added": 0,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Providers§FilterTreeItem",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§extractRepoResult",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§extractRepoResult",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§getRepoBinaryPath",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📄@semio-repo/vscode/extension.ts#Utilities§getRepoBinaryPath",
+              "lines": {
+                "added": 2,
+                "removed": 4
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    }
+  ]
+}

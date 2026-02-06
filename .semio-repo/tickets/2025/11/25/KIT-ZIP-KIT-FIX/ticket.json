@@ -4,7 +4,7 @@
   "prompt": "Migration from old format",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-KIT-APP",
   "started": "2025-11-25T00:00:00Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migration from old format",
       "llm": "sonnet-4",

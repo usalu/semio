@@ -4,7 +4,7 @@
   "prompt": "Optimize Yjs state management to prevent overfetching and infinite rerenders",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-16T17:06:07.858Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Optimize Yjs state management to prevent overfetching and infinite rerenders",
       "llm": "sonnet-4-5",

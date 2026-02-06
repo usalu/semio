@@ -4,7 +4,7 @@
   "prompt": "Derive contributions from tickets and file headers instead of hardcoding. Sort by ticket count. Add commits/tickets/files to VS Code extension tree.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-CONTRIBUTOR-MECHANISM",
   "started": "2026-01-05T14:05:02Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Derive contributions from tickets and file headers instead of hardcoding. Sort by ticket count. Add commits/tickets/files to VS Code extension tree.",
       "llm": "sonnet-4-5",

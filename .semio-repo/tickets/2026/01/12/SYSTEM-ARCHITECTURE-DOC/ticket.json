@@ -4,7 +4,7 @@
   "prompt": "Migrated from legacy files",
   "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS/UPDATED-AGENTS-MD",
   "started": "2026-01-29T19:44:03.418422Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Migrated from legacy files",
       "llm": "",

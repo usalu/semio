@@ -4,7 +4,7 @@
   "prompt": "Remove stats nesting, add nesting to lines {added;removed}, add nesting to date {created,updated}, rename base to commit, and migrate all existing logs to the new format.",
   "goal": "AI-OPTIMIZED-REPO",
   "started": "2025-12-16T17:06:07.935Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Remove stats nesting, add nesting to lines {added;removed}, add nesting to date {created,updated}, rename base to commit, and migrate all existing logs to the new format.",
       "llm": "gpt-5-2",

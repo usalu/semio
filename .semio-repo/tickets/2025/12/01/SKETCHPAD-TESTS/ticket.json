@@ -4,7 +4,7 @@
   "prompt": "Extend/adjust/refactor code to comply with sketchpad tests",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.801Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Extend/adjust/refactor code to comply with sketchpad tests",
       "llm": "sonnet-4-5",

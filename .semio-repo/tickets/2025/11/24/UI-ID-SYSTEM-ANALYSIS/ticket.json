@@ -4,7 +4,7 @@
   "prompt": "UI-ID-SYSTEM-ANALYSIS",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-16T17:06:07.713Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "UI-ID-SYSTEM-ANALYSIS",
       "llm": "sonnet-4",

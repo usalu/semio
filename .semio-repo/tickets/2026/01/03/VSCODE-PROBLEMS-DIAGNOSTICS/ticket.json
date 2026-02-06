@@ -5,7 +5,7 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2026-01-03T00:22:52Z",
   "finished": "2026-01-03T00:26:51Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The analyze violation diagnostics are not shown in vscode under problems",
       "llm": "opus-4-5-20251101",

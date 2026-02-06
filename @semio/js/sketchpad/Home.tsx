@@ -565,7 +565,6 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 
         await storeKitFileBlobs(kit.guid, importedFiles);
         completeKitImport(operationId);
-        // Don't auto-navigate - let user click the now-enabled row
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
         failKitImport(operationId, error instanceof Error ? error.message : String(error));
@@ -1220,14 +1219,12 @@ const HomeTableContent: FC = () => {
         homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKitShift", kitId);
         lastClickedIdRef.current = kitId;
       }
-      // Don't update lastClickedIdRef for shift-clicks - keep the anchor stable
     } else if (e.metaKey || e.ctrlKey) {
       if (selection.includes(kitId)) {
         homeCommands.removeKitFromSelection("semio.sketchpad.app.home.canvas.table.removeKitCtrl", kitId);
       } else {
         homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.addKitCtrl", kitId);
       }
-      // Don't update lastClickedIdRef for ctrl/cmd clicks
     } else {
       homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKit", kitId);
       lastClickedIdRef.current = kitId;

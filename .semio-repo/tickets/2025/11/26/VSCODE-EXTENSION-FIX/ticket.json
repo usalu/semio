@@ -4,7 +4,7 @@
   "prompt": "Fix VS Code extension linting and test setup",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2025-12-16T17:06:07.722Z",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix VS Code extension linting and test setup",
       "llm": "sonnet-4",
