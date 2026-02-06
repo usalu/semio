@@ -41,7 +41,7 @@ from semio import (
 )
 
 TOLERANCE = 0.001
-ASSETS_DIR = "../../assets/semio"
+ASSETS_DIR = "../assets/semio"
 
 
 def load_json(filename: str) -> dict:

@@ -11,7 +11,7 @@ import (
 	"github.com/usalu/semio/go/semio"
 )
 
-const AssetsPath = "../../assets/semio"
+const AssetsPath = "../assets/semio"
 const Iterations = 3
 
 func loadKit(filename string) semio.Kit {

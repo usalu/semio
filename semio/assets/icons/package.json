@@ -1,5 +1,5 @@
 {
-  "name": "semio/icons",
+  "name": "@semio/icons",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/assets/icons",
@@ -9,7 +9,7 @@
     "preflight": "echo \"No preflight checks configured for icons\""
   },
   "devDependencies": {
-    "semio/logo": "*"
+    "@semio/logo": "*"
   },
   "author": {
     "name": "Ueli Saluz",

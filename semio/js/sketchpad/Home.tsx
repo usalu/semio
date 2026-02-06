@@ -45,7 +45,7 @@ import {
   TemporaryKitIcon,
   TutorialIcon,
   UserIcon,
-} from "semio/assets";
+} from "@semio/assets";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";

@@ -56,7 +56,7 @@ export default defineConfig({
       name: "serve-wasm-and-assets",
       enforce: "pre",
       configureServer(server) {
-        const assetsPath = path.resolve(__dirname, "../../assets");
+        const assetsPath = path.resolve(__dirname, "../assets");
         const publicPath = path.resolve(__dirname, "public");
         return () => {
           server.middlewares.use((req, res, next) => {
@@ -90,7 +90,7 @@ export default defineConfig({
   resolve: {
     dedupe: ["three"],
     alias: {
-      "semio/assets": path.resolve(__dirname, "../../assets"),
+      "@semio/assets": path.resolve(__dirname, "../assets"),
     },
   },
   ssr: {

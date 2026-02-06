@@ -1,0 +1,22 @@
+{
+  "title": "Fix Mcp Server Graphql",
+  "status": "open",
+  "prompt": "Fix the MCP server which fails with GraphQL errors. Convert all MCP tool handlers from broken GraphQL queries to direct Tool* function calls. Add uri field to Goal type. Ensure MCP tools return same output as CLI. Extend tests.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
+  "started": "2026-02-06T23:13:16.706903779Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-06 23:13:16"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "windsurf-chat"
+      },
+      "commit": "ed14664e8b9fd928006607e1035779b1723addc0",
+      "prompt": "Fix the MCP server which fails with GraphQL errors. Convert all MCP tool handlers from broken GraphQL queries to direct Tool* function calls. Add uri field to Goal type. Ensure MCP tools return same output as CLI. Extend tests.",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

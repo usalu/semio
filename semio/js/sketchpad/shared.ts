@@ -22,7 +22,7 @@
 // #region 🔖Imports
 
 import { ComponentType, ReactNode } from "react";
-import { ChatIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "semio/assets";
+import { ChatIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { AnyActorRef, assign, fromCallback } from "xstate";
 import * as Y from "yjs";
 import { Guid, Kit, KitDiff } from "../semio";

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻︎ semio/assets/repo/some/folder/file_fixable.tsx
+// 💻︎semio/assets/repo/some/folder/file_fixable.tsx
 
 // 2025 Test User <test@test.com>
 

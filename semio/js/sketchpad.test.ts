@@ -22,7 +22,7 @@
 import { expect, Locator, Page, test } from "@playwright/test";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import MetabolismKitData from "../../assets/semio/kit_metabolism.json" with { type: "json" };
+import MetabolismKitData from "../assets/semio/kit_metabolism.json" with { type: "json" };
 
 const designs = (MetabolismKitData as any).designs ?? [];
 const nakaginCapsuleTowerDesign = designs.find((d: any) => d.name === "Nakagin Capsule Tower");
@@ -331,7 +331,7 @@ async function initHome(page: Page) {
   await page.waitForLoadState("domcontentloaded");
   await page.waitForTimeout(2000);
 
-  const zipPath = path.resolve(__dirname, "../../assets/semio/metabolism.zip");
+  const zipPath = path.resolve(__dirname, "../assets/semio/metabolism.zip");
   const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
   await expect(fileInput).toBeAttached({ timeout: 10000 });
 
@@ -648,7 +648,7 @@ test.describe("sketchpad", () => {
 
     // #region 🔖Home Selection State
     console.log("[Home] Testing selection state");
-    const zipPath = path.resolve(__dirname, "../../assets/semio/metabolism.zip");
+    const zipPath = path.resolve(__dirname, "../assets/semio/metabolism.zip");
     const fileInput = page.locator('[id="semio.sketchpad.app.home.importKit"]');
     await expect(fileInput).toBeAttached({ timeout: 10000 });
     await fileInput.setInputFiles(zipPath);

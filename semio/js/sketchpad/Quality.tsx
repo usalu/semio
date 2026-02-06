@@ -25,7 +25,7 @@ import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from "semio/assets";
+import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
 import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "./elements";

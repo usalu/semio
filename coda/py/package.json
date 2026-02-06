@@ -1,5 +1,5 @@
 {
-  "name": "coda/engine",
+  "name": "@coda/engine",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "coda/py",
@@ -17,7 +17,7 @@
     }
   },
   "devDependencies": {
-    "semio/assets": "*"
+    "@semio/assets": "*"
   },
   "author": {
     "name": "Ueli Saluz",

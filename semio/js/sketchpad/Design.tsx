@@ -74,7 +74,7 @@ import { ThreeEvent, useLoader } from "@react-three/fiber";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "semio/assets";
+import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import * as THREE from "three";
 import { OBJLoader } from "three/addons/loaders/OBJLoader.js";
 import { useLabel } from "../i18n";
@@ -211,7 +211,7 @@ import {
 
 // #endregion 🔖Imports
 
-// #region 🔖 State Management
+// #region 🔖State Management
 
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
 
@@ -1288,7 +1288,7 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
   return <>{children}</>;
 };
 
-// #region 🔖 Hooks
+// #region 🔖Hooks
 
 function useDesignAppInitialize() {
   const actor = useSketchpadActor();
@@ -2234,7 +2234,7 @@ export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   }, [actor, state, kitGuid, designGuid]);
 }
 
-// #endregion 🔖 Hooks
+// #endregion 🔖Hooks
 
 function getTransactionAffectedPieces(store: DesignStore | null): { changedPieces: Set<string>; statusMap: Map<string, DiffStatus> } {
   const changedPieces = new Set<string>();

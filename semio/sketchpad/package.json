@@ -1,9 +1,9 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "name": "semio/sketchpad",
+  "name": "@semio/sketchpad",
   "version": "0.1.0",
-  "description": "semio ⋅ sketchpad",
+  "description": "semio \u22c5 sketchpad",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -12,7 +12,7 @@
     "postinstall": "node -e \"require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')\""
   },
   "dependencies": {
-    "semio/js": "*"
+    "@semio/js": "*"
   },
   "author": {
     "name": "Ueli Saluz",

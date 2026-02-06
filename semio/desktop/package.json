@@ -1,9 +1,9 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "name": "semio/desktop",
+  "name": "@semio/desktop",
   "version": "2.0.0-alpha",
-  "description": "A sketchpad for semio 🧩",
+  "description": "A sketchpad for semio \ud83e\udde9",
   "main": ".vite/build/main.js",
   "scripts": {
     "dev": "electron-forge start",
@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@electron/fuses": "^2.0.0",
-    "semio/js": "^0.1.0",
+    "@semio/js": "^0.1.0",
     "electron-squirrel-startup": "^1.0.1"
   },
   "devDependencies": {

@@ -3117,7 +3117,7 @@ mod tests {
     use std::fs;
     use std::path::Path;
 
-    const ASSETS_DIR: &str = "../../assets/semio";
+    const ASSETS_DIR: &str = "../assets/semio";
     const TOLERANCE: f64 = 0.001;
 
     fn load_kit(filename: &str) -> Kit {

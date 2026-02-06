@@ -20,7 +20,146 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+Introduce a new command: `search <query>` that gathers all the information from the semio repo regarding the given query. It lists all the resources that fuzzy match the query.
+```
+# [🏗️Projects](semiorepo://projects)
 
+{FILTEREDPROJECTTREEWITHBUNDLESFOLDERSFILESSECTIONSDEFINITIONSTODOS}
+
+# [🎯Goals](semiorepo://goals)
+
+{FILTEREDGOALTREEWITHTICKETS}
+
+# [✍️Drafts](semiorepo://drafts)
+
+{FILTEREDDRAFTTREE}
+
+# [📝Todos](semiorepo://todos)
+
+# [📁Folders](semiorepo://folders)
+
+# [📄Files](semiorepo://files)
+
+# [🔖Sections](semiorepo://sections)
+
+# [🏷️Definitions](semiorepo://definitions)
+
+# [🛡️Policies](semiorepo://policies)
+
+# [👤Contributors](semiorepo://contributors)
+
+# [🔀Commits](semiorepo://commits)
+
+
+```
+
+The `tree <query>?` command is not working properly. It should have a positional query parameter which is used for fuzzy search and not for exact match. All items are fuzzy matched against the query (including the id, title,description, etc). When a match is found the item and all the parent that lead to the item are returned. When something is filtered out then all intermediate parents are left out (e.g. no folders but with bundles and files makes the files directly on the bundle level visible). It should return the complete monorepo as a tree. It should work with all `--only-<value> <value>?` and `--no-<filter> <value>?` flags. <filter> can be kinds e.g. `projects`, `bundles`, `folders`, `files`, `sections`, `definitions`, `policies`, `contributors`, `commits`. or specific values e.g. `library`, `schema`, `binary`, `client`, `site`, `assets`, `organization`, `required`, `implementation`, `interface`, `constant`, etc. Some <filter> have a value such as `--no-year <year>?` and `--only-year <year>?`, `no-usalu` for no usalu contributor, etc.
+
+Here some examples that must work:
+
+```bash
+$ ./semio-repo/cli/cli tree --only-project --only-bundle --2026 --usalu
+$ ./semio-repo/cli/cli tree --no-bundle --no-year 2026 --no-contributor usalu
+$ ./semio-repo/cli/cli tree --only-organization --only-open
+$ ./semio-repo/cli/cli tree --no-folder required --only-file implementation --only-definition constant
+$ ./semio-repo/cli/cli tree "semio repo cli filter mechanism"
+```
+
+```
+$ ./semio-repo/cli/cli tree
+- [🏗️Projects](semiorepo://projects)
+  - <PROJECTITEM>
+    - <BUNDLEITEM>
+      - <FOLDERITEM*>
+        - <FILEITEM>
+          - <SECTIONITEM*>
+            - <DEFINITIONITEM>
+- [🎯Goals](semiorepo://goals)
+  - <GOALITEM*>
+    - <TICKETITEM>
+- [✍️Drafts](semiorepo://drafts)
+  - <DRAFTITEM>
+- [🛡️Policies](semiorepo://policies)
+  - <POLICYITEM>
+    - <VIOLATIONKINDITEM*>
+- [👤Contributors](semiorepo://contributors)
+  - <CONTRIBUTORITEM>
+- [🔀Commits](semiorepo://commits)
+  - <COMMITITEM>
+```
+
+
+
+The semio repo mcp server is not running. Make sure every single tool and resource is tested. It should return the same output as over the cli.
+e.g. goal_list tool: Failure in MCP tool execution: internal error: graphql errors: [Cannot query field "uri" on type "Goal".]
+
+The semio repo vscode extension should support both id and uri.
+
+E.g. when click with ctrl on `semiorepo://ticket/2026/01/26/ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT` it should navigate to the ticket folder. Currently it opens the search. Same when clicking on a tree item. Same when running the command `semio-repo: Navigate to` which should take an id or an uri as argument.
+
+The semio repo cli should be thoroughly tested. The items of trees or list all must have valid ids and uris.
+
+```
+$ ./semio-repo/cli/cli ticket list
+- [📅︎2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS?closed](semiorepo://ticket/2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS) - Top-level Only Definitions - closed - 22 hours ago
+```
+should be
+```
+- [📅2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS?closed](semiorepo://ticket/2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS) - Top-level Only Definitions - closed - 22 hours ago
+```
+
+$ ./semio-repo/cli/cli ticket tree
+- [2026](2026)
+  - [01](2026/01)
+    - [26](2026/01/26)
+      - [ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT](semiorepo://ticket/2026/01/26/ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT)
+```
+should be
+```
+$ ./semio-repo/cli/cli ticket tree
+- [📅2026](semiorepo://tickets?year=2026)
+  - [📅2026/01](semiorepo://tickets?year=2026&month=01)
+    - [📅2026/01/26](semiorepo://tickets?year=2026&month=01&day=26)
+      - [📅2026/01/26/ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT?closed](semiorepo://ticket/2026/01/26/ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT) - Zero Touch Devcontainer Extension Support - closed - 1 week ago
+```
+
+```
+$ ./semio-repo/cli/cli file list
+- [⚙︎📄.codex/config.toml](semiorepo://file/📄.codex/config.toml)
+- [📄︎📄.devcontainer/post-attach.sh](semiorepo://file/📄.devcontainer/post-attach.sh)
+- [💻︎📄semio/py/semio.py](semiorepo://file/📄semio/py/semio.py)
+```
+should be
+```
+$ ./semio-repo/cli/cli file list
+- [⚙️.codex/config.toml](semiorepo://file/.codex/config.toml)
+- [📜.devcontainer/post-attach.sh](semiorepo://file/.devcontainer/post-attach.sh)
+- [💻semio/py/semio.py](semiorepo://file/semio/py/semio.py)
+```
+
+```
+ $ ./semio-repo/cli/cli folder list
+- [📁︎.claude](semiorepo://folder/.claude) - required
+- [📁︎.codex](semiorepo://folder/.codex) - required
+- [📁︎.cursor](semiorepo://folder/.cursor) - required
+- [📁︎.devcontainer](semiorepo://folder/.devcontainer) - required
+- [📁︎.github](semiorepo://folder/.github) - required
+- [🗃︎.github/agents](semiorepo://folder/.github/agents) - organization
+```
+should be
+```
+$ ./semio-repo/cli/cli folder list
+- [📁.claude](semiorepo://folder/.claude)
+- [📁.codex](semiorepo://folder/.codex)
+- [📁.cursor](semiorepo://folder/.cursor)
+- [📁.devcontainer](semiorepo://folder/.devcontainer)
+- [📁.github](semiorepo://folder/.github)
+- [🗃️.github/agents](semiorepo://folder/.github/agents)
+```
+
+etc for all commands.
+
+The ids in semio dont have a spaces (e.g. between first emoji and rest). Some code still has it wrong e.g. semio go cli. Fix it everywhere.
 
 semio repo vscode:
 The menu items on the filter are not consistent. Dont use codeicons. Dont use text. Just use the emoji and show as tooltip what the filter does. Dont show the static emoji text.
@@ -68,7 +207,7 @@ The goal tree should
 The violation system is not working properly. `./semio-repo/cli/cli fix` should fix all autofixable violations.
 
 semio repo cli:
-The policy/violationKind/violation/fix mechanism is not yet complete. Every language should define primitive functionality that all policies can use. E.g. todos should be ignored by the comment fix. Currently it works for typescript but not for other languages such as python, c#. This shouldn't be possible.
+The policy/violationKind/violation/fix mechanism is not yet complete. Every language should define primitive functionality that all policies can use. E.g. todos should be ignored by the comment fix. Currently it works for typescript but not for other languages such as python or c#. This shouldn't be possible.
 
 Somehow the fix mechanism removes a region that it shouldnt. This shouldnt happen. There is something wrong.
 semio/js/**.tsx
@@ -710,7 +849,7 @@ bundle: `<kind>{project-code}/{code}` (<kind> - 📚:library, 🛂:schema, ⌨�
 folders: `📁{parent-path*}`
 folder: `<kind>{path*}` (<kind> - 🗃️:organization, 📁:required)
 files: `📄{folder-path*}` 
-file: `<kind>{path*}` (<kind> - 💻:code, 🧪:test, 📃:docs, ⚙️:config, 💾:resource, ⚖️:license)
+file: `<kind>{path*}` (<kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️:config, 💾:resource, ⚖️:license)
 sections: `🔖{file-path*}#{parent-path*}`
 section: `🔖{path*}` 
 definitions: `🏷️{file-path*}#{section-path*}§{path*}`

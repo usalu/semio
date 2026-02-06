@@ -80,7 +80,7 @@ import {
   SearchIcon,
   TriangleAlertIcon,
   TutorialIcon,
-} from "semio/assets";
+} from "@semio/assets";
 import * as THREE from "three";
 import { Expertise, setExpertiseProvider, useLabel } from "../i18n";
 import { Camera, cn, Plane, Point, Vector } from "../semio";

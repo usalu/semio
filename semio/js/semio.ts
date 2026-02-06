@@ -28,8 +28,8 @@
 
 import { ClassValue, clsx } from "clsx";
 import cytoscape from "cytoscape";
-import { default as adjectives } from "semio/assets/lists/adjectives.json";
-import { default as animals } from "semio/assets/lists/animals.json";
+import { default as adjectives } from "@semio/assets/lists/adjectives.json";
+import { default as animals } from "@semio/assets/lists/animals.json";
 import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";

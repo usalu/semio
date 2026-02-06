@@ -1,0 +1,25 @@
+{
+  "title": "Fix Emoji Space In Ids",
+  "status": "open",
+  "prompt": "Fix emoji presentation in artifact IDs and URIs across all CLI list/tree commands. Remove U+FE0E text presentation selectors, fix duplicate emoji prefixes in file IDs/URIs, fix folder kind not appearing correctly, fix ticket tree intermediate nodes missing proper IDs/URIs. Extend test coverage for all list/tree markdown output.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/435"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "started": "2026-02-06T22:34:05.911772817Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-06 22:34:05"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "copilot-chat"
+      },
+      "commit": "ed14664e8b9fd928006607e1035779b1723addc0",
+      "prompt": "Fix emoji presentation in artifact IDs and URIs across all CLI list/tree commands. Remove U+FE0E text presentation selectors, fix duplicate emoji prefixes in file IDs/URIs, fix folder kind not appearing correctly, fix ticket tree intermediate nodes missing proper IDs/URIs. Extend test coverage for all list/tree markdown output.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

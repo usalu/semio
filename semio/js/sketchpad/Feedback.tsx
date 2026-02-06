@@ -25,7 +25,7 @@ import { useSelector } from "@xstate/react";
 import { FC, useCallback, useLayoutEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { CheckIcon, ChatIcon as FeedbackIcon } from "semio/assets";
+import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
 import { useLabel } from "../i18n";
 import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "./elements";
 import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared";

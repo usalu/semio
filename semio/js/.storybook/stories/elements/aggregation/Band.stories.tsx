@@ -20,7 +20,7 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "semio/assets";
+import { AddIcon, AwardIcon, DocumentIcon, FolderIcon, LayoutIcon, TypeIcon, UserIcon } from "@semio/assets";
 import { Band, Button, Input, Level, LevelProvider, Toggle, getLevelBgClass } from "../../../../sketchpad/elements";
 
 const meta = {

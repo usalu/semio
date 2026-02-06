@@ -2,7 +2,7 @@
 
 ALWAYS work inside a ticket. ALWAYS use semio-repo mcp (or the cli `./semio-repo/cli/cli`) for repo-specific infrastructure. ALWAYS start by listing the current goal tree with `goal_tree` (or `./semio-repo/cli/cli goal tree`). Create a new ticket with mcp tool `ticket_open` (or `./semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>? --parent <parent-ticket-id>?`). This creates a `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` folder along with `ticket.md` in it. NEVER answer directly in the chat and ALWAYS document everything (todos, changes, summary, etc) in `ticket.md`. ALWAYS use the mcp tool `ticket_close` (or `./semio-repo/cli/cli ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat ALWAYS reopen the same ticket with mcp tool `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
 Create a goal with mcp tool `goal_open`(or `./semio-repo/cli/cli goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`./semio-repo/cli/cli goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or `./semio-repo/cli/cligoal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
-A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
+A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`, `gpt-5-3-codex`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 
 - Multiple agents and a developer ALWAYS work on the same codebase at the same time. NEVER use `git stash`, `git stash pop`, `git checkout`, … because it will mess up others work and worst-case delete their work.
 - The codebase in under design and development and not used in production yet. There are many inconsistencies that need to be refactored. ALWAYS use clean mechanisms that might require large refactorings and NEVER care about backwards compatibility.
@@ -33,7 +33,13 @@ Source files MUST NOT include inline comments except for license headers, region
 
 Block and JSDoc comments are treated as inline comments.
 
-Comment detection MUST ignore comment markers inside string literals and template literal text.
+Comment scanning MUST be language-agnostic via `BaseLanguage.ScanComments` using configurable primitives per language.
+
+Each language MUST declare its string literal flavors (templates, raw backticks, triple quotes, verbatim strings), JSDoc support, and skip directives in its constructor.
+
+Comment detection MUST ignore comment markers inside string literals, template literal text, raw backtick strings, triple-quoted strings, and verbatim strings.
+
+Language-specific skip directives (e.g., `nolint` for Go, `noqa`/`type: ignore` for Python, `pragma` for C#, `eslint-`/`@ts-` for TypeScript) MUST be excluded from inline comment violations alongside built-in directives (`TODO`, `semio-ignore-`).
 
 Inline comment violations MUST be grouped per contiguous inline-comment block.
 
@@ -116,7 +122,7 @@ Collection artifact types (projects, bundles, folders, files, sections, definiti
 The `navigate` MCP tool MUST accept either an artifact ID or URI and return both the resolved URI and ID.
 The `semio.navigate` VS Code command MUST accept either an artifact ID or URI and navigate to the corresponding resource.
 Repo tool definitions MUST be top-level only (anchored at the start of the line).
-The `sync github` command MUST reconcile local tickets and goals with GitHub by: ensuring root goals (depth 0) have milestones, ensuring first-generation child goals (depth 1) have issues with the `goal` label linked to the root goal's milestone, ensuring deeper goals (depth 2+) have issues with the `goal` label linked as sub-issues to their parent goal's issue without milestone, migrating child goals from legacy milestones to issues, processing goals in depth-first order so parents exist before children, ensuring issue titles and descriptions match local goal and ticket data, reopening GitHub issues if local tickets or goals are open, linking parent tickets as sub-issues to their parent ticket's issue, closing issues for closed tickets, resolving goal milestones by title via the GitHub API before assigning them to ticket issues, synchronizing repository label definitions for all valid project and bundle `@` labels, updating stored milestone URLs, and removing invalid `@` labels that do not map to current projects or bundles from both ticket-linked issues and repository-wide issue listings.
+The `sync github` command MUST reconcile local tickets and goals with GitHub by: ensuring root goals (depth 0) have milestones, ensuring first-generation child goals (depth 1) have issues with the `goal` label linked to the root goal's milestone, ensuring deeper goals (depth 2+) have issues with the `goal` label linked as sub-issues to their parent goal's issue without milestone, repairing existing goal issues so depth 1 issues always carry the root milestone, depth 2+ issues always have a parent sub-issue link and no milestone, and missing `goal` labels are restored, migrating child goals from legacy milestones to issues, processing goals in depth-first order so parents exist before children, ensuring issue titles and descriptions match local goal and ticket data, reopening GitHub issues if local tickets or goals are open, linking parent tickets as sub-issues to their parent ticket's issue, closing issues for closed tickets, resolving goal milestones by title via the GitHub API before assigning them to ticket issues, synchronizing repository label definitions for all valid project and bundle `@` labels, updating stored milestone URLs, and removing invalid `@` labels that do not map to current projects or bundles from both ticket-linked issues and repository-wide issue listings.
 Go repo-tooling tests MUST support fast and slow execution lanes, and slow-lane suites MUST be shardable across parallel jobs while preserving full command-surface coverage.
 CLI `--json` output MUST emit pure data per line without event wrappers or `{"data": ...}` GraphQL envelopes; errors MUST go to stderr; stdout MUST be empty on error.
 CLI cobra root MUST set `SilenceUsage` and `SilenceErrors` to prevent stdout pollution on errors.
@@ -132,6 +138,7 @@ A ticket MUST store a `prompt` which is the prompt used to create the ticket.
 A ticket MUST store a `commit` which is the git commit at ticket creation for line stats calculation.
 
 A ticket interaction MUST store `started` and optional `finished` timestamps.
+A ticket interaction `author` payload MUST be accepted as either a string or an object when reading persisted ticket and goal histories.
 
 A ticket MUST store a summary when finished.
 
@@ -241,6 +248,7 @@ Bundle kind MUST be derived from the `bundleKind` field in `package.json` or `pr
 Valid bundle kinds: `library`, `schema`, `binary`, `ui`, `site`, `assets`.
 Folder kind MUST be derived from the folder name: `.`-prefixed folders and folders containing package manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `*.csproj`, `*.sln`) are `required`; all others are `organization`.
 File kind MUST be derived from the file name and extension using pattern matching: test files (`*.test.*`, `_test.*`, `*.spec.*`, `*.stories.*`, `*.benchmark.*`), config files (`.json`, `.yaml`, `.toml`, `.xml`, etc. plus named files like `Dockerfile`, `Makefile`), docs (`.md`, `.txt`, `.rst`), resources (images, fonts, media, archives, binaries), code (comprehensive language extension list), scripts (`.sh`, `.bash`, `.bat`, `.ps1`, etc.), and license files (names containing `license` or `licence`).
+`FileHeaderId` MUST override the filename-derived file kind to `script` when the file exists on disk and its first line starts with a shebang (`#!`).
 Definition kind MUST be derived from the language processor keyword via `extractDefinitionKeyword` and `DeriveDefinitionKind`: interface-like keywords (`interface`, `type`, `trait`, `abstract`, `delegate`, `record`, `union`, `scalar`, `extend *`) map to `interface`; constant-like keywords (`const`, `enum`, `var`, `let`, `static`) map to `constant`; all others (including `function`, `class`, `struct`, `def`, `func`, `fn`) map to `implementation`.
 `extractDefinitionKeyword` MUST prioritize the word directly preceding the definition name over fallback keyword scanning, and MUST skip access modifiers (`public`, `private`, `protected`, `internal`, `abstract`, `sealed`, `virtual`, `override`, `async`, `partial`, `pub`, `export`).
 `refineDefinitionKind` MUST reclassify `const`/`let`/`var` definitions as `implementation` when the initializer is an arrow function (`=>`), function expression, or class expression.
@@ -632,49 +640,49 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 
 In general, if the user talks about an old file, then probably there is the same file with the suffix `*.old` that is the original state.
 
-## 📁 .devcontainer/
+## 📁.devcontainer/
 
 Devcontainer configuration and lifecycle scripts.
 
-## 📄 .devcontainer/devcontainer.json
+## 📄.devcontainer/devcontainer.json
 
 Devcontainer configuration with VS Code customizations, container/remote env, post-create/start/attach commands, and persisted volumes for AI auth, editor server state, and Playwright cache under `node_modules`.
 
-## 📄 .devcontainer/post-create.sh
+## 📄.devcontainer/post-create.sh
 
 Devcontainer provisioning steps for dependency installs, including Playwright browser install into the shared cache path.
 
-## 📄 .devcontainer/post-start.sh
+## 📄.devcontainer/post-start.sh
 
 Devcontainer start script that fixes ownership for persisted volumes, normalizes Claude Code auth storage, sets git safe directories, and activates the Python virtual environment.
 
-## 📄 .devcontainer/post-attach.sh
+## 📄.devcontainer/post-attach.sh
 
 Devcontainer post-attach script that uninstalls any existing semio-repo extension via IDE IPC hook CLIs and extensions directory cleanup, clears stale VS Code and Cursor caches, builds and installs the local semio extension via VS Code, Cursor, Windsurf, or Antigravity IPC hook CLIs with list-extensions validation and extensions directory fallback plus extensions.json registration (using `$mid` location keys) on WSL-only CLI responses, then writes the Windsurf MCP config for the semio-repo server.
 
-## 📁 semio-repo/
+## 📁semio-repo/
 
 Repo tooling, CLI, and editor integration sources.
 
-## 📁 semio-repo/vscode/
+## 📁semio-repo/vscode/
 
 VS Code extension source for semio-repo tooling workflows.
 
-## 📄 semio-repo/vscode/.vscode-test.mjs
+## 📄semio-repo/vscode/.vscode-test.mjs
 
 VS Code test-cli configuration entrypoint that defines the compiled test glob and Electron launch arguments for extension tests.
 
-## 📄 semio-repo/vscode/extension.test.ts
+## 📄semio-repo/vscode/extension.test.ts
 
 VS Code extension integration tests covering command registration, diagnostics, sidebar view contributions, filter state behavior, and monorepo tree provider roots.
 
-## 📄 semio-repo/vscode/extension.ts
+## 📄semio-repo/vscode/extension.ts
 
 Extension activation entrypoint that registers the two sidebar views (Monorepo and Filter) backed by tree data providers wired to a shared filter state source.
 The Filter view exposes one item per filter kind with emoji + name labels, tooltip descriptions, and emoji-only menu actions for option toggles.
 The Monorepo view applies the shared filter state across all branches and uses GraphQL-backed data retrieval via the repo CLI executor.
 
-## 📁 js/
+## 📁js/
 
 Javascript code with shared core (semio/js) that uses storybook and exports a handful of React components (Sketchpad, Diagram, Model) for both web-based and desktop-based environments, a documentation (semio/docs) that uses astro with starlight and mdx, and desktop (semio/desktop) that runs in electron.
 
@@ -693,7 +701,7 @@ Javascript code with shared core (semio/js) that uses storybook and exports a ha
 - The ui consists of a three horizontal strips: navbar, canvas and footer. A canvas consists of windows. On top of the canvas are panels which can toggled on and off.
 - Navbar panel toggles always order panels as Details, Chat, then Settings for every app.
 
-## 📁 js/semio/
+## 📁js/semio/
 
 Shared react components. The main component is Sketchpad. Sketchpad is used in three different szenarios:
 
@@ -2786,27 +2794,27 @@ This script consolidates all Metabolism asset generation:
 - Fix diffs are normalized (GUIDs replaced with `<GUID>`) before comparison
 - C# fix generation is pending; comparison skips fix diff for now
 
-## 📁 js/semio/sketchpad/
+## 📁js/semio/sketchpad/
 
 Sketchpad app modules, state machine wiring, and shared app surfaces for Home, Kit, Design, Type, Quality, Docs, and Feedback.
 
-## 📄 js/semio/sketchpad/elements.tsx
+## 📄js/semio/sketchpad/elements.tsx
 
 `Table` supports row-level hover callbacks for app hover state dispatch.
 
-## 📄 js/semio/sketchpad/Home.tsx
+## 📄js/semio/sketchpad/Home.tsx
 
 Home app hover state is stored in the Sketchpad state machine and updated via hover commands for table rows.
 
-## 📄 js/semio/sketchpad/Kit.tsx
+## 📄js/semio/sketchpad/Kit.tsx
 
 Kit app hover state covers all artifact kinds and is updated via table and diagram hover dispatch.
 
-## 📄 js/semio/sketchpad/Sketchpad.tsx
+## 📄js/semio/sketchpad/Sketchpad.tsx
 
 Home command hooks forward hover events, including clear, into the Sketchpad state machine.
 
-## 📁 js/vscode/
+## 📁js/vscode/
 
 VSCode extension providing violation diagnostics for open files and kit validation. Compatible with VS Code and Windsurf (engine: `^1.106.0`).
 
@@ -2865,49 +2873,57 @@ Ticket tree items use `ticketOpen` and `ticketClosed` context values for inline 
 - `RepoCodeActionProvider`: Quick fixes for violation diagnostics that run `repo fix <path>`
 - `KitCodeActionProvider`: Quick fixes for kit validation problems that apply diff-based fixes
 
-## 📄 js/vscode/extension.ts
+## 📄js/vscode/extension.ts
 
 Extension activation, repo CLI command execution helpers, GraphQL client piping through the repo CLI, ticket command prompts aligned to repo ticket inputs including LLM and UI selection on ticket open, and section tree normalization for the Sections view based on repo section list output with line-only range start/end values.
 
-## 📄 js/vscode/package.json
+## 📄js/vscode/package.json
 
 VS Code extension manifest with unscoped name for vsce packaging, command contributions, scripts, and engine compatibility for Cursor support.
 
-## 📁 js/vscode/generated/
+## 📁js/vscode/generated/
 
 GraphQL codegen outputs for the VS Code extension.
 
-## 📄 js/vscode/generated/graphql.ts
+## 📄js/vscode/generated/graphql.ts
 
 Generated GraphQL types and typed documents for the VS Code extension.
 
-## 📁 graphql/repo/
+## 📁graphql/repo/
 
 Repo CLI GraphQL schema mirror for tooling.
 
-## 📄 graphql/repo/schema.graphql
+## 📄graphql/repo/schema.graphql
 
 GraphQL schema mirror of the repo CLI schema with TicketUI enum and ticket UI fields for VS Code codegen and typed documents.
 
-## 📁 sql/sqlite/repo/
+## 📁sql/sqlite/repo/
 
 SQLite schema definitions for repo exports.
 
-## 📄 sql/sqlite/repo/schema.sql
+## 📄sql/sqlite/repo/schema.sql
 
 SQLite schema with ticket UI storage alongside LLM and commit metadata.
 
-## 📁 semio-repo/cli/
+## 📁semio-repo/cli/
 
 Repo CLI implementation and tests for the Go-based `semio-repo` tooling entrypoint.
 
-## 📄 semio-repo/cli/cli.go
+## 📄semio-repo/cli/cli.go
 
-Repo CLI single-file entrypoint with command registry, GraphQL execution, and three-tier hierarchical GitHub sync where root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone, ticket issues linked to root goal milestones, repository label catalog synchronization plus repository-wide `@` label cleanup for project/bundle tags, and emoji-normalized artifact IDs. Artifact kind derivation: `DeriveBundleKind` reads `bundleKind` from `package.json`/`project.json` at bundle root (fallback `library`); `DeriveFolderKind` classifies `.`-prefixed and manifest-containing folders as `required`; `DeriveFileKind` pattern-matches file names/extensions into `code`/`test`/`config`/`docs`/`resource`/`script`/`license`; `DeriveDefinitionKind` maps language keywords to `implementation`/`interface`/`constant` via `extractDefinitionKeyword` (word-before-name priority, modifier skipping) and `refineDefinitionKind` (arrow function detection). Dual identification system: `GetArtifactID` generates emoji-prefixed primary IDs (with kind-specific emoji helpers `projectKindEmoji`, `bundleKindEmoji`, `fileKindEmoji`, `folderKindEmoji`, `definitionKindEmoji`), `GetArtifactURI` generates `semiorepo://` secondary URIs with `SectionIdValueToUriPath`/`DefinitionIdValueToUriPath` for `#`/`§`→`/SLUG` encoding, `ParseSectionUriPath` for reverse URI→file+slugs parsing. `IdToUri`/`UriToId` bidirectional conversion with emoji normalization (strip `\uFE0E`/`\uFE0F` for matching). Collection types (projects, bundles, folders, files, sections, definitions, tickets, goals, drafts, todos, policies, violationKinds, contributors, commits) have dedicated ID and URI formats. `navigate` MCP tool resolves ID or URI input to both forms. MCP resource templates use slash-based paths for sections/definitions. Relative date rendering for tickets and goals supports RFC3339 and YYYY-MM-DD input formats via a flexible parser that uses the `dustin/go-humanize` package for human-friendly scheduling and history display. `--json` outputs pure data per line (no event wrappers, no `{"data": ...}` GraphQL envelope). Errors go to stderr. Cobra root has `SilenceUsage`/`SilenceErrors` to prevent stdout pollution on errors. Three rendering modes via `--format` flag: `NDJSONRenderer` (json), `HumanRenderer` (text), `MarkdownRenderer` (md, default). `inferEntityKind(key)` maps GraphQL operation names to entity kinds via prefix matching for generic mutation/query result dispatch. `renderEntityMarkdownLink(kind, data)` produces `[<id>](<uri>) - <prop1> - <prop2>` markdown for any entity kind. `renderEntityMarkdown(kind, data)` adds `- ` list prefix. `formatMarkdownResult` and `formatResult` use generic entity-kind dispatch with `inferEntityKind` fallback — no JSON code-block or dump fallback paths. Streaming list items detected via command suffix (`" list"`, `" tree"`) to apply correct `- ` markdown prefix. `repoContext.Fix()` detects violations via `CheckPoliciesWithContext`, filters autofixable ones, groups by file, and delegates to `applyAutofixes()` which applies per-violation-kind handlers bottom-up to avoid line number shifts: empty section removal with surrounding blank cleanup, missing/mismatched section end name resolution via `findMatchingSectionStartName()` stack-based walk, inline comment contiguous block removal with blank line tracking, block/JSDoc comment removal. Post-removal blank line collapse prevents double blank lines. `extractFileFromScope()` strips `#section` and `::definition` suffixes from scope strings. `FileHeaderId` generates emoji-prefixed file artifact IDs for headers using `DeriveFileKind` and `GetArtifactID`. `ViolationCodeHeaderWrongFileId` (autofixable) replaces `ViolationCodeHeaderMissingFilename`; `headerPolicy` detects wrong/missing file IDs by scanning header lines for file extensions and emoji markers; `applyAutofixes` replaces the identified line with the correct artifact ID comment.
+Repo CLI single-file entrypoint with command registry, GraphQL execution, and three-tier hierarchical GitHub sync where root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone, with enforcement that existing goal issues always have the root milestone at depth 1, a parent sub-issue link and no milestone at depth 2+, and a restored `goal` label when missing. Ticket issues link to root goal milestones. Repository label catalog synchronization plus repository-wide `@` label cleanup for project/bundle tags, and emoji-normalized artifact IDs. Artifact kind derivation: `DeriveBundleKind` reads `bundleKind` from `package.json`/`project.json` at bundle root (fallback `library`); `DeriveFolderKind` classifies `.`-prefixed and manifest-containing folders as `required`; `DeriveFileKind` pattern-matches file names/extensions into `code`/`test`/`config`/`docs`/`resource`/`script`/`license`; `DeriveDefinitionKind` maps language keywords to `implementation`/`interface`/`constant` via `extractDefinitionKeyword` (word-before-name priority, modifier skipping) and `refineDefinitionKind` (arrow function detection). Dual identification system: `GetArtifactID` generates emoji-prefixed primary IDs (with kind-specific emoji helpers `projectKindEmoji`, `bundleKindEmoji`, `fileKindEmoji`, `folderKindEmoji`, `definitionKindEmoji`), `GetArtifactURI` generates `semiorepo://` secondary URIs with `SectionIdValueToUriPath`/`DefinitionIdValueToUriPath` for `#`/`§`→`/SLUG` encoding, `ParseSectionUriPath` for reverse URI→file+slugs parsing. `IdToUri`/`UriToId` bidirectional conversion with emoji normalization (strip `\uFE0E`/`\uFE0F` for matching). Collection types (projects, bundles, folders, files, sections, definitions, tickets, goals, drafts, todos, policies, violationKinds, contributors, commits) have dedicated ID and URI formats. `navigate` MCP tool resolves ID or URI input to both forms. MCP resource templates use slash-based paths for sections/definitions. Relative date rendering for tickets and goals supports RFC3339 and YYYY-MM-DD input formats via a flexible parser that uses the `dustin/go-humanize` package for human-friendly scheduling and history display. `--json` outputs pure data per line (no event wrappers, no `{"data": ...}` GraphQL envelope). Errors go to stderr. Cobra root has `SilenceUsage`/`SilenceErrors` to prevent stdout pollution on errors. Three rendering modes via `--format` flag: `NDJSONRenderer` (json), `HumanRenderer` (text), `MarkdownRenderer` (md, default). `inferEntityKind(key)` maps GraphQL operation names to entity kinds via prefix matching for generic mutation/query result dispatch. `renderEntityMarkdownLink(kind, data)` produces `[<id>](<uri>) - <prop1> - <prop2>` markdown for any entity kind. `renderEntityMarkdown(kind, data)` adds `- ` list prefix. `formatMarkdownResult` and `formatResult` use generic entity-kind dispatch with `inferEntityKind` fallback — no JSON code-block or dump fallback paths. Streaming list items detected via command suffix (`" list"`, `" tree"`) to apply correct `- ` markdown prefix. `repoContext.Fix()` detects violations via `CheckPoliciesWithContext`, filters autofixable ones, groups by file, and delegates to `applyAutofixes()` which applies per-violation-kind handlers bottom-up to avoid line number shifts: empty section removal with surrounding blank cleanup, missing/mismatched section end name resolution via `findMatchingSectionStartName()` stack-based walk, inline comment contiguous block removal with blank line tracking, block/JSDoc comment removal. Post-removal blank line collapse prevents double blank lines. `extractFileFromScope()` strips `#section` and `::definition` suffixes from scope strings. `FileHeaderId` generates emoji-prefixed file artifact IDs for headers using `DeriveFileKind` and `GetArtifactID`; for code files it reads the file content and overrides the kind to `script` when the first line starts with a shebang (`#!`). `ViolationCodeHeaderWrongFileId` (autofixable) replaces `ViolationCodeHeaderMissingFilename`; `headerPolicy` detects wrong/missing file IDs by scanning header lines for file extensions and emoji markers; `applyAutofixes` replaces the identified line with the correct artifact ID comment. `LanguagePlugin` interface with `BaseLanguage` base struct provides language-agnostic comment scanning via `ScanComments` using configurable primitives: `commentPrefix`, `blockCommentStart`/`blockCommentEnd`, `hasJSDoc`, `hasTemplates`, `hasRawBackticks`, `hasTripleQuotes`, `hasVerbatimStrings`, `skipDirectives`. `SkipDirectives()` merges built-in directives (`TODO`, `semio-ignore-`) with language-specific ones. `CommentScanState` tracks scanner state across lines (block comments, string literals, template expressions, triple quotes, raw backticks, verbatim strings, TODO blocks, escape sequences). Language constructors: TypeScript (`hasJSDoc`, `hasTemplates`, skip `eslint-`/`@ts-`/`noinspection`), Go (`hasRawBackticks`, skip `nolint`), Python (`hasTripleQuotes`, skip `noqa`/`type: ignore`/`pylint:`/`pragma:`), C# (`hasVerbatimStrings`, skip `pragma`). `ParseIgnoreDirectives` accepts language-aware `commentPrefix` parameter. `applyAutofixes` inline comment fix uses `PolicySectionStartMatch`/`PolicySectionEndMatch` and `SkipDirectives()` for language-aware region/directive detection.
 
-## 📄 semio-repo/cli/cli_test.go
+## 📄semio-repo/cli/main.go
 
-Consolidated Go test suite for the repo CLI and tooling behavior, structured for fast/slow lane execution with explicit slow-test sharding for parallel CI distribution. `executeCommand` separates stdout/stderr with 3-return signature. Wrong-argument tests cover all command categories (ticket, goal, policy, folder, file, section, definition, contributor, graphql). `TestCliJsonPureData` validates no event wrappers or `{"data": ...}` envelopes. `TestCliJsonErrorsToStderr` validates empty stdout on errors. Fix tests cover all autofixable violation kinds (empty section, missing end name, name mismatch, inline/block/JSDoc comments), nested sections, idempotency, multiple violations per file, non-autofixable detection, GraphQL mutation, RepoContext integration, scope extraction, violation kind metadata, and fixture-based end-to-end validation via `file_fixable.tsx`/`file_fixable_expected.tsx`. GraphQL fix mutation tests are scoped to avoid fixture side effects. `TestArtifactIDAndURI` covers all artifact and collection types (repo, projects, project, bundles, bundle, folders, folder, files, file, sections, section, definitions, definition, tickets, ticket, goals, goal, drafts, draft, todos, todo, policies, policy, violationKinds, violationKind, contributors, contributor, commits, commit). `TestIdToUri`/`TestUriToId` validate bidirectional ID↔URI conversion for all types including edge cases (ticket status stripping, empty input, invalid URIs). `TestSectionIdValueToUriPath`/`TestDefinitionIdValueToUriPath`/`TestParseSectionUriPath` validate URI path encoding and parsing helpers. Markdown output tests: `TestFormatMarkdownResult_MutationKeys` (21 mutation operations), `TestFormatMarkdownResult_SingleEntities` (12 entity kinds), `TestFormatMarkdownResult_Lists` (12 list types), `TestFormatMarkdownResult_Analyze`, `TestFormatMarkdownResult_Fix`, `TestFormatMarkdownResult_FileWithSections`, `TestFormatMarkdownResult_NoJSONFallback`, `TestFormatResult_MutationKeys` (12 HumanRenderer mutations), `TestRenderEntityMarkdownLink_AllKinds` (15 entity kinds), `TestInferEntityKind` (27 operation name mappings). `TestFileHeaderId` validates artifact ID generation for code, test, config, docs, and script file kinds. `TestFixHeaderWrongFileId` tests autofix line replacement. `TestFixHeaderWrongFileIdIdempotent` verifies correct IDs are not flagged. `TestFixHeaderWrongFileIdDetection` validates violation detection and autofixable status. `TestFixHeaderWrongFileIdEndToEnd` tests detect-fix-verify cycle.
+Go repo CLI/runtime implementation with custom `Interaction` JSON decoding that normalizes legacy object-form and current string-form `author` payloads into a single author string for ticket and goal interaction reads.
+
+## 📄semio-repo/cli/cli_test.go
+
+Consolidated Go test suite for the repo CLI and tooling behavior, structured for fast/slow lane execution with explicit slow-test sharding for parallel CI distribution. `executeCommand` separates stdout/stderr with 3-return signature. Wrong-argument tests cover all command categories (ticket, goal, policy, folder, file, section, definition, contributor, graphql). `TestCliJsonPureData` validates no event wrappers or `{"data": ...}` envelopes. `TestCliJsonErrorsToStderr` validates empty stdout on errors. Fix tests cover all autofixable violation kinds (empty section, missing end name, name mismatch, inline/block/JSDoc comments), nested sections, idempotency, multiple violations per file, non-autofixable detection, GraphQL mutation, RepoContext integration, scope extraction, violation kind metadata, and fixture-based end-to-end validation via `file_fixable.tsx`/`file_fixable_expected.tsx`. GraphQL fix mutation tests are scoped to avoid fixture side effects. `TestArtifactIDAndURI` covers all artifact and collection types (repo, projects, project, bundles, bundle, folders, folder, files, file, sections, section, definitions, definition, tickets, ticket, goals, goal, drafts, draft, todos, todo, policies, policy, violationKinds, violationKind, contributors, contributor, commits, commit). `TestIdToUri`/`TestUriToId` validate bidirectional ID↔URI conversion for all types including edge cases (ticket status stripping, empty input, invalid URIs). `TestSectionIdValueToUriPath`/`TestDefinitionIdValueToUriPath`/`TestParseSectionUriPath` validate URI path encoding and parsing helpers. Markdown output tests: `TestFormatMarkdownResult_MutationKeys` (21 mutation operations), `TestFormatMarkdownResult_SingleEntities` (12 entity kinds), `TestFormatMarkdownResult_Lists` (12 list types), `TestFormatMarkdownResult_Analyze`, `TestFormatMarkdownResult_Fix`, `TestFormatMarkdownResult_FileWithSections`, `TestFormatMarkdownResult_NoJSONFallback`, `TestFormatResult_MutationKeys` (12 HumanRenderer mutations), `TestRenderEntityMarkdownLink_AllKinds` (15 entity kinds), `TestInferEntityKind` (27 operation name mappings). `TestFileHeaderId` validates artifact ID generation for code, test, config, docs, script, resource, and license file kinds plus shebang-based script override for code files. `TestDeriveFileKind` covers 32 file name/extension patterns across all file kinds. `TestFileKindEmoji` covers all 7 file kind emojis plus unknown/empty fallback. `TestFixHeaderWrongFileId` tests autofix line replacement. `TestFixHeaderWrongFileIdIdempotent` verifies correct IDs are not flagged. `TestFixHeaderWrongFileIdDetection` validates violation detection and autofixable status. `TestFixHeaderWrongFileIdEndToEnd` tests detect-fix-verify cycle. Per-language comment scanning tests: `TestScanCommentsGo` (inline, block, TODO, nolint, raw backtick strings, header exclusion, region markers, debug markers, URL schemes, grouped comments), `TestScanCommentsPython` (inline, TODO, noqa, type: ignore, triple-quoted strings, header exclusion, region markers, regular strings, trailing comments), `TestScanCommentsCSharp` (inline, block, TODO, pragma, verbatim strings, region markers, header exclusion, no-JSDoc), `TestScanCommentsTypeScript` (JSDoc, template literals, template expressions, eslint/ts directives, string literals, config files), `TestScanCommentsShell` (inline, strings, region markers), `TestScanCommentsRust` (inline, block, TODO). `TestScanCommentsAutofix` validates cross-language autofix for Python inline, Python trailing, Go block, and C# inline comment removal.
+
+## 📄semio-repo/cli/main_test.go
+
+Go test suite includes interaction-author shape coverage to validate JSON decoding for both legacy object payloads and current string payloads.
 
 ## 📁net/
 

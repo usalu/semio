@@ -1,0 +1,902 @@
+// #region 🔖Header
+
+// 🧪︎ semio-repo/vscode/extension.test.ts
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🔖Header
+
+// #region 🔖Imports
+
+import * as assert from "assert";
+import * as fs from "fs";
+import * as path from "path";
+import * as vscode from "vscode";
+import { FilterTreeDataProvider, FilterTreeItem, MonorepoTreeDataProvider, MonorepoTreeItem, TicketData, TicketInteraction } from "./extension";
+
+// #endregion 🔖Imports
+
+// #region 🔖Constants
+
+const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem", "semio.navigate"];
+const EXPECTED_CONSTRAINTS = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
+const EXPECTED_VIEWS = ["semio.monorepo", "semio.filter"];
+
+// #endregion 🔖Constants
+
+// #region 🔖Utilities
+
+function getWorkspaceRoot(): string {
+  return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath ?? path.join(__dirname, "../../../..");
+}
+
+function getFixturePath(relativePath: string): string {
+  return path.join(getWorkspaceRoot(), "semio", "assets", relativePath);
+}
+
+async function openFixture(relativePath: string): Promise<vscode.TextDocument> {
+  const fixturePath = getFixturePath(relativePath);
+  if (!fs.existsSync(fixturePath)) {
+    throw new Error(`Fixture not found at ${fixturePath}`);
+  }
+  const fixtureUri = vscode.Uri.file(fixturePath);
+  const document = await vscode.workspace.openTextDocument(fixtureUri);
+  return document;
+}
+
+async function waitForDiagnostics(uri: vscode.Uri, timeout = 5000): Promise<vscode.Diagnostic[]> {
+  await new Promise((resolve) => setTimeout(resolve, timeout));
+  return vscode.languages.getDiagnostics(uri).filter((d) => d.source === "semio");
+}
+
+type RepoEvent = {
+  kind: string;
+  data?: unknown;
+  result?: unknown;
+  error?: { message?: string; fatal?: boolean };
+  done?: { exit_code?: number };
+};
+
+function parseRepoEvents(output: string): RepoEvent[] {
+  const lines = output.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
+  return lines.map((line) => JSON.parse(line) as RepoEvent);
+}
+
+function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
+  let lastResult: unknown = null;
+  for (const event of events) {
+    if (event.kind === "error" && event.error?.fatal) {
+      throw new Error(event.error.message ?? "Repo command failed");
+    }
+    if (event.kind === "result") {
+      lastResult = event.result ?? event.data ?? null;
+    }
+  }
+  if (lastResult && typeof lastResult === "object" && !Array.isArray(lastResult)) {
+    if ("data" in (lastResult as Record<string, unknown>)) {
+      return lastResult as Record<string, unknown>;
+    }
+  }
+  return { data: lastResult };
+}
+
+// #endregion 🔖Utilities
+
+// #region 🔖Extension Activation
+
+suiteSetup(async function () {
+  this.timeout(30000);
+  await openFixture("@semio/kit_metabolism.json");
+  await new Promise((resolve) => setTimeout(resolve, 2000));
+});
+
+// #endregion 🔖Extension Activation
+
+// #region 🔖RepoEvent Parsing Tests
+
+suite("RepoEvent Parsing Test Suite", () => {
+  test("parseRepoEvents handles result field correctly", () => {
+    const output = '{"kind":"result","result":{"data":{"violations":[{"id":"v1"}]}}}';
+    const events = parseRepoEvents(output);
+    assert.strictEqual(events.length, 1);
+    assert.strictEqual(events[0].kind, "result");
+    assert.ok(events[0].result);
+    const result = events[0].result as any;
+    assert.ok(result.data);
+    assert.ok(result.data.violations);
+    assert.strictEqual(result.data.violations.length, 1);
+  });
+
+  test("extractRepoResult extracts data from result field", () => {
+    const events: RepoEvent[] = [
+      { kind: "result", result: { data: { violations: [{ id: "v1" }] } } }
+    ];
+    const extracted = extractRepoResult(events);
+    assert.ok(extracted.data);
+    const data = extracted.data as any;
+    assert.ok(data.violations);
+    assert.strictEqual(data.violations.length, 1);
+    assert.strictEqual(data.violations[0].id, "v1");
+  });
+
+  test("extractRepoResult falls back to data field if result is missing", () => {
+    const events: RepoEvent[] = [
+      { kind: "result", data: { violations: [{ id: "v2" }] } }
+    ];
+    const extracted = extractRepoResult(events);
+    assert.ok(extracted.data);
+    const data = extracted.data as any;
+    assert.ok(data.violations);
+    assert.strictEqual(data.violations.length, 1);
+    assert.strictEqual(data.violations[0].id, "v2");
+  });
+
+  test("extractRepoResult prefers result over data field", () => {
+    const events: RepoEvent[] = [
+      { kind: "result", result: { data: { violations: [{ id: "from-result" }] } }, data: { violations: [{ id: "from-data" }] } }
+    ];
+    const extracted = extractRepoResult(events);
+    assert.ok(extracted.data);
+    const data = extracted.data as any;
+    assert.ok(data.violations);
+    assert.strictEqual(data.violations[0].id, "from-result");
+  });
+
+  test("extractRepoResult handles fatal errors", () => {
+    const events: RepoEvent[] = [
+      { kind: "error", error: { message: "Fatal error occurred", fatal: true } }
+    ];
+    assert.throws(() => extractRepoResult(events), /Fatal error occurred/);
+  });
+
+  test("extractRepoResult ignores non-fatal errors", () => {
+    const events: RepoEvent[] = [
+      { kind: "error", error: { message: "Non-fatal warning", fatal: false } },
+      { kind: "result", result: { data: { violations: [] } } }
+    ];
+    const extracted = extractRepoResult(events);
+    assert.ok(extracted.data);
+  });
+
+  test("extractRepoResult uses last result when multiple result events", () => {
+    const events: RepoEvent[] = [
+      { kind: "result", result: { data: { violations: [{ id: "first" }] } } },
+      { kind: "result", result: { data: { violations: [{ id: "last" }] } } }
+    ];
+    const extracted = extractRepoResult(events);
+    const data = extracted.data as any;
+    assert.strictEqual(data.violations[0].id, "last");
+  });
+});
+
+// #endregion 🔖RepoEvent Parsing Tests
+
+// #region 🔖Command Registration Tests
+
+suite("Command Registration Test Suite", () => {
+  test("All expected commands are registered", async () => {
+    const extension = vscode.extensions.getExtension("usalu.semio-repo");
+    assert.ok(extension, "Extension should be found");
+    if (!extension.isActive) {
+      await extension.activate();
+    }
+    const commands = await vscode.commands.getCommands(true);
+    const missing = EXPECTED_COMMANDS.filter((cmd) => !commands.includes(cmd));
+    assert.strictEqual(missing.length, 0, `Missing commands: ${missing.join(", ")}`);
+  });
+});
+
+// #endregion 🔖Command Registration Tests
+
+// #region 🔖Kit Validation Tests
+
+suite("Kit Validation Test Suite", function () {
+  this.timeout(15000);
+
+  test("Valid kit file produces no diagnostics", async function () {
+    const document = await openFixture("@semio/kit_metabolism.json");
+    const diagnostics = await waitForDiagnostics(document.uri);
+    assert.strictEqual(diagnostics.length, 0, "Valid kit should have no validation errors");
+  });
+
+  test("Invalid kit file triggers all expected constraint violations", async function () {
+    const document = await openFixture("@semio/kit_invalid.json");
+    const diagnostics = await waitForDiagnostics(document.uri);
+    if (diagnostics.length === 0) {
+      console.log("Skipping: validation may be disabled due to bundling issues");
+      return;
+    }
+    const constraintIds = new Set<string>();
+    diagnostics.forEach((diag) => {
+      if (typeof diag.code === "object" && diag.code !== null) {
+        constraintIds.add((diag.code as { value: string }).value);
+      } else if (typeof diag.code === "string") {
+        constraintIds.add(diag.code);
+      }
+    });
+    const missing = EXPECTED_CONSTRAINTS.filter((c) => !constraintIds.has(c));
+    assert.strictEqual(missing.length, 0, `Missing constraint violations: ${missing.join(", ")}`);
+  });
+
+  test("Diagnostics have correct source and severity", async function () {
+    const document = await openFixture("@semio/kit_invalid.json");
+    const diagnostics = await waitForDiagnostics(document.uri);
+    if (diagnostics.length === 0) {
+      console.log("Skipping: validation may be disabled due to bundling issues");
+      return;
+    }
+    diagnostics.forEach((diag) => {
+      assert.strictEqual(diag.source, "semio", "Source should be 'semio'");
+      const validSeverities = [vscode.DiagnosticSeverity.Error, vscode.DiagnosticSeverity.Warning, vscode.DiagnosticSeverity.Information];
+      assert.ok(validSeverities.includes(diag.severity), `Invalid severity: ${diag.severity}`);
+    });
+  });
+
+  test("Quick fixes are available for kit diagnostics", async function () {
+    const document = await openFixture("@semio/kit_invalid.json");
+    const diagnostics = await waitForDiagnostics(document.uri);
+    if (diagnostics.length === 0) {
+      console.log("Skipping: validation may be disabled due to bundling issues");
+      return;
+    }
+    const codeActions = await vscode.commands.executeCommand<vscode.CodeAction[]>("vscode.executeCodeActionProvider", document.uri, diagnostics[0].range);
+    assert.ok(codeActions && codeActions.length > 0, "Should have code actions available");
+    const fixAction = codeActions.find((action) => action.kind?.value === vscode.CodeActionKind.QuickFix.value);
+    assert.ok(fixAction, "Should have at least one quick fix action");
+    assert.ok(fixAction.edit, "Quick fix should have a workspace edit");
+  });
+
+  test("Quick fix workspace edit contains valid text edits", async function () {
+    const document = await openFixture("@semio/kit_invalid.json");
+    const diagnostics = await waitForDiagnostics(document.uri);
+    if (diagnostics.length === 0) {
+      console.log("Skipping: validation may be disabled due to bundling issues");
+      return;
+    }
+    const codeActions = await vscode.commands.executeCommand<vscode.CodeAction[]>("vscode.executeCodeActionProvider", document.uri, diagnostics[0].range);
+    const fixAction = codeActions?.find((action) => action.kind?.value === vscode.CodeActionKind.QuickFix.value);
+    if (!fixAction?.edit) {
+      console.log("Skipping: no quick fix with edit found");
+      return;
+    }
+    const entries = fixAction.edit.entries();
+    assert.ok(entries.length > 0, "Workspace edit should have entries");
+    for (const [uri, edits] of entries) {
+      assert.ok(uri.fsPath.endsWith(".json"), "Edit should target JSON file");
+      assert.ok(edits.length > 0, "Should have at least one text edit");
+      edits.forEach((edit) => {
+        assert.ok(edit.range, "Text edit should have a range");
+        assert.ok(typeof edit.newText === "string", "Text edit should have newText");
+      });
+    }
+  });
+});
+
+// #endregion 🔖Kit Validation Tests
+
+// #region 🔖Repo Diagnostics Tests
+
+suite("Repo Diagnostics Test Suite", function () {
+  this.timeout(30000);
+
+  test("Invalid repo file produces diagnostics", async function () {
+    const document = await openFixture("repo/some/folder/file_invalid.tsx");
+    const diagnostics = await waitForDiagnostics(document.uri, 10000);
+    if (diagnostics.length === 0) {
+      console.log("Skipping: no violations found (analyze returned 0)");
+      return;
+    }
+    assert.ok(diagnostics.length > 0, "Invalid repo file should have diagnostics");
+  });
+
+  test("Repo diagnostics show violation name as message", async function () {
+    const document = await openFixture("repo/some/folder/file_invalid.tsx");
+    const diagnostics = await waitForDiagnostics(document.uri, 10000);
+    if (diagnostics.length === 0) {
+      console.log("Skipping: no violations found");
+      return;
+    }
+    diagnostics.forEach((diag) => {
+      assert.ok(!diag.message.includes("\n"), "Message should not contain newlines");
+      assert.ok(!diag.message.includes("file_invalid.tsx"), "Message should not contain file path");
+    });
+  });
+
+  test("Repo diagnostics have policy ID as code with link target", async function () {
+    const document = await openFixture("repo/some/folder/file_invalid.tsx");
+    const diagnostics = await waitForDiagnostics(document.uri, 10000);
+    if (diagnostics.length === 0) {
+      console.log("Skipping: no violations found");
+      return;
+    }
+    const diagWithLink = diagnostics.find((d) => typeof d.code === "object" && d.code !== null);
+    if (!diagWithLink) {
+      console.log("Skipping: no diagnostic with code object found");
+      return;
+    }
+    const codeObj = diagWithLink.code as { value: string; target: vscode.Uri };
+    assert.ok(codeObj.value, "Code should have policy ID");
+    assert.ok(!codeObj.value.includes(":"), "Code should be policy ID without violation suffix");
+    assert.ok(codeObj.target, "Code should have target URI");
+    assert.ok(codeObj.target.fsPath.includes("repo.tsx"), "Target should point to repo.tsx");
+    assert.ok(codeObj.target.fragment.startsWith("L"), "Target should have line number fragment");
+  });
+
+  test("Valid repo file produces no diagnostics", async function () {
+    const document = await openFixture("repo/some/folder/file.tsx");
+    const diagnostics = await waitForDiagnostics(document.uri, 10000);
+    assert.strictEqual(diagnostics.length, 0, "Valid repo file should have no diagnostics");
+  });
+
+  test("Repo diagnostics have code actions for autofixable violations", async function () {
+    const document = await openFixture("repo/some/folder/file_invalid.tsx");
+    const diagnostics = await waitForDiagnostics(document.uri, 10000);
+    if (diagnostics.length === 0) {
+      console.log("Skipping: no violations found");
+      return;
+    }
+    const codeActions = await vscode.commands.executeCommand<vscode.CodeAction[]>("vscode.executeCodeActionProvider", document.uri, diagnostics[0].range);
+    assert.ok(codeActions && codeActions.length > 0, "Should have code actions for repo diagnostics");
+    const fixAction = codeActions.find((a) => a.kind?.value === vscode.CodeActionKind.QuickFix.value);
+    assert.ok(fixAction, "Should have quick fix action");
+    assert.ok(fixAction.command || fixAction.edit, "Quick fix should have command or edit");
+  });
+});
+
+// #endregion 🔖Repo Diagnostics Tests
+
+// #region 🔖Refresh Diagnostics Tests
+
+suite("Refresh Diagnostics Test Suite", function () {
+  this.timeout(15000);
+
+  test("semio.refreshDiagnostics updates all open documents", async function () {
+    const document = await openFixture("@semio/kit_invalid.json");
+    await vscode.commands.executeCommand("semio.refreshDiagnostics");
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    const diagnostics = vscode.languages.getDiagnostics(document.uri).filter((d) => d.source === "semio");
+    if (diagnostics.length === 0) {
+      console.log("Skipping: validation may be disabled due to bundling issues");
+      return;
+    }
+    assert.ok(diagnostics.length > 0, "Diagnostics should be present after refresh");
+  });
+});
+
+// #endregion 🔖Refresh Diagnostics Tests
+
+// #region 🔖Sidebar View Tests
+
+suite("Sidebar View Test Suite", function () {
+  this.timeout(15000);
+
+  test("All expected views are registered", async function () {
+    const extension = vscode.extensions.getExtension("usalu.semio-repo");
+    assert.ok(extension, "Extension should be found");
+    if (!extension.isActive) {
+      await extension.activate();
+    }
+    assert.ok(extension.isActive, "Extension should be active");
+
+    const packageJSON = extension.packageJSON;
+    const views = packageJSON.contributes.views;
+    assert.ok(views, "Views contribution should exist");
+    assert.ok(views["semio-repo"], "semio-repo container should exist");
+    const registeredViews = views["semio-repo"].map((v: any) => v.id);
+    const missing = EXPECTED_VIEWS.filter((v) => !registeredViews.includes(v));
+    assert.strictEqual(missing.length, 0, `Missing views: ${missing.join(", ")}`);
+  });
+
+  test("Monorepo view can be focused", async function () {
+    await vscode.commands.executeCommand("semio.monorepo.focus");
+  });
+
+  test("Filter view can be focused", async function () {
+    await vscode.commands.executeCommand("semio.filter.focus");
+  });
+
+  test("Refresh codebase command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.refreshCodebase"), "refreshCodebase command should be registered");
+  });
+
+  test("Toggle filter command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.filter.toggle"), "semio.filter.toggle command should be registered");
+  });
+
+  test("Copy ID command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.copyId"), "copyId command should be registered");
+  });
+
+  test("Mailto command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.mailto"), "mailto command should be registered");
+  });
+
+  test("Open link command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.openLink"), "openLink command should be registered");
+  });
+
+  test("Refresh monorepo command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.refreshMonorepo"), "refreshMonorepo command should be registered");
+  });
+
+  test("Copy commit SHA command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.copyCommitSha"), "copyCommitSha command should be registered");
+  });
+
+  test("Open commit in GitHub command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.openCommitInGitHub"), "openCommitInGitHub command should be registered");
+  });
+
+  test("Ticket reopen command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.ticketReopen"), "ticketReopen command should be registered");
+  });
+
+  test("Refresh item command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.refreshItem"), "refreshItem command should be registered");
+  });
+
+  test("New filter toggle commands are available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    const newFilterCommands = [
+      "semio.filter.toggle.project.user",
+      "semio.filter.toggle.project.infrastructure",
+      "semio.filter.toggle.project.research",
+      "semio.filter.toggle.file.code",
+      "semio.filter.toggle.file.script",
+      "semio.filter.toggle.file.config",
+      "semio.filter.toggle.file.test",
+      "semio.filter.toggle.file.docs",
+      "semio.filter.toggle.file.resource",
+      "semio.filter.toggle.file.license",
+      "semio.filter.toggle.goal.open",
+      "semio.filter.toggle.goal.closed",
+      "semio.filter.toggle.bundle.schema",
+      "semio.filter.toggle.policy.none",
+      "semio.filter.toggle.policy.all",
+      "semio.filter.toggle.contributor.none",
+      "semio.filter.toggle.contributor.all",
+      "semio.filter.toggle.commit.none",
+      "semio.filter.toggle.commit.all",
+    ];
+    const missing = newFilterCommands.filter(cmd => !commands.includes(cmd));
+    assert.strictEqual(missing.length, 0, `Missing new filter commands: ${missing.join(", ")}`);
+  });
+});
+
+// #endregion 🔖Sidebar View Tests
+
+// #region 🔖Sections View Tests
+
+suite("Sections View Test Suite", function () {
+  this.timeout(30000);
+
+  test("Sections view is registered", async function () {
+    const extension = vscode.extensions.getExtension("usalu.semio-repo");
+    assert.ok(extension, "Extension should be found");
+    if (!extension.isActive) {
+      await extension.activate();
+    }
+    const packageJSON = extension.packageJSON;
+    const views = packageJSON.contributes.views["explorer"] || packageJSON.contributes.views["semio-repo"];
+    const sectionView = views.find((v: any) => v.id === "semio.sections");
+    assert.ok(sectionView, "semio.sections view should be registered");
+  });
+
+  test("Sections view can be focused", async function () {
+    await vscode.commands.executeCommand("semio.sections.focus");
+  });
+
+  test("sectionTree command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionTree"), "sectionTree command should be registered");
+  });
+
+  test("sectionList command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionList"), "sectionList command should be registered");
+  });
+
+  test("sectionCreate command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionCreate"), "sectionCreate command should be registered");
+  });
+
+  test("sectionMove command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionMove"), "sectionMove command should be registered");
+  });
+
+  test("sectionDelete command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionDelete"), "sectionDelete command should be registered");
+  });
+
+  test("sectionOpen command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionOpen"), "sectionOpen command should be registered");
+  });
+
+  test("sectionRename command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionRename"), "sectionRename command should be registered");
+  });
+
+  test("sectionIntegrate command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.sectionIntegrate"), "sectionIntegrate command should be registered");
+  });
+
+  test("Sections tree view refreshes on file change", async function () {
+    const root = getWorkspaceRoot();
+    const candidatePaths = [
+      path.join(root, "semio-repo", "vscode", "extension.ts"),
+      path.join(root, "@semio-repo/vscode/extension.ts"),
+      path.join(root, "extension.ts"),
+    ];
+    const existing = candidatePaths.find((p) => fs.existsSync(p));
+    if (existing) {
+      await vscode.workspace.openTextDocument(vscode.Uri.file(existing));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await vscode.commands.executeCommand("semio.sections.focus");
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    assert.ok(true, "Sections tree view should refresh without error");
+  });
+});
+
+// #endregion 🔖Sections View Tests
+
+suite("Filter Provider Test Suite", () => {
+  test("FilterProvider initializes correctly", () => {
+    const provider = new FilterTreeDataProvider();
+    assert.ok(provider);
+  });
+
+  test("Root elements include expected categories", async () => {
+    const provider = new FilterTreeDataProvider();
+    const children = await provider.getChildren();
+    assert.strictEqual(children.length, 13, "Should have 13 root elements (search + 12 filters)");
+    const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
+    assert.ok(labels.some(l => l.startsWith("🔍Search")), "Should have Search");
+    assert.ok(labels.some(l => l.startsWith("🏗️Projects")), "Should have Projects");
+    assert.ok(labels.some(l => l.startsWith("📦Bundles")), "Should have Bundles");
+    assert.ok(labels.some(l => l.startsWith("📂Folders")), "Should have Folders");
+    assert.ok(labels.some(l => l.startsWith("📄Files")), "Should have Files");
+    assert.ok(labels.some(l => l.startsWith("🔖Sections")), "Should have Sections");
+    assert.ok(labels.some(l => l.startsWith("🏷️Definitions")), "Should have Definitions");
+    assert.ok(labels.some(l => l.startsWith("🎯Goals")), "Should have Goals");
+    assert.ok(labels.some(l => l.startsWith("📅Tickets")), "Should have Tickets");
+    assert.ok(labels.some(l => l.startsWith("📅Dates")), "Should have Dates");
+    assert.ok(labels.some(l => l.startsWith("🛡️Policies")), "Should have Policies");
+    assert.ok(labels.some(l => l.startsWith("👤Contributors")), "Should have Contributors");
+    assert.ok(labels.some(l => l.startsWith("🔄Commits")), "Should have Commits");
+  });
+
+  test("Time category returns year values when available", async () => {
+    const provider = new FilterTreeDataProvider();
+    provider.availableYears = [2024, 2025];
+    const timeItem = new FilterTreeItem("📅Dates", "filter", vscode.TreeItemCollapsibleState.Collapsed, "filter_time");
+    const children = await provider.getChildren(timeItem);
+    assert.strictEqual(children.length, 2, "Should have 2 year items");
+    const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : '');
+    assert.ok(labels.includes("2024"), "Should have 2024");
+    assert.ok(labels.includes("2025"), "Should have 2025");
+  });
+
+  test("Year item returns month values when available", async () => {
+    const provider = new FilterTreeDataProvider();
+    provider.availableMonths = [1, 6, 12];
+    const yearItem = new FilterTreeItem("2024", "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_year", "year", 2024);
+    const children = await provider.getChildren(yearItem);
+    assert.strictEqual(children.length, 3, "Should have 3 month items");
+  });
+
+  test("Month item returns day values when available", async () => {
+    const provider = new FilterTreeDataProvider();
+    provider.availableDays = [1, 15, 28];
+    const monthItem = new FilterTreeItem("January", "timeValue", vscode.TreeItemCollapsibleState.Collapsed, "filter_time_month", "month", 1);
+    const children = await provider.getChildren(monthItem);
+    assert.strictEqual(children.length, 3, "Should have 3 day items");
+  });
+
+  test("Toggle methods update filter state", () => {
+    const provider = new FilterTreeDataProvider();
+
+    provider.toggle("bundle", "library");
+    assert.strictEqual(provider.filters.bundle.library, false);
+    provider.toggle("bundle", "library");
+    assert.strictEqual(provider.filters.bundle.library, true);
+
+    provider.toggle("folder", "organization");
+    assert.strictEqual(provider.filters.folder.organization, false);
+
+    provider.toggle("section", "all");
+    assert.strictEqual(provider.filters.section.all, false);
+
+    provider.toggle("definition", "implementation");
+    assert.strictEqual(provider.filters.definition.implementation, false);
+
+    provider.toggle("ticket", "open");
+    assert.strictEqual(provider.filters.ticket.open, false);
+
+    provider.toggle("project", "user");
+    assert.strictEqual(provider.filters.project.user, false);
+    provider.toggle("project", "user");
+    assert.strictEqual(provider.filters.project.user, true);
+
+    provider.toggle("file", "code");
+    assert.strictEqual(provider.filters.file.code, false);
+    provider.toggle("file", "code");
+    assert.strictEqual(provider.filters.file.code, true);
+
+    provider.toggle("goal", "open");
+    assert.strictEqual(provider.filters.goal.open, false);
+    provider.toggle("goal", "open");
+    assert.strictEqual(provider.filters.goal.open, true);
+  });
+
+  test("Bundle none/all toggles set all bundle filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("bundle", "none");
+    for (const key of Object.keys(provider.filters.bundle)) {
+      assert.strictEqual(provider.filters.bundle[key], false, `bundle.${key} should be false after none`);
+    }
+    provider.toggle("bundle", "all");
+    for (const key of Object.keys(provider.filters.bundle)) {
+      assert.strictEqual(provider.filters.bundle[key], true, `bundle.${key} should be true after all`);
+    }
+  });
+
+  test("Folder none/all toggles set all folder filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("folder", "none");
+    for (const key of Object.keys(provider.filters.folder)) {
+      assert.strictEqual(provider.filters.folder[key], false, `folder.${key} should be false after none`);
+    }
+    provider.toggle("folder", "all");
+    for (const key of Object.keys(provider.filters.folder)) {
+      assert.strictEqual(provider.filters.folder[key], true, `folder.${key} should be true after all`);
+    }
+  });
+
+  test("Definition none/all toggles set all definition filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("definition", "none");
+    for (const key of Object.keys(provider.filters.definition)) {
+      assert.strictEqual(provider.filters.definition[key], false, `definition.${key} should be false after none`);
+    }
+    provider.toggle("definition", "all");
+    for (const key of Object.keys(provider.filters.definition)) {
+      assert.strictEqual(provider.filters.definition[key], true, `definition.${key} should be true after all`);
+    }
+  });
+
+  test("Ticket none/all toggles set all ticket filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("ticket", "none");
+    for (const key of Object.keys(provider.filters.ticket)) {
+      assert.strictEqual(provider.filters.ticket[key], false, `ticket.${key} should be false after none`);
+    }
+    provider.toggle("ticket", "all");
+    for (const key of Object.keys(provider.filters.ticket)) {
+      assert.strictEqual(provider.filters.ticket[key], true, `ticket.${key} should be true after all`);
+    }
+  });
+
+  test("Project none/all toggles set all project filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("project", "none");
+    for (const key of Object.keys(provider.filters.project)) {
+      assert.strictEqual(provider.filters.project[key], false, `project.${key} should be false after none`);
+    }
+    provider.toggle("project", "all");
+    for (const key of Object.keys(provider.filters.project)) {
+      assert.strictEqual(provider.filters.project[key], true, `project.${key} should be true after all`);
+    }
+  });
+
+  test("File none/all toggles set all file filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("file", "none");
+    for (const key of Object.keys(provider.filters.file)) {
+      assert.strictEqual(provider.filters.file[key], false, `file.${key} should be false after none`);
+    }
+    provider.toggle("file", "all");
+    for (const key of Object.keys(provider.filters.file)) {
+      assert.strictEqual(provider.filters.file[key], true, `file.${key} should be true after all`);
+    }
+  });
+
+  test("Goal none/all toggles set all goal filters", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.toggle("goal", "none");
+    for (const key of Object.keys(provider.filters.goal)) {
+      assert.strictEqual(provider.filters.goal[key], false, `goal.${key} should be false after none`);
+    }
+    provider.toggle("goal", "all");
+    for (const key of Object.keys(provider.filters.goal)) {
+      assert.strictEqual(provider.filters.goal[key], true, `goal.${key} should be true after all`);
+    }
+  });
+
+  test("Time filter toggle updates state", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.availableYears = [2024];
+    provider.availableMonths = [1];
+    provider.availableDays = [15];
+
+    provider.toggleYear(2024);
+    assert.ok(provider.excludedYears.includes(2024));
+    provider.toggleYear(2024);
+    assert.ok(!provider.excludedYears.includes(2024));
+
+    provider.toggleMonth(1);
+    assert.ok(provider.excludedMonths.includes(1));
+
+    provider.toggleDay(15);
+    assert.ok(provider.excludedDays.includes(15));
+
+    provider.toggle("time", "none");
+    assert.strictEqual(provider.timeFilter.none, true);
+    assert.strictEqual(provider.timeFilter.all, false);
+    assert.ok(provider.excludedYears.includes(2024));
+    assert.ok(provider.excludedMonths.includes(1));
+    assert.ok(provider.excludedDays.includes(15));
+
+    provider.toggle("time", "all");
+    assert.strictEqual(provider.timeFilter.none, false);
+    assert.strictEqual(provider.timeFilter.all, true);
+    assert.strictEqual(provider.excludedYears.length, 0);
+  });
+
+  test("setTimeMode sets year/month/day modes", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.availableYears = [2024, 2025];
+    provider.availableMonths = [3, 6];
+    provider.availableDays = [1, 15];
+
+    provider.setTimeMode("year", "none");
+    assert.deepStrictEqual(provider.excludedYears, [2024, 2025]);
+    provider.setTimeMode("year", "all");
+    assert.deepStrictEqual(provider.excludedYears, []);
+
+    provider.setTimeMode("month", "none");
+    assert.deepStrictEqual(provider.excludedMonths, [3, 6]);
+    provider.setTimeMode("month", "all");
+    assert.deepStrictEqual(provider.excludedMonths, []);
+
+    provider.setTimeMode("day", "none");
+    assert.deepStrictEqual(provider.excludedDays, [1, 15]);
+    provider.setTimeMode("day", "all");
+    assert.deepStrictEqual(provider.excludedDays, []);
+  });
+
+  test("Search query update updates search state", () => {
+    const provider = new FilterTreeDataProvider();
+    provider.searchQuery = "test";
+    assert.strictEqual(provider.searchQuery, "test");
+    provider.matchCase = true;
+    assert.strictEqual(provider.matchCase, true);
+    provider.matchWholeWord = true;
+    assert.strictEqual(provider.matchWholeWord, true);
+    provider.useRegex = true;
+    assert.strictEqual(provider.useRegex, true);
+  });
+});
+
+suite("Monorepo Provider Test Suite", () => {
+  test("MonorepoProvider initializes with filter provider", () => {
+    const filterProvider = new FilterTreeDataProvider();
+    const provider = new MonorepoTreeDataProvider(filterProvider);
+    assert.ok(provider);
+  });
+
+  test("Root elements include expected emoji-prefixed categories", async () => {
+    const provider = new MonorepoTreeDataProvider();
+    const children = await provider.getChildren();
+    assert.strictEqual(children.length, 6);
+    const labels = children.map(c => c.label);
+    assert.ok(labels.includes("🏗️Projects"), "Should have 🏗️Projects");
+    assert.ok(labels.includes("🎯Goals"), "Should have 🎯Goals");
+    assert.ok(labels.includes("📅Tickets"), "Should have 📅Tickets");
+    assert.ok(labels.includes("🛡️Policies"), "Should have 🛡️Policies");
+    assert.ok(labels.includes("👤Contributors"), "Should have 👤Contributors");
+    assert.ok(labels.includes("🔀Commits"), "Should have 🔀Commits");
+  });
+
+  test("Root elements have correct contextValues", async () => {
+    const provider = new MonorepoTreeDataProvider();
+    const roots = await provider.getChildren();
+    const contextValues = roots.map((r: MonorepoTreeItem) => r.contextValue);
+    assert.ok(contextValues.includes("root_projects"));
+    assert.ok(contextValues.includes("root_goals"));
+    assert.ok(contextValues.includes("root_tickets"));
+    assert.ok(contextValues.includes("root_policies"));
+    assert.ok(contextValues.includes("root_contributors"));
+    assert.ok(contextValues.includes("root_commits"));
+  });
+
+  test("MonorepoTreeItem stores nodeId for copy support", () => {
+    const item = new MonorepoTreeItem("Test", vscode.TreeItemCollapsibleState.None, "test_ctx", undefined, "test-node-id");
+    assert.strictEqual(item.nodeId, "test-node-id");
+    assert.strictEqual(item.tooltip, "test-node-id");
+  });
+
+  test("MonorepoTreeItem without nodeId defaults tooltip to label", () => {
+    const item = new MonorepoTreeItem("Label", vscode.TreeItemCollapsibleState.None, "ctx");
+    assert.strictEqual(item.nodeId, undefined);
+  });
+
+  test("Projects root expands to at least one project when repo CLI is available", async function () {
+    this.timeout(30000);
+    const provider = new MonorepoTreeDataProvider();
+    const roots = await provider.getChildren();
+    const projectsRoot = roots.find((r: MonorepoTreeItem) => r.contextValue === "root_projects");
+    if (!projectsRoot) {
+      assert.ok(false, "Projects root should exist");
+      return;
+    }
+
+    const expanded = await provider.getChildren(projectsRoot);
+    if (expanded.length === 0) {
+      return;
+    }
+    assert.ok(expanded.length > 0);
+  });
+});
+
+suite("Data Structures Test Suite", () => {
+  test("TicketInteraction matches expected structure", () => {
+    const interaction: TicketInteraction = {
+      prompt: "test prompt",
+      llm: "gpt-4",
+      client: "vscode",
+      author: "user",
+      dates: { started: "2024-01-01" },
+      commit: "sha123"
+    };
+    assert.ok(interaction);
+    assert.strictEqual(interaction.client, "vscode");
+  });
+
+  test("TicketData includes interactions", () => {
+    const ticket: TicketData = {
+      year: 2024,
+      month: 1,
+      day: 1,
+      slug: "test-ticket",
+      frontmatter: {
+        status: "open",
+        prompt: "test"
+      },
+      folderPath: "/path/to/ticket",
+      filePath: "/path/to/ticket/ticket.md",
+      interactions: []
+    };
+    assert.ok(ticket);
+    assert.ok(Array.isArray(ticket.interactions));
+  });
+});

@@ -53,9 +53,9 @@ const args = [
   "loguru",
   "--hidden-import=loguru",
   "--add-data",
-  "../../assets/icons/semio_512x512.png;icons/",
+  "../assets/icons/semio_512x512.png;icons/",
   "--icon",
-  "../../assets/icons/semio.ico",
+  "../assets/icons/semio.ico",
   "engine.py",
 ];
 

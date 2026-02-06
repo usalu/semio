@@ -135,7 +135,7 @@
         },
         "variant": {
           "default": "",
-          "description": "🔀 The optional variant of the design. No variant means the default variant.",
+          "description": "🔀The optional variant of the design. No variant means the default variant.",
           "maxLength": 64,
           "title": "Variant",
           "type": "string"
@@ -255,7 +255,7 @@
         },
         "type": {
           "$ref": "#/$defs/TypeId",
-          "description": "🧩 The type of the piece."
+          "description": "🧩The type of the piece."
         },
         "plane": {
           "anyOf": [
@@ -282,7 +282,7 @@
           "description": "📺 The optional center of the piece in the diagram. When pieces are connected only one piece can have a center."
         },
         "attributes": {
-          "description": "🏷️ The attributes of the piece.",
+          "description": "🏷️The attributes of the piece.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -408,7 +408,7 @@
           "type": "number"
         },
         "attributes": {
-          "description": "🏷️ The attributes of the connector.",
+          "description": "🏷️The attributes of the connector.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -424,31 +424,31 @@
       "type": "object"
     },
     "Attribute": {
-      "description": "🏷️ A attribute is a key value pair with an an optional definition.",
+      "description": "🏷️A attribute is a key value pair with an an optional definition.",
       "properties": {
         "name": {
-          "description": "🏷️ The name of the attribute.",
+          "description": "🏷️The name of the attribute.",
           "maxLength": 64,
           "title": "Name",
           "type": "string"
         },
         "value": {
           "default": "",
-          "description": "🏷️ The optional value [ text | url ] of the attribute. No value is equivalent to true.",
+          "description": "🏷️The optional value [ text | url ] of the attribute. No value is equivalent to true.",
           "maxLength": 64,
           "title": "Value",
           "type": "string"
         },
         "unit": {
           "default": "",
-          "description": "🏷️ The optional unit of the value of the attribute.",
+          "description": "🏷️The optional unit of the value of the attribute.",
           "maxLength": 64,
           "title": "Unit",
           "type": "string"
         },
         "definition": {
           "default": "",
-          "description": "🏷️ The optional definition [ text | uri ] of the attribute.",
+          "description": "🏷️The optional definition [ text | uri ] of the attribute.",
           "maxLength": 2560,
           "title": "Definition",
           "type": "string"
@@ -461,7 +461,7 @@
       "type": "object"
     },
     "Model": {
-      "description": "💾 A model is a link to a resource that describes a type for a certain level of detail and tags.",
+      "description": "💾A model is a link to a resource that describes a type for a certain level of detail and tags.",
       "properties": {
         "url": {
           "description": "🔗 The Unique Resource Locator (URL) to the resource of the model.",
@@ -483,7 +483,7 @@
           "type": "string"
         },
         "tags": {
-          "description": "🏷️ The optional tags to group models. No tags means default.",
+          "description": "🏷️The optional tags to group models. No tags means default.",
           "items": {
             "type": "string"
           },
@@ -491,7 +491,7 @@
           "type": "array"
         },
         "attributes": {
-          "description": "🏷️ The attributes of the model.",
+          "description": "🏷️The attributes of the model.",
           "items": {
             "$ref": "#/$defs/Attribute"
           },
@@ -534,7 +534,7 @@
         },
         "variant": {
           "default": "",
-          "description": "🔀 The optional variant of the type. No variant means the default variant.",
+          "description": "🔀The optional variant of the type. No variant means the default variant.",
           "maxLength": 64,
           "title": "Variant",
           "type": "string"
@@ -547,7 +547,7 @@
       "type": "object"
     },
     "Type": {
-      "description": "🧩 A type is a reusable element that can be connected with other types over connectors.",
+      "description": "🧩A type is a reusable element that can be connected with other types over connectors.",
       "properties": {
         "name": {
           "description": "📛 The name of the type.",
@@ -578,7 +578,7 @@
         },
         "variant": {
           "default": "",
-          "description": "🔀 The optional variant of the type. No variant means the default variant.",
+          "description": "🔀The optional variant of the type. No variant means the default variant.",
           "maxLength": 64,
           "title": "Variant",
           "type": "string"
@@ -665,7 +665,7 @@
       "type": "object"
     }
   },
-  "description": "🗃️ A kit is a collection of types and designs.",
+  "description": "🗃️A kit is a collection of types and designs.",
   "properties": {
     "uri": {
       "description": "🆔 The uri of the kit.",
@@ -709,7 +709,7 @@
     },
     "version": {
       "default": "",
-      "description": "🔀 The optional version of the kit. No version means the latest version.",
+      "description": "🔀The optional version of the kit. No version means the latest version.",
       "maxLength": 64,
       "title": "Version",
       "type": "string"
@@ -730,7 +730,7 @@
     },
     "license": {
       "default": "",
-      "description": "⚖️ The optional license [ spdx id | url ] of the kit.",
+      "description": "⚖️The optional license [ spdx id | url ] of the kit.",
       "maxLength": 1024,
       "title": "License",
       "type": "string"
@@ -748,7 +748,7 @@
       "type": "string"
     },
     "types": {
-      "description": "🧩 The types of the kit.",
+      "description": "🧩The types of the kit.",
       "items": {
         "$ref": "#/$defs/Type"
       },
@@ -764,7 +764,7 @@
       "type": "array"
     },
     "attributes": {
-      "description": "🏷️ The attributes of the kit.",
+      "description": "🏷️The attributes of the kit.",
       "items": {
         "$ref": "#/$defs/Attribute"
       },

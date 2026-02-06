@@ -21,7 +21,7 @@ export default defineConfig(async () => {
   return {
     resolve: {
       alias: {
-        "semio/js": path.resolve(__dirname, "../js"),
+        "@semio/js": path.resolve(__dirname, "../js"),
       },
     },
     plugins: [
@@ -42,7 +42,7 @@ export default defineConfig(async () => {
         enforce: "pre" as const,
         configureServer(server: any) {
           const jsPublicPath = path.resolve(__dirname, "../js/public");
-          const assetsPath = path.resolve(__dirname, "../../assets");
+          const assetsPath = path.resolve(__dirname, "../assets");
           server.middlewares.use((req: any, res: any, next: any) => {
             if (req.url?.endsWith(".wasm")) {
               const wasmFile = path.join(jsPublicPath, req.url);
@@ -66,7 +66,7 @@ export default defineConfig(async () => {
     ],
     optimizeDeps: {
       include: ["golden-layout"],
-      exclude: ["semio/js"],
+      exclude: ["@semio/js"],
       esbuildOptions: {
         target: "es2020",
       },

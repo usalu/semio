@@ -20,7 +20,7 @@
 // #endregion 🔖Header
 
 import { createRoot } from "react-dom/client";
-import { Sketchpad } from "semio/js";
+import { Sketchpad } from "@semio/js";
 import "./globals.css";
 
 import { appRegistry } from "../semio/sketchpad/Sketchpad";

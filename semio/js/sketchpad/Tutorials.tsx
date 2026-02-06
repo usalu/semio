@@ -22,7 +22,7 @@
 // #region 🔖Imports
 
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
-import { CloseIcon, PauseIcon, PlayIcon, RecordIcon, SkipBackIcon, SkipForwardIcon, StopIcon } from "semio/assets";
+import { CloseIcon, PauseIcon, PlayIcon, RecordIcon, SkipBackIcon, SkipForwardIcon, StopIcon } from "@semio/assets";
 import { guid, Guid } from "../semio";
 import { useAddFooterItem, useMode, useRemoveFooterItem } from "./Sketchpad";
 import { Button, Slider } from "./elements";

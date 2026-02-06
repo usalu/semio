@@ -14,7 +14,7 @@ type Kit {
     image?: string;
     # 🕒 The last upstring string of the kit.
     lastUpstringAt?: string;
-    # ⚖️ The optional license [ spdx id | url ] of the kit.
+    # ⚖️The optional license [ spdx id | url ] of the kit.
     license?: string;
     # 📛 The name of the kit.
     name: string;
@@ -22,11 +22,11 @@ type Kit {
     preview?: string;
     # ☁️ The optional Unique Resource Locator (URL) where to fetch the kit remotely.
     remote?: string;
-    # 🧩 The types of the kit.
+    # 🧩The types of the kit.
     types?: Type[];
     # 🆔 The uri of the kit.
     uri: string;
-    # 🔀 The optional version of the kit. No version means the latest version.
+    # 🔀The optional version of the kit. No version means the latest version.
     version?: string;
 }
 
@@ -50,7 +50,7 @@ type Design {
     attributes?: Attribute[];
     # 📏 The unit of the design.
     unit?: string;
-    # 🔀 The optional variant of the design. No variant means the default variant.
+    # 🔀The optional variant of the design. No variant means the default variant.
     variant?: string;
     # 🥽 The optional view of the design. No view means the default view.
     view?: string;
@@ -110,7 +110,7 @@ type Piece {
     id_?: string;
     # ◳ The optional plane of the piece. When pieces are connected only one piece can have a plane.
     plane?: null | Plane;
-    # 🧩 The type of the piece.
+    # 🧩The type of the piece.
     type: TypeId;
 }
 
@@ -156,23 +156,23 @@ type Vector {
 type TypeId {
     # 📛 The name of the type.
     name: string;
-    # 🔀 The optional variant of the type. No variant means the default variant.
+    # 🔀The optional variant of the type. No variant means the default variant.
     variant?: string;
 }
 
 # ↗️ The output of a attribute.
 type Attribute {
-    # 🏷️ The optional definition [ text | url ] of the attribute.
+    # 🏷️The optional definition [ text | url ] of the attribute.
     definition?: string;
-    # 🏷️ The name of the attribute.
+    # 🏷️The name of the attribute.
     name: string;
-    # 🏷️ The optional unit of the value of the attribute.
+    # 🏷️The optional unit of the value of the attribute.
     unit?: string;
-    # 🏷️ The optional value [ text | url ] of the attribute. No value is equivalent to true.
+    # 🏷️The optional value [ text | url ] of the attribute. No value is equivalent to true.
     value?: string;
 }
 
-# 🧩 A type is a reusable element that can be connected with other types over connectors.
+# 🧩A type is a reusable element that can be connected with other types over connectors.
 type Type {
     authors?: Author[];
     # 🕒 The creation string of the type.
@@ -192,7 +192,7 @@ type Type {
     models?: Model[];
     # Ⓜ️ The length unit of the point and the direction of the connectors of the type.
     unit?: string;
-    # 🔀 The optional variant of the type. No variant means the default variant.
+    # 🔀The optional variant of the type. No variant means the default variant.
     variant?: string;
 }
 
@@ -218,13 +218,13 @@ type Locator {
     subgroup?: string;
 }
 
-# 💾 A model is a link to a resource that describes a type for a certain level of detail and tags.
+# 💾A model is a link to a resource that describes a type for a certain level of detail and tags.
 type Model {
     # 🔍 The optional Level of Detail/Development/Design (LoD) of the model. No lod means the default lod.
     lod: string;
     # ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the model.
     mime: string;
-    # 🏷️ The optional tags to group models. No tags means default.
+    # 🏷️The optional tags to group models. No tags means default.
     tags?: string[];
     # 🔗 The Unique Resource Locator (URL) to the resource of the model.
     url: string;

@@ -1,0 +1,19 @@
+{
+  "name": "@semio-repo/cli",
+  "version": "1.0.0",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "semio-repo/cli",
+  "projectType": "application",
+  "scripts": {
+    "dev": "go run",
+    "build": "go build",
+    "test": "go test -v ./...",
+    "preflight": "go vet ./..."
+  },
+  "author": {
+    "name": "Ueli Saluz",
+    "email": "ueli@semio-tech.com",
+    "url": "https://github.com/usalu"
+  },
+  "bundleKind": "binary"
+}

@@ -96,7 +96,7 @@ import {
 
 const KitSectionLazy = React.lazy(() => import("./Kit").then((module) => ({ default: module.KitSection })));
 
-import { AddIcon, AwardIcon, CheckIcon, CodeIcon, ConnectorIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "semio/assets";
+import { AddIcon, AwardIcon, CheckIcon, CodeIcon, ConnectorIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SelectToolIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 
 // #endregion 🔖Imports
 

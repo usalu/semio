@@ -58,7 +58,7 @@ import {
   TutorialIcon,
   TypeIcon,
   UserIcon,
-} from "semio/assets";
+} from "@semio/assets";
 import { Camera } from "three";
 import * as Y from "yjs";
 import i18n, { useLabel } from "../i18n";

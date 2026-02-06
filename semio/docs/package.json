@@ -1,9 +1,9 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
-  "name": "semio/docs",
+  "name": "@semio/docs",
   "version": "0.1.0",
-  "description": "semio ⋅ docs",
+  "description": "semio \u22c5 docs",
   "scripts": {
     "dev": "vite --port 4321 --host 0.0.0.0",
     "build": "vite build",
@@ -11,7 +11,7 @@
     "preflight": "echo \"No preflight checks configured\""
   },
   "dependencies": {
-    "semio/js": "*"
+    "@semio/js": "*"
   },
   "author": {
     "name": "Ueli Saluz",

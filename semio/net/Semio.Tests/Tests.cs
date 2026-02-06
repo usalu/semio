@@ -30,7 +30,7 @@ namespace Semio.Tests;
 
 public class Tests
 {
-    public static readonly string AssetsPath = "../../../../../assets/semio";
+    public static readonly string AssetsPath = "../../../../assets/semio";
     private const double Tolerance = 0.001;
 
     public static T LoadAsset<T>(string filename)

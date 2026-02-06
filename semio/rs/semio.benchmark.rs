@@ -3,7 +3,7 @@ use std::fs;
 use std::path::Path;
 use semio::*;
 
-const ASSETS_DIR: &str = "../../assets/semio";
+const ASSETS_DIR: &str = "../assets/semio";
 const ITERATIONS: u32 = 3;
 
 fn load_kit(filename: &str) -> Kit {

@@ -1,7 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
-  "name": "semio/js",
+  "name": "@semio/js",
   "version": "0.1.0",
   "type": "module",
   "exports": {
@@ -85,7 +85,7 @@
     "@eslint/js": "^9.28.0",
     "@mdx-js/rollup": "^3.1.1",
     "@playwright/test": "^1.57.0",
-    "semio/assets": "^1.0.0",
+    "@semio/assets": "^1.0.0",
     "@storybook/addon-docs": "^10.1.11",
     "@storybook/addon-vitest": "^10.1.11",
     "@storybook/react-vite": "^10.1.11",

@@ -49,7 +49,7 @@ import {
   TutorialIcon,
   TypeIcon,
   UserIcon,
-} from "semio/assets";
+} from "@semio/assets";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import i18n, { useHotkey, useLabel } from "../i18n";

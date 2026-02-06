@@ -1,5 +1,5 @@
 {
-  "name": "semio/engine",
+  "name": "@semio/engine",
   "version": "1.0.0",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "sourceRoot": "semio/engine",
@@ -19,7 +19,7 @@
     }
   },
   "devDependencies": {
-    "semio/assets": "*"
+    "@semio/assets": "*"
   },
   "author": {
     "name": "Ueli Saluz",

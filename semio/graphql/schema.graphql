@@ -556,7 +556,7 @@ input KitInputNode {
   preview: String = ""
 
   """
-  🔀 The optional version of the kit. No version means the latest version.
+  🔀The optional version of the kit. No version means the latest version.
   """
   version: String = ""
 
@@ -571,12 +571,12 @@ input KitInputNode {
   homepage: String = ""
 
   """
-  ⚖️ The optional license [ spdx id | url ] of the kit.
+  ⚖️The optional license [ spdx id | url ] of the kit.
   """
   license: String = ""
 
   """
-  🧩 The types of the kit.
+  🧩The types of the kit.
   """
   types: [TypeInputNode] = null
 
@@ -586,7 +586,7 @@ input KitInputNode {
   designs: [DesignInputNode] = null
 
   """
-  🏷️ The attributes of the kit.
+  🏷️The attributes of the kit.
   """
   attributes: [AttributeInputNode] = null
 }
@@ -613,12 +613,12 @@ input TypeInputNode {
   image: String = ""
 
   """
-  🔀 The optional variant of the type. No variant means the default variant.
+  🔀The optional variant of the type. No variant means the default variant.
   """
   variant: String = ""
 
   """
-  📦 The number of items in stock. 2147483647 (=2^31-1) means infinite stock.
+  📦The number of items in stock. 2147483647 (=2^31-1) means infinite stock.
   """
   stock: Int = 2147483647
 
@@ -663,34 +663,34 @@ input ModelInputNode {
   description: String = ""
 
   """
-  🏷️ The optional tags to group models. No tags means default.
+  🏷️The optional tags to group models. No tags means default.
   """
   tags: [String] = null
 
   """
-  🏷️ The attributes of the model.
+  🏷️The attributes of the model.
   """
   attributes: [AttributeInputNode] = null
 }
 
 input AttributeInputNode {
   """
-  🏷️ The name of the attribute.
+  🏷️The name of the attribute.
   """
   name: String!
 
   """
-  🏷️ The optional value [ text | url ] of the attribute. No value is equivalent to true.
+  🏷️The optional value [ text | url ] of the attribute. No value is equivalent to true.
   """
   value: String = ""
 
   """
-  🏷️ The optional unit of the value of the attribute.
+  🏷️The optional unit of the value of the attribute.
   """
   unit: String = ""
 
   """
-  🏷️ The optional definition [ text | uri ] of the attribute.
+  🏷️The optional definition [ text | uri ] of the attribute.
   """
   definition: String = ""
 }
@@ -737,7 +737,7 @@ input ConnectorInputNode {
   direction: VectorInputNode!
 
   """
-  🏷️ The attributes of the connector.
+  🏷️The attributes of the connector.
   """
   attributes: [AttributeInputNode] = null
 }
@@ -810,7 +810,7 @@ input DesignInputNode {
   image: String = ""
 
   """
-  🔀 The optional variant of the design. No variant means the default variant.
+  🔀The optional variant of the design. No variant means the default variant.
   """
   variant: String = ""
 
@@ -853,7 +853,7 @@ input PieceInputNode {
   center: CoordInputNode = null
 
   """
-  🏷️ The attributes of the piece.
+  🏷️The attributes of the piece.
   """
   attributes: [AttributeInputNode] = null
   type: TypeIdInputNode!
@@ -895,7 +895,7 @@ input TypeIdInputNode {
   name: String!
 
   """
-  🔀 The optional variant of the type. No variant means the default variant.
+  🔀The optional variant of the type. No variant means the default variant.
   """
   variant: String = ""
 }

@@ -24,7 +24,7 @@ import { createRoot } from "react-dom/client";
 
 import "./globals.css";
 
-import { Sketchpad } from "semio/js";
+import { Sketchpad } from "@semio/js";
 
 declare global {
   interface Window {

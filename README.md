@@ -115,6 +115,7 @@ Let me walk you through 🚶
        - [🤖 Models](#-models-)
          - [Claude Opus 4.5](#-opus-45-)
          - [GPT-5.2 Codex](#-gpt-52-codex-)
+         - [GPT-5.3 Codex](#-gpt-53-codex-)
      - [🔄 CI/CD](#-cicd-)
 1. [♻️ Ecosystems](#%EF%B8%8F-ecosystems-)
    - [🟨 JavaScript](#-javascript-)
@@ -770,6 +771,7 @@ Each ticket workspace keeps a single `ticket.md` with todos, changes, log, and s
 ## 🧰 Violations [↑](#-development)
 
 Contributor workflows include an automated code-quality report that highlights inline and multi-line comments (including JSDoc blocks), missing license headers, malformed region blocks, and empty regions before changes are shared.
+Comment scanning works uniformly across all supported languages (TypeScript, Go, Python, C#, Shell, Rust) through a single generic implementation in `BaseLanguage.ScanComments`. Each language declares its own string literal flavors (template literals for JS/TS, raw backtick strings for Go, triple-quoted strings for Python, verbatim `@""` strings for C#) so the scanner correctly ignores comment markers inside string contexts. Each language also declares its own skip directives (e.g. `eslint-`/`@ts-` for TypeScript, `nolint` for Go, `noqa`/`type: ignore` for Python, `pragma` for C#) which are excluded from comment violations alongside the built-in `TODO` and `semio-ignore-` directives.
 It also enforces module boundaries and domain-neutral terminology for shared UI building blocks.
 Each reported problem includes a short reason and solution so contributors can resolve violations quickly.
 
@@ -978,11 +980,13 @@ Used to ensure consistent formatting of source code, docs, …
 
 ### 🤖 Models [↑](#-ai-)
 
-The default model for agent work is **Claude Opus 4.5**, with **GPT-5.2 Codex** as an alternative 🧠
+The default model for agent work is **Claude Opus 4.5**, with **GPT-5.2 Codex** and **GPT-5.3 Codex** as alternatives 🧠
 
 #### Claude Opus 4.5 [↑](#-models-)
 
 #### GPT-5.2 Codex [↑](#-models-)
+
+#### GPT-5.3 Codex [↑](#-models-)
 
 ## 🔄 CI/CD [↑](#-development-)
 
@@ -1131,12 +1135,12 @@ A component is a piece of software which is packaged independently 🏝️
 ## 🧼 Code Hygiene Hooks [↑](#-bundles-)
 
 The code hygiene hook enforces comment, license, region, and file header policies before changes are shared.
-File headers must contain the correct artifact ID (emoji-prefixed path like `💻︎ semio/js/src/index.ts`) instead of plain file paths; the `fix` command replaces wrong IDs automatically.
+File headers must contain the correct artifact ID (emoji-prefixed path like `💻︎semio/js/src/index.ts` or `📜︎semio/engine/build.ts` for shebang scripts) instead of plain file paths; the `fix` command replaces wrong IDs automatically.
 It helps keep the codebase clean by removing obsolete inline or block comments, while respecting TODOs and active contiguous comment blocks following them.
+Comment scanning is language-agnostic: every language uses the same `BaseLanguage.ScanComments` implementation configured with language-specific primitives (comment prefix, block comment delimiters, string literal flavors, JSDoc support, skip directives). This means adding comment scanning for a new language only requires setting the right fields in its constructor.
 It treats empty regions as invalid structure and removes them automatically in fix mode so region blocks stay meaningful and concise.
 It ignores configuration files to avoid breaking structured data with comment prefix injections.
 All code must sit inside named regions; orphan definitions outside any section are reported as code:section:orphan-definition so you can relocate them as full definition blocks.
-Wait, I should also mention the partial removal of comments.
 Inline and block comment fixes are precise: they only remove the comment portion of a line when code is present, preserving the logic integrity.
 
 ## 🧩 Repo Tooling Sync [↑](#-bundles-)
@@ -1147,6 +1151,7 @@ The repo CLI streams command execution as JSONL events and three rendering adapt
 Markdown output uses the format `[<id>](<uri>) - <prop1> - <prop2>` for single entities, `- [<id>](<uri>) - <prop1> - <prop2>` for list items, and nested `- ` indentation for tree views. There are no JSON code-block or dump fallback paths — all output resolves to entity-kind-specific renderers.
 The `inferEntityKind(key)` function maps GraphQL operation names (e.g. `ticketOpen`, `goalCreate`) to entity kinds via prefix matching, enabling generic dispatch for mutation results without per-operation switch cases. `renderEntityMarkdownLink(kind, data)` produces the base markdown link format, and `renderEntityMarkdown(kind, data)` wraps it with the `- ` list prefix. Streaming list detection (`" list"` / `" tree"` command suffixes) ensures streamed single-entity events get the correct `- ` prefix in markdown mode.
 When `--json` is active, each stdout line is pure domain data (one JSON object per line) without event wrappers or `{"data": ...}` GraphQL envelopes; errors are written to stderr only, and stdout stays empty on failure so downstream consumers can pipe output directly into `jq` or similar tools without filtering boilerplate.
+Ticket and goal interaction decoding accepts both legacy object-form and current string-form `author` payloads so historical workspaces remain queryable through GraphQL, CLI trees, and the VS Code extension.
 Human-readable CLI IDs normalize emoji to text presentation (U+FE0E), replacing emoji presentation selectors and appending the text variant when missing, so monospace terminals reserve stable width before adjacent symbols like `@`.
 The codebase uses a dual identification system: emoji-prefixed artifact IDs (primary, for GraphQL/logs/messages/UI) and `semiorepo://` URIs (secondary, for MCP resources and clickable links). `GetArtifactID` and `GetArtifactURI` generate these from kind+data, while `IdToUri` and `UriToId` convert between the two systems. Section and definition URIs encode hierarchy separators (`#`, `§`) as `/`-delimited UPPERCASE-SLUG path segments so URIs remain valid without fragment identifiers. Collection types (projects, bundles, folders, files, sections, definitions, tickets, goals, drafts, todos, policies, violationKinds, contributors, commits) each have dedicated ID and URI formats. The `navigate` MCP tool and `semio.navigate` VS Code command accept either an ID or URI and resolve to the target resource.
 
@@ -1158,7 +1163,7 @@ Every artifact in the repo tree (bundles, folders, files, definitions) carries a
 
 **Folder kind** is derived from the folder name. Folders starting with `.` (dotfiles like `.github`, `.vscode`) are `required` because they contain configuration that must be present. Folders containing package manifests (`package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, `*.csproj`, `*.sln`) are also `required`. Everything else is `organization`.
 
-**File kind** uses pattern matching on the file name and extension. Test files (`*.test.*`, `_test.*`, `test_*`, `*.spec.*`, `*.stories.*`, `*.benchmark.*`) are detected first. Then config files (JSON, YAML, TOML, XML, INI, and named files like `Dockerfile`, `Makefile`), docs (`.md`, `.txt`, `.rst`), resources (images, fonts, media, archives, binaries), code (a comprehensive list of ~60+ programming language extensions), scripts (`.sh`, `.bash`, `.bat`, `.ps1`), and license files (names containing `license`/`licence`).
+**File kind** uses pattern matching on the file name and extension. Test files (`*.test.*`, `_test.*`, `test_*`, `*.spec.*`, `*.stories.*`, `*.benchmark.*`) are detected first. Then config files (JSON, YAML, TOML, XML, INI, and named files like `Dockerfile`, `Makefile`), docs (`.md`, `.txt`, `.rst`), resources (images, fonts, media, archives, binaries), code (a comprehensive list of ~60+ programming language extensions), scripts (`.sh`, `.bash`, `.bat`, `.ps1`), and license files (names containing `license`/`licence`). When generating file header IDs, code files whose first line is a shebang (`#!`) are reclassified as scripts so `#!/usr/bin/env tsx` correctly produces a `📜` header instead of `💻`.
 
 **Definition kind** is derived from the keyword that introduces the definition in source code. The `extractDefinitionKeyword` function inspects the regex match text, finds the word directly preceding the definition name (skipping access modifiers like `public`, `private`, `export`, `pub`), and returns it. `DeriveDefinitionKind` then classifies: interface-like keywords (`interface`, `type`, `trait`, `abstract`, `delegate`, `record`, `union`, `scalar`, `extend *`) → `interface`; constant-like keywords (`const`, `enum`, `var`, `let`, `static`) → `constant`; everything else (`function`, `class`, `struct`, `def`, `func`, `fn`) → `implementation`. A post-processing step `refineDefinitionKind` reclassifies `const`/`let`/`var` declarations as `implementation` when the initializer is an arrow function (`=>`), function expression, or class expression — so `const handler = () => {}` correctly maps to implementation rather than constant.
 
@@ -1172,7 +1177,7 @@ The MCP adapter forwards commands through the same streaming registry and suppor
 Benchmark, preflight, and dependency update workflows are implemented inside the same single-file entrypoint so operational commands share the unified event pipeline.
 The CLI exposes an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
 Go repo-tooling tests are organized into a fast lane and a slow lane: fast checks cover the same command families with lightweight assertions for tight feedback, while heavy graph/tree/lifecycle/e2e checks run as explicit slow shards in parallel jobs. This keeps the full behavior surface tested while reducing wall-clock time for day-to-day development.
-The `sync github` command reconciles local tickets/goals with GitHub using a three-tier hierarchy: root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone linkage. Goals are processed in depth order so parents exist before children. The command also migrates child goals from legacy milestones to issues, closes issues for closed tickets, resolves root goal milestones by title via the GitHub API before applying them to ticket issues, synchronizes the GitHub repository label catalog for all valid project and bundle `@` labels (creating missing and deleting invalid), updates stored milestone URLs, and removes invalid `@` labels from both ticket-linked issues and repository issues discovered during a global GitHub issue sweep.
+The `sync github` command reconciles local tickets/goals with GitHub using a three-tier hierarchy: root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone linkage. It actively repairs existing goal issues so depth 1 issues always carry the root milestone, depth 2+ issues always have a parent sub-issue link and no milestone, and missing `goal` labels are reattached. Goals are processed in depth order so parents exist before children. The command also migrates child goals from legacy milestones to issues, closes issues for closed tickets, resolves root goal milestones by title via the GitHub API before applying them to ticket issues, synchronizes the GitHub repository label catalog for all valid project and bundle `@` labels (creating missing and deleting invalid), updates stored milestone URLs, and removes invalid `@` labels from both ticket-linked issues and repository issues discovered during a global GitHub issue sweep.
 Section management includes an integrate command so source files can be merged into target sections through the same GraphQL-backed CLI surface.
 GraphQL ticket UI inputs accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) so CLI and tooling inputs map cleanly to schema enums.
 Section and definition ranges expose line/column start/end positions so editors can locate code precisely.
@@ -1216,7 +1221,7 @@ Webhook receivers enrich GitHub issue events, and Discord notifications format p
 
 ## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
 
-Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every interaction records the toolchain context. Parsing is forgiving; for example, `claude-opus-4-5-20251101` resolves to `opus-4-5` by finding it as a substring of the slugified input.
+Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every interaction records the toolchain context. Parsing is forgiving; for example, `claude-opus-4-5-20251101` resolves to `opus-4-5` and `gpt-5-3-codex-test` resolves to `gpt-5-3-codex` by finding them as substrings of the slugified input.
 Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen actions add a prompt comment with the same heading so each interaction is surfaced in GitHub.
 Ticket closing derives bundle labels from every touched path, adds `semio-repo` when a file falls outside bundles, and posts a semantic change list for bundles, folders, files, sections, and definitions using status icons plus `-removed`/`+added` counts.
 Ticket summary comments prepend a `# 🔍 Summary` heading so the close summary is visually consistent in GitHub issues.

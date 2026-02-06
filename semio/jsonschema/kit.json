@@ -142,7 +142,7 @@
         },
         "isAbstract": {
           "default": false,
-          "description": "🚫 Whether this design is abstract. Abstract designs cannot be used by pieces or opened in an editor.",
+          "description": "🚫Whether this design is abstract. Abstract designs cannot be used by pieces or opened in an editor.",
           "title": "Is Abstract",
           "type": "boolean"
         },
@@ -771,7 +771,7 @@
         },
         "isAbstract": {
           "default": false,
-          "description": "🚫 Whether this type is abstract. Abstract types cannot be used by pieces.",
+          "description": "🚫Whether this type is abstract. Abstract types cannot be used by pieces.",
           "title": "Is Abstract",
           "type": "boolean"
         },

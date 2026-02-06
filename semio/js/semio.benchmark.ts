@@ -1,7 +1,7 @@
-import DiffForward from "../../assets/semio/diff_kit_metabolism.json";
-import DiffInverse from "../../assets/semio/diff_kit_metabolism_inverted.json";
-import InvalidKit from "../../assets/semio/kit_invalid.json";
-import MetabolismKit from "../../assets/semio/kit_metabolism.json";
+import DiffForward from "../assets/semio/diff_kit_metabolism.json";
+import DiffInverse from "../assets/semio/diff_kit_metabolism_inverted.json";
+import InvalidKit from "../assets/semio/kit_invalid.json";
+import MetabolismKit from "../assets/semio/kit_metabolism.json";
 import {
     applyKitDiff,
     exportKit,
@@ -44,7 +44,7 @@ const diffInverse = DiffInverse as unknown as KitDiff;
 bench("Roundtrip/Metabolism", async () => {
     const fs = await import("fs");
     const path = await import("path");
-    const zipPath = path.resolve("../../assets/semio/metabolism.zip");
+    const zipPath = path.resolve("../assets/semio/metabolism.zip");
     const zipBuffer = fs.readFileSync(zipPath);
 
     const { kit, files } = await importKit(zipBuffer);

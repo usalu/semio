@@ -3,7 +3,7 @@ import json
 import os
 from semio import Kit, validateKit, validateKitDict, flattenDesignDict, _applyDesignDiff, applyKitDiffDict, Type, Design
 
-ASSETS_DIR = "../../assets/semio"
+ASSETS_DIR = "../assets/semio"
 ITERATIONS = 3
 
 def load_json(filename: str) -> dict:

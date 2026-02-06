@@ -19,7 +19,7 @@
 
 // #endregion 🔖Header
 
-import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "semio/assets";
+import { InvalidKit, InvalidKitValidation, MetabolismKit, MetabolismKitDiff, MetabolismKitDiffed, MetabolismKitDiffInverted } from "@semio/assets";
 import { describe, expect, it } from "vitest";
 import {
   applyDesignDiff,
@@ -162,7 +162,7 @@ describe("Roundtrip", () => {
       it("Zip -> Kit -> Zip -> Kit", async () => {
         const fs = await import("node:fs");
         const path = await import("node:path");
-        const zipPath = path.join(__dirname, "../../assets/semio/metabolism.zip");
+        const zipPath = path.join(__dirname, "../assets/semio/metabolism.zip");
         const zipBuffer = fs.readFileSync(zipPath);
 
         const { kit, files } = await importKit(zipBuffer.buffer);

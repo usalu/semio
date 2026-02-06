@@ -1,6 +1,6 @@
 # region Header
 #
-# 💻︎ semio/assets/repo/some/folder/file_fixed.py
+# 💻︎semio/assets/repo/some/folder/file_fixed.py
 #
 # 2025 Test User <test@test.com>
 #
@@ -20,7 +20,6 @@
 # endregion Header
 
 # region Functions
-#
 
 
 def fixed_function(value: int) -> int:

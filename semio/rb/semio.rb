@@ -24,13 +24,13 @@ module Semio
   # 🪪 Identifier for a connector within a type.
   ConnectorId = Struct.new(:id_, keyword_init: true)
 
-  # 🏷️ Represents a attribute, a named property with an optional value, unit, and definition.
+  # 🏷️Represents a attribute, a named property with an optional value, unit, and definition.
   Attribute = Struct.new(:name, :value, :unit, :definition, keyword_init: true)
 
   # 📑 Represents an author.
   Author = Struct.new(:name, :email, :rank, keyword_init: true)
 
-  # 💾 A model links to a resource (e.g., file) describing a type.
+  # 💾A model links to a resource (e.g., file) describing a type.
   Model = Struct.new(:url, :description, :tags, :attributes, keyword_init: true)
 
   # ◳ A plane defined by an origin point and two axes vectors.
@@ -73,7 +73,7 @@ module Semio
     keyword_init: true
   )
 
-  # 🧩 A type is a reusable element blueprint with connectors for connection.
+  # 🧩A type is a reusable element blueprint with connectors for connection.
   Type = Struct.new(
     :name,
     :description,
