@@ -48,6 +48,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/blevesearch/bleve/v2"
 	"github.com/bmatcuk/doublestar/v4"
 	"github.com/dustin/go-humanize"
 	"github.com/graphql-go/graphql"
@@ -328,6 +329,9 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(fileCommand(factory, &config))
 	root.AddCommand(sectionCommand(factory, &config))
 	root.AddCommand(definitionCommand(factory, &config))
+	root.AddCommand(moveCommand(factory, &config))
+	root.AddCommand(integrateCommand(factory, &config))
+	root.AddCommand(extractCommand(factory, &config))
 	root.AddCommand(syncCommand(factory, &config))
 	root.AddCommand(treeCommand(factory, &config))
 	root.AddCommand(exportCommand(factory, &config))
@@ -525,309 +529,228 @@ func fixCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
-	var maxDepth int
 	cmd := &cobra.Command{
-		Use:   "tree [scope]",
-		Short: "Show codebase tree",
+		Use:   "tree [query]",
+		Short: "Show monorepo tree",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			scope := ""
-			if len(args) > 0 {
-				scope = args[0]
-			}
 			ctx := cmd.Context()
 
-			folders := []Folder{}
-			files := []File{}
-
-			// Metadata collection
-			type nodeMeta struct {
-				status   string
-				summary  string
-				date     string
-				author   string
-				isGoal   bool
-				isTicket bool
+			filter := buildTreeFilterFromFlags(cmd)
+			if len(args) > 0 {
+				filter.Query = args[0]
 			}
-			metaMap := make(map[string]nodeMeta)
-			var metaMutex sync.Mutex
 
-			folderCh := make(chan Folder)
-			fileCh := make(chan File)
-			errCh := make(chan error, 4) // Increased buffer for tickets/goals
-			var wg sync.WaitGroup
+			buildOpts := TreeBuildOptions{
+				IncludeSections: filter.OnlyKinds[TreeNodeSection] ||
+					filter.OnlyKinds[TreeNodeDefinition] ||
+					filter.Query != "",
+			}
+			tree := BuildMonorepoTree(ctx, buildOpts)
+			tree = FilterMonorepoTree(tree, &filter)
+			tree = SearchMonorepoTree(tree, filter.Query)
 
-			// Metadata streams
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				// Only load metadata if scope covers repo root or .semio-repo
-				// Simple heuristic: if scope is empty, ".", or contains ".semio-repo"
-
-				// Using context for cancellation
-				ticketCh := make(chan Ticket)
-				go func() {
-					StreamTickets(ctx, nil, nil, nil, ticketCh)
-				}()
-
-				for t := range ticketCh {
-					metaMutex.Lock()
-					author := ""
-					if len(t.Interactions) > 0 {
-						author = parseGitAuthor(t.Interactions[0].Author).Name
-					}
-					date := humanize.Time(t.Started)
-					metaMap[filepath.Clean(t.FolderPath)] = nodeMeta{
-						status:   string(t.Status),
-						summary:  t.Summary,
-						date:     date,
-						author:   author,
-						isTicket: true,
-					}
-					metaMutex.Unlock()
-				}
-			}()
-
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				goalCh := make(chan *Goal)
-				go func() {
-					StreamGoals(ctx, goalCh)
-				}()
-
-				for g := range goalCh {
-					metaMutex.Lock()
-					date := g.Dates.Due
-					if date == "" && g.Dates.Closed != nil {
-						date = humanize.Time(*g.Dates.Closed)
-					}
-					metaMap[filepath.Clean(filepath.Join(GetRepoGoalsDir(), Slugify(g.Title)))] = nodeMeta{
-						status:  g.Status,
-						summary: g.Summary,
-						date:    date,
-						isGoal:  true,
-					}
-					metaMutex.Unlock()
-				}
-			}()
-
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				if err := StreamFolders(ctx, scope, folderCh); err != nil {
-					errCh <- err
-				}
-			}()
-
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-				if err := StreamFiles(ctx, scope, fileCh); err != nil {
-					errCh <- err
-				}
-			}()
-
-			var wgCollect sync.WaitGroup
-			wgCollect.Add(2)
-
-			go func() {
-				defer wgCollect.Done()
-				for f := range folderCh {
-					folders = append(folders, f)
-				}
-			}()
-			go func() {
-				defer wgCollect.Done()
-				for f := range fileCh {
-					files = append(files, f)
-				}
-			}()
-
-			wg.Wait()
-			wgCollect.Wait()
-			close(errCh)
-
-			for err := range errCh {
+			var output string
+			switch {
+			case config.IsJSON():
+				encoded, err := json.Marshal(tree)
 				if err != nil {
 					return err
 				}
+				output = string(encoded) + "\n"
+			case config.IsMarkdown():
+				output = RenderMonorepoTreeMarkdown(tree)
+			default:
+				output = RenderMonorepoTree(tree)
 			}
-
-			type node struct {
-				name     string
-				path     string
-				children []*node
-				isFile   bool
-			}
-
-			nodeMap := make(map[string]*node)
-
-			// Resolve root path to absolute to match StreamFiles/StreamFolders output
-			rootPath := scope
-			rootDir := GetRootDir()
-			if bundleName, found := strings.CutPrefix(scope, "semio/"); found {
-				bundles := LoadBundles()
-				for _, b := range bundles {
-					if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
-						rootPath = filepath.Join(rootDir, b.Root)
-						break
-					}
-				}
-			} else if scope != "" && scope != "semio" {
-				if filepath.IsAbs(scope) {
-					rootPath = scope
-				} else {
-					rootPath = filepath.Join(rootDir, scope)
-				}
-			} else {
-				rootPath = rootDir
-			}
-			rootPath = filepath.Clean(rootPath)
-
-			root := &node{name: scope, path: rootPath, children: []*node{}} // Keep name as scope for display?
-			// If scope is empty, display root dir name or "."?
-			if scope == "" {
-				root.name = filepath.Base(rootPath)
-			}
-
-			// We use "." as the key for root because StreamFiles/StreamFolders return paths relative to search root.
-			// Top-level files/folders have parent ".".
-			nodeMap["."] = root
-
-			for _, f := range folders {
-				cleanPath := filepath.Clean(f.Path)
-				if cleanPath == "." {
-					continue
-				}
-				// Use absolute path for node.path to enable metadata lookup
-				absPath := filepath.Join(rootPath, cleanPath)
-				if _, ok := nodeMap[cleanPath]; !ok {
-					nodeMap[cleanPath] = &node{name: filepath.Base(cleanPath), path: absPath, children: []*node{}}
-				}
-			}
-			for _, f := range files {
-				cleanPath := filepath.Clean(f.Path)
-				if cleanPath == "." {
-					continue
-				}
-				absPath := filepath.Join(rootPath, cleanPath)
-				nodeMap[cleanPath] = &node{name: filepath.Base(cleanPath), path: absPath, children: []*node{}, isFile: true}
-			}
-
-			for path, n := range nodeMap {
-				if n == root {
-					continue
-				}
-				// Parent of "foo" is "." -> nodeMap["."] -> root
-				parentPath := filepath.Dir(path)
-				if p, ok := nodeMap[parentPath]; ok {
-					p.children = append(p.children, n)
-				}
-			}
-
-			var sortChildren func(*node)
-			sortChildren = func(n *node) {
-				sort.Slice(n.children, func(i, j int) bool {
-					return n.children[i].name < n.children[j].name
-				})
-				for _, c := range n.children {
-					sortChildren(c)
-				}
-			}
-			sortChildren(root)
-
-			var walk func([]*node, string, int)
-			walk = func(nodes []*node, prefix string, depth int) {
-				if maxDepth > 0 && depth >= maxDepth {
-					return
-				}
-				for i, node := range nodes {
-					if config.IsMarkdown() {
-						indent := strings.Repeat("  ", depth)
-						relPath := node.path
-						if rel, err := filepath.Rel(rootDir, node.path); err == nil {
-							relPath = rel
-						}
-
-						name := node.name
-						metaMutex.Lock()
-						meta, hasMeta := metaMap[node.path]
-						metaMutex.Unlock()
-
-						metaStr := ""
-						if hasMeta {
-							isOpen := meta.status == "open"
-							icon := "✅"
-							if isOpen {
-								icon = "🔵"
-							}
-							metaStr = fmt.Sprintf(" %s %s", icon, meta.date)
-							if meta.author != "" {
-								metaStr += " " + meta.author
-							}
-							if meta.summary != "" {
-								metaStr += " # " + meta.summary
-							}
-						}
-						fmt.Fprintf(cmd.OutOrStdout(), "%s- [%s](%s)%s\n", indent, name, relPath, metaStr)
-						walk(node.children, "", depth+1)
-					} else {
-						isLast := i == len(nodes)-1
-						connector := "├── "
-						if isLast {
-							connector = "└── "
-						}
-
-						name := node.name
-						metaMutex.Lock()
-						meta, hasMeta := metaMap[node.path]
-						metaMutex.Unlock()
-
-						if hasMeta {
-							isOpen := meta.status == "open"
-							color := ColorGreen
-							if isOpen {
-								color = ColorBlue
-							}
-
-							name = colorize(name, color, true)
-
-							icon := "✅"
-							if isOpen {
-								icon = "🔵"
-							}
-
-							metaStr := fmt.Sprintf(" %s %s", icon, meta.date)
-							if meta.author != "" {
-								metaStr += " " + meta.author
-							}
-							if meta.summary != "" {
-								metaStr += " # " + meta.summary
-							}
-							name += colorize(metaStr, ColorDim, true)
-						}
-
-						fmt.Fprintf(cmd.OutOrStdout(), "%s%s%s\n", prefix, connector, name)
-
-						newPrefix := prefix + "│   "
-						if isLast {
-							newPrefix = prefix + "    "
-						}
-						walk(node.children, newPrefix, depth+1)
-					}
-				}
-			}
-			if !config.IsMarkdown() {
-				fmt.Fprintln(cmd.OutOrStdout(), root.path)
-			}
-			walk(root.children, "", 0)
-
+			fmt.Fprint(cmd.OutOrStdout(), output)
 			return nil
 		},
 	}
-	cmd.Flags().IntVarP(&maxDepth, "depth", "d", 0, "Max depth")
+	bindTreeFlags(cmd)
 	return cmd
+}
+
+func bindTreeFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("only-project", false, "Only show projects")
+	cmd.Flags().Bool("no-project", false, "Exclude projects")
+	cmd.Flags().Bool("only-bundle", false, "Only show bundles")
+	cmd.Flags().Bool("no-bundle", false, "Exclude bundles")
+	cmd.Flags().Bool("only-folder", false, "Only show folders")
+	cmd.Flags().Bool("no-folder", false, "Exclude folders")
+	cmd.Flags().Bool("only-file", false, "Only show files")
+	cmd.Flags().Bool("no-file", false, "Exclude files")
+	cmd.Flags().Bool("only-section", false, "Only show sections")
+	cmd.Flags().Bool("no-section", false, "Exclude sections")
+	cmd.Flags().Bool("only-definition", false, "Only show definitions")
+	cmd.Flags().Bool("no-definition", false, "Exclude definitions")
+	cmd.Flags().Bool("only-goal", false, "Only show goals")
+	cmd.Flags().Bool("no-goal", false, "Exclude goals")
+	cmd.Flags().Bool("only-ticket", false, "Only show tickets")
+	cmd.Flags().Bool("no-ticket", false, "Exclude tickets")
+	cmd.Flags().Bool("only-draft", false, "Only show drafts")
+	cmd.Flags().Bool("no-draft", false, "Exclude drafts")
+	cmd.Flags().Bool("only-policy", false, "Only show policies")
+	cmd.Flags().Bool("no-policy", false, "Exclude policies")
+	cmd.Flags().Bool("only-contributor", false, "Only show contributors")
+	cmd.Flags().Bool("no-contributor", false, "Exclude contributors")
+	cmd.Flags().Bool("only-commit", false, "Only show commits")
+	cmd.Flags().Bool("no-commit", false, "Exclude commits")
+
+	cmd.Flags().Bool("only-library", false, "Only show library bundles")
+	cmd.Flags().Bool("no-library", false, "Exclude library bundles")
+	cmd.Flags().Bool("only-schema", false, "Only show schema bundles")
+	cmd.Flags().Bool("no-schema", false, "Exclude schema bundles")
+	cmd.Flags().Bool("only-binary", false, "Only show binary bundles")
+	cmd.Flags().Bool("no-binary", false, "Exclude binary bundles")
+	cmd.Flags().Bool("only-client", false, "Only show client bundles")
+	cmd.Flags().Bool("no-client", false, "Exclude client bundles")
+	cmd.Flags().Bool("only-site", false, "Only show site bundles")
+	cmd.Flags().Bool("no-site", false, "Exclude site bundles")
+	cmd.Flags().Bool("only-assets", false, "Only show asset bundles")
+	cmd.Flags().Bool("no-assets", false, "Exclude asset bundles")
+
+	cmd.Flags().Bool("only-organization", false, "Only show organization folders")
+	cmd.Flags().Bool("no-organization", false, "Exclude organization folders")
+	cmd.Flags().Bool("only-required", false, "Only show required folders")
+	cmd.Flags().Bool("no-required", false, "Exclude required folders")
+
+	cmd.Flags().Bool("only-code", false, "Only show code files")
+	cmd.Flags().Bool("no-code", false, "Exclude code files")
+	cmd.Flags().Bool("only-script", false, "Only show script files")
+	cmd.Flags().Bool("no-script", false, "Exclude script files")
+	cmd.Flags().Bool("only-config", false, "Only show config files")
+	cmd.Flags().Bool("no-config", false, "Exclude config files")
+	cmd.Flags().Bool("only-test", false, "Only show test files")
+	cmd.Flags().Bool("no-test", false, "Exclude test files")
+	cmd.Flags().Bool("only-docs", false, "Only show docs files")
+	cmd.Flags().Bool("no-docs", false, "Exclude docs files")
+	cmd.Flags().Bool("only-resource", false, "Only show resource files")
+	cmd.Flags().Bool("no-resource", false, "Exclude resource files")
+	cmd.Flags().Bool("only-license", false, "Only show license files")
+	cmd.Flags().Bool("no-license", false, "Exclude license files")
+
+	cmd.Flags().Bool("only-implementation", false, "Only show implementation definitions")
+	cmd.Flags().Bool("no-implementation", false, "Exclude implementation definitions")
+	cmd.Flags().Bool("only-interface", false, "Only show interface definitions")
+	cmd.Flags().Bool("no-interface", false, "Exclude interface definitions")
+	cmd.Flags().Bool("only-constant", false, "Only show constant definitions")
+	cmd.Flags().Bool("no-constant", false, "Exclude constant definitions")
+
+	cmd.Flags().Bool("only-open", false, "Only show open items")
+	cmd.Flags().Bool("only-closed", false, "Only show closed items")
+	cmd.Flags().Bool("open", false, "Only show open items")
+	cmd.Flags().Bool("closed", false, "Only show closed items")
+
+	cmd.Flags().IntSlice("only-year", nil, "Only show years")
+	cmd.Flags().IntSlice("no-year", nil, "Exclude years")
+	cmd.Flags().IntSlice("only-month", nil, "Only show months")
+	cmd.Flags().IntSlice("no-month", nil, "Exclude months")
+	cmd.Flags().IntSlice("only-day", nil, "Only show days")
+	cmd.Flags().IntSlice("no-day", nil, "Exclude days")
+
+	cmd.Flags().StringSlice("only-contributor-name", nil, "Only show specific contributors")
+	cmd.Flags().StringSlice("no-contributor-name", nil, "Exclude specific contributors")
+	cmd.Flags().StringSlice("only-policy-name", nil, "Only show specific policies")
+	cmd.Flags().StringSlice("no-policy-name", nil, "Exclude specific policies")
+}
+
+func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
+	filter := TreeFilter{
+		OnlyKinds:       make(map[TreeNodeKind]bool),
+		ExcludeKinds:    make(map[TreeNodeKind]bool),
+		OnlySubKinds:    make(map[TreeNodeKind][]string),
+		ExcludeSubKinds: make(map[TreeNodeKind][]string),
+	}
+
+	kindFlags := []struct {
+		onlyFlag string
+		noFlag   string
+		kind     TreeNodeKind
+	}{
+		{"only-project", "no-project", TreeNodeProject},
+		{"only-bundle", "no-bundle", TreeNodeBundle},
+		{"only-folder", "no-folder", TreeNodeFolder},
+		{"only-file", "no-file", TreeNodeFile},
+		{"only-section", "no-section", TreeNodeSection},
+		{"only-definition", "no-definition", TreeNodeDefinition},
+		{"only-goal", "no-goal", TreeNodeGoal},
+		{"only-ticket", "no-ticket", TreeNodeTicket},
+		{"only-draft", "no-draft", TreeNodeDraft},
+		{"only-policy", "no-policy", TreeNodePolicy},
+		{"only-contributor", "no-contributor", TreeNodeContributor},
+		{"only-commit", "no-commit", TreeNodeCommit},
+	}
+
+	for _, kf := range kindFlags {
+		if v, _ := cmd.Flags().GetBool(kf.onlyFlag); v {
+			filter.OnlyKinds[kf.kind] = true
+		}
+		if v, _ := cmd.Flags().GetBool(kf.noFlag); v {
+			filter.ExcludeKinds[kf.kind] = true
+		}
+	}
+
+	type subKindFlag struct {
+		onlyFlag string
+		noFlag   string
+		kind     TreeNodeKind
+		value    string
+	}
+	subKindFlags := []subKindFlag{
+		{"only-library", "no-library", TreeNodeBundle, string(BundleKindLibrary)},
+		{"only-schema", "no-schema", TreeNodeBundle, string(BundleKindSchema)},
+		{"only-binary", "no-binary", TreeNodeBundle, string(BundleKindBinary)},
+		{"only-client", "no-client", TreeNodeBundle, string(BundleKindUI)},
+		{"only-site", "no-site", TreeNodeBundle, string(BundleKindSite)},
+		{"only-assets", "no-assets", TreeNodeBundle, string(BundleKindAssets)},
+		{"only-organization", "no-organization", TreeNodeFolder, string(FolderKindOrganization)},
+		{"only-required", "no-required", TreeNodeFolder, string(FolderKindRequired)},
+		{"only-code", "no-code", TreeNodeFile, FileKindCode},
+		{"only-script", "no-script", TreeNodeFile, FileKindScript},
+		{"only-config", "no-config", TreeNodeFile, FileKindConfig},
+		{"only-test", "no-test", TreeNodeFile, FileKindTest},
+		{"only-docs", "no-docs", TreeNodeFile, FileKindDocs},
+		{"only-resource", "no-resource", TreeNodeFile, FileKindResource},
+		{"only-license", "no-license", TreeNodeFile, FileKindLicense},
+		{"only-implementation", "no-implementation", TreeNodeDefinition, string(DefinitionKindImplementation)},
+		{"only-interface", "no-interface", TreeNodeDefinition, string(DefinitionKindInterface)},
+		{"only-constant", "no-constant", TreeNodeDefinition, string(DefinitionKindConstant)},
+	}
+
+	for _, sf := range subKindFlags {
+		if v, _ := cmd.Flags().GetBool(sf.onlyFlag); v {
+			filter.OnlySubKinds[sf.kind] = append(filter.OnlySubKinds[sf.kind], sf.value)
+		}
+		if v, _ := cmd.Flags().GetBool(sf.noFlag); v {
+			filter.ExcludeSubKinds[sf.kind] = append(filter.ExcludeSubKinds[sf.kind], sf.value)
+		}
+	}
+
+	if v, _ := cmd.Flags().GetBool("only-open"); v {
+		filter.OnlyStatus = "open"
+	} else if v, _ := cmd.Flags().GetBool("open"); v {
+		filter.OnlyStatus = "open"
+	}
+	if v, _ := cmd.Flags().GetBool("only-closed"); v {
+		filter.OnlyStatus = "closed"
+	} else if v, _ := cmd.Flags().GetBool("closed"); v {
+		filter.OnlyStatus = "closed"
+	}
+
+	filter.OnlyYears, _ = cmd.Flags().GetIntSlice("only-year")
+	filter.ExcludeYears, _ = cmd.Flags().GetIntSlice("no-year")
+	filter.OnlyMonths, _ = cmd.Flags().GetIntSlice("only-month")
+	filter.ExcludeMonths, _ = cmd.Flags().GetIntSlice("no-month")
+	filter.OnlyDays, _ = cmd.Flags().GetIntSlice("only-day")
+	filter.ExcludeDays, _ = cmd.Flags().GetIntSlice("no-day")
+
+	filter.OnlyContributors, _ = cmd.Flags().GetStringSlice("only-contributor-name")
+	filter.ExcludeContributors, _ = cmd.Flags().GetStringSlice("no-contributor-name")
+	filter.OnlyPolicies, _ = cmd.Flags().GetStringSlice("only-policy-name")
+	filter.ExcludePolicies, _ = cmd.Flags().GetStringSlice("no-policy-name")
+
+	return filter
 }
 
 func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
@@ -1056,11 +979,15 @@ func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			data, _ := json.Marshal(map[string]interface{}{"draft": draft})
-			// Print event directly since draft commands are local fs operations
-			fmt.Printf("{\"kind\":\"result\",\"command\":\"draft create\",\"data\":%s}\n", string(data))
-			fmt.Printf("{\"kind\":\"done\",\"done\":{\"status\":\"ok\",\"exitCode\":0}}\n")
-			return nil
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "draft create"}
+				data, _ := json.Marshal(map[string]interface{}{"draft": draft})
+				stream <- Event{Kind: KindResult, Command: "draft create", Data: data}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
 	createCmd.Flags().StringSlice("files", nil, "Files to include in the draft")
@@ -1076,8 +1003,13 @@ func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if err := DeleteDraft(slug); err != nil {
 				return err
 			}
-			fmt.Printf("{\"kind\":\"done\",\"done\":{\"status\":\"ok\",\"exitCode\":0}}\n")
-			return nil
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "draft delete"}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
 
@@ -1089,12 +1021,17 @@ func draftCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			for _, d := range drafts {
-				data, _ := json.Marshal(map[string]interface{}{"draft": d})
-				fmt.Printf("{\"kind\":\"result\",\"command\":\"draft list\",\"data\":%s}\n", string(data))
-			}
-			fmt.Printf("{\"kind\":\"done\",\"done\":{\"status\":\"ok\",\"exitCode\":0}}\n")
-			return nil
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "draft list"}
+				for _, d := range drafts {
+					data, _ := json.Marshal(map[string]interface{}{"draft": d})
+					stream <- Event{Kind: KindResult, Command: "draft list", Data: data}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
 
@@ -2196,6 +2133,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 								status
 								dueDate
 								createdAt
+								description
 								parent
 							}
 							tickets(status: $status) {
@@ -2216,6 +2154,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 								status
 								dueDate
 								createdAt
+								description
 								parent
 							}
 							tickets {
@@ -2237,6 +2176,7 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 							status
 							dueDate
 							createdAt
+							description
 							parent
 						}
 					}
@@ -3610,6 +3550,196 @@ func definitionCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
+func moveCommand(factory EngineFactory, config *Config) *cobra.Command {
+	return &cobra.Command{
+		Use:   "move <source> <target>",
+		Short: "Move an artifact from source to target",
+		Long:  "Move an artifact (file, folder, section) between locations. Supports cross-kind moves: file→section calls integrate, section→file calls extract.",
+		Args:  cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := factory(*config)
+			if err != nil {
+				return err
+			}
+
+			source := ParseArtifactRef(args[0])
+			target := ParseArtifactRef(args[1])
+
+			var result ToolResult
+
+			switch {
+			case source.Kind == "file" && target.Kind == "file":
+				result = ToolFileMove(source.Path, target.Path)
+			case source.Kind == "folder" && target.Kind == "folder":
+				result = ToolFolderMove(source.Path, target.Path)
+			case source.Kind == "section" && target.Kind == "section" && source.Path == target.Path:
+				if len(source.SectionParts) == 0 || len(target.SectionParts) == 0 {
+					return fmt.Errorf("missing section path")
+				}
+				oldName := ResolveSectionName(source.Path, source.SectionParts[len(source.SectionParts)-1])
+				newName := ResolveSectionName(target.Path, target.SectionParts[len(target.SectionParts)-1])
+				result = ToolSectionMove(source.Path, oldName, newName)
+			case source.Kind == "file" && target.Kind == "section":
+				targetFile := target.Path
+				var sectionName, parentSection string
+				if len(target.SectionParts) > 0 {
+					sectionName = ResolveSectionName(targetFile, target.SectionParts[len(target.SectionParts)-1])
+				}
+				if len(target.SectionParts) > 1 {
+					parentSection = ResolveSectionName(targetFile, target.SectionParts[len(target.SectionParts)-2])
+				}
+				result = ToolIntegrate(source.Path, sectionName, targetFile, parentSection)
+				if result.Error == "" {
+					absSource := filepath.Join(rootDir, source.Path)
+					os.Remove(absSource)
+					RemoveAgentsDocsEntry(source.Path)
+				}
+			case source.Kind == "section" && target.Kind == "file":
+				if len(source.SectionParts) == 0 {
+					return fmt.Errorf("missing section path")
+				}
+				sourceFile := source.Path
+				sectionName := ResolveSectionName(sourceFile, source.SectionParts[len(source.SectionParts)-1])
+				result = ToolExtract(sourceFile, sectionName, target.Path)
+			default:
+				return fmt.Errorf("unsupported move: %s → %s", source.Kind, target.Kind)
+			}
+
+			if result.Error != "" {
+				return fmt.Errorf("%s", result.Error)
+			}
+			for _, line := range result.Output.Lines {
+				fmt.Println(line.Text)
+			}
+			return nil
+		},
+	}
+}
+
+func integrateCommand(factory EngineFactory, config *Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "integrate [source] [target]",
+		Short: "Integrate source code into a target file section",
+		Args:  cobra.MaximumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := factory(*config)
+			if err != nil {
+				return err
+			}
+
+			if len(args) == 2 {
+				source := ParseArtifactRef(args[0])
+				target := ParseArtifactRef(args[1])
+
+				if source.Kind == "file" && target.Kind == "section" {
+					targetFile := target.Path
+					var sectionName, parentSection string
+					if len(target.SectionParts) > 0 {
+						sectionName = ResolveSectionName(targetFile, target.SectionParts[len(target.SectionParts)-1])
+					}
+					if len(target.SectionParts) > 1 {
+						parentSection = ResolveSectionName(targetFile, target.SectionParts[len(target.SectionParts)-2])
+					}
+					result := ToolIntegrate(source.Path, sectionName, targetFile, parentSection)
+					if result.Error != "" {
+						return fmt.Errorf("%s", result.Error)
+					}
+					for _, line := range result.Output.Lines {
+						fmt.Println(line.Text)
+					}
+					return nil
+				}
+			}
+
+			file, _ := cmd.Flags().GetString("file")
+			targetFile, _ := cmd.Flags().GetString("target-file")
+			targetSection, _ := cmd.Flags().GetString("target-section")
+			parentSection, _ := cmd.Flags().GetString("parent-section")
+
+			if file == "" && len(args) > 0 {
+				file = args[0]
+			}
+			if file == "" || targetFile == "" || targetSection == "" {
+				return fmt.Errorf("missing file, target-file, or target-section")
+			}
+
+			result := ToolIntegrate(file, targetSection, targetFile, parentSection)
+			if result.Error != "" {
+				return fmt.Errorf("%s", result.Error)
+			}
+			for _, line := range result.Output.Lines {
+				fmt.Println(line.Text)
+			}
+			return nil
+		},
+	}
+	cmd.Flags().String("file", "", "Source file path")
+	cmd.Flags().String("target-file", "", "Target file path")
+	cmd.Flags().String("target-section", "", "Target section name")
+	cmd.Flags().String("parent-section", "", "Parent section name")
+	return cmd
+}
+
+func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "extract [source] [target]",
+		Short: "Extract a section from a source file into a target file",
+		Args:  cobra.MaximumNArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			_, err := factory(*config)
+			if err != nil {
+				return err
+			}
+
+			if len(args) == 2 {
+				source := ParseArtifactRef(args[0])
+				target := ParseArtifactRef(args[1])
+
+				if source.Kind == "section" && target.Kind == "file" {
+					if len(source.SectionParts) == 0 {
+						return fmt.Errorf("missing section path")
+					}
+					sourceFile := source.Path
+					sectionName := ResolveSectionName(sourceFile, source.SectionParts[len(source.SectionParts)-1])
+					result := ToolExtract(sourceFile, sectionName, target.Path)
+					if result.Error != "" {
+						return fmt.Errorf("%s", result.Error)
+					}
+					for _, line := range result.Output.Lines {
+						fmt.Println(line.Text)
+					}
+					return nil
+				}
+			}
+
+			file, _ := cmd.Flags().GetString("file")
+			section, _ := cmd.Flags().GetString("section")
+			targetFile, _ := cmd.Flags().GetString("target-file")
+
+			if file == "" && len(args) > 0 {
+				file = args[0]
+			}
+			if file == "" || section == "" || targetFile == "" {
+				return fmt.Errorf("missing file, section, or target-file")
+			}
+
+			result := ToolExtract(file, section, targetFile)
+			if result.Error != "" {
+				return fmt.Errorf("%s", result.Error)
+			}
+			for _, line := range result.Output.Lines {
+				fmt.Println(line.Text)
+			}
+			return nil
+		},
+	}
+	cmd.Flags().String("file", "", "Source file path")
+	cmd.Flags().String("section", "", "Section name")
+	cmd.Flags().String("parent-section", "", "Parent section name")
+	cmd.Flags().String("target-file", "", "Target file path")
+	return cmd
+}
+
 // #region 🔖Templates
 
 var globalTemplateManager *TemplateManager
@@ -3743,8 +3873,8 @@ func tmplTernary(trueVal, falseVal interface{}, condition bool) interface{} {
 }
 
 var defaultTemplates = map[string]string{
-	"goal_text":    `{{ .Kind }} {{ .Title | color "bold" }} {{ if .DueDate }}{{ .DueDate | timeLeft | color "yellow" }} {{ end }}{{ if .OpenSubgoals }}{{ .OpenSubgoals }} open subgoals {{ end }}{{ if .OpenTickets }}{{ .OpenTickets }} open tickets {{ end }}{{ .Description | truncate 50 | color "dim" }}`,
-	"goal_md":      `[{{ .Kind }}{{ .ID }}]({{ .URI }}){{ if .Title }} - {{ .Title }}{{ end }}{{ if .DueDate }} - {{ .DueDate | timeLeft }}{{ end }}{{ if .Description }} - {{ .Description }}{{ end }}`,
+	"goal_text":    `{{ .Kind }} {{ .Title | color "bold" }} {{ if .Status }}{{ .Status | color "dim" }} {{ end }}{{ if .CreatedAt }}{{ "created" | color "dim" }} {{ .CreatedAt | timeAgo | color "dim" }} {{ end }}{{ if .DueDate }}{{ .DueDate | timeLeft | color "yellow" }} {{ end }}{{ if .OpenSubgoals }}{{ .OpenSubgoals }} open subgoals {{ end }}{{ if .OpenTickets }}{{ .OpenTickets }} open tickets {{ end }}{{ .Description | truncate 80 | color "dim" }}`,
+	"goal_md":      "[{{ .Kind }}{{ .ID }}]({{ .URI }}){{ if .Title }} - `{{ .Title }}`{{ end }}{{ if .Status }} - `{{ .Status }}`{{ end }}{{ if .CreatedAt }} - `created {{ .CreatedAt | timeAgo }}`{{ end }}{{ if .DueDate }} - `{{ .DueDate | timeLeft }}`{{ end }}{{ if .Description }} - `{{ .Description }}`{{ end }}",
 	"ticket_text":  `{{ .Kind | colorStatus .Status }} {{ .Title | color "bold" }} ({{ .Slug | color "dim" }}) {{ if eq .Status "open" }}{{ if .Created }}opened {{ .Created | timeAgo }} {{ end }}{{ else }}{{ if .Finished }}closed {{ .Finished | timeAgo }} {{ end }}{{ end }}{{ if eq .Status "open" }}{{ .Prompt | truncate 30 }}{{ else }}{{ .Summary | truncate 30 }}{{ end }}`,
 	"ticket_md":    `[{{ .Kind }}{{ .Slug }}]({{ .URI }}){{ if .Title }} - {{ .Title }}{{ end }}{{ if eq .Status "open" }}{{ if .Created }} - opened {{ .Created | timeAgo }}{{ end }}{{ else }}{{ if .Finished }} - closed {{ .Finished | timeAgo }}{{ end }}{{ end }}{{ if eq .Status "open" }}{{ if .Prompt }} - {{ .Prompt }}{{ end }}{{ else }}{{ if .Summary }} - {{ .Summary }}{{ end }}{{ end }}`,
 	"section_text": `{{ .Name | color "bold" }} {{ if .Range }}(lines {{ .Range }}){{ end }}`,
@@ -3774,6 +3904,179 @@ type GoalNode struct {
 	Children           []*GoalNode
 	Tickets            []*TicketNode
 }
+
+// #region 🔖Monorepo Tree Types
+
+type TreeNodeKind string
+
+const (
+	TreeNodeProject           TreeNodeKind = "project"
+	TreeNodeBundle            TreeNodeKind = "bundle"
+	TreeNodeFolder            TreeNodeKind = "folder"
+	TreeNodeFile              TreeNodeKind = "file"
+	TreeNodeSection           TreeNodeKind = "section"
+	TreeNodeDefinition        TreeNodeKind = "definition"
+	TreeNodeGoal              TreeNodeKind = "goal"
+	TreeNodeTicket            TreeNodeKind = "ticket"
+	TreeNodeDraft             TreeNodeKind = "draft"
+	TreeNodePolicy            TreeNodeKind = "policy"
+	TreeNodeViolationKindNode TreeNodeKind = "violationKind"
+	TreeNodeContributor       TreeNodeKind = "contributor"
+	TreeNodeCommit            TreeNodeKind = "commit"
+	TreeNodeCategory          TreeNodeKind = "category"
+)
+
+type TreeNode struct {
+	Kind        TreeNodeKind
+	ID          string
+	Label       string
+	URI         string
+	SubKind     string
+	Description string
+	Year        int
+	Month       int
+	Day         int
+	Status      string
+	Contributor string
+	Children    []*TreeNode
+	matched     bool
+}
+
+type TreeFilter struct {
+	Query               string
+	OnlyKinds           map[TreeNodeKind]bool
+	ExcludeKinds        map[TreeNodeKind]bool
+	OnlySubKinds        map[TreeNodeKind][]string
+	ExcludeSubKinds     map[TreeNodeKind][]string
+	OnlyYears           []int
+	ExcludeYears        []int
+	OnlyMonths          []int
+	ExcludeMonths       []int
+	OnlyDays            []int
+	ExcludeDays         []int
+	OnlyStatus          string
+	OnlyContributors    []string
+	ExcludeContributors []string
+	OnlyPolicies        []string
+	ExcludePolicies     []string
+}
+
+func (f *TreeFilter) HasOnlyKinds() bool {
+	return len(f.OnlyKinds) > 0
+}
+
+func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
+	if kind == TreeNodeCategory {
+		return true
+	}
+	if f.HasOnlyKinds() {
+		return f.OnlyKinds[kind]
+	}
+	return !f.ExcludeKinds[kind]
+}
+
+func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
+	if subKind == "" {
+		return true
+	}
+	if only, ok := f.OnlySubKinds[kind]; ok && len(only) > 0 {
+		for _, s := range only {
+			if strings.EqualFold(s, subKind) {
+				return true
+			}
+		}
+		return false
+	}
+	if exclude, ok := f.ExcludeSubKinds[kind]; ok {
+		for _, s := range exclude {
+			if strings.EqualFold(s, subKind) {
+				return false
+			}
+		}
+	}
+	return true
+}
+
+func (f *TreeFilter) MatchesDate(year, month, day int) bool {
+	if len(f.OnlyYears) > 0 {
+		found := false
+		for _, y := range f.OnlyYears {
+			if y == year {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	for _, y := range f.ExcludeYears {
+		if y == year {
+			return false
+		}
+	}
+	if len(f.OnlyMonths) > 0 && month > 0 {
+		found := false
+		for _, m := range f.OnlyMonths {
+			if m == month {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	for _, m := range f.ExcludeMonths {
+		if m == month {
+			return false
+		}
+	}
+	if len(f.OnlyDays) > 0 && day > 0 {
+		found := false
+		for _, d := range f.OnlyDays {
+			if d == day {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	for _, d := range f.ExcludeDays {
+		if d == day {
+			return false
+		}
+	}
+	return true
+}
+
+func (f *TreeFilter) MatchesStatus(status string) bool {
+	if f.OnlyStatus == "" {
+		return true
+	}
+	return strings.EqualFold(f.OnlyStatus, status)
+}
+
+func (f *TreeFilter) MatchesContributor(contributor string) bool {
+	if len(f.OnlyContributors) > 0 {
+		for _, c := range f.OnlyContributors {
+			if strings.EqualFold(c, contributor) {
+				return true
+			}
+		}
+		return false
+	}
+	for _, c := range f.ExcludeContributors {
+		if strings.EqualFold(c, contributor) {
+			return false
+		}
+	}
+	return true
+}
+
+// #endregion 🔖Monorepo Tree Types
 
 // #endregion 🔖Models
 
@@ -3966,7 +4269,9 @@ func renderGoalTreeNodes(roots []*GoalNode, format string) string {
 				"Kind":         "🎯",
 				"ID":           n.ID,
 				"Title":        n.Title,
+				"Status":       n.Status,
 				"DueDate":      n.DueDate,
+				"CreatedAt":    n.CreatedAt,
 				"Description":  n.Description,
 				"URI":          fmt.Sprintf("semiorepo://goal/%s", n.ID),
 				"OpenSubgoals": countOpenSubgoals(n),
@@ -4164,6 +4469,606 @@ func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
 	}
 	return sb.String()
 }
+
+// #region 🔖Monorepo Tree
+
+type TreeBuildOptions struct {
+	IncludeSections bool
+}
+
+func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
+	var options TreeBuildOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+	root := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+
+	var projects []Project
+	var goals []*Goal
+	var drafts []*Draft
+	var policies []PolicyDef
+	var contributors []Contributor
+	var commits []Commit
+	var allFolders []Folder
+	var allFiles []File
+
+	var wg sync.WaitGroup
+	wg.Add(8)
+
+	go func() {
+		defer wg.Done()
+		projects = LoadProjects()
+	}()
+	go func() {
+		defer wg.Done()
+		goalCh := make(chan *Goal)
+		go func() { StreamGoals(ctx, goalCh) }()
+		for g := range goalCh {
+			goals = append(goals, g)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		drafts, _ = ListDrafts()
+	}()
+	go func() {
+		defer wg.Done()
+		policyCh := make(chan PolicyDef)
+		go func() { StreamPolicies(ctx, policyCh) }()
+		for p := range policyCh {
+			policies = append(policies, p)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		contribCh := make(chan Contributor)
+		go func() { StreamContributors(ctx, contribCh) }()
+		for c := range contribCh {
+			contributors = append(contributors, c)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		limit := 100
+		commits = LoadCommits(&limit)
+	}()
+	go func() {
+		defer wg.Done()
+		folderCh := make(chan Folder)
+		go func() { StreamFolders(ctx, "", folderCh) }()
+		for f := range folderCh {
+			allFolders = append(allFolders, f)
+		}
+	}()
+	go func() {
+		defer wg.Done()
+		fileCh := make(chan File)
+		go func() { StreamFiles(ctx, "", fileCh) }()
+		for f := range fileCh {
+			allFiles = append(allFiles, f)
+		}
+	}()
+	wg.Wait()
+
+	projectsNode := &TreeNode{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects"}
+	sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
+
+	type folderEntry struct {
+		folder *Folder
+		node   *TreeNode
+	}
+	globalFolderMap := make(map[string]*folderEntry)
+	for fi := range allFolders {
+		f := &allFolders[fi]
+		fNode := &TreeNode{
+			Kind:    TreeNodeFolder,
+			ID:      f.GetID(),
+			Label:   f.Name,
+			URI:     f.GetURI(),
+			SubKind: string(f.Kind),
+		}
+		globalFolderMap[f.Path] = &folderEntry{folder: f, node: fNode}
+	}
+
+	globalFileNodes := make(map[string]*TreeNode)
+	for fi := range allFiles {
+		f := &allFiles[fi]
+		fileNode := &TreeNode{
+			Kind:    TreeNodeFile,
+			ID:      f.Path,
+			Label:   f.Name,
+			URI:     f.GetURI(),
+			SubKind: f.Kind,
+		}
+		if options.IncludeSections {
+			absPath := filepath.Join(GetRootDir(), f.Path)
+			content, err := ReadTextFile(absPath)
+			if err == nil {
+				sections := ParseSections(content, f.Path)
+				for si := range sections {
+					s := &sections[si]
+					sNode := buildSectionTreeNode(s)
+					fileNode.Children = append(fileNode.Children, sNode)
+				}
+			}
+		}
+		globalFileNodes[f.Path] = fileNode
+	}
+
+	for pi := range projects {
+		p := &projects[pi]
+		pNode := &TreeNode{
+			Kind:    TreeNodeProject,
+			ID:      p.GetID(),
+			Label:   p.Name,
+			URI:     p.GetURI(),
+			SubKind: string(p.Kind),
+		}
+		sort.Slice(p.Bundles, func(i, j int) bool { return p.Bundles[i].Name < p.Bundles[j].Name })
+		for bi := range p.Bundles {
+			b := &p.Bundles[bi]
+			bNode := &TreeNode{
+				Kind:    TreeNodeBundle,
+				ID:      b.GetID(),
+				Label:   b.Name,
+				URI:     b.GetURI(),
+				SubKind: string(b.Kind),
+			}
+
+			bundleRoot := b.Root
+			if b.SourceRoot != "" {
+				bundleRoot = b.SourceRoot
+			}
+
+			bundleFolderMap := make(map[string]*folderEntry)
+			for path, fe := range globalFolderMap {
+				if strings.HasPrefix(path, bundleRoot+"/") || path == bundleRoot {
+					bundleFolderMap[path] = fe
+				}
+			}
+
+			for path, fe := range bundleFolderMap {
+				parentPath := filepath.Dir(path)
+				if _, ok := bundleFolderMap[parentPath]; ok {
+					continue
+				}
+				bNode.Children = append(bNode.Children, fe.node)
+			}
+			for path, fe := range bundleFolderMap {
+				parentPath := filepath.Dir(path)
+				if pfe, ok := bundleFolderMap[parentPath]; ok {
+					pfe.node.Children = append(pfe.node.Children, fe.node)
+				}
+			}
+
+			for path, fileNode := range globalFileNodes {
+				if !strings.HasPrefix(path, bundleRoot+"/") {
+					continue
+				}
+				folderPath := filepath.Dir(path)
+				if fe, ok := bundleFolderMap[folderPath]; ok {
+					fe.node.Children = append(fe.node.Children, fileNode)
+				} else {
+					bNode.Children = append(bNode.Children, fileNode)
+				}
+			}
+
+			sortTreeChildren(bNode)
+			pNode.Children = append(pNode.Children, bNode)
+		}
+		projectsNode.Children = append(projectsNode.Children, pNode)
+	}
+	root.Children = append(root.Children, projectsNode)
+
+	goalsNode := &TreeNode{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "semiorepo://goals"}
+	goalMap := make(map[string]*TreeNode)
+	sort.Slice(goals, func(i, j int) bool { return goals[i].ID < goals[j].ID })
+	for _, g := range goals {
+		gNode := &TreeNode{
+			Kind:        TreeNodeGoal,
+			ID:          g.GetID(),
+			Label:       g.Title,
+			URI:         g.GetURI(),
+			SubKind:     g.Status,
+			Description: g.Description,
+			Status:      g.Status,
+		}
+		goalMap[g.ID] = gNode
+	}
+	var rootGoals []*TreeNode
+	for _, g := range goals {
+		gNode := goalMap[g.ID]
+		parentID := ""
+		if idx := strings.LastIndex(g.ID, "/"); idx >= 0 {
+			parentID = g.ID[:idx]
+		}
+		if parentID != "" && parentID != g.ID {
+			if parent, ok := goalMap[parentID]; ok {
+				parent.Children = append(parent.Children, gNode)
+			} else {
+				rootGoals = append(rootGoals, gNode)
+			}
+		} else {
+			rootGoals = append(rootGoals, gNode)
+		}
+	}
+	goalsNode.Children = rootGoals
+
+	ticketCh := make(chan Ticket)
+	go func() { StreamTickets(ctx, nil, nil, nil, ticketCh) }()
+	var tickets []Ticket
+	for t := range ticketCh {
+		tickets = append(tickets, t)
+	}
+	for ti := range tickets {
+		t := &tickets[ti]
+		tNode := &TreeNode{
+			Kind:        TreeNodeTicket,
+			ID:          t.GetID(),
+			Label:       t.Title,
+			URI:         t.GetURI(),
+			Description: t.Prompt,
+			Year:        t.Year,
+			Month:       t.Month,
+			Day:         t.Day,
+			Status:      string(t.Status),
+		}
+		if t.Goal != "" {
+			if gNode, ok := goalMap[t.Goal]; ok {
+				gNode.Children = append(gNode.Children, tNode)
+				continue
+			}
+		}
+		goalsNode.Children = append(goalsNode.Children, tNode)
+	}
+	root.Children = append(root.Children, goalsNode)
+
+	draftsNode := &TreeNode{Kind: TreeNodeCategory, ID: "drafts", Label: "✍️Drafts", URI: "semiorepo://drafts"}
+	if drafts != nil {
+		for _, d := range drafts {
+			dNode := &TreeNode{
+				Kind:  TreeNodeDraft,
+				ID:    "draft:" + d.ID,
+				Label: d.ID,
+				URI:   "semiorepo://draft/" + strings.ToUpper(Slugify(d.ID)),
+			}
+			draftsNode.Children = append(draftsNode.Children, dNode)
+		}
+	}
+	root.Children = append(root.Children, draftsNode)
+
+	policiesNode := &TreeNode{Kind: TreeNodeCategory, ID: "policies", Label: "🛡️Policies", URI: "semiorepo://policies"}
+	sort.Slice(policies, func(i, j int) bool { return policies[i].ID < policies[j].ID })
+	for _, p := range policies {
+		pNode := &TreeNode{
+			Kind:        TreeNodePolicy,
+			ID:          "policy:" + p.ID,
+			Label:       p.Name,
+			URI:         "semiorepo://policy/" + strings.ToUpper(Slugify(p.ID)),
+			Description: p.Description,
+		}
+		for _, k := range p.Kinds {
+			meta := k.Info()
+			vkNode := &TreeNode{
+				Kind:        TreeNodeViolationKindNode,
+				ID:          "violation_kind:" + string(k),
+				Label:       string(k),
+				URI:         "semiorepo://violationKind/" + strings.ToUpper(Slugify(string(k))),
+				SubKind:     string(meta.Priority),
+				Description: meta.Reason,
+			}
+			pNode.Children = append(pNode.Children, vkNode)
+		}
+		policiesNode.Children = append(policiesNode.Children, pNode)
+	}
+	root.Children = append(root.Children, policiesNode)
+
+	contributorsNode := &TreeNode{Kind: TreeNodeCategory, ID: "contributors", Label: "👤Contributors", URI: "semiorepo://contributors"}
+	sort.Slice(contributors, func(i, j int) bool { return contributors[i].Github < contributors[j].Github })
+	for _, c := range contributors {
+		label := c.Github
+		if c.Name != "" {
+			label = c.Name + " (" + c.Github + ")"
+		}
+		cNode := &TreeNode{
+			Kind:        TreeNodeContributor,
+			ID:          c.GetID(),
+			Label:       label,
+			URI:         c.GetURI(),
+			Contributor: c.Github,
+		}
+		contributorsNode.Children = append(contributorsNode.Children, cNode)
+	}
+	root.Children = append(root.Children, contributorsNode)
+
+	commitsNode := &TreeNode{Kind: TreeNodeCategory, ID: "commits", Label: "🔀Commits", URI: "semiorepo://commits"}
+	for ci := range commits {
+		c := &commits[ci]
+		cNode := &TreeNode{
+			Kind:  TreeNodeCommit,
+			ID:    c.GetID(),
+			Label: c.SHA[:8] + " " + c.Title,
+			URI:   c.GetURI(),
+			Year:  c.Date.Year(),
+			Month: int(c.Date.Month()),
+			Day:   c.Date.Day(),
+		}
+		commitsNode.Children = append(commitsNode.Children, cNode)
+	}
+	root.Children = append(root.Children, commitsNode)
+
+	return root
+}
+
+func buildSectionTreeNode(s *Section) *TreeNode {
+	sNode := &TreeNode{
+		Kind:  TreeNodeSection,
+		ID:    s.GetID(),
+		Label: s.Name,
+		URI:   s.GetURI(),
+	}
+	for di := range s.Definitions {
+		d := &s.Definitions[di]
+		dNode := &TreeNode{
+			Kind:    TreeNodeDefinition,
+			ID:      d.GetID(),
+			Label:   d.Name,
+			URI:     d.GetURI(),
+			SubKind: string(d.Kind),
+		}
+		sNode.Children = append(sNode.Children, dNode)
+	}
+	for ci := range s.Children {
+		child := &s.Children[ci]
+		sNode.Children = append(sNode.Children, buildSectionTreeNode(child))
+	}
+	return sNode
+}
+
+func sortTreeChildren(node *TreeNode) {
+	sort.Slice(node.Children, func(i, j int) bool {
+		a, b := node.Children[i], node.Children[j]
+		if a.Kind != b.Kind {
+			aIsFolder := a.Kind == TreeNodeFolder
+			bIsFolder := b.Kind == TreeNodeFolder
+			if aIsFolder != bIsFolder {
+				return aIsFolder
+			}
+		}
+		return a.Label < b.Label
+	})
+	for _, c := range node.Children {
+		sortTreeChildren(c)
+	}
+}
+
+func FilterMonorepoTree(root *TreeNode, filter *TreeFilter) *TreeNode {
+	if filter == nil {
+		return root
+	}
+
+	filtered := filterNode(root, filter)
+	if filtered == nil {
+		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+	}
+
+	if filter.HasOnlyKinds() || len(filter.ExcludeKinds) > 0 {
+		collapseFilteredKinds(filtered, filter)
+	}
+
+	return filtered
+}
+
+func filterNode(node *TreeNode, filter *TreeFilter) *TreeNode {
+	if node.Kind != TreeNodeCategory {
+		if !filter.IsKindVisible(node.Kind) {
+			var kept []*TreeNode
+			for _, c := range node.Children {
+				fc := filterNode(c, filter)
+				if fc != nil {
+					kept = append(kept, fc)
+				}
+			}
+			if len(kept) > 0 {
+				copy := *node
+				copy.Children = kept
+				return &copy
+			}
+			return nil
+		}
+		if !filter.MatchesSubKind(node.Kind, node.SubKind) {
+			return nil
+		}
+		if node.Year > 0 && !filter.MatchesDate(node.Year, node.Month, node.Day) {
+			return nil
+		}
+		if node.Status != "" && !filter.MatchesStatus(node.Status) {
+			return nil
+		}
+		if node.Contributor != "" && !filter.MatchesContributor(node.Contributor) {
+			return nil
+		}
+	}
+
+	var kept []*TreeNode
+	for _, c := range node.Children {
+		fc := filterNode(c, filter)
+		if fc != nil {
+			kept = append(kept, fc)
+		}
+	}
+
+	if node.Kind == TreeNodeCategory && len(kept) == 0 {
+		return nil
+	}
+
+	copy := *node
+	copy.Children = kept
+	return &copy
+}
+
+func collapseFilteredKinds(node *TreeNode, filter *TreeFilter) {
+	var newChildren []*TreeNode
+	for _, c := range node.Children {
+		if c.Kind != TreeNodeCategory && !filter.IsKindVisible(c.Kind) {
+			collapseFilteredKinds(c, filter)
+			newChildren = append(newChildren, c.Children...)
+		} else {
+			collapseFilteredKinds(c, filter)
+			newChildren = append(newChildren, c)
+		}
+	}
+	node.Children = newChildren
+}
+
+func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
+	if query == "" {
+		return root
+	}
+
+	mapping := bleve.NewIndexMapping()
+	index, err := bleve.NewMemOnly(mapping)
+	if err != nil {
+		return root
+	}
+	defer index.Close()
+
+	nodeIndex := make(map[string]*TreeNode)
+	var indexNodes func(node *TreeNode)
+	indexNodes = func(node *TreeNode) {
+		if node.Kind != TreeNodeCategory {
+			docID := node.ID
+			if docID == "" {
+				docID = node.Label
+			}
+			text := strings.Join([]string{
+				node.Label,
+				node.ID,
+				node.SubKind,
+				node.Description,
+				node.URI,
+				node.Status,
+				node.Contributor,
+				string(node.Kind),
+			}, " ")
+			doc := map[string]interface{}{"text": text}
+			index.Index(docID, doc)
+			nodeIndex[docID] = node
+		}
+		for _, c := range node.Children {
+			indexNodes(c)
+		}
+	}
+	indexNodes(root)
+
+	searchRequest := bleve.NewSearchRequest(bleve.NewMatchQuery(query))
+	searchRequest.Size = len(nodeIndex)
+	results, err := index.Search(searchRequest)
+	if err != nil {
+		return root
+	}
+
+	matchedIDs := make(map[string]bool)
+	for _, hit := range results.Hits {
+		matchedIDs[hit.ID] = true
+	}
+
+	if len(matchedIDs) == 0 {
+		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+	}
+
+	pruned := pruneUnmatched(root, matchedIDs)
+	if pruned == nil {
+		return &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+	}
+	return pruned
+}
+
+func pruneUnmatched(node *TreeNode, matchedIDs map[string]bool) *TreeNode {
+	docID := node.ID
+	if docID == "" {
+		docID = node.Label
+	}
+
+	selfMatched := matchedIDs[docID]
+
+	var kept []*TreeNode
+	for _, c := range node.Children {
+		fc := pruneUnmatched(c, matchedIDs)
+		if fc != nil {
+			kept = append(kept, fc)
+		}
+	}
+
+	if selfMatched || len(kept) > 0 || node.Kind == TreeNodeCategory {
+		if node.Kind == TreeNodeCategory && len(kept) == 0 && !selfMatched {
+			return nil
+		}
+		copy := *node
+		copy.Children = kept
+		return &copy
+	}
+	return nil
+}
+
+func RenderMonorepoTree(root *TreeNode) string {
+	var sb strings.Builder
+	for i, c := range root.Children {
+		renderTreeNodeText(&sb, c, "", i == len(root.Children)-1, true)
+	}
+	return sb.String()
+}
+
+func RenderMonorepoTreeMarkdown(root *TreeNode) string {
+	var sb strings.Builder
+	for _, c := range root.Children {
+		renderTreeNodeMarkdown(&sb, c, "")
+	}
+	return sb.String()
+}
+
+func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLast bool, isRoot bool) {
+	connector := "├── "
+	if isLast {
+		connector = "└── "
+	}
+	if isRoot {
+		connector = ""
+	}
+
+	label := node.Label
+	if node.URI != "" && node.Kind == TreeNodeCategory {
+		label = "[" + node.Label + "](" + node.URI + ")"
+	}
+
+	sb.WriteString(prefix + connector + label + "\n")
+
+	newPrefix := prefix
+	if !isRoot {
+		if isLast {
+			newPrefix += "    "
+		} else {
+			newPrefix += "│   "
+		}
+	}
+
+	for i, c := range node.Children {
+		renderTreeNodeText(sb, c, newPrefix, i == len(node.Children)-1, false)
+	}
+}
+
+func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) {
+	label := node.Label
+	if node.URI != "" {
+		label = "[" + node.Label + "](" + node.URI + ")"
+	}
+	sb.WriteString(indent + "- " + label + "\n")
+	for _, c := range node.Children {
+		renderTreeNodeMarkdown(sb, c, indent+"  ")
+	}
+}
+
+// #endregion 🔖Monorepo Tree
 
 // #endregion 🔖Tree Logic
 
@@ -4739,6 +5644,36 @@ func renderStream(cmd *cobra.Command, config *Config, stream <-chan Event) error
 		return ExitError{Code: exitCode}
 	}
 	return nil
+}
+
+func renderEventsToMarkdown(events []Event) string {
+	var sb strings.Builder
+	for _, event := range events {
+		if event.Kind == KindResult && len(event.Data) > 0 {
+			sb.WriteString(formatMarkdownResult(event.Command, event.Data))
+		}
+		if event.Kind == KindError && event.Error != nil {
+			sb.WriteString(fmt.Sprintf("**Error: %s**\n", event.Error.Message))
+		}
+	}
+	return sb.String()
+}
+
+func toolResultFromEvents(events []Event, data interface{}) ToolResult {
+	text := renderEventsToMarkdown(events)
+	output := NewOutput()
+	if text != "" {
+		output.Plain(text)
+	}
+	for _, event := range events {
+		if event.Kind == KindError && event.Error != nil {
+			return ToolResult{Output: *output, Data: data, Error: event.Error.Message}
+		}
+		if event.Kind == KindDone && event.Done != nil && event.Done.ExitCode != 0 {
+			output.ExitCode = event.Done.ExitCode
+		}
+	}
+	return ToolResult{Output: *output, Data: data}
 }
 
 func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query string, variables map[string]interface{}) error {
@@ -8161,13 +9096,15 @@ type Interaction struct {
 
 func (i *Interaction) UnmarshalJSON(data []byte) error {
 	type interactionAlias struct {
-		Dates  InteractionDates `json:"dates"`
-		Author json.RawMessage  `json:"author"`
-		System System           `json:"system"`
-		Commit string           `json:"commit"`
-		Prompt string           `json:"prompt,omitempty"`
-		LLM    string           `json:"llm,omitempty"`
-		Diff   *TicketDiffs     `json:"diff,omitempty"`
+		Dates    InteractionDates `json:"dates"`
+		Author   json.RawMessage  `json:"author"`
+		System   System           `json:"system"`
+		Commit   string           `json:"commit"`
+		Prompt   string           `json:"prompt,omitempty"`
+		LLM      string           `json:"llm,omitempty"`
+		Diff     *TicketDiffs     `json:"diff,omitempty"`
+		Started  string           `json:"started,omitempty"`
+		Finished *string          `json:"finished,omitempty"`
 	}
 
 	var aux interactionAlias
@@ -8181,6 +9118,13 @@ func (i *Interaction) UnmarshalJSON(data []byte) error {
 	}
 
 	i.Dates = aux.Dates
+	// Backwards compatibility: flat "started"/"finished" fields
+	if i.Dates.Started == "" && aux.Started != "" {
+		i.Dates.Started = aux.Started
+	}
+	if i.Dates.Finished == nil && aux.Finished != nil {
+		i.Dates.Finished = aux.Finished
+	}
 	i.Author = author
 	i.System = aux.System
 	i.Commit = aux.Commit
@@ -8900,33 +9844,33 @@ type CodebasePolicy struct {
 	Violations []PolicyViolationRef `json:"violations,omitempty"`
 }
 
-type TreeNodeKind string
+type CbTreeNodeKind string
 
 const (
-	TreeNodeRepo       TreeNodeKind = "repo"
-	TreeNodeBundle     TreeNodeKind = "bundle"
-	TreeNodeFolder     TreeNodeKind = "folder"
-	TreeNodeFile       TreeNodeKind = "file"
-	TreeNodeSection    TreeNodeKind = "section"
-	TreeNodeDefinition TreeNodeKind = "definition"
+	CbTreeNodeRepo       CbTreeNodeKind = "repo"
+	CbTreeNodeBundle     CbTreeNodeKind = "bundle"
+	CbTreeNodeFolder     CbTreeNodeKind = "folder"
+	CbTreeNodeFile       CbTreeNodeKind = "file"
+	CbTreeNodeSection    CbTreeNodeKind = "section"
+	CbTreeNodeDefinition CbTreeNodeKind = "definition"
 )
 
-type TreeNode struct {
-	Kind     TreeNodeKind         `json:"kind"`
-	Children map[string]*TreeNode `json:"children,omitempty"`
+type CbTreeNode struct {
+	Kind     CbTreeNodeKind         `json:"kind"`
+	Children map[string]*CbTreeNode `json:"children,omitempty"`
 }
 
 type Codebase struct {
-	Bundles      []CodebaseBundle      `json:"bundles"`
-	Folders      []CodebaseFolder      `json:"folders"`
-	Files        []CodebaseFile        `json:"files"`
-	Sections     []CodebaseSection     `json:"sections"`
-	Definitions  []CodebaseDefinition  `json:"definitions"`
-	Contributors []CodebaseContributor `json:"contributors"`
-	Tickets      []CodebaseTicket      `json:"tickets"`
-	Policies     []CodebasePolicy      `json:"policies"`
-	Violations   []CodebaseViolation   `json:"violations"`
-	Tree         map[string]*TreeNode  `json:"tree"`
+	Bundles      []CodebaseBundle       `json:"bundles"`
+	Folders      []CodebaseFolder       `json:"folders"`
+	Files        []CodebaseFile         `json:"files"`
+	Sections     []CodebaseSection      `json:"sections"`
+	Definitions  []CodebaseDefinition   `json:"definitions"`
+	Contributors []CodebaseContributor  `json:"contributors"`
+	Tickets      []CodebaseTicket       `json:"tickets"`
+	Policies     []CodebasePolicy       `json:"policies"`
+	Violations   []CodebaseViolation    `json:"violations"`
+	Tree         map[string]*CbTreeNode `json:"tree"`
 }
 
 // #endregion 🔖Codebase Types
@@ -11198,7 +12142,7 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 }
 
 func (ctx *CodebaseContext) GetFileID(file string) string {
-	return "📄" + NormalizePath(file)
+	return buildFileID(file, nil)
 }
 
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
@@ -11822,19 +12766,19 @@ func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
 	return result
 }
 
-func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []CodebaseFile, sections []CodebaseSection, definitions []CodebaseDefinition) map[string]*TreeNode {
-	tree := make(map[string]*TreeNode)
-	tree["semio"] = &TreeNode{Kind: TreeNodeRepo, Children: make(map[string]*TreeNode)}
+func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []CodebaseFile, sections []CodebaseSection, definitions []CodebaseDefinition) map[string]*CbTreeNode {
+	tree := make(map[string]*CbTreeNode)
+	tree["semio"] = &CbTreeNode{Kind: CbTreeNodeRepo, Children: make(map[string]*CbTreeNode)}
 	root := tree["semio"]
 
 	for _, bundle := range bundles {
-		root.Children[bundle.ID] = &TreeNode{Kind: TreeNodeBundle, Children: make(map[string]*TreeNode)}
+		root.Children[bundle.ID] = &CbTreeNode{Kind: CbTreeNodeBundle, Children: make(map[string]*CbTreeNode)}
 	}
 
-	folderNodes := make(map[string]*TreeNode)
+	folderNodes := make(map[string]*CbTreeNode)
 	for _, file := range files {
 		bundleName := ctx.GetBundleForFile(file.Path)
-		var parent *TreeNode
+		var parent *CbTreeNode
 		if bundleName != "" {
 			parent = root.Children[bundleName]
 		} else {
@@ -11846,7 +12790,7 @@ func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []C
 			for i, part := range parts {
 				folderPath := strings.Join(parts[:i+1], "/")
 				if _, ok := folderNodes[folderPath]; !ok {
-					folderNode := &TreeNode{Kind: TreeNodeFolder, Children: make(map[string]*TreeNode)}
+					folderNode := &CbTreeNode{Kind: CbTreeNodeFolder, Children: make(map[string]*CbTreeNode)}
 					if i == 0 {
 						parent.Children[part] = folderNode
 					} else {
@@ -11856,10 +12800,10 @@ func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []C
 					folderNodes[folderPath] = folderNode
 				}
 			}
-			fileNode := &TreeNode{Kind: TreeNodeFile, Children: make(map[string]*TreeNode)}
+			fileNode := &CbTreeNode{Kind: CbTreeNodeFile, Children: make(map[string]*CbTreeNode)}
 			folderNodes[folder].Children[file.ID] = fileNode
 		} else {
-			fileNode := &TreeNode{Kind: TreeNodeFile, Children: make(map[string]*TreeNode)}
+			fileNode := &CbTreeNode{Kind: CbTreeNodeFile, Children: make(map[string]*CbTreeNode)}
 			parent.Children[file.ID] = fileNode
 		}
 	}
@@ -13327,6 +14271,16 @@ func LoadProjects() []Project {
 	return projectCache
 }
 
+func isProjectDir(name string) bool {
+	if strings.HasPrefix(name, ".") {
+		return false
+	}
+	if name == "node_modules" {
+		return false
+	}
+	return true
+}
+
 func loadProjectsInternal() []Project {
 	var projects []Project
 	projectsDir := rootDir
@@ -13334,16 +14288,13 @@ func loadProjectsInternal() []Project {
 	if err != nil {
 		return nil
 	}
-	// Add root project for semio-repo/go if needed?
-	// User said "semio-repo/go" -> Project semio-repo.
-	// We handle folders starting with @.
 
 	for _, d := range entries {
 		if !d.IsDir() {
 			continue
 		}
 		name := d.Name()
-		if !strings.HasPrefix(name, "@") {
+		if !isProjectDir(name) {
 			continue
 		}
 
@@ -13355,7 +14306,6 @@ func loadProjectsInternal() []Project {
 			Bundles: []Bundle{},
 		}
 
-		// Scan for bundles in subdirectories
 		projectPath := filepath.Join(projectsDir, name)
 		subEntries, _ := os.ReadDir(projectPath)
 		for _, sub := range subEntries {
@@ -13365,10 +14315,12 @@ func loadProjectsInternal() []Project {
 			if strings.HasPrefix(sub.Name(), ".") {
 				continue
 			}
+			if sub.Name() == "node_modules" {
+				continue
+			}
 			bunName := sub.Name()
 			fullBundleName := name + "/" + bunName
 
-			// Derive bundle kind
 			bundlePath := filepath.Join(name, bunName)
 			kind := DeriveBundleKind(fullBundleName, bundlePath)
 
@@ -13379,10 +14331,8 @@ func loadProjectsInternal() []Project {
 				Kind:        kind,
 			}
 
-			// Load Packages map
 			bundle.Packages = loadPackages(filepath.Join(rootDir, bundlePath))
 
-			// Try to load additional metadata from project.json/package.json
 			configPath := filepath.Join(projectPath, bunName, "project.json")
 			if !FileExists(configPath) {
 				configPath = filepath.Join(projectPath, bunName, "package.json")
@@ -13687,14 +14637,19 @@ func runProjectTree(factory EngineFactory, config Config, cmd *cobra.Command, ar
 		for p := range projChan {
 			projects = append(projects, p)
 		}
-		sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
-
+		var events []Event
 		for _, p := range projects {
 			data, err := json.Marshal(map[string]interface{}{"project": p})
 			if err != nil {
 				continue
 			}
-			stream <- Event{Kind: KindResult, Command: "project tree", Data: data}
+			events = append(events, Event{Kind: KindResult, Command: "project tree", Data: data})
+		}
+		sort.Slice(events, func(i, j int) bool {
+			return formatMarkdownResult(events[i].Command, events[i].Data) < formatMarkdownResult(events[j].Command, events[j].Data)
+		})
+		for _, ev := range events {
+			stream <- ev
 		}
 		stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 	}()
@@ -14701,90 +15656,100 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 }
 
 func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) ToolResult {
-	output := NewOutput()
-	resolvedPrompt := prompt
-	if resolvedPrompt == "" {
-		resolvedPrompt = title
-	}
 	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noGithub, issue)
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	if ticket == nil {
-		output.Info("\n🚫Ticket creation skipped (NOTICKET)")
+		output := NewOutput()
+		output.Info("Ticket creation skipped (NOTICKET)")
 		return ToolResult{Output: *output}
 	}
-	if shouldContinueTicket(resolvedPrompt) {
-		output.Success(fmt.Sprintf("\n↩️ Continued ticket: %s", ticket.Slug))
-		return ToolResult{Output: *output, Data: ticket}
-	}
-	output.Success(fmt.Sprintf("\n🎫 Created ticket: %s", ticket.Slug))
-	output.Info(fmt.Sprintf("   Folder: %s", ticket.FolderPath))
-	if ticket.JsonPath != "" {
-		output.Info(fmt.Sprintf("   JSON:   %s", ticket.JsonPath))
-	}
-	if draft != "" {
-		output.Info(fmt.Sprintf("   Draft:  %s", draft))
-	}
-	if ticket.TicketPath != "" {
-		output.Info(fmt.Sprintf("   Ticket: %s", ticket.TicketPath))
-	}
-	if ticket.GitHub != nil && ticket.GitHub.Issue != "" {
-		output.Info(fmt.Sprintf("   Issue:  %s", ticket.GitHub.Issue))
-	}
-	return ToolResult{Output: *output, Data: ticket}
+	data, _ := json.Marshal(map[string]interface{}{
+		"ticketOpen": map[string]interface{}{
+			"id":     ticket.GetID(),
+			"slug":   ticket.Slug,
+			"status": ticket.Status,
+			"path":   ticket.FolderPath,
+			"uri":    fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, ticket.Slug),
+		},
+	})
+	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
+	return toolResultFromEvents(events, ticket)
 }
 
 func ToolTicketList(year, month, day *int) ToolResult {
-	output := NewOutput()
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Info(fmt.Sprintf("\n🎫 Found %d tickets:\n", len(tickets)))
+	var events []Event
 	for _, t := range tickets {
-		status := "🟢"
-		if t.GetStatus() == TicketStatusClosed {
-			status = "✅"
+		created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", t.Year, t.Month, t.Day)
+		dates := map[string]interface{}{"created": created}
+		if t.Finished != nil {
+			dates["finished"] = t.Finished.Format(time.RFC3339)
 		}
-		output.Plain(fmt.Sprintf("   %s %d/%s/%s/%s", status, t.Year, PadNumber(t.Month, 2), PadNumber(t.Day, 2), t.Slug))
-		output.Plain(fmt.Sprintf("      %s", t.GetTitle()))
+		flat := map[string]interface{}{
+			"slug":   t.Slug,
+			"year":   t.Year,
+			"month":  t.Month,
+			"day":    t.Day,
+			"title":  t.Title,
+			"status": t.Status,
+			"date":   dates,
+		}
+		data, _ := json.Marshal(map[string]interface{}{"ticket": flat})
+		events = append(events, Event{Kind: KindResult, Command: "ticket list", Data: data})
 	}
-	return ToolResult{Output: *output, Data: tickets}
+	return toolResultFromEvents(events, tickets)
 }
 
 func ToolTicketRead(year, month, day int, slug string) ToolResult {
-	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Info(fmt.Sprintf("\n🎫 Ticket: %s", ticket.Slug))
-	output.Plain(fmt.Sprintf("   Status: %s", ticket.GetStatus()))
-	output.Plain(fmt.Sprintf("   Created: %s", ticket.GetDateStarted()))
-	output.Plain(fmt.Sprintf("   Prompt: %s", ticket.GetPrompt()))
-	if ticket.GetLLM() != "" {
-		output.Plain(fmt.Sprintf("   LLM: %s", ticket.GetLLM()))
+	created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", ticket.Year, ticket.Month, ticket.Day)
+	dates := map[string]interface{}{"created": created}
+	if ticket.Finished != nil {
+		dates["finished"] = ticket.Finished.Format(time.RFC3339)
 	}
+	flat := map[string]interface{}{
+		"slug":   ticket.Slug,
+		"year":   ticket.Year,
+		"month":  ticket.Month,
+		"day":    ticket.Day,
+		"title":  ticket.Title,
+		"status": ticket.Status,
+		"date":   dates,
+	}
+	data, _ := json.Marshal(map[string]interface{}{"ticket": flat})
+	events := []Event{{Kind: KindResult, Command: "ticket read", Data: data}}
 	ticketContent, _ := ReadTextFile(ticket.TicketPath)
+	result := toolResultFromEvents(events, ticket)
 	if ticketContent != "" {
-		output.Plain(fmt.Sprintf("\n%s", ticketContent))
+		result.Output.Plain(ticketContent)
 	}
-	return ToolResult{Output: *output, Data: ticket}
+	return result
 }
 
 func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noGithub bool) ToolResult {
-	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	if title != "" {
 		if err := UpdateTicketTitle(ticket, title); err != nil {
+			output := NewOutput()
 			output.Error(fmt.Sprintf("Error: %v", err))
 			return ToolResult{Output: *output, Error: err.Error()}
 		}
@@ -14795,35 +15760,39 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 		}
 	}
 	if err := FinishTicket(ticket, summary, files, noGithub, false); err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	filesResult := ticket.GetFiles()
-	filesCount := 0
-	sectionsCount := 0
-	defsCount := 0
-	if filesResult != nil {
-		filesCount = len(filesResult.Files.Modified) + len(filesResult.Files.Added) + len(filesResult.Files.Renamed) + len(filesResult.Files.Deleted)
-		sectionsCount = len(filesResult.Sections.Modified) + len(filesResult.Sections.Added) + len(filesResult.Sections.Renamed) + len(filesResult.Sections.Deleted)
-		defsCount = len(filesResult.Definitions.Modified) + len(filesResult.Definitions.Added) + len(filesResult.Definitions.Renamed) + len(filesResult.Definitions.Deleted)
+	dates := map[string]interface{}{
+		"started": fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", ticket.Year, ticket.Month, ticket.Day),
 	}
-	output.Success(fmt.Sprintf("\n✅ Ticket finished: %s", ticket.Slug))
-	output.Info(fmt.Sprintf("   Summary: %s", summary))
-	output.Info(fmt.Sprintf("   Files: %d", filesCount))
-	output.Info(fmt.Sprintf("   Sections affected: %d", sectionsCount))
-	output.Info(fmt.Sprintf("   Definitions affected: %d", defsCount))
-	return ToolResult{Output: *output, Data: ticket}
+	if ticket.Finished != nil {
+		dates["finished"] = ticket.Finished.Format(time.RFC3339)
+	}
+	data, _ := json.Marshal(map[string]interface{}{
+		"ticketClose": map[string]interface{}{
+			"id":     ticket.GetID(),
+			"slug":   ticket.Slug,
+			"status": ticket.Status,
+			"dates":  dates,
+		},
+	})
+	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
+	return toolResultFromEvents(events, ticket)
 }
 
 func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noGithub bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
 	if title != "" {
 		if err := UpdateTicketTitle(ticket, title); err != nil {
+			output := NewOutput()
 			output.Error(fmt.Sprintf("Error: %v", err))
 			return ToolResult{Output: *output, Error: err.Error()}
 		}
@@ -14853,31 +15822,30 @@ func ToolDraftCreate(slug string, files []string) ToolResult {
 }
 
 func ToolDraftList() ToolResult {
-	output := NewOutput()
 	drafts, err := ListDrafts()
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Info(fmt.Sprintf("\n📝Found %d drafts:\n", len(drafts)))
+	var events []Event
 	for _, d := range drafts {
-		output.Plain(fmt.Sprintf("   %s", d.ID))
+		data, _ := json.Marshal(map[string]interface{}{"draft": d})
+		events = append(events, Event{Kind: KindResult, Command: "draft list", Data: data})
 	}
-	return ToolResult{Output: *output, Data: drafts}
+	return toolResultFromEvents(events, drafts)
 }
 
 func ToolDraftDelete(slug string) ToolResult {
-	output := NewOutput()
 	if err := DeleteDraft(slug); err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Success(fmt.Sprintf("\n🗑️ Deleted draft: %s", slug))
-	return ToolResult{Output: *output}
+	return toolResultFromEvents(nil, nil)
 }
 
 func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noGithub bool, parent, milestone string) ToolResult {
-	output := NewOutput()
 	ctx := NewRepoContext(rootDir)
 	goal, err := ctx.GoalCreate(GoalCreateInput{
 		Title:       title,
@@ -14891,47 +15859,41 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noG
 		Milestone:   milestone,
 	})
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Success(fmt.Sprintf("\n🎯Created goal: %s", goal.ID))
-	output.Info(fmt.Sprintf("   Title: %s", goal.Title))
-	output.Info(fmt.Sprintf("   Due: %s", goal.Dates.Due))
-	if goal.GitHub != nil {
-		if goal.GitHub.Milestone != "" {
-			output.Info(fmt.Sprintf("   Milestone: %s", goal.GitHub.Milestone))
-		}
-		if goal.GitHub.Issue != "" {
-			output.Info(fmt.Sprintf("   Issue: %s", goal.GitHub.Issue))
-		}
-	}
-	return ToolResult{Output: *output, Data: goal}
+	data, _ := json.Marshal(map[string]interface{}{
+		"goalCreate": map[string]interface{}{
+			"id":      goal.ID,
+			"title":   goal.Title,
+			"status":  goal.Status,
+			"prompt":  goal.Prompt,
+			"dueDate": goal.Dates.Due,
+			"client":  goal.Client,
+			"llm":     goal.LLM,
+		},
+	})
+	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
+	return toolResultFromEvents(events, goal)
 }
 
 func ToolGoalList() ToolResult {
-	output := NewOutput()
 	goals, err := ListGoals()
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Info(fmt.Sprintf("\n🎯Found %d goals:\n", len(goals)))
+	var events []Event
 	for _, g := range goals {
-		status := "🟢"
-		if g.Status == "closed" {
-			status = "✅"
-		}
-		output.Plain(fmt.Sprintf("   %s %s", status, g.ID))
-		output.Plain(fmt.Sprintf("      %s", g.Title))
-		if g.Dates.Due != "" {
-			output.Plain(fmt.Sprintf("      Due: %s", g.Dates.Due))
-		}
+		data, _ := json.Marshal(map[string]interface{}{"goal": g, "id": g.ID})
+		events = append(events, Event{Kind: KindResult, Command: "goal list", Data: data})
 	}
-	return ToolResult{Output: *output, Data: goals}
+	return toolResultFromEvents(events, goals)
 }
 
 func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
-	output := NewOutput()
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.GoalClose(GoalCloseInput{
 		ID:       id,
@@ -14939,15 +15901,21 @@ func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
 		NoGithub: noGithub,
 	})
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Success(fmt.Sprintf("\n✅ Closed goal: %s", res.ID))
-	return ToolResult{Output: *output}
+	data, _ := json.Marshal(map[string]interface{}{
+		"goalClose": map[string]interface{}{
+			"id":     res.ID,
+			"status": res.Status,
+		},
+	})
+	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
+	return toolResultFromEvents(events, nil)
 }
 
 func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string, noGithub bool) ToolResult {
-	output := NewOutput()
 	ctx := NewRepoContext(rootDir)
 	var titlePtr, descriptionPtr, dueDatePtr *string
 	if title != "" {
@@ -14970,97 +15938,98 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 		NoGithub:    noGithub,
 	})
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Success(fmt.Sprintf("\n🔓 Reopened goal: %s", res.ID))
-	return ToolResult{Output: *output}
+	data, _ := json.Marshal(map[string]interface{}{
+		"goalReopen": map[string]interface{}{
+			"id":     res.ID,
+			"status": res.Status,
+		},
+	})
+	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
+	return toolResultFromEvents(events, nil)
 }
 
 func ToolContributorAdd(github string) ToolResult {
-	output := NewOutput()
 	contributor, err := CreateContributor(github)
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Success(fmt.Sprintf("\n👤Added contributor: %s", contributor.Github))
-	output.Info(fmt.Sprintf("   Path: %s", GetContributorPath(github)))
-	return ToolResult{Output: *output, Data: contributor}
+	data, _ := json.Marshal(map[string]interface{}{
+		"contributorAdd": map[string]interface{}{
+			"id":     contributor.Github,
+			"github": contributor.Github,
+			"name":   contributor.Name,
+			"emails": contributor.Emails,
+		},
+	})
+	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
+	return toolResultFromEvents(events, contributor)
 }
 
 func ToolContributorList() ToolResult {
-	output := NewOutput()
 	contributors, err := ListContributors()
 	if err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Info(fmt.Sprintf("\n👥 Found %d contributors:\n", len(contributors)))
+	var events []Event
 	for _, c := range contributors {
-		name := c.Name
-		if name == "" {
-			name = c.Github
-		}
-		output.Plain(fmt.Sprintf("   %s (@%s)", name, c.Github))
-		ticketCount := len(c.Contributions.Tickets)
-		if ticketCount > 0 {
-			output.Plain(fmt.Sprintf("      Tickets: %d", ticketCount))
-		}
-		projectCount := len(c.Contributions.Bundles)
-		if projectCount > 0 {
-			output.Plain(fmt.Sprintf("      Bundles: %d", projectCount))
-		}
-		fileCount := len(c.Contributions.Files)
-		if fileCount > 0 {
-			output.Plain(fmt.Sprintf("      Files: %d", fileCount))
-		}
-		commitCount := len(c.Contributions.Commits)
-		if commitCount > 0 {
-			output.Plain(fmt.Sprintf("      Commits: %d", commitCount))
-		}
-		if c.Contributions.Lines != nil {
-			output.Plain(fmt.Sprintf("      Lines: +%d -%d", c.Contributions.Lines.Added, c.Contributions.Lines.Removed))
-		}
+		data, _ := json.Marshal(map[string]interface{}{"contributor": c})
+		events = append(events, Event{Kind: KindResult, Command: "contributor list", Data: data})
 	}
-	return ToolResult{Output: *output, Data: contributors}
+	return toolResultFromEvents(events, contributors)
 }
 
 func ToolContributorRemove(github string) ToolResult {
-	output := NewOutput()
 	if err := RemoveContributor(github); err != nil {
+		output := NewOutput()
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
-	output.Success(fmt.Sprintf("\n🗑️ Removed contributor: %s", github))
-	return ToolResult{Output: *output}
+	data, _ := json.Marshal(map[string]interface{}{
+		"contributorRemove": github,
+	})
+	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
+	return toolResultFromEvents(events, nil)
 }
 
 func ToolProjectList() ToolResult {
-	output := NewOutput()
 	bundles := GetProjects()
-	output.Info(fmt.Sprintf("\n📦Found %d bundles:\n", len(bundles)))
+	var events []Event
 	for _, p := range bundles {
-		output.Plain(fmt.Sprintf("   %s", p.Name))
-		output.Plain(fmt.Sprintf("      Root: %s", p.Root))
-		if len(p.Tags) > 0 {
-			output.Plain(fmt.Sprintf("      Tags: %s", strings.Join(p.Tags, ", ")))
-		}
+		data, _ := json.Marshal(map[string]interface{}{"project": p})
+		events = append(events, Event{Kind: KindResult, Command: "project list", Data: data})
 	}
-	return ToolResult{Output: *output, Data: bundles}
+	return toolResultFromEvents(events, bundles)
 }
 
 func ToolProjectTree() ToolResult {
-	output := NewOutput()
-	bundles := GetProjects()
-	output.Info("\n📦Bundle tree:\n")
-	for _, p := range bundles {
-		output.Plain(fmt.Sprintf("   └── %s (%s)", p.Name, p.Root))
+	projChan := make(chan Project)
+	go func() {
+		StreamProjects(context.Background(), projChan)
+	}()
+	var projects []Project
+	for p := range projChan {
+		projects = append(projects, p)
 	}
-	return ToolResult{Output: *output, Data: bundles}
+	var events []Event
+	for _, p := range projects {
+		data, _ := json.Marshal(map[string]interface{}{"project": p})
+		events = append(events, Event{Kind: KindResult, Command: "project tree", Data: data})
+	}
+	sort.Slice(events, func(i, j int) bool {
+		return formatMarkdownResult(events[i].Command, events[i].Data) < formatMarkdownResult(events[j].Command, events[j].Data)
+	})
+	return toolResultFromEvents(events, projects)
 }
-
 func ToolFolderCreate(path string) ToolResult {
+
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if FileExists(absPath) {
@@ -15095,6 +16064,7 @@ func ToolFolderMove(source, target string) ToolResult {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
+	UpdateAgentsDocsPath(source, target)
 	output.Success(fmt.Sprintf("\n📁Moved folder: %s → %s", source, target))
 	return ToolResult{Output: *output}
 }
@@ -15287,6 +16257,7 @@ func ToolFileMove(source, target string) ToolResult {
 		output.Error(fmt.Sprintf("Error: %v", err))
 		return ToolResult{Output: *output, Error: err.Error()}
 	}
+	UpdateAgentsDocsPath(source, target)
 	output.Success(fmt.Sprintf("\n📄Moved file: %s → %s", source, target))
 	return ToolResult{Output: *output}
 }
@@ -15733,6 +16704,90 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 
 	output.Success(fmt.Sprintf("\n🧩Extracted %s from %s to %s", sourceSectionName, sourceFilePath, targetFilePath))
 	return ToolResult{Output: *output}
+}
+
+func UpdateAgentsDocsPath(oldPath, newPath string) {
+	agentsPath := filepath.Join(rootDir, "AGENTS.md")
+	if !FileExists(agentsPath) {
+		return
+	}
+	content, err := ReadTextFile(agentsPath)
+	if err != nil {
+		return
+	}
+
+	oldNorm := NormalizePath(oldPath)
+	newNorm := NormalizePath(newPath)
+	if oldNorm == newNorm {
+		return
+	}
+
+	lines := strings.Split(content, "\n")
+	changed := false
+
+	for i, line := range lines {
+		if !strings.HasPrefix(line, "## ") && !strings.HasPrefix(line, "### ") {
+			continue
+		}
+		if strings.Contains(line, oldNorm) {
+			newLine := strings.Replace(line, oldNorm, newNorm, 1)
+			if newLine != line {
+				lines[i] = newLine
+				changed = true
+			}
+		}
+	}
+
+	if !changed {
+		return
+	}
+
+	WriteTextFile(agentsPath, strings.Join(lines, "\n"))
+}
+
+func RemoveAgentsDocsEntry(filePath string) {
+	agentsPath := filepath.Join(rootDir, "AGENTS.md")
+	if !FileExists(agentsPath) {
+		return
+	}
+	content, err := ReadTextFile(agentsPath)
+	if err != nil {
+		return
+	}
+
+	norm := NormalizePath(filePath)
+	lines := strings.Split(content, "\n")
+	var newLines []string
+	skip := false
+
+	for _, line := range lines {
+		if strings.HasPrefix(line, "#") {
+			if skip {
+				skip = false
+			}
+			if strings.HasPrefix(line, "## ") {
+				header := line[3:]
+				cleanHeader := strings.ReplaceAll(header, "\uFE0E", "")
+				cleanHeader = strings.ReplaceAll(cleanHeader, "\uFE0F", "")
+				runes := []rune(cleanHeader)
+				if len(runes) > 1 {
+					pathPart := strings.TrimSuffix(string(runes[1:]), "/")
+					if pathPart == norm {
+						skip = true
+						continue
+					}
+				}
+			}
+		}
+		if !skip {
+			newLines = append(newLines, line)
+		}
+	}
+
+	newContent := strings.Join(newLines, "\n")
+	if newContent != content {
+		WriteTextFile(agentsPath, newContent)
+	}
 }
 
 func SplitHeader(content string, lang LanguagePlugin) (string, string) {
@@ -22167,6 +23222,23 @@ func createMcpServer() *server.MCPServer {
 		sectionIntegrate,
 	)
 	s.AddTool(
+		mcp.NewTool("extract",
+			mcp.WithDescription("Extract a section from a source file into a target file"),
+			mcp.WithString("source_file", mcp.Required(), mcp.Description("Source file path")),
+			mcp.WithString("source_section", mcp.Required(), mcp.Description("Source section name")),
+			mcp.WithString("target_file", mcp.Required(), mcp.Description("Target file path")),
+		),
+		sectionExtract,
+	)
+	s.AddTool(
+		mcp.NewTool("move",
+			mcp.WithDescription("Move an artifact from source to target. Supports file→file, folder→folder, file→section (integrate), section→file (extract)."),
+			mcp.WithString("source", mcp.Required(), mcp.Description("Source artifact ID (e.g. 💻path, 📁path/, 🔖path#SECTION)")),
+			mcp.WithString("target", mcp.Required(), mcp.Description("Target artifact ID (e.g. 💻path, 📁path/, 🔖path#SECTION)")),
+		),
+		artifactMove,
+	)
+	s.AddTool(
 		mcp.NewTool("definition_list",
 			mcp.WithDescription("List definitions in a file"),
 			mcp.WithString("file", mcp.Required(), mcp.Description("File path")),
@@ -23019,6 +24091,81 @@ func sectionIntegrate(ctx context.Context, request mcp.CallToolRequest) (*mcp.Ca
 	return toolResultToMCP(result)
 }
 
+func sectionExtract(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	sourceFile, err := requireStringArg(args, "source_file")
+	if err != nil {
+		return nil, err
+	}
+	sourceSection, err := requireStringArg(args, "source_section")
+	if err != nil {
+		return nil, err
+	}
+	targetFile, err := requireStringArg(args, "target_file")
+	if err != nil {
+		return nil, err
+	}
+	result := ToolExtract(sourceFile, sourceSection, targetFile)
+	return toolResultToMCP(result)
+}
+
+func artifactMove(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	args := getArgs(request)
+	sourceID, err := requireStringArg(args, "source")
+	if err != nil {
+		return nil, err
+	}
+	targetID, err := requireStringArg(args, "target")
+	if err != nil {
+		return nil, err
+	}
+
+	source := ParseArtifactRef(sourceID)
+	target := ParseArtifactRef(targetID)
+
+	var result ToolResult
+
+	switch {
+	case source.Kind == "file" && target.Kind == "file":
+		result = ToolFileMove(source.Path, target.Path)
+	case source.Kind == "folder" && target.Kind == "folder":
+		result = ToolFolderMove(source.Path, target.Path)
+	case source.Kind == "section" && target.Kind == "section" && source.Path == target.Path:
+		if len(source.SectionParts) == 0 || len(target.SectionParts) == 0 {
+			return nil, fmt.Errorf("missing section path")
+		}
+		oldName := ResolveSectionName(source.Path, source.SectionParts[len(source.SectionParts)-1])
+		newName := ResolveSectionName(target.Path, target.SectionParts[len(target.SectionParts)-1])
+		result = ToolSectionMove(source.Path, oldName, newName)
+	case source.Kind == "file" && target.Kind == "section":
+		targetFile := target.Path
+		var sectionName, parentSection string
+		if len(target.SectionParts) > 0 {
+			sectionName = ResolveSectionName(targetFile, target.SectionParts[len(target.SectionParts)-1])
+		}
+		if len(target.SectionParts) > 1 {
+			parentSection = ResolveSectionName(targetFile, target.SectionParts[len(target.SectionParts)-2])
+		}
+		result = ToolIntegrate(source.Path, sectionName, targetFile, parentSection)
+		if result.Error == "" {
+			absSource := filepath.Join(rootDir, source.Path)
+			os.Remove(absSource)
+			RemoveAgentsDocsEntry(source.Path)
+		}
+	case source.Kind == "section" && target.Kind == "file":
+		if len(source.SectionParts) == 0 {
+			return nil, fmt.Errorf("missing section path")
+		}
+		sourceFile := source.Path
+		sectionName := ResolveSectionName(sourceFile, source.SectionParts[len(source.SectionParts)-1])
+		result = ToolExtract(sourceFile, sectionName, target.Path)
+	default:
+		return nil, fmt.Errorf("unsupported move: %s → %s", source.Kind, target.Kind)
+	}
+
+	return toolResultToMCP(result)
+}
+
 func definitionList(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 	args := getArgs(request)
 	file, err := requireStringArg(args, "file")
@@ -23213,7 +24360,7 @@ func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 
 func handleSectionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	path := strings.TrimPrefix(request.Params.URI, "semiorepo://sections/")
-	query := `query Sections($path: String!) { file(path: $path) { sections { id path name kind startLine endLine definitions { name } children { name } } } }`
+	query := `query Sections($path: String!) { file(path: $path) { sections { id path name range { start end } definitions { name } children { name } } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
 		return nil, err
@@ -23240,7 +24387,7 @@ func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest)
 	path := parts[0]
 	sectionPath := strings.Split(parts[1], "/")
 
-	query := `query Section($path: String!, $sectionPath: [String!]!) { section(path: $path, sectionPath: $sectionPath) { id path name kind startLine endLine } }`
+	query := `query Section($path: String!, $sectionPath: [String!]!) { section(path: $path, sectionPath: $sectionPath) { id path name range { start end } } }`
 	result, err := gql(query, map[string]interface{}{"path": path, "sectionPath": sectionPath})
 	if err != nil {
 		return nil, err
@@ -23260,7 +24407,7 @@ func handleSectionResource(ctx context.Context, request mcp.ReadResourceRequest)
 
 func handleDefinitionsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	path := strings.TrimPrefix(request.Params.URI, "semiorepo://definitions/")
-	query := `query Definitions($path: String!) { file(path: $path) { definitions { id name kind line } } }`
+	query := `query Definitions($path: String!) { file(path: $path) { definitions { id name kind range { start end } } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
 		return nil, err
@@ -23287,7 +24434,7 @@ func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceReque
 	path := parts[0]
 	name := parts[1]
 
-	query := `query Definition($path: String!, $name: String!) { definition(path: $path, name: $name) { id name kind line } }`
+	query := `query Definition($path: String!, $name: String!) { definition(path: $path, name: $name) { id name kind range { start end } } }`
 	result, err := gql(query, map[string]interface{}{"path": path, "name": name})
 	if err != nil {
 		return nil, err
@@ -23306,7 +24453,7 @@ func handleDefinitionResource(ctx context.Context, request mcp.ReadResourceReque
 }
 
 func handleTicketsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Tickets { repo { tickets { id slug title status prompt interaction { prompt } } } }`
+	query := `query Tickets { repo { tickets { id slug title status prompt interactions { prompt } } } }`
 	result, err := gql(query, nil)
 	if err != nil {
 		return nil, err
@@ -23334,7 +24481,7 @@ func handleTicketResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	day, _ := strconv.Atoi(parts[2])
 	slug := parts[3]
 
-	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) { ticket(year: $year, month: $month, day: $day, slug: $slug) { id slug title status prompt interaction { prompt started finished } } }`
+	query := `query Ticket($year: Int!, $month: Int!, $day: Int!, $slug: String!) { ticket(year: $year, month: $month, day: $day, slug: $slug) { id slug title status prompt interactions { prompt dates { started finished } } } }`
 	result, err := gql(query, map[string]interface{}{"year": year, "month": month, "day": day, "slug": slug})
 	if err != nil {
 		return nil, err
@@ -23481,7 +24628,7 @@ func handleViolationKindResource(ctx context.Context, request mcp.ReadResourceRe
 }
 
 func handleContributorsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Contributors { repo { contributors { id email name contributions { count } } } }`
+	query := `query Contributors { repo { contributors { id emails name contributions { commits { id } tickets { id } } } } }`
 	result, err := gql(query, nil)
 	if err != nil {
 		return nil, err
@@ -23501,7 +24648,7 @@ func handleContributorsResource(ctx context.Context, request mcp.ReadResourceReq
 
 func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := strings.TrimPrefix(request.Params.URI, "semiorepo://contributor/")
-	query := `query Contributor($id: String!) { contributor(id: $id) { id email name contributions { count } } }`
+	query := `query Contributor($id: String!) { contributor(id: $id) { id emails name contributions { commits { id } tickets { id } } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
 		return nil, err
@@ -23520,7 +24667,7 @@ func handleContributorResource(ctx context.Context, request mcp.ReadResourceRequ
 }
 
 func handleCommitsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Commits { repo { commits { oid message author { name } } } }`
+	query := `query Commits { repo { commits { id sha title date } } }`
 	result, err := gql(query, nil)
 	if err != nil {
 		return nil, err
@@ -24521,10 +25668,12 @@ func ToolFix(scopeRaw string) ToolResult {
 
 func ToolPolicyList() ToolResult {
 	policies := GetRegisteredPolicies()
-	output := NewOutput()
-	bytes, _ := json.MarshalIndent(policies, "", "  ")
-	output.Plain(string(bytes))
-	return ToolResult{Output: *output, Data: policies}
+	var events []Event
+	for _, p := range policies {
+		data, _ := json.Marshal(map[string]interface{}{"policy": p})
+		events = append(events, Event{Kind: KindResult, Command: "policy list", Data: data})
+	}
+	return toolResultFromEvents(events, policies)
 }
 
 func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
@@ -26017,7 +27166,9 @@ type SemanticId struct {
 }
 
 func emojiText(emoji string) string {
-	return strings.ReplaceAll(emoji, "\uFE0F", "")
+	stripped := strings.ReplaceAll(emoji, "\uFE0F", "")
+	stripped = strings.ReplaceAll(stripped, "\uFE0E", "")
+	return stripped + "\uFE0E"
 }
 
 func (s SemanticId) String() string {
@@ -26105,6 +27256,114 @@ func definitionKindEmoji(data map[string]interface{}) string {
 		return "🪨"
 	}
 	return "🛠️"
+}
+
+type ArtifactRef struct {
+	Kind         string
+	Path         string
+	SectionParts []string
+}
+
+func ParseArtifactRef(ref string) ArtifactRef {
+	clean := strings.ReplaceAll(ref, "\uFE0E", "")
+	clean = strings.ReplaceAll(clean, "\uFE0F", "")
+
+	sectionEmojis := []string{"🔖"}
+	for _, e := range sectionEmojis {
+		if strings.HasPrefix(clean, e) {
+			rest := clean[len(e):]
+			parts := strings.SplitN(rest, "#", 2)
+			filePath := NormalizePath(parts[0])
+			var sectionParts []string
+			if len(parts) > 1 {
+				sectionParts = strings.Split(parts[1], "#")
+			}
+			return ArtifactRef{Kind: "section", Path: filePath, SectionParts: sectionParts}
+		}
+	}
+
+	defEmojis := []string{"🏷", "✂", "🪨", "🛠"}
+	for _, e := range defEmojis {
+		if strings.HasPrefix(clean, e) {
+			rest := clean[len(e):]
+			return ArtifactRef{Kind: "definition", Path: NormalizePath(rest)}
+		}
+	}
+
+	folderEmojis := []string{"📁", "🗃", "📂"}
+	for _, e := range folderEmojis {
+		if strings.HasPrefix(clean, e) {
+			rest := clean[len(e):]
+			return ArtifactRef{Kind: "folder", Path: NormalizePath(strings.TrimSuffix(rest, "/"))}
+		}
+	}
+
+	fileEmojis := []string{"💻", "🧪", "📜", "📃", "⚙", "💾", "⚖", "📄"}
+	for _, e := range fileEmojis {
+		if strings.HasPrefix(clean, e) {
+			rest := clean[len(e):]
+			return ArtifactRef{Kind: "file", Path: NormalizePath(rest)}
+		}
+	}
+
+	if strings.Contains(ref, "#") {
+		parts := strings.SplitN(ref, "#", 2)
+		filePath := NormalizePath(parts[0])
+		var sectionParts []string
+		if len(parts) > 1 {
+			sectionParts = strings.Split(parts[1], "#")
+		}
+		return ArtifactRef{Kind: "section", Path: filePath, SectionParts: sectionParts}
+	}
+	if strings.HasSuffix(ref, "/") {
+		return ArtifactRef{Kind: "folder", Path: NormalizePath(strings.TrimSuffix(ref, "/"))}
+	}
+	normalized := NormalizePath(ref)
+	absPath := filepath.Join(rootDir, normalized)
+	if info, err := os.Stat(absPath); err == nil && info.IsDir() {
+		return ArtifactRef{Kind: "folder", Path: normalized}
+	}
+	return ArtifactRef{Kind: "file", Path: normalized}
+}
+
+func UnSlugify(slug string) string {
+	parts := strings.Split(slug, "-")
+	for i, p := range parts {
+		if len(p) > 0 {
+			parts[i] = strings.ToUpper(p[:1]) + strings.ToLower(p[1:])
+		}
+	}
+	return strings.Join(parts, " ")
+}
+
+func FindSectionBySlug(sections []Section, slug string) *Section {
+	for i := range sections {
+		if Slugify(sections[i].Name) == slug {
+			return &sections[i]
+		}
+		if found := FindSectionBySlug(sections[i].Children, slug); found != nil {
+			return found
+		}
+	}
+	return nil
+}
+
+func ResolveSectionName(filePath string, slug string) string {
+	absPath := filepath.Join(rootDir, filePath)
+	content, err := ReadTextFile(absPath)
+	if err != nil {
+		return UnSlugify(slug)
+	}
+	lang := GetLanguage(filePath)
+	if lang == nil || !lang.SupportsSections() {
+		return UnSlugify(slug)
+	}
+	sections := lang.ParseSections(content)
+	section := FindSectionBySlug(sections, slug)
+	if section != nil {
+		return section.Name
+	}
+	return UnSlugify(slug)
 }
 
 func SectionIdValueToUriPath(value string) string {

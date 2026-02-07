@@ -95,6 +95,48 @@ File section trees MUST be derived from language-aware section parsing per file.
 Section data MUST expose file path, section path, range, and parent-child relationships.
 Shell scripts (`.sh`) MUST use hash-based region markers for section parsing.
 
+### Move, Integrate, Extract
+
+The `move` command MUST accept two artifact ID arguments (source and target) and dispatch based on artifact kind pairs: file→file (`ToolFileMove`), folder→folder (`ToolFolderMove`), section→section within the same file (`ToolSectionMove`), file→section (`ToolIntegrate` then delete source), section→file (`ToolExtract`).
+
+Artifact IDs MUST be parsed via `ParseArtifactRef` which detects kind from emoji prefix (📁 folder, 💻/📄 file, 🔖 section) and extracts path and section parts from `#`-delimited slugs.
+
+Section slug resolution MUST attempt to match existing section names case-insensitively before falling back to `UnSlugify` conversion.
+
+The `integrate` command MUST accept either two artifact ID positional arguments (source file, target section) or `--file`, `--target-file`, `--target-section`, `--parent-section` flags.
+
+The `extract` command MUST accept either two artifact ID positional arguments (source section, target file) or `--file`, `--section`, `--target-file` flags.
+
+File and folder move operations MUST automatically update `AGENTS.md` `# Codebase` section headers by replacing old path prefixes with new ones via `UpdateAgentsDocsPath`.
+
+Cross-kind file→section move MUST remove the source file and its `AGENTS.md` entry after successful integration via `RemoveAgentsDocsEntry`.
+
+MCP tools `move`, `extract`, and `integrate` MUST expose the same functionality as their CLI counterparts.
+
+### Tree
+
+The `tree` command MUST render the complete monorepo as a hierarchical tree of categories (projects, goals, drafts, policies, contributors, commits) with nested entity nodes.
+
+The `tree` command MUST accept an optional positional query for fuzzy full-text search via bleve across all node attributes (id, label, description, status, contributor, kind, URI).
+
+Search results MUST preserve the parent chain of matched items and prune unmatched branches.
+
+Kind-level filtering MUST use `--only-<kind>` and `--no-<kind>` flags for projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, contributors, and commits.
+
+Excluded kinds MUST collapse, promoting their children to the parent level.
+
+Sub-kind filtering MUST narrow within a kind via `--only-<subkind>` and `--no-<subkind>` flags (library, schema, binary, client, site, assets for bundles; organization, required for folders; code, script, config, test, docs, resource, license for files; implementation, interface, constant for definitions).
+
+Date filtering MUST support `--only-year`, `--no-year`, `--only-month`, `--no-month`, `--only-day`, `--no-day` for tickets and commits.
+
+Status filtering MUST support `--only-open`, `--only-closed`, `--open`, `--closed` for goals and tickets.
+
+Contributor filtering MUST support `--only-contributor-name` and `--no-contributor-name`.
+
+Section and definition parsing MUST be opt-in, activated only when `--only-section`, `--only-definition`, or a search query is present.
+
+Tree building MUST use a single concurrent filesystem walk for all folders and files with parallel streaming of all other data sources.
+
 ### Engine
 
 Engine startup MUST support a dev/debug mode flag that waits for debugger attachment before runtime begins.
@@ -2915,7 +2957,7 @@ Repo CLI single-file entrypoint with command registry, GraphQL execution, and th
 
 ## 📄semio-repo/cli/main.go
 
-Go repo CLI/runtime implementation with custom `Interaction` JSON decoding that normalizes legacy object-form and current string-form `author` payloads into a single author string for ticket and goal interaction reads.
+Go repo CLI/runtime implementation with custom `Interaction` JSON decoding that normalizes legacy object-form and current string-form `author` payloads into a single author string for ticket and goal interaction reads. MCP tool handlers call `Tool*` functions directly instead of GraphQL mutations to ensure consistent output between MCP and CLI. MCP resource handlers use validated GraphQL queries with correct field names (`range { start end }` for sections/definitions, `interactions` for tickets, `emails` for contributors, `id sha title date` for commits). `goalType` GraphQL object includes `uri` field resolved via `Goal.GetURI()`. `emojiText` enforces U+FE0E text presentation selector on all artifact ID emojis. `loadProjectsInternal` detects both `@`-prefixed and non-prefixed project directories, excluding hidden dirs and `node_modules`. `TreeNodeKind` enum and `TreeNode` struct model the complete monorepo hierarchy (project, bundle, folder, file, section, definition, goal, ticket, draft, policy, violationKind, contributor, commit, category). `TreeFilter` supports kind-level (`OnlyKinds`/`ExcludeKinds`), sub-kind-level (`OnlySubKinds`/`ExcludeSubKinds`), date (`OnlyYears`/`ExcludeYears`/months/days), status, and contributor filtering with case-insensitive matching. `BuildMonorepoTree` streams all data sources concurrently (projects, goals, tickets, drafts, policies, contributors, commits, folders, files) with a single filesystem walk, assigns folders/files to bundles by path prefix, and optionally parses sections via `TreeBuildOptions.IncludeSections`. `FilterMonorepoTree` recursively filters nodes and `collapseFilteredKinds` promotes children of excluded kinds to parent level. `SearchMonorepoTree` indexes all node attributes into a bleve in-memory index, performs fuzzy match queries, and `pruneUnmatched` preserves parent chains. `RenderMonorepoTree` outputs tree-connector text with `├──`/`└──` prefixes. `bindTreeFlags` registers `--only-<kind>`/`--no-<kind>` for 12 kinds, `--only-<subkind>`/`--no-<subkind>` for bundle/folder/file/definition sub-kinds, `--only-open`/`--only-closed`/`--open`/`--closed`, `--only-year`/`--no-year`/month/day int slices, and `--only-contributor-name`/`--no-contributor-name` string slices. `ArtifactRef` struct with `Kind` (file/folder/section), `Path`, and `SectionParts` fields parsed by `ParseArtifactRef` from emoji-prefixed artifact IDs (📁→folder, 💻/📄→file, 🔖→section with `#`-delimited slugs). `UnSlugify` converts `UPPER-KEBAB` slugs to title case. `FindSectionBySlug` case-insensitively matches section names against slugified forms. `ResolveSectionName` attempts slug-to-section resolution via file parsing, falling back to `UnSlugify`. `moveCommand` dispatches on source/target kind pairs: file→file, folder→folder, section→section (rename), file→section (integrate+delete+`RemoveAgentsDocsEntry`), section→file (extract). `integrateCommand` accepts artifact ID positional args or `--file`/`--target-file`/`--target-section`/`--parent-section` flags. `extractCommand` accepts artifact ID positional args or `--file`/`--section`/`--target-file` flags. `UpdateAgentsDocsPath` replaces old path prefixes with new ones in `AGENTS.md` `## ` headers under `# Codebase`. `RemoveAgentsDocsEntry` removes matching `## ` header and its content paragraph from `AGENTS.md`. `ToolFileMove`/`ToolFolderMove` call `UpdateAgentsDocsPath` after successful rename. MCP handlers `sectionExtract` and `artifactMove` expose extract and move functionality.
 
 ## 📄semio-repo/cli/cli_test.go
 
@@ -2923,7 +2965,7 @@ Consolidated Go test suite for the repo CLI and tooling behavior, structured for
 
 ## 📄semio-repo/cli/main_test.go
 
-Go test suite includes interaction-author shape coverage to validate JSON decoding for both legacy object payloads and current string payloads.
+Go test suite includes interaction-author shape coverage to validate JSON decoding for both legacy object payloads and current string payloads. MCP tool tests cover all `Tool*` functions used by MCP handlers: `TestToolProjectList`, `TestToolProjectTree`, `TestToolContributorList`, `TestToolGoalList`, `TestToolTicketList`, `TestToolDraftList`, `TestToolFolderList`, `TestToolFolderTree`, `TestToolFileList`, `TestToolFileTree`, `TestToolSectionList`, `TestToolSectionTree`, `TestToolDefinitionList`, `TestToolPolicyList`, `TestToolPolicyCheck`, `TestToolAnalyzeScope`, `TestToolFixScope`, `TestToolFolderCRUD`, `TestToolFileCRUD`, `TestToolTicketLifecycle`, `TestToolDraftLifecycle`, `TestToolGoalUri`. `TestUriToId` expects U+FE0E text presentation selector in all artifact IDs. Monorepo tree tests: `TestTreeNodeKindConstants` (distinctness, non-empty), `TestTreeFilterIsKindVisible` (default/only/exclude/category), `TestTreeFilterMatchesSubKind` (default/only/exclude/empty/case-insensitive), `TestTreeFilterMatchesDate` (default/only-year/exclude-year/month/combined), `TestTreeFilterMatchesStatus` (default/open/closed/case-insensitive), `TestTreeFilterMatchesContributor` (default/only/exclude/case-insensitive), `TestFilterMonorepoTree` (no-filter/exclude-bundle/no-folder-collapse/only-library/status/year/contributor/nil), `TestSearchMonorepoTree` (empty-query/match/no-match/parent-chain), `TestRenderMonorepoTree` (basic/category-URI/connectors/empty), `TestBuildMonorepoTree` (categories/projects/with-sections/without-sections), `TestCollapseFilteredKinds` (folder-collapse/nested-collapse), `TestSortTreeChildren` (alphabetical/folders-first), `TestTreeCommandFlags` (flag-binding/empty-flags).
 
 ## 📁net/
 

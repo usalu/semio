@@ -285,22 +285,22 @@ let monorepoProvider: MonorepoTreeDataProvider | undefined;
 
 // #region 🔖Utilities
 
-function log(...args: any[]): void {
+function writeLog(level: string, args: any[]): void {
   const message = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-  outputChannel?.appendLine(message);
+  const prefix = level === 'ERROR' ? '[ERROR] ' : '';
+  outputChannel?.appendLine(prefix + message);
   try {
     const logPath = path.join(getWorkspaceRoot() || "", "activation.log");
-    fs.appendFileSync(logPath, "[LOG] " + message + "\n");
+    fs.appendFileSync(logPath, `[${level}] ${message}\n`);
   } catch (e) { }
 }
 
+function log(...args: any[]): void {
+  writeLog('LOG', args);
+}
+
 function logError(...args: any[]): void {
-  const message = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
-  outputChannel?.appendLine('[ERROR] ' + message);
-  try {
-    const logPath = path.join(getWorkspaceRoot() || "", "activation.log");
-    fs.appendFileSync(logPath, "[ERROR] " + message + "\n");
-  } catch (e) { }
+  writeLog('ERROR', args);
 }
 
 function getWorkspaceRoot(): string | undefined {
@@ -310,20 +310,9 @@ function getWorkspaceRoot(): string | undefined {
 function getRepoBinaryPath(): string | undefined {
   const root = getWorkspaceRoot();
   if (!root) return undefined;
-  const isWindows = process.platform === "win32";
-
-  const candidates: string[] = [];
-  if (isWindows) {
-    candidates.push(path.join(root, "semio-repo", "cli", "cli.exe"));
-  } else {
-    candidates.push(path.join(root, "semio-repo", "cli", "cli"));
-  }
-
-  for (const candidate of candidates) {
-    if (fs.existsSync(candidate)) return candidate;
-  }
-
-  return undefined;
+  const ext = process.platform === "win32" ? ".exe" : "";
+  const candidate = path.join(root, "semio-repo", "cli", `cli${ext}`);
+  return fs.existsSync(candidate) ? candidate : undefined;
 }
 
 function getRepoCommand(): string {
@@ -350,28 +339,17 @@ function resolveCommitSha(commit: string | { sha?: string } | undefined): string
 function getGitHubRepoBaseUrl(): string | undefined {
   if (cachedRepoBaseUrl !== undefined) return cachedRepoBaseUrl;
   const root = getWorkspaceRoot();
-  if (!root) {
-    cachedRepoBaseUrl = undefined;
-    return cachedRepoBaseUrl;
-  }
+  if (!root) return (cachedRepoBaseUrl = undefined);
   const packagePath = path.join(root, "package.json");
-  if (!fs.existsSync(packagePath)) {
-    cachedRepoBaseUrl = undefined;
-    return cachedRepoBaseUrl;
-  }
+  if (!fs.existsSync(packagePath)) return (cachedRepoBaseUrl = undefined);
   const raw = fs.readFileSync(packagePath, "utf8");
   const parsed = JSON.parse(raw) as { repository?: { url?: string } | string };
   const repoUrl = typeof parsed.repository === "string" ? parsed.repository : parsed.repository?.url;
-  if (!repoUrl) {
-    cachedRepoBaseUrl = undefined;
-    return cachedRepoBaseUrl;
-  }
+  if (!repoUrl) return (cachedRepoBaseUrl = undefined);
   let cleaned = repoUrl.replace(/^git\+/, "").replace(/\.git$/, "");
   if (cleaned.startsWith("git@")) {
     const match = cleaned.match(/^git@([^:]+):(.+)$/);
-    if (match) {
-      cleaned = `https://${match[1]}/${match[2]}`;
-    }
+    if (match) cleaned = `https://${match[1]}/${match[2]}`;
   }
   cachedRepoBaseUrl = cleaned.startsWith("http://") || cleaned.startsWith("https://") ? cleaned : undefined;
   return cachedRepoBaseUrl;
@@ -415,12 +393,12 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   }
 }
 
-function parseRepoEvents(output: string): RepoEvent[] {
+export function parseRepoEvents(output: string): RepoEvent[] {
   const lines = output.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
   return lines.map((line) => JSON.parse(line) as RepoEvent);
 }
 
-function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
+export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
   const results: unknown[] = [];
   const controlKinds = new Set(["start", "progress", "log", "done"]);
 

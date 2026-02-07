@@ -20,6 +20,27 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+Refactor the semio repo cli to be clean and extend the cli tests to be complete. Dont create any new file. Dont remove any functionality or tests. Just refactor by getting rid of code smells, duplication, etc by introducing proper abstraction, apis and mechanisms.
+
+Refactor the semio repo vscode exension to be clean and extend the extension tests to be complete. Dont create any new file. Dont remove any functionality or tests. Just refactor by getting rid of code smells, duplication, etc by introducing proper abstraction, apis and mechanisms.
+
+There should be a general `move <source> <target>` command that moves the kind from the source to the target. e.g. `folder`, `file`, `section`, `definition`, `violationKind`, etc. Move even works for different kinds e.g. `move <file> <section>` calls `integrate` and `move <section> <file>` calls `extract`.
+
+Further get the `integrate`/`extract`/`<kind> move` commands working properly.
+`integrate` should integrate the source code into the target file by wrapping it into the target section optionally with a target parent section otherwise it will be placed at the end of the file after the last section.
+`extract` should extract a section from the source file and create a target file with removing the outermost section.
+`move <source> <target>` should move the kind from the source to the target. e.g. `folder`, `file`, `section`, `definition`, etc.
+All commands should automatically adjust the dev docs (`AGENTS.md` rename/move the sections under `# Codebase`. Ignore `README.md` for now.)
+```bash
+$ ./semio-repo/cli/cli move "💻semio/js/sketchpad/Design.tsx" "💻semio/js/sketchpad/apps/Design.tsx"
+$ ./semio-repo/cli/cli move "💻semio/js/sketchpad/store.tsx" "🔖semio/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE"
+$ ./semio-repo/cli/cli move "🔖semio/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE" "💻semio/js/sketchpad/store.tsx"
+$ ./semio-repo/cli/cli integrate "💻semio/js/sketchpad/store.tsx" "🔖semio/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE"
+$ ./semio-repo/cli/cli integrate --file ./semio/js/sketchpad/store.tsx --target-file "./semio/js/sketchpad/Sketchpad.tsx" --target-section "Store"  --parent-section "State Managment"
+$ ./semio-repo/cli/cli extract "🔖semio/js/sketchpad/Sketchpad.tsx#STATE-MANAGMENT#STORE" "💻semio/js/sketchpad/store.tsx"
+$ ./semio-repo/cli/cli extract --file ./semio/js/sketchpad/Sketchpad.tsx --section "Store" --parent-section "State Managment" --target-file "./semio/js/sketchpad/store.tsx" 
+```
+
 Introduce a new command: `search <query>` that gathers all the information from the semio repo regarding the given query. It lists all the resources that fuzzy match the query.
 ```
 # [🏗️Projects](semiorepo://projects)
@@ -53,7 +74,7 @@ Introduce a new command: `search <query>` that gathers all the information from 
 
 ```
 
-The `tree <query>?` command is not working properly. It should have a positional query parameter which is used for fuzzy search and not for exact match. All items are fuzzy matched against the query (including the id, title,description, etc). When a match is found the item and all the parent that lead to the item are returned. When something is filtered out then all intermediate parents are left out (e.g. no folders but with bundles and files makes the files directly on the bundle level visible). It should return the complete monorepo as a tree. It should work with all `--only-<value> <value>?` and `--no-<filter> <value>?` flags. <filter> can be kinds e.g. `projects`, `bundles`, `folders`, `files`, `sections`, `definitions`, `policies`, `contributors`, `commits`. or specific values e.g. `library`, `schema`, `binary`, `client`, `site`, `assets`, `organization`, `required`, `implementation`, `interface`, `constant`, etc. Some <filter> have a value such as `--no-year <year>?` and `--only-year <year>?`, `no-usalu` for no usalu contributor, etc.
+The `tree <query>?` command is not working properly. It should have a positional query parameter which is used for search and not for exact match. All items are matched against the query (including the id, title,description, etc). The query can be anything from just a term, a sentence or a text. The query should only loosely match because it just serves as prefiltering. Use bleve. When a match is found the item and all the parent that lead to the item are returned. When something is filtered out then all intermediate parents are left out (e.g. no folders but with bundles and files makes the files directly on the bundle level visible). It should return the complete monorepo as a tree. It should work with all `--only-<value> <value>?` and `--no-<filter> <value>?` flags. <filter> can be kinds e.g. `projects`, `bundles`, `folders`, `files`, `sections`, `definitions`, `policies`, `contributors`, `commits`. or specific values e.g. `library`, `schema`, `binary`, `client`, `site`, `assets`, `organization`, `required`, `implementation`, `interface`, `constant`, etc. Some <filter> have a value such as `--no-year <year>?` and `--only-year <year>?`, `no-usalu` for no usalu contributor, etc.
 
 Here some examples that must work:
 
@@ -199,7 +220,7 @@ $ ./semio-repo/cli/cli ticket reopen 2026/02/06/FIX-VSCODE-FILTER-MENU-CONSISTEN
 {"ticketReopen":{"id":"ticket:2026/02/06/FIX-VSCODE-FILTER-MENU-CONSISTENCY","slug":"FIX-VSCODE-FILTER-MENU-CONSISTENCY","status":"OPEN"}}
 ```
 
-The goal tree should
+The goal tree should contain more and better information:
 - [🎯R26-02](semiorepo://goal/R26-02) - `r26-02` - `open` - `created 4 weeks ago` - `due in 3 weeks from now` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
   - [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `Running Sketchpad` - `created 1 week ago` - `due in 1 week from now` - `Running sketchpad infrastructure with MVP functionality.`
     - [🎯R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS](semiorepo://goal/R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS) - `Running Sketchpad Apps` - `open` - `created 3 weeks ago` - `due in 3 weeks from now` - `All apps that are needed to run sketchpad with MVP functionality.`

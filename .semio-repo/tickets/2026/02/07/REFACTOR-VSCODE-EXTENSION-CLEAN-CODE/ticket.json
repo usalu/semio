@@ -1,0 +1,25 @@
+{
+  "title": "Refactor Vscode Extension Clean Code",
+  "status": "open",
+  "prompt": "Refactor the semio-repo VS Code extension to eliminate code smells, duplication, and introduce proper abstractions. Extend tests to be complete. No new files, no removed functionality or tests.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/439"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
+  "started": "2026-02-07T00:59:25.886075889Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-07 00:59:25"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "windsurf-chat"
+      },
+      "commit": "0289c4bd83eb052f0aaeaa8256cff387196d7b60",
+      "prompt": "Refactor the semio-repo VS Code extension to eliminate code smells, duplication, and introduce proper abstractions. Extend tests to be complete. No new files, no removed functionality or tests.",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

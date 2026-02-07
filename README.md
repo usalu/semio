@@ -1173,12 +1173,13 @@ Go tests for repo tooling are consolidated into a single `semio-repo/cli/cli_tes
 Legacy adapter packages are removed so every command is dispatched through the same engine event stream and GraphQL executor.
 The streaming core uses a command registry with an emitter that surfaces progress, errors, items, logs, and a terminal done payload so CLI, MCP, and VS Code share one execution model.
 Registry invocation accepts JSON inputs and emits item metadata alongside data payloads so tooling can page through large result sets without rehydrating full responses.
-The MCP adapter forwards commands through the same streaming registry and supports cursor plus limit paging over item events for list-style tools.
+The MCP adapter forwards commands through the same streaming registry and supports cursor plus limit paging over item events for list-style tools. MCP tool handlers call `Tool*` functions directly instead of issuing GraphQL mutations, ensuring identical output between MCP and CLI for all operations (contributor, project, folder, file, section, definition, ticket, goal, draft, analyze, fix, policy). MCP resource handlers use validated GraphQL queries matching the actual schema field names.
+Project detection scans all non-hidden top-level directories (excluding `node_modules`) as potential projects, treating their subdirectories as bundles. This supports both `@`-prefixed (npm workspace convention) and non-prefixed project directories.
 Benchmark, preflight, and dependency update workflows are implemented inside the same single-file entrypoint so operational commands share the unified event pipeline.
 The CLI exposes an export command that emits a SQLite snapshot of bundles, folders, files, sections, contributors, tickets, policies, and violations.
 Go repo-tooling tests are organized into a fast lane and a slow lane: fast checks cover the same command families with lightweight assertions for tight feedback, while heavy graph/tree/lifecycle/e2e checks run as explicit slow shards in parallel jobs. This keeps the full behavior surface tested while reducing wall-clock time for day-to-day development.
 The `sync github` command reconciles local tickets/goals with GitHub using a three-tier hierarchy: root goals (depth 0) map to milestones, first-generation child goals (depth 1) map to issues with the `goal` label linked to the root milestone, and deeper goals (depth 2+) map to sub-issues of their parent goal's issue without milestone linkage. It actively repairs existing goal issues so depth 1 issues always carry the root milestone, depth 2+ issues always have a parent sub-issue link and no milestone, and missing `goal` labels are reattached. Goals are processed in depth order so parents exist before children. The command also migrates child goals from legacy milestones to issues, closes issues for closed tickets, resolves root goal milestones by title via the GitHub API before applying them to ticket issues, synchronizes the GitHub repository label catalog for all valid project and bundle `@` labels (creating missing and deleting invalid), updates stored milestone URLs, and removes invalid `@` labels from both ticket-linked issues and repository issues discovered during a global GitHub issue sweep.
-Section management includes an integrate command so source files can be merged into target sections through the same GraphQL-backed CLI surface.
+Section management includes `integrate`, `extract`, and `move` commands. `integrate` merges a source file into a target section. `extract` pulls a section out of a file into a new file. `move` is a general dispatcher that accepts emoji-prefixed artifact IDs (📁 folder, 💻/📄 file, 🔖 section) and routes to the appropriate operation — including cross-kind moves like file→section (integrate then delete) and section→file (extract). All file and folder moves automatically update `AGENTS.md` codebase headers to keep documentation in sync.
 GraphQL ticket UI inputs accept normalized enum tokens (copilot_chat, claude_code, codex, etc.) so CLI and tooling inputs map cleanly to schema enums.
 Section and definition ranges expose line/column start/end positions so editors can locate code precisely.
 Range selections always request start/end line/column subfields so Position objects satisfy schema selection requirements in CLI, MCP, and VS Code queries.
@@ -1290,6 +1291,18 @@ This keeps the active editor clean of stale versions while aligning installation
 
 Playwright browser downloads live under the workspace `node_modules` volume so the binaries persist across container restarts and editor reloads.
 The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-op once cached.
+
+## 🌳 Monorepo Tree [↑](#-bundles-)
+
+The `tree` command renders the complete monorepo as a hierarchical tree covering projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, contributors, and commits.
+An optional positional query argument performs fuzzy full-text search via bleve against all node attributes (id, label, description, status, contributor, etc.), preserving the parent chain of matched items while pruning unmatched branches.
+Kind-level filtering uses `--only-<kind>` and `--no-<kind>` flags (e.g., `--only-bundle`, `--no-folder`) to include or exclude entire node types. When a kind is excluded, its children are promoted to the parent level (e.g., `--no-folder` makes files appear directly under bundles).
+Sub-kind filtering narrows within a kind (e.g., `--only-library` for library bundles, `--no-required` for required folders, `--only-code` for code files, `--only-implementation` for implementation definitions).
+Date filtering supports `--only-year`, `--no-year`, `--only-month`, `--no-month`, `--only-day`, `--no-day` for tickets and commits.
+Status filtering uses `--only-open`, `--only-closed`, `--open`, `--closed` for goals and tickets.
+Contributor filtering uses `--only-contributor-name` and `--no-contributor-name`.
+Section and definition parsing is opt-in: sections are only loaded when `--only-section`, `--only-definition`, or a search query is active, keeping the default tree fast.
+Data loading uses a single concurrent filesystem walk for folders and files, with parallel streaming of goals, tickets, drafts, policies, contributors, and commits, so the full tree builds in one pass.
 
 ## 🧭 Section Tree [↑](#-bundles-)
 

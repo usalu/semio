@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪︎ semio-repo/cli/main_test.go
+// 🧪︎semio-repo/cli/main_test.go
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -33,6 +33,8 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+
+	"github.com/spf13/cobra"
 )
 
 // #region 🔖Helpers
@@ -1084,6 +1086,29 @@ func executeCommand(args ...string) (string, string, error) {
 	return stdout.String(), stderr.String(), err
 }
 
+func executeCommandMd(args ...string) (string, string, error) {
+	stdout := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
+	root, config := NewRootWithConfig(testEngineFactory)
+	root.SetOut(stdout)
+	root.SetErr(stderr)
+	root.SetArgs(args)
+	config.Format = "md"
+	err := root.Execute()
+	if err != nil {
+		fmt.Fprintln(stderr, err)
+	}
+	return stdout.String(), stderr.String(), err
+}
+
+func toolOutputText(result ToolResult) string {
+	var lines []string
+	for _, line := range result.Output.Lines {
+		lines = append(lines, line.Text)
+	}
+	return strings.Join(lines, "\n")
+}
+
 // #endregion 🔖Helpers
 
 // #region 🔖Codebase Tests
@@ -1146,20 +1171,20 @@ func TestFileHeaderId(t *testing.T) {
 		path string
 		want string
 	}{
-		{"code ts", "semio/js/src/index.ts", "\U0001F4BBsemio/js/src/index.ts"},
-		{"code tsx", "semio/js/src/App.tsx", "\U0001F4BBsemio/js/src/App.tsx"},
-		{"code go", "semio-repo/cli/cli.go", "\U0001F4BBsemio-repo/cli/cli.go"},
-		{"code cs", "semio/gh/Semio.cs", "\U0001F4BBsemio/gh/Semio.cs"},
-		{"code py", "semio/engine/main.py", "\U0001F4BBsemio/engine/main.py"},
-		{"test ts", "semio/js/src/index.test.ts", "\U0001F9EAsemio/js/src/index.test.ts"},
-		{"test go", "semio-repo/cli/cli_test.go", "\U0001F9EAsemio-repo/cli/cli_test.go"},
-		{"config json", "tsconfig.json", "\u2699tsconfig.json"},
-		{"docs md", "README.md", "\U0001F4C3README.md"},
-		{"script sh", "build.sh", "\U0001F4DCbuild.sh"},
-		{"script bash", "deploy.bash", "\U0001F4DCdeploy.bash"},
-		{"script ps1", "setup.ps1", "\U0001F4DCsetup.ps1"},
-		{"resource png", "logo.png", "\U0001F4BElogo.png"},
-		{"license", "LICENSE.md", "\u2696LICENSE.md"},
+		{"code ts", "semio/js/src/index.ts", "\U0001F4BB\uFE0Esemio/js/src/index.ts"},
+		{"code tsx", "semio/js/src/App.tsx", "\U0001F4BB\uFE0Esemio/js/src/App.tsx"},
+		{"code go", "semio-repo/cli/cli.go", "\U0001F4BB\uFE0Esemio-repo/cli/cli.go"},
+		{"code cs", "semio/gh/Semio.cs", "\U0001F4BB\uFE0Esemio/gh/Semio.cs"},
+		{"code py", "semio/engine/main.py", "\U0001F4BB\uFE0Esemio/engine/main.py"},
+		{"test ts", "semio/js/src/index.test.ts", "\U0001F9EA\uFE0Esemio/js/src/index.test.ts"},
+		{"test go", "semio-repo/cli/cli_test.go", "\U0001F9EA\uFE0Esemio-repo/cli/cli_test.go"},
+		{"config json", "tsconfig.json", "\u2699\uFE0Etsconfig.json"},
+		{"docs md", "README.md", "\U0001F4C3\uFE0EREADME.md"},
+		{"script sh", "build.sh", "\U0001F4DC\uFE0Ebuild.sh"},
+		{"script bash", "deploy.bash", "\U0001F4DC\uFE0Edeploy.bash"},
+		{"script ps1", "setup.ps1", "\U0001F4DC\uFE0Esetup.ps1"},
+		{"resource png", "logo.png", "\U0001F4BE\uFE0Elogo.png"},
+		{"license", "LICENSE.md", "\u2696\uFE0ELICENSE.md"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1182,7 +1207,7 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("#!/usr/bin/env tsx\nconsole.log('build');\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := "\U0001F4DC" + filePath
+		want := "\U0001F4DC\uFE0E" + filePath
 		if got != want {
 			t.Errorf("FileHeaderId(%q) with shebang = %q, want %q", filePath, got, want)
 		}
@@ -1200,7 +1225,7 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("#!/usr/bin/env python3\nprint('hello')\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := "\U0001F4DC" + filePath
+		want := "\U0001F4DC\uFE0E" + filePath
 		if got != want {
 			t.Errorf("FileHeaderId(%q) with shebang = %q, want %q", filePath, got, want)
 		}
@@ -1218,7 +1243,7 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("export const x = 1;\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := "\U0001F4BB" + filePath
+		want := "\U0001F4BB\uFE0E" + filePath
 		if got != want {
 			t.Errorf("FileHeaderId(%q) without shebang = %q, want %q", filePath, got, want)
 		}
@@ -1226,7 +1251,7 @@ func TestFileHeaderId(t *testing.T) {
 
 	t.Run("nonexistent code file stays code", func(t *testing.T) {
 		got := FileHeaderId("nonexistent/file.ts")
-		want := "\U0001F4BBnonexistent/file.ts"
+		want := "\U0001F4BB\uFE0Enonexistent/file.ts"
 		if got != want {
 			t.Errorf("FileHeaderId for nonexistent file = %q, want %q", got, want)
 		}
@@ -2871,7 +2896,7 @@ func TestFolderListCommand(t *testing.T) {
 func TestFolderTreeCommand(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	result := ToolFolderTree("semio-repo/go")
+	result := ToolFolderTree("semio/go")
 	if result.Error != "" {
 		t.Errorf("ToolFolderTree returned error: %s", result.Error)
 	}
@@ -2910,7 +2935,7 @@ func TestFileListCommand(t *testing.T) {
 func TestFileTreeCommand(t *testing.T) {
 	cwd, _ := os.Getwd()
 	SetRootDir(findTestRepoRoot(cwd))
-	result := ToolFileTree("semio-repo/go")
+	result := ToolFileTree("semio/go")
 	if result.Error != "" {
 		t.Errorf("ToolFileTree returned error: %s", result.Error)
 	}
@@ -3384,20 +3409,26 @@ func TestTreeCommands(t *testing.T) {
 	if !strings.Contains(output, "semio.go") {
 		t.Errorf("repo tree semio/go missing semio.go, got:\n%s", output)
 	}
+	if strings.Contains(output, "├── ") || strings.Contains(output, "└── ") {
+		t.Errorf("repo tree default output must be markdown, got:\n%s", output)
+	}
+	if !strings.Contains(output, "- [") {
+		t.Errorf("repo tree default output missing markdown list items, got:\n%s", output)
+	}
 
 	// 2. Folder Tree
 	output, err = executeTreeCommand("folder", "tree", "semio/go")
 	if err != nil {
 		t.Errorf("folder tree failed: %v", err)
 	}
-	// Folder tree produces output like "└── cmd/"
-	// Note: output might include metadata/logs unless JSON is false and renderStream handles it well.
-	// renderStream without JSON prints messages directly if they are logs.
 	if !strings.Contains(output, "semio.go") {
 		// Just checking that we got some output
 		if len(output) < 10 {
 			t.Errorf("folder tree output suspicious: %s", output)
 		}
+	}
+	if !strings.Contains(output, "- [") {
+		t.Errorf("folder tree default output must be markdown, got:\n%s", output)
 	}
 
 	// 3. File Tree
@@ -3408,15 +3439,20 @@ func TestTreeCommands(t *testing.T) {
 	if !strings.Contains(output, "semio.go") {
 		t.Errorf("file tree missing semio.go")
 	}
+	if !strings.Contains(output, "- [") {
+		t.Errorf("file tree default output must be markdown, got:\n%s", output)
+	}
 
 	// 4. Ticket Tree
 	output, err = executeTreeCommand("ticket", "tree")
 	if err != nil {
 		t.Errorf("ticket tree failed: %v", err)
 	}
-	// We expect at least the root or some structure
 	if len(output) == 0 {
 		t.Errorf("ticket tree output empty")
+	}
+	if !strings.Contains(output, "- [") {
+		t.Errorf("ticket tree default output must be markdown, got:\n%s", output)
 	}
 
 	// 5. Goal Tree
@@ -3424,9 +3460,35 @@ func TestTreeCommands(t *testing.T) {
 	if err != nil {
 		t.Errorf("goal tree failed: %v", err)
 	}
-	// Goal tree should produce some output (goals + tickets hierarchy)
 	if len(output) == 0 {
 		t.Errorf("goal tree output empty")
+	}
+	if !strings.Contains(output, "- [") {
+		t.Errorf("goal tree default output must be markdown, got:\n%s", output)
+	}
+
+	// 6. Repo Tree Text
+	output, err = executeTreeCommand("tree", "semio/go", "--text")
+	if err != nil {
+		t.Errorf("repo tree text failed: %v", err)
+	}
+	if !strings.Contains(output, "├── ") && !strings.Contains(output, "└── ") {
+		t.Errorf("repo tree text output should use connectors, got:\n%s", output)
+	}
+
+	// 7. Repo Tree JSON
+	output, err = executeTreeCommand("tree", "semio/go", "--json")
+	if err != nil {
+		t.Errorf("repo tree json failed: %v", err)
+	}
+	var parsed map[string]interface{}
+	if parseErr := json.Unmarshal([]byte(strings.TrimSpace(output)), &parsed); parseErr != nil {
+		t.Errorf("repo tree json output is invalid JSON: %v\noutput:\n%s", parseErr, output)
+	}
+	if _, ok := parsed["kind"]; !ok {
+		if _, ok := parsed["Kind"]; !ok {
+			t.Errorf("repo tree json output missing kind field: %s", output)
+		}
 	}
 }
 
@@ -3990,7 +4052,7 @@ func TestFormatResult_Bundle(t *testing.T) {
 	result := formatResult("bundle list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"📚︎ MyBundle",
+		"📚︎MyBundle",
 		"/path/to/bundle",
 	}
 
@@ -4012,8 +4074,7 @@ func TestFormatResult_Folder(t *testing.T) {
 	result := formatResult("folder list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"📁︎ path/to/folder",
-		"custom",
+		"📁︎path/to/folder",
 	}
 
 	for _, part := range expectedParts {
@@ -4722,22 +4783,22 @@ func TestMarkdownOutput(t *testing.T) {
 	}{
 		{
 			name:        "Repo Tree MD",
-			args:        []string{"tree", "--md"},
+			args:        []string{"tree"},
 			wantMarkers: []string{"- [", "]("},
 		},
 		{
 			name:        "Ticket Tree MD",
-			args:        []string{"ticket", "tree", "--md"},
+			args:        []string{"ticket", "tree"},
 			wantMarkers: []string{"- [", "](semiorepo://ticket/"},
 		},
 		{
 			name:        "Goal Tree MD",
-			args:        []string{"goal", "tree", "--md"},
+			args:        []string{"goal", "tree"},
 			wantMarkers: []string{"- [", "](semiorepo://goal/"},
 		},
 		{
 			name:        "Ticket List MD",
-			args:        []string{"ticket", "list", "--md"},
+			args:        []string{"ticket", "list"},
 			wantMarkers: []string{"- [", "](semiorepo://ticket/"},
 		},
 	}
@@ -4766,6 +4827,9 @@ func TestMarkdownOutput(t *testing.T) {
 
 			if strings.Contains(output, " -  - ") {
 				t.Errorf("Output contains double dash ' -  - ' which indicates empty property issue:\n%s", output)
+			}
+			if strings.Contains(output, "├── ") || strings.Contains(output, "└── ") {
+				t.Errorf("Output should not contain ASCII tree connectors in default markdown mode:\n%s", output)
 			}
 		})
 	}
@@ -5334,203 +5398,203 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "repo",
 			kind:    "repo",
 			data:    map[string]interface{}{},
-			wantID:  "🌍",
+			wantID:  "🌍︎",
 			wantURI: "semiorepo://repo",
 		},
 		{
 			name:    "projects collection",
 			kind:    "projects",
 			data:    map[string]interface{}{},
-			wantID:  "🏗",
+			wantID:  "🏗︎",
 			wantURI: "semiorepo://projects",
 		},
 		{
 			name:    "project user",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio", "kind": "user"},
-			wantID:  "👤@semio",
+			wantID:  "👤︎@semio",
 			wantURI: "semiorepo://project/@semio",
 		},
 		{
 			name:    "project infrastructure",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"},
-			wantID:  "🧰@semio-repo",
+			wantID:  "🧰︎@semio-repo",
 			wantURI: "semiorepo://project/@semio-repo",
 		},
 		{
 			name:    "project research",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "coda", "kind": "research"},
-			wantID:  "🔬@coda",
+			wantID:  "🔬︎@coda",
 			wantURI: "semiorepo://project/@coda",
 		},
 		{
 			name:    "bundles collection",
 			kind:    "bundles",
 			data:    map[string]interface{}{"projectCode": "semio"},
-			wantID:  "📦semio",
+			wantID:  "📦︎semio",
 			wantURI: "semiorepo://bundles",
 		},
 		{
 			name:    "bundle library",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/js", "kind": "library"},
-			wantID:  "📚semio/js",
+			wantID:  "📚︎semio/js",
 			wantURI: "semiorepo://bundle/semio/js",
 		},
 		{
 			name:    "bundle example",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "coda/examples", "kind": "library"},
-			wantID:  "📚coda/examples",
+			wantID:  "📚︎coda/examples",
 			wantURI: "semiorepo://bundle/coda/examples",
 		},
 		{
 			name:    "bundle ui",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/desktop", "kind": "ui"},
-			wantID:  "🖱semio/desktop",
+			wantID:  "🖱︎semio/desktop",
 			wantURI: "semiorepo://bundle/semio/desktop",
 		},
 		{
 			name:    "folders collection empty",
 			kind:    "folders",
 			data:    map[string]interface{}{},
-			wantID:  "📁",
+			wantID:  "📁︎",
 			wantURI: "semiorepo://folders",
 		},
 		{
 			name:    "folders collection with parent",
 			kind:    "folders",
 			data:    map[string]interface{}{"parentPath": "semio/js/src"},
-			wantID:  "📁semio/js/src",
+			wantID:  "📁︎semio/js/src",
 			wantURI: "semiorepo://folders/semio/js/src",
 		},
 		{
 			name:    "folder required",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/src", "kind": "required"},
-			wantID:  "📁semio/js/src",
+			wantID:  "📁︎semio/js/src",
 			wantURI: "semiorepo://folder/semio/js/src",
 		},
 		{
 			name:    "folder organization",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/utils", "kind": "organization"},
-			wantID:  "🗃semio/js/utils",
+			wantID:  "🗃︎semio/js/utils",
 			wantURI: "semiorepo://folder/semio/js/utils",
 		},
 		{
 			name:    "files collection empty",
 			kind:    "files",
 			data:    map[string]interface{}{},
-			wantID:  "📄",
+			wantID:  "📄︎",
 			wantURI: "semiorepo://files",
 		},
 		{
 			name:    "file docs",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
-			wantID:  "📃test.txt",
+			wantID:  "📃︎test.txt",
 			wantURI: "semiorepo://file/test.txt",
 		},
 		{
 			name:    "file code",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.ts", "kind": "code"},
-			wantID:  "💻semio/js/src/index.ts",
+			wantID:  "💻︎semio/js/src/index.ts",
 			wantURI: "semiorepo://file/semio/js/src/index.ts",
 		},
 		{
 			name:    "file test",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"},
-			wantID:  "🧪semio/js/src/index.test.ts",
+			wantID:  "🧪︎semio/js/src/index.test.ts",
 			wantURI: "semiorepo://file/semio/js/src/index.test.ts",
 		},
 		{
 			name:    "file config",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
-			wantID:  "⚙tsconfig.json",
+			wantID:  "⚙︎tsconfig.json",
 			wantURI: "semiorepo://file/tsconfig.json",
 		},
 		{
 			name:    "file script",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "build.sh", "kind": "script"},
-			wantID:  "\U0001F4DCbuild.sh",
+			wantID:  "\U0001F4DC︎build.sh",
 			wantURI: "semiorepo://file/build.sh",
 		},
 		{
 			name:    "file resource",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
-			wantID:  "💾logo.png",
+			wantID:  "💾︎logo.png",
 			wantURI: "semiorepo://file/logo.png",
 		},
 		{
 			name:    "file license",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "LICENSE.md", "kind": "license"},
-			wantID:  "⚖LICENSE.md",
+			wantID:  "⚖︎LICENSE.md",
 			wantURI: "semiorepo://file/LICENSE.md",
 		},
 		{
 			name:    "sections collection",
 			kind:    "sections",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts"},
-			wantID:  "🔖semio/js/src/index.ts",
+			wantID:  "🔖︎semio/js/src/index.ts",
 			wantURI: "semiorepo://sections/semio/js/src/index.ts",
 		},
 		{
 			name:    "section",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"},
-			wantID:  "🔖semio/js/src/Design.tsx#State Management#Design Store",
+			wantID:  "🔖︎semio/js/src/Design.tsx#State Management#Design Store",
 			wantURI: "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE",
 		},
 		{
 			name:    "section single level",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/file.ts#Imports"},
-			wantID:  "🔖semio/js/src/file.ts#Imports",
+			wantID:  "🔖︎semio/js/src/file.ts#Imports",
 			wantURI: "semiorepo://section/semio/js/src/file.ts/IMPORTS",
 		},
 		{
 			name:    "definitions collection",
 			kind:    "definitions",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts"},
-			wantID:  "🏷semio/js/src/index.ts",
+			wantID:  "🏷︎semio/js/src/index.ts",
 			wantURI: "semiorepo://definitions/semio/js/src/index.ts",
 		},
 		{
 			name:    "definition with id",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "implementation", "id": "semio/js/src/file.ts#Section§myFunc"},
-			wantID:  "🛠semio/js/src/file.ts#Section§myFunc",
+			wantID:  "🛠︎semio/js/src/file.ts#Section§myFunc",
 			wantURI: "semiorepo://definition/semio/js/src/file.ts/SECTION/MYFUNC",
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
-			wantID:  "✂semio/js/src/file.ts#Types§MyInterface",
+			wantID:  "✂︎semio/js/src/file.ts#Types§MyInterface",
 			wantURI: "semiorepo://definition/semio/js/src/file.ts/TYPES/MYINTERFACE",
 		},
 		{
 			name:    "definition constant",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
-			wantID:  "🪨semio/js/src/file.ts§MAX_SIZE",
+			wantID:  "🪨︎semio/js/src/file.ts§MAX_SIZE",
 			wantURI: "semiorepo://definition/semio/js/src/file.ts/MAX-SIZE",
 		},
 		{
 			name:    "tickets collection",
 			kind:    "tickets",
 			data:    map[string]interface{}{},
-			wantID:  "📅",
+			wantID:  "📅︎",
 			wantURI: "semiorepo://tickets",
 		},
 		{
@@ -5542,7 +5606,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"day":   float64(4),
 				"slug":  "test-ticket",
 			},
-			wantID:  "📅2025/02/04/test-ticket",
+			wantID:  "📅︎2025/02/04/test-ticket",
 			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
@@ -5555,105 +5619,105 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"slug":   "test-ticket",
 				"status": "open",
 			},
-			wantID:  "📅2025/02/04/test-ticket?open",
+			wantID:  "📅︎2025/02/04/test-ticket?open",
 			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
 			name:    "goals collection",
 			kind:    "goals",
 			data:    map[string]interface{}{},
-			wantID:  "🎯",
+			wantID:  "🎯︎",
 			wantURI: "semiorepo://goals",
 		},
 		{
 			name:    "goal",
 			kind:    "goal",
 			data:    map[string]interface{}{"id": "R26-02/RUNNING-SKETCHPAD"},
-			wantID:  "🎯R26-02/RUNNING-SKETCHPAD",
+			wantID:  "🎯︎R26-02/RUNNING-SKETCHPAD",
 			wantURI: "semiorepo://goal/R26-02/RUNNING-SKETCHPAD",
 		},
 		{
 			name:    "drafts collection",
 			kind:    "drafts",
 			data:    map[string]interface{}{},
-			wantID:  "✍",
+			wantID:  "✍︎",
 			wantURI: "semiorepo://drafts",
 		},
 		{
 			name:    "draft",
 			kind:    "draft",
 			data:    map[string]interface{}{"slug": "my-draft"},
-			wantID:  "✍my-draft",
+			wantID:  "✍︎my-draft",
 			wantURI: "semiorepo://draft/my-draft",
 		},
 		{
 			name:    "todos collection",
 			kind:    "todos",
 			data:    map[string]interface{}{},
-			wantID:  "📝",
+			wantID:  "📝︎",
 			wantURI: "semiorepo://todos",
 		},
 		{
 			name:    "todo",
 			kind:    "todo",
 			data:    map[string]interface{}{"id": "my-todo"},
-			wantID:  "📝my-todo",
+			wantID:  "📝︎my-todo",
 			wantURI: "semiorepo://todo/my-todo",
 		},
 		{
 			name:    "policies collection",
 			kind:    "policies",
 			data:    map[string]interface{}{},
-			wantID:  "🛡",
+			wantID:  "🛡︎",
 			wantURI: "semiorepo://policies",
 		},
 		{
 			name:    "policy",
 			kind:    "policy",
 			data:    map[string]interface{}{"id": "/code-hygiene"},
-			wantID:  "🛡/code-hygiene",
+			wantID:  "🛡︎/code-hygiene",
 			wantURI: "semiorepo://policy//code-hygiene",
 		},
 		{
 			name:    "violationKinds collection",
 			kind:    "violationKinds",
 			data:    map[string]interface{}{},
-			wantID:  "🚫",
+			wantID:  "🚫︎",
 			wantURI: "semiorepo://violationKinds",
 		},
 		{
 			name:    "violationKind",
 			kind:    "violationKind",
 			data:    map[string]interface{}{"id": "code-hygiene/inline-comment"},
-			wantID:  "🚫code-hygiene/inline-comment",
+			wantID:  "🚫︎code-hygiene/inline-comment",
 			wantURI: "semiorepo://violationKind/code-hygiene/inline-comment",
 		},
 		{
 			name:    "contributors collection",
 			kind:    "contributors",
 			data:    map[string]interface{}{},
-			wantID:  "👤",
+			wantID:  "👤︎",
 			wantURI: "semiorepo://contributors",
 		},
 		{
 			name:    "contributor",
 			kind:    "contributor",
 			data:    map[string]interface{}{"github": "usalu"},
-			wantID:  "👤usalu",
+			wantID:  "👤︎usalu",
 			wantURI: "semiorepo://contributor/usalu",
 		},
 		{
 			name:    "commits collection",
 			kind:    "commits",
 			data:    map[string]interface{}{},
-			wantID:  "🔀",
+			wantID:  "🔀︎",
 			wantURI: "semiorepo://commits",
 		},
 		{
 			name:    "commit",
 			kind:    "commit",
 			data:    map[string]interface{}{"sha": "abc123"},
-			wantID:  "🔀abc123",
+			wantID:  "🔀︎abc123",
 			wantURI: "semiorepo://commit/abc123",
 		},
 	}
@@ -5716,34 +5780,34 @@ func TestUriToId(t *testing.T) {
 		uri  string
 		want string
 	}{
-		{"repo", "semiorepo://repo", "🌍"},
-		{"projects", "semiorepo://projects", "🏗"},
-		{"project", "semiorepo://project/@semio", "👤@semio"},
-		{"bundles", "semiorepo://bundles", "📦"},
-		{"bundle", "semiorepo://bundle/semio/js", "📚semio/js"},
-		{"folders", "semiorepo://folders", "📁"},
-		{"folder", "semiorepo://folder/semio/js/src", "📁semio/js/src"},
-		{"files", "semiorepo://files", "📄"},
-		{"file", "semiorepo://file/test.txt", "📄test.txt"},
-		{"section", "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "🔖semio/js/src/Design.tsx#STATE-MANAGEMENT#DESIGN-STORE"},
-		{"definition single", "semiorepo://definition/semio/js/src/file.ts/MY-FUNC", "🛠semio/js/src/file.ts§MY-FUNC"},
-		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/SECTION/MY-FUNC", "🛠semio/js/src/file.ts#SECTION§MY-FUNC"},
-		{"tickets", "semiorepo://tickets", "📅"},
-		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", "📅2025/02/04/test-ticket"},
-		{"goals", "semiorepo://goals", "🎯"},
-		{"goal", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", "🎯R26-02/RUNNING-SKETCHPAD"},
-		{"drafts", "semiorepo://drafts", "✍"},
-		{"draft", "semiorepo://draft/my-draft", "✍my-draft"},
-		{"todos", "semiorepo://todos", "📝"},
-		{"todo", "semiorepo://todo/my-todo", "📝my-todo"},
-		{"policies", "semiorepo://policies", "🛡"},
-		{"policy", "semiorepo://policy/code-hygiene", "🛡/code-hygiene"},
-		{"violationKinds", "semiorepo://violationKinds", "🚫"},
-		{"violationKind", "semiorepo://violationKind/code-hygiene/inline-comment", "🚫code-hygiene/inline-comment"},
-		{"contributors", "semiorepo://contributors", "👤"},
-		{"contributor", "semiorepo://contributor/usalu", "👤usalu"},
-		{"commits", "semiorepo://commits", "🔀"},
-		{"commit", "semiorepo://commit/abc123", "🔀abc123"},
+		{"repo", "semiorepo://repo", "🌍\uFE0E"},
+		{"projects", "semiorepo://projects", "🏗\uFE0E"},
+		{"project", "semiorepo://project/@semio", "👤\uFE0E@semio"},
+		{"bundles", "semiorepo://bundles", "📦\uFE0E"},
+		{"bundle", "semiorepo://bundle/semio/js", "📚\uFE0Esemio/js"},
+		{"folders", "semiorepo://folders", "📁\uFE0E"},
+		{"folder", "semiorepo://folder/semio/js/src", "📁\uFE0Esemio/js/src"},
+		{"files", "semiorepo://files", "📄\uFE0E"},
+		{"file", "semiorepo://file/test.txt", "📄\uFE0Etest.txt"},
+		{"section", "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "🔖\uFE0Esemio/js/src/Design.tsx#STATE-MANAGEMENT#DESIGN-STORE"},
+		{"definition single", "semiorepo://definition/semio/js/src/file.ts/MY-FUNC", "🛠\uFE0Esemio/js/src/file.ts§MY-FUNC"},
+		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/SECTION/MY-FUNC", "🛠\uFE0Esemio/js/src/file.ts#SECTION§MY-FUNC"},
+		{"tickets", "semiorepo://tickets", "📅\uFE0E"},
+		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", "📅\uFE0E2025/02/04/test-ticket"},
+		{"goals", "semiorepo://goals", "🎯\uFE0E"},
+		{"goal", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", "🎯\uFE0ER26-02/RUNNING-SKETCHPAD"},
+		{"drafts", "semiorepo://drafts", "✍\uFE0E"},
+		{"draft", "semiorepo://draft/my-draft", "✍\uFE0Emy-draft"},
+		{"todos", "semiorepo://todos", "📝\uFE0E"},
+		{"todo", "semiorepo://todo/my-todo", "📝\uFE0Emy-todo"},
+		{"policies", "semiorepo://policies", "🛡\uFE0E"},
+		{"policy", "semiorepo://policy/code-hygiene", "🛡\uFE0E/code-hygiene"},
+		{"violationKinds", "semiorepo://violationKinds", "🚫\uFE0E"},
+		{"violationKind", "semiorepo://violationKind/code-hygiene/inline-comment", "🚫\uFE0Ecode-hygiene/inline-comment"},
+		{"contributors", "semiorepo://contributors", "👤\uFE0E"},
+		{"contributor", "semiorepo://contributor/usalu", "👤\uFE0Eusalu"},
+		{"commits", "semiorepo://commits", "🔀\uFE0E"},
+		{"commit", "semiorepo://commit/abc123", "🔀\uFE0Eabc123"},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -5877,3 +5941,1380 @@ func TestMcpToolsSchemas(t *testing.T) {
 		})
 	}
 }
+
+// #endregion 🔖MCP Schema Tests
+
+// #region 🔖MCP Tool Tests
+
+func setupToolTest(t *testing.T) {
+	t.Helper()
+	cwd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("failed to get cwd: %v", err)
+	}
+	rootDir = findTestRepoRoot(cwd)
+	InvalidateProjectCache()
+}
+
+func TestToolProjectList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolProjectList()
+	if result.Error != "" {
+		t.Errorf("ToolProjectList returned error: %s", result.Error)
+	}
+	if result.Data == nil {
+		t.Error("ToolProjectList returned nil data")
+	}
+	projects, ok := result.Data.([]Project)
+	if !ok {
+		t.Fatal("ToolProjectList data is not []Project")
+	}
+	if len(projects) == 0 {
+		t.Error("ToolProjectList returned empty projects")
+	}
+}
+
+func TestToolProjectTree(t *testing.T) {
+	setupToolTest(t)
+	result := ToolProjectTree()
+	if result.Error != "" {
+		t.Errorf("ToolProjectTree returned error: %s", result.Error)
+	}
+}
+
+func TestToolContributorList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolContributorList()
+	if result.Error != "" {
+		t.Errorf("ToolContributorList returned error: %s", result.Error)
+	}
+	if result.Data == nil {
+		t.Error("ToolContributorList returned nil data")
+	}
+}
+
+func TestToolGoalList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolGoalList()
+	if result.Error != "" {
+		t.Errorf("ToolGoalList returned error: %s", result.Error)
+	}
+	if result.Data == nil {
+		t.Error("ToolGoalList returned nil data")
+	}
+}
+
+func TestToolTicketList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolTicketList(nil, nil, nil)
+	if result.Error != "" {
+		t.Errorf("ToolTicketList returned error: %s", result.Error)
+	}
+	if result.Data == nil {
+		t.Error("ToolTicketList returned nil data")
+	}
+}
+
+func TestToolDraftList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolDraftList()
+	if result.Error != "" {
+		t.Errorf("ToolDraftList returned error: %s", result.Error)
+	}
+}
+
+func TestToolFolderList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolFolderList(".")
+	if result.Error != "" {
+		t.Errorf("ToolFolderList returned error: %s", result.Error)
+	}
+	if result.Data == nil {
+		t.Error("ToolFolderList returned nil data")
+	}
+}
+
+func TestToolFolderTree(t *testing.T) {
+	setupToolTest(t)
+	result := ToolFolderTree("semio-repo")
+	if result.Error != "" {
+		t.Errorf("ToolFolderTree returned error: %s", result.Error)
+	}
+}
+
+func TestToolFileList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolFileList("semio-repo/cli")
+	if result.Error != "" {
+		t.Errorf("ToolFileList returned error: %s", result.Error)
+	}
+	if result.Data == nil {
+		t.Error("ToolFileList returned nil data")
+	}
+}
+
+func TestToolFileTree(t *testing.T) {
+	setupToolTest(t)
+	result := ToolFileTree("semio-repo/cli")
+	if result.Error != "" {
+		t.Errorf("ToolFileTree returned error: %s", result.Error)
+	}
+}
+
+func TestToolSectionList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolSectionList("semio-repo/cli/main.go")
+	if result.Error != "" {
+		t.Errorf("ToolSectionList returned error: %s", result.Error)
+	}
+}
+
+func TestToolSectionTree(t *testing.T) {
+	setupToolTest(t)
+	result := ToolSectionTree("semio-repo/cli/main.go")
+	if result.Error != "" {
+		t.Errorf("ToolSectionTree returned error: %s", result.Error)
+	}
+}
+
+func TestToolDefinitionList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolDefinitionList("semio-repo/cli/main.go")
+	if result.Error != "" {
+		t.Errorf("ToolDefinitionList returned error: %s", result.Error)
+	}
+}
+
+func TestToolPolicyList(t *testing.T) {
+	setupToolTest(t)
+	result := ToolPolicyList()
+	if result.Error != "" {
+		t.Errorf("ToolPolicyList returned error: %s", result.Error)
+	}
+}
+
+func TestToolPolicyCheck(t *testing.T) {
+	setupToolTest(t)
+	result := ToolPolicyCheck("code", "semio-repo/cli")
+	if result.Error != "" {
+		t.Errorf("ToolPolicyCheck returned error: %s", result.Error)
+	}
+}
+
+func TestToolAnalyzeScope(t *testing.T) {
+	setupToolTest(t)
+	result := ToolAnalyze("semio-repo/cli", nil)
+	if result.Error != "" {
+		t.Errorf("ToolAnalyze returned error: %s", result.Error)
+	}
+}
+
+func TestToolFixScope(t *testing.T) {
+	setupToolTest(t)
+	result := ToolFix("semio-repo/cli")
+	if result.Error != "" {
+		t.Errorf("ToolFix returned error: %s", result.Error)
+	}
+}
+
+func TestToolFolderCRUD(t *testing.T) {
+	setupToolTest(t)
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	result := ToolFolderCreate("test-folder")
+	if result.Error != "" {
+		t.Fatalf("ToolFolderCreate returned error: %s", result.Error)
+	}
+
+	result = ToolFolderList(".")
+	if result.Error != "" {
+		t.Fatalf("ToolFolderList returned error: %s", result.Error)
+	}
+
+	result = ToolFolderMove("test-folder", "renamed-folder")
+	if result.Error != "" {
+		t.Fatalf("ToolFolderMove returned error: %s", result.Error)
+	}
+
+	result = ToolFolderDelete("renamed-folder")
+	if result.Error != "" {
+		t.Fatalf("ToolFolderDelete returned error: %s", result.Error)
+	}
+}
+
+func TestToolFileCRUD(t *testing.T) {
+	setupToolTest(t)
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+
+	result := ToolFileCreate("test.txt")
+	if result.Error != "" {
+		t.Fatalf("ToolFileCreate returned error: %s", result.Error)
+	}
+
+	result = ToolFileMove("test.txt", "renamed.txt")
+	if result.Error != "" {
+		t.Fatalf("ToolFileMove returned error: %s", result.Error)
+	}
+
+	result = ToolFileDelete("renamed.txt")
+	if result.Error != "" {
+		t.Fatalf("ToolFileDelete returned error: %s", result.Error)
+	}
+}
+
+func TestToolTicketLifecycle(t *testing.T) {
+	setupToolTest(t)
+
+	result := ToolTicketOpen("Test Lifecycle Ticket", "Test prompt", "sonnet-4-5", "windsurf-chat", "", true, "AI-OPTIMIZED-REPO", "", true, "")
+	if result.Error != "" {
+		t.Fatalf("ToolTicketOpen returned error: %s", result.Error)
+	}
+	ticket, ok := result.Data.(*Ticket)
+	if !ok || ticket == nil {
+		t.Fatal("ToolTicketOpen returned nil ticket")
+	}
+
+	readResult := ToolTicketRead(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+	if readResult.Error != "" {
+		t.Fatalf("ToolTicketRead returned error: %s", readResult.Error)
+	}
+
+	closeResult := ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Test summary", []string{"semio-repo/cli/main.go"}, "", true)
+	if closeResult.Error != "" {
+		t.Fatalf("ToolTicketClose returned error: %s", closeResult.Error)
+	}
+
+	reopenResult := ToolTicketReopen(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Reopen prompt", "sonnet-4-5", "windsurf-chat", "", "", "", "", true)
+	if reopenResult.Error != "" {
+		t.Fatalf("ToolTicketReopen returned error: %s", reopenResult.Error)
+	}
+
+	ToolTicketClose(ticket.Year, ticket.Month, ticket.Day, ticket.Slug, "Final close", []string{"semio-repo/cli/main.go"}, "", true)
+	ticketPath := GetTicketPath(ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+	os.RemoveAll(ticketPath)
+}
+
+func TestToolDraftLifecycle(t *testing.T) {
+	setupToolTest(t)
+
+	result := ToolDraftCreate("test-mcp-draft", nil)
+	if result.Error != "" {
+		t.Fatalf("ToolDraftCreate returned error: %s", result.Error)
+	}
+
+	listResult := ToolDraftList()
+	if listResult.Error != "" {
+		t.Fatalf("ToolDraftList returned error: %s", listResult.Error)
+	}
+
+	deleteResult := ToolDraftDelete("test-mcp-draft")
+	if deleteResult.Error != "" {
+		t.Fatalf("ToolDraftDelete returned error: %s", deleteResult.Error)
+	}
+}
+
+func TestToolGoalUri(t *testing.T) {
+	setupToolTest(t)
+	result := ToolGoalList()
+	if result.Error != "" {
+		t.Fatalf("ToolGoalList returned error: %s", result.Error)
+	}
+	goals, ok := result.Data.([]*Goal)
+	if !ok || len(goals) == 0 {
+		t.Skip("no goals to verify URI")
+	}
+	for _, g := range goals {
+		uri := g.GetURI()
+		if uri == "" {
+			t.Errorf("goal %s has empty URI", g.ID)
+		}
+		if !strings.HasPrefix(uri, "semiorepo://goal/") {
+			t.Errorf("goal %s URI %q should start with semiorepo://goal/", g.ID, uri)
+		}
+	}
+}
+
+// #region 🔖Output Parity Tests
+
+func TestParityGoalList(t *testing.T) {
+	setupToolTest(t)
+
+	t.Run("output matches CLI markdown", func(t *testing.T) {
+		cliOut, _, err := executeCommandMd("goal", "list")
+		if err != nil {
+			t.Fatalf("CLI goal list failed: %v", err)
+		}
+		toolResult := ToolGoalList()
+		if toolResult.Error != "" {
+			t.Fatalf("ToolGoalList returned error: %s", toolResult.Error)
+		}
+		mcpOut := toolOutputText(toolResult)
+		if cliOut != mcpOut {
+			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
+		}
+	})
+
+	t.Run("both return same number of goals", func(t *testing.T) {
+		cliOut, _, _ := executeCommandMd("goal", "list")
+		toolResult := ToolGoalList()
+		mcpOut := toolOutputText(toolResult)
+		cliLines := strings.Count(cliOut, "\n")
+		mcpLines := strings.Count(mcpOut, "\n")
+		if cliLines != mcpLines {
+			t.Errorf("line count mismatch: CLI=%d, MCP=%d", cliLines, mcpLines)
+		}
+	})
+
+	t.Run("empty output when no goals match filter", func(t *testing.T) {
+		// Both should produce the same empty-ish output for a nonexistent filter
+		// (This tests structural consistency even with no results)
+		cliOut, _, _ := executeCommandMd("goal", "list")
+		mcpOut := toolOutputText(ToolGoalList())
+		if len(cliOut) == 0 && len(mcpOut) != 0 {
+			t.Error("CLI produced empty output but MCP did not")
+		}
+		if len(cliOut) != 0 && len(mcpOut) == 0 {
+			t.Error("MCP produced empty output but CLI did not")
+		}
+	})
+}
+
+func TestParityContributorList(t *testing.T) {
+	setupToolTest(t)
+
+	t.Run("output matches CLI markdown", func(t *testing.T) {
+		cliOut, _, err := executeCommandMd("contributor", "list")
+		if err != nil {
+			t.Fatalf("CLI contributor list failed: %v", err)
+		}
+		toolResult := ToolContributorList()
+		if toolResult.Error != "" {
+			t.Fatalf("ToolContributorList returned error: %s", toolResult.Error)
+		}
+		mcpOut := toolOutputText(toolResult)
+		if cliOut != mcpOut {
+			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
+		}
+	})
+
+	t.Run("both return same number of contributors", func(t *testing.T) {
+		cliOut, _, _ := executeCommandMd("contributor", "list")
+		mcpOut := toolOutputText(ToolContributorList())
+		cliLines := strings.Count(cliOut, "\n")
+		mcpLines := strings.Count(mcpOut, "\n")
+		if cliLines != mcpLines {
+			t.Errorf("line count mismatch: CLI=%d, MCP=%d", cliLines, mcpLines)
+		}
+	})
+}
+
+func TestParityTicketList(t *testing.T) {
+	setupToolTest(t)
+
+	t.Run("output matches CLI markdown", func(t *testing.T) {
+		cliOut, _, err := executeCommandMd("ticket", "list")
+		if err != nil {
+			t.Fatalf("CLI ticket list failed: %v", err)
+		}
+		toolResult := ToolTicketList(nil, nil, nil)
+		if toolResult.Error != "" {
+			t.Fatalf("ToolTicketList returned error: %s", toolResult.Error)
+		}
+		mcpOut := toolOutputText(toolResult)
+		if cliOut != mcpOut {
+			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
+		}
+	})
+
+	t.Run("both return same number of tickets", func(t *testing.T) {
+		cliOut, _, _ := executeCommandMd("ticket", "list")
+		mcpOut := toolOutputText(ToolTicketList(nil, nil, nil))
+		cliLines := strings.Count(cliOut, "\n")
+		mcpLines := strings.Count(mcpOut, "\n")
+		if cliLines != mcpLines {
+			t.Errorf("line count mismatch: CLI=%d, MCP=%d", cliLines, mcpLines)
+		}
+	})
+}
+
+func TestParityDraftList(t *testing.T) {
+	setupToolTest(t)
+
+	t.Run("uses event rendering format", func(t *testing.T) {
+		toolResult := ToolDraftList()
+		if toolResult.Error != "" {
+			t.Fatalf("ToolDraftList returned error: %s", toolResult.Error)
+		}
+		mcpOut := toolOutputText(toolResult)
+		// Draft list is MCP-only (no CLI counterpart), but verify it uses
+		// the same event-based rendering as other list commands
+		drafts, _ := ListDrafts()
+		if len(drafts) > 0 && mcpOut == "" {
+			t.Error("ToolDraftList returned empty output despite having drafts")
+		}
+		if len(drafts) == 0 && mcpOut != "" {
+			t.Error("ToolDraftList returned output despite having no drafts")
+		}
+	})
+
+	t.Run("renders same as manual event rendering", func(t *testing.T) {
+		drafts, err := ListDrafts()
+		if err != nil {
+			t.Fatalf("ListDrafts failed: %v", err)
+		}
+		var events []Event
+		for _, d := range drafts {
+			data, _ := json.Marshal(map[string]interface{}{"draft": d})
+			events = append(events, Event{Kind: KindResult, Command: "draft list", Data: data})
+		}
+		expected := renderEventsToMarkdown(events)
+		actual := toolOutputText(ToolDraftList())
+		if expected != actual {
+			t.Errorf("output mismatch:\nexpected:\n%s\nactual:\n%s", expected, actual)
+		}
+	})
+}
+
+func TestParityProjectList(t *testing.T) {
+	setupToolTest(t)
+
+	t.Run("output matches CLI markdown", func(t *testing.T) {
+		cliOut, _, err := executeCommandMd("project", "list")
+		if err != nil {
+			t.Fatalf("CLI project list failed: %v", err)
+		}
+		toolResult := ToolProjectList()
+		if toolResult.Error != "" {
+			t.Fatalf("ToolProjectList returned error: %s", toolResult.Error)
+		}
+		mcpOut := toolOutputText(toolResult)
+		if cliOut != mcpOut {
+			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
+		}
+	})
+
+	t.Run("both return non-empty output", func(t *testing.T) {
+		cliOut, _, _ := executeCommandMd("project", "list")
+		mcpOut := toolOutputText(ToolProjectList())
+		if len(cliOut) == 0 {
+			t.Error("CLI project list returned empty output")
+		}
+		if len(mcpOut) == 0 {
+			t.Error("MCP project list returned empty output")
+		}
+	})
+}
+
+func TestParityProjectTree(t *testing.T) {
+	setupToolTest(t)
+
+	t.Run("output matches CLI markdown", func(t *testing.T) {
+		cliOut, _, err := executeCommandMd("project", "tree")
+		if err != nil {
+			t.Fatalf("CLI project tree failed: %v", err)
+		}
+		toolResult := ToolProjectTree()
+		if toolResult.Error != "" {
+			t.Fatalf("ToolProjectTree returned error: %s", toolResult.Error)
+		}
+		mcpOut := toolOutputText(toolResult)
+		if cliOut != mcpOut {
+			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
+		}
+	})
+
+	t.Run("projects are sorted alphabetically", func(t *testing.T) {
+		mcpOut := toolOutputText(ToolProjectTree())
+		lines := strings.Split(strings.TrimSpace(mcpOut), "\n")
+		for i := 1; i < len(lines); i++ {
+			if lines[i] < lines[i-1] {
+				t.Errorf("projects not sorted: %q comes after %q", lines[i], lines[i-1])
+			}
+		}
+	})
+}
+
+func TestParityPolicyList(t *testing.T) {
+	setupToolTest(t)
+
+	t.Run("output matches CLI markdown", func(t *testing.T) {
+		cliOut, _, err := executeCommandMd("policy", "list")
+		if err != nil {
+			t.Fatalf("CLI policy list failed: %v", err)
+		}
+		toolResult := ToolPolicyList()
+		if toolResult.Error != "" {
+			t.Fatalf("ToolPolicyList returned error: %s", toolResult.Error)
+		}
+		mcpOut := toolOutputText(toolResult)
+		if cliOut != mcpOut {
+			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
+		}
+	})
+
+	t.Run("both return same number of policies", func(t *testing.T) {
+		cliOut, _, _ := executeCommandMd("policy", "list")
+		mcpOut := toolOutputText(ToolPolicyList())
+		cliLines := strings.Count(cliOut, "\n")
+		mcpLines := strings.Count(mcpOut, "\n")
+		if cliLines != mcpLines {
+			t.Errorf("line count mismatch: CLI=%d, MCP=%d", cliLines, mcpLines)
+		}
+	})
+}
+
+// #endregion 🔖Output Parity Tests
+
+// #endregion 🔖MCP Tool Tests
+
+// #region 🔖Monorepo Tree Tests
+
+func TestTreeNodeKindConstants(t *testing.T) {
+	t.Run("all kinds are distinct", func(t *testing.T) {
+		kinds := []TreeNodeKind{
+			TreeNodeProject, TreeNodeBundle, TreeNodeFolder, TreeNodeFile,
+			TreeNodeSection, TreeNodeDefinition, TreeNodeGoal, TreeNodeTicket,
+			TreeNodeDraft, TreeNodePolicy, TreeNodeViolationKindNode,
+			TreeNodeContributor, TreeNodeCommit, TreeNodeCategory,
+		}
+		seen := make(map[TreeNodeKind]bool)
+		for _, k := range kinds {
+			if seen[k] {
+				t.Errorf("duplicate TreeNodeKind: %s", k)
+			}
+			seen[k] = true
+		}
+	})
+
+	t.Run("kinds are non-empty strings", func(t *testing.T) {
+		kinds := []TreeNodeKind{
+			TreeNodeProject, TreeNodeBundle, TreeNodeFolder, TreeNodeFile,
+			TreeNodeSection, TreeNodeDefinition, TreeNodeGoal, TreeNodeTicket,
+			TreeNodeDraft, TreeNodePolicy, TreeNodeViolationKindNode,
+			TreeNodeContributor, TreeNodeCommit, TreeNodeCategory,
+		}
+		for _, k := range kinds {
+			if string(k) == "" {
+				t.Error("TreeNodeKind should not be empty")
+			}
+		}
+	})
+}
+
+func TestTreeFilterIsKindVisible(t *testing.T) {
+	t.Run("all visible by default", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlyKinds:    make(map[TreeNodeKind]bool),
+			ExcludeKinds: make(map[TreeNodeKind]bool),
+		}
+		if !f.IsKindVisible(TreeNodeBundle) {
+			t.Error("bundle should be visible by default")
+		}
+		if !f.IsKindVisible(TreeNodeFile) {
+			t.Error("file should be visible by default")
+		}
+	})
+
+	t.Run("only-kind filters to specified kinds", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlyKinds:    map[TreeNodeKind]bool{TreeNodeProject: true, TreeNodeBundle: true},
+			ExcludeKinds: make(map[TreeNodeKind]bool),
+		}
+		if !f.IsKindVisible(TreeNodeProject) {
+			t.Error("project should be visible with only-project")
+		}
+		if !f.IsKindVisible(TreeNodeBundle) {
+			t.Error("bundle should be visible with only-bundle")
+		}
+		if f.IsKindVisible(TreeNodeFolder) {
+			t.Error("folder should not be visible when not in only-kinds")
+		}
+		if f.IsKindVisible(TreeNodeFile) {
+			t.Error("file should not be visible when not in only-kinds")
+		}
+	})
+
+	t.Run("exclude-kind hides specified kinds", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlyKinds:    make(map[TreeNodeKind]bool),
+			ExcludeKinds: map[TreeNodeKind]bool{TreeNodeFolder: true},
+		}
+		if f.IsKindVisible(TreeNodeFolder) {
+			t.Error("folder should not be visible when excluded")
+		}
+		if !f.IsKindVisible(TreeNodeFile) {
+			t.Error("file should still be visible")
+		}
+	})
+
+	t.Run("category always visible", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlyKinds:    map[TreeNodeKind]bool{TreeNodeProject: true},
+			ExcludeKinds: make(map[TreeNodeKind]bool),
+		}
+		if !f.IsKindVisible(TreeNodeCategory) {
+			t.Error("category should always be visible")
+		}
+	})
+}
+
+func TestTreeFilterMatchesSubKind(t *testing.T) {
+	t.Run("matches all when no sub-kind filters", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		if !f.MatchesSubKind(TreeNodeBundle, "library") {
+			t.Error("should match any sub-kind by default")
+		}
+	})
+
+	t.Run("only sub-kind includes specified", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlySubKinds:    map[TreeNodeKind][]string{TreeNodeBundle: {"library"}},
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		if !f.MatchesSubKind(TreeNodeBundle, "library") {
+			t.Error("library should match only-library")
+		}
+		if f.MatchesSubKind(TreeNodeBundle, "schema") {
+			t.Error("schema should not match only-library")
+		}
+	})
+
+	t.Run("exclude sub-kind removes specified", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: map[TreeNodeKind][]string{TreeNodeFolder: {"required"}},
+		}
+		if f.MatchesSubKind(TreeNodeFolder, "required") {
+			t.Error("required should not match when excluded")
+		}
+		if !f.MatchesSubKind(TreeNodeFolder, "organization") {
+			t.Error("organization should still match")
+		}
+	})
+
+	t.Run("empty sub-kind always matches", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlySubKinds:    map[TreeNodeKind][]string{TreeNodeBundle: {"library"}},
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		if !f.MatchesSubKind(TreeNodeBundle, "") {
+			t.Error("empty sub-kind should always match")
+		}
+	})
+
+	t.Run("case insensitive matching", func(t *testing.T) {
+		f := &TreeFilter{
+			OnlySubKinds:    map[TreeNodeKind][]string{TreeNodeBundle: {"Library"}},
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		if !f.MatchesSubKind(TreeNodeBundle, "library") {
+			t.Error("should match case-insensitively")
+		}
+	})
+}
+
+func TestTreeFilterMatchesDate(t *testing.T) {
+	t.Run("matches all when no date filters", func(t *testing.T) {
+		f := &TreeFilter{}
+		if !f.MatchesDate(2026, 1, 15) {
+			t.Error("should match any date by default")
+		}
+	})
+
+	t.Run("only-year includes specified year", func(t *testing.T) {
+		f := &TreeFilter{OnlyYears: []int{2026}}
+		if !f.MatchesDate(2026, 1, 1) {
+			t.Error("2026 should match only-year 2026")
+		}
+		if f.MatchesDate(2025, 1, 1) {
+			t.Error("2025 should not match only-year 2026")
+		}
+	})
+
+	t.Run("exclude-year removes specified year", func(t *testing.T) {
+		f := &TreeFilter{ExcludeYears: []int{2026}}
+		if f.MatchesDate(2026, 1, 1) {
+			t.Error("2026 should not match no-year 2026")
+		}
+		if !f.MatchesDate(2025, 1, 1) {
+			t.Error("2025 should still match")
+		}
+	})
+
+	t.Run("month filter", func(t *testing.T) {
+		f := &TreeFilter{OnlyMonths: []int{6}}
+		if !f.MatchesDate(2026, 6, 1) {
+			t.Error("June should match")
+		}
+		if f.MatchesDate(2026, 7, 1) {
+			t.Error("July should not match")
+		}
+	})
+
+	t.Run("combined year and month", func(t *testing.T) {
+		f := &TreeFilter{OnlyYears: []int{2026}, ExcludeMonths: []int{12}}
+		if !f.MatchesDate(2026, 6, 1) {
+			t.Error("2026/06 should match")
+		}
+		if f.MatchesDate(2026, 12, 1) {
+			t.Error("2026/12 should not match")
+		}
+		if f.MatchesDate(2025, 6, 1) {
+			t.Error("2025 should not match")
+		}
+	})
+}
+
+func TestTreeFilterMatchesStatus(t *testing.T) {
+	t.Run("matches all when no status filter", func(t *testing.T) {
+		f := &TreeFilter{}
+		if !f.MatchesStatus("open") {
+			t.Error("should match any status by default")
+		}
+		if !f.MatchesStatus("closed") {
+			t.Error("should match any status by default")
+		}
+	})
+
+	t.Run("only-open filters to open", func(t *testing.T) {
+		f := &TreeFilter{OnlyStatus: "open"}
+		if !f.MatchesStatus("open") {
+			t.Error("open should match only-open")
+		}
+		if f.MatchesStatus("closed") {
+			t.Error("closed should not match only-open")
+		}
+	})
+
+	t.Run("only-closed filters to closed", func(t *testing.T) {
+		f := &TreeFilter{OnlyStatus: "closed"}
+		if !f.MatchesStatus("closed") {
+			t.Error("closed should match only-closed")
+		}
+		if f.MatchesStatus("open") {
+			t.Error("open should not match only-closed")
+		}
+	})
+
+	t.Run("case insensitive", func(t *testing.T) {
+		f := &TreeFilter{OnlyStatus: "Open"}
+		if !f.MatchesStatus("open") {
+			t.Error("should match case-insensitively")
+		}
+	})
+}
+
+func TestTreeFilterMatchesContributor(t *testing.T) {
+	t.Run("matches all when no contributor filter", func(t *testing.T) {
+		f := &TreeFilter{}
+		if !f.MatchesContributor("usalu") {
+			t.Error("should match any contributor by default")
+		}
+	})
+
+	t.Run("only-contributor includes specified", func(t *testing.T) {
+		f := &TreeFilter{OnlyContributors: []string{"usalu"}}
+		if !f.MatchesContributor("usalu") {
+			t.Error("usalu should match")
+		}
+		if f.MatchesContributor("other") {
+			t.Error("other should not match")
+		}
+	})
+
+	t.Run("exclude-contributor removes specified", func(t *testing.T) {
+		f := &TreeFilter{ExcludeContributors: []string{"usalu"}}
+		if f.MatchesContributor("usalu") {
+			t.Error("usalu should not match when excluded")
+		}
+		if !f.MatchesContributor("other") {
+			t.Error("other should still match")
+		}
+	})
+
+	t.Run("case insensitive", func(t *testing.T) {
+		f := &TreeFilter{OnlyContributors: []string{"Usalu"}}
+		if !f.MatchesContributor("usalu") {
+			t.Error("should match case-insensitively")
+		}
+	})
+}
+
+func TestFilterMonorepoTree(t *testing.T) {
+	makeTree := func() *TreeNode {
+		return &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "Projects", Children: []*TreeNode{
+					{Kind: TreeNodeProject, ID: "proj1", Label: "proj1", Children: []*TreeNode{
+						{Kind: TreeNodeBundle, ID: "b1", Label: "bundle1", SubKind: "library", Children: []*TreeNode{
+							{Kind: TreeNodeFolder, ID: "f1", Label: "src", SubKind: "organization", Children: []*TreeNode{
+								{Kind: TreeNodeFile, ID: "file1", Label: "index.ts", SubKind: "code"},
+								{Kind: TreeNodeFile, ID: "file2", Label: "README.md", SubKind: "docs"},
+							}},
+						}},
+						{Kind: TreeNodeBundle, ID: "b2", Label: "bundle2", SubKind: "schema"},
+					}},
+				}},
+				{Kind: TreeNodeCategory, ID: "goals", Label: "Goals", Children: []*TreeNode{
+					{Kind: TreeNodeGoal, ID: "g1", Label: "Goal1", Status: "open", Children: []*TreeNode{
+						{Kind: TreeNodeTicket, ID: "t1", Label: "Ticket1", Status: "open", Year: 2026, Month: 2, Day: 5},
+						{Kind: TreeNodeTicket, ID: "t2", Label: "Ticket2", Status: "closed", Year: 2025, Month: 12, Day: 1},
+					}},
+				}},
+				{Kind: TreeNodeCategory, ID: "contributors", Label: "Contributors", Children: []*TreeNode{
+					{Kind: TreeNodeContributor, ID: "c1", Label: "usalu", Contributor: "usalu"},
+					{Kind: TreeNodeContributor, ID: "c2", Label: "other", Contributor: "other"},
+				}},
+			},
+		}
+	}
+
+	t.Run("no filter returns full tree", func(t *testing.T) {
+		tree := makeTree()
+		filter := &TreeFilter{
+			OnlyKinds:       make(map[TreeNodeKind]bool),
+			ExcludeKinds:    make(map[TreeNodeKind]bool),
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		result := FilterMonorepoTree(tree, filter)
+		if len(result.Children) != 3 {
+			t.Errorf("expected 3 top-level categories, got %d", len(result.Children))
+		}
+	})
+
+	t.Run("exclude-bundle removes bundles", func(t *testing.T) {
+		tree := makeTree()
+		filter := &TreeFilter{
+			OnlyKinds:       make(map[TreeNodeKind]bool),
+			ExcludeKinds:    map[TreeNodeKind]bool{TreeNodeBundle: true},
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		result := FilterMonorepoTree(tree, filter)
+		projectsNode := result.Children[0]
+		proj := projectsNode.Children[0]
+		for _, c := range proj.Children {
+			if c.Kind == TreeNodeBundle {
+				t.Error("bundles should be collapsed out")
+			}
+		}
+	})
+
+	t.Run("no-folder collapses folders", func(t *testing.T) {
+		tree := makeTree()
+		filter := &TreeFilter{
+			OnlyKinds:       make(map[TreeNodeKind]bool),
+			ExcludeKinds:    map[TreeNodeKind]bool{TreeNodeFolder: true},
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		result := FilterMonorepoTree(tree, filter)
+		projectsNode := result.Children[0]
+		proj := projectsNode.Children[0]
+		bundle := proj.Children[0]
+		hasFile := false
+		for _, c := range bundle.Children {
+			if c.Kind == TreeNodeFolder {
+				t.Error("folders should be collapsed")
+			}
+			if c.Kind == TreeNodeFile {
+				hasFile = true
+			}
+		}
+		if !hasFile {
+			t.Error("files should be promoted to bundle level")
+		}
+	})
+
+	t.Run("only-library sub-kind filter", func(t *testing.T) {
+		tree := makeTree()
+		filter := &TreeFilter{
+			OnlyKinds:       make(map[TreeNodeKind]bool),
+			ExcludeKinds:    make(map[TreeNodeKind]bool),
+			OnlySubKinds:    map[TreeNodeKind][]string{TreeNodeBundle: {"library"}},
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		result := FilterMonorepoTree(tree, filter)
+		projectsNode := result.Children[0]
+		proj := projectsNode.Children[0]
+		for _, c := range proj.Children {
+			if c.Kind == TreeNodeBundle && c.SubKind != "library" {
+				t.Errorf("only library bundles expected, got %s", c.SubKind)
+			}
+		}
+		if len(proj.Children) != 1 {
+			t.Errorf("expected 1 bundle (library), got %d", len(proj.Children))
+		}
+	})
+
+	t.Run("status filter open", func(t *testing.T) {
+		tree := makeTree()
+		filter := &TreeFilter{
+			OnlyKinds:       make(map[TreeNodeKind]bool),
+			ExcludeKinds:    make(map[TreeNodeKind]bool),
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+			OnlyStatus:      "open",
+		}
+		result := FilterMonorepoTree(tree, filter)
+		goalsNode := result.Children[1]
+		goal := goalsNode.Children[0]
+		for _, c := range goal.Children {
+			if c.Kind == TreeNodeTicket && c.Status != "open" {
+				t.Error("only open tickets should be visible")
+			}
+		}
+	})
+
+	t.Run("year filter", func(t *testing.T) {
+		tree := makeTree()
+		filter := &TreeFilter{
+			OnlyKinds:       make(map[TreeNodeKind]bool),
+			ExcludeKinds:    make(map[TreeNodeKind]bool),
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+			ExcludeYears:    []int{2025},
+		}
+		result := FilterMonorepoTree(tree, filter)
+		goalsNode := result.Children[1]
+		goal := goalsNode.Children[0]
+		for _, c := range goal.Children {
+			if c.Kind == TreeNodeTicket && c.Year == 2025 {
+				t.Error("2025 tickets should be excluded")
+			}
+		}
+	})
+
+	t.Run("contributor filter", func(t *testing.T) {
+		tree := makeTree()
+		filter := &TreeFilter{
+			OnlyKinds:           make(map[TreeNodeKind]bool),
+			ExcludeKinds:        make(map[TreeNodeKind]bool),
+			OnlySubKinds:        make(map[TreeNodeKind][]string),
+			ExcludeSubKinds:     make(map[TreeNodeKind][]string),
+			ExcludeContributors: []string{"usalu"},
+		}
+		result := FilterMonorepoTree(tree, filter)
+		contribNode := result.Children[2]
+		for _, c := range contribNode.Children {
+			if c.Contributor == "usalu" {
+				t.Error("usalu should be excluded")
+			}
+		}
+		if len(contribNode.Children) != 1 {
+			t.Errorf("expected 1 contributor, got %d", len(contribNode.Children))
+		}
+	})
+
+	t.Run("nil filter returns same tree", func(t *testing.T) {
+		tree := makeTree()
+		result := FilterMonorepoTree(tree, nil)
+		if result != tree {
+			t.Error("nil filter should return same tree")
+		}
+	})
+}
+
+func TestSearchMonorepoTree(t *testing.T) {
+	makeTree := func() *TreeNode {
+		return &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "Projects", Children: []*TreeNode{
+					{Kind: TreeNodeProject, ID: "proj:semio", Label: "semio", Children: []*TreeNode{
+						{Kind: TreeNodeBundle, ID: "bundle:cli", Label: "cli", SubKind: "binary"},
+						{Kind: TreeNodeBundle, ID: "bundle:docs", Label: "docs", SubKind: "site"},
+					}},
+				}},
+				{Kind: TreeNodeCategory, ID: "goals", Label: "Goals", Children: []*TreeNode{
+					{Kind: TreeNodeGoal, ID: "goal:test", Label: "Test Goal", Description: "testing search"},
+				}},
+			},
+		}
+	}
+
+	t.Run("empty query returns full tree", func(t *testing.T) {
+		tree := makeTree()
+		result := SearchMonorepoTree(tree, "")
+		if len(result.Children) != 2 {
+			t.Errorf("expected 2 categories, got %d", len(result.Children))
+		}
+	})
+
+	t.Run("query matches items", func(t *testing.T) {
+		tree := makeTree()
+		result := SearchMonorepoTree(tree, "cli")
+		found := false
+		var walk func(*TreeNode)
+		walk = func(n *TreeNode) {
+			if n.ID == "bundle:cli" {
+				found = true
+			}
+			for _, c := range n.Children {
+				walk(c)
+			}
+		}
+		walk(result)
+		if !found {
+			t.Error("search for 'cli' should find bundle:cli")
+		}
+	})
+
+	t.Run("query with no matches returns empty tree", func(t *testing.T) {
+		tree := makeTree()
+		result := SearchMonorepoTree(tree, "zzzznonexistent")
+		totalChildren := 0
+		for _, c := range result.Children {
+			totalChildren += len(c.Children)
+		}
+		if totalChildren != 0 {
+			t.Errorf("search for nonexistent term should return empty, got %d children", totalChildren)
+		}
+	})
+
+	t.Run("parent chain preserved", func(t *testing.T) {
+		tree := makeTree()
+		result := SearchMonorepoTree(tree, "cli")
+		if len(result.Children) == 0 {
+			t.Fatal("expected at least one category")
+		}
+		projectsNode := result.Children[0]
+		if projectsNode.ID != "projects" {
+			t.Errorf("expected projects category, got %s", projectsNode.ID)
+		}
+		if len(projectsNode.Children) == 0 {
+			t.Fatal("expected project under projects")
+		}
+		proj := projectsNode.Children[0]
+		if proj.ID != "proj:semio" {
+			t.Errorf("expected semio project, got %s", proj.ID)
+		}
+	})
+}
+
+func TestRenderMonorepoTree(t *testing.T) {
+	t.Run("renders basic tree", func(t *testing.T) {
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
+				}},
+			},
+		}
+		output := RenderMonorepoTree(tree)
+		if !strings.Contains(output, "🏗️Projects") {
+			t.Error("output should contain Projects label")
+		}
+		if !strings.Contains(output, "semio") {
+			t.Error("output should contain project name")
+		}
+	})
+
+	t.Run("renders category URI", func(t *testing.T) {
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "goals", Label: "🎯Goals", URI: "semiorepo://goals"},
+			},
+		}
+		output := RenderMonorepoTree(tree)
+		if !strings.Contains(output, "[🎯Goals](semiorepo://goals)") {
+			t.Errorf("output should contain category with URI link, got: %s", output)
+		}
+	})
+
+	t.Run("renders nested tree with connectors", func(t *testing.T) {
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "Projects", Children: []*TreeNode{
+					{Kind: TreeNodeProject, ID: "p1", Label: "proj1"},
+					{Kind: TreeNodeProject, ID: "p2", Label: "proj2"},
+				}},
+			},
+		}
+		output := RenderMonorepoTree(tree)
+		if !strings.Contains(output, "├── ") || !strings.Contains(output, "└── ") {
+			t.Errorf("output should contain tree connectors, got: %s", output)
+		}
+	})
+
+	t.Run("empty tree renders nothing", func(t *testing.T) {
+		tree := &TreeNode{Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{}}
+		output := RenderMonorepoTree(tree)
+		if output != "" {
+			t.Errorf("empty tree should render nothing, got: %q", output)
+		}
+	})
+
+	t.Run("markdown renderer uses list bullets", func(t *testing.T) {
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
+				}},
+			},
+		}
+		output := RenderMonorepoTreeMarkdown(tree)
+		if !strings.Contains(output, "- [🏗️Projects](semiorepo://projects)") {
+			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
+		}
+		if !strings.Contains(output, "  - semio") {
+			t.Errorf("markdown tree should contain nested bullet item, got: %s", output)
+		}
+		if strings.Contains(output, "├── ") || strings.Contains(output, "└── ") {
+			t.Errorf("markdown tree must not contain ascii connectors, got: %s", output)
+		}
+	})
+}
+
+func TestBuildMonorepoTree(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping slow tree build test in short mode")
+	}
+
+	cwd, _ := os.Getwd()
+	oldRoot := rootDir
+	rootDir = findTestRepoRoot(cwd)
+	defer func() { rootDir = oldRoot }()
+	InvalidateProjectCache()
+
+	t.Run("builds tree with categories", func(t *testing.T) {
+		ctx := context.Background()
+		tree := BuildMonorepoTree(ctx)
+		if tree == nil {
+			t.Fatal("tree should not be nil")
+		}
+		if len(tree.Children) == 0 {
+			t.Fatal("tree should have categories")
+		}
+
+		categoryIDs := make(map[string]bool)
+		for _, c := range tree.Children {
+			if c.Kind != TreeNodeCategory {
+				t.Errorf("top-level children should be categories, got %s", c.Kind)
+			}
+			categoryIDs[c.ID] = true
+		}
+
+		expected := []string{"projects", "goals", "drafts", "policies", "contributors", "commits"}
+		for _, id := range expected {
+			if !categoryIDs[id] {
+				t.Errorf("missing category: %s", id)
+			}
+		}
+	})
+
+	t.Run("projects category has children", func(t *testing.T) {
+		ctx := context.Background()
+		tree := BuildMonorepoTree(ctx)
+		var projectsNode *TreeNode
+		for _, c := range tree.Children {
+			if c.ID == "projects" {
+				projectsNode = c
+				break
+			}
+		}
+		if projectsNode == nil {
+			t.Fatal("projects category not found")
+		}
+		if len(projectsNode.Children) == 0 {
+			t.Error("projects should have children")
+		}
+		hasBundles := false
+		for _, p := range projectsNode.Children {
+			if p.Kind != TreeNodeProject {
+				t.Errorf("projects children should be projects, got %s", p.Kind)
+			}
+			for _, b := range p.Children {
+				if b.Kind != TreeNodeBundle {
+					t.Errorf("project children should be bundles, got %s", b.Kind)
+				}
+				hasBundles = true
+			}
+		}
+		if !hasBundles {
+			t.Error("at least one project should have bundles")
+		}
+	})
+
+	t.Run("with sections includes sections", func(t *testing.T) {
+		ctx := context.Background()
+		tree := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
+		hasSections := false
+		var walk func(*TreeNode)
+		walk = func(n *TreeNode) {
+			if n.Kind == TreeNodeSection {
+				hasSections = true
+				return
+			}
+			for _, c := range n.Children {
+				walk(c)
+			}
+		}
+		walk(tree)
+		if !hasSections {
+			t.Error("tree with IncludeSections should have section nodes")
+		}
+	})
+
+	t.Run("without sections excludes sections", func(t *testing.T) {
+		ctx := context.Background()
+		tree := BuildMonorepoTree(ctx)
+		var walk func(*TreeNode)
+		walk = func(n *TreeNode) {
+			if n.Kind == TreeNodeSection {
+				t.Error("tree without IncludeSections should not have section nodes")
+				return
+			}
+			for _, c := range n.Children {
+				walk(c)
+			}
+		}
+		walk(tree)
+	})
+}
+
+func TestCollapseFilteredKinds(t *testing.T) {
+	t.Run("collapses folders promoting files to parent", func(t *testing.T) {
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeBundle, ID: "b1", Label: "bundle", Children: []*TreeNode{
+					{Kind: TreeNodeFolder, ID: "f1", Label: "src", Children: []*TreeNode{
+						{Kind: TreeNodeFile, ID: "file1", Label: "index.ts"},
+						{Kind: TreeNodeFile, ID: "file2", Label: "app.ts"},
+					}},
+				}},
+			},
+		}
+		filter := &TreeFilter{
+			OnlyKinds:       make(map[TreeNodeKind]bool),
+			ExcludeKinds:    map[TreeNodeKind]bool{TreeNodeFolder: true},
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		collapseFilteredKinds(tree, filter)
+		bundle := tree.Children[0]
+		if len(bundle.Children) != 2 {
+			t.Errorf("expected 2 files promoted to bundle, got %d", len(bundle.Children))
+		}
+		for _, c := range bundle.Children {
+			if c.Kind != TreeNodeFile {
+				t.Errorf("expected file, got %s", c.Kind)
+			}
+		}
+	})
+
+	t.Run("nested collapse", func(t *testing.T) {
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
+				{Kind: TreeNodeProject, ID: "p1", Label: "proj", Children: []*TreeNode{
+					{Kind: TreeNodeBundle, ID: "b1", Label: "bundle", Children: []*TreeNode{
+						{Kind: TreeNodeFile, ID: "f1", Label: "main.go"},
+					}},
+				}},
+			},
+		}
+		filter := &TreeFilter{
+			OnlyKinds:       make(map[TreeNodeKind]bool),
+			ExcludeKinds:    map[TreeNodeKind]bool{TreeNodeBundle: true},
+			OnlySubKinds:    make(map[TreeNodeKind][]string),
+			ExcludeSubKinds: make(map[TreeNodeKind][]string),
+		}
+		collapseFilteredKinds(tree, filter)
+		proj := tree.Children[0]
+		if len(proj.Children) != 1 {
+			t.Errorf("expected 1 file promoted to project, got %d", len(proj.Children))
+		}
+		if proj.Children[0].Kind != TreeNodeFile {
+			t.Errorf("expected file, got %s", proj.Children[0].Kind)
+		}
+	})
+}
+
+func TestSortTreeChildren(t *testing.T) {
+	t.Run("sorts alphabetically", func(t *testing.T) {
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: "root", Children: []*TreeNode{
+				{Kind: TreeNodeFile, Label: "z.ts"},
+				{Kind: TreeNodeFile, Label: "a.ts"},
+				{Kind: TreeNodeFile, Label: "m.ts"},
+			},
+		}
+		sortTreeChildren(tree)
+		if tree.Children[0].Label != "a.ts" {
+			t.Errorf("expected a.ts first, got %s", tree.Children[0].Label)
+		}
+		if tree.Children[2].Label != "z.ts" {
+			t.Errorf("expected z.ts last, got %s", tree.Children[2].Label)
+		}
+	})
+
+	t.Run("folders before files", func(t *testing.T) {
+		tree := &TreeNode{
+			Kind: TreeNodeCategory, Label: "root", Children: []*TreeNode{
+				{Kind: TreeNodeFile, Label: "a.ts"},
+				{Kind: TreeNodeFolder, Label: "src"},
+				{Kind: TreeNodeFile, Label: "b.ts"},
+			},
+		}
+		sortTreeChildren(tree)
+		if tree.Children[0].Kind != TreeNodeFolder {
+			t.Errorf("expected folder first, got %s", tree.Children[0].Kind)
+		}
+	})
+}
+
+func TestTreeCommandFlags(t *testing.T) {
+	t.Run("builds filter from flags", func(t *testing.T) {
+		cmd := &cobra.Command{}
+		bindTreeFlags(cmd)
+		cmd.Flags().Set("only-project", "true")
+		cmd.Flags().Set("no-folder", "true")
+		cmd.Flags().Set("only-library", "true")
+		cmd.Flags().Set("only-open", "true")
+		cmd.Flags().Set("no-year", "2025")
+
+		filter := buildTreeFilterFromFlags(cmd)
+
+		if !filter.OnlyKinds[TreeNodeProject] {
+			t.Error("expected only-project to be set")
+		}
+		if !filter.ExcludeKinds[TreeNodeFolder] {
+			t.Error("expected no-folder to be set")
+		}
+		if len(filter.OnlySubKinds[TreeNodeBundle]) != 1 || filter.OnlySubKinds[TreeNodeBundle][0] != string(BundleKindLibrary) {
+			t.Error("expected only-library sub-kind")
+		}
+		if filter.OnlyStatus != "open" {
+			t.Errorf("expected only-open status, got %q", filter.OnlyStatus)
+		}
+		if len(filter.ExcludeYears) != 1 || filter.ExcludeYears[0] != 2025 {
+			t.Errorf("expected no-year 2025, got %v", filter.ExcludeYears)
+		}
+	})
+
+	t.Run("empty flags produce empty filter", func(t *testing.T) {
+		cmd := &cobra.Command{}
+		bindTreeFlags(cmd)
+		filter := buildTreeFilterFromFlags(cmd)
+		if filter.HasOnlyKinds() {
+			t.Error("empty flags should not set only-kinds")
+		}
+		if len(filter.ExcludeKinds) != 0 {
+			t.Error("empty flags should not set exclude-kinds")
+		}
+		if filter.OnlyStatus != "" {
+			t.Error("empty flags should not set status")
+		}
+	})
+}
+
+// #endregion 🔖Monorepo Tree Tests
