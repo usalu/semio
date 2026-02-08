@@ -23,11 +23,11 @@
 
 // @ts-ignore
 import { TypedDocumentNode } from "@graphql-typed-document-node/core";
+import { deserializeKit, Problem, validateKit } from "@semio/js/semio";
 import { cacheExchange, Client, fetchExchange } from "@urql/core";
 import { exec, execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
-import { deserializeKit, Problem, validateKit } from "@semio/js/semio";
 import { promisify } from "util";
 import * as vscode from "vscode";
 import {
@@ -315,6 +315,15 @@ function getRepoBinaryPath(): string | undefined {
   return fs.existsSync(candidate) ? candidate : undefined;
 }
 
+function execShell(cmd: string, cwd: string | undefined): Promise<string> {
+  return new Promise((resolve, reject) => {
+    exec(cmd, { cwd, maxBuffer: 1024 * 1024 * 10 }, (err, stdout, stderr) => {
+      if (err) return reject(err);
+      resolve(stdout);
+    });
+  });
+}
+
 function getRepoCommand(): string {
   const binaryPath = getRepoBinaryPath();
   return binaryPath ?? "";
@@ -514,91 +523,307 @@ function resetUrqlClient(): void {
   urqlClient = null;
 }
 
+function isSectionNode(value: any): boolean {
+  if (!value || typeof value !== "object") return false;
+  if (value.__typename === "Section") return true;
+  if (typeof value.id === "string" && value.id.startsWith("section:")) return true;
+  return false;
+}
+
 // #endregion 🔖Utilities
+
+// #region 🔖URI Resolution
+
+interface TreeNodeData {
+  Kind: string;
+  ID: string;
+  Label: string;
+  URI: string;
+  SubKind?: string;
+  Description?: string;
+  Year?: number;
+  Month?: number;
+  Day?: number;
+  Status?: string;
+  Children?: TreeNodeData[];
+}
+
+let treeNodeCache: Map<string, TreeNodeData> | null = null;
+let treeNodeCacheTime = 0;
+const TREE_CACHE_TTL = 30000;
+
+export function bundleKindEmoji(kind: string): string {
+  switch (kind) {
+    case "schema": return "🛂";
+    case "binary": return "⌨️";
+    case "ui": return "🖱️";
+    case "site": return "🌐";
+    case "assets": return "🏪";
+    case "library": return "📚";
+    default: return "📚";
+  }
+}
+
+export function slugify(text: string): string {
+  return text.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+function flattenTree(node: TreeNodeData, result: Map<string, TreeNodeData>): void {
+  if (node.URI) {
+    result.set(node.URI, node);
+  }
+  if (node.Children) {
+    for (const child of node.Children) {
+      flattenTree(child, result);
+    }
+  }
+}
+
+async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
+  const now = Date.now();
+  if (treeNodeCache && (now - treeNodeCacheTime) < TREE_CACHE_TTL) {
+    return treeNodeCache;
+  }
+  const root = getWorkspaceRoot();
+  const command = getRepoCommand();
+  if (!root || !command) return new Map();
+  try {
+    const { stdout } = await execAsync(`"${command}" --json tree`, { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
+    if (!stdout.trim()) return treeNodeCache ?? new Map();
+    const events = parseRepoEvents(stdout);
+    const result = extractRepoResult(events);
+    const tree = result.data as TreeNodeData | undefined;
+    if (tree) {
+      const cache = new Map<string, TreeNodeData>();
+      flattenTree(tree, cache);
+      treeNodeCache = cache;
+      treeNodeCacheTime = now;
+      return cache;
+    }
+  } catch (error) {
+    logError("[getTreeNodeCache] error:", error);
+  }
+  return treeNodeCache ?? new Map();
+}
+
+export function invalidateTreeNodeCache(): void {
+  treeNodeCache = null;
+  treeNodeCacheTime = 0;
+}
+
+export function parseUri(uri: string): { type: string; path: string } | null {
+  const match = uri.match(/^semiorepo:\/\/([a-zA-Z]+)\/(.*)/);
+  if (!match) return null;
+  return { type: match[1], path: match[2] };
+}
+
+async function navigateToUri(uri: string): Promise<void> {
+  const wsRoot = getWorkspaceRoot();
+  if (!wsRoot) return;
+  const parsed = parseUri(uri);
+  if (!parsed) return;
+
+  switch (parsed.type) {
+    case "ticket": {
+      const ticketMdPath = path.join(wsRoot, ".semio-repo", "tickets", parsed.path, "ticket.md");
+      if (fs.existsSync(ticketMdPath)) {
+        return vscode.commands.executeCommand("semio.navigateToFile", ticketMdPath) as any;
+      }
+      break;
+    }
+    case "goal": {
+      const goalJsonPath = path.join(wsRoot, ".semio-repo", "goals", parsed.path, "goal.json");
+      if (fs.existsSync(goalJsonPath)) {
+        return vscode.commands.executeCommand("semio.navigateToFile", goalJsonPath) as any;
+      }
+      break;
+    }
+    case "draft": {
+      const draftPath = path.join(wsRoot, ".semio-repo", "drafts", parsed.path);
+      if (fs.existsSync(draftPath)) {
+        return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(draftPath)) as any;
+      }
+      break;
+    }
+    case "contributor": {
+      const github = parsed.path.toLowerCase().replace(/-/g, "");
+      return vscode.env.openExternal(vscode.Uri.parse(`https://github.com/${github}`)) as any;
+    }
+    case "commit": {
+      const sha = parsed.path.toLowerCase().replace(/-/g, "");
+      const baseUrl = getGitHubRepoBaseUrl();
+      if (baseUrl) {
+        return vscode.env.openExternal(vscode.Uri.parse(`${baseUrl}/commit/${sha}`)) as any;
+      }
+      break;
+    }
+    default: {
+      const cache = await getTreeNodeCache();
+      const node = cache.get(uri);
+      if (!node) break;
+
+      switch (node.Kind) {
+        case "project":
+        case "bundle": {
+          const repo = await fetchRepoStructureViaGraphQL();
+          if (repo) {
+            if (node.Kind === "project") {
+              const proj = repo.projects?.find((p: any) => p.uri === uri || slugify(p.name) === slugify(node.Label));
+              if (proj) {
+                const abs = path.join(wsRoot, proj.root);
+                if (fs.existsSync(abs)) {
+                  return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+                }
+              }
+            } else {
+              const bundle = repo.bundles?.find((b: any) => b.uri === uri || slugify(b.name) === slugify(node.Label));
+              if (bundle) {
+                const abs = path.join(wsRoot, bundle.root);
+                if (fs.existsSync(abs)) {
+                  return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+                }
+              }
+            }
+          }
+          break;
+        }
+        case "folder": {
+          const folderPath = node.ID.replace(/^folder:/, "");
+          const abs = path.join(wsRoot, folderPath);
+          if (fs.existsSync(abs)) {
+            return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+          }
+          break;
+        }
+        case "file": {
+          const filePath = node.ID.replace(/^file:/, "");
+          return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
+        }
+        case "section": {
+          const sectionId = node.ID.replace(/^section:/, "");
+          const hashIdx = sectionId.indexOf("#");
+          if (hashIdx >= 0) {
+            const filePath = sectionId.substring(0, hashIdx);
+            const sectionPath = sectionId.substring(hashIdx + 1);
+            const binaryPath = getRepoBinaryPath();
+            if (binaryPath) {
+              try {
+                const { stdout } = await execAsync(`"${binaryPath}" --json section list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
+                const events = parseRepoEvents(stdout);
+                for (const event of events) {
+                  if (event.kind === "result" && (event as any).data?.section) {
+                    const section = (event as any).data.section;
+                    if (findSectionByPath(section, sectionPath)) {
+                      const found = findSectionByPath(section, sectionPath)!;
+                      return openFileAtLine(filePath, found.startLine, found.endLine);
+                    }
+                  }
+                }
+              } catch { /* fall through */ }
+            }
+            return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
+          }
+          break;
+        }
+        case "definition": {
+          const defId = node.ID.replace(/^definition:/, "");
+          const sepIdx = defId.indexOf("§");
+          if (sepIdx >= 0) {
+            const fileSection = defId.substring(0, sepIdx);
+            const hashIdx = fileSection.indexOf("#");
+            const filePath = hashIdx >= 0 ? fileSection.substring(0, hashIdx) : fileSection;
+            const binaryPath = getRepoBinaryPath();
+            if (binaryPath) {
+              try {
+                const { stdout } = await execAsync(`"${binaryPath}" --json definition list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
+                const events = parseRepoEvents(stdout);
+                for (const event of events) {
+                  if (event.kind === "result" && (event as any).data?.definition) {
+                    const def = (event as any).data.definition;
+                    if (def.name === node.Label && def.startLine) {
+                      return openFileAtLine(filePath, def.startLine, def.endLine);
+                    }
+                  }
+                }
+              } catch { /* fall through */ }
+            }
+            return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
+          }
+          break;
+        }
+        case "policy": {
+          vscode.window.showInformationMessage(`Policy: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
+          break;
+        }
+        case "violationKind": {
+          vscode.window.showInformationMessage(`Violation Kind: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
+          break;
+        }
+      }
+      break;
+    }
+  }
+}
+
+function findSectionByPath(section: any, sectionPath: string): any | null {
+  const parts = sectionPath.split("/");
+  if (slugify(section.name) === slugify(parts[0]) || section.name === parts[0]) {
+    if (parts.length === 1) return section;
+    const rest = parts.slice(1).join("/");
+    for (const child of section.children || []) {
+      const found = findSectionByPath(child, rest);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+// #endregion 🔖URI Resolution
 
 // #region 🔖Data Fetching
 
-async function fetchRepoStructureViaGraphQL(): Promise<Repo | null> {
+async function queryGraphQL<T>(doc: TypedDocumentNode<any, any>, vars: Record<string, unknown>, extract: (data: any) => T, fallback: T): Promise<T> {
   const client = getUrqlClient();
-  if (!client) return null;
-  const result = await client.query(RepoStructureDocument as TypedDocumentNode<any, any>, {}).toPromise();
+  if (!client) return fallback;
+  const result = await client.query(doc, vars).toPromise();
   if (result.error) {
-    logError("[GraphQL] fetchRepoStructureViaGraphQL error:", result.error);
-    return null;
+    logError("[GraphQL] error:", result.error);
+    return fallback;
   }
-  return result.data?.repo as unknown as Repo ?? null;
+  return extract(result.data) ?? fallback;
+}
+
+async function fetchRepoStructureViaGraphQL(): Promise<Repo | null> {
+  return queryGraphQL(RepoStructureDocument as TypedDocumentNode<any, any>, {}, d => d?.repo as unknown as Repo, null);
 }
 
 async function fetchBundlesViaGraphQL(): Promise<Bundle[]> {
-  const client = getUrqlClient();
-  if (!client) return [];
-  const result = await client.query(BundlesDocument as TypedDocumentNode<any, any>, {}).toPromise();
-  if (result.error) {
-    logError("[GraphQL] fetchBundlesViaGraphQL error:", result.error);
-    return [];
-  }
-  return result.data?.repo?.bundles ?? [];
+  return queryGraphQL(BundlesDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.bundles, []);
 }
 
-async function fetchFolderContent(path: string): Promise<any | null> {
-  const client = getUrqlClient();
-  if (!client) return null;
-  const result = await client.query(FolderContentDocument as TypedDocumentNode<any, any>, { path }).toPromise();
-  if (result.error) {
-    logError("[GraphQL] fetchFolderContent error:", result.error);
-    return null;
-  }
-  return result.data?.folder ?? null;
+async function fetchFolderContent(folderPath: string): Promise<any | null> {
+  return queryGraphQL(FolderContentDocument as TypedDocumentNode<any, any>, { path: folderPath }, d => d?.folder, null);
 }
 
 async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: number, status?: TicketStatus): Promise<Ticket[]> {
-  const client = getUrqlClient();
-  if (!client) return [];
-  const result = await client.query(TicketsDocument as TypedDocumentNode<any, any>, { year, month, day, status }).toPromise();
-  if (result.error) {
-    logError("[GraphQL] fetchTicketsViaGraphQL error:", result.error);
-    return [];
-  }
-  return result.data?.repo?.tickets ?? [];
+  return queryGraphQL(TicketsDocument as TypedDocumentNode<any, any>, { year, month, day, status }, d => d?.repo?.tickets, []);
 }
 
 async function fetchContributorsViaGraphQL(): Promise<Contributor[]> {
-  const client = getUrqlClient();
-  if (!client) return [];
-  const result = await client.query(ContributorsDocument as TypedDocumentNode<any, any>, {}).toPromise();
-  if (result.error) {
-    logError("[GraphQL] fetchContributorsViaGraphQL error:", result.error);
-    return [];
-  }
-  return result.data?.repo?.contributors ?? [];
+  return queryGraphQL(ContributorsDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.contributors, []);
 }
 
 async function fetchPoliciesViaGraphQL(): Promise<Policy[]> {
-  const client = getUrqlClient();
-  if (!client) return [];
-  const result = await client.query(PoliciesDocument as TypedDocumentNode<any, any>, {}).toPromise();
-  if (result.error) {
-    logError("[GraphQL] fetchPoliciesViaGraphQL error:", result.error);
-    return [];
-  }
-  return result.data?.repo?.policies ?? [];
+  return queryGraphQL(PoliciesDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.policies, []);
 }
 
 async function fetchGoalsViaGraphQL(): Promise<any[]> {
-  const client = getUrqlClient();
-  if (!client) return [];
-  const result = await client.query(GoalsDocument as TypedDocumentNode<any, any>, {}).toPromise();
-  if (result.error) {
-    logError("[GraphQL] fetchGoalsViaGraphQL error:", result.error);
-    return [];
-  }
-  return result.data?.repo?.goals ?? [];
+  return queryGraphQL(GoalsDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.goals, []);
 }
 
 async function getProjectList(): Promise<ProjectData[]> {
   if (cachedProjects) return cachedProjects;
   if (!hasRepoAccess()) return [];
-
   const repo = await fetchRepoStructureViaGraphQL();
   if (repo && repo.bundles) {
     cachedProjects = repo.bundles.map((b) => ({
@@ -614,11 +839,8 @@ async function getProjectList(): Promise<ProjectData[]> {
   return [];
 }
 
-async function fetchCommitsViaGraphQL(limit = 100): Promise<any[]> {
-  const client = getUrqlClient();
-  if (!client) return [];
-  const res = await client.query(RepoCommitsDocument as TypedDocumentNode<any, any>, {}).toPromise();
-  return res.data?.repo?.commits || [];
+async function fetchCommitsViaGraphQL(): Promise<any[]> {
+  return queryGraphQL(RepoCommitsDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.commits, []);
 }
 
 // #endregion 🔖Data Fetching
@@ -701,6 +923,17 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
   const range = new vscode.Range(startPos, endPos);
   editor.selection = new vscode.Selection(startPos, startPos);
   editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
+}
+
+export function getFileKindIcon(name: string): string {
+  if (name.endsWith(".ts") || name.endsWith(".tsx") || name.endsWith(".js") || name.endsWith(".jsx")) return "📄";
+  if (name.endsWith(".py")) return "🐍";
+  if (name.endsWith(".go")) return "🔷";
+  if (name.endsWith(".cs")) return "🟣";
+  if (name.endsWith(".json") || name.endsWith(".yaml") || name.endsWith(".toml")) return "⚙️";
+  if (name.endsWith(".md") || name.endsWith(".txt")) return "📝";
+  if (name.endsWith(".sh") || name.endsWith(".ps1")) return "🖥️";
+  return "📄";
 }
 
 // #endregion 🔖Helpers
@@ -910,17 +1143,28 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
   public excludedMonths: number[] = [];
   public excludedDays: number[] = [];
 
+  constructor() {
+    this.updateContextKeys();
+  }
+
+  refresh(): void {
+    this.updateContextKeys();
+    this._onDidChangeTreeData.fire();
+  }
+
+  updateContextKeys(): void {
+    for (const [kind, values] of Object.entries(this.filters)) {
+      for (const [key, enabled] of Object.entries(values)) {
+        vscode.commands.executeCommand("setContext", `semio.filter.${kind}.${key}`, enabled);
+      }
+    }
+  }
+
   public availableYears: number[] = [];
   public availableMonths: number[] = [];
   public availableDays: number[] = [];
   public availableContributors: string[] = [];
   public availablePolicies: string[] = [];
-
-  constructor() { }
-
-  refresh(): void {
-    this._onDidChangeTreeData.fire();
-  }
 
   getTreeItem(element: FilterTreeItem): vscode.TreeItem {
     return element;
@@ -1089,9 +1333,9 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-  constructor(private filterProvider?: FilterTreeDataProvider) { }
+  constructor(public filterProvider?: FilterTreeDataProvider) { }
 
-  private matchesSearch(text: string): boolean {
+  matchesSearch(text: string): boolean {
     const fp = this.filterProvider;
     if (!fp) return true;
     const query = fp.searchQuery || "";
@@ -1116,7 +1360,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
     return target.includes(raw);
   }
 
-  private passesTicketFilter(t: any): boolean {
+  passesTicketFilter(t: any): boolean {
     if (!this.filterProvider) return true;
     if (t.status === "OPEN" && !this.filterProvider.filters.ticket.open) return false;
     if (t.status === "CLOSED" && !this.filterProvider.filters.ticket.closed) return false;
@@ -1124,6 +1368,32 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
     if (this.filterProvider.excludedMonths.includes(t.month)) return false;
     if (this.filterProvider.excludedDays.includes(t.day)) return false;
     return true;
+  }
+
+  buildTicketItem(t: any): MonorepoTreeItem {
+    const statusIcon = t.status === "OPEN" ? "🔵" : "🟢";
+    const ticketId = `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`;
+    const item = new MonorepoTreeItem(`📅${statusIcon}${t.slug}`, vscode.TreeItemCollapsibleState.None, "ticket", t, ticketId);
+    item.command = { command: "semio.ticketOpen", title: "Open", arguments: [t] };
+    return item;
+  }
+
+  private buildFolderItems(content: any): MonorepoTreeItem[] {
+    const items: MonorepoTreeItem[] = [];
+    for (const c of content.children || []) {
+      if (!this.matchesSearch(c.name)) continue;
+      const item = new MonorepoTreeItem(`📂${c.name}`, vscode.TreeItemCollapsibleState.Collapsed, "folder", c, c.path);
+      item.command = { command: "semio.navigateToFolder", title: "Open", arguments: [c.path] };
+      items.push(item);
+    }
+    for (const f of content.files || []) {
+      if (!this.matchesSearch(f.name)) continue;
+      const kindIcon = getFileKindIcon(f.name);
+      const item = new MonorepoTreeItem(`${kindIcon}${f.name}`, vscode.TreeItemCollapsibleState.Collapsed, "file", f, f.path);
+      item.command = { command: "semio.navigateToFile", title: "Open", arguments: [f.path] };
+      items.push(item);
+    }
+    return items;
   }
 
   refresh(): void {
@@ -1171,61 +1441,18 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       return (project.bundles || [])
         .filter((b: any) => this.matchesSearch(b.name))
         .map((b: any) => {
-          const kindIcon = b.kind || "🏪";
-          const item = new MonorepoTreeItem(`${kindIcon}${b.name}`, vscode.TreeItemCollapsibleState.Collapsed, "bundle", b, `${kindIcon}${b.id}`);
+          const kindIcon = bundleKindEmoji(b.kind);
+          const shortName = b.name.includes("/") ? b.name.split("/").pop()! : b.name;
+          const item = new MonorepoTreeItem(`${kindIcon}${shortName}`, vscode.TreeItemCollapsibleState.Collapsed, "bundle", b, `${kindIcon}${b.id}`);
           item.command = { command: "semio.navigateToBundle", title: "Open", arguments: [b.root] };
           return item;
         });
     }
 
-    if (element.contextValue === "bundle") {
-      const bundle = element.data;
-      const content = await fetchFolderContent(bundle.root);
-      if (!content) return [];
-      const items: MonorepoTreeItem[] = [];
-      if (content.children) {
-        for (const c of content.children) {
-          if (!this.matchesSearch(c.name)) continue;
-          const item = new MonorepoTreeItem(`📂${c.name}`, vscode.TreeItemCollapsibleState.Collapsed, "folder", c, c.path);
-          item.command = { command: "semio.navigateToFolder", title: "Open", arguments: [c.path] };
-          items.push(item);
-        }
-      }
-      if (content.files) {
-        for (const f of content.files) {
-          if (!this.matchesSearch(f.name)) continue;
-          const kindIcon = this.getFileKindIcon(f.name);
-          const item = new MonorepoTreeItem(`${kindIcon}${f.name}`, vscode.TreeItemCollapsibleState.Collapsed, "file", f, f.path);
-          item.command = { command: "semio.navigateToFile", title: "Open", arguments: [f.path] };
-          items.push(item);
-        }
-      }
-      return items;
-    }
-
-    if (element.contextValue === "folder") {
-      const folder = element.data;
-      const content = await fetchFolderContent(folder.path);
-      if (!content) return [];
-      const items: MonorepoTreeItem[] = [];
-      if (content.children) {
-        for (const c of content.children) {
-          if (!this.matchesSearch(c.name)) continue;
-          const item = new MonorepoTreeItem(`📂${c.name}`, vscode.TreeItemCollapsibleState.Collapsed, "folder", c, c.path);
-          item.command = { command: "semio.navigateToFolder", title: "Open", arguments: [c.path] };
-          items.push(item);
-        }
-      }
-      if (content.files) {
-        for (const f of content.files) {
-          if (!this.matchesSearch(f.name)) continue;
-          const kindIcon = this.getFileKindIcon(f.name);
-          const item = new MonorepoTreeItem(`${kindIcon}${f.name}`, vscode.TreeItemCollapsibleState.Collapsed, "file", f, f.path);
-          item.command = { command: "semio.navigateToFile", title: "Open", arguments: [f.path] };
-          items.push(item);
-        }
-      }
-      return items;
+    if (element.contextValue === "bundle" || element.contextValue === "folder") {
+      const folderPath = element.contextValue === "bundle" ? element.data.root : element.data.path;
+      const content = await fetchFolderContent(folderPath);
+      return content ? this.buildFolderItems(content) : [];
     }
 
     if (element.contextValue === "file") {
@@ -1254,10 +1481,10 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       const payload = element.data as { filePath: string; section: any; definitions: any[] };
       const section = payload.section;
       const items: MonorepoTreeItem[] = [];
-      const children = section.children || [];
+      const children = (section.children || []).filter((child: any) => isSectionNode(child));
       for (const child of children) {
         if (!this.matchesSearch(child.name)) continue;
-        const hasGrandChildren = (child.children && child.children.length > 0);
+        const hasGrandChildren = (child.children || []).some((grandChild: any) => isSectionNode(grandChild));
         const hasDefs = (payload.definitions || []).some((d: any) => d.section?.id === child.id);
         const collapsible = (hasGrandChildren || hasDefs) ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
         const childPayload = { filePath: payload.filePath, section: child, definitions: payload.definitions };
@@ -1289,7 +1516,11 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       return goals
         .filter((g: any) => !g.id.includes("/"))
         .filter((g: any) => this.matchesSearch(g.title || g.id))
-        .map((g: any) => new MonorepoTreeItem(`🎯${g.title || g.id}`, vscode.TreeItemCollapsibleState.Collapsed, "goal", g, g.id));
+        .map((g: any) => {
+          const item = new MonorepoTreeItem(`🎯${g.title || g.id}`, vscode.TreeItemCollapsibleState.Collapsed, "goal", g, g.id);
+          item.command = { command: "semio.navigate", title: "Open", arguments: [`semiorepo://goal/${g.id}`] };
+          return item;
+        });
     }
 
     if (element.contextValue === "goal") {
@@ -1299,18 +1530,17 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       const subgoals = allGoals
         .filter((g: any) => g.id.startsWith(goalId + "/") && g.id.split("/").length === goalId.split("/").length + 1)
         .filter((g: any) => this.matchesSearch(g.title || g.id));
-      const subgoalItems = subgoals.map((g: any) => new MonorepoTreeItem(`🎯${g.title || g.id}`, vscode.TreeItemCollapsibleState.Collapsed, "goal", g, g.id));
+      const subgoalItems = subgoals.map((g: any) => {
+        const item = new MonorepoTreeItem(`🎯${g.title || g.id}`, vscode.TreeItemCollapsibleState.Collapsed, "goal", g, g.id);
+        item.command = { command: "semio.navigate", title: "Open", arguments: [`semiorepo://goal/${g.id}`] };
+        return item;
+      });
       const goalTickets = await fetchTicketsViaGraphQL();
       const ticketItems = goalTickets
         .filter((t: any) => t.goal === goalId)
         .filter((t: any) => this.passesTicketFilter(t))
         .filter((t: any) => this.matchesSearch(t.slug))
-        .map((t: any) => {
-          const statusIcon = t.status === "OPEN" ? "🔵" : "🟢";
-          const item = new MonorepoTreeItem(`📅${statusIcon}${t.slug}`, vscode.TreeItemCollapsibleState.None, "ticket", t, `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`);
-          item.command = { command: "semio.ticketOpen", title: "Open", arguments: [t] };
-          return item;
-        });
+        .map((t: any) => this.buildTicketItem(t));
       return [...subgoalItems, ...ticketItems];
     }
 
@@ -1349,13 +1579,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       return tickets
         .filter((t: any) => this.passesTicketFilter(t))
         .filter((t: any) => this.matchesSearch(t.slug))
-        .map((t: any) => {
-          const statusIcon = t.status === "OPEN" ? "🔵" : "🟢";
-          const ticketId = `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`;
-          const item = new MonorepoTreeItem(`📅${statusIcon}${t.slug}`, vscode.TreeItemCollapsibleState.None, "ticket", t, ticketId);
-          item.command = { command: "semio.ticketOpen", title: "Open", arguments: [t] };
-          return item;
-        });
+        .map((t: any) => this.buildTicketItem(t));
     }
 
     if (element.contextValue === "root_policies") {
@@ -1450,11 +1674,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       const noGoalTickets = commitTickets.filter((t: any) => !t.goal);
       for (const t of noGoalTickets) {
         if (!this.matchesSearch(t.slug)) continue;
-        const statusIcon = t.status === "OPEN" ? "🔵" : "🟢";
-        const ticketId = `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`;
-        const item = new MonorepoTreeItem(`📅${statusIcon}${t.slug}`, vscode.TreeItemCollapsibleState.None, "ticket", t, ticketId);
-        item.command = { command: "semio.ticketOpen", title: "Open", arguments: [t] };
-        items.push(item);
+        items.push(this.buildTicketItem(t));
       }
       return items;
     }
@@ -1463,13 +1683,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       const { tickets } = element.data;
       return tickets
         .filter((t: any) => this.matchesSearch(t.slug))
-        .map((t: any) => {
-          const statusIcon = t.status === "OPEN" ? "🔵" : "🟢";
-          const ticketId = `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`;
-          const item = new MonorepoTreeItem(`📅${statusIcon}${t.slug}`, vscode.TreeItemCollapsibleState.None, "ticket", t, ticketId);
-          item.command = { command: "semio.ticketOpen", title: "Open", arguments: [t] };
-          return item;
-        });
+        .map((t: any) => this.buildTicketItem(t));
     }
 
     if (element.contextValue === "commit_goals") {
@@ -1479,21 +1693,121 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       const goalIds = [...new Set(tickets.map((t: any) => t.goal).filter((g: any) => !!g))];
       return goalIds
         .filter((g: any) => this.matchesSearch(g))
-        .map((g: any) => new MonorepoTreeItem(`🎯${g}`, vscode.TreeItemCollapsibleState.None, "goal", { id: g }, g));
+        .map((g: any) => {
+          const item = new MonorepoTreeItem(`🎯${g}`, vscode.TreeItemCollapsibleState.None, "goal", { id: g }, g);
+          item.command = { command: "semio.navigate", title: "Open", arguments: [`semiorepo://goal/${g}`] };
+          return item;
+        });
     }
 
     return [];
   }
 
-  private getFileKindIcon(name: string): string {
-    if (name.endsWith(".ts") || name.endsWith(".tsx") || name.endsWith(".js") || name.endsWith(".jsx")) return "📄";
-    if (name.endsWith(".py")) return "🐍";
-    if (name.endsWith(".go")) return "🔷";
-    if (name.endsWith(".cs")) return "🟣";
-    if (name.endsWith(".json") || name.endsWith(".yaml") || name.endsWith(".toml")) return "⚙️";
-    if (name.endsWith(".md") || name.endsWith(".txt")) return "📝";
-    if (name.endsWith(".sh") || name.endsWith(".ps1")) return "🖥️";
-    return "📄";
+}
+
+class SectionTreeItem extends vscode.TreeItem {
+  constructor(
+    public section: SectionInfo,
+    public filePath: string
+  ) {
+    super(
+      section.name,
+      (section.children && section.children.length > 0)
+        ? vscode.TreeItemCollapsibleState.Collapsed
+        : vscode.TreeItemCollapsibleState.None
+    );
+    this.contextValue = "section";
+    this.iconPath = new vscode.ThemeIcon("bookmark");
+    this.tooltip = `Section: ${section.name}`;
+    const start = section.startLine - 1;
+    this.command = {
+      command: "vscode.open",
+      title: "Open Section",
+      arguments: [
+        vscode.Uri.file(path.join(getWorkspaceRoot() || "", filePath)),
+        { selection: new vscode.Range(start, 0, start, 0) }
+      ]
+    };
+  }
+}
+
+export class SectionsTreeDataProvider implements vscode.TreeDataProvider<SectionTreeItem> {
+  private _onDidChangeTreeData = new vscode.EventEmitter<SectionTreeItem | undefined | null | void>();
+  readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
+  private activeEditor: vscode.TextEditor | undefined;
+
+  constructor(private context: vscode.ExtensionContext) {
+    this.activeEditor = vscode.window.activeTextEditor;
+    vscode.window.onDidChangeActiveTextEditor(editor => {
+      this.activeEditor = editor;
+      this.refresh();
+    });
+    vscode.workspace.onDidChangeTextDocument(e => {
+      if (this.activeEditor && e.document.uri.toString() === this.activeEditor.document.uri.toString()) {
+        this.refresh();
+      }
+    });
+  }
+
+  refresh(): void {
+    this._onDidChangeTreeData.fire();
+  }
+
+  getTreeItem(element: SectionTreeItem): vscode.TreeItem {
+    return element;
+  }
+
+  async getChildren(element?: SectionTreeItem): Promise<SectionTreeItem[]> {
+    if (!this.activeEditor) return [];
+
+    // Use relative path for repo commands
+    const root = getWorkspaceRoot();
+    if (!root) return [];
+
+    const uri = this.activeEditor.document.uri;
+    const filePath = path.relative(root, uri.fsPath);
+    if (!filePath || filePath.startsWith("..")) return [];
+
+    if (element) {
+      return this.createSectionItems(element.section.children || [], filePath);
+    } else {
+      const binaryPath = getRepoBinaryPath();
+      if (!binaryPath) return [];
+
+      try {
+        // Use JSON format which returns Events
+        // The output contains multiple JSON objects (one per line)
+        const output = await execShell(`"${binaryPath}" section list --file "${filePath}" --json`, root);
+
+        const sections: SectionInfo[] = [];
+        const lines = output.split("\n");
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const event = JSON.parse(line);
+            if (event.kind === "result" && event.data && event.data.section) {
+              sections.push(event.data.section);
+            }
+          } catch (e) {
+            // Ignore parse errors
+          }
+        }
+        return this.createSectionItems(sections, filePath);
+      } catch (e) {
+        console.error("Failed to fetch sections:", e);
+        return [];
+      }
+    }
+  }
+
+  private createSectionItems(sections: SectionInfo[], filePath: string): SectionTreeItem[] {
+    return sections.map(s => {
+      const item = new SectionTreeItem(s, filePath);
+      // Map JSON keys as sections effectively
+      // The CLI output already includes children recursively in the result event if filtered? 
+      // No, CLI section list returns roots.
+      return item;
+    });
   }
 }
 
@@ -1507,6 +1821,9 @@ function registerSidebarViews(context: vscode.ExtensionContext): void {
 
   monorepoProvider = new MonorepoTreeDataProvider(filterProvider);
   vscode.window.registerTreeDataProvider("semio.monorepo", monorepoProvider);
+
+  const sectionsProvider = new SectionsTreeDataProvider(context);
+  vscode.window.registerTreeDataProvider("semio.sections", sectionsProvider);
 }
 
 function registerCommands(context: vscode.ExtensionContext): void {
@@ -1559,116 +1876,60 @@ function registerCommands(context: vscode.ExtensionContext): void {
     filterProvider?.toggle(kind, key);
   });
 
-  register("semio.filter.toggle.bundle.library", () => filterProvider?.toggle("bundle", "library"));
-  register("semio.filter.toggle.bundle.binary", () => filterProvider?.toggle("bundle", "binary"));
-  register("semio.filter.toggle.bundle.ui", () => filterProvider?.toggle("bundle", "ui"));
-  register("semio.filter.toggle.bundle.site", () => filterProvider?.toggle("bundle", "site"));
-  register("semio.filter.toggle.bundle.assets", () => filterProvider?.toggle("bundle", "assets"));
-  register("semio.filter.toggle.bundle.schema", () => filterProvider?.toggle("bundle", "schema"));
-  register("semio.filter.toggle.bundle.default", () => filterProvider?.toggle("bundle", "default"));
-  register("semio.filter.toggle.bundle.none", () => filterProvider?.toggle("bundle", "none"));
-  register("semio.filter.toggle.bundle.all", () => filterProvider?.toggle("bundle", "all"));
+  const filterToggleEntries: Record<string, string[]> = {
+    bundle: ["library", "binary", "ui", "site", "assets", "schema", "default", "none", "all"],
+    project: ["user", "infrastructure", "research", "none", "all"],
+    folder: ["organization", "required", "none", "all"],
+    file: ["code", "script", "config", "test", "docs", "resource", "license", "none", "all"],
+    section: ["none", "all"],
+    definition: ["implementation", "interface", "constant", "none", "all"],
+    goal: ["open", "closed", "none", "all"],
+    ticket: ["open", "closed", "none", "all"],
+    policy: ["none", "all"],
+    contributor: ["none", "all"],
+    commit: ["none", "all"],
+    time: ["none", "all"],
+  };
+  for (const [kind, keys] of Object.entries(filterToggleEntries)) {
+    for (const key of keys) {
+      register(`semio.filter.toggle.${kind}.${key}`, () => filterProvider?.toggle(kind, key));
+    }
+  }
 
-  register("semio.filter.toggle.project.user", () => filterProvider?.toggle("project", "user"));
-  register("semio.filter.toggle.project.infrastructure", () => filterProvider?.toggle("project", "infrastructure"));
-  register("semio.filter.toggle.project.research", () => filterProvider?.toggle("project", "research"));
-  register("semio.filter.toggle.project.none", () => filterProvider?.toggle("project", "none"));
-  register("semio.filter.toggle.project.all", () => filterProvider?.toggle("project", "all"));
-
-  register("semio.filter.toggle.folder.organization", () => filterProvider?.toggle("folder", "organization"));
-  register("semio.filter.toggle.folder.required", () => filterProvider?.toggle("folder", "required"));
-  register("semio.filter.toggle.folder.none", () => filterProvider?.toggle("folder", "none"));
-  register("semio.filter.toggle.folder.all", () => filterProvider?.toggle("folder", "all"));
-
-  register("semio.filter.toggle.file.code", () => filterProvider?.toggle("file", "code"));
-  register("semio.filter.toggle.file.script", () => filterProvider?.toggle("file", "script"));
-  register("semio.filter.toggle.file.config", () => filterProvider?.toggle("file", "config"));
-  register("semio.filter.toggle.file.test", () => filterProvider?.toggle("file", "test"));
-  register("semio.filter.toggle.file.docs", () => filterProvider?.toggle("file", "docs"));
-  register("semio.filter.toggle.file.resource", () => filterProvider?.toggle("file", "resource"));
-  register("semio.filter.toggle.file.license", () => filterProvider?.toggle("file", "license"));
-  register("semio.filter.toggle.file.none", () => filterProvider?.toggle("file", "none"));
-  register("semio.filter.toggle.file.all", () => filterProvider?.toggle("file", "all"));
-
-  register("semio.filter.toggle.section.none", () => filterProvider?.toggle("section", "none"));
-  register("semio.filter.toggle.section.all", () => filterProvider?.toggle("section", "all"));
-
-  register("semio.filter.toggle.definition.implementation", () => filterProvider?.toggle("definition", "implementation"));
-  register("semio.filter.toggle.definition.interface", () => filterProvider?.toggle("definition", "interface"));
-  register("semio.filter.toggle.definition.constant", () => filterProvider?.toggle("definition", "constant"));
-  register("semio.filter.toggle.definition.none", () => filterProvider?.toggle("definition", "none"));
-  register("semio.filter.toggle.definition.all", () => filterProvider?.toggle("definition", "all"));
-
-  register("semio.filter.toggle.goal.open", () => filterProvider?.toggle("goal", "open"));
-  register("semio.filter.toggle.goal.closed", () => filterProvider?.toggle("goal", "closed"));
-  register("semio.filter.toggle.goal.none", () => filterProvider?.toggle("goal", "none"));
-  register("semio.filter.toggle.goal.all", () => filterProvider?.toggle("goal", "all"));
-
-  register("semio.filter.toggle.ticket.open", () => filterProvider?.toggle("ticket", "open"));
-  register("semio.filter.toggle.ticket.closed", () => filterProvider?.toggle("ticket", "closed"));
-  register("semio.filter.toggle.ticket.none", () => filterProvider?.toggle("ticket", "none"));
-  register("semio.filter.toggle.ticket.all", () => filterProvider?.toggle("ticket", "all"));
-
-  register("semio.filter.toggle.policy.none", () => filterProvider?.toggle("policy", "none"));
-  register("semio.filter.toggle.policy.all", () => filterProvider?.toggle("policy", "all"));
-
-  register("semio.filter.toggle.contributor.none", () => filterProvider?.toggle("contributor", "none"));
-  register("semio.filter.toggle.contributor.all", () => filterProvider?.toggle("contributor", "all"));
-
-  register("semio.filter.toggle.commit.none", () => filterProvider?.toggle("commit", "none"));
-  register("semio.filter.toggle.commit.all", () => filterProvider?.toggle("commit", "all"));
-
-  register("semio.filter.toggle.time.none", () => filterProvider?.toggle("time", "none"));
-  register("semio.filter.toggle.time.all", () => filterProvider?.toggle("time", "all"));
-
-  register("semio.filter.time.year.none", () => filterProvider?.setTimeMode("year", "none"));
-  register("semio.filter.time.year.all", () => filterProvider?.setTimeMode("year", "all"));
-  register("semio.filter.time.month.none", () => filterProvider?.setTimeMode("month", "none"));
-  register("semio.filter.time.month.all", () => filterProvider?.setTimeMode("month", "all"));
-  register("semio.filter.time.day.none", () => filterProvider?.setTimeMode("day", "none"));
-  register("semio.filter.time.day.all", () => filterProvider?.setTimeMode("day", "all"));
+  const timeModes: Array<["year" | "month" | "day", "none" | "all"]> = [
+    ["year", "none"], ["year", "all"], ["month", "none"], ["month", "all"], ["day", "none"], ["day", "all"],
+  ];
+  for (const [unit, mode] of timeModes) {
+    register(`semio.filter.time.${unit}.${mode}`, () => filterProvider?.setTimeMode(unit, mode));
+  }
 
   register("semio.filter.toggleYear", (year: number) => filterProvider?.toggleYear(year));
   register("semio.filter.toggleMonth", (month: number) => filterProvider?.toggleMonth(month));
   register("semio.filter.toggleDay", (day: number) => filterProvider?.toggleDay(day));
 
-  register("semio.filter.search.matchCase", () => {
-    if (filterProvider) {
-      filterProvider.matchCase = !filterProvider.matchCase;
-      filterProvider.refresh();
-      monorepoProvider?.refresh();
-    }
-  });
-  register("semio.filter.search.wholeWord", () => {
-    if (filterProvider) {
-      filterProvider.matchWholeWord = !filterProvider.matchWholeWord;
-      filterProvider.refresh();
-      monorepoProvider?.refresh();
-    }
-  });
-  register("semio.filter.search.regex", () => {
-    if (filterProvider) {
-      filterProvider.useRegex = !filterProvider.useRegex;
-      filterProvider.refresh();
-      monorepoProvider?.refresh();
-    }
-  });
+  const searchToggles: Array<[string, keyof FilterTreeDataProvider]> = [
+    ["semio.filter.search.matchCase", "matchCase"],
+    ["semio.filter.search.wholeWord", "matchWholeWord"],
+    ["semio.filter.search.regex", "useRegex"],
+  ];
+  for (const [cmd, prop] of searchToggles) {
+    register(cmd, () => {
+      if (filterProvider) {
+        (filterProvider as any)[prop] = !(filterProvider as any)[prop];
+        filterProvider.refresh();
+        monorepoProvider?.refresh();
+      }
+    });
+  }
 
-  register("semio.navigateToBundle", (root: string) => {
+  const revealInExplorer = (targetPath: string) => {
     const wsRoot = getWorkspaceRoot();
     if (!wsRoot) return;
-    const abs = path.isAbsolute(root) ? root : path.join(wsRoot, root);
-    const uri = vscode.Uri.file(abs);
-    return vscode.commands.executeCommand("revealInExplorer", uri);
-  });
-
-  register("semio.navigateToFolder", (folderPath: string) => {
-    const wsRoot = getWorkspaceRoot();
-    if (!wsRoot) return;
-    const abs = path.isAbsolute(folderPath) ? folderPath : path.join(wsRoot, folderPath);
-    const uri = vscode.Uri.file(abs);
-    return vscode.commands.executeCommand("revealInExplorer", uri);
-  });
+    const abs = path.isAbsolute(targetPath) ? targetPath : path.join(wsRoot, targetPath);
+    return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs));
+  };
+  register("semio.navigateToBundle", revealInExplorer);
+  register("semio.navigateToFolder", revealInExplorer);
 
   register("semio.navigateToFile", async (filePath: string) => {
     const root = getWorkspaceRoot();
@@ -1684,87 +1945,38 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  register("semio.navigateToSection", (section: any) => {
-    const payload = section as { filePath?: string; section?: any };
-    const filePath = payload.filePath;
-    const sec = payload.section;
-    if (!filePath || typeof sec?.range?.start !== "number") return;
-    return openFileAtLine(filePath, sec.range.start, sec.range.end ?? undefined);
-  });
-
-  register("semio.navigateToDefinition", (def: any) => {
-    const payload = def as { filePath?: string; definition?: any };
-    const filePath = payload.filePath;
-    const d = payload.definition;
-    if (!filePath || typeof d?.range?.start !== "number") return;
-    return openFileAtLine(filePath, d.range.start, d.range.end ?? undefined);
-  });
+  const navigateToRangedItem = (payload: any, rangeKey: string) => {
+    const filePath = payload?.filePath;
+    const item = payload?.[rangeKey];
+    if (!filePath || typeof item?.range?.start !== "number") return;
+    return openFileAtLine(filePath, item.range.start, item.range.end ?? undefined);
+  };
+  register("semio.navigateToSection", (s: any) => navigateToRangedItem(s, "section"));
+  register("semio.navigateToDefinition", (d: any) => navigateToRangedItem(d, "definition"));
 
   register("semio.navigate", async (target: string) => {
     if (!target) return;
-    let uri = target;
-    if (!target.startsWith("semiorepo://")) {
-      const binaryPath = getRepoBinaryPath();
-      if (!binaryPath) return;
-      const cp = require("child_process");
-      try {
-        const result = cp.execSync(`${binaryPath} navigate "${target}" --json`, { cwd: getWorkspaceRoot(), encoding: "utf-8" });
-        const parsed = JSON.parse(result.trim());
-        uri = parsed.uri || target;
-      } catch {
-        return;
+    if (target.startsWith("semiorepo://")) {
+      return navigateToUri(target);
+    }
+    const cache = await getTreeNodeCache();
+    for (const [uri, node] of cache) {
+      if (node.ID === target || node.Label === target || slugify(node.Label) === slugify(target)) {
+        return navigateToUri(uri);
       }
     }
-    const uriPath = uri.replace("semiorepo://", "");
-    const wsRoot = getWorkspaceRoot();
-    if (!wsRoot) return;
-    if (uriPath.startsWith("folder/") || uriPath.startsWith("bundle/")) {
-      const p = uriPath.replace(/^(folder|bundle)\//, "");
-      const abs = path.isAbsolute(p) ? p : path.join(wsRoot, p);
-      return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs));
+  });
+
+  register("semio.navigateTo", async () => {
+    const cache = await getTreeNodeCache();
+    const items: vscode.QuickPickItem[] = [];
+    for (const [uri, node] of cache) {
+      if (node.Kind === "category") continue;
+      items.push({ label: node.Label, description: node.Kind, detail: uri });
     }
-    if (uriPath.startsWith("file/")) {
-      const p = uriPath.replace(/^file\//, "");
-      return vscode.commands.executeCommand("semio.navigateToFile", p);
-    }
-    if (uriPath.startsWith("section/")) {
-      const p = uriPath.replace(/^section\//, "");
-      const parts = p.split("/");
-      let fileEnd = -1;
-      for (let i = 0; i < parts.length; i++) {
-        if (parts[i].includes(".")) fileEnd = i;
-      }
-      if (fileEnd >= 0) {
-        const filePath = parts.slice(0, fileEnd + 1).join("/");
-        return vscode.commands.executeCommand("semio.navigateToFile", filePath);
-      }
-    }
-    if (uriPath.startsWith("definition/")) {
-      const p = uriPath.replace(/^definition\//, "");
-      const parts = p.split("/");
-      let fileEnd = -1;
-      for (let i = 0; i < parts.length; i++) {
-        if (parts[i].includes(".")) fileEnd = i;
-      }
-      if (fileEnd >= 0) {
-        const filePath = parts.slice(0, fileEnd + 1).join("/");
-        return vscode.commands.executeCommand("semio.navigateToFile", filePath);
-      }
-    }
-    if (uriPath.startsWith("ticket/")) {
-      const ticketPath = uriPath.replace(/^ticket\//, "");
-      const ticketMdPath = path.join(wsRoot, ".semio-repo", "tickets", ticketPath, "ticket.md");
-      return vscode.commands.executeCommand("semio.navigateToFile", ticketMdPath);
-    }
-    if (uriPath.startsWith("goal/")) {
-      const goalPath = uriPath.replace(/^goal\//, "");
-      const goalJsonPath = path.join(wsRoot, ".semio-repo", "goals", goalPath, "goal.json");
-      return vscode.commands.executeCommand("semio.navigateToFile", goalJsonPath);
-    }
-    if (uriPath.startsWith("project/")) {
-      const code = uriPath.replace(/^project\//, "");
-      const abs = path.join(wsRoot, code);
-      return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs));
+    const picked = await vscode.window.showQuickPick(items, { placeHolder: "Navigate to..." });
+    if (picked?.detail) {
+      return navigateToUri(picked.detail);
     }
   });
 
@@ -1839,7 +2051,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList",
     "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree",
     "semio.refreshDiagnostics", "semio.fixViolation",
-    "semio.navigateToRepo", "semio.navigate", "semio.goalOpen", "semio.goalList",
+    "semio.navigateToRepo", "semio.navigateTo", "semio.goalOpen", "semio.goalList",
   ];
 
   for (const command of contributedCommands) {
@@ -1898,7 +2110,15 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(repoDiagnosticCollection, kitDiagnosticCollection);
 
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
+      invalidateTreeNodeCache();
       monorepoProvider?.refresh();
+    }));
+
+    context.subscriptions.push(vscode.window.registerUriHandler({
+      handleUri(uri: vscode.Uri) {
+        const semiorepoUri = `semiorepo://${uri.authority}${uri.path}`;
+        vscode.commands.executeCommand("semio.navigate", semiorepoUri);
+      }
     }));
 
     setTimeout(() => {

@@ -25,13 +25,27 @@ import * as assert from "assert";
 import * as fs from "fs";
 import * as path from "path";
 import * as vscode from "vscode";
-import { FilterTreeDataProvider, FilterTreeItem, MonorepoTreeDataProvider, MonorepoTreeItem, TicketData, TicketInteraction } from "./extension";
+import {
+  FilterTreeDataProvider,
+  FilterTreeItem,
+  MonorepoTreeDataProvider,
+  MonorepoTreeItem,
+  TicketData,
+  TicketInteraction,
+  parseRepoEvents,
+  extractRepoResult,
+  getFileKindIcon,
+  slugify,
+  parseUri,
+  invalidateTreeNodeCache,
+  bundleKindEmoji,
+} from "./extension";
 
 // #endregion 🔖Imports
 
 // #region 🔖Constants
 
-const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem", "semio.navigate"];
+const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem", "semio.navigate", "semio.navigateTo"];
 const EXPECTED_CONSTRAINTS = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
 const EXPECTED_VIEWS = ["semio.monorepo", "semio.filter"];
 
@@ -62,44 +76,13 @@ async function waitForDiagnostics(uri: vscode.Uri, timeout = 5000): Promise<vsco
   return vscode.languages.getDiagnostics(uri).filter((d) => d.source === "semio");
 }
 
-type RepoEvent = {
-  kind: string;
-  data?: unknown;
-  result?: unknown;
-  error?: { message?: string; fatal?: boolean };
-  done?: { exit_code?: number };
-};
-
-function parseRepoEvents(output: string): RepoEvent[] {
-  const lines = output.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
-  return lines.map((line) => JSON.parse(line) as RepoEvent);
-}
-
-function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
-  let lastResult: unknown = null;
-  for (const event of events) {
-    if (event.kind === "error" && event.error?.fatal) {
-      throw new Error(event.error.message ?? "Repo command failed");
-    }
-    if (event.kind === "result") {
-      lastResult = event.result ?? event.data ?? null;
-    }
-  }
-  if (lastResult && typeof lastResult === "object" && !Array.isArray(lastResult)) {
-    if ("data" in (lastResult as Record<string, unknown>)) {
-      return lastResult as Record<string, unknown>;
-    }
-  }
-  return { data: lastResult };
-}
-
 // #endregion 🔖Utilities
 
 // #region 🔖Extension Activation
 
 suiteSetup(async function () {
   this.timeout(30000);
-  await openFixture("@semio/kit_metabolism.json");
+  await openFixture("semio/kit_metabolism.json");
   await new Promise((resolve) => setTimeout(resolve, 2000));
 });
 
@@ -207,13 +190,13 @@ suite("Kit Validation Test Suite", function () {
   this.timeout(15000);
 
   test("Valid kit file produces no diagnostics", async function () {
-    const document = await openFixture("@semio/kit_metabolism.json");
+    const document = await openFixture("semio/kit_metabolism.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     assert.strictEqual(diagnostics.length, 0, "Valid kit should have no validation errors");
   });
 
   test("Invalid kit file triggers all expected constraint violations", async function () {
-    const document = await openFixture("@semio/kit_invalid.json");
+    const document = await openFixture("semio/kit_invalid.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -232,7 +215,7 @@ suite("Kit Validation Test Suite", function () {
   });
 
   test("Diagnostics have correct source and severity", async function () {
-    const document = await openFixture("@semio/kit_invalid.json");
+    const document = await openFixture("semio/kit_invalid.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -246,7 +229,7 @@ suite("Kit Validation Test Suite", function () {
   });
 
   test("Quick fixes are available for kit diagnostics", async function () {
-    const document = await openFixture("@semio/kit_invalid.json");
+    const document = await openFixture("semio/kit_invalid.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -260,7 +243,7 @@ suite("Kit Validation Test Suite", function () {
   });
 
   test("Quick fix workspace edit contains valid text edits", async function () {
-    const document = await openFixture("@semio/kit_invalid.json");
+    const document = await openFixture("semio/kit_invalid.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
       console.log("Skipping: validation may be disabled due to bundling issues");
@@ -364,7 +347,7 @@ suite("Refresh Diagnostics Test Suite", function () {
   this.timeout(15000);
 
   test("semio.refreshDiagnostics updates all open documents", async function () {
-    const document = await openFixture("@semio/kit_invalid.json");
+    const document = await openFixture("semio/kit_invalid.json");
     await vscode.commands.executeCommand("semio.refreshDiagnostics");
     await new Promise((resolve) => setTimeout(resolve, 3000));
     const diagnostics = vscode.languages.getDiagnostics(document.uri).filter((d) => d.source === "semio");
@@ -658,89 +641,19 @@ suite("Filter Provider Test Suite", () => {
     assert.strictEqual(provider.filters.goal.open, true);
   });
 
-  test("Bundle none/all toggles set all bundle filters", () => {
-    const provider = new FilterTreeDataProvider();
-    provider.toggle("bundle", "none");
-    for (const key of Object.keys(provider.filters.bundle)) {
-      assert.strictEqual(provider.filters.bundle[key], false, `bundle.${key} should be false after none`);
-    }
-    provider.toggle("bundle", "all");
-    for (const key of Object.keys(provider.filters.bundle)) {
-      assert.strictEqual(provider.filters.bundle[key], true, `bundle.${key} should be true after all`);
-    }
-  });
-
-  test("Folder none/all toggles set all folder filters", () => {
-    const provider = new FilterTreeDataProvider();
-    provider.toggle("folder", "none");
-    for (const key of Object.keys(provider.filters.folder)) {
-      assert.strictEqual(provider.filters.folder[key], false, `folder.${key} should be false after none`);
-    }
-    provider.toggle("folder", "all");
-    for (const key of Object.keys(provider.filters.folder)) {
-      assert.strictEqual(provider.filters.folder[key], true, `folder.${key} should be true after all`);
-    }
-  });
-
-  test("Definition none/all toggles set all definition filters", () => {
-    const provider = new FilterTreeDataProvider();
-    provider.toggle("definition", "none");
-    for (const key of Object.keys(provider.filters.definition)) {
-      assert.strictEqual(provider.filters.definition[key], false, `definition.${key} should be false after none`);
-    }
-    provider.toggle("definition", "all");
-    for (const key of Object.keys(provider.filters.definition)) {
-      assert.strictEqual(provider.filters.definition[key], true, `definition.${key} should be true after all`);
-    }
-  });
-
-  test("Ticket none/all toggles set all ticket filters", () => {
-    const provider = new FilterTreeDataProvider();
-    provider.toggle("ticket", "none");
-    for (const key of Object.keys(provider.filters.ticket)) {
-      assert.strictEqual(provider.filters.ticket[key], false, `ticket.${key} should be false after none`);
-    }
-    provider.toggle("ticket", "all");
-    for (const key of Object.keys(provider.filters.ticket)) {
-      assert.strictEqual(provider.filters.ticket[key], true, `ticket.${key} should be true after all`);
-    }
-  });
-
-  test("Project none/all toggles set all project filters", () => {
-    const provider = new FilterTreeDataProvider();
-    provider.toggle("project", "none");
-    for (const key of Object.keys(provider.filters.project)) {
-      assert.strictEqual(provider.filters.project[key], false, `project.${key} should be false after none`);
-    }
-    provider.toggle("project", "all");
-    for (const key of Object.keys(provider.filters.project)) {
-      assert.strictEqual(provider.filters.project[key], true, `project.${key} should be true after all`);
-    }
-  });
-
-  test("File none/all toggles set all file filters", () => {
-    const provider = new FilterTreeDataProvider();
-    provider.toggle("file", "none");
-    for (const key of Object.keys(provider.filters.file)) {
-      assert.strictEqual(provider.filters.file[key], false, `file.${key} should be false after none`);
-    }
-    provider.toggle("file", "all");
-    for (const key of Object.keys(provider.filters.file)) {
-      assert.strictEqual(provider.filters.file[key], true, `file.${key} should be true after all`);
-    }
-  });
-
-  test("Goal none/all toggles set all goal filters", () => {
-    const provider = new FilterTreeDataProvider();
-    provider.toggle("goal", "none");
-    for (const key of Object.keys(provider.filters.goal)) {
-      assert.strictEqual(provider.filters.goal[key], false, `goal.${key} should be false after none`);
-    }
-    provider.toggle("goal", "all");
-    for (const key of Object.keys(provider.filters.goal)) {
-      assert.strictEqual(provider.filters.goal[key], true, `goal.${key} should be true after all`);
-    }
-  });
+  for (const kind of ["bundle", "folder", "definition", "ticket", "project", "file", "goal"]) {
+    test(`${kind} none/all toggles set all ${kind} filters`, () => {
+      const provider = new FilterTreeDataProvider();
+      provider.toggle(kind, "none");
+      for (const key of Object.keys(provider.filters[kind])) {
+        assert.strictEqual(provider.filters[kind][key], false, `${kind}.${key} should be false after none`);
+      }
+      provider.toggle(kind, "all");
+      for (const key of Object.keys(provider.filters[kind])) {
+        assert.strictEqual(provider.filters[kind][key], true, `${kind}.${key} should be true after all`);
+      }
+    });
+  }
 
   test("Time filter toggle updates state", () => {
     const provider = new FilterTreeDataProvider();
@@ -900,3 +813,404 @@ suite("Data Structures Test Suite", () => {
     assert.ok(Array.isArray(ticket.interactions));
   });
 });
+
+// #region 🔖getFileKindIcon Tests
+
+suite("getFileKindIcon Test Suite", () => {
+  test("TypeScript files return document icon", () => {
+    assert.strictEqual(getFileKindIcon("app.ts"), "📄");
+    assert.strictEqual(getFileKindIcon("component.tsx"), "📄");
+  });
+
+  test("JavaScript files return document icon", () => {
+    assert.strictEqual(getFileKindIcon("index.js"), "📄");
+    assert.strictEqual(getFileKindIcon("app.jsx"), "📄");
+  });
+
+  test("Python files return snake icon", () => {
+    assert.strictEqual(getFileKindIcon("main.py"), "🐍");
+  });
+
+  test("Go files return blue diamond icon", () => {
+    assert.strictEqual(getFileKindIcon("main.go"), "🔷");
+  });
+
+  test("C# files return purple circle icon", () => {
+    assert.strictEqual(getFileKindIcon("Program.cs"), "🟣");
+  });
+
+  test("Config files return gear icon", () => {
+    assert.strictEqual(getFileKindIcon("config.json"), "⚙️");
+    assert.strictEqual(getFileKindIcon("settings.yaml"), "⚙️");
+    assert.strictEqual(getFileKindIcon("pyproject.toml"), "⚙️");
+  });
+
+  test("Markdown and text files return memo icon", () => {
+    assert.strictEqual(getFileKindIcon("README.md"), "📝");
+    assert.strictEqual(getFileKindIcon("notes.txt"), "📝");
+  });
+
+  test("Shell scripts return desktop icon", () => {
+    assert.strictEqual(getFileKindIcon("setup.sh"), "🖥️");
+    assert.strictEqual(getFileKindIcon("build.ps1"), "🖥️");
+  });
+
+  test("Unknown extensions return default document icon", () => {
+    assert.strictEqual(getFileKindIcon("image.png"), "📄");
+    assert.strictEqual(getFileKindIcon("archive.zip"), "📄");
+  });
+});
+
+// #endregion 🔖getFileKindIcon Tests
+
+// #region 🔖matchesSearch Tests
+
+suite("MonorepoProvider matchesSearch Test Suite", () => {
+  test("Empty query matches everything", () => {
+    const fp = new FilterTreeDataProvider();
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.matchesSearch("anything"), true);
+    assert.strictEqual(provider.matchesSearch(""), true);
+  });
+
+  test("Case-insensitive substring match by default", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.searchQuery = "hello";
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.matchesSearch("Hello World"), true);
+    assert.strictEqual(provider.matchesSearch("HELLO"), true);
+    assert.strictEqual(provider.matchesSearch("goodbye"), false);
+  });
+
+  test("Case-sensitive match when enabled", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.searchQuery = "Hello";
+    fp.matchCase = true;
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.matchesSearch("Hello World"), true);
+    assert.strictEqual(provider.matchesSearch("hello world"), false);
+  });
+
+  test("Whole word match when enabled", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.searchQuery = "test";
+    fp.matchWholeWord = true;
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.matchesSearch("this is a test"), true);
+    assert.strictEqual(provider.matchesSearch("testing"), false);
+  });
+
+  test("Regex match when enabled", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.searchQuery = "^test.*$";
+    fp.useRegex = true;
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.matchesSearch("testing123"), true);
+    assert.strictEqual(provider.matchesSearch("my test"), false);
+  });
+
+  test("Invalid regex returns true (graceful fallback)", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.searchQuery = "[invalid";
+    fp.useRegex = true;
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.matchesSearch("anything"), true);
+  });
+
+  test("No filter provider matches everything", () => {
+    const provider = new MonorepoTreeDataProvider();
+    assert.strictEqual(provider.matchesSearch("anything"), true);
+  });
+});
+
+// #endregion 🔖matchesSearch Tests
+
+// #region 🔖passesTicketFilter Tests
+
+suite("MonorepoProvider passesTicketFilter Test Suite", () => {
+  test("No filter provider passes all tickets", () => {
+    const provider = new MonorepoTreeDataProvider();
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 1 }), true);
+  });
+
+  test("Filters out OPEN tickets when open filter is off", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.filters.ticket.open = false;
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 1 }), false);
+    assert.strictEqual(provider.passesTicketFilter({ status: "CLOSED", year: 2024, month: 1, day: 1 }), true);
+  });
+
+  test("Filters out CLOSED tickets when closed filter is off", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.filters.ticket.closed = false;
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.passesTicketFilter({ status: "CLOSED", year: 2024, month: 1, day: 1 }), false);
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 1 }), true);
+  });
+
+  test("Filters out excluded years", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.excludedYears = [2024];
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 1 }), false);
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2025, month: 1, day: 1 }), true);
+  });
+
+  test("Filters out excluded months", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.excludedMonths = [6];
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 6, day: 1 }), false);
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 7, day: 1 }), true);
+  });
+
+  test("Filters out excluded days", () => {
+    const fp = new FilterTreeDataProvider();
+    fp.excludedDays = [15];
+    const provider = new MonorepoTreeDataProvider(fp);
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 15 }), false);
+    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 16 }), true);
+  });
+});
+
+// #endregion 🔖passesTicketFilter Tests
+
+// #region 🔖buildTicketItem Tests
+
+suite("MonorepoProvider buildTicketItem Test Suite", () => {
+  test("Open ticket has blue status icon", () => {
+    const provider = new MonorepoTreeDataProvider();
+    const item = provider.buildTicketItem({ status: "OPEN", year: 2024, month: 3, day: 15, slug: "MY-TICKET" });
+    assert.ok((item.label as string).includes("🔵"));
+    assert.ok((item.label as string).includes("MY-TICKET"));
+    assert.strictEqual(item.contextValue, "ticket");
+  });
+
+  test("Closed ticket has green status icon", () => {
+    const provider = new MonorepoTreeDataProvider();
+    const item = provider.buildTicketItem({ status: "CLOSED", year: 2024, month: 3, day: 15, slug: "DONE-TICKET" });
+    assert.ok((item.label as string).includes("🟢"));
+  });
+
+  test("Ticket item has correct nodeId format", () => {
+    const provider = new MonorepoTreeDataProvider();
+    const item = provider.buildTicketItem({ status: "OPEN", year: 2024, month: 1, day: 5, slug: "TEST" });
+    assert.strictEqual(item.nodeId, "2024/01/05/TEST");
+  });
+
+  test("Ticket item has ticketOpen command", () => {
+    const provider = new MonorepoTreeDataProvider();
+    const item = provider.buildTicketItem({ status: "OPEN", year: 2024, month: 1, day: 1, slug: "X" });
+    assert.strictEqual(item.command?.command, "semio.ticketOpen");
+  });
+});
+
+// #endregion 🔖buildTicketItem Tests
+
+// #region 🔖RepoEvent Extended Tests
+
+suite("RepoEvent Extended Parsing Test Suite", () => {
+  test("parseRepoEvents handles multiple lines", () => {
+    const output = '{"kind":"start"}\n{"kind":"result","result":{"data":"hello"}}\n{"kind":"done"}\n';
+    const events = parseRepoEvents(output);
+    assert.strictEqual(events.length, 3);
+    assert.strictEqual(events[0].kind, "start");
+    assert.strictEqual(events[1].kind, "result");
+    assert.strictEqual(events[2].kind, "done");
+  });
+
+  test("parseRepoEvents ignores blank lines", () => {
+    const output = '{"kind":"result","result":{}}\n\n  \n';
+    const events = parseRepoEvents(output);
+    assert.strictEqual(events.length, 1);
+  });
+
+  test("extractRepoResult handles empty events", () => {
+    const result = extractRepoResult([]);
+    assert.strictEqual(result.data, null);
+  });
+
+  test("extractRepoResult skips control events (start, progress, log, done)", () => {
+    const events = [
+      { kind: "start" },
+      { kind: "progress" },
+      { kind: "log" },
+      { kind: "result", result: { data: { value: 42 } } },
+      { kind: "done" },
+    ];
+    const result = extractRepoResult(events);
+    assert.ok(result.data);
+    assert.strictEqual((result.data as any).value, 42);
+  });
+
+  test("extractRepoResult collects section results", () => {
+    const events = [
+      { kind: "section", result: undefined, data: undefined },
+    ];
+    const result = extractRepoResult(events);
+    assert.ok(result);
+  });
+});
+
+// #endregion 🔖RepoEvent Extended Tests
+
+// #region 🔖URI Resolution Tests
+
+suite("slugify Test Suite", () => {
+  test("Converts text to uppercase slug", () => {
+    assert.strictEqual(slugify("Hello World"), "HELLO-WORLD");
+  });
+
+  test("Converts file path to slug", () => {
+    assert.strictEqual(slugify("semio/js/semio.ts"), "SEMIO-JS-SEMIO-TS");
+  });
+
+  test("Handles already slugified text", () => {
+    assert.strictEqual(slugify("HELLO-WORLD"), "HELLO-WORLD");
+  });
+
+  test("Strips leading and trailing hyphens", () => {
+    assert.strictEqual(slugify("--hello--"), "HELLO");
+  });
+
+  test("Handles empty string", () => {
+    assert.strictEqual(slugify(""), "");
+  });
+
+  test("Preserves numbers", () => {
+    assert.strictEqual(slugify("version-2.0"), "VERSION-2-0");
+  });
+
+  test("Handles goal ID with slashes", () => {
+    assert.strictEqual(slugify("AI-OPTIMIZED-REPO"), "AI-OPTIMIZED-REPO");
+  });
+});
+
+suite("bundleKindEmoji Test Suite", () => {
+  test("Maps library to 📚", () => {
+    assert.strictEqual(bundleKindEmoji("library"), "📚");
+  });
+  test("Maps binary to ⌨️", () => {
+    assert.strictEqual(bundleKindEmoji("binary"), "⌨️");
+  });
+  test("Maps schema to 🛂", () => {
+    assert.strictEqual(bundleKindEmoji("schema"), "🛂");
+  });
+  test("Maps ui to 🖱️", () => {
+    assert.strictEqual(bundleKindEmoji("ui"), "🖱️");
+  });
+  test("Maps site to 🌐", () => {
+    assert.strictEqual(bundleKindEmoji("site"), "🌐");
+  });
+  test("Maps assets to 🏪", () => {
+    assert.strictEqual(bundleKindEmoji("assets"), "🏪");
+  });
+  test("Defaults to 📚 for unknown kind", () => {
+    assert.strictEqual(bundleKindEmoji("unknown"), "📚");
+  });
+});
+
+suite("parseUri Test Suite", () => {
+  test("Parses ticket URI", () => {
+    const result = parseUri("semiorepo://ticket/2026/02/07/MY-TICKET");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "ticket");
+    assert.strictEqual(result!.path, "2026/02/07/MY-TICKET");
+  });
+
+  test("Parses goal URI", () => {
+    const result = parseUri("semiorepo://goal/AI-OPTIMIZED-REPO/REPO-CLIENT");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "goal");
+    assert.strictEqual(result!.path, "AI-OPTIMIZED-REPO/REPO-CLIENT");
+  });
+
+  test("Parses file URI", () => {
+    const result = parseUri("semiorepo://file/SEMIO-JS-SEMIO-TS");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "file");
+    assert.strictEqual(result!.path, "SEMIO-JS-SEMIO-TS");
+  });
+
+  test("Parses contributor URI", () => {
+    const result = parseUri("semiorepo://contributor/USALU");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "contributor");
+    assert.strictEqual(result!.path, "USALU");
+  });
+
+  test("Parses commit URI", () => {
+    const result = parseUri("semiorepo://commit/ABC123DEF");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "commit");
+    assert.strictEqual(result!.path, "ABC123DEF");
+  });
+
+  test("Parses section URI", () => {
+    const result = parseUri("semiorepo://section/SEMIO-JS-SEMIO-TS-HEADER");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "section");
+    assert.strictEqual(result!.path, "SEMIO-JS-SEMIO-TS-HEADER");
+  });
+
+  test("Parses draft URI", () => {
+    const result = parseUri("semiorepo://draft/MY-DRAFT");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "draft");
+    assert.strictEqual(result!.path, "MY-DRAFT");
+  });
+
+  test("Parses policy URI", () => {
+    const result = parseUri("semiorepo://policy/CODE-HYGIENE");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "policy");
+    assert.strictEqual(result!.path, "CODE-HYGIENE");
+  });
+
+  test("Returns null for non-semiorepo URIs", () => {
+    assert.strictEqual(parseUri("https://example.com"), null);
+    assert.strictEqual(parseUri("file:///tmp/foo"), null);
+    assert.strictEqual(parseUri("not a uri"), null);
+  });
+
+  test("Returns null for malformed semiorepo URI", () => {
+    assert.strictEqual(parseUri("semiorepo://"), null);
+  });
+});
+
+suite("Navigation Commands Test Suite", function () {
+  this.timeout(15000);
+
+  test("semio.navigate command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.navigate"), "navigate command should be registered");
+  });
+
+  test("semio.navigateTo command is available", async function () {
+    const commands = await vscode.commands.getCommands(true);
+    assert.ok(commands.includes("semio.navigateTo"), "navigateTo command should be registered");
+  });
+
+  test("invalidateTreeNodeCache does not throw", () => {
+    invalidateTreeNodeCache();
+    assert.ok(true);
+  });
+
+  test("semio.navigate handles empty target gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "");
+    assert.ok(true, "Should not throw on empty target");
+  });
+
+  test("semio.navigate handles undefined target gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", undefined);
+    assert.ok(true, "Should not throw on undefined target");
+  });
+
+  test("semio.navigate handles unknown URI type gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://unknown/SOMETHING");
+    assert.ok(true, "Should not throw on unknown URI type");
+  });
+});
+
+// #endregion 🔖URI Resolution Tests

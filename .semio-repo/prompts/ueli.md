@@ -20,9 +20,72 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
-Refactor the semio repo cli to be clean and extend the cli tests to be complete. Dont create any new file. Dont remove any functionality or tests. Just refactor by getting rid of code smells, duplication, etc by introducing proper abstraction, apis and mechanisms.
+semio repo cli:
+- every list and tree command should have a query parameter that uses bleve for prefiltering.
+- The violation kinds are not properly nested as tree but wrongly a flat list.
+- policy tree command is missing.
 
-Refactor the semio repo vscode exension to be clean and extend the extension tests to be complete. Dont create any new file. Dont remove any functionality or tests. Just refactor by getting rid of code smells, duplication, etc by introducing proper abstraction, apis and mechanisms.
+semio repo vscode extension:
+- The filter section should not have refresh button but clear button
+- The filter search tree item should be the same input as native vscode uses for repo-wide search (ctrl + shift + h).
+- When a filter is pressed, it works but nowhere is it indicated that the filter is active. Make sure to indicate the filter state. Dont add new tree items for it.
+- The copied ids are wrong. Make sure they are the full ids (e.g. "🛠️semio-repo/VSCODE/extension.ts#URI Resolution§TreeNodeData ) and not the short ids (e.g. R26-02).
+- Finish ticket button should only be visible when a ticket is open. Reopen button should only be visible when a ticket is closed.
+- Domain logic should not be in the extension but in the repo binary. E.g. the search feature should use the repo binary to search.
+
+semio repo cli:
+All items should always be identically rendered across all commands regardless the originating command. It doesnt matter if an item is part of the tree or list command. Make sure the item rendering is defined once and reused for all commands. Once for text and once for markdown. For all items in all commands. Extend the tests so that all representations are guaranteed to be identical.
+e.g.
+the goal format in the tree command is correct:
+```
+$ ./semio-repo/cli/cli goal tree
+- [🎯R26-02](semiorepo://goal/R26-02) - `r26-02` - `open` - `created 1 week ago` - `2 weeks from now` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
+  - [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `Running Sketchpad` - `open` - `1 week from now` - `Running sketchpad infrastructure and apps with MVP functionality.`
+    - [🎯R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS](semiorepo://goal/R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS) - `Apps` - `open` - `2 weeks from now` - `Apps within sketchpad`
+```
+and the list command is currently differing and wrong:
+```
+$ ./semio-repo/cli/cli goal list
+- [🎯︎R26-02](semiorepo://goal/R26-02) - r26-02 - open - 2 weeks from now
+- [🎯︎R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - Running Sketchpad - open - 1 week from now
+- [🎯︎R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS](semiorepo://goal/R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS) - Apps - open - 2 weeks from now
+
+```
+should be:
+```
+$ ./semio-repo/cli/cli goal list
+- [🎯R26-02](semiorepo://goal/R26-02) - `r26-02` - `open` - `created 1 week ago` - `2 weeks from now` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
+- [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `Running Sketchpad` - `open` - `1 week from now` - `Running sketchpad infrastructure and apps with MVP functionality.`
+- [🎯R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS](semiorepo://goal/R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS) - `Apps` - `open` - `2 weeks from now` - `Apps within sketchpad`
+```
+and the tree command is differing again and wrong:
+```
+$ ./semio-repo/cli/cli tree
+- [🎯Goals](semiorepo://goals)
+ - [🎯r26-02](semiorepo://goal/R26-02)
+    - [Running Sketchpad](semiorepo://goal/RUNNING-SKETCHPAD)
+      - [Apps](semiorepo://goal/APPS)
+```
+should be:
+```
+$ ./semio-repo/cli/cli tree
+- [🎯Goals](semiorepo://goals)
+  - [🎯R26-02](semiorepo://goal/R26-02) - `r26-02` - `open` - `created 1 week ago` - `2 weeks from now` - `The r26-02 release aims to deliver sketchpad running at MVP level, along with updated documentation and examples. This includes core sketchpad functionality, user interface components, and comprehensive documentation to support initial user adoption.`
+    - [🎯R26-02/RUNNING-SKETCHPAD](semiorepo://goal/R26-02/RUNNING-SKETCHPAD) - `Running Sketchpad` - `open` - `1 week from now` - `Running sketchpad infrastructure and apps with MVP functionality.`
+      - [🎯R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS](semiorepo://goal/R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS) - `Apps` - `open` - `2 weeks from now` - `Apps within sketchpad`
+```
+
+The semio repo vscode extension should properly resolve all uris and navigate to them. Clicking on a uri should navigate to the resource, clicking on a tree item should navigate to the resource, the `semio-repo: Navigate to` command should navigate to the resource.
+
+semio repo vscode extension:
+- target and temp are appearing as user projects although they are not
+- sections in the explorer sideview are not appearing
+- definitions tree items are appearing twice - once wrongly with a section emoji in the right place and once on root of the section (not part of the subsection) as definitions.
+- filter kind menu buttons are working but should indicate the filter state.
+
+Refactor the semio repo cli to be clean and extend the cli tests to be complete. Dont create any new file. Dont remove any functionality or tests. Just refactor by getting rid of code smells, duplication, etc by introducing proper abstraction, apis and mechanisms. First analyze throughly and create a plan and then implement it step by step.
+
+Refactor the semio repo vscode exension to be clean and extend the extension tests to be complete. Dont create any new file. Dont remove any functionality or tests. Just refactor by getting rid of code smells, duplication, etc by introducing proper abstraction, apis and mechanisms. First analyze throughly and create a plan and then implement it step by step.
 
 There should be a general `move <source> <target>` command that moves the kind from the source to the target. e.g. `folder`, `file`, `section`, `definition`, `violationKind`, etc. Move even works for different kinds e.g. `move <file> <section>` calls `integrate` and `move <section> <file>` calls `extract`.
 

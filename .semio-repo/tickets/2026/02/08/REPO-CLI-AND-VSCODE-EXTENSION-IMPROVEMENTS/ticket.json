@@ -1,0 +1,22 @@
+{
+  "title": "Repo CLI and VSCode Extension Improvements",
+  "status": "open",
+  "prompt": "CLI: Add query parameter with bleve prefiltering to all list/tree commands. Fix violation kinds to be properly nested as tree. Add policy tree command. VSCode Extension: Replace filter refresh button with clear button. Use native VSCode search input for filter. Indicate active filter state. Fix copied IDs to use full artifact IDs. Show finish ticket button only when ticket is open, reopen only when closed. Move domain logic from extension to repo binary (search feature). Extend existing test file to cover everything.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT",
+  "started": "2026-02-08T01:46:47.117285209Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-08 01:46:47"
+      },
+      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "system": {
+        "version": "linux",
+        "client": "windsurf-chat"
+      },
+      "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
+      "prompt": "CLI: Add query parameter with bleve prefiltering to all list/tree commands. Fix violation kinds to be properly nested as tree. Add policy tree command. VSCode Extension: Replace filter refresh button with clear button. Use native VSCode search input for filter. Indicate active filter state. Fix copied IDs to use full artifact IDs. Show finish ticket button only when ticket is open, reopen only when closed. Move domain logic from extension to repo binary (search feature). Extend existing test file to cover everything.",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

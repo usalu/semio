@@ -31,7 +31,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"io/ioutil"
 	"math"
 	"math/rand"
 	"os"
@@ -3740,87 +3739,7 @@ func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return cmd
 }
 
-// #region 🔖Templates
-
-var globalTemplateManager *TemplateManager
-var globalTemplateManagerOnce sync.Once
-
-type TemplateManager struct {
-	tmpl *template.Template
-}
-
-func GetTemplateManager() *TemplateManager {
-	globalTemplateManagerOnce.Do(func() {
-		t := template.New("root").Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{
-			"color":       tmplColor,
-			"colorStatus": tmplColorStatus,
-			"timeAgo":     tmplTimeAgo,
-			"timeLeft":    tmplTimeLeft,
-			"truncate":    tmplTruncate,
-			"ternary":     tmplTernary,
-		})
-
-		// Parse all defined templates
-		for name, content := range defaultTemplates {
-			_, err := t.New(name).Parse(content)
-			if err != nil {
-				panic(fmt.Sprintf("failed to parse template %s: %v", name, err))
-			}
-		}
-
-		globalTemplateManager = &TemplateManager{tmpl: t}
-	})
-	return globalTemplateManager
-}
-
-func (m *TemplateManager) Render(name string, data interface{}) (string, error) {
-	var sb strings.Builder
-	if err := m.tmpl.ExecuteTemplate(&sb, name, data); err != nil {
-		return "", err
-	}
-	return sb.String(), nil
-}
-
-// Template Functions
-
-func tmplColor(color string, s string) string {
-	// Check if NO_COLOR
-	if os.Getenv("NO_COLOR") != "" {
-		return s
-	}
-	c := ColorReset
-	switch color {
-	case "red":
-		c = ColorRed
-	case "green":
-		c = ColorGreen
-	case "blue":
-		c = ColorBlue
-	case "yellow":
-		c = ColorYellow
-	case "dim":
-		c = ColorDim
-	case "bold":
-		c = ColorBold
-	}
-	return c + s + ColorReset
-}
-
-func tmplColorStatus(status string, s string) string {
-	if os.Getenv("NO_COLOR") != "" {
-		return s
-	}
-	c := ColorBlue
-	switch status {
-	case "finished", "closed", "pass":
-		c = ColorGreen
-	case "failed", "error":
-		c = ColorRed
-	case "open":
-		c = ColorBlue
-	}
-	return c + s + ColorReset
-}
+// #region 🔖Utilities
 
 func parseFlexibleTime(t string) (time.Time, error) {
 	if t == "" {
@@ -3839,50 +3758,7 @@ func parseFlexibleTime(t string) (time.Time, error) {
 	return time.Time{}, fmt.Errorf("could not parse time: %s", t)
 }
 
-func tmplTimeAgo(t string) string {
-	parsed, err := parseFlexibleTime(t)
-	if err != nil {
-		return t
-	}
-	return humanize.Time(parsed)
-}
-
-func tmplTimeLeft(t string) string {
-	parsed, err := parseFlexibleTime(t)
-	if err != nil {
-		return t
-	}
-	if time.Now().After(parsed) {
-		return "overdue " + humanize.Time(parsed)
-	}
-	return humanize.Time(parsed)
-}
-
-func tmplTruncate(length int, s string) string {
-	if len(s) <= length {
-		return s
-	}
-	return s[:length] + "…"
-}
-
-func tmplTernary(trueVal, falseVal interface{}, condition bool) interface{} {
-	if condition {
-		return trueVal
-	}
-	return falseVal
-}
-
-var defaultTemplates = map[string]string{
-	"goal_text":    `{{ .Kind }} {{ .Title | color "bold" }} {{ if .Status }}{{ .Status | color "dim" }} {{ end }}{{ if .CreatedAt }}{{ "created" | color "dim" }} {{ .CreatedAt | timeAgo | color "dim" }} {{ end }}{{ if .DueDate }}{{ .DueDate | timeLeft | color "yellow" }} {{ end }}{{ if .OpenSubgoals }}{{ .OpenSubgoals }} open subgoals {{ end }}{{ if .OpenTickets }}{{ .OpenTickets }} open tickets {{ end }}{{ .Description | truncate 80 | color "dim" }}`,
-	"goal_md":      "[{{ .Kind }}{{ .ID }}]({{ .URI }}){{ if .Title }} - `{{ .Title }}`{{ end }}{{ if .Status }} - `{{ .Status }}`{{ end }}{{ if .CreatedAt }} - `created {{ .CreatedAt | timeAgo }}`{{ end }}{{ if .DueDate }} - `{{ .DueDate | timeLeft }}`{{ end }}{{ if .Description }} - `{{ .Description }}`{{ end }}",
-	"ticket_text":  `{{ .Kind | colorStatus .Status }} {{ .Title | color "bold" }} ({{ .Slug | color "dim" }}) {{ if eq .Status "open" }}{{ if .Created }}opened {{ .Created | timeAgo }} {{ end }}{{ else }}{{ if .Finished }}closed {{ .Finished | timeAgo }} {{ end }}{{ end }}{{ if eq .Status "open" }}{{ .Prompt | truncate 30 }}{{ else }}{{ .Summary | truncate 30 }}{{ end }}`,
-	"ticket_md":    `[{{ .Kind }}{{ .Slug }}]({{ .URI }}){{ if .Title }} - {{ .Title }}{{ end }}{{ if eq .Status "open" }}{{ if .Created }} - opened {{ .Created | timeAgo }}{{ end }}{{ else }}{{ if .Finished }} - closed {{ .Finished | timeAgo }}{{ end }}{{ end }}{{ if eq .Status "open" }}{{ if .Prompt }} - {{ .Prompt }}{{ end }}{{ else }}{{ if .Summary }} - {{ .Summary }}{{ end }}{{ end }}`,
-	"section_text": `{{ .Name | color "bold" }} {{ if .Range }}(lines {{ .Range }}){{ end }}`,
-	"section_md":   `[{{ .Name }}]({{ .URI }}) ({{ .Range }})`,
-	// Add other templates as needed
-}
-
-// #endregion 🔖Templates
+// #endregion 🔖Utilities
 
 // #region 🔖Models
 
@@ -3938,6 +3814,7 @@ type TreeNode struct {
 	Day         int
 	Status      string
 	Contributor string
+	Data        map[string]interface{}
 	Children    []*TreeNode
 	matched     bool
 }
@@ -4252,30 +4129,44 @@ func renderGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}, isTTY bool
 	return renderGoalTreeNodes(roots, format)
 }
 
+func goalNodeToData(n *GoalNode) map[string]interface{} {
+	return map[string]interface{}{
+		"id":          n.ID,
+		"title":       n.Title,
+		"status":      n.Status,
+		"dueDate":     n.DueDate,
+		"createdAt":   n.CreatedAt,
+		"description": n.Description,
+	}
+}
+
+func ticketNodeToData(n *TicketNode) map[string]interface{} {
+	return map[string]interface{}{
+		"slug":     n.Slug,
+		"title":    n.Title,
+		"status":   n.Status,
+		"started":  n.Created,
+		"finished": n.Finished,
+		"prompt":   n.Prompt,
+		"summary":  n.Summary,
+	}
+}
+
 func renderGoalTreeNodes(roots []*GoalNode, format string) string {
-	tmplManager := GetTemplateManager()
 	var sb strings.Builder
 
 	var render func(node interface{}, prefix string, isLast bool, isRoot bool)
 	render = func(node interface{}, prefix string, isLast bool, isRoot bool) {
-		tmplName := ""
+		var lineContent string
 		var children []interface{}
-		var viewModel map[string]interface{}
 
 		switch n := node.(type) {
 		case *GoalNode:
-			tmplName = "goal_" + format
-			viewModel = map[string]interface{}{
-				"Kind":         "🎯",
-				"ID":           n.ID,
-				"Title":        n.Title,
-				"Status":       n.Status,
-				"DueDate":      n.DueDate,
-				"CreatedAt":    n.CreatedAt,
-				"Description":  n.Description,
-				"URI":          fmt.Sprintf("semiorepo://goal/%s", n.ID),
-				"OpenSubgoals": countOpenSubgoals(n),
-				"OpenTickets":  countOpenTickets(n),
+			data := goalNodeToData(n)
+			if format == "md" {
+				lineContent = renderEntityMarkdownLink("goal", data)
+			} else {
+				lineContent = renderEntityHuman("goal", data, false)
 			}
 			for _, c := range n.Children {
 				children = append(children, c)
@@ -4283,28 +4174,16 @@ func renderGoalTreeNodes(roots []*GoalNode, format string) string {
 			for _, t := range n.Tickets {
 				children = append(children, t)
 			}
-
 		case *TicketNode:
-			tmplName = "ticket_" + format
-			viewModel = map[string]interface{}{
-				"Kind":     "🎫",
-				"Title":    n.Title,
-				"Slug":     n.Slug,
-				"Status":   n.Status,
-				"Created":  n.Created,
-				"Finished": n.Finished,
-				"Prompt":   n.Prompt,
-				"Summary":  n.Summary,
-				"URI":      n.URI,
+			data := ticketNodeToData(n)
+			if format == "md" {
+				lineContent = renderEntityMarkdownLink("ticket", data)
+			} else {
+				lineContent = renderEntityHuman("ticket", data, false)
 			}
 			for _, c := range n.Children {
 				children = append(children, c)
 			}
-		}
-
-		lineContent, err := tmplManager.Render(tmplName, viewModel)
-		if err != nil {
-			lineContent = fmt.Sprintf("Error rendering: %v", err)
 		}
 
 		if format == "text" {
@@ -4347,28 +4226,22 @@ func renderGoalTreeNodes(roots []*GoalNode, format string) string {
 }
 
 func renderSectionTree(root *Section, isTTY bool, useMD bool) string {
-	tmplManager := GetTemplateManager()
 	var sb strings.Builder
 
 	var render func(s *Section, prefix string, isLast bool, isRoot bool)
 	render = func(s *Section, prefix string, isLast bool, isRoot bool) {
-		tmplName := "section_text"
+		data := map[string]interface{}{
+			"path":      s.Path,
+			"name":      s.Name,
+			"startLine": float64(s.StartLine),
+			"endLine":   float64(s.EndLine),
+		}
+
+		var lineContent string
 		if useMD {
-			tmplName = "section_md"
-		}
-
-		// Calculate URI for markdown
-		uri := fmt.Sprintf("semiorepo://section/%s#%s", s.FilePath, s.Name)
-
-		viewModel := map[string]interface{}{
-			"Name":  s.Name,
-			"Range": fmt.Sprintf("%d-%d", s.StartLine, s.EndLine),
-			"URI":   uri,
-		}
-
-		lineContent, err := tmplManager.Render(tmplName, viewModel)
-		if err != nil {
-			lineContent = fmt.Sprintf("Error rendering: %v", err)
+			lineContent = renderEntityMarkdown("section", data)
+		} else {
+			lineContent = renderEntityHuman("section", data, false)
 		}
 
 		if !useMD {
@@ -4390,13 +4263,11 @@ func renderSectionTree(root *Section, isTTY bool, useMD bool) string {
 				}
 			}
 			for i := range s.Children {
-				// Don't pass loop variable pointer, pass address of element
 				childPtr := &s.Children[i]
 				render(childPtr, newPrefix, i == len(s.Children)-1, false)
 			}
 		} else {
-			// Markdown
-			sb.WriteString(prefix + "- " + lineContent + "\n")
+			sb.WriteString(prefix + lineContent + "\n")
 			newPrefix := prefix + "  "
 			for i := range s.Children {
 				childPtr := &s.Children[i]
@@ -4411,59 +4282,13 @@ func renderSectionTree(root *Section, isTTY bool, useMD bool) string {
 
 func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
 	var sb strings.Builder
-	tmplManager := GetTemplateManager()
-
-	tmplName := "ticket_text"
-	if useMD {
-		tmplName = "ticket_md"
-	}
 
 	for _, t := range ticketsRaw {
 		if tm, ok := t.(map[string]interface{}); ok {
-			// id, _ := tm["id"].(string)
-			slug, _ := tm["slug"].(string)
-			status, _ := tm["status"].(string)
-			title, _ := tm["title"].(string)
-			prompt, _ := tm["prompt"].(string)
-			summary, _ := tm["summary"].(string)
-
-			created := ""
-			finished := ""
-			if dates, ok := tm["date"].(map[string]interface{}); ok {
-				created, _ = dates["created"].(string)
-				finished, _ = dates["finished"].(string)
-			}
-			if created == "" {
-				created, _ = tm["createdAt"].(string)
-			}
-
-			// Construct URI
-			uri := fmt.Sprintf("semiorepo://ticket/%s", Slugify(slug))
-			if tTime, err := time.Parse(time.RFC3339, created); err == nil {
-				uri = fmt.Sprintf("semiorepo://ticket/%d/%02d/%02d/%s", tTime.Year(), tTime.Month(), tTime.Day(), Slugify(slug))
-			}
-
-			viewModel := map[string]interface{}{
-				"Kind":     "🎫",
-				"Title":    title,
-				"Slug":     slug,
-				"Status":   status,
-				"Created":  created,
-				"Finished": finished,
-				"Prompt":   prompt,
-				"Summary":  summary,
-				"URI":      uri,
-			}
-
-			line, err := tmplManager.Render(tmplName, viewModel)
-			if err != nil {
-				line = fmt.Sprintf("Error: %v", err)
-			}
-
-			if !useMD {
-				sb.WriteString("  " + line + "\n")
+			if useMD {
+				sb.WriteString(renderEntityMarkdown("ticket", tm) + "\n")
 			} else {
-				sb.WriteString("- " + line + "\n")
+				sb.WriteString("  " + renderEntityHuman("ticket", tm, false) + "\n")
 			}
 		}
 	}
@@ -4566,6 +4391,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Label:   f.Name,
 			URI:     f.GetURI(),
 			SubKind: string(f.Kind),
+			Data:    map[string]interface{}{"path": f.Path, "name": f.Name, "kind": string(f.Kind)},
 		}
 		globalFolderMap[f.Path] = &folderEntry{folder: f, node: fNode}
 	}
@@ -4579,6 +4405,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Label:   f.Name,
 			URI:     f.GetURI(),
 			SubKind: f.Kind,
+			Data:    map[string]interface{}{"path": f.Path, "name": f.Name, "kind": f.Kind},
 		}
 		if options.IncludeSections {
 			absPath := filepath.Join(GetRootDir(), f.Path)
@@ -4603,6 +4430,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Label:   p.Name,
 			URI:     p.GetURI(),
 			SubKind: string(p.Kind),
+			Data:    map[string]interface{}{"name": p.Name, "kind": string(p.Kind)},
 		}
 		sort.Slice(p.Bundles, func(i, j int) bool { return p.Bundles[i].Name < p.Bundles[j].Name })
 		for bi := range p.Bundles {
@@ -4613,6 +4441,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 				Label:   b.Name,
 				URI:     b.GetURI(),
 				SubKind: string(b.Kind),
+				Data:    map[string]interface{}{"name": b.Name, "root": b.Root, "kind": string(b.Kind)},
 			}
 
 			bundleRoot := b.Root
@@ -4664,6 +4493,10 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	goalMap := make(map[string]*TreeNode)
 	sort.Slice(goals, func(i, j int) bool { return goals[i].ID < goals[j].ID })
 	for _, g := range goals {
+		goalCreatedAt := ""
+		if len(g.Interactions) > 0 {
+			goalCreatedAt = g.Interactions[0].Dates.Started
+		}
 		gNode := &TreeNode{
 			Kind:        TreeNodeGoal,
 			ID:          g.GetID(),
@@ -4672,6 +4505,14 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			SubKind:     g.Status,
 			Description: g.Description,
 			Status:      g.Status,
+			Data: map[string]interface{}{
+				"id":          g.ID,
+				"title":       g.Title,
+				"status":      g.Status,
+				"dueDate":     g.DueDate,
+				"createdAt":   goalCreatedAt,
+				"description": g.Description,
+			},
 		}
 		goalMap[g.ID] = gNode
 	}
@@ -4702,6 +4543,10 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	}
 	for ti := range tickets {
 		t := &tickets[ti]
+		ticketFinished := ""
+		if t.Finished != nil {
+			ticketFinished = t.Finished.Format(time.RFC3339)
+		}
 		tNode := &TreeNode{
 			Kind:        TreeNodeTicket,
 			ID:          t.GetID(),
@@ -4712,6 +4557,18 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Month:       t.Month,
 			Day:         t.Day,
 			Status:      string(t.Status),
+			Data: map[string]interface{}{
+				"year":     float64(t.Year),
+				"month":    float64(t.Month),
+				"day":      float64(t.Day),
+				"slug":     t.Slug,
+				"title":    t.Title,
+				"status":   string(t.Status),
+				"started":  t.Started.Format(time.RFC3339),
+				"finished": ticketFinished,
+				"prompt":   t.Prompt,
+				"summary":  t.Summary,
+			},
 		}
 		if t.Goal != "" {
 			if gNode, ok := goalMap[t.Goal]; ok {
@@ -4731,6 +4588,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 				ID:    "draft:" + d.ID,
 				Label: d.ID,
 				URI:   "semiorepo://draft/" + strings.ToUpper(Slugify(d.ID)),
+				Data:  map[string]interface{}{"id": d.ID, "slug": d.ID},
 			}
 			draftsNode.Children = append(draftsNode.Children, dNode)
 		}
@@ -4746,6 +4604,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Label:       p.Name,
 			URI:         "semiorepo://policy/" + strings.ToUpper(Slugify(p.ID)),
 			Description: p.Description,
+			Data:        map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description},
 		}
 		for _, k := range p.Kinds {
 			meta := k.Info()
@@ -4756,6 +4615,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 				URI:         "semiorepo://violationKind/" + strings.ToUpper(Slugify(string(k))),
 				SubKind:     string(meta.Priority),
 				Description: meta.Reason,
+				Data:        map[string]interface{}{"id": string(k), "description": meta.Reason},
 			}
 			pNode.Children = append(pNode.Children, vkNode)
 		}
@@ -4776,6 +4636,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Label:       label,
 			URI:         c.GetURI(),
 			Contributor: c.Github,
+			Data:        map[string]interface{}{"github": c.Github, "name": c.Name},
 		}
 		contributorsNode.Children = append(contributorsNode.Children, cNode)
 	}
@@ -4792,6 +4653,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Year:  c.Date.Year(),
 			Month: int(c.Date.Month()),
 			Day:   c.Date.Day(),
+			Data:  map[string]interface{}{"sha": c.SHA, "message": c.Title},
 		}
 		commitsNode.Children = append(commitsNode.Children, cNode)
 	}
@@ -4806,6 +4668,7 @@ func buildSectionTreeNode(s *Section) *TreeNode {
 		ID:    s.GetID(),
 		Label: s.Name,
 		URI:   s.GetURI(),
+		Data:  map[string]interface{}{"path": s.Path, "name": s.Name, "startLine": float64(s.StartLine), "endLine": float64(s.EndLine)},
 	}
 	for di := range s.Definitions {
 		d := &s.Definitions[di]
@@ -4815,6 +4678,7 @@ func buildSectionTreeNode(s *Section) *TreeNode {
 			Label:   d.Name,
 			URI:     d.GetURI(),
 			SubKind: string(d.Kind),
+			Data:    map[string]interface{}{"name": d.Name, "kind": string(d.Kind), "startLine": float64(d.StartLine), "endLine": float64(d.EndLine)},
 		}
 		sNode.Children = append(sNode.Children, dNode)
 	}
@@ -5027,6 +4891,40 @@ func RenderMonorepoTreeMarkdown(root *TreeNode) string {
 	return sb.String()
 }
 
+func treeNodeKindToEntityKind(k TreeNodeKind) string {
+	switch k {
+	case TreeNodeProject:
+		return "project"
+	case TreeNodeBundle:
+		return "bundle"
+	case TreeNodeFolder:
+		return "folder"
+	case TreeNodeFile:
+		return "file"
+	case TreeNodeSection:
+		return "section"
+	case TreeNodeDefinition:
+		return "definition"
+	case TreeNodeGoal:
+		return "goal"
+	case TreeNodeTicket:
+		return "ticket"
+	case TreeNodeDraft:
+		return "draft"
+	case TreeNodePolicy:
+		return "policy"
+	case TreeNodeViolationKindNode:
+		return "violationKind"
+	case TreeNodeContributor:
+		return "contributor"
+	case TreeNodeCommit:
+		return "commit"
+	case TreeNodeCategory:
+		return "category"
+	}
+	return ""
+}
+
 func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLast bool, isRoot bool) {
 	connector := "├── "
 	if isLast {
@@ -5037,8 +4935,15 @@ func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLa
 	}
 
 	label := node.Label
-	if node.URI != "" && node.Kind == TreeNodeCategory {
-		label = "[" + node.Label + "](" + node.URI + ")"
+	if node.Kind == TreeNodeCategory {
+		if node.URI != "" {
+			label = "[" + node.Label + "](" + node.URI + ")"
+		}
+	} else if node.Data != nil {
+		entityKind := treeNodeKindToEntityKind(node.Kind)
+		if entityKind != "" {
+			label = renderEntityHuman(entityKind, node.Data, false)
+		}
 	}
 
 	sb.WriteString(prefix + connector + label + "\n")
@@ -5058,11 +4963,26 @@ func renderTreeNodeText(sb *strings.Builder, node *TreeNode, prefix string, isLa
 }
 
 func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) {
-	label := node.Label
-	if node.URI != "" {
-		label = "[" + node.Label + "](" + node.URI + ")"
+	if node.Kind == TreeNodeCategory {
+		label := node.Label
+		if node.URI != "" {
+			label = "[" + node.Label + "](" + node.URI + ")"
+		}
+		sb.WriteString(indent + "- " + label + "\n")
+	} else if node.Data != nil {
+		entityKind := treeNodeKindToEntityKind(node.Kind)
+		if entityKind != "" {
+			sb.WriteString(indent + renderEntityMarkdown(entityKind, node.Data) + "\n")
+		} else {
+			sb.WriteString(indent + "- " + node.Label + "\n")
+		}
+	} else {
+		label := node.Label
+		if node.URI != "" {
+			label = "[" + node.Label + "](" + node.URI + ")"
+		}
+		sb.WriteString(indent + "- " + label + "\n")
 	}
-	sb.WriteString(indent + "- " + label + "\n")
 	for _, c := range node.Children {
 		renderTreeNodeMarkdown(sb, c, indent+"  ")
 	}
@@ -5657,6 +5577,18 @@ func renderEventsToMarkdown(events []Event) string {
 		}
 	}
 	return sb.String()
+}
+
+func toolErrorResult(err error) ToolResult {
+	output := NewOutput()
+	output.Error(fmt.Sprintf("Error: %v", err))
+	return ToolResult{Output: *output, Error: err.Error()}
+}
+
+func toolErrorMsg(msg string) ToolResult {
+	output := NewOutput()
+	output.Error(fmt.Sprintf("Error: %s", msg))
+	return ToolResult{Output: *output, Error: msg}
 }
 
 func toolResultFromEvents(events []Event, data interface{}) ToolResult {
@@ -9281,6 +9213,7 @@ const (
 	ViolationSketchpadStateYjsAppState      ViolationKind = "sketchpad:state:yjs-app-state"
 	ViolationSketchpadStateForbiddenStore   ViolationKind = "sketchpad:state:forbidden-store"
 	ViolationSketchpadHooksNonTriadic       ViolationKind = "sketchpad:hooks:non-triadic"
+	ViolationCodeUnicodeEmojiVariation      ViolationKind = "code:unicode:emoji-variation"
 	ViolationRepoMissingCommand             ViolationKind = "repo:missing-command"
 	ViolationRepoMissingTicketTracking      ViolationKind = "repo:missing-ticket-tracking"
 )
@@ -9389,6 +9322,13 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Priority:    ViolationPriorityLow,
 		Reason:      "JSDoc comments are forbidden",
 		Solution:    "Remove JSDoc comment",
+		Autofixable: true,
+	},
+	ViolationCodeUnicodeEmojiVariation: {
+		Kind:        ViolationCodeUnicodeEmojiVariation,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Emoji variation selectors (VS15/VS16) are forbidden",
+		Solution:    "Strip variation selectors from emoji",
 		Autofixable: true,
 	},
 	ViolationDevDocsMissingFile: {
@@ -11090,6 +11030,7 @@ var policies = []PolicyDef{
 			ViolationCodeCommentInline,
 			ViolationCodeCommentBlock,
 			ViolationCodeCommentJSDoc,
+			ViolationCodeUnicodeEmojiVariation,
 		},
 		Run: codePolicy,
 	},
@@ -11832,6 +11773,32 @@ func codePolicy(ctx *PolicyContext) []Violation {
 	violations = append(violations, headerPolicy(ctx)...)
 	violations = append(violations, sectionPolicy(ctx)...)
 	violations = append(violations, commentPolicy(ctx)...)
+	violations = append(violations, emojiPolicy(ctx)...)
+	return violations
+}
+
+func emojiPolicy(ctx *PolicyContext) []Violation {
+	var violations []Violation
+	files, err := ctx.Files()
+	if err != nil {
+		return violations
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file) // Assumes ReadText is cached which it probably is
+		if strings.Contains(content, "\uFE0E") || strings.Contains(content, "\uFE0F") {
+			lines := strings.Split(content, "\n")
+			for i, line := range lines {
+				if strings.Contains(line, "\uFE0E") || strings.Contains(line, "\uFE0F") {
+					violations = append(violations, Violation{
+						Kind:    ViolationCodeUnicodeEmojiVariation,
+						Scope:   file,
+						Line:    i + 1,
+						Summary: "Emoji variation selectors (VS15/VS16) are forbidden",
+					})
+				}
+			}
+		}
+	}
 	return violations
 }
 
@@ -13090,16 +13057,13 @@ func ToolCodebase() ToolResult {
 
 	ctx.LoadBundles()
 	if err := ctx.LoadFiles(); err != nil {
-		output.Error(fmt.Sprintf("Error loading files: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	if err := ctx.LoadViolations(); err != nil {
-		output.Error(fmt.Sprintf("Error loading violations: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	if err := ctx.LoadTickets(); err != nil {
-		output.Error(fmt.Sprintf("Error loading tickets: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	ctx.LoadPolicies()
 
@@ -13225,9 +13189,6 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noGithub 
 func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if ticket == nil {
 		return fmt.Errorf("ticket is nil")
-	}
-	if false {
-		return fmt.Errorf("ticket data is nil")
 	}
 	title = strings.TrimSpace(title)
 	if title == "" {
@@ -13930,9 +13891,6 @@ func ghListOpenIssuesWithLabel(label string) ([]string, error) {
 }
 
 func SaveTicket(ticket *Ticket) error {
-	if false {
-		return fmt.Errorf("ticket data is nil")
-	}
 	jsonBytes, err := json.MarshalIndent(ticket, "", "  ")
 	if err != nil {
 		return err
@@ -14275,7 +14233,7 @@ func isProjectDir(name string) bool {
 	if strings.HasPrefix(name, ".") {
 		return false
 	}
-	if name == "node_modules" {
+	if name == "node_modules" || name == "target" || name == "temp" {
 		return false
 	}
 	return true
@@ -14515,7 +14473,7 @@ func loadPackages(bundleRoot string) []Package {
 		switch filename {
 		case "package.json":
 			kind = "npm"
-			if content, err := ioutil.ReadFile(path); err == nil {
+			if content, err := os.ReadFile(path); err == nil {
 				var meta struct {
 					Name    string `json:"name"`
 					Version string `json:"version"`
@@ -14526,7 +14484,7 @@ func loadPackages(bundleRoot string) []Package {
 			}
 		case "go.mod":
 			kind = "go"
-			if content, err := ioutil.ReadFile(path); err == nil {
+			if content, err := os.ReadFile(path); err == nil {
 				lines := strings.Split(string(content), "\n")
 				if len(lines) > 0 && strings.HasPrefix(lines[0], "module ") {
 					name = strings.TrimSpace(strings.TrimPrefix(lines[0], "module "))
@@ -14534,7 +14492,7 @@ func loadPackages(bundleRoot string) []Package {
 			}
 		case "Cargo.toml":
 			kind = "cargo"
-			if content, err := ioutil.ReadFile(path); err == nil {
+			if content, err := os.ReadFile(path); err == nil {
 				lines := strings.Split(string(content), "\n")
 				for _, line := range lines {
 					if strings.HasPrefix(line, "name =") {
@@ -14545,7 +14503,7 @@ func loadPackages(bundleRoot string) []Package {
 			}
 		case "pyproject.toml":
 			kind = "pip"
-			if content, err := ioutil.ReadFile(path); err == nil {
+			if content, err := os.ReadFile(path); err == nil {
 				lines := strings.Split(string(content), "\n")
 				for _, line := range lines {
 					if strings.HasPrefix(line, "name =") {
@@ -15658,9 +15616,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) ToolResult {
 	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noGithub, issue)
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	if ticket == nil {
 		output := NewOutput()
@@ -15683,9 +15639,7 @@ func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal
 func ToolTicketList(year, month, day *int) ToolResult {
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	var events []Event
 	for _, t := range tickets {
@@ -15712,9 +15666,7 @@ func ToolTicketList(year, month, day *int) ToolResult {
 func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", ticket.Year, ticket.Month, ticket.Day)
 	dates := map[string]interface{}{"created": created}
@@ -15743,15 +15695,11 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noGithub bool) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	if title != "" {
 		if err := UpdateTicketTitle(ticket, title); err != nil {
-			output := NewOutput()
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
 			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, title); err != nil {
@@ -15760,9 +15708,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 		}
 	}
 	if err := FinishTicket(ticket, summary, files, noGithub, false); err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	dates := map[string]interface{}{
 		"started": fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", ticket.Year, ticket.Month, ticket.Day),
@@ -15786,15 +15732,11 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	if title != "" {
 		if err := UpdateTicketTitle(ticket, title); err != nil {
-			output := NewOutput()
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		if ticket.GitHub != nil && ticket.GitHub.Issue != "" && !noGithub {
 			if err := ghUpdateIssueTitle(ticket.GitHub.Issue, title); err != nil {
@@ -15803,8 +15745,7 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 		}
 	}
 	if err := ReopenTicket(ticket, prompt, llm, client, draft, goal, parent, noGithub); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🔓 Ticket reopened: %s", ticket.Slug))
 	return ToolResult{Output: *output, Data: ticket}
@@ -15814,8 +15755,7 @@ func ToolDraftCreate(slug string, files []string) ToolResult {
 	output := NewOutput()
 	draft, err := CreateDraft(slug, files)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n📝Created draft: %s", draft.ID))
 	return ToolResult{Output: *output, Data: draft}
@@ -15824,9 +15764,7 @@ func ToolDraftCreate(slug string, files []string) ToolResult {
 func ToolDraftList() ToolResult {
 	drafts, err := ListDrafts()
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	var events []Event
 	for _, d := range drafts {
@@ -15838,9 +15776,7 @@ func ToolDraftList() ToolResult {
 
 func ToolDraftDelete(slug string) ToolResult {
 	if err := DeleteDraft(slug); err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	return toolResultFromEvents(nil, nil)
 }
@@ -15859,9 +15795,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noG
 		Milestone:   milestone,
 	})
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	data, _ := json.Marshal(map[string]interface{}{
 		"goalCreate": map[string]interface{}{
@@ -15881,9 +15815,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noG
 func ToolGoalList() ToolResult {
 	goals, err := ListGoals()
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	var events []Event
 	for _, g := range goals {
@@ -15901,9 +15833,7 @@ func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
 		NoGithub: noGithub,
 	})
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	data, _ := json.Marshal(map[string]interface{}{
 		"goalClose": map[string]interface{}{
@@ -15938,9 +15868,7 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 		NoGithub:    noGithub,
 	})
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	data, _ := json.Marshal(map[string]interface{}{
 		"goalReopen": map[string]interface{}{
@@ -15955,9 +15883,7 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 func ToolContributorAdd(github string) ToolResult {
 	contributor, err := CreateContributor(github)
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	data, _ := json.Marshal(map[string]interface{}{
 		"contributorAdd": map[string]interface{}{
@@ -15974,9 +15900,7 @@ func ToolContributorAdd(github string) ToolResult {
 func ToolContributorList() ToolResult {
 	contributors, err := ListContributors()
 	if err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	var events []Event
 	for _, c := range contributors {
@@ -15988,9 +15912,7 @@ func ToolContributorList() ToolResult {
 
 func ToolContributorRemove(github string) ToolResult {
 	if err := RemoveContributor(github); err != nil {
-		output := NewOutput()
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	data, _ := json.Marshal(map[string]interface{}{
 		"contributorRemove": github,
@@ -16000,11 +15922,23 @@ func ToolContributorRemove(github string) ToolResult {
 }
 
 func ToolProjectList() ToolResult {
-	bundles := GetProjects()
+	projects := LoadProjects()
+	sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
 	var events []Event
-	for _, p := range bundles {
+	for _, p := range projects {
 		data, _ := json.Marshal(map[string]interface{}{"project": p})
 		events = append(events, Event{Kind: KindResult, Command: "project list", Data: data})
+	}
+	return toolResultFromEvents(events, projects)
+}
+
+func ToolBundleList() ToolResult {
+	bundles := LoadBundles()
+	sort.Slice(bundles, func(i, j int) bool { return bundles[i].Name < bundles[j].Name })
+	var events []Event
+	for _, b := range bundles {
+		data, _ := json.Marshal(map[string]interface{}{"bundle": b})
+		events = append(events, Event{Kind: KindResult, Command: "bundle list", Data: data})
 	}
 	return toolResultFromEvents(events, bundles)
 }
@@ -16029,16 +15963,13 @@ func ToolProjectTree() ToolResult {
 	return toolResultFromEvents(events, projects)
 }
 func ToolFolderCreate(path string) ToolResult {
-
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: Folder already exists: %s", path))
-		return ToolResult{Output: *output, Error: "folder already exists"}
+		return toolErrorMsg(fmt.Sprintf("Folder already exists: %s", path))
 	}
 	if err := EnsureDir(absPath); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n📁Created folder: %s", path))
 	return ToolResult{Output: *output}
@@ -16049,20 +15980,16 @@ func ToolFolderMove(source, target string) ToolResult {
 	absSource := filepath.Join(rootDir, source)
 	absTarget := filepath.Join(rootDir, target)
 	if !FileExists(absSource) {
-		output.Error(fmt.Sprintf("Error: Source folder not found: %s", source))
-		return ToolResult{Output: *output, Error: "source not found"}
+		return toolErrorMsg(fmt.Sprintf("Source folder not found: %s", source))
 	}
 	if FileExists(absTarget) {
-		output.Error(fmt.Sprintf("Error: Target folder already exists: %s", target))
-		return ToolResult{Output: *output, Error: "target exists"}
+		return toolErrorMsg(fmt.Sprintf("Target folder already exists: %s", target))
 	}
 	if err := EnsureDir(filepath.Dir(absTarget)); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	if err := os.Rename(absSource, absTarget); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	UpdateAgentsDocsPath(source, target)
 	output.Success(fmt.Sprintf("\n📁Moved folder: %s → %s", source, target))
@@ -16073,12 +16000,10 @@ func ToolFolderDelete(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: Folder not found: %s", path))
-		return ToolResult{Output: *output, Error: "folder not found"}
+		return toolErrorMsg(fmt.Sprintf("Folder not found: %s", path))
 	}
 	if err := os.RemoveAll(absPath); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🗑️ Deleted folder: %s", path))
 	return ToolResult{Output: *output}
@@ -16088,13 +16013,11 @@ func ToolFolderList(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: Folder not found: %s", path))
-		return ToolResult{Output: *output, Error: "folder not found"}
+		return toolErrorMsg(fmt.Sprintf("Folder not found: %s", path))
 	}
 	folders, err := ListDirEntries(absPath, true)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	var relPaths []string
 	for _, f := range folders {
@@ -16119,8 +16042,7 @@ func ToolFolderTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: Folder not found: %s", path))
-		return ToolResult{Output: *output, Error: "folder not found"}
+		return toolErrorMsg(fmt.Sprintf("Folder not found: %s", path))
 	}
 	output.Info(fmt.Sprintf("\n📁Folder tree: %s\n", path))
 	printTree(output, absPath, "")
@@ -16175,14 +16097,12 @@ func ToolFileCreate(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File already exists: %s", path))
-		return ToolResult{Output: *output, Error: "file already exists"}
+		return toolErrorMsg(fmt.Sprintf("File already exists: %s", path))
 	}
 	language := GetLanguage(path)
 	content := generateFileHeader(path, language)
 	if err := WriteTextFile(absPath, content); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n📄Created file: %s", path))
 	return ToolResult{Output: *output}
@@ -16242,20 +16162,16 @@ func ToolFileMove(source, target string) ToolResult {
 	absSource := filepath.Join(rootDir, source)
 	absTarget := filepath.Join(rootDir, target)
 	if !FileExists(absSource) {
-		output.Error(fmt.Sprintf("Error: Source file not found: %s", source))
-		return ToolResult{Output: *output, Error: "source not found"}
+		return toolErrorMsg(fmt.Sprintf("Source file not found: %s", source))
 	}
 	if FileExists(absTarget) {
-		output.Error(fmt.Sprintf("Error: Target file already exists: %s", target))
-		return ToolResult{Output: *output, Error: "target exists"}
+		return toolErrorMsg(fmt.Sprintf("Target file already exists: %s", target))
 	}
 	if err := EnsureDir(filepath.Dir(absTarget)); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	if err := os.Rename(absSource, absTarget); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	UpdateAgentsDocsPath(source, target)
 	output.Success(fmt.Sprintf("\n📄Moved file: %s → %s", source, target))
@@ -16266,12 +16182,10 @@ func ToolFileDelete(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File not found: %s", path))
-		return ToolResult{Output: *output, Error: "file not found"}
+		return toolErrorMsg(fmt.Sprintf("File not found: %s", path))
 	}
 	if err := os.Remove(absPath); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🗑️ Deleted file: %s", path))
 	return ToolResult{Output: *output}
@@ -16283,8 +16197,7 @@ func ToolFileList(scopeRaw string) ToolResult {
 	bundles := GetProjects()
 	files, err := ScopeToFiles(scope, bundles)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Info(fmt.Sprintf("\n📄Found %d files in scope \"%s\":\n", len(files), scopeRaw))
 	for i, f := range files {
@@ -16301,8 +16214,7 @@ func ToolFileTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: Path not found: %s", path))
-		return ToolResult{Output: *output, Error: "path not found"}
+		return toolErrorMsg(fmt.Sprintf("Path not found: %s", path))
 	}
 	output.Info(fmt.Sprintf("\n📄File tree: %s\n", path))
 	printTree(output, absPath, "")
@@ -16313,13 +16225,11 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
-		return ToolResult{Output: *output, Error: "file not found"}
+		return toolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}
 	content, err := ReadTextFile(absPath)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	parts := strings.Split(sectionPath, "#")
 	sectionName := parts[len(parts)-1]
@@ -16327,51 +16237,42 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	if language != nil && language.Name() == "json" {
 		pathParts := NormalizeSectionPath(sectionPath)
 		if len(pathParts) == 0 {
-			output.Error("Error: Section path required")
-			return ToolResult{Output: *output, Error: "section path required"}
+			return toolErrorMsg("Section path required")
 		}
 		sectionName = pathParts[len(pathParts)-1]
 		parentPath := strings.Join(pathParts[:len(pathParts)-1], "/")
 		_, locations, err := ParseJSONSectionsDetailed(content)
 		if err != nil {
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		targetPath := strings.Join(pathParts, "/")
 		if _, exists := locations[targetPath]; exists {
-			output.Error(fmt.Sprintf("Error: Section already exists: %s", targetPath))
-			return ToolResult{Output: *output, Error: "section exists"}
+			return toolErrorMsg(fmt.Sprintf("Section already exists: %s", targetPath))
 		}
 		objectStart, objectEnd, ok := jsonFindObjectRange(content, locations, parentPath)
 		if !ok {
-			output.Error("Error: Parent section is not a JSON object")
-			return ToolResult{Output: *output, Error: "parent not object"}
+			return toolErrorMsg("Parent section is not a JSON object")
 		}
 		entry := fmt.Sprintf("%s: {}", strconv.Quote(sectionName))
 		updated, inserted := jsonInsertEntry(content, objectStart, objectEnd, entry)
 		if !inserted {
-			output.Error("Error: Failed to insert section")
-			return ToolResult{Output: *output, Error: "insert failed"}
+			return toolErrorMsg("Failed to insert section")
 		}
 		if err := WriteTextFile(absPath, updated); err != nil {
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		output.Success(fmt.Sprintf("\n🏷️Created section \"%s\" in %s", sectionName, filePath))
 		return ToolResult{Output: *output}
 	}
 	if language == nil || !language.SupportsSections() {
-		output.Error("Error: Unsupported file type")
-		return ToolResult{Output: *output, Error: "unsupported file type"}
+		return toolErrorMsg("Unsupported file type")
 	}
 	newSection := language.FormatSectionBoth(sectionName)
 	if newSection == "" {
-		output.Error("Error: Cannot create section for this file type")
-		return ToolResult{Output: *output, Error: "unsupported file type"}
+		return toolErrorMsg("Cannot create section for this file type")
 	}
 	if err := WriteTextFile(absPath, content+newSection); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🏷️Created section \"%s\" in %s", sectionName, filePath))
 	return ToolResult{Output: *output}
@@ -16381,13 +16282,11 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
-		return ToolResult{Output: *output, Error: "file not found"}
+		return toolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}
 	content, err := ReadTextFile(absPath)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	oldParts := strings.Split(oldPath, "#")
 	oldName := oldParts[len(oldParts)-1]
@@ -16398,45 +16297,38 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 		oldParts = NormalizeSectionPath(oldPath)
 		newParts = NormalizeSectionPath(newPath)
 		if len(oldParts) == 0 || len(newParts) == 0 {
-			output.Error("Error: Section path required")
-			return ToolResult{Output: *output, Error: "section path required"}
+			return toolErrorMsg("Section path required")
 		}
 		oldPathNormalized := strings.Join(oldParts, "/")
 		newPathNormalized := strings.Join(newParts, "/")
 		_, locations, err := ParseJSONSectionsDetailed(content)
 		if err != nil {
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		source, ok := locations[oldPathNormalized]
 		if !ok {
-			output.Error(fmt.Sprintf("Error: Section not found: %s", oldPathNormalized))
-			return ToolResult{Output: *output, Error: "section not found"}
+			return toolErrorMsg(fmt.Sprintf("Section not found: %s", oldPathNormalized))
 		}
 		entry, start, end := jsonExtractEntry(content, source.KeyStart, source.ValueEnd)
 		updated := content[:start] + content[end:]
 		_, updatedLocations, err := ParseJSONSectionsDetailed(updated)
 		if err != nil {
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		newName = newParts[len(newParts)-1]
 		entry = jsonRenameEntryKey(entry, newName)
 		parentPath := strings.Join(newParts[:len(newParts)-1], "/")
 		objectStart, objectEnd, ok := jsonFindObjectRange(updated, updatedLocations, parentPath)
 		if !ok {
-			output.Error("Error: Target section is not a JSON object")
-			return ToolResult{Output: *output, Error: "target not object"}
+			return toolErrorMsg("Target section is not a JSON object")
 		}
 		entry = jsonReindentEntry(entry, "")
 		finalContent, inserted := jsonInsertEntry(updated, objectStart, objectEnd, entry)
 		if !inserted {
-			output.Error("Error: Failed to move section")
-			return ToolResult{Output: *output, Error: "move failed"}
+			return toolErrorMsg("Failed to move section")
 		}
 		if err := WriteTextFile(absPath, finalContent); err != nil {
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		output.Success(fmt.Sprintf("\n🏷️Renamed section \"%s\" to \"%s\" in %s", oldPathNormalized, newPathNormalized, filePath))
 		return ToolResult{Output: *output}
@@ -16457,8 +16349,7 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 		}
 	}
 	if err := WriteTextFile(absPath, content); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🏷️Renamed section \"%s\" to \"%s\" in %s", oldName, newName, filePath))
 	return ToolResult{Output: *output}
@@ -16470,32 +16361,27 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 	// 1. Read source content
 	absSourcePath := filepath.Join(rootDir, sourcePath)
 	if !FileExists(absSourcePath) {
-		output.Error(fmt.Sprintf("Error: Source file not found: %s", sourcePath))
-		return ToolResult{Output: *output, Error: "source file not found"}
+		return toolErrorMsg(fmt.Sprintf("Source file not found: %s", sourcePath))
 	}
 	sourceContent, err := ReadTextFile(absSourcePath)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error reading source file: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 
 	// 2. Read target file
 	absTargetFilePath := filepath.Join(rootDir, targetFilePath)
 	if !FileExists(absTargetFilePath) {
-		output.Error(fmt.Sprintf("Error: Target file not found: %s", targetFilePath))
-		return ToolResult{Output: *output, Error: "target file not found"}
+		return toolErrorMsg(fmt.Sprintf("Target file not found: %s", targetFilePath))
 	}
 	targetContent, err := ReadTextFile(absTargetFilePath)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error reading target file: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 
 	// 3. Get target language
 	targetLanguage := GetLanguage(targetFilePath)
 	if targetLanguage == nil || !targetLanguage.SupportsSections() {
-		output.Error("Error: Target file type does not support sections")
-		return ToolResult{Output: *output, Error: "unsupported target file type"}
+		return toolErrorMsg("Target file type does not support sections")
 	}
 
 	output.Info("Splitting headers...")
@@ -16537,14 +16423,12 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 		sections := targetLanguage.ParseSections(targetCode)
 		parentSection := FindSection(sections, targetParentSectionName)
 		if parentSection == nil {
-			output.Error(fmt.Sprintf("Error: Parent section not found: %s", targetParentSectionName))
-			return ToolResult{Output: *output, Error: "parent section not found"}
+			return toolErrorMsg(fmt.Sprintf("Parent section not found: %s", targetParentSectionName))
 		}
 
 		// Insert at the end of parent section (before parent's end marker)
 		if parentSection.EndLine == -1 {
-			output.Error(fmt.Sprintf("Error: Parent section %s is not properly closed", targetParentSectionName))
-			return ToolResult{Output: *output, Error: "parent section not closed"}
+			return toolErrorMsg(fmt.Sprintf("Parent section %s is not properly closed", targetParentSectionName))
 		}
 
 		// Insert before the end marker line of the parent section
@@ -16585,8 +16469,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 
 	// 12. Write target file
 	if err := WriteTextFile(absTargetFilePath, finalContent); err != nil {
-		output.Error(fmt.Sprintf("Error writing target file: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 
 	output.Success(fmt.Sprintf("\n🧩Integrated %s into %s section of %s", sourcePath, targetSectionName, targetFilePath))
@@ -16599,35 +16482,30 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 	// 1. Read source content
 	absSourcePath := filepath.Join(rootDir, sourceFilePath)
 	if !FileExists(absSourcePath) {
-		output.Error(fmt.Sprintf("Error: Source file not found: %s", sourceFilePath))
-		return ToolResult{Output: *output, Error: "source file not found"}
+		return toolErrorMsg(fmt.Sprintf("Source file not found: %s", sourceFilePath))
 	}
 	sourceContent, err := ReadTextFile(absSourcePath)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error reading source file: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 
 	// 2. Language
 	sourceLanguage := GetLanguage(sourceFilePath)
 	if sourceLanguage == nil || !sourceLanguage.SupportsSections() {
-		output.Error("Error: Source file type does not support sections")
-		return ToolResult{Output: *output, Error: "unsupported source file type"}
+		return toolErrorMsg("Source file type does not support sections")
 	}
 
 	// 3. Parse and Find Section
 	sections := sourceLanguage.ParseSections(sourceContent)
 	section := FindSection(sections, sourceSectionName)
 	if section == nil {
-		output.Error(fmt.Sprintf("Error: Section not found: %s", sourceSectionName))
-		return ToolResult{Output: *output, Error: "section not found"}
+		return toolErrorMsg(fmt.Sprintf("Section not found: %s", sourceSectionName))
 	}
 
 	// 4. Extract Content
 	lines := strings.Split(sourceContent, "\n")
 	if section.StartLine > len(lines) || section.EndLine > len(lines) {
-		output.Error("Error: Section range invalid")
-		return ToolResult{Output: *output, Error: "invalid section range"}
+		return toolErrorMsg("Section range invalid")
 	}
 
 	// Extract lines inside markers (StartLine+1 to EndLine-1 in 1-based logic)
@@ -16670,12 +16548,10 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 	// 6. Write Target File
 	absTargetFilePath := filepath.Join(rootDir, targetFilePath)
 	if err := os.MkdirAll(filepath.Dir(absTargetFilePath), 0755); err != nil {
-		output.Error(fmt.Sprintf("Error creating target directory: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	if err := WriteTextFile(absTargetFilePath, targetContent); err != nil {
-		output.Error(fmt.Sprintf("Error writing target file: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 
 	// 7. Remove Section from Source
@@ -16697,9 +16573,8 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 	newSourceContent := strings.Join(newSourceLines, "\n")
 
 	if err := WriteTextFile(absSourcePath, newSourceContent); err != nil {
-		output.Error(fmt.Sprintf("Error updating source file: %v", err))
 		// Note: Target file was already written. Partial state?
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 
 	output.Success(fmt.Sprintf("\n🧩Extracted %s from %s to %s", sourceSectionName, sourceFilePath, targetFilePath))
@@ -16869,13 +16744,11 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
-		return ToolResult{Output: *output, Error: "file not found"}
+		return toolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}
 	content, err := ReadTextFile(absPath)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	sections := ParseSections(content, filePath)
 	parts := strings.Split(sectionPath, "#")
@@ -16885,31 +16758,26 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	if language != nil && language.Name() == "json" {
 		pathParts := NormalizeSectionPath(sectionPath)
 		if len(pathParts) == 0 {
-			output.Error("Error: Section path required")
-			return ToolResult{Output: *output, Error: "section path required"}
+			return toolErrorMsg("Section path required")
 		}
 		_, locations, err := ParseJSONSectionsDetailed(content)
 		if err != nil {
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		location, ok := locations[strings.Join(pathParts, "/")]
 		if !ok {
-			output.Error(fmt.Sprintf("Error: Section not found: %s", strings.Join(pathParts, "/")))
-			return ToolResult{Output: *output, Error: "section not found"}
+			return toolErrorMsg(fmt.Sprintf("Section not found: %s", strings.Join(pathParts, "/")))
 		}
 		_, start, end := jsonExtractEntry(content, location.KeyStart, location.ValueEnd)
 		updated := content[:start] + content[end:]
 		if err := WriteTextFile(absPath, updated); err != nil {
-			output.Error(fmt.Sprintf("Error: %v", err))
-			return ToolResult{Output: *output, Error: err.Error()}
+			return toolErrorResult(err)
 		}
 		output.Success(fmt.Sprintf("\n🗑️ Deleted section \"%s\" from %s", strings.Join(pathParts, "/"), filePath))
 		return ToolResult{Output: *output}
 	}
 	if section == nil {
-		output.Error(fmt.Sprintf("Error: Section not found: %s", sectionName))
-		return ToolResult{Output: *output, Error: "section not found"}
+		return toolErrorMsg(fmt.Sprintf("Section not found: %s", sectionName))
 	}
 	lines := strings.Split(content, "\n")
 	var newLines []string
@@ -16920,8 +16788,7 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 		}
 	}
 	if err := WriteTextFile(absPath, strings.Join(newLines, "\n")); err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("\n🗑️ Deleted section \"%s\" from %s", sectionName, filePath))
 	return ToolResult{Output: *output}
@@ -16931,18 +16798,15 @@ func ToolSectionList(filePath string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(filePath)
 	if scope.Kind != ScopeFile && scope.Kind != ScopeSection {
-		output.Error("Error: Scope must be a file or section")
-		return ToolResult{Output: *output, Error: "invalid scope"}
+		return toolErrorMsg("Scope must be a file or section")
 	}
 	absPath := filepath.Join(rootDir, scope.FilePath)
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File not found: %s", scope.FilePath))
-		return ToolResult{Output: *output, Error: "file not found"}
+		return toolErrorMsg(fmt.Sprintf("File not found: %s", scope.FilePath))
 	}
 	content, err := ReadTextFile(absPath)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	sections := ParseSections(content, scope.FilePath)
 	output.Info(fmt.Sprintf("\n🏷️Sections in %s:\n", scope.FilePath))
@@ -16966,13 +16830,11 @@ func ToolSectionTree(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.Split(filePath, "#")[0])
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
-		return ToolResult{Output: *output, Error: "file not found"}
+		return toolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}
 	content, err := ReadTextFile(absPath)
 	if err != nil {
-		output.Error(fmt.Sprintf("Error: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	sections := ParseSections(content, filePath)
 	output.Info(fmt.Sprintf("\n🏷️Sections in %s:\n", filePath))
@@ -16996,8 +16858,7 @@ func ToolDefinitionList(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
 	if !FileExists(absPath) {
-		output.Error(fmt.Sprintf("Error: File not found: %s", filePath))
-		return ToolResult{Output: *output, Error: "file not found"}
+		return toolErrorMsg(fmt.Sprintf("File not found: %s", filePath))
 	}
 	output.Info(fmt.Sprintf("\n📋 Definitions in %s:\n", filePath))
 	output.Plain("   (definition parsing not implemented in Go - use TypeScript API)")
@@ -17013,8 +16874,7 @@ func ToolUpdateMetabolism() ToolResult {
 	output.Info("\n🔄 Running update-metabolism via npx tsx...")
 	stdout, stderr, exitCode := ExecCommand("npx", []string{"tsx", "scripts/update-metabolism.tsx"}, "")
 	if exitCode != 0 {
-		output.Error(fmt.Sprintf("Error: %s%s", stdout, stderr))
-		return ToolResult{Output: *output, Error: "update-metabolism failed"}
+		return toolErrorMsg(fmt.Sprintf("%s%s", stdout, stderr))
 	}
 	output.Success(stdout)
 	return ToolResult{Output: *output}
@@ -17450,8 +17310,7 @@ func ToolExport(outputPath string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	result, err := ExportToSQLite(outputPath, ctx)
 	if err != nil {
-		output.Error(fmt.Sprintf("Export failed: %v", err))
-		return ToolResult{Output: *output, Error: err.Error()}
+		return toolErrorResult(err)
 	}
 	output.Success(fmt.Sprintf("Exported to: %s", result.Path))
 	output.Plain(fmt.Sprintf("  Bundles: %d", result.Bundles))
@@ -18542,6 +18401,14 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					}
 					linesToRemove[i] = true
 				}
+				fixed++
+			}
+		case ViolationCodeUnicodeEmojiVariation:
+			if v.Line > 0 && v.Line <= len(lines) {
+				line := lines[v.Line-1]
+				line = strings.ReplaceAll(line, "\uFE0E", "")
+				line = strings.ReplaceAll(line, "\uFE0F", "")
+				lines[v.Line-1] = line
 				fixed++
 			}
 		}
@@ -24878,9 +24745,6 @@ func filterConsideredFiles(files []string) []string {
 }
 
 func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
-	if false {
-		return nil, fmt.Errorf("ticket data is nil")
-	}
 	if len(ticket.Interactions) == 0 {
 		return nil, fmt.Errorf("no interactions found for ticket")
 	}
@@ -26096,7 +25960,7 @@ func runUpdate(cmd *cobra.Command, args []string) error {
 
 func loadUpdateConfig(rootDir string) (*UpdateConfig, error) {
 	dependabotPath := filepath.Join(rootDir, ".github", "dependabot.yml")
-	data, err := ioutil.ReadFile(dependabotPath)
+	data, err := os.ReadFile(dependabotPath)
 	if err != nil {
 		return nil, fmt.Errorf("dependabot.yml not found: %w", err)
 	}
@@ -27168,7 +27032,7 @@ type SemanticId struct {
 func emojiText(emoji string) string {
 	stripped := strings.ReplaceAll(emoji, "\uFE0F", "")
 	stripped = strings.ReplaceAll(stripped, "\uFE0E", "")
-	return stripped + "\uFE0E"
+	return stripped
 }
 
 func (s SemanticId) String() string {
@@ -27468,6 +27332,15 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		return fmt.Sprintf("%s%s", emojiText("🔖"), val)
 	case "section":
 		path, _ := data["path"].(string)
+		if path == "" {
+			filePath, _ := data["filePath"].(string)
+			name, _ := data["name"].(string)
+			if filePath != "" && name != "" {
+				path = filePath + "#" + name
+			} else if name != "" {
+				path = name
+			}
+		}
 		return fmt.Sprintf("%s%s", emojiText("🔖"), path)
 	case "definitions":
 		filePath, _ := data["filePath"].(string)
@@ -27885,115 +27758,191 @@ func UriToId(uri string) string {
 
 // #endregion 🔖Artifact ID
 
-func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) string {
-	id := GetArtifactID(kind, data)
-	prop1 := ""
-	prop2 := ""
-	prop3 := ""
+// #region 🔖Entity Rendering
 
-	switch kind {
-	case "ticket":
-		title, _ := data["title"].(string)
-		status, _ := data["status"].(string)
-		createdStr := ""
-		if dates, ok := data["dates"].(map[string]interface{}); ok {
+func extractCreatedStr(data map[string]interface{}) string {
+	createdStr := ""
+	if dates, ok := data["dates"].(map[string]interface{}); ok {
+		createdStr, _ = dates["created"].(string)
+		if createdStr == "" {
+			createdStr, _ = dates["started"].(string)
+		}
+	}
+	if createdStr == "" {
+		if dates, ok := data["date"].(map[string]interface{}); ok {
 			createdStr, _ = dates["created"].(string)
 			if createdStr == "" {
 				createdStr, _ = dates["started"].(string)
 			}
 		}
-		if createdStr == "" {
-			if dates, ok := data["date"].(map[string]interface{}); ok {
-				createdStr, _ = dates["created"].(string)
-				if createdStr == "" {
-					createdStr, _ = dates["started"].(string)
-				}
+	}
+	if createdStr == "" {
+		createdStr, _ = data["createdAt"].(string)
+	}
+	if createdStr == "" {
+		if started, ok := data["started"].(string); ok {
+			createdStr = started
+		}
+	}
+	return createdStr
+}
+
+func extractFinishedStr(data map[string]interface{}) string {
+	finishedStr := ""
+	if dates, ok := data["dates"].(map[string]interface{}); ok {
+		finishedStr, _ = dates["finished"].(string)
+	}
+	if finishedStr == "" {
+		if dates, ok := data["date"].(map[string]interface{}); ok {
+			finishedStr, _ = dates["finished"].(string)
+		}
+	}
+	if finishedStr == "" {
+		finishedStr, _ = data["finishedAt"].(string)
+	}
+	if finishedStr == "" {
+		if finished, ok := data["finished"].(string); ok {
+			finishedStr = finished
+		}
+	}
+	return finishedStr
+}
+
+func collectEntityProps(kind string, data map[string]interface{}, truncateDesc bool) []string {
+	var props []string
+	appendNonEmpty := func(vals ...string) {
+		for _, v := range vals {
+			if v != "" {
+				props = append(props, v)
 			}
 		}
-		if createdStr == "" {
-			createdStr, _ = data["createdAt"].(string)
-		}
-		dateDisplay := createdStr
-		if createdStr != "" {
-			if tParsed, err := parseFlexibleTime(createdStr); err == nil {
-				dateDisplay = humanize.Time(tParsed)
-			}
-		}
-		prop1 = title
-		prop2 = status
-		prop3 = dateDisplay
+	}
+	switch kind {
 	case "goal":
 		title, _ := data["title"].(string)
 		status, _ := data["status"].(string)
+		createdStr := extractCreatedStr(data)
+		createdDisplay := ""
+		if createdStr != "" {
+			if tParsed, err := parseFlexibleTime(createdStr); err == nil {
+				createdDisplay = "created " + humanize.Time(tParsed)
+			} else {
+				createdDisplay = "created " + createdStr
+			}
+		}
 		dueDate, _ := data["dueDate"].(string)
 		if dueDate == "" {
 			if dates, ok := data["dates"].(map[string]interface{}); ok {
 				dueDate, _ = dates["due"].(string)
 			}
 		}
+		dueDisplay := ""
 		if dueDate != "" {
 			if tParsed, err := parseFlexibleTime(dueDate); err == nil {
-				dueDate = humanize.Time(tParsed)
+				dueDisplay = humanize.Time(tParsed)
+			} else {
+				dueDisplay = dueDate
 			}
 		}
-		prop1 = title
-		prop2 = status
-		prop3 = dueDate
+		description, _ := data["description"].(string)
+		if truncateDesc && len(description) > 80 {
+			description = description[:80] + "..."
+		}
+		appendNonEmpty(title, status, createdDisplay, dueDisplay, description)
+	case "ticket":
+		title, _ := data["title"].(string)
+		status, _ := data["status"].(string)
+		createdStr := extractCreatedStr(data)
+		finishedStr := extractFinishedStr(data)
+		dateDisplay := ""
+		if status == "open" || status == "OPEN" {
+			if createdStr != "" {
+				if tParsed, err := parseFlexibleTime(createdStr); err == nil {
+					dateDisplay = "opened " + humanize.Time(tParsed)
+				} else {
+					dateDisplay = "opened " + createdStr
+				}
+			}
+		} else {
+			if finishedStr != "" {
+				if tParsed, err := parseFlexibleTime(finishedStr); err == nil {
+					dateDisplay = "closed " + humanize.Time(tParsed)
+				} else {
+					dateDisplay = "closed " + finishedStr
+				}
+			} else if createdStr != "" {
+				if tParsed, err := parseFlexibleTime(createdStr); err == nil {
+					dateDisplay = humanize.Time(tParsed)
+				}
+			}
+		}
+		prompt, _ := data["prompt"].(string)
+		summary, _ := data["summary"].(string)
+		content := ""
+		if status == "open" || status == "OPEN" {
+			content = prompt
+		} else {
+			content = summary
+		}
+		if truncateDesc && len(content) > 80 {
+			content = content[:80] + "..."
+		}
+		appendNonEmpty(title, status, dateDisplay, content)
 	case "bundle":
 		root, _ := data["root"].(string)
 		ptype, _ := data["projectType"].(string)
 		if ptype == "" {
 			ptype, _ = data["type"].(string)
 		}
-		prop1 = root
-		prop2 = ptype
+		appendNonEmpty(root, ptype)
 	case "folder":
 	case "file":
-		// id is path
 	case "section":
 		start, _ := data["startLine"].(float64)
 		end, _ := data["endLine"].(float64)
-		prop1 = fmt.Sprintf(":%d-%d", int(start), int(end))
+		if start > 0 || end > 0 {
+			appendNonEmpty(fmt.Sprintf(":%d-%d", int(start), int(end)))
+		}
 	case "definition":
 		name, _ := data["name"].(string)
 		start, _ := data["startLine"].(float64)
 		end, _ := data["endLine"].(float64)
-		prop1 = name
-		prop2 = fmt.Sprintf(":%d-%d", int(start), int(end))
+		appendNonEmpty(name)
+		if start > 0 || end > 0 {
+			appendNonEmpty(fmt.Sprintf(":%d-%d", int(start), int(end)))
+		}
 	case "contributor":
 		name, _ := data["name"].(string)
 		email, _ := data["email"].(string)
-		prop1 = name
-		prop2 = email
+		appendNonEmpty(name, email)
 	case "todo":
 		name, _ := data["name"].(string)
-		prop1 = name
+		appendNonEmpty(name)
 	case "draft":
-		// no extra props
 	case "policy":
-		prop1, _ = data["description"].(string)
+		desc, _ := data["description"].(string)
+		appendNonEmpty(desc)
 	case "violationKind":
-		prop1, _ = data["description"].(string)
+		desc, _ := data["description"].(string)
+		appendNonEmpty(desc)
 	case "project":
-		prop1, _ = data["description"].(string)
+		desc, _ := data["description"].(string)
+		appendNonEmpty(desc)
 	case "commit":
-		prop1, _ = data["message"].(string)
+		msg, _ := data["message"].(string)
+		appendNonEmpty(msg)
 	case "repo":
 		name, _ := data["name"].(string)
-		prop1 = name
+		appendNonEmpty(name)
 	}
+	return props
+}
 
-	props := []string{}
-	if prop1 != "" {
-		props = append(props, prop1)
-	}
-	if prop2 != "" {
-		props = append(props, prop2)
-	}
-	if prop3 != "" {
-		props = append(props, prop3)
-	}
+// #endregion 🔖Entity Rendering
 
+func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) string {
+	id := GetArtifactID(kind, data)
+	props := collectEntityProps(kind, data, false)
 	propColor := func(i int) string {
 		switch i {
 		case 0:
@@ -28006,7 +27955,6 @@ func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) str
 			return ColorDim
 		}
 	}
-
 	out := fmt.Sprintf("%s", colorize(id, ColorBold, isTTY))
 	for i, p := range props {
 		out += fmt.Sprintf(" %s", colorize(p, propColor(i), isTTY))
@@ -28051,113 +27999,10 @@ func inferEntityKind(key string) string {
 func renderEntityMarkdownLink(kind string, data map[string]interface{}) string {
 	id := GetArtifactID(kind, data)
 	uri := GetArtifactURI(kind, data)
-	prop1 := ""
-	prop2 := ""
-	prop3 := ""
-
-	switch kind {
-	case "ticket":
-		title, _ := data["title"].(string)
-		status, _ := data["status"].(string)
-		createdStr := ""
-		if dates, ok := data["dates"].(map[string]interface{}); ok {
-			createdStr, _ = dates["created"].(string)
-			if createdStr == "" {
-				createdStr, _ = dates["started"].(string)
-			}
-		}
-		if createdStr == "" {
-			if dates, ok := data["date"].(map[string]interface{}); ok {
-				createdStr, _ = dates["created"].(string)
-				if createdStr == "" {
-					createdStr, _ = dates["started"].(string)
-				}
-			}
-		}
-		if createdStr == "" {
-			createdStr, _ = data["createdAt"].(string)
-		}
-		dateDisplay := createdStr
-		if createdStr != "" {
-			if tParsed, err := parseFlexibleTime(createdStr); err == nil {
-				dateDisplay = humanize.Time(tParsed)
-			}
-		}
-		prop1 = title
-		prop2 = status
-		prop3 = dateDisplay
-	case "goal":
-		title, _ := data["title"].(string)
-		status, _ := data["status"].(string)
-		dueDate, _ := data["dueDate"].(string)
-		if dueDate == "" {
-			if dates, ok := data["dates"].(map[string]interface{}); ok {
-				dueDate, _ = dates["due"].(string)
-			}
-		}
-		if dueDate != "" {
-			if tParsed, err := parseFlexibleTime(dueDate); err == nil {
-				dueDate = humanize.Time(tParsed)
-			}
-		}
-		prop1 = title
-		prop2 = status
-		prop3 = dueDate
-	case "bundle":
-		root, _ := data["root"].(string)
-		ptype, _ := data["projectType"].(string)
-		if ptype == "" {
-			ptype, _ = data["type"].(string)
-		}
-		prop1 = root
-		prop2 = ptype
-	case "folder":
-	case "section":
-		start, _ := data["startLine"].(float64)
-		end, _ := data["endLine"].(float64)
-		prop1 = fmt.Sprintf(":%d-%d", int(start), int(end))
-	case "definition":
-		name, _ := data["name"].(string)
-		start, _ := data["startLine"].(float64)
-		end, _ := data["endLine"].(float64)
-		prop1 = name
-		prop2 = fmt.Sprintf(":%d-%d", int(start), int(end))
-	case "contributor":
-		name, _ := data["name"].(string)
-		email, _ := data["email"].(string)
-		prop1 = name
-		prop2 = email
-	case "todo":
-		name, _ := data["name"].(string)
-		prop1 = name
-	case "draft":
-	case "policy":
-		prop1, _ = data["description"].(string)
-	case "violationKind":
-		prop1, _ = data["description"].(string)
-	case "project":
-		prop1, _ = data["description"].(string)
-	case "commit":
-		prop1, _ = data["message"].(string)
-	case "repo":
-		name, _ := data["name"].(string)
-		prop1 = name
-	}
-
-	props := []string{}
-	if prop1 != "" {
-		props = append(props, prop1)
-	}
-	if prop2 != "" {
-		props = append(props, prop2)
-	}
-	if prop3 != "" {
-		props = append(props, prop3)
-	}
-
+	props := collectEntityProps(kind, data, false)
 	out := fmt.Sprintf("[%s](%s)", id, uri)
 	for _, p := range props {
-		out += fmt.Sprintf(" - %s", p)
+		out += fmt.Sprintf(" - `%s`", p)
 	}
 	return out
 }

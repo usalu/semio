@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪︎semio-repo/cli/main_test.go
+// 🧪semio-repo/cli/main_test.go
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -1171,20 +1171,20 @@ func TestFileHeaderId(t *testing.T) {
 		path string
 		want string
 	}{
-		{"code ts", "semio/js/src/index.ts", "\U0001F4BB\uFE0Esemio/js/src/index.ts"},
-		{"code tsx", "semio/js/src/App.tsx", "\U0001F4BB\uFE0Esemio/js/src/App.tsx"},
-		{"code go", "semio-repo/cli/cli.go", "\U0001F4BB\uFE0Esemio-repo/cli/cli.go"},
-		{"code cs", "semio/gh/Semio.cs", "\U0001F4BB\uFE0Esemio/gh/Semio.cs"},
-		{"code py", "semio/engine/main.py", "\U0001F4BB\uFE0Esemio/engine/main.py"},
-		{"test ts", "semio/js/src/index.test.ts", "\U0001F9EA\uFE0Esemio/js/src/index.test.ts"},
-		{"test go", "semio-repo/cli/cli_test.go", "\U0001F9EA\uFE0Esemio-repo/cli/cli_test.go"},
-		{"config json", "tsconfig.json", "\u2699\uFE0Etsconfig.json"},
-		{"docs md", "README.md", "\U0001F4C3\uFE0EREADME.md"},
-		{"script sh", "build.sh", "\U0001F4DC\uFE0Ebuild.sh"},
-		{"script bash", "deploy.bash", "\U0001F4DC\uFE0Edeploy.bash"},
-		{"script ps1", "setup.ps1", "\U0001F4DC\uFE0Esetup.ps1"},
-		{"resource png", "logo.png", "\U0001F4BE\uFE0Elogo.png"},
-		{"license", "LICENSE.md", "\u2696\uFE0ELICENSE.md"},
+		{"code ts", "semio/js/src/index.ts", "\U0001F4BBsemio/js/src/index.ts"},
+		{"code tsx", "semio/js/src/App.tsx", "\U0001F4BBsemio/js/src/App.tsx"},
+		{"code go", "semio-repo/cli/cli.go", "\U0001F4BBsemio-repo/cli/cli.go"},
+		{"code cs", "semio/gh/Semio.cs", "\U0001F4BBsemio/gh/Semio.cs"},
+		{"code py", "semio/engine/main.py", "\U0001F4BBsemio/engine/main.py"},
+		{"test ts", "semio/js/src/index.test.ts", "\U0001F9EAsemio/js/src/index.test.ts"},
+		{"test go", "semio-repo/cli/cli_test.go", "\U0001F9EAsemio-repo/cli/cli_test.go"},
+		{"config json", "tsconfig.json", "\u2699tsconfig.json"},
+		{"docs md", "README.md", "\U0001F4C3README.md"},
+		{"script sh", "build.sh", "\U0001F4DCbuild.sh"},
+		{"script bash", "deploy.bash", "\U0001F4DCdeploy.bash"},
+		{"script ps1", "setup.ps1", "\U0001F4DCsetup.ps1"},
+		{"resource png", "logo.png", "\U0001F4BElogo.png"},
+		{"license", "LICENSE.md", "\u2696LICENSE.md"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1207,7 +1207,7 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("#!/usr/bin/env tsx\nconsole.log('build');\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := "\U0001F4DC\uFE0E" + filePath
+		want := "\U0001F4DC" + filePath
 		if got != want {
 			t.Errorf("FileHeaderId(%q) with shebang = %q, want %q", filePath, got, want)
 		}
@@ -1225,7 +1225,7 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("#!/usr/bin/env python3\nprint('hello')\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := "\U0001F4DC\uFE0E" + filePath
+		want := "\U0001F4DC" + filePath
 		if got != want {
 			t.Errorf("FileHeaderId(%q) with shebang = %q, want %q", filePath, got, want)
 		}
@@ -1243,7 +1243,7 @@ func TestFileHeaderId(t *testing.T) {
 		os.WriteFile(absPath, []byte("export const x = 1;\n"), 0644)
 
 		got := FileHeaderId(filePath)
-		want := "\U0001F4BB\uFE0E" + filePath
+		want := "\U0001F4BB" + filePath
 		if got != want {
 			t.Errorf("FileHeaderId(%q) without shebang = %q, want %q", filePath, got, want)
 		}
@@ -1251,7 +1251,7 @@ func TestFileHeaderId(t *testing.T) {
 
 	t.Run("nonexistent code file stays code", func(t *testing.T) {
 		got := FileHeaderId("nonexistent/file.ts")
-		want := "\U0001F4BB\uFE0Enonexistent/file.ts"
+		want := "\U0001F4BBnonexistent/file.ts"
 		if got != want {
 			t.Errorf("FileHeaderId for nonexistent file = %q, want %q", got, want)
 		}
@@ -2445,6 +2445,37 @@ func TestScanCommentsAutofix(t *testing.T) {
 	})
 }
 
+func TestEmojiVariationAutofix(t *testing.T) {
+	t.Run("strip emoji variation", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+
+		content := "This is a test \U0001F4BB\uFE0E with emoji variation.\nAnd another line \u2699\uFE0F with VS16."
+		expected := "This is a test \U0001F4BB with emoji variation.\nAnd another line \u2699 with VS16."
+		testFile := "test_emoji.txt"
+		absPath := filepath.Join(tmpDir, testFile)
+		WriteTextFile(absPath, content)
+
+		violations := []Violation{
+			{Kind: ViolationCodeUnicodeEmojiVariation, Scope: testFile, Line: 1},
+			{Kind: ViolationCodeUnicodeEmojiVariation, Scope: testFile, Line: 2},
+		}
+		fixed, err := applyAutofixes(testFile, violations)
+		if err != nil {
+			t.Fatalf("applyAutofixes failed: %v", err)
+		}
+		if fixed != 2 {
+			t.Fatalf("expected 2 fixed, got %d", fixed)
+		}
+		got, _ := ReadTextFile(absPath)
+		if got != expected {
+			t.Errorf("expected:\n%q\ngot:\n%q", expected, got)
+		}
+	})
+}
+
 func TestFixNonAutofixableNotFixed(t *testing.T) {
 	cwd, _ := os.Getwd()
 	oldRoot := rootDir
@@ -2843,16 +2874,16 @@ func TestFixtureViolationsByLanguage(t *testing.T) {
 // #region 🔖Bundle Tests
 
 func TestBundleListCommand(t *testing.T) {
-	result := ToolProjectList()
+	result := ToolBundleList()
 	if result.Error != "" {
-		t.Errorf("ToolProjectList returned error: %s", result.Error)
+		t.Errorf("ToolBundleList returned error: %s", result.Error)
 	}
 	if result.Data == nil {
-		t.Error("ToolProjectList returned nil data")
+		t.Error("ToolBundleList returned nil data")
 	}
 	bundles, ok := result.Data.([]Bundle)
 	if !ok {
-		t.Error("ToolProjectList data is not []Bundle")
+		t.Error("ToolBundleList data is not []Bundle")
 		return
 	}
 	if len(bundles) == 0 {
@@ -3996,7 +4027,7 @@ func TestFormatResult_Section(t *testing.T) {
 
 	expectedParts := []string{
 		"MySection",
-		"(lines 10-20)",
+		":10-20",
 	}
 
 	for _, part := range expectedParts {
@@ -4052,7 +4083,7 @@ func TestFormatResult_Bundle(t *testing.T) {
 	result := formatResult("bundle list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"📚︎MyBundle",
+		"📚MyBundle",
 		"/path/to/bundle",
 	}
 
@@ -4074,7 +4105,7 @@ func TestFormatResult_Folder(t *testing.T) {
 	result := formatResult("folder list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"📁︎path/to/folder",
+		"📁path/to/folder",
 	}
 
 	for _, part := range expectedParts {
@@ -5398,203 +5429,203 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "repo",
 			kind:    "repo",
 			data:    map[string]interface{}{},
-			wantID:  "🌍︎",
+			wantID:  "🌍",
 			wantURI: "semiorepo://repo",
 		},
 		{
 			name:    "projects collection",
 			kind:    "projects",
 			data:    map[string]interface{}{},
-			wantID:  "🏗︎",
+			wantID:  "🏗",
 			wantURI: "semiorepo://projects",
 		},
 		{
 			name:    "project user",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio", "kind": "user"},
-			wantID:  "👤︎@semio",
+			wantID:  "👤@semio",
 			wantURI: "semiorepo://project/@semio",
 		},
 		{
 			name:    "project infrastructure",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"},
-			wantID:  "🧰︎@semio-repo",
+			wantID:  "🧰@semio-repo",
 			wantURI: "semiorepo://project/@semio-repo",
 		},
 		{
 			name:    "project research",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "coda", "kind": "research"},
-			wantID:  "🔬︎@coda",
+			wantID:  "🔬@coda",
 			wantURI: "semiorepo://project/@coda",
 		},
 		{
 			name:    "bundles collection",
 			kind:    "bundles",
 			data:    map[string]interface{}{"projectCode": "semio"},
-			wantID:  "📦︎semio",
+			wantID:  "📦semio",
 			wantURI: "semiorepo://bundles",
 		},
 		{
 			name:    "bundle library",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/js", "kind": "library"},
-			wantID:  "📚︎semio/js",
+			wantID:  "📚semio/js",
 			wantURI: "semiorepo://bundle/semio/js",
 		},
 		{
 			name:    "bundle example",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "coda/examples", "kind": "library"},
-			wantID:  "📚︎coda/examples",
+			wantID:  "📚coda/examples",
 			wantURI: "semiorepo://bundle/coda/examples",
 		},
 		{
 			name:    "bundle ui",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/desktop", "kind": "ui"},
-			wantID:  "🖱︎semio/desktop",
+			wantID:  "🖱semio/desktop",
 			wantURI: "semiorepo://bundle/semio/desktop",
 		},
 		{
 			name:    "folders collection empty",
 			kind:    "folders",
 			data:    map[string]interface{}{},
-			wantID:  "📁︎",
+			wantID:  "📁",
 			wantURI: "semiorepo://folders",
 		},
 		{
 			name:    "folders collection with parent",
 			kind:    "folders",
 			data:    map[string]interface{}{"parentPath": "semio/js/src"},
-			wantID:  "📁︎semio/js/src",
+			wantID:  "📁semio/js/src",
 			wantURI: "semiorepo://folders/semio/js/src",
 		},
 		{
 			name:    "folder required",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/src", "kind": "required"},
-			wantID:  "📁︎semio/js/src",
+			wantID:  "📁semio/js/src",
 			wantURI: "semiorepo://folder/semio/js/src",
 		},
 		{
 			name:    "folder organization",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/utils", "kind": "organization"},
-			wantID:  "🗃︎semio/js/utils",
+			wantID:  "🗃semio/js/utils",
 			wantURI: "semiorepo://folder/semio/js/utils",
 		},
 		{
 			name:    "files collection empty",
 			kind:    "files",
 			data:    map[string]interface{}{},
-			wantID:  "📄︎",
+			wantID:  "📄",
 			wantURI: "semiorepo://files",
 		},
 		{
 			name:    "file docs",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
-			wantID:  "📃︎test.txt",
+			wantID:  "📃test.txt",
 			wantURI: "semiorepo://file/test.txt",
 		},
 		{
 			name:    "file code",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.ts", "kind": "code"},
-			wantID:  "💻︎semio/js/src/index.ts",
+			wantID:  "💻semio/js/src/index.ts",
 			wantURI: "semiorepo://file/semio/js/src/index.ts",
 		},
 		{
 			name:    "file test",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"},
-			wantID:  "🧪︎semio/js/src/index.test.ts",
+			wantID:  "🧪semio/js/src/index.test.ts",
 			wantURI: "semiorepo://file/semio/js/src/index.test.ts",
 		},
 		{
 			name:    "file config",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
-			wantID:  "⚙︎tsconfig.json",
+			wantID:  "⚙tsconfig.json",
 			wantURI: "semiorepo://file/tsconfig.json",
 		},
 		{
 			name:    "file script",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "build.sh", "kind": "script"},
-			wantID:  "\U0001F4DC︎build.sh",
+			wantID:  "\U0001F4DCbuild.sh",
 			wantURI: "semiorepo://file/build.sh",
 		},
 		{
 			name:    "file resource",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
-			wantID:  "💾︎logo.png",
+			wantID:  "💾logo.png",
 			wantURI: "semiorepo://file/logo.png",
 		},
 		{
 			name:    "file license",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "LICENSE.md", "kind": "license"},
-			wantID:  "⚖︎LICENSE.md",
+			wantID:  "⚖LICENSE.md",
 			wantURI: "semiorepo://file/LICENSE.md",
 		},
 		{
 			name:    "sections collection",
 			kind:    "sections",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts"},
-			wantID:  "🔖︎semio/js/src/index.ts",
+			wantID:  "🔖semio/js/src/index.ts",
 			wantURI: "semiorepo://sections/semio/js/src/index.ts",
 		},
 		{
 			name:    "section",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"},
-			wantID:  "🔖︎semio/js/src/Design.tsx#State Management#Design Store",
+			wantID:  "🔖semio/js/src/Design.tsx#State Management#Design Store",
 			wantURI: "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE",
 		},
 		{
 			name:    "section single level",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/file.ts#Imports"},
-			wantID:  "🔖︎semio/js/src/file.ts#Imports",
+			wantID:  "🔖semio/js/src/file.ts#Imports",
 			wantURI: "semiorepo://section/semio/js/src/file.ts/IMPORTS",
 		},
 		{
 			name:    "definitions collection",
 			kind:    "definitions",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts"},
-			wantID:  "🏷︎semio/js/src/index.ts",
+			wantID:  "🏷semio/js/src/index.ts",
 			wantURI: "semiorepo://definitions/semio/js/src/index.ts",
 		},
 		{
 			name:    "definition with id",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "implementation", "id": "semio/js/src/file.ts#Section§myFunc"},
-			wantID:  "🛠︎semio/js/src/file.ts#Section§myFunc",
+			wantID:  "🛠semio/js/src/file.ts#Section§myFunc",
 			wantURI: "semiorepo://definition/semio/js/src/file.ts/SECTION/MYFUNC",
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
-			wantID:  "✂︎semio/js/src/file.ts#Types§MyInterface",
+			wantID:  "✂semio/js/src/file.ts#Types§MyInterface",
 			wantURI: "semiorepo://definition/semio/js/src/file.ts/TYPES/MYINTERFACE",
 		},
 		{
 			name:    "definition constant",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
-			wantID:  "🪨︎semio/js/src/file.ts§MAX_SIZE",
+			wantID:  "🪨semio/js/src/file.ts§MAX_SIZE",
 			wantURI: "semiorepo://definition/semio/js/src/file.ts/MAX-SIZE",
 		},
 		{
 			name:    "tickets collection",
 			kind:    "tickets",
 			data:    map[string]interface{}{},
-			wantID:  "📅︎",
+			wantID:  "📅",
 			wantURI: "semiorepo://tickets",
 		},
 		{
@@ -5606,7 +5637,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"day":   float64(4),
 				"slug":  "test-ticket",
 			},
-			wantID:  "📅︎2025/02/04/test-ticket",
+			wantID:  "📅2025/02/04/test-ticket",
 			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
@@ -5619,105 +5650,105 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"slug":   "test-ticket",
 				"status": "open",
 			},
-			wantID:  "📅︎2025/02/04/test-ticket?open",
+			wantID:  "📅2025/02/04/test-ticket?open",
 			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
 			name:    "goals collection",
 			kind:    "goals",
 			data:    map[string]interface{}{},
-			wantID:  "🎯︎",
+			wantID:  "🎯",
 			wantURI: "semiorepo://goals",
 		},
 		{
 			name:    "goal",
 			kind:    "goal",
 			data:    map[string]interface{}{"id": "R26-02/RUNNING-SKETCHPAD"},
-			wantID:  "🎯︎R26-02/RUNNING-SKETCHPAD",
+			wantID:  "🎯R26-02/RUNNING-SKETCHPAD",
 			wantURI: "semiorepo://goal/R26-02/RUNNING-SKETCHPAD",
 		},
 		{
 			name:    "drafts collection",
 			kind:    "drafts",
 			data:    map[string]interface{}{},
-			wantID:  "✍︎",
+			wantID:  "✍",
 			wantURI: "semiorepo://drafts",
 		},
 		{
 			name:    "draft",
 			kind:    "draft",
 			data:    map[string]interface{}{"slug": "my-draft"},
-			wantID:  "✍︎my-draft",
+			wantID:  "✍my-draft",
 			wantURI: "semiorepo://draft/my-draft",
 		},
 		{
 			name:    "todos collection",
 			kind:    "todos",
 			data:    map[string]interface{}{},
-			wantID:  "📝︎",
+			wantID:  "📝",
 			wantURI: "semiorepo://todos",
 		},
 		{
 			name:    "todo",
 			kind:    "todo",
 			data:    map[string]interface{}{"id": "my-todo"},
-			wantID:  "📝︎my-todo",
+			wantID:  "📝my-todo",
 			wantURI: "semiorepo://todo/my-todo",
 		},
 		{
 			name:    "policies collection",
 			kind:    "policies",
 			data:    map[string]interface{}{},
-			wantID:  "🛡︎",
+			wantID:  "🛡",
 			wantURI: "semiorepo://policies",
 		},
 		{
 			name:    "policy",
 			kind:    "policy",
 			data:    map[string]interface{}{"id": "/code-hygiene"},
-			wantID:  "🛡︎/code-hygiene",
+			wantID:  "🛡/code-hygiene",
 			wantURI: "semiorepo://policy//code-hygiene",
 		},
 		{
 			name:    "violationKinds collection",
 			kind:    "violationKinds",
 			data:    map[string]interface{}{},
-			wantID:  "🚫︎",
+			wantID:  "🚫",
 			wantURI: "semiorepo://violationKinds",
 		},
 		{
 			name:    "violationKind",
 			kind:    "violationKind",
 			data:    map[string]interface{}{"id": "code-hygiene/inline-comment"},
-			wantID:  "🚫︎code-hygiene/inline-comment",
+			wantID:  "🚫code-hygiene/inline-comment",
 			wantURI: "semiorepo://violationKind/code-hygiene/inline-comment",
 		},
 		{
 			name:    "contributors collection",
 			kind:    "contributors",
 			data:    map[string]interface{}{},
-			wantID:  "👤︎",
+			wantID:  "👤",
 			wantURI: "semiorepo://contributors",
 		},
 		{
 			name:    "contributor",
 			kind:    "contributor",
 			data:    map[string]interface{}{"github": "usalu"},
-			wantID:  "👤︎usalu",
+			wantID:  "👤usalu",
 			wantURI: "semiorepo://contributor/usalu",
 		},
 		{
 			name:    "commits collection",
 			kind:    "commits",
 			data:    map[string]interface{}{},
-			wantID:  "🔀︎",
+			wantID:  "🔀",
 			wantURI: "semiorepo://commits",
 		},
 		{
 			name:    "commit",
 			kind:    "commit",
 			data:    map[string]interface{}{"sha": "abc123"},
-			wantID:  "🔀︎abc123",
+			wantID:  "🔀abc123",
 			wantURI: "semiorepo://commit/abc123",
 		},
 	}
@@ -5780,34 +5811,34 @@ func TestUriToId(t *testing.T) {
 		uri  string
 		want string
 	}{
-		{"repo", "semiorepo://repo", "🌍\uFE0E"},
-		{"projects", "semiorepo://projects", "🏗\uFE0E"},
-		{"project", "semiorepo://project/@semio", "👤\uFE0E@semio"},
-		{"bundles", "semiorepo://bundles", "📦\uFE0E"},
-		{"bundle", "semiorepo://bundle/semio/js", "📚\uFE0Esemio/js"},
-		{"folders", "semiorepo://folders", "📁\uFE0E"},
-		{"folder", "semiorepo://folder/semio/js/src", "📁\uFE0Esemio/js/src"},
-		{"files", "semiorepo://files", "📄\uFE0E"},
-		{"file", "semiorepo://file/test.txt", "📄\uFE0Etest.txt"},
-		{"section", "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "🔖\uFE0Esemio/js/src/Design.tsx#STATE-MANAGEMENT#DESIGN-STORE"},
-		{"definition single", "semiorepo://definition/semio/js/src/file.ts/MY-FUNC", "🛠\uFE0Esemio/js/src/file.ts§MY-FUNC"},
-		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/SECTION/MY-FUNC", "🛠\uFE0Esemio/js/src/file.ts#SECTION§MY-FUNC"},
-		{"tickets", "semiorepo://tickets", "📅\uFE0E"},
-		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", "📅\uFE0E2025/02/04/test-ticket"},
-		{"goals", "semiorepo://goals", "🎯\uFE0E"},
-		{"goal", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", "🎯\uFE0ER26-02/RUNNING-SKETCHPAD"},
-		{"drafts", "semiorepo://drafts", "✍\uFE0E"},
-		{"draft", "semiorepo://draft/my-draft", "✍\uFE0Emy-draft"},
-		{"todos", "semiorepo://todos", "📝\uFE0E"},
-		{"todo", "semiorepo://todo/my-todo", "📝\uFE0Emy-todo"},
-		{"policies", "semiorepo://policies", "🛡\uFE0E"},
-		{"policy", "semiorepo://policy/code-hygiene", "🛡\uFE0E/code-hygiene"},
-		{"violationKinds", "semiorepo://violationKinds", "🚫\uFE0E"},
-		{"violationKind", "semiorepo://violationKind/code-hygiene/inline-comment", "🚫\uFE0Ecode-hygiene/inline-comment"},
-		{"contributors", "semiorepo://contributors", "👤\uFE0E"},
-		{"contributor", "semiorepo://contributor/usalu", "👤\uFE0Eusalu"},
-		{"commits", "semiorepo://commits", "🔀\uFE0E"},
-		{"commit", "semiorepo://commit/abc123", "🔀\uFE0Eabc123"},
+		{"repo", "semiorepo://repo", "🌍"},
+		{"projects", "semiorepo://projects", "🏗"},
+		{"project", "semiorepo://project/@semio", "👤@semio"},
+		{"bundles", "semiorepo://bundles", "📦"},
+		{"bundle", "semiorepo://bundle/semio/js", "📚semio/js"},
+		{"folders", "semiorepo://folders", "📁"},
+		{"folder", "semiorepo://folder/semio/js/src", "📁semio/js/src"},
+		{"files", "semiorepo://files", "📄"},
+		{"file", "semiorepo://file/test.txt", "📄test.txt"},
+		{"section", "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "🔖semio/js/src/Design.tsx#STATE-MANAGEMENT#DESIGN-STORE"},
+		{"definition single", "semiorepo://definition/semio/js/src/file.ts/MY-FUNC", "🛠semio/js/src/file.ts§MY-FUNC"},
+		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/SECTION/MY-FUNC", "🛠semio/js/src/file.ts#SECTION§MY-FUNC"},
+		{"tickets", "semiorepo://tickets", "📅"},
+		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", "📅2025/02/04/test-ticket"},
+		{"goals", "semiorepo://goals", "🎯"},
+		{"goal", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", "🎯R26-02/RUNNING-SKETCHPAD"},
+		{"drafts", "semiorepo://drafts", "✍"},
+		{"draft", "semiorepo://draft/my-draft", "✍my-draft"},
+		{"todos", "semiorepo://todos", "📝"},
+		{"todo", "semiorepo://todo/my-todo", "📝my-todo"},
+		{"policies", "semiorepo://policies", "🛡"},
+		{"policy", "semiorepo://policy/code-hygiene", "🛡/code-hygiene"},
+		{"violationKinds", "semiorepo://violationKinds", "🚫"},
+		{"violationKind", "semiorepo://violationKind/code-hygiene/inline-comment", "🚫code-hygiene/inline-comment"},
+		{"contributors", "semiorepo://contributors", "👤"},
+		{"contributor", "semiorepo://contributor/usalu", "👤usalu"},
+		{"commits", "semiorepo://commits", "🔀"},
+		{"commit", "semiorepo://commit/abc123", "🔀abc123"},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -7005,13 +7036,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders basic tree", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗Projects", URI: "semiorepo://projects", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTree(tree)
-		if !strings.Contains(output, "🏗️Projects") {
+		if !strings.Contains(output, "🏗Projects") {
 			t.Error("output should contain Projects label")
 		}
 		if !strings.Contains(output, "semio") {
@@ -7057,13 +7088,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("markdown renderer uses list bullets", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗Projects", URI: "semiorepo://projects", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTreeMarkdown(tree)
-		if !strings.Contains(output, "- [🏗️Projects](semiorepo://projects)") {
+		if !strings.Contains(output, "- [🏗Projects](semiorepo://projects)") {
 			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
 		}
 		if !strings.Contains(output, "  - semio") {
@@ -7316,5 +7347,687 @@ func TestTreeCommandFlags(t *testing.T) {
 		}
 	})
 }
+
+// #region 🔖Unified Rendering Identity Tests
+
+func TestTreeNodeKindToEntityKindCoversAll(t *testing.T) {
+	kinds := []struct {
+		kind     TreeNodeKind
+		expected string
+	}{
+		{TreeNodeProject, "project"},
+		{TreeNodeBundle, "bundle"},
+		{TreeNodeFolder, "folder"},
+		{TreeNodeFile, "file"},
+		{TreeNodeSection, "section"},
+		{TreeNodeDefinition, "definition"},
+		{TreeNodeGoal, "goal"},
+		{TreeNodeTicket, "ticket"},
+		{TreeNodeDraft, "draft"},
+		{TreeNodePolicy, "policy"},
+		{TreeNodeViolationKindNode, "violationKind"},
+		{TreeNodeContributor, "contributor"},
+		{TreeNodeCommit, "commit"},
+		{TreeNodeCategory, "category"},
+	}
+	for _, tt := range kinds {
+		t.Run(string(tt.kind), func(t *testing.T) {
+			got := treeNodeKindToEntityKind(tt.kind)
+			if got != tt.expected {
+				t.Errorf("treeNodeKindToEntityKind(%q) = %q, want %q", tt.kind, got, tt.expected)
+			}
+		})
+	}
+	t.Run("unknown returns empty", func(t *testing.T) {
+		got := treeNodeKindToEntityKind(TreeNodeKind("unknown"))
+		if got != "" {
+			t.Errorf("treeNodeKindToEntityKind(unknown) = %q, want empty", got)
+		}
+	})
+}
+
+func TestUnifiedRenderingGoalIdentity(t *testing.T) {
+	data := map[string]interface{}{
+		"id":          "TEST-GOAL",
+		"title":       "Test Goal",
+		"status":      "open",
+		"dueDate":     "2030-01-01",
+		"createdAt":   "2025-01-01T00:00:00Z",
+		"description": "A test goal",
+	}
+
+	mdLink := renderEntityMarkdownLink("goal", data)
+	mdItem := renderEntityMarkdown("goal", data)
+	humanItem := renderEntityHuman("goal", data, false)
+
+	t.Run("renderEntityMarkdown is dash-prefixed renderEntityMarkdownLink", func(t *testing.T) {
+		if mdItem != "- "+mdLink {
+			t.Errorf("renderEntityMarkdown should be '- ' + renderEntityMarkdownLink.\n  Got:  %q\n  Want: %q", mdItem, "- "+mdLink)
+		}
+	})
+
+	t.Run("markdown link has artifact ID and URI", func(t *testing.T) {
+		if !strings.Contains(mdLink, "[🎯") {
+			t.Errorf("markdown link missing goal emoji prefix: %s", mdLink)
+		}
+		if !strings.Contains(mdLink, "](semiorepo://goal/") {
+			t.Errorf("markdown link missing goal URI: %s", mdLink)
+		}
+	})
+
+	t.Run("human has artifact ID", func(t *testing.T) {
+		if !strings.Contains(humanItem, "🎯") {
+			t.Errorf("human output missing goal emoji: %s", humanItem)
+		}
+	})
+
+	t.Run("both formats share same props from collectEntityProps", func(t *testing.T) {
+		props := collectEntityProps("goal", data, false)
+		for _, p := range props {
+			if !strings.Contains(mdLink, p) {
+				t.Errorf("markdown link missing prop %q: %s", p, mdLink)
+			}
+			if !strings.Contains(humanItem, p) {
+				t.Errorf("human output missing prop %q: %s", p, humanItem)
+			}
+		}
+	})
+
+	t.Run("goalNodeToData roundtrip matches direct rendering", func(t *testing.T) {
+		node := &GoalNode{
+			ID:          "TEST-GOAL",
+			Title:       "Test Goal",
+			Status:      "open",
+			DueDate:     "2030-01-01",
+			CreatedAt:   "2025-01-01T00:00:00Z",
+			Description: "A test goal",
+		}
+		nodeData := goalNodeToData(node)
+		fromNode := renderEntityMarkdownLink("goal", nodeData)
+		fromDirect := renderEntityMarkdownLink("goal", data)
+		if fromNode != fromDirect {
+			t.Errorf("goalNodeToData roundtrip mismatch:\n  fromNode:   %q\n  fromDirect: %q", fromNode, fromDirect)
+		}
+	})
+
+	t.Run("goal tree markdown uses renderEntityMarkdownLink for content", func(t *testing.T) {
+		roots := []*GoalNode{{
+			ID:          "TEST-GOAL",
+			Title:       "Test Goal",
+			Status:      "open",
+			DueDate:     "2030-01-01",
+			CreatedAt:   "2025-01-01T00:00:00Z",
+			Description: "A test goal",
+		}}
+		treeOutput := renderGoalTreeNodes(roots, "md")
+		expectedLink := renderEntityMarkdownLink("goal", data)
+		if !strings.Contains(treeOutput, expectedLink) {
+			t.Errorf("goal tree markdown should contain renderEntityMarkdownLink output.\n  Tree:     %q\n  Expected: %q", treeOutput, expectedLink)
+		}
+		if strings.Contains(treeOutput, "- - [") {
+			t.Errorf("goal tree markdown must not have double dash: %q", treeOutput)
+		}
+	})
+
+	t.Run("goal tree text uses renderEntityHuman for content", func(t *testing.T) {
+		roots := []*GoalNode{{
+			ID:          "TEST-GOAL",
+			Title:       "Test Goal",
+			Status:      "open",
+			DueDate:     "2030-01-01",
+			CreatedAt:   "2025-01-01T00:00:00Z",
+			Description: "A test goal",
+		}}
+		treeOutput := renderGoalTreeNodes(roots, "text")
+		expectedHuman := renderEntityHuman("goal", data, false)
+		if !strings.Contains(treeOutput, expectedHuman) {
+			t.Errorf("goal tree text should contain renderEntityHuman output.\n  Tree:     %q\n  Expected: %q", treeOutput, expectedHuman)
+		}
+	})
+
+	t.Run("monorepo tree node markdown matches goal tree markdown", func(t *testing.T) {
+		treeNode := &TreeNode{
+			Kind:  TreeNodeGoal,
+			ID:    "TEST-GOAL",
+			Label: "TEST-GOAL",
+			URI:   "semiorepo://goal/TEST-GOAL",
+			Data:  data,
+		}
+		var sb strings.Builder
+		renderTreeNodeMarkdown(&sb, treeNode, "")
+		monorepoOutput := strings.TrimSpace(sb.String())
+
+		roots := []*GoalNode{{
+			ID:          "TEST-GOAL",
+			Title:       "Test Goal",
+			Status:      "open",
+			DueDate:     "2030-01-01",
+			CreatedAt:   "2025-01-01T00:00:00Z",
+			Description: "A test goal",
+		}}
+		goalTreeOutput := strings.TrimSpace(renderGoalTreeNodes(roots, "md"))
+		if monorepoOutput != goalTreeOutput {
+			t.Errorf("monorepo tree markdown and goal tree markdown differ:\n  Monorepo:  %q\n  GoalTree:  %q", monorepoOutput, goalTreeOutput)
+		}
+	})
+
+	t.Run("monorepo tree node text matches goal tree text", func(t *testing.T) {
+		treeNode := &TreeNode{
+			Kind:  TreeNodeGoal,
+			ID:    "TEST-GOAL",
+			Label: "TEST-GOAL",
+			URI:   "semiorepo://goal/TEST-GOAL",
+			Data:  data,
+		}
+		var sb strings.Builder
+		renderTreeNodeText(&sb, treeNode, "", true, true)
+		monorepoOutput := strings.TrimSpace(sb.String())
+
+		roots := []*GoalNode{{
+			ID:          "TEST-GOAL",
+			Title:       "Test Goal",
+			Status:      "open",
+			DueDate:     "2030-01-01",
+			CreatedAt:   "2025-01-01T00:00:00Z",
+			Description: "A test goal",
+		}}
+		goalTreeOutput := strings.TrimSpace(renderGoalTreeNodes(roots, "text"))
+		if monorepoOutput != goalTreeOutput {
+			t.Errorf("monorepo tree text and goal tree text differ:\n  Monorepo:  %q\n  GoalTree:  %q", monorepoOutput, goalTreeOutput)
+		}
+	})
+}
+
+func TestUnifiedRenderingTicketIdentity(t *testing.T) {
+	data := map[string]interface{}{
+		"slug":     "MY-TICKET",
+		"title":    "My Ticket",
+		"status":   "open",
+		"started":  "2025-01-01T00:00:00Z",
+		"finished": "",
+		"prompt":   "Fix something",
+		"summary":  "",
+		"year":     float64(2025),
+		"month":    float64(1),
+		"day":      float64(1),
+	}
+
+	mdLink := renderEntityMarkdownLink("ticket", data)
+	mdItem := renderEntityMarkdown("ticket", data)
+	humanItem := renderEntityHuman("ticket", data, false)
+
+	t.Run("markdown item is dash-prefixed link", func(t *testing.T) {
+		if mdItem != "- "+mdLink {
+			t.Errorf("renderEntityMarkdown should be '- ' + renderEntityMarkdownLink.\n  Got:  %q\n  Want: %q", mdItem, "- "+mdLink)
+		}
+	})
+
+	t.Run("both formats share same props", func(t *testing.T) {
+		props := collectEntityProps("ticket", data, false)
+		for _, p := range props {
+			if !strings.Contains(mdLink, p) {
+				t.Errorf("markdown link missing prop %q: %s", p, mdLink)
+			}
+			if !strings.Contains(humanItem, p) {
+				t.Errorf("human output missing prop %q: %s", p, humanItem)
+			}
+		}
+	})
+
+	t.Run("ticketNodeToData roundtrip matches direct rendering", func(t *testing.T) {
+		node := &TicketNode{
+			Slug:     "MY-TICKET",
+			Title:    "My Ticket",
+			Status:   "open",
+			Created:  "2025-01-01T00:00:00Z",
+			Finished: "",
+			Prompt:   "Fix something",
+			Summary:  "",
+		}
+		nodeData := ticketNodeToData(node)
+		nodeData["year"] = float64(2025)
+		nodeData["month"] = float64(1)
+		nodeData["day"] = float64(1)
+		fromNode := renderEntityMarkdownLink("ticket", nodeData)
+		fromDirect := renderEntityMarkdownLink("ticket", data)
+		if fromNode != fromDirect {
+			t.Errorf("ticketNodeToData roundtrip mismatch:\n  fromNode:   %q\n  fromDirect: %q", fromNode, fromDirect)
+		}
+	})
+
+	t.Run("goal tree ticket markdown uses renderEntityMarkdownLink", func(t *testing.T) {
+		roots := []*GoalNode{{
+			ID: "G1", Title: "Parent", Status: "open",
+			Tickets: []*TicketNode{{
+				Slug: "MY-TICKET", Title: "My Ticket", Status: "open",
+				Created: "2025-01-01T00:00:00Z", Prompt: "Fix something",
+			}},
+		}}
+		treeOutput := renderGoalTreeNodes(roots, "md")
+		ticketData := ticketNodeToData(roots[0].Tickets[0])
+		expectedLink := renderEntityMarkdownLink("ticket", ticketData)
+		if !strings.Contains(treeOutput, expectedLink) {
+			t.Errorf("goal tree ticket markdown should contain renderEntityMarkdownLink output.\n  Tree:     %q\n  Expected: %q", treeOutput, expectedLink)
+		}
+		if strings.Contains(treeOutput, "- - [") {
+			t.Errorf("ticket in goal tree must not have double dash: %q", treeOutput)
+		}
+	})
+
+	t.Run("ticket list markdown matches renderEntityMarkdown", func(t *testing.T) {
+		tickets := []interface{}{data}
+		listOutput := strings.TrimSpace(renderTicketList(tickets, false, true))
+		directMD := strings.TrimSpace(renderEntityMarkdown("ticket", data))
+		if listOutput != directMD {
+			t.Errorf("ticket list markdown should match renderEntityMarkdown.\n  List:   %q\n  Direct: %q", listOutput, directMD)
+		}
+	})
+
+	t.Run("ticket list text matches renderEntityHuman", func(t *testing.T) {
+		tickets := []interface{}{data}
+		listOutput := strings.TrimSpace(renderTicketList(tickets, false, false))
+		directHuman := renderEntityHuman("ticket", data, false)
+		if !strings.Contains(listOutput, directHuman) {
+			t.Errorf("ticket list text should contain renderEntityHuman output.\n  List:   %q\n  Direct: %q", listOutput, directHuman)
+		}
+	})
+}
+
+func TestUnifiedRenderingSectionIdentity(t *testing.T) {
+	data := map[string]interface{}{
+		"path":      "test/file.ts#MySection",
+		"name":      "MySection",
+		"startLine": float64(10),
+		"endLine":   float64(20),
+	}
+
+	mdLink := renderEntityMarkdownLink("section", data)
+	mdItem := renderEntityMarkdown("section", data)
+	humanItem := renderEntityHuman("section", data, false)
+
+	t.Run("markdown item is dash-prefixed link", func(t *testing.T) {
+		if mdItem != "- "+mdLink {
+			t.Errorf("renderEntityMarkdown should be '- ' + renderEntityMarkdownLink.\n  Got:  %q\n  Want: %q", mdItem, "- "+mdLink)
+		}
+	})
+
+	t.Run("both formats share same props", func(t *testing.T) {
+		props := collectEntityProps("section", data, false)
+		for _, p := range props {
+			if !strings.Contains(mdLink, p) {
+				t.Errorf("markdown link missing prop %q: %s", p, mdLink)
+			}
+			if !strings.Contains(humanItem, p) {
+				t.Errorf("human output missing prop %q: %s", p, humanItem)
+			}
+		}
+	})
+
+	t.Run("section tree markdown uses renderEntityMarkdown", func(t *testing.T) {
+		s := &Section{
+			Path:      "test/file.ts#MySection",
+			Name:      "MySection",
+			StartLine: 10,
+			EndLine:   20,
+		}
+		treeOutput := strings.TrimSpace(renderSectionTree(s, false, true))
+		expectedMD := strings.TrimSpace(renderEntityMarkdown("section", data))
+		if treeOutput != expectedMD {
+			t.Errorf("section tree markdown root should match renderEntityMarkdown.\n  Tree:   %q\n  Direct: %q", treeOutput, expectedMD)
+		}
+	})
+
+	t.Run("section tree text uses renderEntityHuman", func(t *testing.T) {
+		s := &Section{
+			Path:      "test/file.ts#MySection",
+			Name:      "MySection",
+			StartLine: 10,
+			EndLine:   20,
+		}
+		treeOutput := strings.TrimSpace(renderSectionTree(s, false, false))
+		expectedHuman := renderEntityHuman("section", data, false)
+		if treeOutput != expectedHuman {
+			t.Errorf("section tree text root should match renderEntityHuman.\n  Tree:   %q\n  Direct: %q", treeOutput, expectedHuman)
+		}
+	})
+
+	t.Run("section tree markdown preserves indentation for children", func(t *testing.T) {
+		s := &Section{
+			Path:      "test/file.ts#Parent",
+			Name:      "Parent",
+			StartLine: 1,
+			EndLine:   30,
+			Children: []Section{{
+				Path:      "test/file.ts#Child",
+				Name:      "Child",
+				StartLine: 5,
+				EndLine:   15,
+			}},
+		}
+		treeOutput := renderSectionTree(s, false, true)
+		lines := strings.Split(strings.TrimSpace(treeOutput), "\n")
+		if len(lines) < 2 {
+			t.Fatalf("expected at least 2 lines, got %d: %q", len(lines), treeOutput)
+		}
+		if !strings.HasPrefix(lines[0], "- [") {
+			t.Errorf("root section should start with '- [': %q", lines[0])
+		}
+		if !strings.HasPrefix(lines[1], "  - [") {
+			t.Errorf("child section should start with '  - [' for 2-space indent: %q", lines[1])
+		}
+	})
+
+	t.Run("monorepo tree node markdown matches direct rendering", func(t *testing.T) {
+		treeNode := &TreeNode{
+			Kind:  TreeNodeSection,
+			ID:    "sec1",
+			Label: "MySection",
+			URI:   "semiorepo://section/test/file.ts/MYSECTION",
+			Data:  data,
+		}
+		var sb strings.Builder
+		renderTreeNodeMarkdown(&sb, treeNode, "")
+		monorepoOutput := strings.TrimSpace(sb.String())
+		directMD := strings.TrimSpace(renderEntityMarkdown("section", data))
+		if monorepoOutput != directMD {
+			t.Errorf("monorepo tree section markdown should match renderEntityMarkdown.\n  Monorepo: %q\n  Direct:   %q", monorepoOutput, directMD)
+		}
+	})
+}
+
+func TestUnifiedRenderingAllKindIdentity(t *testing.T) {
+	entities := []struct {
+		kind     string
+		nodeKind TreeNodeKind
+		data     map[string]interface{}
+	}{
+		{"project", TreeNodeProject, map[string]interface{}{
+			"name": "myproject", "description": "A project",
+		}},
+		{"bundle", TreeNodeBundle, map[string]interface{}{
+			"name": "mybundle", "root": "path/to/bundle",
+		}},
+		{"folder", TreeNodeFolder, map[string]interface{}{
+			"path": "src/folder", "name": "folder",
+		}},
+		{"file", TreeNodeFile, map[string]interface{}{
+			"path": "src/file.ts", "name": "file.ts",
+		}},
+		{"contributor", TreeNodeContributor, map[string]interface{}{
+			"github": "dev1", "name": "Developer One",
+		}},
+		{"policy", TreeNodePolicy, map[string]interface{}{
+			"id": "code-hygiene", "name": "Code Hygiene", "description": "Clean code policy",
+		}},
+		{"violationKind", TreeNodeViolationKindNode, map[string]interface{}{
+			"id": "inline-comment", "description": "No inline comments",
+		}},
+		{"draft", TreeNodeDraft, map[string]interface{}{
+			"id": "draft-1", "slug": "my-draft",
+		}},
+		{"commit", TreeNodeCommit, map[string]interface{}{
+			"sha": "abc1234567890", "message": "fix: something",
+		}},
+	}
+
+	for _, tt := range entities {
+		t.Run(tt.kind+"_markdown_identity", func(t *testing.T) {
+			directMD := renderEntityMarkdown(tt.kind, tt.data)
+			treeNode := &TreeNode{
+				Kind:  tt.nodeKind,
+				ID:    "test-" + tt.kind,
+				Label: tt.kind,
+				Data:  tt.data,
+			}
+			var sb strings.Builder
+			renderTreeNodeMarkdown(&sb, treeNode, "")
+			treeOutput := strings.TrimSpace(sb.String())
+			directMDTrimmed := strings.TrimSpace(directMD)
+			if treeOutput != directMDTrimmed {
+				t.Errorf("%s: monorepo tree markdown differs from direct renderEntityMarkdown.\n  Tree:   %q\n  Direct: %q", tt.kind, treeOutput, directMDTrimmed)
+			}
+		})
+
+		t.Run(tt.kind+"_text_identity", func(t *testing.T) {
+			directHuman := renderEntityHuman(tt.kind, tt.data, false)
+			treeNode := &TreeNode{
+				Kind:  tt.nodeKind,
+				ID:    "test-" + tt.kind,
+				Label: tt.kind,
+				Data:  tt.data,
+			}
+			var sb strings.Builder
+			renderTreeNodeText(&sb, treeNode, "", true, true)
+			treeOutput := strings.TrimSpace(sb.String())
+			if treeOutput != directHuman {
+				t.Errorf("%s: monorepo tree text differs from direct renderEntityHuman.\n  Tree:   %q\n  Direct: %q", tt.kind, treeOutput, directHuman)
+			}
+		})
+
+		t.Run(tt.kind+"_props_in_both_formats", func(t *testing.T) {
+			props := collectEntityProps(tt.kind, tt.data, false)
+			mdLink := renderEntityMarkdownLink(tt.kind, tt.data)
+			human := renderEntityHuman(tt.kind, tt.data, false)
+			for _, p := range props {
+				if !strings.Contains(mdLink, p) {
+					t.Errorf("%s: markdown link missing prop %q: %s", tt.kind, p, mdLink)
+				}
+				if !strings.Contains(human, p) {
+					t.Errorf("%s: human output missing prop %q: %s", tt.kind, p, human)
+				}
+			}
+		})
+	}
+}
+
+func TestCollectEntityPropsConsistency(t *testing.T) {
+	t.Run("goal props include all fields", func(t *testing.T) {
+		data := map[string]interface{}{
+			"id":          "G1",
+			"title":       "My Goal",
+			"status":      "open",
+			"dueDate":     "2030-01-01",
+			"createdAt":   "2025-01-01T00:00:00Z",
+			"description": "Description",
+		}
+		props := collectEntityProps("goal", data, false)
+		if len(props) < 4 {
+			t.Errorf("goal props should have >= 4 entries (title, status, created, due, desc), got %d: %v", len(props), props)
+		}
+		found := map[string]bool{}
+		for _, p := range props {
+			if strings.Contains(p, "My Goal") {
+				found["title"] = true
+			}
+			if strings.Contains(p, "open") {
+				found["status"] = true
+			}
+			if strings.Contains(p, "created") {
+				found["created"] = true
+			}
+			if strings.Contains(p, "Description") {
+				found["description"] = true
+			}
+		}
+		for _, key := range []string{"title", "status", "created", "description"} {
+			if !found[key] {
+				t.Errorf("goal props missing %s: %v", key, props)
+			}
+		}
+	})
+
+	t.Run("ticket open props include prompt", func(t *testing.T) {
+		data := map[string]interface{}{
+			"slug": "T1", "title": "Fix Bug", "status": "open",
+			"started": "2025-01-01T00:00:00Z", "prompt": "Please fix",
+			"year": float64(2025), "month": float64(1), "day": float64(1),
+		}
+		props := collectEntityProps("ticket", data, false)
+		found := false
+		for _, p := range props {
+			if strings.Contains(p, "Please fix") {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("open ticket props should contain prompt: %v", props)
+		}
+	})
+
+	t.Run("ticket closed props include summary", func(t *testing.T) {
+		data := map[string]interface{}{
+			"slug": "T1", "title": "Fix Bug", "status": "closed",
+			"finished": "2025-01-02T00:00:00Z", "summary": "Fixed the bug",
+			"year": float64(2025), "month": float64(1), "day": float64(1),
+		}
+		props := collectEntityProps("ticket", data, false)
+		found := false
+		for _, p := range props {
+			if strings.Contains(p, "Fixed the bug") {
+				found = true
+			}
+		}
+		if !found {
+			t.Errorf("closed ticket props should contain summary: %v", props)
+		}
+	})
+
+	t.Run("section props include line range", func(t *testing.T) {
+		data := map[string]interface{}{
+			"path": "file.ts#Sec", "name": "Sec",
+			"startLine": float64(10), "endLine": float64(20),
+		}
+		props := collectEntityProps("section", data, false)
+		if len(props) < 1 || !strings.Contains(props[0], ":10-20") {
+			t.Errorf("section props should contain :10-20, got: %v", props)
+		}
+	})
+
+	t.Run("definition props include name and line range", func(t *testing.T) {
+		data := map[string]interface{}{
+			"name": "myFunc", "startLine": float64(5), "endLine": float64(15),
+		}
+		props := collectEntityProps("definition", data, false)
+		foundName := false
+		foundRange := false
+		for _, p := range props {
+			if strings.Contains(p, "myFunc") {
+				foundName = true
+			}
+			if strings.Contains(p, ":5-15") {
+				foundRange = true
+			}
+		}
+		if !foundName {
+			t.Errorf("definition props should contain name: %v", props)
+		}
+		if !foundRange {
+			t.Errorf("definition props should contain line range: %v", props)
+		}
+	})
+}
+
+func TestNoDoubleDashInMarkdownOutput(t *testing.T) {
+	kinds := []struct {
+		kind string
+		data map[string]interface{}
+	}{
+		{"goal", map[string]interface{}{
+			"id": "G1", "title": "Goal", "status": "open",
+		}},
+		{"ticket", map[string]interface{}{
+			"slug": "T1", "title": "Ticket", "status": "open",
+			"year": float64(2025), "month": float64(1), "day": float64(1),
+		}},
+		{"section", map[string]interface{}{
+			"path": "file.ts#Sec", "name": "Sec",
+			"startLine": float64(1), "endLine": float64(5),
+		}},
+		{"bundle", map[string]interface{}{
+			"name": "b1", "root": "path",
+		}},
+		{"folder", map[string]interface{}{
+			"path": "src/f",
+		}},
+		{"file", map[string]interface{}{
+			"path": "src/a.ts",
+		}},
+		{"contributor", map[string]interface{}{
+			"github": "dev",
+		}},
+		{"commit", map[string]interface{}{
+			"sha": "abc",
+		}},
+	}
+
+	for _, tt := range kinds {
+		t.Run(tt.kind+"_renderEntityMarkdown", func(t *testing.T) {
+			output := renderEntityMarkdown(tt.kind, tt.data)
+			if count := strings.Count(output, "- "); count > 1 {
+				dashPositions := []int{}
+				idx := 0
+				for {
+					pos := strings.Index(output[idx:], "- ")
+					if pos == -1 {
+						break
+					}
+					dashPositions = append(dashPositions, idx+pos)
+					idx += pos + 2
+				}
+				if len(dashPositions) >= 2 && dashPositions[1]-dashPositions[0] <= 3 {
+					t.Errorf("renderEntityMarkdown(%s) has double dash at start: %q", tt.kind, output)
+				}
+			}
+		})
+
+		t.Run(tt.kind+"_treeNodeMarkdown", func(t *testing.T) {
+			nodeKind := TreeNodeKind(tt.kind)
+			switch tt.kind {
+			case "goal":
+				nodeKind = TreeNodeGoal
+			case "ticket":
+				nodeKind = TreeNodeTicket
+			case "section":
+				nodeKind = TreeNodeSection
+			case "bundle":
+				nodeKind = TreeNodeBundle
+			case "folder":
+				nodeKind = TreeNodeFolder
+			case "file":
+				nodeKind = TreeNodeFile
+			case "contributor":
+				nodeKind = TreeNodeContributor
+			case "commit":
+				nodeKind = TreeNodeCommit
+			}
+
+			treeNode := &TreeNode{Kind: nodeKind, ID: "test", Label: "test", Data: tt.data}
+			var sb strings.Builder
+			renderTreeNodeMarkdown(&sb, treeNode, "")
+			output := sb.String()
+			if strings.HasPrefix(output, "- - ") {
+				t.Errorf("renderTreeNodeMarkdown(%s) has double dash: %q", tt.kind, output)
+			}
+		})
+	}
+
+	t.Run("goalTreeNodes_no_double_dash", func(t *testing.T) {
+		roots := []*GoalNode{{
+			ID: "G1", Title: "Goal", Status: "open",
+			Tickets: []*TicketNode{{
+				Slug: "T1", Title: "Ticket", Status: "open",
+			}},
+		}}
+		output := renderGoalTreeNodes(roots, "md")
+		for i, line := range strings.Split(output, "\n") {
+			trimmed := strings.TrimLeft(line, " ")
+			if strings.HasPrefix(trimmed, "- - ") {
+				t.Errorf("line %d has double dash: %q", i, line)
+			}
+		}
+	})
+}
+
+// #endregion 🔖Unified Rendering Identity Tests
 
 // #endregion 🔖Monorepo Tree Tests

@@ -217,6 +217,10 @@ The command browser mirrors the repo command and subcommand hierarchy so discove
 Problem list entries open in dedicated editor tabs so edits are immediately saveable.
 Contributor views merge ticket activity and file header credits into a per-person breakdown with line totals, grouped tickets, commits, bundles, and file navigation for quick context.
 The built-in Explorer adds a Sections panel that lists the current file structure (including JSON object keys), lets you jump to a section on click, supports F2 rename, and provides inline create-child, rename, delete, and drag-move actions.
+The `semio-repo: Navigate` command (`semio.navigate`) accepts any `semiorepo://` URI or plain artifact ID and opens the corresponding resource: files open in the editor, folders and bundles reveal in the Explorer, tickets open their `ticket.md`, goals open their `goal.json`, contributors and commits open GitHub in the browser, and sections and definitions jump to the correct line.
+The `semio-repo: Navigate to...` command (`semio.navigateTo`) opens a quick pick listing all tree nodes from the repo.
+Clicking any tree item in the Monorepo view navigates to its resource, including goals which open their `goal.json`.
+A URI handler registered for the `semiorepo` scheme means clicking `semiorepo://` links from terminals, markdown previews, or external applications triggers navigation within VS Code.
 
 ## 🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)
 
@@ -1187,6 +1191,8 @@ Section list queries fetch nested children alongside ranges so tree views can re
 Repo tool definitions are top-level only (anchored at the start of the line); definitions inside classes, functions, or indents are ignored to keep the scope flat and manageable.
 Ticket listing reads from the active `.semio-repo/tickets` workspace and falls back to legacy root `tickets/` directories when needed.
 Repo `tree` commands support a `--md` flag that renders the structure as a Markdown nested bullet list with links.
+The top-level `repo tree` command defaults to Markdown output; `--text` renders ASCII connectors and `--json` returns the raw tree object.
+Project tool listing is sourced from project records (`LoadProjects`) so project outputs and tool return types stay aligned on `Project` entities.
 VS Code consumes the JSONL stream, extracts the final `result` payload, and returns the GraphQL response to keep extension data aligned with the CLI engine.
 Devcontainer attach uninstalls any existing semio-repo extension across IDE IPC hook CLIs and extensions directories, clears stale VS Code and Cursor caches, installs the freshly packaged VSIX, verifies via list-extensions, and falls back to direct installation into IDE extensions directories with extensions.json updates (including the `$mid` location key) when CLIs report WSL-only usage.
 The semio-repo extension targets a VS Code engine range compatible with Cursor (1.105.x) so Cursor can load the bundled extension without version rejections.
@@ -1608,6 +1614,7 @@ Real-time validation for kit JSON files with Quick Fix code actions that apply `
 ### Sidebar
 
 Tree views for tickets, policies, contributors, and commands with search and filter support.
+Section tree expansion in the Monorepo view treats GraphQL section children as mixed interface nodes and only renders nodes identified as sections (`__typename: Section` or `section:` IDs), preventing definition entries from appearing twice.
 
 ### Tickets
 

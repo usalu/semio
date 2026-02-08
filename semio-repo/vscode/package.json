@@ -240,6 +240,14 @@
         "title": "semio-repo: Navigate to Definition"
       },
       {
+        "command": "semio.navigate",
+        "title": "semio-repo: Navigate"
+      },
+      {
+        "command": "semio.navigateTo",
+        "title": "semio-repo: Navigate to..."
+      },
+      {
         "command": "semio.refreshMonorepo",
         "title": "semio-repo: Refresh Monorepo",
         "icon": "$(refresh)"
@@ -410,102 +418,127 @@
       },
       {
         "command": "semio.filter.toggle.bundle.library",
+        "toggled": "semio.filter.bundle.library",
         "title": "\ud83d\udcda"
       },
       {
         "command": "semio.filter.toggle.bundle.binary",
+        "toggled": "semio.filter.bundle.binary",
         "title": "\u2328\ufe0f"
       },
       {
         "command": "semio.filter.toggle.bundle.ui",
+        "toggled": "semio.filter.bundle.ui",
         "title": "\ud83d\uddb1\ufe0f"
       },
       {
         "command": "semio.filter.toggle.bundle.site",
+        "toggled": "semio.filter.bundle.site",
         "title": "\ud83d\udcd4"
       },
       {
         "command": "semio.filter.toggle.bundle.assets",
+        "toggled": "semio.filter.bundle.assets",
         "title": "\ud83c\udf10"
       },
       {
         "command": "semio.filter.toggle.bundle.default",
+        "toggled": "semio.filter.bundle.default",
         "title": "\ud83c\udfea"
       },
       {
         "command": "semio.filter.toggle.bundle.none",
+        "toggled": "semio.filter.bundle.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.bundle.all",
+        "toggled": "semio.filter.bundle.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.folder.organization",
+        "toggled": "semio.filter.folder.organization",
         "title": "\ud83d\uddc3\ufe0f"
       },
       {
         "command": "semio.filter.toggle.folder.required",
+        "toggled": "semio.filter.folder.required",
         "title": "\ud83d\udcc1"
       },
       {
         "command": "semio.filter.toggle.folder.none",
+        "toggled": "semio.filter.folder.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.folder.all",
+        "toggled": "semio.filter.folder.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.section.none",
+        "toggled": "semio.filter.section.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.section.all",
+        "toggled": "semio.filter.section.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.definition.implementation",
+        "toggled": "semio.filter.definition.implementation",
         "title": "\ud83d\udee0\ufe0f"
       },
       {
         "command": "semio.filter.toggle.definition.interface",
+        "toggled": "semio.filter.definition.interface",
         "title": "\u2702\ufe0f"
       },
       {
         "command": "semio.filter.toggle.definition.constant",
+        "toggled": "semio.filter.definition.constant",
         "title": "\ud83e\udea8"
       },
       {
         "command": "semio.filter.toggle.definition.none",
+        "toggled": "semio.filter.definition.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.definition.all",
+        "toggled": "semio.filter.definition.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.ticket.open",
+        "toggled": "semio.filter.ticket.open",
         "title": "\ud83d\udd35"
       },
       {
         "command": "semio.filter.toggle.ticket.closed",
+        "toggled": "semio.filter.ticket.closed",
         "title": "\ud83d\udfe2"
       },
       {
         "command": "semio.filter.toggle.ticket.none",
+        "toggled": "semio.filter.ticket.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.ticket.all",
+        "toggled": "semio.filter.ticket.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.time.none",
+        "toggled": "semio.filter.time.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.time.all",
+        "toggled": "semio.filter.time.all",
         "title": "\u2705"
       },
       {
@@ -551,102 +584,127 @@
       },
       {
         "command": "semio.filter.toggle.project.user",
+        "toggled": "semio.filter.project.user",
         "title": "\ud83d\udc64"
       },
       {
         "command": "semio.filter.toggle.project.infrastructure",
+        "toggled": "semio.filter.project.infrastructure",
         "title": "\ud83e\uddf0"
       },
       {
         "command": "semio.filter.toggle.project.research",
+        "toggled": "semio.filter.project.research",
         "title": "\ud83d\udd2c"
       },
       {
         "command": "semio.filter.toggle.project.none",
+        "toggled": "semio.filter.project.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.project.all",
+        "toggled": "semio.filter.project.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.bundle.schema",
+        "toggled": "semio.filter.bundle.schema",
         "title": "\ud83d\udec2"
       },
       {
         "command": "semio.filter.toggle.file.code",
+        "toggled": "semio.filter.file.code",
         "title": "\ud83d\udcc4"
       },
       {
         "command": "semio.filter.toggle.file.script",
+        "toggled": "semio.filter.file.script",
         "title": "\ud83d\udda5\ufe0f"
       },
       {
         "command": "semio.filter.toggle.file.config",
+        "toggled": "semio.filter.file.config",
         "title": "\u2699\ufe0f"
       },
       {
         "command": "semio.filter.toggle.file.test",
+        "toggled": "semio.filter.file.test",
         "title": "\ud83e\uddea"
       },
       {
         "command": "semio.filter.toggle.file.docs",
+        "toggled": "semio.filter.file.docs",
         "title": "\ud83d\udcdd"
       },
       {
         "command": "semio.filter.toggle.file.resource",
+        "toggled": "semio.filter.file.resource",
         "title": "\ud83c\udfa8"
       },
       {
         "command": "semio.filter.toggle.file.license",
+        "toggled": "semio.filter.file.license",
         "title": "\ud83d\udcdc"
       },
       {
         "command": "semio.filter.toggle.file.none",
+        "toggled": "semio.filter.file.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.file.all",
+        "toggled": "semio.filter.file.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.goal.open",
+        "toggled": "semio.filter.goal.open",
         "title": "\ud83d\udd35"
       },
       {
         "command": "semio.filter.toggle.goal.closed",
+        "toggled": "semio.filter.goal.closed",
         "title": "\ud83d\udfe2"
       },
       {
         "command": "semio.filter.toggle.goal.none",
+        "toggled": "semio.filter.goal.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.goal.all",
+        "toggled": "semio.filter.goal.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.policy.none",
+        "toggled": "semio.filter.policy.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.policy.all",
+        "toggled": "semio.filter.policy.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.contributor.none",
+        "toggled": "semio.filter.contributor.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.contributor.all",
+        "toggled": "semio.filter.contributor.all",
         "title": "\u2705"
       },
       {
         "command": "semio.filter.toggle.commit.none",
+        "toggled": "semio.filter.commit.none",
         "title": "\ud83d\udeab"
       },
       {
         "command": "semio.filter.toggle.commit.all",
+        "toggled": "semio.filter.commit.all",
         "title": "\u2705"
       }
     ],
@@ -708,131 +766,157 @@
         },
         {
           "command": "semio.filter.toggle.project.user",
+        "toggled": "semio.filter.project.user",
           "when": "view == semio.filter && viewItem == filter_project",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.project.infrastructure",
+        "toggled": "semio.filter.project.infrastructure",
           "when": "view == semio.filter && viewItem == filter_project",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.project.research",
+        "toggled": "semio.filter.project.research",
           "when": "view == semio.filter && viewItem == filter_project",
           "group": "inline@3"
         },
         {
           "command": "semio.filter.toggle.bundle.library",
+        "toggled": "semio.filter.bundle.library",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.bundle.binary",
+        "toggled": "semio.filter.bundle.binary",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.bundle.ui",
+        "toggled": "semio.filter.bundle.ui",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@3"
         },
         {
           "command": "semio.filter.toggle.bundle.site",
+        "toggled": "semio.filter.bundle.site",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@4"
         },
         {
           "command": "semio.filter.toggle.bundle.assets",
+        "toggled": "semio.filter.bundle.assets",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@5"
         },
         {
           "command": "semio.filter.toggle.bundle.schema",
+        "toggled": "semio.filter.bundle.schema",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@6"
         },
         {
           "command": "semio.filter.toggle.bundle.default",
+        "toggled": "semio.filter.bundle.default",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@7"
         },
         {
           "command": "semio.filter.toggle.folder.organization",
+        "toggled": "semio.filter.folder.organization",
           "when": "view == semio.filter && viewItem == filter_folder",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.folder.required",
+        "toggled": "semio.filter.folder.required",
           "when": "view == semio.filter && viewItem == filter_folder",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.file.code",
+        "toggled": "semio.filter.file.code",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.file.script",
+        "toggled": "semio.filter.file.script",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.file.config",
+        "toggled": "semio.filter.file.config",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@3"
         },
         {
           "command": "semio.filter.toggle.file.test",
+        "toggled": "semio.filter.file.test",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@4"
         },
         {
           "command": "semio.filter.toggle.file.docs",
+        "toggled": "semio.filter.file.docs",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@5"
         },
         {
           "command": "semio.filter.toggle.file.resource",
+        "toggled": "semio.filter.file.resource",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@6"
         },
         {
           "command": "semio.filter.toggle.file.license",
+        "toggled": "semio.filter.file.license",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@7"
         },
         {
           "command": "semio.filter.toggle.definition.implementation",
+        "toggled": "semio.filter.definition.implementation",
           "when": "view == semio.filter && viewItem == filter_definition",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.definition.interface",
+        "toggled": "semio.filter.definition.interface",
           "when": "view == semio.filter && viewItem == filter_definition",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.definition.constant",
+        "toggled": "semio.filter.definition.constant",
           "when": "view == semio.filter && viewItem == filter_definition",
           "group": "inline@3"
         },
         {
           "command": "semio.filter.toggle.goal.open",
+        "toggled": "semio.filter.goal.open",
           "when": "view == semio.filter && viewItem == filter_goal",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.goal.closed",
+        "toggled": "semio.filter.goal.closed",
           "when": "view == semio.filter && viewItem == filter_goal",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.ticket.open",
+        "toggled": "semio.filter.ticket.open",
           "when": "view == semio.filter && viewItem == filter_ticket",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.ticket.closed",
+        "toggled": "semio.filter.ticket.closed",
           "when": "view == semio.filter && viewItem == filter_ticket",
           "group": "inline@2"
         },
