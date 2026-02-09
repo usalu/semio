@@ -20,6 +20,49 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## History
 
+All source code headers should be extended/changed/refactored to look like this:
+```md
+// #region 🔖Header
+
+// <ID> e.g. 💻︎ semio-repo/cli/main.go
+
+// <SUMMARY> e.g. 
+
+// <YEARS> CONTRIBUTORNAME <<EMAIL>> // e.g. 2023, 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+// <YEARS> CONTRIBUTORNAME <<EMAIL>> // e.g. 2026 Kinan Saraki <kinan.sarak@gmail.com>
+// …
+
+// #region 🔖License
+
+// <LICENSETEXT>
+// …
+
+// <LICENSETEXT>
+// …
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+
+// <FILEWIDEREQUIRMENT1>
+//  …
+
+// <FILEWIDEREQUIRMENT>
+//  …
+
+// …
+
+// #region 🔖Specs
+
+// #endregion 🔖Header
+```
+
+All trees of policies are currently flat but it should be in the same tree as the id of the violation kind. Both in semio repo cli and semio repo vscode extension.
+
+semio repo:
+The id system is not properly setup. e.g. when copying the id in the vscode extension it is missing the starting emoji which is part of the id.
+Find all mismatchtes, fix them and extend the tests, so this cant happen in the future.
+
 semio repo cli:
 - every list and tree command should have a query parameter that uses bleve for prefiltering.
 - The violation kinds are not properly nested as tree but wrongly a flat list.
@@ -960,30 +1003,30 @@ projects: `semiorepo://projects`
 project: `semiorepo://project/{id}`
 bundles: `semiorepo://bundles`
 bundle: `semiorepo://bundle/{id}`
-folders: `semiorepo://folders/{parent-path*}`
-folder: `semiorepo://folder/{path*}`
-files: `semiorepo://files/{folder-path*}`
-file: `semiorepo://file/{path*}`
-sections: `semiorepo://sections/{file-path*}`
-section: `semiorepo://section/{path*}` # just id but replace `#` with `/` and replace section name and definition name with uppercase slugs e.g. `🔖semio/js/sketchpad/Design.tsx#State Management#Design Store` turns into `semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE`
-definitions: `semiorepo://definitions/{path*}`
-definition: `semiorepo://definition/{path*}`
+folders: `semiorepo://folders/{PARENT-PATH*}`
+folder: `semiorepo://folder/{PATH*}`
+files: `semiorepo://files/{FOLDER-PATH*}`
+file: `semiorepo://file/{PATH*}`
+sections: `semiorepo://sections/{FILE-PATH*}`
+section: `semiorepo://section/{PATH*}` # just id but replace `#` with `/` and replace section name and definition name with uppercase slugs e.g. `🔖semio/js/sketchpad/Design.tsx#State Management#Design Store` turns into `semio/JS/SKETCHPAD/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE`
+definitions: `semiorepo://definitions/{PATH*}`
+definition: `semiorepo://definition/{PATH*}`
 tickets: `semiorepo://tickets`
-ticket: `semiorepo://ticket/{year}/{month}/{day}/{slug}`
+ticket: `semiorepo://ticket/{YEAR}/{MONTH}/{DAY}/{SLUG}`
 goals: `semiorepo://goals`
-goal: `semiorepo://goal/{path*}` # {path*} is a uppercase slug path to a goal e.g. "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP"
+goal: `semiorepo://goal/{PATH*}` # {PATH*} is a uppercase slug path to a goal e.g. "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP"
 drafts: `semiorepo://drafts`
-draft: `semiorepo://draft/{slug}`
+draft: `semiorepo://draft/{SLUG}`
 todos: `semiorepo://todos`
-todo: `semiorepo://todo/{slug}`
+todo: `semiorepo://todo/{SLUG}`
 policies: `semiorepo://policies`
-policy: `semiorepo://policy/{id}`
+policy: `semiorepo://policy/{ID}`
 violationKinds: `semiorepo://violationKinds`
-violationKind: `semiorepo://violationKind/{policy-id}/{path*}`
+violationKind: `semiorepo://violationKind/{POLICY-ID}/{PATH*}`
 contributors: `semiorepo://contributors`
-contributor: `semiorepo://contributor/{github}`
+contributor: `semiorepo://contributor/{GITHUB}`
 commits: `semiorepo://commits`
-commit: `semiorepo://commit/{sha}`
+commit: `semiorepo://commit/{SHA}`
 The query params are
 General query params: 
 {?client}

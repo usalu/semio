@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻︎ semio-repo/vscode/extension.ts
+// 💻 semio-repo/vscode/extension.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -555,8 +555,8 @@ const TREE_CACHE_TTL = 30000;
 export function bundleKindEmoji(kind: string): string {
   switch (kind) {
     case "schema": return "🛂";
-    case "binary": return "⌨️";
-    case "ui": return "🖱️";
+    case "binary": return "⌨";
+    case "ui": return "🖱";
     case "site": return "🌐";
     case "assets": return "🏪";
     case "library": return "📚";
@@ -930,9 +930,9 @@ export function getFileKindIcon(name: string): string {
   if (name.endsWith(".py")) return "🐍";
   if (name.endsWith(".go")) return "🔷";
   if (name.endsWith(".cs")) return "🟣";
-  if (name.endsWith(".json") || name.endsWith(".yaml") || name.endsWith(".toml")) return "⚙️";
+  if (name.endsWith(".json") || name.endsWith(".yaml") || name.endsWith(".toml")) return "⚙";
   if (name.endsWith(".md") || name.endsWith(".txt")) return "📝";
-  if (name.endsWith(".sh") || name.endsWith(".ps1")) return "🖥️";
+  if (name.endsWith(".sh") || name.endsWith(".ps1")) return "🖥";
   return "📄";
 }
 
@@ -1174,16 +1174,16 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     if (!element) {
       return [
         this.createSearchItem(),
-        this.createFilterItem("🏗️Projects", "filter_project", "Projects filter"),
+        this.createFilterItem("🏗Projects", "filter_project", "Projects filter"),
         this.createFilterItem("📦Bundles", "filter_bundle", "Bundles filter"),
         this.createFilterItem("📂Folders", "filter_folder", "Folders filter"),
         this.createFilterItem("📄Files", "filter_file", "Files filter"),
         this.createFilterItem("🔖Sections", "filter_section", "Sections filter"),
-        this.createFilterItem("🏷️Definitions", "filter_definition", "Definitions filter"),
+        this.createFilterItem("🏷Definitions", "filter_definition", "Definitions filter"),
         this.createFilterItem("🎯Goals", "filter_goal", "Goals filter"),
         this.createFilterItem("📅Tickets", "filter_ticket", "Tickets filter"),
         this.createFilterItem("📅Dates", "filter_time", "Dates filter", vscode.TreeItemCollapsibleState.Collapsed),
-        this.createFilterItem("🛡️Policies", "filter_policy", "Policies filter"),
+        this.createFilterItem("🛡Policies", "filter_policy", "Policies filter"),
         this.createFilterItem("👤Contributors", "filter_contributor", "Contributors filter"),
         this.createFilterItem("🔄Commits", "filter_commit", "Commits filter"),
       ];
@@ -1411,10 +1411,10 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
   async getChildren(element?: MonorepoTreeItem): Promise<MonorepoTreeItem[]> {
     if (!element) {
       return [
-        new MonorepoTreeItem("🏗️Projects", vscode.TreeItemCollapsibleState.Collapsed, "root_projects", undefined, "🏗️Projects"),
+        new MonorepoTreeItem("🏗Projects", vscode.TreeItemCollapsibleState.Collapsed, "root_projects", undefined, "🏗Projects"),
         new MonorepoTreeItem("🎯Goals", vscode.TreeItemCollapsibleState.Collapsed, "root_goals", undefined, "🎯Goals"),
         new MonorepoTreeItem("📅Tickets", vscode.TreeItemCollapsibleState.Collapsed, "root_tickets", undefined, "📅Tickets"),
-        new MonorepoTreeItem("🛡️Policies", vscode.TreeItemCollapsibleState.Collapsed, "root_policies", undefined, "🛡️Policies"),
+        new MonorepoTreeItem("🛡Policies", vscode.TreeItemCollapsibleState.Collapsed, "root_policies", undefined, "🛡Policies"),
         new MonorepoTreeItem("👤Contributors", vscode.TreeItemCollapsibleState.Collapsed, "root_contributors", undefined, "👤Contributors"),
         new MonorepoTreeItem("🔀Commits", vscode.TreeItemCollapsibleState.Collapsed, "root_commits", undefined, "🔀Commits"),
       ];
@@ -1429,7 +1429,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       return projects
         .filter((p: any) => this.matchesSearch(p.name))
         .map((p: any) => {
-          const kindIcon = p.kind || "🏗️";
+          const kindIcon = p.kind || "🏗";
           const item = new MonorepoTreeItem(`${kindIcon}${p.name}`, vscode.TreeItemCollapsibleState.Collapsed, "project", p, `${kindIcon}${p.id}`);
           item.command = { command: "semio.navigateToFolder", title: "Open", arguments: [p.root] };
           return item;
@@ -1502,7 +1502,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
         return true;
       });
       for (const d of filteredDefs) {
-        const kindIcon = d.kind === "IMPLEMENTATION" ? "🛠️" : d.kind === "INTERFACE" ? "✂️" : "🪨";
+        const kindIcon = d.kind === "IMPLEMENTATION" ? "🛠" : d.kind === "INTERFACE" ? "✂" : "🪨";
         const data = { filePath: payload.filePath, definition: d };
         const item = new MonorepoTreeItem(`${kindIcon}${d.name}`, vscode.TreeItemCollapsibleState.None, "definition", data, `${payload.filePath}§${d.name}`);
         item.command = { command: "semio.navigateToDefinition", title: "Open", arguments: [data] };
@@ -1586,7 +1586,7 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
       const policies = await fetchPoliciesViaGraphQL();
       return policies
         .filter((p: any) => this.matchesSearch(p.name))
-        .map((p: any) => new MonorepoTreeItem(`🛡️${p.name}`, vscode.TreeItemCollapsibleState.Collapsed, "policy", p, p.id));
+        .map((p: any) => new MonorepoTreeItem(`🛡${p.name}`, vscode.TreeItemCollapsibleState.Collapsed, "policy", p, p.id));
     }
 
     if (element.contextValue === "policy") {
@@ -2041,7 +2041,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
 
   const contributedCommands: string[] = [
     "semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile",
-    "semio.policyList", "semio.ticketList", "semio.ticketRead", "semio.ticketTree",
+    "semio.policyList", "semio.policyTree", "semio.ticketList", "semio.ticketRead", "semio.ticketTree",
     "semio.projectList", "semio.projectTree",
     "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove",
     "semio.sectionTree", "semio.sectionList", "semio.sectionCreate", "semio.sectionMove",

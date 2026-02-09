@@ -30,11 +30,11 @@
     <a href="https://learn.microsoft.com/en-us/dotnet/csharp/"><img src="semio/assets/badges/powered-by-csharp.svg" alt="C#"></a>
     <br/>
     <br/>
-    <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘️ </i>
+    <i>🧩 Design-Information-Modeling for Kit-of-Parts 🏘 </i>
 </p>
 <br/>
 
-You want to 🧩 the next 🏘️🏛️🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣️👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥️✒️🖨️🪄🚀
+You want to 🧩 the next 🏘🏛🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣👥🖱⌨ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥✒🖨🪄🚀
 
 # 👋 Hello contributor
 
@@ -47,10 +47,10 @@ Let me walk you through 🚶
 
 # 📑 Overview
 
-1. [🛍️ Products](#%EF%B8%8F-products-)
-   - [✏️ sketchpad](#%EF%B8%8F-sketchpad-)
+1. [🛍 Products](#%EF%B8%8F-products-)
+   - [✏ sketchpad](#%EF%B8%8F-sketchpad-)
    - [👥 studio](#-studio-)
-   - [☁️ cloud](#%EF%B8%8F-cloud-)
+   - [☁ cloud](#%EF%B8%8F-cloud-)
    - [🤖 assistant](#-assistant-)
    - [VS Code Extension](#vs-code-extension-)
    - [🦗 semio.gh](#-semiogh-)
@@ -60,88 +60,88 @@ Let me walk you through 🚶
    - [🐞 semio.ladybug](#-semioladybug-)
 1. [📄 Specs](#-specs-)
    - [📦 Kit](#-kit-)
-   - [🏘️ Design](#%EF%B8%8F-design-)
+   - [🏘 Design](#%EF%B8%8F-design-)
    - [🏠 Type](#-type-)
    - [🔗 Connection](#-connection-)
    - [⭕ Piece](#-piece-)
    - [⚓ Connector](#-port-)
    - [💾 Model](#-model-)
-   - [🏷️ Attribute](#%EF%B8%8F-attribute-)
-   - [🏷️ Tag](#%EF%B8%8F-tag-)
+   - [🏷 Attribute](#%EF%B8%8F-attribute-)
+   - [🏷 Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
    - [🔢 Quality](#-quality-)
    - [📊 Benchmark](#-benchmark-)
-   - [🏷️ Concept](#%EF%B8%8F-concept-)
+   - [🏷 Concept](#%EF%B8%8F-concept-)
    - [👤 Author](#-author-)
    - [📋 Layer](#-layer-)
    - [👥 Group](#-group-)
-   - [⚙️ Prop](#️-prop-)
+   - [⚙ Prop](#-prop-)
    - [📈 Stat](#-stat-)
 1. [🦑 Repo](#-repo-)
-   - [⚖️ Principles](#️-principles-)
+   - [⚖ Principles](#-principles-)
    - [🔀 Git](#-git-)
      - [🦑 GitKraken](#-gitkraken-)
      - [💬 Discord](#-discord-)
      - [📢 Release](#-release-)
-     - [🏷️ Tag](#%EF%B8%8F-tag-)
+     - [🏷 Tag](#%EF%B8%8F-tag-)
      - [🌿 Branch](#-branch-)
-     - [🗃️ Commit](#%EF%B8%8F-commit-)
+     - [🗃 Commit](#%EF%B8%8F-commit-)
 1. [🧑‍💻 Development](#-development-)
    - [🔌 Connector Numbers](#-port-numbers-)
    - [📒 Tickets and reports](#-tickets-and-reports)
    - [🪄 AI](#-ai-)
-     - [🛠️ Uses-Cases](#-uses-cases-)
-       - [⚖️ Decision Making](#-decision-making-)
+     - [🛠 Uses-Cases](#-uses-cases-)
+       - [⚖ Decision Making](#-decision-making-)
        - [🔁 Refactoring](#-refactoring-)
        - [🐛 Bug Fixes](#-bug-fixes-)
-     - [⌨️ Tools](#-tools-)
+     - [⌨ Tools](#-tools-)
        - [🌐 Web-Chat](#-web-chat-)
-         - [❄️ ChatGPT](#-chatgpt-)
+         - [❄ ChatGPT](#-chatgpt-)
          - [🌟 Gemini](#-gemini-)
          - [AI studio](#-ai-studio-)
        - [💻 Editor](#-editor-)
-         - [✈️ Copilot](#-copilot-)
-         - [🖱️ Cursor](#-cursor-)
+         - [✈ Copilot](#-copilot-)
+         - [🖱 Cursor](#-cursor-)
          - [🌊 Windsurf](#-windsurf-)
-       - [⌨️ CLI](#-cli-)
-         - [⌨️ Claude Code](#-claude-code-)
+       - [⌨ CLI](#-cli-)
+         - [⌨ Claude Code](#-claude-code-)
          - [🧾 Codex](#-codex-)
-       - [☁️ Cloud](#-cloud-)
+       - [☁ Cloud](#-cloud-)
          - [🦑 Jules](#-jules-)
        - [🔍 Agents](#-agents-)
-         - [↕️ Reorderer](#-reorderer-)
+         - [↕ Reorderer](#-reorderer-)
          - [🔁 Formatter](#-formatter-)
        - [🤖 Models](#-models-)
          - [Claude Opus 4.5](#-opus-45-)
          - [GPT-5.2 Codex](#-gpt-52-codex-)
          - [GPT-5.3 Codex](#-gpt-53-codex-)
      - [🔄 CI/CD](#-cicd-)
-1. [♻️ Ecosystems](#%EF%B8%8F-ecosystems-)
+1. [♻ Ecosystems](#%EF%B8%8F-ecosystems-)
    - [🟨 JavaScript](#-javascript-)
    - [🟪 .NET](#-net-)
    - [🐍 Python](#-python-)
 1. [📦 Bundles](#-bundles-)
    - [🟨 semio/js](#-semiojs-)
-   - [✏️ semio/desktop](#️-semiodesktop-)
+   - [✏ semio/desktop](#-semiodesktop-)
    - [📚 semio/docs](#-semiodocs-)
-   - [🎛️ semio/play](#%EF%B8%8F-semioplay-)
+   - [🎛 semio/play](#%EF%B8%8F-semioplay-)
    - [🤖 semio/assistant](#-semioassistant-)
-   - [⚙️ semio/engine](#️-semioengine-)
+   - [⚙ semio/engine](#-semioengine-)
    - [🟪 semio/net](#-semionet-)
    - [🦗 semio/grasshopper](#-semiograsshopper-)
-     - [🪢 Scripting](#️-scripting-)
-   - [🛍️ semio/assets](#%EF%B8%8F-semioassets-)
-     - [🏷️ Badges](#%EF%B8%8F-badges-)
+     - [🪢 Scripting](#-scripting-)
+   - [🛍 semio/assets](#%EF%B8%8F-semioassets-)
+     - [🏷 Badges](#%EF%B8%8F-badges-)
      - [📄 Fonts](#-fonts-)
-     - [👁️ Icons](#%EF%B8%8F-icons-)
-1. [🏘️ Examples](#%EF%B8%8F-examples-)
+     - [👁 Icons](#%EF%B8%8F-icons-)
+1. [🏘 Examples](#%EF%B8%8F-examples-)
    - [🚀 Starter](#-starter-)
    - [👋 Hello semio](#-hello-semio-)
    - [🌈 Geometry](#-geometry-)
    - [🫀 Metabolism](#-metabolism-)
 1. [💯 Brand](#-brand-)
-   - [✍️ Concept](#%EF%B8%8F-concept-)
+   - [✍ Concept](#%EF%B8%8F-concept-)
      - [✅ Do](#-do-)
      - [❌ Dont](#-dont-)
    - [🌈 Colors](#-colors-)
@@ -154,12 +154,12 @@ Let me walk you through 🚶
    - [📄 Typography](#-typography-)
      - [🔡 Typesetting](#-typesetting-)
    - [👀 Visual elements](#-visual-elements-)
-1. [⚖️ License](#-license-)
+1. [⚖ License](#-license-)
 1. [🔒Security](#-security-)
 1. [✨ Contributors](#-contributors-)
 1. [📊 Stats](#-stats-)
 
-# 🛍️ Products [↑](#-overview)
+# 🛍 Products [↑](#-overview)
 
 > Do you wonder how semio is interopable? The reason are shared [specification](#-specs-), [ecosystems](#%EF%B8%8F-ecosystems-) and [bundles](#-bundles-) 🪢
 
@@ -167,11 +167,11 @@ Work-in-progress artifacts stay bundled with the active ticket workspace so team
 The engine offers a dev/debug startup mode that waits for a debugger to attach before it runs.
 The engine can also run as a pure stdio MCP server for tool integrations.
 
-## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
+## ✏ sketchpad [↑](#%EF%B8%8F-products-)
 
-[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️
+[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱
 
-It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍️
+It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍
 
 Sketchpad uses semantic borders to communicate interactive element edges and window boundaries. Windows are separated from the canvas edge and from each other by a single spacing unit, and each window is outlined by a continuous border.
 
@@ -193,7 +193,7 @@ A studio is a synchronous collaboriation environment for teams to work together 
 
 <!-- ![semio studio Demo](/assets/images/studio-demo.png) -->
 
-## ☁️ cloud [↑](#%EF%B8%8F-products-)
+## ☁ cloud [↑](#%EF%B8%8F-products-)
 
 Use any file-hosting platform as an asynchronous Common-Data-Environment 📁
 
@@ -201,7 +201,7 @@ Use any file-hosting platform as an asynchronous Common-Data-Environment 📁
 
 ## 🤖 assistant [↑](#%EF%B8%8F-products-)
 
-The assistant helps you on every step in the design process with semio ✍️
+The assistant helps you on every step in the design process with semio ✍
 
 ![semio assistant Demo](/assets/images/assistant-demo.png)
 
@@ -262,7 +262,7 @@ The SQL-schema of `kit.db` is found in [`./sqlite/schema.sql`](./sqlite/schema.s
 
 For Inter-Process-Communication (IPC) the JSON-schema in [`./jsonschema/kit.json`](./jsonschema/kit.json) is used 📄
 
-## 🏘️ Design [↑](#-specs-)
+## 🏘 Design [↑](#-specs-)
 
 A [`design`](#%EF%B8%8F-design-) is an undirected graph of [`pieces`](#-piece-) (nodes) and [`connections`](#-connection-) (edges) with organizational [`layers`](#-layer-), [`groups`](#-group-), [`stats`](#-stat-), [`attributes`](#%EF%B8%8F-attribute-), and [`concepts`](#%EF%B8%8F-concept-) 📐
 
@@ -294,7 +294,7 @@ The _translation_ is applied first, then the _rotation_ 🥈
 
 The two [`pieces`](#-piece-) are called **_connected_** and **_connecting_** but there is no difference between them 🔄
 
-The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece-) ➡️
+The _direction_ of a [`connection`](#-connection-) goes from the lower _hierarchy_ to the higher _hierarchy_ of the [`pieces`](#-piece-) ➡
 
 A [`connection`](#-connection-) can have [`attributes`](#%EF%B8%8F-attribute-) and diagram positioning with **x** and **y** offsets 📍
 
@@ -318,9 +318,9 @@ A [`connector`](#-port-) can have a connector **port** and a list of **compatibl
 
 No **port** means the _default_ port and no **compatible ports** means the connector is compatible with all other connectors 🔑
 
-It is enough for one [`connector`](#-port-) to be compatible with another [`connector`](#-port-) to be compatible with each other ↔️
+It is enough for one [`connector`](#-port-) to be compatible with another [`connector`](#-port-) to be compatible with each other ↔
 
-A [`connector`](#-port-) can have [`props`](#️-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
+A [`connector`](#-port-) can have [`props`](#-prop-) that define measurable characteristics and [`attributes`](#%EF%B8%8F-attribute-) for additional metadata 📏
 
 ## 💾 Model [↑](#-specs-)
 
@@ -330,7 +330,7 @@ No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ model 🔑
 
 The similarity of [`models`](#-model-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
-## 🏷️ Attribute [↑](#-specs-)
+## 🏷 Attribute [↑](#-specs-)
 
 A [`attribute`](#%EF%B8%8F-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
@@ -353,15 +353,15 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 - `Pa` for pascal, `kPa` for kilopascal, `MPa` for megapascal
 - …
 
-A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔️
+A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔
 
-## 🏷️ Tag [↑](#-specs-)
+## 🏷 Tag [↑](#-specs-)
 
 A [`tag`](#%EF%B8%8F-tag-) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
 
 ## ◳ Plane [↑](#-specs-)
 
-A [`plane`](#-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈️
+A [`plane`](#-plane-) is a location (**origin**) and orientation (**x-axis**, **y-axis** and derived z-axis) in 3D space ✈
 
 The coordinate system is left-handed where the thumb points up into the direction of the z-axis, the index-finger forwards into the direction of the y-axis and the middle-finger points to the right into the direction of the x-axis 👈
 
@@ -385,7 +385,7 @@ A [`benchmark`](#-benchmark-) is a performance standard within a [`quality`](#-q
 
 Benchmarks provide reference points for evaluating quality measurements against industry or design standards 📈
 
-## 🏷️ Concept [↑](#-specs-)
+## 🏷 Concept [↑](#-specs-)
 
 A [`concept`](#%EF%B8%8F-concept-) is a **name** and **order** pair that provides semantic grouping for [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) 🧠
 
@@ -409,9 +409,9 @@ A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`
 
 Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
 
-## ⚙️ Prop [↑](#-specs-)
+## ⚙ Prop [↑](#-specs-)
 
-A [`prop`](#️-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
+A [`prop`](#-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
 
 Props define measurable characteristics of connectors using the quality system for standardized measurement 📐
 
@@ -425,14 +425,14 @@ Stats provide computed or measured performance data for entire designs using the
 
 This git repo has <strong>everything</strong> that exists in the open semio ecosystem 🤯
 
-## ⚖️ Principles [↑](#-repo-)
+## ⚖ Principles [↑](#-repo-)
 
 Let's start with the rules of thumbs that this codebase was built with 🫰
 
 <details>
 <summary><strong>💾 If something can be written in a single file, then it probably should ✅</strong></summary>
 
-I know, the urge to <strong>tidy</strong> up or <strong>separate</strong> things is big 🗃️
+I know, the urge to <strong>tidy</strong> up or <strong>separate</strong> things is big 🗃
 
 But try to withstand it 🫥
 
@@ -443,8 +443,8 @@ A single file is easier for humans and computers to understand 💡
 You will be surprised
 
 - by the awesome [fill-in-the-middle suggestions](#-cursor-) of your copilot 🤖
-- by the hassle-free [context selection](#-browser-) for your ai agent 🖱️
-- by the smooth refactor experience by just going top-to-bottom ⬇️
+- by the hassle-free [context selection](#-browser-) for your ai agent 🖱
+- by the smooth refactor experience by just going top-to-bottom ⬇
 - by the beautiful diff for your next code review 🔍
 - by the clean git-history when you try to find a certain change 🔁
 
@@ -453,13 +453,13 @@ You will be surprised
 <details>
 <summary><strong>🙃 Write and read code upside down ✅</strong></summary>
 
-Whenever something is referenced it should be above in the source code ⬆️
+Whenever something is referenced it should be above in the source code ⬆
 
-This means that all the building blocks (functions, classes, components, …) are first defined and then used below ⬇️
+This means that all the building blocks (functions, classes, components, …) are first defined and then used below ⬇
 
 If you have a cyclic depedency (really?!) then put the object with lower complexity first 🥇
 
-This means that when you start with unknown code, it is probably best to start on the bottom and go upwards 🖱️
+This means that when you start with unknown code, it is probably best to start on the bottom and go upwards 🖱
 
 Why? LLMs, reflection, … , work best left-to-write 🤖
 
@@ -494,7 +494,7 @@ If you are not sure what the code does, you can ask [ai](#-ai-) 💬
 </details>
 
 <details>
-<summary><strong>🗣️ Don't use comments or if you must, only tag code at the end of the line ❌</strong></summary>
+<summary><strong>🗣 Don't use comments or if you must, only tag code at the end of the line ❌</strong></summary>
 
 Smaller code, less tokens and easier diffs 🔍
 
@@ -565,13 +565,13 @@ Trust me, it will make collaboration much easier 🔀
 
 The main question is the port productive or not?
 
-The pay-off of abstraction happens in the future 🛣️
+The pay-off of abstraction happens in the future 🛣
 
 Every extension profits from a clean port 🚀
 
 Most things are not extended 🪨
 
-If you change your architecture, just design proper ports for something concrete not something potential and reactor it ✍️
+If you change your architecture, just design proper ports for something concrete not something potential and reactor it ✍
 
 </details>
 
@@ -584,16 +584,16 @@ Actually repeated code can improve the attribute of your copilots suggestion �
 
 The main question is how can your application grow?
 
-If a change requires exponentially more duplication then you'll probably have to fix it 🛠️
+If a change requires exponentially more duplication then you'll probably have to fix it 🛠
 
 If not, then you are probably good 👌
 
 </details>
 
 <details>
-<summary><strong>🏷️ Never use `type` for naming enums, ports, or types. Always use `kind` instead ✅</strong></summary>
+<summary><strong>🏷 Never use `type` for naming enums, ports, or types. Always use `kind` instead ✅</strong></summary>
 
-To avoid confusion with the native `type` concept in Semio, always use `kind` for naming enums, ports, or types that represent categories or classifications 🏷️
+To avoid confusion with the native `type` concept in Semio, always use `kind` for naming enums, ports, or types that represent categories or classifications 🏷
 
 Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc. 🔄
 
@@ -608,7 +608,7 @@ Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-St
 
 But as always, the devil is in the details 😈
 
-Even if 95% of the codebase follows those principles, there are good reasons for the other 5% ⚖️
+Even if 95% of the codebase follows those principles, there are good reasons for the other 5% ⚖
 
 </details>
 
@@ -619,9 +619,9 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 ### 🦑 GitKraken [↑](#-git-)
 
 > [!NOTE]  
-> It is free for open-source bundles like this one ❤️
+> It is free for open-source bundles like this one ❤
 
-We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱️
+We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱
 
 It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
 
@@ -647,8 +647,8 @@ COMPONENT
 
 **Title symbols:**
 
-- 🏗️ Foundational work
-- 🛠️ Heavy work
+- 🏗 Foundational work
+- 🛠 Heavy work
 - 🪛 Minor work
 - 🐛 Major Bug fix
 
@@ -656,27 +656,27 @@ COMPONENT
 
 - 🌱 Started [not yet ready]
 - ➕ Added [ready]
-- ⬆️ Updated
-- 🔄️ Renamed
+- ⬆ Updated
+- 🔄 Renamed
 - 🔁 Refactored
 - 🐛 Bug fix
 
 Before every [release](#-release-) the [repo](#-repo-) is archived 📦
 
-### 🏷️ Tag [↑](#-gitstyle-)
+### 🏷 Tag [↑](#-gitstyle-)
 
 We have two different types of tags:
 
 - `rYY.MM-V` for [releases](#-release-) (e.g `r21.06-1`,`r23.07-2`,`r24.12-1`, `r25.07-1`, …)
-- `COMPONENT-vMAJOR.MINOR.PATCH` for [bundles](#-bundles-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#️-semioengine-), [`sketchpad-v1.0.0`](#-semiodesktop-), [`grasshopper-v5.4.0-beta`](#-semiograsshopper-), …)
+- `COMPONENT-vMAJOR.MINOR.PATCH` for [bundles](#-bundles-) which follow the [semver](https://semver.org/) versioning scheme (e.g [`engine-v4.0.2`](#-semioengine-), [`sketchpad-v1.0.0`](#-semiodesktop-), [`grasshopper-v5.4.0-beta`](#-semiograsshopper-), …)
 
 ### 🌿 Branch [↑](#-gitstyle-)
 
-The `main` branch is compressed (squashed history) and acts as the canonical integration branch 🗜️
+The `main` branch is compressed (squashed history) and acts as the canonical integration branch 🗜
 
 If a release receives updates after `main` already progressed, create a parallel `release/rYY.MM-V` branch for that release and keep it compressed as well 🧵
 
-Every [contributor](#-contributor-) has their own `FIRSTNAME` general-purpose development branch 🛠️
+Every [contributor](#-contributor-) has their own `FIRSTNAME` general-purpose development branch 🛠
 
 In [GitKraken](#-gitkraken-) you will quickly find the latest development branch 👀
 
@@ -684,7 +684,7 @@ Other branches are created for [bundles](#-bundles-), [specific features](https:
 
 Usually one person works on one feature at a time and hence the `-NAME` suffix 📛
 
-### 🗃️ Commit [↑](#-gitstyle-)
+### 🗃 Commit [↑](#-gitstyle-)
 
 Commit messages follow this format:
 
@@ -692,7 +692,7 @@ Commit messages follow this format:
 MAIN-TASK-SYMBOL SUMMARY WORK-SYMBOL
 ```
 
-The first symbol encodes the main task of the commit and the last symbol encodes the amount of work (`🪛` < `🔨` < `🛠️` < `🏗️`) 🧰
+The first symbol encodes the main task of the commit and the last symbol encodes the amount of work (`🪛` < `🔨` < `🛠` < `🏗`) 🧰
 
 <details>
 <summary><strong>📦 Commit as much as you like ✅</strong></summary>
@@ -710,9 +710,9 @@ But as we archive and squash all commits on every [release](#-release-) nothing 
 
 Pushing regularly keeps you extra safe from losing your work 🛟
 
-There are a few services (like [Discord](https://discord.com/channels/1338232508264747130/1339164626658525246)) that are automatically updating to what happens in the [repo](#-repo-) 🔄️
+There are a few services (like [Discord](https://discord.com/channels/1338232508264747130/1339164626658525246)) that are automatically updating to what happens in the [repo](#-repo-) 🔄
 
-To keep our inbox notifications low, we try to push not more than once an hour ⬆️
+To keep our inbox notifications low, we try to push not more than once an hour ⬆
 
 </details>
 
@@ -763,7 +763,7 @@ Afterwards you can install uv with this command:
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
+Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙
 
 ## 🎫 Tickets [↑](#-development)
 
@@ -779,7 +779,7 @@ Comment scanning works uniformly across all supported languages (TypeScript, Go,
 It also enforces module boundaries and domain-neutral terminology for shared UI building blocks.
 Each reported problem includes a short reason and solution so contributors can resolve violations quickly.
 
-The `fix` command applies autofixes for all autofixable violation kinds: it replaces wrong file header artifact IDs with the correct emoji-prefixed path (e.g. `💻︎ semio/js/src/index.ts`), removes empty sections (including one surrounding blank line, preferring the preceding one), resolves missing section end names by walking backward through nested sections to find the matching start, corrects mismatched section end names, removes contiguous inline comment blocks (including intervening blank lines), and removes block and JSDoc comments.
+The `fix` command applies autofixes for all autofixable violation kinds: it replaces wrong file header artifact IDs with the correct emoji-prefixed path (e.g. `💻 semio/js/src/index.ts`), removes empty sections (including one surrounding blank line, preferring the preceding one), resolves missing section end names by walking backward through nested sections to find the matching start, corrects mismatched section end names, removes contiguous inline comment blocks (including intervening blank lines), and removes block and JSDoc comments.
 After removing lines, a post-processing step collapses consecutive blank lines so the output stays clean.
 Non-autofixable violations (missing header regions, unnamed region starts, orphan definitions) are reported but left for manual resolution.
 
@@ -860,17 +860,17 @@ Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
 We pick tools based on billing model (request-based vs token-based), required context size, and whether a workflow needs MCP (e.g. Playwright) 🧰
 
-## 🛠️ Uses-Cases [↑](#-ai-)
+## 🛠 Uses-Cases [↑](#-ai-)
 
-Here some strategic advice for different uses-cases 🗺️
+Here some strategic advice for different uses-cases 🗺
 
-### ⚖️ Decision Making [↑](#-uses-cases-)
+### ⚖ Decision Making [↑](#-uses-cases-)
 
 [Model](#-models-) will always tell you that your ideas, guesses, analysis, … are great 💯
 
 This makes it really hard to use them for decision making because they tend to just reinforce your own bias 📢
 
-Try to formulate everything as neutral, general and unbiased as possible 🕊️
+Try to formulate everything as neutral, general and unbiased as possible 🕊
 
 ### 🔁 Refactoring [↑](#-uses-cases-)
 
@@ -888,7 +888,7 @@ For this reason, we usually create a new file which we name with the suffix`*.ol
 
 Try to describe only how to the bug appears and **not** what you think caused it 😶
 
-Experience what can be causes for bugs is increadibly valuable skill as a developer but the problem is that [models](#-models-) are really biased the way you ask questions 🏋️
+Experience what can be causes for bugs is increadibly valuable skill as a developer but the problem is that [models](#-models-) are really biased the way you ask questions 🏋
 
 Especially when your guess is wrong then the [model](#-models-) might have found the mistake but because of your bias it tries to take a different approach to fix it 🔀
 
@@ -896,13 +896,13 @@ Secondly, if the model can't find the bug then it will often try to remove funct
 
 Therefore, it is often a good idea that after you found the bug, reset your branch and create a new ticket where you define exactly how to fix the bug 🪛
 
-## ⌨️ Tools [↑](#-ai-)
+## ⌨ Tools [↑](#-ai-)
 
 ### 🌐 Web-Chat [↑](#-tools-)
 
 For research, prompt preparation or [single file-related](#-principles-) operations (sorting, formatting, explaining, …) we use the free , [Gemini](https://gemini.google.com) or [Groq](https://console.groq.com), … in the browser to not waste precious tokens 🆓
 
-#### [❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)
+#### [❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)
 
 The free quota is very quickly reached but resets regularly and hence we just use it for questioning or prompt preparation 💬
 
@@ -914,7 +914,7 @@ Good for larger experiments due to more generous free quota 🧪
 
 ### 💻 Editor [↑](#-tools-)
 
-#### ✈️ [Copilot](.github/chatmodes) [↑](#-ai-)
+#### ✈ [Copilot](.github/chatmodes) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -925,7 +925,7 @@ Good for larger experiments due to more generous free quota 🧪
 
 Copilot is our default for most tickets because request-based billing makes fast interaction cheap 💳
 
-#### 🖱️ [Cursor](.cursor) [↑](#-ai-)
+#### 🖱 [Cursor](.cursor) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -936,7 +936,7 @@ Copilot is our default for most tickets because request-based billing makes fast
 
 We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳
 
-We use [Cursor](https://www.cursor.com) as our main editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡️
+We use [Cursor](https://www.cursor.com) as our main editor for typing code mostly with [Tab](https://docs.cursor.com/tab/overview) ➡
 
 For tasks that require updated large docs that are too large to paste into the prompt, we use the agent 📚
 
@@ -946,9 +946,9 @@ But in general, we don't use the chat because it is way too expensive 💰
 
 Used for token-heavy test-driven-development workflows with MCP (especially Playwright) 🧪
 
-### ⌨️ CLI [↑](#-tools-)
+### ⌨ CLI [↑](#-tools-)
 
-#### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
+#### ⌨ [Claude Code](CLAUDE.md) [↑](#-ai-)
 
 We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳
 
@@ -958,7 +958,7 @@ Used for small bugs and focused fixes with strong repo context 🧠
 
 Used for simple tasks (small edits, small refactors, small doc updates) 🧩
 
-### ☁️ Cloud [↑](#-tools-)
+### ☁ Cloud [↑](#-tools-)
 
 #### 🦑 Jules [↑](#-tools-)
 
@@ -968,7 +968,7 @@ Used on the phone when no IDE is available 📱
 
 ### 🔍 Agents [↑](#-ai-)
 
-#### ↕️ Reorderer [↑](#-agents-)
+#### ↕ Reorderer [↑](#-agents-)
 
 Used to ensure consistent order of source code, docs, …
 
@@ -1004,7 +1004,7 @@ The default model for agent work is **Claude Opus 4.5**, with **GPT-5.2 Codex** 
 All automation, CI runs, and agent workflows are controlled through the canonical root commands `dev`, `fix`, `analyze`, `preflight`, `test`, `build`, `update`, `publish:test`, and `publish`. Only `dev` is allowed to stay live for watch mode, while the remaining commands must exit so CI and agents can finish reliably. `publish:test` and `publish` always run a full `build` first.
 The root `package.json` uses `preflight.ts` to orchestrate the command pipeline, and delegates bundle builds/tests/publishing to Nx (`npx nx run-many -t <target>`).
 
-# ♻️ Ecosystems [↑](#-overview)
+# ♻ Ecosystems [↑](#-overview)
 
 <details>
 <summary><strong>📺 Channels:</strong></summary>
@@ -1019,9 +1019,9 @@ The root `package.json` uses `preflight.ts` to orchestrate the command pipeline,
 
 </details>
 
-You might have noticed that the individual components can be closely related such as [sketchpad](#️-sketchpad-), [Grasshopper](#-semiogh-) and [engine](#️-engine-) but they are in totally different folders 📂
+You might have noticed that the individual components can be closely related such as [sketchpad](#-sketchpad-), [Grasshopper](#-semiogh-) and [engine](#-engine-) but they are in totally different folders 📂
 
-The reason for this is that the repo is not disected according content but according technology stack ✂️
+The reason for this is that the repo is not disected according content but according technology stack ✂
 
 This is less intuitive but more tool-friendly and everything that is easier for our tools is less pain to develop 🧑‍💻
 
@@ -1094,7 +1094,7 @@ A .NET core for semio 🥜
 - `semio/semio/grasshopper/Semio.Grasshopper` - Grasshopper plugin.
 
 > [!WARNING]  
-> [Rhino](#-semio.3dm-) still runs on .NET 7.0 7️⃣
+> [Rhino](#-semio.3dm-) still runs on .NET 7.0 7⃣
 > Be careful to not update packages to a higher version, that might break the compatibility 🚨
 
 ## 🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)
@@ -1134,12 +1134,12 @@ uv sync # at the root
 
 # 📦 Bundles [↑](#-overview)
 
-A component is a piece of software which is packaged independently 🏝️
+A component is a piece of software which is packaged independently 🏝
 
 ## 🧼 Code Hygiene Hooks [↑](#-bundles-)
 
 The code hygiene hook enforces comment, license, region, and file header policies before changes are shared.
-File headers must contain the correct artifact ID (emoji-prefixed path like `💻︎semio/js/src/index.ts` or `📜︎semio/engine/build.ts` for shebang scripts) instead of plain file paths; the `fix` command replaces wrong IDs automatically.
+File headers must contain the correct artifact ID (emoji-prefixed path like `💻semio/js/src/index.ts` or `📜semio/engine/build.ts` for shebang scripts) instead of plain file paths; the `fix` command replaces wrong IDs automatically.
 It helps keep the codebase clean by removing obsolete inline or block comments, while respecting TODOs and active contiguous comment blocks following them.
 Comment scanning is language-agnostic: every language uses the same `BaseLanguage.ScanComments` implementation configured with language-specific primitives (comment prefix, block comment delimiters, string literal flavors, JSDoc support, skip directives). This means adding comment scanning for a new language only requires setting the right fields in its constructor.
 It treats empty regions as invalid structure and removes them automatically in fix mode so region blocks stay meaningful and concise.
@@ -1159,7 +1159,7 @@ Ticket and goal interaction decoding accepts both legacy object-form and current
 Human-readable CLI IDs normalize emoji to text presentation (U+FE0E), replacing emoji presentation selectors and appending the text variant when missing, so monospace terminals reserve stable width before adjacent symbols like `@`.
 The codebase uses a dual identification system: emoji-prefixed artifact IDs (primary, for GraphQL/logs/messages/UI) and `semiorepo://` URIs (secondary, for MCP resources and clickable links). `GetArtifactID` and `GetArtifactURI` generate these from kind+data, while `IdToUri` and `UriToId` convert between the two systems. Section and definition URIs encode hierarchy separators (`#`, `§`) as `/`-delimited UPPERCASE-SLUG path segments so URIs remain valid without fragment identifiers. Collection types (projects, bundles, folders, files, sections, definitions, tickets, goals, drafts, todos, policies, violationKinds, contributors, commits) each have dedicated ID and URI formats. The `navigate` MCP tool and `semio.navigate` VS Code command accept either an ID or URI and resolve to the target resource.
 
-## 🏷️ Artifact Kind Derivation [↑](#-bundles-)
+## 🏷 Artifact Kind Derivation [↑](#-bundles-)
 
 Every artifact in the repo tree (bundles, folders, files, definitions) carries a **kind** that determines its emoji icon, GraphQL enum value, and filter behavior. Kinds are derived from source metadata rather than hardcoded per bundle name.
 
@@ -1219,14 +1219,14 @@ Post-attach uninstalls any existing semio-repo extension across IDE IPC hook CLI
 Post-attach also writes Windsurf's MCP config at `~/.codeium/windsurf/mcp_config.json` so the semio-repo MCP server is ready after rebuilds without manual setup.
 Engine compatibility for the local extension is aligned to the lowest supported editor build so Cursor and VS Code accept the same VSIX.
 
-## 🛰️ Repo Dev Server [↑](#-bundles-)
+## 🛰 Repo Dev Server [↑](#-bundles-)
 
 The repo dev server is a stateful Go service that persists ticket state, semantic scopes, claims, and warnings so collaboration stays consistent even when the CLI is stateless.
 The CLI sends unified diffs or file snapshots; the server parses them, reindexes affected files, updates claims, and emits conflict warnings and precommit blockers.
 HTTP endpoints cover ticket lifecycle commands, diff ingestion, precommit checks, indexing, and read-only queries for warnings, violations, and scopes.
 Webhook receivers enrich GitHub issue events, and Discord notifications format prompt/summary headings to match ticket workflow conventions.
 
-## 🎟️ Ticket Workflow Signals [↑](#-bundles-)
+## 🎟 Ticket Workflow Signals [↑](#-bundles-)
 
 Ticket creation always captures both the LLM and the UI surface (copilot-chat, antigravity, cursor, claude-code, codex, droid) so every interaction records the toolchain context. Parsing is forgiving; for example, `claude-opus-4-5-20251101` resolves to `opus-4-5` and `gpt-5-3-codex-test` resolves to `gpt-5-3-codex` by finding them as substrings of the slugified input.
 Ticket issue bodies always start with a `# 🤖 Prompt` heading, and reopen actions add a prompt comment with the same heading so each interaction is surfaced in GitHub.
@@ -1309,6 +1309,7 @@ Status filtering uses `--only-open`, `--only-closed`, `--open`, `--closed` for g
 Contributor filtering uses `--only-contributor-name` and `--no-contributor-name`.
 Section and definition parsing is opt-in: sections are only loaded when `--only-section`, `--only-definition`, or a search query is active, keeping the default tree fast.
 Data loading uses a single concurrent filesystem walk for folders and files, with parallel streaming of goals, tickets, drafts, policies, contributors, and commits, so the full tree builds in one pass.
+The `policy tree` command renders policies with their violation kinds as nested children, so each policy node lists all its violation kind IDs indented underneath. This matches the hierarchical structure visible in the main monorepo tree and the VS Code extension sidebar.
 
 ## 🧭 Section Tree [↑](#-bundles-)
 
@@ -1540,7 +1541,7 @@ The unit system automatically adapts based on the `--spacing` mode (compact vs t
 
 The code runs in different environments (different browsers, electron, mobile/desktop/tablet). Platform-specific functionality MUST be generalized and provided as props to Sketchpad. NEVER hardcode platform-specific behavior or APIs directly in bundles.
 
-## ✏️ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)
+## ✏ [semio/desktop](https://github.com/usalu/semio/tree/main/semio/desktop) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1590,7 +1591,7 @@ Currently not implemented in this repo (planned component) 🧩
 
 </details>
 
-## 🎛️ [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)
+## 🎛 [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)
 
 A playground for [sketchpad](#%EF%B8%8F-sketchpad-) 🎮
 
@@ -1680,12 +1681,12 @@ A full-blown Grasshopper Plugin that has (almost) everything 💯
 
 ### 🪢 Scripting
 
-Analogous to [our principles](#️-principles-) for text-based code, we follow a similar logic for script-based code 🔄
+Analogous to [our principles](#-principles-) for text-based code, we follow a similar logic for script-based code 🔄
 
 <details>
 <summary><strong>💻 Optimize your definitions for rectangular space ✅</strong></summary>
 
-Every inch of wasted screen space, means a loss of productivity because you need longer for navigation 🖱️
+Every inch of wasted screen space, means a loss of productivity because you need longer for navigation 🖱
 
 It is harder to understand something far away compared to something close 🔍
 
@@ -1700,7 +1701,7 @@ But you waste a lot of space for nothing 💸
 
 We know that there are [only two hard things in Computer Science](https://martinfowler.com/bliki/TwoHardThings.html): Cache invalidation and naming things 🥈
 
-Visual programming languages solve the naming problem by using wires to overcome the neeed of names ⬆️
+Visual programming languages solve the naming problem by using wires to overcome the neeed of names ⬆
 
 That is a big gain in productivity because you can focus on the logic instead of the names 🚀
 
@@ -1732,15 +1733,15 @@ Designing means making decisions 🪨
 
 Fewer parameters makes your design more parameteric and not less 🤯
 
-The price for a synergizing system is the loss of flexibility 🤷‍♂️
+The price for a synergizing system is the loss of flexibility 🤷‍♂
 
 If you don't know the parameters in the first place, you shouldn't create the Grasshopper script in the first place 🥈
 
-Grasshopper is an amazing tool if you know the system that you want to create but is terrible for prototyping because of its lack of abstraction ⬇️
+Grasshopper is an amazing tool if you know the system that you want to create but is terrible for prototyping because of its lack of abstraction ⬇
 
 </details>
 
-## ⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)
+## ⚙ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1801,7 +1802,7 @@ A hidden fat-client which exposes shared functionality to other desktop uis 🤝
 It takes care of:
 
 - CRUDs (Create-Read-Update-Delete) for local kits 💾
-- Client-Server communication ↔️
+- Client-Server communication ↔
 
 The engine supports a dev/debug startup flag that waits for a debugger to attach before the runtime begins.
 The engine can start as a pure stdio MCP server for integrations that speak MCP over stdin/stdout.
@@ -1819,36 +1820,36 @@ If you go to `http://127.0.0.1:2412/api/docs/` you find the Swagger UI:
 
 ### ⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)
 
-> Still a prototype ✏️
+> Still a prototype ✏
 
 If you go to `http://127.0.0.1:2412/graphql/` you find the GraphiQL UI:
 
 ![GraphQL Query](assets/images/graphiql.png)
 
-## 🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)
+## 🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)
 
-### 🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)
+### 🏷 [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)
 
 Each badge is created with [shields.io](https://shields.io) with style `flat-square` and [semio colors](#-colors-).
 
 1. Copy the `*.shields` file of an existing badge 📄
-1. Open and download the `*.svg` file ⬇️
+1. Open and download the `*.svg` file ⬇
 
 ### 📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)
 
 1. Search font on [fontsource.org](https://fontsource.org) 🔍
 1. Hit `Download` and extract zip file 📂
 1. Use kebaberized font name as folder name and remove everything else (such as version numbers) ➖
-1. Merge all types in one folder (`ttf`, `webfonts`, …) - they won't collide due to different extensions 🗃️
+1. Merge all types in one folder (`ttf`, `webfonts`, …) - they won't collide due to different extensions 🗃
 1. Remove all parts that repeat everywher (such as common name prefix, single weighted fonts, …) 💯
 
-### 👁️ [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)
+### 👁 [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)
 
 1. Open [favicongenerator.net](https://www.favicongenerator.io) 🔍
-1. Select `Circle` as `Background Shape` ⏺️
+1. Select `Circle` as `Background Shape` ⏺
 1. Select `Anta` as `Font Family` 📃
 1. Enter the `Code` that you find in the [dictionary](https://github.com/usalu/semio/tree/main/meta/dictionary.csv)
-1. Adjust the `Font Size` to the largest so that the space to the side is the same as the thickness of the stroke 🖊️
+1. Adjust the `Font Size` to the largest so that the space to the side is the same as the thickness of the stroke 🖊
 1. Toggle `Enable SVG` on 🔳
 1. Hit `Generate Favicon` and download the zip file to `assets/icons/temp/NAME.zip` where `NAME` is the lowercase name and verb of the icon 📂
 1. Repeat the process for all icons 🔁
@@ -1860,7 +1861,7 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 
 Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `MetabolismKitDesignsByGuid`, `MetabolismKitDesignsByName`, `MetabolismKitPortsByGuid`, and `MetabolismKitPortsByName` provide direct access to every type, design, and port without filtering.
 
-# 🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
+# 🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
 
 ## 🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)
 
@@ -1872,17 +1873,17 @@ Lookup tables `MetabolismKitTypesByGuid`, `MetabolismKitTypesByName`, `Metabolis
 
 # 💯 Brand [↑](#-overview)
 
-## ✍️ Concept [↑](#-brand-)
+## ✍ Concept [↑](#-brand-)
 
 ### ✅ Do [↑](#%EF%B8%8F-concept-)
 
 - Visual is better than text 👀
-- Compact ➡️ More information ➡️ Faster to understand 🚀
+- Compact ➡ More information ➡ Faster to understand 🚀
 
 ### ❌ Dont [↑](#%EF%B8%8F-concept-)
 
 - Rounded corners ⬜
-- Shadows 🌤️
+- Shadows 🌤
 - Multiple unicode directly after each other 🥇🥈🥉
 
 ## 🌈 Colors [↑](#-brand-)
@@ -1934,7 +1935,7 @@ Use the primary color for the most important elements of your design 🏆
 
 We use it e.g. for:
 
-- Highlighting interactive elements 🖱️
+- Highlighting interactive elements 🖱
 - Background for important elements 🟥
 
 ### 🥈 Secondary [↑](#-colors-)
@@ -1954,15 +1955,15 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 ## 📄 Typography [↑](#-brand-)
 
 > [!NOTE]
-> Try to place notes either in the beginning or the end of a section ↕️
+> Try to place notes either in the beginning or the end of a section ↕
 > A starting note should contain something important but not crucial to give the brain the right context 🧠
 > The starting sentence of a note needs no symbol because every note type starts with a symbol 🥇
 
-- Be consistent with your language ♻️
+- Be consistent with your language ♻
 - When things are analogical use the same sentence structure for it 🔄
 - One symbol after every sentance 💯
 - One symbol at a time 🥇
-- A symbol is preferably an emoji or otherwise unicode ⚖️
+- A symbol is preferably an emoji or otherwise unicode ⚖
 - 📝 One symbol to summarize a title
 - 💡 One symbol to summarize a title description and one to think about in the end 🤔
 - `.` are forbidden ⛔
@@ -1974,9 +1975,9 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 
 ### 🔡 [Typesetting](/assets/fonts/README.md) [↑](#-typography-)
 
-- Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨️
-- Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍️
-- Monospaced: [Shart Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) 🖥️
+- Sans serif: [Anta](https://fonts.google.com/specimen/Anta) 🖨
+- Serif: [Kelly Slab](https://fonts.google.com/specimen/Kelly+Slab) ✍
+- Monospaced: [Shart Tech Mono](https://fonts.google.com/specimen/Share+Tech+Mono) 🖥
 - Emoji: [Noto Emoji](https://fonts.google.com/noto/specimen/Noto+Emoji) ⚫
 
 ## 👀 Visual elements [↑](#-brand-)
@@ -1985,7 +1986,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - Borders □
 - Basic geometric shapes ⚪
 
-# ⚖️ License
+# ⚖ License
 
 The files in this repository are licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Most libraries, modules, extensions, objects or code herein are explicitly licensed. This is indicated in the root of the containing folder under a different license file, or in the configuration files of a bundle or in the respective file's header.
 
@@ -2018,13 +2019,13 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-python-" title="🐍Python"><sub>🐍<sub></a>
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>      
         <br />
-        <a href="#-semiodesktop-" title="✏️semio/desktop"><sub>✏️<sub></a>
-        <a href="#-semioengine-" title="⚙️semio/engine"><sub>⚙️<sub></a>
+        <a href="#-semiodesktop-" title="✏semio/desktop"><sub>✏<sub></a>
+        <a href="#-semioengine-" title="⚙semio/engine"><sub>⚙<sub></a>
         <a href="#-semioassistant-" title="🤖semio/assistant"><sub>🤖<sub></a>
-        <a href="#%EF%B8%8F-semioplay-" title="🎛️semio/play"><sub>🎛️<sub></a>
+        <a href="#%EF%B8%8F-semioplay-" title="🎛semio/play"><sub>🎛<sub></a>
         <br />
         <a href="#-semiodocs-" title="📚semio/docs"><sub>📚<sub></a>
-        <a href="#-semioassets-" title="🛍️semio/assets"><sub>🛍️<sub></a>
+        <a href="#-semioassets-" title="🛍semio/assets"><sub>🛍<sub></a>
         <a href="#-brand-" title="💯Brand"><sub>💯<sub></a>
         <br />
         <a href="#-semio.3dm-" title="🦏Rhino"><sub>🦏<sub></a>
@@ -2072,7 +2073,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
-        <a href="#-semioengine-" title="⚙️semio/engine"><sub>⚙️<sub></a> 
+        <a href="#-semioengine-" title="⚙semio/engine"><sub>⚙<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
         <img src=".semio-repo/contributors/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>

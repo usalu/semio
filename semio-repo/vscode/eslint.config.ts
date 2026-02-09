@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// ⚙︎ semio-repo/vscode/eslint.config.ts
+// ⚙ semio-repo/vscode/eslint.config.ts
 
 // 2025 Ueli Saluz
 

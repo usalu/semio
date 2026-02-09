@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪semio-repo/cli/main_test.go
+// 🧪︎semio-repo/cli/main_test.go
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -33,6 +33,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -494,6 +495,7 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 		tickets {
 			id
 			slug
+			foobar123
 		}
 		policies {
 			id
@@ -649,7 +651,7 @@ func TestNodesAndEdges(t *testing.T) {
 			id
 		}
 		violations {
-			id
+			id: uid
 			file { id }
 			folder { id }
 		}
@@ -796,7 +798,7 @@ func TestNodesAndEdges(t *testing.T) {
 	}
 	for _, v := range resp.Violations {
 		if v.ID == "" {
-			t.Error("violation has empty id")
+			t.Errorf("violation has empty id: %+v", v)
 		}
 	}
 }
@@ -1320,9 +1322,9 @@ func TestFileKindEmoji(t *testing.T) {
 		{"test", "test", "\U0001F9EA"},
 		{"script", "script", "\U0001F4DC"},
 		{"docs", "docs", "\U0001F4C3"},
-		{"config", "config", "\u2699\uFE0F"},
+		{"config", "config", "FOO"},
 		{"resource", "resource", "\U0001F4BE"},
-		{"license", "license", "\u2696\uFE0F"},
+		{"license", "license", "\u2696"},
 		{"unknown", "unknown", "\U0001F4C4"},
 		{"empty", "", "\U0001F4C4"},
 	}
@@ -2758,6 +2760,31 @@ func TestPolicyListCommand(t *testing.T) {
 	}
 }
 
+func TestPolicyTreeCommand(t *testing.T) {
+	result := ToolPolicyTree()
+	if result.Error != "" {
+		t.Errorf("ToolPolicyTree returned error: %s", result.Error)
+	}
+	if result.Data == nil {
+		t.Error("ToolPolicyTree returned nil data")
+	}
+	policies, ok := result.Data.([]PolicyDef)
+	if !ok {
+		t.Error("ToolPolicyTree data is not []PolicyDef")
+		return
+	}
+	if len(policies) == 0 {
+		t.Error("ToolPolicyTree returned no policies")
+	}
+	text := result.Output.Lines[0].Text
+	if !strings.Contains(text, "code") {
+		t.Error("Expected policy tree output to contain 'code' policy")
+	}
+	if !strings.Contains(text, "code:header:missing-region") {
+		t.Error("Expected policy tree output to contain violation kind 'code:header:missing-region'")
+	}
+}
+
 func TestPolicyCheckCommand(t *testing.T) {
 	result := ToolPolicyCheck("code", "semio/js")
 	if result.Error != "" {
@@ -2792,6 +2819,7 @@ func TestFixtureViolationsGroupedInline(t *testing.T) {
 		ViolationCodeHeaderWrongFileId,
 		ViolationCodeHeaderMissingContributors,
 		ViolationCodeHeaderWrongLicense,
+		ViolationCodeHeaderMissingSpecsRegion,
 		ViolationCodeSectionMissingStartName,
 		ViolationCodeSectionMissingEndName,
 		ViolationCodeSectionNameMismatch,
@@ -4083,7 +4111,7 @@ func TestFormatResult_Bundle(t *testing.T) {
 	result := formatResult("bundle list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"📚MyBundle",
+		"📚︎MyBundle",
 		"/path/to/bundle",
 	}
 
@@ -4105,7 +4133,7 @@ func TestFormatResult_Folder(t *testing.T) {
 	result := formatResult("folder list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"📁path/to/folder",
+		"📁︎path/to/folder",
 	}
 
 	for _, part := range expectedParts {
@@ -4516,6 +4544,45 @@ func TestFormatMarkdownResult_Lists(t *testing.T) {
 	}
 }
 
+func TestCollectEntityProps_MultilineEscaped(t *testing.T) {
+	tests := []struct {
+		name string
+		kind string
+		data map[string]interface{}
+	}{
+		{"ticket summary with newlines", "ticket", map[string]interface{}{
+			"slug": "T1", "status": "closed", "title": "Fix Bug",
+			"year": float64(2026), "month": float64(1), "day": float64(1),
+			"summary": "Fixed three areas:\n\n1. First fix\n2. Second fix\n3. Third fix",
+		}},
+		{"ticket prompt with newlines", "ticket", map[string]interface{}{
+			"slug": "T2", "status": "open", "title": "Add Feature",
+			"year": float64(2026), "month": float64(1), "day": float64(2),
+			"prompt": "Please implement:\n- item A\n- item B",
+		}},
+		{"goal description with newlines", "goal", map[string]interface{}{
+			"id": "GOAL1", "title": "Goal One", "status": "open",
+			"description": "Line one\nLine two\r\nLine three",
+		}},
+		{"policy description with newlines", "policy", map[string]interface{}{
+			"id": "P1", "description": "Rule one\nRule two",
+		}},
+		{"commit message with newlines", "commit", map[string]interface{}{
+			"id": "abc123", "message": "feat: add feature\n\nDetailed description here",
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			props := collectEntityProps(tt.kind, tt.data, false)
+			for _, p := range props {
+				if strings.Contains(p, "\n") || strings.Contains(p, "\r") {
+					t.Errorf("property contains newline: %q", p)
+				}
+			}
+		})
+	}
+}
+
 func TestFormatMarkdownResult_Analyze(t *testing.T) {
 	payload := map[string]interface{}{
 		"analyze": map[string]interface{}{
@@ -4890,7 +4957,7 @@ func TestLifecycleCommands(t *testing.T) {
 
 			rootCmd := NewRoot(factory)
 			// Create goal first
-			goalTitle := fmt.Sprintf("Test Goal %s %s", mode, t.Name())
+			goalTitle := fmt.Sprintf("Test Goal %s LifecycleTest %d", mode, time.Now().UnixNano())
 			goalCmd := NewRoot(factory)
 			goalB := bytes.NewBufferString("")
 			goalCmd.SetOut(goalB)
@@ -5429,203 +5496,203 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "repo",
 			kind:    "repo",
 			data:    map[string]interface{}{},
-			wantID:  "🌍",
+			wantID:  emojiText(EmojiRepo),
 			wantURI: "semiorepo://repo",
 		},
 		{
 			name:    "projects collection",
 			kind:    "projects",
 			data:    map[string]interface{}{},
-			wantID:  "🏗",
+			wantID:  emojiText(EmojiProjects),
 			wantURI: "semiorepo://projects",
 		},
 		{
 			name:    "project user",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio", "kind": "user"},
-			wantID:  "👤@semio",
+			wantID:  fmt.Sprintf("%s@semio", emojiText(EmojiProjectUser)),
 			wantURI: "semiorepo://project/@semio",
 		},
 		{
 			name:    "project infrastructure",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"},
-			wantID:  "🧰@semio-repo",
+			wantID:  fmt.Sprintf("%s@semio-repo", emojiText(EmojiProjectInfra)),
 			wantURI: "semiorepo://project/@semio-repo",
 		},
 		{
 			name:    "project research",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "coda", "kind": "research"},
-			wantID:  "🔬@coda",
+			wantID:  fmt.Sprintf("%s@coda", emojiText(EmojiProjectResearch)),
 			wantURI: "semiorepo://project/@coda",
 		},
 		{
 			name:    "bundles collection",
 			kind:    "bundles",
 			data:    map[string]interface{}{"projectCode": "semio"},
-			wantID:  "📦semio",
+			wantID:  fmt.Sprintf("%ssemio", emojiText(EmojiBundles)),
 			wantURI: "semiorepo://bundles",
 		},
 		{
 			name:    "bundle library",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/js", "kind": "library"},
-			wantID:  "📚semio/js",
+			wantID:  fmt.Sprintf("%ssemio/js", emojiText(EmojiBundleLibrary)),
 			wantURI: "semiorepo://bundle/semio/js",
 		},
 		{
 			name:    "bundle example",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "coda/examples", "kind": "library"},
-			wantID:  "📚coda/examples",
+			wantID:  fmt.Sprintf("%scoda/examples", emojiText(EmojiBundleLibrary)),
 			wantURI: "semiorepo://bundle/coda/examples",
 		},
 		{
 			name:    "bundle ui",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/desktop", "kind": "ui"},
-			wantID:  "🖱semio/desktop",
+			wantID:  fmt.Sprintf("%ssemio/desktop", emojiText(EmojiBundleUI)),
 			wantURI: "semiorepo://bundle/semio/desktop",
 		},
 		{
 			name:    "folders collection empty",
 			kind:    "folders",
 			data:    map[string]interface{}{},
-			wantID:  "📁",
+			wantID:  emojiText(EmojiFolders),
 			wantURI: "semiorepo://folders",
 		},
 		{
 			name:    "folders collection with parent",
 			kind:    "folders",
 			data:    map[string]interface{}{"parentPath": "semio/js/src"},
-			wantID:  "📁semio/js/src",
+			wantID:  fmt.Sprintf("%ssemio/js/src", emojiText(EmojiFolders)),
 			wantURI: "semiorepo://folders/semio/js/src",
 		},
 		{
 			name:    "folder required",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/src", "kind": "required"},
-			wantID:  "📁semio/js/src",
+			wantID:  fmt.Sprintf("%ssemio/js/src", emojiText(EmojiFolderRequired)),
 			wantURI: "semiorepo://folder/semio/js/src",
 		},
 		{
 			name:    "folder organization",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/utils", "kind": "organization"},
-			wantID:  "🗃semio/js/utils",
+			wantID:  fmt.Sprintf("%ssemio/js/utils", emojiText(EmojiFolderOrg)),
 			wantURI: "semiorepo://folder/semio/js/utils",
 		},
 		{
 			name:    "files collection empty",
 			kind:    "files",
 			data:    map[string]interface{}{},
-			wantID:  "📄",
+			wantID:  emojiText(EmojiFiles),
 			wantURI: "semiorepo://files",
 		},
 		{
 			name:    "file docs",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
-			wantID:  "📃test.txt",
+			wantID:  fmt.Sprintf("%stest.txt", emojiText(EmojiFileDocs)),
 			wantURI: "semiorepo://file/test.txt",
 		},
 		{
 			name:    "file code",
 			kind:    "file",
-			data:    map[string]interface{}{"path": "semio/js/src/index.ts", "kind": "code"},
-			wantID:  "💻semio/js/src/index.ts",
-			wantURI: "semiorepo://file/semio/js/src/index.ts",
+			data:    map[string]interface{}{"path": "main.go", "kind": "code"},
+			wantID:  fmt.Sprintf("%smain.go", emojiText(EmojiFileCode)),
+			wantURI: "semiorepo://file/main.go",
 		},
 		{
 			name:    "file test",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"},
-			wantID:  "🧪semio/js/src/index.test.ts",
+			wantID:  fmt.Sprintf("%ssemio/js/src/index.test.ts", emojiText(EmojiFileTest)),
 			wantURI: "semiorepo://file/semio/js/src/index.test.ts",
 		},
 		{
 			name:    "file config",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
-			wantID:  "⚙tsconfig.json",
+			wantID:  fmt.Sprintf("%stsconfig.json", emojiText(EmojiFileConfig)),
 			wantURI: "semiorepo://file/tsconfig.json",
 		},
 		{
 			name:    "file script",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "build.sh", "kind": "script"},
-			wantID:  "\U0001F4DCbuild.sh",
+			wantID:  fmt.Sprintf("%sbuild.sh", emojiText(EmojiFileScript)),
 			wantURI: "semiorepo://file/build.sh",
 		},
 		{
 			name:    "file resource",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
-			wantID:  "💾logo.png",
+			wantID:  fmt.Sprintf("%slogo.png", emojiText(EmojiFileResource)),
 			wantURI: "semiorepo://file/logo.png",
 		},
 		{
 			name:    "file license",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "LICENSE.md", "kind": "license"},
-			wantID:  "⚖LICENSE.md",
+			wantID:  fmt.Sprintf("%sLICENSE.md", emojiText(EmojiFileLicense)),
 			wantURI: "semiorepo://file/LICENSE.md",
 		},
 		{
 			name:    "sections collection",
 			kind:    "sections",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts"},
-			wantID:  "🔖semio/js/src/index.ts",
+			wantID:  fmt.Sprintf("%ssemio/js/src/index.ts", emojiText(EmojiSections)),
 			wantURI: "semiorepo://sections/semio/js/src/index.ts",
 		},
 		{
 			name:    "section",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"},
-			wantID:  "🔖semio/js/src/Design.tsx#State Management#Design Store",
+			wantID:  fmt.Sprintf("%ssemio/js/src/Design.tsx#State Management#Design Store", emojiText(EmojiSection)),
 			wantURI: "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE",
 		},
 		{
 			name:    "section single level",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/file.ts#Imports"},
-			wantID:  "🔖semio/js/src/file.ts#Imports",
+			wantID:  fmt.Sprintf("%ssemio/js/src/file.ts#Imports", emojiText(EmojiSection)),
 			wantURI: "semiorepo://section/semio/js/src/file.ts/IMPORTS",
 		},
 		{
 			name:    "definitions collection",
 			kind:    "definitions",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts"},
-			wantID:  "🏷semio/js/src/index.ts",
+			wantID:  fmt.Sprintf("%ssemio/js/src/index.ts", emojiText(EmojiDefinitions)),
 			wantURI: "semiorepo://definitions/semio/js/src/index.ts",
 		},
 		{
 			name:    "definition with id",
 			kind:    "definition",
-			data:    map[string]interface{}{"kind": "implementation", "id": "semio/js/src/file.ts#Section§myFunc"},
-			wantID:  "🛠semio/js/src/file.ts#Section§myFunc",
-			wantURI: "semiorepo://definition/semio/js/src/file.ts/SECTION/MYFUNC",
+			data:    map[string]interface{}{"id": "semio/js/src/index.ts#MyClass", "kind": "implementation"},
+			wantID:  fmt.Sprintf("%ssemio/js/src/index.ts#MyClass", emojiText(EmojiDefinitionImpl)),
+			wantURI: "semiorepo://definition/semio/js/src/index.ts/MYCLASS",
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
-			wantID:  "✂semio/js/src/file.ts#Types§MyInterface",
+			wantID:  fmt.Sprintf("%ssemio/js/src/file.ts#Types§MyInterface", emojiText(EmojiDefinitionInterface)),
 			wantURI: "semiorepo://definition/semio/js/src/file.ts/TYPES/MYINTERFACE",
 		},
 		{
 			name:    "definition constant",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
-			wantID:  "🪨semio/js/src/file.ts§MAX_SIZE",
+			wantID:  fmt.Sprintf("%ssemio/js/src/file.ts§MAX_SIZE", emojiText(EmojiDefinitionConstant)),
 			wantURI: "semiorepo://definition/semio/js/src/file.ts/MAX-SIZE",
 		},
 		{
 			name:    "tickets collection",
 			kind:    "tickets",
 			data:    map[string]interface{}{},
-			wantID:  "📅",
+			wantID:  emojiText(EmojiTickets),
 			wantURI: "semiorepo://tickets",
 		},
 		{
@@ -5637,7 +5704,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"day":   float64(4),
 				"slug":  "test-ticket",
 			},
-			wantID:  "📅2025/02/04/test-ticket",
+			wantID:  fmt.Sprintf("%s2025/02/04/test-ticket", emojiText(EmojiTicket)),
 			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
@@ -5650,105 +5717,105 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"slug":   "test-ticket",
 				"status": "open",
 			},
-			wantID:  "📅2025/02/04/test-ticket?open",
+			wantID:  fmt.Sprintf("%s2025/02/04/test-ticket?open", emojiText(EmojiTicket)),
 			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
 			name:    "goals collection",
 			kind:    "goals",
 			data:    map[string]interface{}{},
-			wantID:  "🎯",
+			wantID:  emojiText(EmojiGoals),
 			wantURI: "semiorepo://goals",
 		},
 		{
 			name:    "goal",
 			kind:    "goal",
 			data:    map[string]interface{}{"id": "R26-02/RUNNING-SKETCHPAD"},
-			wantID:  "🎯R26-02/RUNNING-SKETCHPAD",
+			wantID:  fmt.Sprintf("%sR26-02/RUNNING-SKETCHPAD", emojiText(EmojiGoal)),
 			wantURI: "semiorepo://goal/R26-02/RUNNING-SKETCHPAD",
 		},
 		{
 			name:    "drafts collection",
 			kind:    "drafts",
 			data:    map[string]interface{}{},
-			wantID:  "✍",
+			wantID:  emojiText(EmojiDrafts),
 			wantURI: "semiorepo://drafts",
 		},
 		{
 			name:    "draft",
 			kind:    "draft",
 			data:    map[string]interface{}{"slug": "my-draft"},
-			wantID:  "✍my-draft",
+			wantID:  fmt.Sprintf("%smy-draft", emojiText(EmojiDraft)),
 			wantURI: "semiorepo://draft/my-draft",
 		},
 		{
 			name:    "todos collection",
 			kind:    "todos",
 			data:    map[string]interface{}{},
-			wantID:  "📝",
+			wantID:  emojiText(EmojiTodos),
 			wantURI: "semiorepo://todos",
 		},
 		{
 			name:    "todo",
 			kind:    "todo",
 			data:    map[string]interface{}{"id": "my-todo"},
-			wantID:  "📝my-todo",
+			wantID:  fmt.Sprintf("%smy-todo", emojiText(EmojiTodo)),
 			wantURI: "semiorepo://todo/my-todo",
 		},
 		{
 			name:    "policies collection",
 			kind:    "policies",
 			data:    map[string]interface{}{},
-			wantID:  "🛡",
+			wantID:  emojiText(EmojiPolicies),
 			wantURI: "semiorepo://policies",
 		},
 		{
 			name:    "policy",
 			kind:    "policy",
 			data:    map[string]interface{}{"id": "/code-hygiene"},
-			wantID:  "🛡/code-hygiene",
+			wantID:  fmt.Sprintf("%s/code-hygiene", emojiText(EmojiPolicy)),
 			wantURI: "semiorepo://policy//code-hygiene",
 		},
 		{
 			name:    "violationKinds collection",
 			kind:    "violationKinds",
 			data:    map[string]interface{}{},
-			wantID:  "🚫",
+			wantID:  emojiText(EmojiViolationKinds),
 			wantURI: "semiorepo://violationKinds",
 		},
 		{
 			name:    "violationKind",
 			kind:    "violationKind",
 			data:    map[string]interface{}{"id": "code-hygiene/inline-comment"},
-			wantID:  "🚫code-hygiene/inline-comment",
+			wantID:  fmt.Sprintf("%scode-hygiene/inline-comment", emojiText(EmojiViolationKind)),
 			wantURI: "semiorepo://violationKind/code-hygiene/inline-comment",
 		},
 		{
 			name:    "contributors collection",
 			kind:    "contributors",
 			data:    map[string]interface{}{},
-			wantID:  "👤",
+			wantID:  emojiText(EmojiContributors),
 			wantURI: "semiorepo://contributors",
 		},
 		{
 			name:    "contributor",
 			kind:    "contributor",
 			data:    map[string]interface{}{"github": "usalu"},
-			wantID:  "👤usalu",
+			wantID:  fmt.Sprintf("%susalu", emojiText(EmojiContributor)),
 			wantURI: "semiorepo://contributor/usalu",
 		},
 		{
 			name:    "commits collection",
 			kind:    "commits",
 			data:    map[string]interface{}{},
-			wantID:  "🔀",
+			wantID:  emojiText(EmojiCommits),
 			wantURI: "semiorepo://commits",
 		},
 		{
 			name:    "commit",
 			kind:    "commit",
 			data:    map[string]interface{}{"sha": "abc123"},
-			wantID:  "🔀abc123",
+			wantID:  fmt.Sprintf("%sabc123", emojiText(EmojiCommit)),
 			wantURI: "semiorepo://commit/abc123",
 		},
 	}
@@ -7036,13 +7103,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders basic tree", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTree(tree)
-		if !strings.Contains(output, "🏗Projects") {
+		if !strings.Contains(output, "🏗️Projects") {
 			t.Error("output should contain Projects label")
 		}
 		if !strings.Contains(output, "semio") {
@@ -7088,13 +7155,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("markdown renderer uses list bullets", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTreeMarkdown(tree)
-		if !strings.Contains(output, "- [🏗Projects](semiorepo://projects)") {
+		if !strings.Contains(output, "- [🏗️Projects](semiorepo://projects)") {
 			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
 		}
 		if !strings.Contains(output, "  - semio") {

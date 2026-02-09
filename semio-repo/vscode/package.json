@@ -75,6 +75,10 @@
         "title": "semio-repo: List Policies"
       },
       {
+        "command": "semio.policyTree",
+        "title": "semio-repo: Show Policy Tree"
+      },
+      {
         "command": "semio.policyCheck",
         "title": "semio-repo: Check Policy"
       },
@@ -766,157 +770,157 @@
         },
         {
           "command": "semio.filter.toggle.project.user",
-        "toggled": "semio.filter.project.user",
+          "toggled": "semio.filter.project.user",
           "when": "view == semio.filter && viewItem == filter_project",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.project.infrastructure",
-        "toggled": "semio.filter.project.infrastructure",
+          "toggled": "semio.filter.project.infrastructure",
           "when": "view == semio.filter && viewItem == filter_project",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.project.research",
-        "toggled": "semio.filter.project.research",
+          "toggled": "semio.filter.project.research",
           "when": "view == semio.filter && viewItem == filter_project",
           "group": "inline@3"
         },
         {
           "command": "semio.filter.toggle.bundle.library",
-        "toggled": "semio.filter.bundle.library",
+          "toggled": "semio.filter.bundle.library",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.bundle.binary",
-        "toggled": "semio.filter.bundle.binary",
+          "toggled": "semio.filter.bundle.binary",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.bundle.ui",
-        "toggled": "semio.filter.bundle.ui",
+          "toggled": "semio.filter.bundle.ui",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@3"
         },
         {
           "command": "semio.filter.toggle.bundle.site",
-        "toggled": "semio.filter.bundle.site",
+          "toggled": "semio.filter.bundle.site",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@4"
         },
         {
           "command": "semio.filter.toggle.bundle.assets",
-        "toggled": "semio.filter.bundle.assets",
+          "toggled": "semio.filter.bundle.assets",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@5"
         },
         {
           "command": "semio.filter.toggle.bundle.schema",
-        "toggled": "semio.filter.bundle.schema",
+          "toggled": "semio.filter.bundle.schema",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@6"
         },
         {
           "command": "semio.filter.toggle.bundle.default",
-        "toggled": "semio.filter.bundle.default",
+          "toggled": "semio.filter.bundle.default",
           "when": "view == semio.filter && viewItem == filter_bundle",
           "group": "inline@7"
         },
         {
           "command": "semio.filter.toggle.folder.organization",
-        "toggled": "semio.filter.folder.organization",
+          "toggled": "semio.filter.folder.organization",
           "when": "view == semio.filter && viewItem == filter_folder",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.folder.required",
-        "toggled": "semio.filter.folder.required",
+          "toggled": "semio.filter.folder.required",
           "when": "view == semio.filter && viewItem == filter_folder",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.file.code",
-        "toggled": "semio.filter.file.code",
+          "toggled": "semio.filter.file.code",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.file.script",
-        "toggled": "semio.filter.file.script",
+          "toggled": "semio.filter.file.script",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.file.config",
-        "toggled": "semio.filter.file.config",
+          "toggled": "semio.filter.file.config",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@3"
         },
         {
           "command": "semio.filter.toggle.file.test",
-        "toggled": "semio.filter.file.test",
+          "toggled": "semio.filter.file.test",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@4"
         },
         {
           "command": "semio.filter.toggle.file.docs",
-        "toggled": "semio.filter.file.docs",
+          "toggled": "semio.filter.file.docs",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@5"
         },
         {
           "command": "semio.filter.toggle.file.resource",
-        "toggled": "semio.filter.file.resource",
+          "toggled": "semio.filter.file.resource",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@6"
         },
         {
           "command": "semio.filter.toggle.file.license",
-        "toggled": "semio.filter.file.license",
+          "toggled": "semio.filter.file.license",
           "when": "view == semio.filter && viewItem == filter_file",
           "group": "inline@7"
         },
         {
           "command": "semio.filter.toggle.definition.implementation",
-        "toggled": "semio.filter.definition.implementation",
+          "toggled": "semio.filter.definition.implementation",
           "when": "view == semio.filter && viewItem == filter_definition",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.definition.interface",
-        "toggled": "semio.filter.definition.interface",
+          "toggled": "semio.filter.definition.interface",
           "when": "view == semio.filter && viewItem == filter_definition",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.definition.constant",
-        "toggled": "semio.filter.definition.constant",
+          "toggled": "semio.filter.definition.constant",
           "when": "view == semio.filter && viewItem == filter_definition",
           "group": "inline@3"
         },
         {
           "command": "semio.filter.toggle.goal.open",
-        "toggled": "semio.filter.goal.open",
+          "toggled": "semio.filter.goal.open",
           "when": "view == semio.filter && viewItem == filter_goal",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.goal.closed",
-        "toggled": "semio.filter.goal.closed",
+          "toggled": "semio.filter.goal.closed",
           "when": "view == semio.filter && viewItem == filter_goal",
           "group": "inline@2"
         },
         {
           "command": "semio.filter.toggle.ticket.open",
-        "toggled": "semio.filter.ticket.open",
+          "toggled": "semio.filter.ticket.open",
           "when": "view == semio.filter && viewItem == filter_ticket",
           "group": "inline@1"
         },
         {
           "command": "semio.filter.toggle.ticket.closed",
-        "toggled": "semio.filter.ticket.closed",
+          "toggled": "semio.filter.ticket.closed",
           "when": "view == semio.filter && viewItem == filter_ticket",
           "group": "inline@2"
         },

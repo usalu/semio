@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪︎ semio-repo/vscode/extension.test.ts
+// 🧪 semio-repo/vscode/extension.test.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -564,16 +564,16 @@ suite("Filter Provider Test Suite", () => {
     assert.strictEqual(children.length, 13, "Should have 13 root elements (search + 12 filters)");
     const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
     assert.ok(labels.some(l => l.startsWith("🔍Search")), "Should have Search");
-    assert.ok(labels.some(l => l.startsWith("🏗️Projects")), "Should have Projects");
+    assert.ok(labels.some(l => l.startsWith("🏗Projects")), "Should have Projects");
     assert.ok(labels.some(l => l.startsWith("📦Bundles")), "Should have Bundles");
     assert.ok(labels.some(l => l.startsWith("📂Folders")), "Should have Folders");
     assert.ok(labels.some(l => l.startsWith("📄Files")), "Should have Files");
     assert.ok(labels.some(l => l.startsWith("🔖Sections")), "Should have Sections");
-    assert.ok(labels.some(l => l.startsWith("🏷️Definitions")), "Should have Definitions");
+    assert.ok(labels.some(l => l.startsWith("🏷Definitions")), "Should have Definitions");
     assert.ok(labels.some(l => l.startsWith("🎯Goals")), "Should have Goals");
     assert.ok(labels.some(l => l.startsWith("📅Tickets")), "Should have Tickets");
     assert.ok(labels.some(l => l.startsWith("📅Dates")), "Should have Dates");
-    assert.ok(labels.some(l => l.startsWith("🛡️Policies")), "Should have Policies");
+    assert.ok(labels.some(l => l.startsWith("🛡Policies")), "Should have Policies");
     assert.ok(labels.some(l => l.startsWith("👤Contributors")), "Should have Contributors");
     assert.ok(labels.some(l => l.startsWith("🔄Commits")), "Should have Commits");
   });
@@ -732,10 +732,10 @@ suite("Monorepo Provider Test Suite", () => {
     const children = await provider.getChildren();
     assert.strictEqual(children.length, 6);
     const labels = children.map(c => c.label);
-    assert.ok(labels.includes("🏗️Projects"), "Should have 🏗️Projects");
+    assert.ok(labels.includes("🏗Projects"), "Should have 🏗Projects");
     assert.ok(labels.includes("🎯Goals"), "Should have 🎯Goals");
     assert.ok(labels.includes("📅Tickets"), "Should have 📅Tickets");
-    assert.ok(labels.includes("🛡️Policies"), "Should have 🛡️Policies");
+    assert.ok(labels.includes("🛡Policies"), "Should have 🛡Policies");
     assert.ok(labels.includes("👤Contributors"), "Should have 👤Contributors");
     assert.ok(labels.includes("🔀Commits"), "Should have 🔀Commits");
   });
@@ -840,9 +840,9 @@ suite("getFileKindIcon Test Suite", () => {
   });
 
   test("Config files return gear icon", () => {
-    assert.strictEqual(getFileKindIcon("config.json"), "⚙️");
-    assert.strictEqual(getFileKindIcon("settings.yaml"), "⚙️");
-    assert.strictEqual(getFileKindIcon("pyproject.toml"), "⚙️");
+    assert.strictEqual(getFileKindIcon("config.json"), "⚙");
+    assert.strictEqual(getFileKindIcon("settings.yaml"), "⚙");
+    assert.strictEqual(getFileKindIcon("pyproject.toml"), "⚙");
   });
 
   test("Markdown and text files return memo icon", () => {
@@ -851,8 +851,8 @@ suite("getFileKindIcon Test Suite", () => {
   });
 
   test("Shell scripts return desktop icon", () => {
-    assert.strictEqual(getFileKindIcon("setup.sh"), "🖥️");
-    assert.strictEqual(getFileKindIcon("build.ps1"), "🖥️");
+    assert.strictEqual(getFileKindIcon("setup.sh"), "🖥");
+    assert.strictEqual(getFileKindIcon("build.ps1"), "🖥");
   });
 
   test("Unknown extensions return default document icon", () => {
@@ -1091,14 +1091,14 @@ suite("bundleKindEmoji Test Suite", () => {
   test("Maps library to 📚", () => {
     assert.strictEqual(bundleKindEmoji("library"), "📚");
   });
-  test("Maps binary to ⌨️", () => {
-    assert.strictEqual(bundleKindEmoji("binary"), "⌨️");
+  test("Maps binary to ⌨", () => {
+    assert.strictEqual(bundleKindEmoji("binary"), "⌨");
   });
   test("Maps schema to 🛂", () => {
     assert.strictEqual(bundleKindEmoji("schema"), "🛂");
   });
-  test("Maps ui to 🖱️", () => {
-    assert.strictEqual(bundleKindEmoji("ui"), "🖱️");
+  test("Maps ui to 🖱", () => {
+    assert.strictEqual(bundleKindEmoji("ui"), "🖱");
   });
   test("Maps site to 🌐", () => {
     assert.strictEqual(bundleKindEmoji("site"), "🌐");
