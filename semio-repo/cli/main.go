@@ -9696,6 +9696,7 @@ const (
 	ViolationCodeCommentBlock               ViolationKind = "code:comment:block"
 	ViolationCodeCommentJSDoc               ViolationKind = "code:comment:jsdoc"
 	ViolationCodeSpecsSyntax                ViolationKind = "code:specs:implementation-syntax"
+	ViolationCodeDocsMissingReadme          ViolationKind = "code:docs:missing-readme"
 	ViolationDevDocsMissingFile             ViolationKind = "dev-docs:missing-file"
 	ViolationDevDocsMissingFolder           ViolationKind = "dev-docs:missing-folder"
 	ViolationDevDocsWrongFilePath           ViolationKind = "dev-docs:wrong-file-path"
@@ -9850,6 +9851,13 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Priority:    ViolationPriorityLow,
 		Reason:      "Specs must be implementation-agnostic and must not contain code syntax",
 		Solution:    "Remove backticks, function calls, and other code syntax from spec text",
+		Autofixable: false,
+	},
+	ViolationCodeDocsMissingReadme: {
+		Kind:        ViolationCodeDocsMissingReadme,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Bundle or folder is missing a README.md with summary and specs",
+		Solution:    "Add a README.md with # Summary and # Specs sections",
 		Autofixable: false,
 	},
 	ViolationCodeUnicodeEmojiVariation: {
@@ -11546,6 +11554,7 @@ var policies = []PolicyDef{
 			ViolationCodeCommentJSDoc,
 			ViolationCodeSpecsSyntax,
 			ViolationCodeUnicodeEmojiVariation,
+			ViolationCodeDocsMissingReadme,
 		},
 		Run: codePolicy,
 	},
@@ -12519,6 +12528,7 @@ func codePolicy(ctx *PolicyContext) []Violation {
 	violations = append(violations, commentPolicy(ctx)...)
 	violations = append(violations, specsPolicy(ctx)...)
 	violations = append(violations, emojiPolicy(ctx)...)
+	violations = append(violations, docsPolicy(ctx)...)
 	return violations
 }
 
@@ -12540,6 +12550,41 @@ func emojiPolicy(ctx *PolicyContext) []Violation {
 						file, i+1, 0, strings.TrimSpace(line)))
 				}
 			}
+		}
+	}
+	return violations
+}
+
+func docsPolicy(ctx *PolicyContext) []Violation {
+	var violations []Violation
+	checked := make(map[string]bool)
+	for _, bundle := range ctx.Bundles {
+		bundleRoot := bundle.Root
+		if checked[bundleRoot] {
+			continue
+		}
+		checked[bundleRoot] = true
+		readmePath := filepath.Join(bundleRoot, "README.md")
+		absPath := filepath.Join(ctx.RootDir, readmePath)
+		if _, err := os.Stat(absPath); os.IsNotExist(err) {
+			violations = append(violations, ctx.CreateViolation(
+				fmt.Sprintf("Bundle %q is missing README.md with # Summary and # Specs sections", bundle.Name),
+				ViolationCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
+			continue
+		}
+		content := ctx.ReadText(readmePath)
+		if !strings.Contains(content, "# Summary") {
+			violations = append(violations, ctx.CreateViolation(
+				fmt.Sprintf("Bundle %q README.md is missing # Summary section", bundle.Name),
+				ViolationCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
+		}
+		if !strings.Contains(content, "# Specs") {
+			violations = append(violations, ctx.CreateViolation(
+				fmt.Sprintf("Bundle %q README.md is missing # Specs section", bundle.Name),
+				ViolationCodeDocsMissingReadme,
+				readmePath, 0, 0, ""))
 		}
 	}
 	return violations

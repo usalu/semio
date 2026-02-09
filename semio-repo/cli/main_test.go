@@ -3265,6 +3265,138 @@ func TestSpecsViolation(t *testing.T) {
 	})
 }
 
+func TestDocsViolation(t *testing.T) {
+	t.Run("docsPolicy detects missing README.md", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		bundleRoot := "test-bundle"
+		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
+			t.Fatalf("failed to create dir: %v", err)
+		}
+		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContext(scope, bundles)
+		violations := docsPolicy(ctx)
+		found := false
+		for _, v := range violations {
+			if v.Kind == ViolationCodeDocsMissingReadme {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected ViolationCodeDocsMissingReadme for missing README.md")
+		}
+	})
+	t.Run("docsPolicy detects missing Summary section", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		bundleRoot := "test-bundle"
+		readmePath := filepath.Join(tmpDir, bundleRoot, "README.md")
+		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
+			t.Fatalf("failed to create dir: %v", err)
+		}
+		if err := WriteTextFile(readmePath, "# Specs\n\nSome specs here.\n"); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContext(scope, bundles)
+		violations := docsPolicy(ctx)
+		found := false
+		for _, v := range violations {
+			if v.Kind == ViolationCodeDocsMissingReadme && strings.Contains(v.Summary, "Summary") {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected ViolationCodeDocsMissingReadme for missing # Summary section")
+		}
+	})
+	t.Run("docsPolicy detects missing Specs section", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		bundleRoot := "test-bundle"
+		readmePath := filepath.Join(tmpDir, bundleRoot, "README.md")
+		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
+			t.Fatalf("failed to create dir: %v", err)
+		}
+		if err := WriteTextFile(readmePath, "# Summary\n\nA test bundle.\n"); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContext(scope, bundles)
+		violations := docsPolicy(ctx)
+		found := false
+		for _, v := range violations {
+			if v.Kind == ViolationCodeDocsMissingReadme && strings.Contains(v.Summary, "Specs") {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected ViolationCodeDocsMissingReadme for missing # Specs section")
+		}
+	})
+	t.Run("docsPolicy clean README no violation", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		bundleRoot := "test-bundle"
+		readmePath := filepath.Join(tmpDir, bundleRoot, "README.md")
+		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
+			t.Fatalf("failed to create dir: %v", err)
+		}
+		if err := WriteTextFile(readmePath, "# Summary\n\nA test bundle.\n\n# Docs\n\n# Specs\n\nSome specs.\n"); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContext(scope, bundles)
+		violations := docsPolicy(ctx)
+		for _, v := range violations {
+			if v.Kind == ViolationCodeDocsMissingReadme {
+				t.Errorf("unexpected ViolationCodeDocsMissingReadme: %s", v.Summary)
+			}
+		}
+	})
+	t.Run("docsPolicy deduplicates bundles with same root", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+		bundleRoot := "test-bundle"
+		if err := os.MkdirAll(filepath.Join(tmpDir, bundleRoot), 0755); err != nil {
+			t.Fatalf("failed to create dir: %v", err)
+		}
+		bundles := []Bundle{
+			{Name: "bundle-a", Root: bundleRoot},
+			{Name: "bundle-b", Root: bundleRoot},
+		}
+		scope := Scope{Kind: ScopeRepo}
+		ctx := NewPolicyContext(scope, bundles)
+		violations := docsPolicy(ctx)
+		count := 0
+		for _, v := range violations {
+			if v.Kind == ViolationCodeDocsMissingReadme {
+				count++
+			}
+		}
+		if count != 1 {
+			t.Errorf("expected 1 violation for deduplicated root, got %d", count)
+		}
+	})
+}
+
 func TestFormatHeaderStructure(t *testing.T) {
 	lang := NewTypeScriptLanguage()
 	header := lang.FormatHeader("💻test/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some specs")

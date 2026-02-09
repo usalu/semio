@@ -1,3 +1,25 @@
+# Summary
+
+Sketchpad app modules, state machine wiring, and shared app surfaces for Home, Kit, Design, Type, Quality, Docs, and Feedback.
+
+# Docs
+
+## elements.tsx
+
+`Table` supports row-level hover callbacks for app hover state dispatch.
+
+## Home.tsx
+
+Home app hover state is stored in the Sketchpad state machine and updated via hover commands for table rows.
+
+## Kit.tsx
+
+Kit app hover state covers all artifact kinds and is updated via table and diagram hover dispatch.
+
+## Sketchpad.tsx
+
+Home command hooks forward hover events, including clear, into the Sketchpad state machine.
+
 # Specs
 
 ## State Management
