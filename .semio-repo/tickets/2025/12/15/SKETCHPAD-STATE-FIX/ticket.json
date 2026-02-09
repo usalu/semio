@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.96Z",
   "interactions": [
     {
-      "prompt": "Fix apps not working after wildcard refactor - state not changing",
-      "llm": "sonnet-4.5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.96Z"
       },
-      "started": "2025-12-16T17:06:07.96Z",
-      "commit": "2fb81ef29354981c1b9625769dba4a06360a4aef"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "2fb81ef29354981c1b9625769dba4a06360a4aef",
+      "prompt": "Fix apps not working after wildcard refactor - state not changing",
+      "llm": "sonnet-4.5"
     }
   ]
 }

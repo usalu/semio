@@ -11,15 +11,17 @@
   "finished": "2026-01-29T11:04:06.702277601Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-29T10:58:29.547846004Z",
+        "finished": "2026-01-29T11:01:25.821221004Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Extend the ticket mechanism to include an `important.md` file for compulsory actions. This file must be created on ticket open, and ticket close must fail if the file is not empty.",
       "llm": "sonnet-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T10:58:29.547846004Z",
-      "finished": "2026-01-29T11:01:25.821221004Z",
-      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -330,7 +332,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field<T> Type",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
               "lines": {
                 "added": 46,
                 "removed": 0
@@ -400,35 +402,35 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Expertise Levels",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Components",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Content",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -498,35 +500,35 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration",
               "lines": {
                 "added": 39,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#AppConfig",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#AppConfig",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Path Matching",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Path Matching",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Route Segments",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Route Segments",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Scope Providers",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Scope Providers",
               "lines": {
                 "added": 4,
                 "removed": 0
@@ -2255,7 +2257,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
               "lines": {
                 "added": 16,
                 "removed": 0
@@ -2521,7 +2523,7 @@
               }
             },
             {
-              "path": "README.md#📄 Specs [↑](#-overview)#⚙️ Prop [↑](#-specs-)",
+              "path": "README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -2668,21 +2670,21 @@
               }
             },
             {
-              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
               "lines": {
                 "added": 85,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -3144,7 +3146,7 @@
               }
             },
             {
-              "path": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️ Commit [↑](#-gitstyle-)",
+              "path": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
               "lines": {
                 "added": 32,
                 "removed": 0
@@ -3221,140 +3223,140 @@
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
               "lines": {
                 "added": 94,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)#⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️ [Cursor](.cursor) [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -9449,15 +9451,17 @@
       }
     },
     {
+      "dates": {
+        "started": "2026-01-29T11:02:28.290250908Z",
+        "finished": "2026-01-29T11:04:06.702277601Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Delete the important.md file when closing a ticket",
       "llm": "sonnet-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T11:02:28.290250908Z",
-      "finished": "2026-01-29T11:04:06.702277601Z",
-      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "diff": {
         "bundles": {
           "deleted": null,

@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.882Z",
   "interactions": [
     {
-      "prompt": "Implement granular store architecture with YPath and DerivedStore",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.882Z"
       },
-      "started": "2025-12-16T17:06:07.882Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Implement granular store architecture with YPath and DerivedStore",
+      "llm": "sonnet-4-5"
     }
   ]
 }

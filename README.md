@@ -34,7 +34,7 @@
 </p>
 <br/>
 
-You want to 🧩 the next 🏘🏛🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣👥🖱⌨ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥✒🖨🪄🚀
+You want to 🧩 the next 🏘🏛🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥✒🖨🪄🚀
 
 # 👋 Hello contributor
 
@@ -76,7 +76,7 @@ Let me walk you through 🚶
    - [👤 Author](#-author-)
    - [📋 Layer](#-layer-)
    - [👥 Group](#-group-)
-   - [⚙ Prop](#-prop-)
+   - [⚙️ Prop](#-prop-)
    - [📈 Stat](#-stat-)
 1. [🦑 Repo](#-repo-)
    - [⚖ Principles](#-principles-)
@@ -86,7 +86,7 @@ Let me walk you through 🚶
      - [📢 Release](#-release-)
      - [🏷 Tag](#%EF%B8%8F-tag-)
      - [🌿 Branch](#-branch-)
-     - [🗃 Commit](#%EF%B8%8F-commit-)
+     - [🗃️ Commit](#%EF%B8%8F-commit-)
 1. [🧑‍💻 Development](#-development-)
    - [🔌 Connector Numbers](#-port-numbers-)
    - [📒 Tickets and reports](#-tickets-and-reports)
@@ -95,17 +95,17 @@ Let me walk you through 🚶
        - [⚖ Decision Making](#-decision-making-)
        - [🔁 Refactoring](#-refactoring-)
        - [🐛 Bug Fixes](#-bug-fixes-)
-     - [⌨ Tools](#-tools-)
+     - [⌨️ Tools](#-tools-)
        - [🌐 Web-Chat](#-web-chat-)
          - [❄ ChatGPT](#-chatgpt-)
          - [🌟 Gemini](#-gemini-)
          - [AI studio](#-ai-studio-)
        - [💻 Editor](#-editor-)
          - [✈ Copilot](#-copilot-)
-         - [🖱 Cursor](#-cursor-)
+         - [🖱️ Cursor](#-cursor-)
          - [🌊 Windsurf](#-windsurf-)
-       - [⌨ CLI](#-cli-)
-         - [⌨ Claude Code](#-claude-code-)
+       - [⌨️ CLI](#-cli-)
+         - [⌨️ Claude Code](#-claude-code-)
          - [🧾 Codex](#-codex-)
        - [☁ Cloud](#-cloud-)
          - [🦑 Jules](#-jules-)
@@ -127,7 +127,7 @@ Let me walk you through 🚶
    - [📚 semio/docs](#-semiodocs-)
    - [🎛 semio/play](#%EF%B8%8F-semioplay-)
    - [🤖 semio/assistant](#-semioassistant-)
-   - [⚙ semio/engine](#-semioengine-)
+   - [⚙️ semio/engine](#-semioengine-)
    - [🟪 semio/net](#-semionet-)
    - [🦗 semio/grasshopper](#-semiograsshopper-)
      - [🪢 Scripting](#-scripting-)
@@ -169,7 +169,7 @@ The engine can also run as a pure stdio MCP server for tool integrations.
 
 ## ✏ sketchpad [↑](#%EF%B8%8F-products-)
 
-[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱
+[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️
 
 It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍
 
@@ -409,7 +409,7 @@ A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`
 
 Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
 
-## ⚙ Prop [↑](#-specs-)
+## ⚙️ Prop [↑](#-specs-)
 
 A [`prop`](#-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
 
@@ -432,7 +432,7 @@ Let's start with the rules of thumbs that this codebase was built with 🫰
 <details>
 <summary><strong>💾 If something can be written in a single file, then it probably should ✅</strong></summary>
 
-I know, the urge to <strong>tidy</strong> up or <strong>separate</strong> things is big 🗃
+I know, the urge to <strong>tidy</strong> up or <strong>separate</strong> things is big 🗃️
 
 But try to withstand it 🫥
 
@@ -443,7 +443,7 @@ A single file is easier for humans and computers to understand 💡
 You will be surprised
 
 - by the awesome [fill-in-the-middle suggestions](#-cursor-) of your copilot 🤖
-- by the hassle-free [context selection](#-browser-) for your ai agent 🖱
+- by the hassle-free [context selection](#-browser-) for your ai agent 🖱️
 - by the smooth refactor experience by just going top-to-bottom ⬇
 - by the beautiful diff for your next code review 🔍
 - by the clean git-history when you try to find a certain change 🔁
@@ -459,7 +459,7 @@ This means that all the building blocks (functions, classes, components, …) ar
 
 If you have a cyclic depedency (really?!) then put the object with lower complexity first 🥇
 
-This means that when you start with unknown code, it is probably best to start on the bottom and go upwards 🖱
+This means that when you start with unknown code, it is probably best to start on the bottom and go upwards 🖱️
 
 Why? LLMs, reflection, … , work best left-to-write 🤖
 
@@ -621,7 +621,7 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 > [!NOTE]  
 > It is free for open-source bundles like this one ❤
 
-We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱
+We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱️
 
 It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
 
@@ -647,7 +647,7 @@ COMPONENT
 
 **Title symbols:**
 
-- 🏗 Foundational work
+- 🏗️ Foundational work
 - 🛠 Heavy work
 - 🪛 Minor work
 - 🐛 Major Bug fix
@@ -684,7 +684,7 @@ Other branches are created for [bundles](#-bundles-), [specific features](https:
 
 Usually one person works on one feature at a time and hence the `-NAME` suffix 📛
 
-### 🗃 Commit [↑](#-gitstyle-)
+### 🗃️ Commit [↑](#-gitstyle-)
 
 Commit messages follow this format:
 
@@ -692,7 +692,7 @@ Commit messages follow this format:
 MAIN-TASK-SYMBOL SUMMARY WORK-SYMBOL
 ```
 
-The first symbol encodes the main task of the commit and the last symbol encodes the amount of work (`🪛` < `🔨` < `🛠` < `🏗`) 🧰
+The first symbol encodes the main task of the commit and the last symbol encodes the amount of work (`🪛` < `🔨` < `🛠` < `🏗️`) 🧰
 
 <details>
 <summary><strong>📦 Commit as much as you like ✅</strong></summary>
@@ -763,7 +763,7 @@ Afterwards you can install uv with this command:
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙
+Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
 
 ## 🎫 Tickets [↑](#-development)
 
@@ -896,7 +896,7 @@ Secondly, if the model can't find the bug then it will often try to remove funct
 
 Therefore, it is often a good idea that after you found the bug, reset your branch and create a new ticket where you define exactly how to fix the bug 🪛
 
-## ⌨ Tools [↑](#-ai-)
+## ⌨️ Tools [↑](#-ai-)
 
 ### 🌐 Web-Chat [↑](#-tools-)
 
@@ -925,7 +925,7 @@ Good for larger experiments due to more generous free quota 🧪
 
 Copilot is our default for most tickets because request-based billing makes fast interaction cheap 💳
 
-#### 🖱 [Cursor](.cursor) [↑](#-ai-)
+#### 🖱️ [Cursor](.cursor) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -946,9 +946,9 @@ But in general, we don't use the chat because it is way too expensive 💰
 
 Used for token-heavy test-driven-development workflows with MCP (especially Playwright) 🧪
 
-### ⌨ CLI [↑](#-tools-)
+### ⌨️ CLI [↑](#-tools-)
 
-#### ⌨ [Claude Code](CLAUDE.md) [↑](#-ai-)
+#### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
 
 We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳
 
@@ -1139,8 +1139,8 @@ A component is a piece of software which is packaged independently 🏝
 ## 🧼 Code Hygiene Hooks [↑](#-bundles-)
 
 The code hygiene hook enforces comment, license, region, and file header policies before changes are shared.
-File headers must contain the correct artifact ID (emoji-prefixed path like `💻semio/js/src/index.ts` or `📜semio/engine/build.ts` for shebang scripts) instead of plain file paths; the `fix` command replaces wrong IDs automatically.
-It helps keep the codebase clean by removing obsolete inline or block comments, while respecting TODOs and active contiguous comment blocks following them.
+File headers use a standardized structure: a Header region containing the file artifact ID (emoji-prefixed path like `💻semio/js/src/index.ts`), an optional summary line, contributor lines (year + name + email), a nested License subregion wrapping the full AGPL license text, and a nested Specs subregion for file-level requirements. The `FormatHeader` method on `BaseLanguage` programmatically builds this structure from five arguments (filePath, summary, contributors, license, specs) so all languages produce consistent headers. Languages that support headers set `supportsHeaders=true` in their constructor. The `headerPolicy` validates that both License and Specs subregions exist inside Header, and the `sectionPolicy` exempts these two subregions from empty-section violations so they can remain content-free placeholders. The `fix` command replaces wrong artifact IDs automatically.
+It helps keep the codebase clean by removing obsolete inline or block comments, while respecting TODOs, active contiguous comment blocks following them, and specs region content.
 Comment scanning is language-agnostic: every language uses the same `BaseLanguage.ScanComments` implementation configured with language-specific primitives (comment prefix, block comment delimiters, string literal flavors, JSDoc support, skip directives). This means adding comment scanning for a new language only requires setting the right fields in its constructor.
 It treats empty regions as invalid structure and removes them automatically in fix mode so region blocks stay meaningful and concise.
 It ignores configuration files to avoid breaking structured data with comment prefix injections.
@@ -1153,6 +1153,7 @@ The repo CLI is the single source of truth for ticket workflows and the GraphQL 
 The VS Code extension uses the schema mirror to generate typed documents and forwards queries through the CLI so the UI and CLI stay in lockstep.
 The repo CLI streams command execution as JSONL events and three rendering adapters decide output format: `NDJSONRenderer` (json) emits raw data lines, `HumanRenderer` (text) renders colored terminal output, and `MarkdownRenderer` (md, default) produces pure markdown links.
 Markdown output uses the format `[<id>](<uri>) - <prop1> - <prop2>` for single entities, `- [<id>](<uri>) - <prop1> - <prop2>` for list items, and nested `- ` indentation for tree views. There are no JSON code-block or dump fallback paths — all output resolves to entity-kind-specific renderers.
+Every tree and list item is guaranteed to be a single line. Property values pass through `sanitizeProp` which strips all newline variants (`\r\n`, `\n`, `\r`), replaces backticks with single quotes (so backtick-wrapped markdown properties don't break), collapses consecutive spaces, and trims whitespace. The final rendered string from both `renderEntityMarkdownLink` and `renderEntityHuman` passes through `sanitizeSingleLine` as a safety net to guarantee no newlines survive into the output. This two-layer approach (property-level + output-level) ensures that even multi-paragraph summaries or descriptions with embedded code references render as a single continuous line.
 The `inferEntityKind(key)` function maps GraphQL operation names (e.g. `ticketOpen`, `goalCreate`) to entity kinds via prefix matching, enabling generic dispatch for mutation results without per-operation switch cases. `renderEntityMarkdownLink(kind, data)` produces the base markdown link format, and `renderEntityMarkdown(kind, data)` wraps it with the `- ` list prefix. Streaming list detection (`" list"` / `" tree"` command suffixes) ensures streamed single-entity events get the correct `- ` prefix in markdown mode.
 When `--json` is active, each stdout line is pure domain data (one JSON object per line) without event wrappers or `{"data": ...}` GraphQL envelopes; errors are written to stderr only, and stdout stays empty on failure so downstream consumers can pipe output directly into `jq` or similar tools without filtering boilerplate.
 Ticket and goal interaction decoding accepts both legacy object-form and current string-form `author` payloads so historical workspaces remain queryable through GraphQL, CLI trees, and the VS Code extension.
@@ -1686,7 +1687,7 @@ Analogous to [our principles](#-principles-) for text-based code, we follow a si
 <details>
 <summary><strong>💻 Optimize your definitions for rectangular space ✅</strong></summary>
 
-Every inch of wasted screen space, means a loss of productivity because you need longer for navigation 🖱
+Every inch of wasted screen space, means a loss of productivity because you need longer for navigation 🖱️
 
 It is harder to understand something far away compared to something close 🔍
 
@@ -1741,7 +1742,7 @@ Grasshopper is an amazing tool if you know the system that you want to create bu
 
 </details>
 
-## ⚙ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)
+## ⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -1840,7 +1841,7 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 1. Search font on [fontsource.org](https://fontsource.org) 🔍
 1. Hit `Download` and extract zip file 📂
 1. Use kebaberized font name as folder name and remove everything else (such as version numbers) ➖
-1. Merge all types in one folder (`ttf`, `webfonts`, …) - they won't collide due to different extensions 🗃
+1. Merge all types in one folder (`ttf`, `webfonts`, …) - they won't collide due to different extensions 🗃️
 1. Remove all parts that repeat everywher (such as common name prefix, single weighted fonts, …) 💯
 
 ### 👁 [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)
@@ -1935,7 +1936,7 @@ Use the primary color for the most important elements of your design 🏆
 
 We use it e.g. for:
 
-- Highlighting interactive elements 🖱
+- Highlighting interactive elements 🖱️
 - Background for important elements 🟥
 
 ### 🥈 Secondary [↑](#-colors-)
@@ -2020,7 +2021,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>      
         <br />
         <a href="#-semiodesktop-" title="✏semio/desktop"><sub>✏<sub></a>
-        <a href="#-semioengine-" title="⚙semio/engine"><sub>⚙<sub></a>
+        <a href="#-semioengine-" title="⚙️semio/engine"><sub>⚙️<sub></a>
         <a href="#-semioassistant-" title="🤖semio/assistant"><sub>🤖<sub></a>
         <a href="#%EF%B8%8F-semioplay-" title="🎛semio/play"><sub>🎛<sub></a>
         <br />
@@ -2073,7 +2074,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
-        <a href="#-semioengine-" title="⚙semio/engine"><sub>⚙<sub></a> 
+        <a href="#-semioengine-" title="⚙️semio/engine"><sub>⚙️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
         <img src=".semio-repo/contributors/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>

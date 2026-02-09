@@ -11,15 +11,17 @@
   "finished": "2026-02-03T08:49:52.347399037Z",
   "interactions": [
     {
-      "prompt": "Extend repo CLI, VS Code extension, and GraphQL to support enhanced ticket commands (goal, parent, no-github) and new goal commands.",
-      "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-01-28T13:54:21.867352599Z",
+        "finished": "2026-02-03T08:49:52.347399037Z"
       },
-      "started": "2026-01-28T13:54:21.867352599Z",
-      "finished": "2026-02-03T08:49:52.347399037Z",
-      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
+      "prompt": "Extend repo CLI, VS Code extension, and GraphQL to support enhanced ticket commands (goal, parent, no-github) and new goal commands.",
+      "llm": "gemini-3-pro"
     }
   ]
 }

@@ -1,20 +1,23 @@
 {
-  "title": "Introduce Field<T> type and useDesignAppField helper to reduce hook boilerplate (Smell 1/2)",
+  "title": "Introduce Field\u003cT\u003e type and useDesignAppField helper to reduce hook boilerplate (Smell 1/2)",
   "status": "closed",
-  "prompt": "Introduce Field<T> type and useDesignAppField helper to reduce hook boilerplate",
+  "prompt": "Introduce Field\u003cT\u003e type and useDesignAppField helper to reduce hook boilerplate",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-20T13:03:02.551Z",
   "finished": "2025-12-20T13:38:37.874Z",
   "interactions": [
     {
-      "prompt": "Introduce Field<T> type and useDesignAppField helper to reduce hook boilerplate",
-      "llm": "opus-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-20T13:03:02.551Z",
+        "finished": "2025-12-20T13:38:37.874Z"
       },
-      "started": "2025-12-20T13:03:02.551Z",
-      "finished": "2025-12-20T13:38:37.874Z",
-      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
+      "prompt": "Introduce Field\u003cT\u003e type and useDesignAppField helper to reduce hook boilerplate",
+      "llm": "opus-4-5"
     }
   ]
 }

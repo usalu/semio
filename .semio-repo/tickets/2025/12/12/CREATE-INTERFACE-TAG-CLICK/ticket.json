@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.905Z",
   "interactions": [
     {
-      "prompt": "Fix create port/tag buttons doing nothing",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.905Z"
       },
-      "started": "2025-12-16T17:06:07.905Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix create port/tag buttons doing nothing",
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.826Z",
   "interactions": [
     {
-      "prompt": "Enhance sketchpad tests with panel verification and drag-drop functionality",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.826Z"
       },
-      "started": "2025-12-16T17:06:07.826Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Enhance sketchpad tests with panel verification and drag-drop functionality",
+      "llm": "sonnet-4-5"
     }
   ]
 }

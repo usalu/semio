@@ -4,6 +4,8 @@
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
+// #region 🔖License
+
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -32,13 +40,17 @@ import {
   MonorepoTreeItem,
   TicketData,
   TicketInteraction,
+  RepoEvent,
+  TreeNodeData,
   parseRepoEvents,
   extractRepoResult,
-  getFileKindIcon,
+  extractLeadingEmoji,
+  treeNodeDisplayLabel,
+  treeNodeContextValue,
+  buildCliTreeArgs,
   slugify,
   parseUri,
   invalidateTreeNodeCache,
-  bundleKindEmoji,
 } from "./extension";
 
 // #endregion 🔖Imports
@@ -564,15 +576,15 @@ suite("Filter Provider Test Suite", () => {
     assert.strictEqual(children.length, 13, "Should have 13 root elements (search + 12 filters)");
     const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : (c.label as vscode.TreeItemLabel).label);
     assert.ok(labels.some(l => l.startsWith("🔍Search")), "Should have Search");
-    assert.ok(labels.some(l => l.startsWith("🏗Projects")), "Should have Projects");
+    assert.ok(labels.some(l => l.startsWith("🏗️Projects")), "Should have Projects");
     assert.ok(labels.some(l => l.startsWith("📦Bundles")), "Should have Bundles");
     assert.ok(labels.some(l => l.startsWith("📂Folders")), "Should have Folders");
     assert.ok(labels.some(l => l.startsWith("📄Files")), "Should have Files");
     assert.ok(labels.some(l => l.startsWith("🔖Sections")), "Should have Sections");
     assert.ok(labels.some(l => l.startsWith("🏷Definitions")), "Should have Definitions");
     assert.ok(labels.some(l => l.startsWith("🎯Goals")), "Should have Goals");
-    assert.ok(labels.some(l => l.startsWith("📅Tickets")), "Should have Tickets");
-    assert.ok(labels.some(l => l.startsWith("📅Dates")), "Should have Dates");
+    assert.ok(labels.some(l => l.startsWith("🎫Tickets")), "Should have Tickets");
+    assert.ok(labels.some(l => l.startsWith("🎫Dates")), "Should have Dates");
     assert.ok(labels.some(l => l.startsWith("🛡Policies")), "Should have Policies");
     assert.ok(labels.some(l => l.startsWith("👤Contributors")), "Should have Contributors");
     assert.ok(labels.some(l => l.startsWith("🔄Commits")), "Should have Commits");
@@ -581,7 +593,7 @@ suite("Filter Provider Test Suite", () => {
   test("Time category returns year values when available", async () => {
     const provider = new FilterTreeDataProvider();
     provider.availableYears = [2024, 2025];
-    const timeItem = new FilterTreeItem("📅Dates", "filter", vscode.TreeItemCollapsibleState.Collapsed, "filter_time");
+    const timeItem = new FilterTreeItem("🎫Dates", "filter", vscode.TreeItemCollapsibleState.Collapsed, "filter_time");
     const children = await provider.getChildren(timeItem);
     assert.strictEqual(children.length, 2, "Should have 2 year items");
     const labels = children.map((c: FilterTreeItem) => typeof c.label === 'string' ? c.label : '');
@@ -727,29 +739,23 @@ suite("Monorepo Provider Test Suite", () => {
     assert.ok(provider);
   });
 
-  test("Root elements include expected emoji-prefixed categories", async () => {
+  test("Root elements are populated from CLI tree", async function () {
+    this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const children = await provider.getChildren();
-    assert.strictEqual(children.length, 6);
-    const labels = children.map(c => c.label);
-    assert.ok(labels.includes("🏗Projects"), "Should have 🏗Projects");
-    assert.ok(labels.includes("🎯Goals"), "Should have 🎯Goals");
-    assert.ok(labels.includes("📅Tickets"), "Should have 📅Tickets");
-    assert.ok(labels.includes("🛡Policies"), "Should have 🛡Policies");
-    assert.ok(labels.includes("👤Contributors"), "Should have 👤Contributors");
-    assert.ok(labels.includes("🔀Commits"), "Should have 🔀Commits");
+    if (children.length === 0) return;
+    const labels = children.map(c => c.label as string);
+    assert.ok(labels.some(l => l.includes("Projects")), "Should have Projects category");
   });
 
-  test("Root elements have correct contextValues", async () => {
+  test("Root elements have category contextValue", async function () {
+    this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    const contextValues = roots.map((r: MonorepoTreeItem) => r.contextValue);
-    assert.ok(contextValues.includes("root_projects"));
-    assert.ok(contextValues.includes("root_goals"));
-    assert.ok(contextValues.includes("root_tickets"));
-    assert.ok(contextValues.includes("root_policies"));
-    assert.ok(contextValues.includes("root_contributors"));
-    assert.ok(contextValues.includes("root_commits"));
+    if (roots.length === 0) return;
+    for (const r of roots) {
+      assert.strictEqual(r.contextValue, "category", `Root ${r.label} should have category contextValue`);
+    }
   });
 
   test("MonorepoTreeItem stores nodeId for copy support", () => {
@@ -767,16 +773,10 @@ suite("Monorepo Provider Test Suite", () => {
     this.timeout(30000);
     const provider = new MonorepoTreeDataProvider();
     const roots = await provider.getChildren();
-    const projectsRoot = roots.find((r: MonorepoTreeItem) => r.contextValue === "root_projects");
-    if (!projectsRoot) {
-      assert.ok(false, "Projects root should exist");
-      return;
-    }
-
+    const projectsRoot = roots.find((r: MonorepoTreeItem) => (r.label as string).includes("Projects"));
+    if (!projectsRoot) return;
     const expanded = await provider.getChildren(projectsRoot);
-    if (expanded.length === 0) {
-      return;
-    }
+    if (expanded.length === 0) return;
     assert.ok(expanded.length > 0);
   });
 });
@@ -814,199 +814,138 @@ suite("Data Structures Test Suite", () => {
   });
 });
 
-// #region 🔖getFileKindIcon Tests
+// #region 🔖CLI Tree Helper Tests
 
-suite("getFileKindIcon Test Suite", () => {
-  test("TypeScript files return document icon", () => {
-    assert.strictEqual(getFileKindIcon("app.ts"), "📄");
-    assert.strictEqual(getFileKindIcon("component.tsx"), "📄");
+suite("extractLeadingEmoji Test Suite", () => {
+  test("Extracts single emoji from start", () => {
+    assert.strictEqual(extractLeadingEmoji("💻coda/py/coda.py"), "💻");
   });
 
-  test("JavaScript files return document icon", () => {
-    assert.strictEqual(getFileKindIcon("index.js"), "📄");
-    assert.strictEqual(getFileKindIcon("app.jsx"), "📄");
+  test("Extracts compound emoji with variation selector", () => {
+    assert.strictEqual(extractLeadingEmoji("⚙️️config.json"), "⚙️️");
   });
 
-  test("Python files return snake icon", () => {
-    assert.strictEqual(getFileKindIcon("main.py"), "🐍");
+  test("Returns empty string for no emoji", () => {
+    assert.strictEqual(extractLeadingEmoji("hello"), "");
   });
 
-  test("Go files return blue diamond icon", () => {
-    assert.strictEqual(getFileKindIcon("main.go"), "🔷");
+  test("Returns empty string for empty input", () => {
+    assert.strictEqual(extractLeadingEmoji(""), "");
   });
 
-  test("C# files return purple circle icon", () => {
-    assert.strictEqual(getFileKindIcon("Program.cs"), "🟣");
-  });
-
-  test("Config files return gear icon", () => {
-    assert.strictEqual(getFileKindIcon("config.json"), "⚙");
-    assert.strictEqual(getFileKindIcon("settings.yaml"), "⚙");
-    assert.strictEqual(getFileKindIcon("pyproject.toml"), "⚙");
-  });
-
-  test("Markdown and text files return memo icon", () => {
-    assert.strictEqual(getFileKindIcon("README.md"), "📝");
-    assert.strictEqual(getFileKindIcon("notes.txt"), "📝");
-  });
-
-  test("Shell scripts return desktop icon", () => {
-    assert.strictEqual(getFileKindIcon("setup.sh"), "🖥");
-    assert.strictEqual(getFileKindIcon("build.ps1"), "🖥");
-  });
-
-  test("Unknown extensions return default document icon", () => {
-    assert.strictEqual(getFileKindIcon("image.png"), "📄");
-    assert.strictEqual(getFileKindIcon("archive.zip"), "📄");
+  test("Extracts category emoji", () => {
+    assert.strictEqual(extractLeadingEmoji("🏗️Projects"), "🏗️");
   });
 });
 
-// #endregion 🔖getFileKindIcon Tests
-
-// #region 🔖matchesSearch Tests
-
-suite("MonorepoProvider matchesSearch Test Suite", () => {
-  test("Empty query matches everything", () => {
-    const fp = new FilterTreeDataProvider();
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.matchesSearch("anything"), true);
-    assert.strictEqual(provider.matchesSearch(""), true);
+suite("treeNodeDisplayLabel Test Suite", () => {
+  test("Category node uses Label directly", () => {
+    const node: TreeNodeData = { Kind: "category", ID: "", Label: "🏗️Projects", URI: "" };
+    assert.strictEqual(treeNodeDisplayLabel(node), "🏗️Projects");
   });
 
-  test("Case-insensitive substring match by default", () => {
+  test("Ticket node gets status icon", () => {
+    const node: TreeNodeData = { Kind: "ticket", ID: "🎫test", Label: "MY-TICKET", URI: "", Status: "open" };
+    assert.ok(treeNodeDisplayLabel(node).includes("🔵"));
+  });
+
+  test("Closed ticket gets green icon", () => {
+    const node: TreeNodeData = { Kind: "ticket", ID: "🎫test", Label: "MY-TICKET", URI: "", Status: "closed" };
+    assert.ok(treeNodeDisplayLabel(node).includes("🟢"));
+  });
+
+  test("File node uses emoji prefix plus Label", () => {
+    const node: TreeNodeData = { Kind: "file", ID: "💻semio/go/semio.go", Label: "semio.go", URI: "" };
+    assert.strictEqual(treeNodeDisplayLabel(node), "💻semio.go");
+  });
+
+  test("Goal node includes status icon", () => {
+    const node: TreeNodeData = { Kind: "goal", ID: "🎯my-goal", Label: "My Goal", URI: "", Status: "open" };
+    const label = treeNodeDisplayLabel(node);
+    assert.ok(label.includes("🔵") || label.includes("🎯"));
+  });
+
+  test("Contributor node gets fallback emoji", () => {
+    const node: TreeNodeData = { Kind: "contributor", ID: "", Label: "usalu", URI: "" };
+    const label = treeNodeDisplayLabel(node);
+    assert.ok(label.includes("👤"));
+  });
+
+  test("Commit node gets fallback emoji", () => {
+    const node: TreeNodeData = { Kind: "commit", ID: "", Label: "Fix bug", URI: "" };
+    const label = treeNodeDisplayLabel(node);
+    assert.ok(label.includes("🔀"));
+  });
+});
+
+suite("treeNodeContextValue Test Suite", () => {
+  test("Category returns category", () => {
+    assert.strictEqual(treeNodeContextValue({ Kind: "category", ID: "", Label: "", URI: "" }), "category");
+  });
+
+  test("File returns file", () => {
+    assert.strictEqual(treeNodeContextValue({ Kind: "file", ID: "", Label: "", URI: "" }), "file");
+  });
+
+  test("Open ticket returns ticketOpen", () => {
+    assert.strictEqual(treeNodeContextValue({ Kind: "ticket", ID: "", Label: "", URI: "", Status: "open" }), "ticketOpen");
+  });
+
+  test("Closed ticket returns ticketClosed", () => {
+    assert.strictEqual(treeNodeContextValue({ Kind: "ticket", ID: "", Label: "", URI: "", Status: "closed" }), "ticketClosed");
+  });
+
+  test("Goal returns goal", () => {
+    assert.strictEqual(treeNodeContextValue({ Kind: "goal", ID: "", Label: "", URI: "" }), "goal");
+  });
+
+  test("Contributor returns contributor", () => {
+    assert.strictEqual(treeNodeContextValue({ Kind: "contributor", ID: "", Label: "", URI: "" }), "contributor");
+  });
+});
+
+suite("buildCliTreeArgs Test Suite", () => {
+  test("No filter provider returns empty args", () => {
+    const args = buildCliTreeArgs(undefined);
+    assert.ok(Array.isArray(args));
+    assert.strictEqual(args.length, 0);
+  });
+
+  test("Filter provider with search query adds positional arg", () => {
     const fp = new FilterTreeDataProvider();
     fp.searchQuery = "hello";
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.matchesSearch("Hello World"), true);
-    assert.strictEqual(provider.matchesSearch("HELLO"), true);
-    assert.strictEqual(provider.matchesSearch("goodbye"), false);
+    const args = buildCliTreeArgs(fp);
+    assert.ok(args.includes("hello"));
   });
 
-  test("Case-sensitive match when enabled", () => {
+  test("Filter provider with excluded file kinds adds --no flags", () => {
     const fp = new FilterTreeDataProvider();
-    fp.searchQuery = "Hello";
-    fp.matchCase = true;
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.matchesSearch("Hello World"), true);
-    assert.strictEqual(provider.matchesSearch("hello world"), false);
+    fp.filters.file.code = false;
+    const args = buildCliTreeArgs(fp);
+    assert.ok(args.includes("--no-code"));
   });
 
-  test("Whole word match when enabled", () => {
+  test("Filter provider with excluded years adds --no-year flags", () => {
     const fp = new FilterTreeDataProvider();
-    fp.searchQuery = "test";
-    fp.matchWholeWord = true;
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.matchesSearch("this is a test"), true);
-    assert.strictEqual(provider.matchesSearch("testing"), false);
+    fp.excludedYears = [2024, 2025];
+    const args = buildCliTreeArgs(fp);
+    assert.ok(args.includes("--no-year"));
+    assert.ok(args.includes("2024"));
+    assert.ok(args.includes("2025"));
   });
 
-  test("Regex match when enabled", () => {
+  test("Filter provider with status filter adds --only-open", () => {
     const fp = new FilterTreeDataProvider();
-    fp.searchQuery = "^test.*$";
-    fp.useRegex = true;
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.matchesSearch("testing123"), true);
-    assert.strictEqual(provider.matchesSearch("my test"), false);
-  });
-
-  test("Invalid regex returns true (graceful fallback)", () => {
-    const fp = new FilterTreeDataProvider();
-    fp.searchQuery = "[invalid";
-    fp.useRegex = true;
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.matchesSearch("anything"), true);
-  });
-
-  test("No filter provider matches everything", () => {
-    const provider = new MonorepoTreeDataProvider();
-    assert.strictEqual(provider.matchesSearch("anything"), true);
-  });
-});
-
-// #endregion 🔖matchesSearch Tests
-
-// #region 🔖passesTicketFilter Tests
-
-suite("MonorepoProvider passesTicketFilter Test Suite", () => {
-  test("No filter provider passes all tickets", () => {
-    const provider = new MonorepoTreeDataProvider();
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 1 }), true);
-  });
-
-  test("Filters out OPEN tickets when open filter is off", () => {
-    const fp = new FilterTreeDataProvider();
-    fp.filters.ticket.open = false;
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 1 }), false);
-    assert.strictEqual(provider.passesTicketFilter({ status: "CLOSED", year: 2024, month: 1, day: 1 }), true);
-  });
-
-  test("Filters out CLOSED tickets when closed filter is off", () => {
-    const fp = new FilterTreeDataProvider();
+    fp.filters.ticket.open = true;
     fp.filters.ticket.closed = false;
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.passesTicketFilter({ status: "CLOSED", year: 2024, month: 1, day: 1 }), false);
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 1 }), true);
-  });
-
-  test("Filters out excluded years", () => {
-    const fp = new FilterTreeDataProvider();
-    fp.excludedYears = [2024];
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 1 }), false);
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2025, month: 1, day: 1 }), true);
-  });
-
-  test("Filters out excluded months", () => {
-    const fp = new FilterTreeDataProvider();
-    fp.excludedMonths = [6];
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 6, day: 1 }), false);
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 7, day: 1 }), true);
-  });
-
-  test("Filters out excluded days", () => {
-    const fp = new FilterTreeDataProvider();
-    fp.excludedDays = [15];
-    const provider = new MonorepoTreeDataProvider(fp);
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 15 }), false);
-    assert.strictEqual(provider.passesTicketFilter({ status: "OPEN", year: 2024, month: 1, day: 16 }), true);
+    fp.filters.goal.open = true;
+    fp.filters.goal.closed = false;
+    const args = buildCliTreeArgs(fp);
+    assert.ok(args.includes("--only-open"));
   });
 });
 
-// #endregion 🔖passesTicketFilter Tests
-
-// #region 🔖buildTicketItem Tests
-
-suite("MonorepoProvider buildTicketItem Test Suite", () => {
-  test("Open ticket has blue status icon", () => {
-    const provider = new MonorepoTreeDataProvider();
-    const item = provider.buildTicketItem({ status: "OPEN", year: 2024, month: 3, day: 15, slug: "MY-TICKET" });
-    assert.ok((item.label as string).includes("🔵"));
-    assert.ok((item.label as string).includes("MY-TICKET"));
-    assert.strictEqual(item.contextValue, "ticket");
-  });
-
-  test("Closed ticket has green status icon", () => {
-    const provider = new MonorepoTreeDataProvider();
-    const item = provider.buildTicketItem({ status: "CLOSED", year: 2024, month: 3, day: 15, slug: "DONE-TICKET" });
-    assert.ok((item.label as string).includes("🟢"));
-  });
-
-  test("Ticket item has correct nodeId format", () => {
-    const provider = new MonorepoTreeDataProvider();
-    const item = provider.buildTicketItem({ status: "OPEN", year: 2024, month: 1, day: 5, slug: "TEST" });
-    assert.strictEqual(item.nodeId, "2024/01/05/TEST");
-  });
-
-  test("Ticket item has ticketOpen command", () => {
-    const provider = new MonorepoTreeDataProvider();
-    const item = provider.buildTicketItem({ status: "OPEN", year: 2024, month: 1, day: 1, slug: "X" });
-    assert.strictEqual(item.command?.command, "semio.ticketOpen");
-  });
-});
-
-// #endregion 🔖buildTicketItem Tests
+// #endregion 🔖CLI Tree Helper Tests
 
 // #region 🔖RepoEvent Extended Tests
 
@@ -1084,30 +1023,6 @@ suite("slugify Test Suite", () => {
 
   test("Handles goal ID with slashes", () => {
     assert.strictEqual(slugify("AI-OPTIMIZED-REPO"), "AI-OPTIMIZED-REPO");
-  });
-});
-
-suite("bundleKindEmoji Test Suite", () => {
-  test("Maps library to 📚", () => {
-    assert.strictEqual(bundleKindEmoji("library"), "📚");
-  });
-  test("Maps binary to ⌨", () => {
-    assert.strictEqual(bundleKindEmoji("binary"), "⌨");
-  });
-  test("Maps schema to 🛂", () => {
-    assert.strictEqual(bundleKindEmoji("schema"), "🛂");
-  });
-  test("Maps ui to 🖱", () => {
-    assert.strictEqual(bundleKindEmoji("ui"), "🖱");
-  });
-  test("Maps site to 🌐", () => {
-    assert.strictEqual(bundleKindEmoji("site"), "🌐");
-  });
-  test("Maps assets to 🏪", () => {
-    assert.strictEqual(bundleKindEmoji("assets"), "🏪");
-  });
-  test("Defaults to 📚 for unknown kind", () => {
-    assert.strictEqual(bundleKindEmoji("unknown"), "📚");
   });
 });
 

@@ -6,13 +6,16 @@
   "started": "2025-11-29T00:00:00Z",
   "interactions": [
     {
-      "prompt": "Migration from old format",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "usalu"
+      "dates": {
+        "started": "2025-11-29T00:00:00Z"
       },
-      "started": "2025-11-29T00:00:00Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Migration from old format",
+      "llm": "sonnet-4"
     }
   ]
 }

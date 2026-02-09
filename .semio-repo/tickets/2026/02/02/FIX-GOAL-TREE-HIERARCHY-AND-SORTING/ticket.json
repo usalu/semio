@@ -11,16 +11,17 @@
   "finished": "2026-02-02T20:28:10.127564521Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-02T20:23:56.263271239Z",
+        "finished": "2026-02-02T20:28:10.127564521Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "The goal tree command shows all goals flat without parent-child hierarchy. Goals stored in nested directories (e.g. R26-02/RUNNING-SKETCHPAD) should be rendered as children. Also sort goals by due date, then by creation date.",
       "llm": "opus-4-5",
-      "ui": "claude-code",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-02T20:23:56.263271239Z",
-      "finished": "2026-02-02T20:28:10.127564521Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "diff": {
         "bundles": {
           "deleted": null,

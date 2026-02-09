@@ -7,14 +7,17 @@
   "finished": "2026-01-02T20:03:29Z",
   "interactions": [
     {
-      "prompt": "The vscode extension should show the violation diagnostics of every open file and rerun the targeted analyze command when saved again.",
-      "llm": "opus-4-5-20251101",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2026-01-02T19:59:01Z",
+        "finished": "2026-01-02T20:03:29Z"
       },
-      "started": "2026-01-02T19:59:01Z",
-      "finished": "2026-01-02T20:03:29Z",
-      "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb",
+      "prompt": "The vscode extension should show the violation diagnostics of every open file and rerun the targeted analyze command when saved again.",
+      "llm": "opus-4-5-20251101"
     }
   ]
 }

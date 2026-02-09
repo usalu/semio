@@ -11,15 +11,17 @@
   "finished": "2026-01-29T09:26:06.846062658Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-29T09:25:37.141338953Z",
+        "finished": "2026-01-29T09:26:06.846062658Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Add extract command to repo CLI/GraphQL and implement drag and drop in VS Code extension codebase view",
       "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T09:25:37.141338953Z",
-      "finished": "2026-01-29T09:26:06.846062658Z",
-      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "diff": {
         "bundles": {
           "deleted": null,

@@ -7,14 +7,17 @@
   "finished": "2025-12-18T16:13:28.263Z",
   "interactions": [
     {
-      "prompt": "Sketchpad needs to have base background",
-      "llm": "gpt-5.2-codex",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-18T16:07:06.312Z",
+        "finished": "2025-12-18T16:13:28.263Z"
       },
-      "started": "2025-12-18T16:07:06.312Z",
-      "finished": "2025-12-18T16:13:28.263Z",
-      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
+      "prompt": "Sketchpad needs to have base background",
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

@@ -11,16 +11,17 @@
   "finished": "2026-02-03T09:25:14.661103701Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-03T09:22:32.865368541Z",
+        "finished": "2026-02-03T09:25:14.661103701Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Modify ticket close --all to also browse GitHub for all issues with the label 'ticket' and close them without a comment",
       "llm": "opus-4-5",
-      "ui": "claude-code",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T09:22:32.865368541Z",
-      "finished": "2026-02-03T09:25:14.661103701Z",
-      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "diff": {
         "bundles": {
           "deleted": null,

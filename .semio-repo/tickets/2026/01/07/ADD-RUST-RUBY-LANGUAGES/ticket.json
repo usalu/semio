@@ -6,13 +6,16 @@
   "started": "0001-01-01T00:00:00Z",
   "interactions": [
     {
-      "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
-      "llm": "opus-4",
-      "author": {
-        "name": "Ueli Saluz \u003cuelisemio.tech\u003e"
+      "dates": {
+        "started": "0001-01-01T00:00:00Z"
       },
-      "started": "0001-01-01T00:00:00Z",
-      "commit": ""
+      "author": "Ueli Saluz \u003cuelisemio.tech\u003e",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
+      "llm": "opus-4"
     }
   ]
 }

@@ -7,14 +7,17 @@
   "finished": "2025-12-16T18:26:49.262Z",
   "interactions": [
     {
-      "prompt": "Complete Feedback app implementation including German translations, global footer action, documentation, and Playwright tests",
-      "llm": "opus-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T18:12:47.861Z",
+        "finished": "2025-12-16T18:26:49.262Z"
       },
-      "started": "2025-12-16T18:12:47.861Z",
-      "finished": "2025-12-16T18:26:49.262Z",
-      "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c",
+      "prompt": "Complete Feedback app implementation including German translations, global footer action, documentation, and Playwright tests",
+      "llm": "opus-4-5"
     }
   ]
 }

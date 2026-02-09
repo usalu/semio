@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.807Z",
   "interactions": [
     {
-      "prompt": "\"Fix diff test - schema changed, concepts now objects\"",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.807Z"
       },
-      "started": "2025-12-16T17:06:07.807Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "\"Fix diff test - schema changed, concepts now objects\"",
+      "llm": "sonnet-4-5"
     }
   ]
 }

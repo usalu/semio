@@ -6,13 +6,16 @@
   "started": "2025-12-19T22:05:57.199Z",
   "interactions": [
     {
-      "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
-      "llm": "opus-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-19T22:05:57.199Z"
       },
-      "started": "2025-12-19T22:05:57.199Z",
-      "commit": "2ac49129091a7cee4b05f2fe08423415f179ea77"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "2ac49129091a7cee4b05f2fe08423415f179ea77",
+      "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
+      "llm": "opus-4-5"
     }
   ]
 }

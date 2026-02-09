@@ -1,0 +1,2553 @@
+{
+  "title": "Inline Specs Migration",
+  "status": "closed",
+  "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new specs violation kind for the code policy that validates specs are implementation-agnostic and properly located. Bundle specs go to .bundle.md files, folder specs to .folder.md files, file specs to header Specs sections, section specs under section starts, and definition specs in language-native docstrings. Extend existing tests to cover the new violation kind.",
+  "summary": "Migrated specs from AGENTS.md into distributed .bundle.md/.folder.md files with new code:specs:implementation-syntax violation kind. Created specsPolicy, isSpecText, hasImplementationSyntax helpers, ScanComments spec exemptions. 11 new test subtests all passing.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/467"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "started": "2026-02-09T16:57:47.865391081Z",
+  "finished": "2026-02-09T22:12:26.448184883Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-09 16:57:47",
+        "finished": "2026-02-09 22:12:26"
+      },
+      "author": "usalu",
+      "system": {
+        "version": "linux",
+        "client": "copilot-chat"
+      },
+      "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
+      "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new specs violation kind for the code policy that validates specs are implementation-agnostic and properly located. Bundle specs go to .bundle.md files, folder specs to .folder.md files, file specs to header Specs sections, section specs under section starts, and definition specs in language-native docstrings. Extend existing tests to cover the new violation kind.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio-repo/repo",
+              "lines": {
+                "added": 217,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 1886,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/semio/semio-repo/vscode",
+              "lines": {
+                "added": 62,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/semio/semio/engine",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 49,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 686,
+                "removed": 127
+              }
+            },
+            {
+              "path": "📃AGENTS.md",
+              "lines": {
+                "added": 19,
+                "removed": 574
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go",
+              "lines": {
+                "added": 974,
+                "removed": 33
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "📃.devcontainer/.folder.md",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃semio-repo/cli/.bundle.md",
+              "lines": {
+                "added": 386,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃semio-repo/vscode/.bundle.md",
+              "lines": {
+                "added": 62,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃semio/.bundle.md",
+              "lines": {
+                "added": 199,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃semio/engine/.bundle.md",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃semio/js/sketchpad/.folder.md",
+              "lines": {
+                "added": 49,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": [
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic",
+              "lines": {
+                "added": 0,
+                "removed": 496
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Artifact Kind Derivation",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Attribute",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Author",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Benchmark",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Code Hygiene",
+              "lines": {
+                "added": 0,
+                "removed": 58
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Concept",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Connection",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Connector",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Contributor",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Design",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Devcontainer",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Engine",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Goal",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Group",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Kit",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Layer",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#MCP Tools",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Model",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Model#Model Tag Selection",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Model#Supported 3D File Extensions",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Move, Integrate, Extract",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Piece",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Plane",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Port",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Prop",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Quality",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Repo Dev Server",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Repo Tooling",
+              "lines": {
+                "added": 0,
+                "removed": 48
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Sections",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Stat",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#State Management",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Tag",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Ticket",
+              "lines": {
+                "added": 0,
+                "removed": 40
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Tooling",
+              "lines": {
+                "added": 0,
+                "removed": 23
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Tree",
+              "lines": {
+                "added": 0,
+                "removed": 26
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Type",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#Business Logic#Url",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX",
+              "lines": {
+                "added": 0,
+                "removed": 78
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#CLI",
+              "lines": {
+                "added": 0,
+                "removed": 44
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#CLI#Borders",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#CLI#Interaction State",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#CLI#Toolbar",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#CLI#Windows",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#Sketchpad",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#Ticket UX",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "AGENTS.md#Software Requirements Specification#UI/UX#VS Code Extension",
+              "lines": {
+                "added": 0,
+                "removed": 26
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types",
+              "lines": {
+                "added": 19,
+                "removed": 21
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#Drafts",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types",
+              "lines": {
+                "added": 7,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Header",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Header#License",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Header#Specs",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context",
+              "lines": {
+                "added": 47,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages",
+              "lines": {
+                "added": 140,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages#TypeScript",
+              "lines": {
+                "added": 6,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies",
+              "lines": {
+                "added": 189,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers",
+              "lines": {
+                "added": 84,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Schema Builder",
+              "lines": {
+                "added": 38,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID",
+              "lines": {
+                "added": 67,
+                "removed": 50
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Entity Rendering",
+              "lines": {
+                "added": 22,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Utils",
+              "lines": {
+                "added": 1,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Codebase#📄semio-repo/cli/cli.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Codebase#📄semio-repo/cli/cli_test.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Codebase#📄semio-repo/cli/main.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Codebase#📄semio-repo/cli/main_test.go",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Artifact Kind Derivation",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Attribute",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Author",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Benchmark",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Code Hygiene",
+              "lines": {
+                "added": 0,
+                "removed": 55
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Concept",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Connection",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Connector",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Contributor",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Design",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Devcontainer",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Engine",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Goal",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Group",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Kit",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Layer",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#MCP Tools",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Model",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Model#Model Tag Selection",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Model#Supported 3D File Extensions",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Move, Integrate, Extract",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Piece",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Plane",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Port",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Prop",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Quality",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Repo Dev Server",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Repo Tooling",
+              "lines": {
+                "added": 0,
+                "removed": 48
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Sections",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Stat",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#State Management",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Tag",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Ticket",
+              "lines": {
+                "added": 0,
+                "removed": 40
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Tooling",
+              "lines": {
+                "added": 0,
+                "removed": 23
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Tree",
+              "lines": {
+                "added": 0,
+                "removed": 26
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Type",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#Business Logic#Url",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX#CLI",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX#CLI#Borders",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX#CLI#Interaction State",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX#CLI#Toolbar",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX#CLI#Windows",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX#Sketchpad",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX#Ticket UX",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃AGENTS.md#Software Requirements Specification#UI/UX#VS Code Extension",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Collection Tests",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Header",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Header#License",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Header#Specs",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Helpers",
+              "lines": {
+                "added": 87,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests#Unified Rendering Identity Tests",
+              "lines": {
+                "added": 325,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests",
+              "lines": {
+                "added": 375,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
+              "lines": {
+                "added": 99,
+                "removed": 26
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": ".devcontainer/.folder.md#Specs",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": ".devcontainer/.folder.md#Specs#Devcontainer",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs",
+              "lines": {
+                "added": 386,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Artifact Kind Derivation",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#CLI",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Code Hygiene",
+              "lines": {
+                "added": 78,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Contributor",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Goal",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#MCP Tools",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Move, Integrate, Extract",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Repo Dev Server",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Repo Tooling",
+              "lines": {
+                "added": 88,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Sections",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Ticket",
+              "lines": {
+                "added": 46,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Ticket UX",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Tooling",
+              "lines": {
+                "added": 38,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/.bundle.md#Specs#Tree",
+              "lines": {
+                "added": 26,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/main.go#Header#License",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/main.go#Header#Specs",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/main_test.go#Header#License",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/cli/main_test.go#Header#Specs",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/.bundle.md#Specs",
+              "lines": {
+                "added": 62,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/.bundle.md#Specs#Commands",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/.bundle.md#Specs#Contributors",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/.bundle.md#Specs#Diagnostics",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/.bundle.md#Specs#General",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/.bundle.md#Specs#Sections View",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/.bundle.md#Specs#Sidebar",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/.bundle.md#Specs#Tickets",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs",
+              "lines": {
+                "added": 199,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Attribute",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Author",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Benchmark",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Concept",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Connection",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Connector",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Design",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Group",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Kit",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Layer",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Model",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Model#Model Tag Selection",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Model#Supported 3D File Extensions",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Piece",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Plane",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Port",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Prop",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Quality",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Stat",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Tag",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Type",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/.bundle.md#Specs#Url",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/engine/.bundle.md#Specs",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/engine/.bundle.md#Specs#Engine",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/sketchpad/.folder.md#Specs",
+              "lines": {
+                "added": 49,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/sketchpad/.folder.md#Specs#Borders",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/sketchpad/.folder.md#Specs#Interaction State",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/sketchpad/.folder.md#Specs#State Management",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/sketchpad/.folder.md#Specs#Toolbar",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/js/sketchpad/.folder.md#Specs#Windows",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§BuildMonorepoTree",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§BuildMonorepoTree",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§ticketCommand",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Cli Adapter§ticketCommand",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#Drafts§CreateDraft",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#Drafts§GetID",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#Drafts§GetURI",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§ContributorAddInput",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§ContributorAddInput",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketReopenInput",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§Contributor",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§Contributor",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§ContributorFile",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§ContributorFolder",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§TicketFileContrib",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Goals§ghAddSubIssue",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Goals§parseIssueNumber",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli§LoadContributor",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli§ResolveContributorContributions",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli§SaveContributor",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli§ghDeleteIssue",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context§ContributorAdd",
+              "lines": {
+                "added": 47,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context§ContributorAdd",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context§applyAutofixes",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§FindAndUpdateContributor",
+              "lines": {
+                "added": 86,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§ViolationKind",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§parseInteractionAuthor",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§parseInteractionAuthor",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§resolveAuthorToGithub",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§violationKindInfoTable",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§IsSpecBlock",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§IsSpecLine",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§PolicyContext",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§PolicyFunc",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§ReadText",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§Sections",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§SpecLines",
+              "lines": {
+                "added": 60,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§codePolicy",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§hasImplementationSyntax",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§headerPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§headerPolicy",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§isSpecText",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§policies",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specImplSyntaxBacktick",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specImplSyntaxFuncCall",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specKeywordPattern",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specsPolicy",
+              "lines": {
+                "added": 82,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers§Node",
+              "lines": {
+                "added": 84,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Schema Builder§buildSchema",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Schema Builder§buildSchema",
+              "lines": {
+                "added": 38,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§IdToUri",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§IdToUri",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ParseArtifactRef",
+              "lines": {
+                "added": 2,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ParseArtifactRef",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ResolveSectionName",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§SemanticId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§UriToId",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§UriToId",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ViolationKindIdToUriPath",
+              "lines": {
+                "added": 7,
+                "removed": 4
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ViolationKindUriPathToId",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§definitionKindEmoji",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§emojiText",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§projectKindEmoji",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Entity Rendering§sanitizeProp",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Entity Rendering§sanitizeSingleLine",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos§TodoToTicket",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos§removeLineFromMarkdown",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Utils§GetGitAuthorGithub",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Utils§GetGitAuthorGithub",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Utils§SimpleGlob",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileHeaderId",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileKindEmoji",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileKindEmoji",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestNodesAndEdgesQuick",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Collection Tests§TestViolationsNonEmpty",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Helpers§TestContributorDiscovery",
+              "lines": {
+                "added": 86,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#MCP Tool Tests#Output Parity Tests§TestParityPolicyList",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests#Unified Rendering Identity Tests§TestCollectEntityPropsConsistency",
+              "lines": {
+                "added": 115,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests#Unified Rendering Identity Tests§TestSingleLineOutput",
+              "lines": {
+                "added": 209,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests§TestRenderMonorepoTree",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests§TestRenderMonorepoTree",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests§TestTreeFilterIsKindVisible",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Nodes and Edges Tests§TestNodesAndEdges",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderAllLanguages",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptySpecs",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderStructure",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestHeaderPolicyMissingSubregions",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSpecsViolation",
+              "lines": {
+                "added": 267,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Bundle",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Bundle",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Folder",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestFormatResult_Folder",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestIdToUri",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestIdToUri",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestIdUriRoundTrip",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestSectionCommands",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestTicketLifecycle_NoGithub",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestUriToId",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestUriToId",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestViolationKindIdToUriPath",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestViolationKindUriPathToId",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_GoalLifecycle_Syntaxes_NoGithub",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_MiscCommands_NoSideEffects",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go§TestMigrateAuthorFieldsToString",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#Drafts§GetID",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types#Drafts§GetURI",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli§LoadContributor",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli§SaveContributor",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§FindAndUpdateContributor",
+              "lines": {
+                "added": 86,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§resolveAuthorToGithub",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§IsSpecBlock",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§IsSpecLine",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§SpecLines",
+              "lines": {
+                "added": 60,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§hasImplementationSyntax",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§isSpecText",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specImplSyntaxBacktick",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specImplSyntaxFuncCall",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specKeywordPattern",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specsPolicy",
+              "lines": {
+                "added": 82,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ViolationKindIdToUriPath",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ViolationKindUriPathToId",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Entity Rendering§sanitizeProp",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Entity Rendering§sanitizeSingleLine",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Helpers§TestContributorDiscovery",
+              "lines": {
+                "added": 86,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests#Unified Rendering Identity Tests§TestSingleLineOutput",
+              "lines": {
+                "added": 210,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderAllLanguages",
+              "lines": {
+                "added": 36,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderEmptySpecs",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFormatHeaderStructure",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestHeaderPolicyMissingSubregions",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestSpecsViolation",
+              "lines": {
+                "added": 267,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestIdUriRoundTrip",
+              "lines": {
+                "added": 32,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestViolationKindIdToUriPath",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestViolationKindUriPathToId",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go§TestMigrateAuthorFieldsToString",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

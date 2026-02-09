@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.713Z",
   "interactions": [
     {
-      "prompt": "UI-ID-SYSTEM-ANALYSIS",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.713Z"
       },
-      "started": "2025-12-16T17:06:07.713Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "UI-ID-SYSTEM-ANALYSIS",
+      "llm": "sonnet-4"
     }
   ]
 }

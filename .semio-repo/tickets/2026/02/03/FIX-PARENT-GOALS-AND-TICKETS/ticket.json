@@ -11,16 +11,17 @@
   "finished": "2026-02-03T10:03:04.930721236Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-03T08:54:16.508931666Z",
+        "finished": "2026-02-03T10:03:04.930721236Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Fix parent goal/ticket functionality, restructure goal tree, and assign tickets.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T08:54:16.508931666Z",
-      "finished": "2026-02-03T10:03:04.930721236Z",
-      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "diff": {
         "bundles": {
           "deleted": null,

@@ -11,15 +11,17 @@
   "finished": "2026-02-03T08:50:03.131685742Z",
   "interactions": [
     {
-      "prompt": "vscode-extension-fixes",
-      "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-01-29T21:09:40.387526517Z",
+        "finished": "2026-02-03T08:50:03.131685742Z"
       },
-      "started": "2026-01-29T21:09:40.387526517Z",
-      "finished": "2026-02-03T08:50:03.131685742Z",
-      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
+      "prompt": "vscode-extension-fixes",
+      "llm": "gemini-3-pro"
     }
   ]
 }

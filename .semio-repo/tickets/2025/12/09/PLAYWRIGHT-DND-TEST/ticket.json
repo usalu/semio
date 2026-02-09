@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.898Z",
   "interactions": [
     {
-      "prompt": "Update Playwright drag-and-drop test for dnd-kit compatibility",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.898Z"
       },
-      "started": "2025-12-16T17:06:07.898Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Update Playwright drag-and-drop test for dnd-kit compatibility",
+      "llm": "sonnet-4-5"
     }
   ]
 }

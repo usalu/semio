@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.911Z",
   "interactions": [
     {
-      "prompt": "Hooks auto-inject command origins via useOrigin",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.911Z"
       },
-      "started": "2025-12-16T17:06:07.911Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Hooks auto-inject command origins via useOrigin",
+      "llm": "sonnet-4-5"
     }
   ]
 }

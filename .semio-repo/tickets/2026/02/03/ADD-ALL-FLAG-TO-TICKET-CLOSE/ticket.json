@@ -11,16 +11,17 @@
   "finished": "2026-02-03T08:53:17.331591151Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-03T08:33:03.147101502Z",
+        "finished": "2026-02-03T08:53:17.331591151Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Introduce the ticket close --all flag to close all open tickets. Close all GitHub ticket issues without a comment. Extend testing.",
       "llm": "gemini-3-flash",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T08:33:03.147101502Z",
-      "finished": "2026-02-03T08:53:17.331591151Z",
-      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "diff": {
         "bundles": {
           "deleted": null,

@@ -11,15 +11,17 @@
   "finished": "2026-01-29T11:16:19.392915079Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-29T11:15:50.340551584Z",
+        "finished": "2026-01-29T11:16:19.392915079Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "prompt": "The definitions tree item icon should be different compared to the section tree item icon.",
       "llm": "sonnet-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T11:15:50.340551584Z",
-      "finished": "2026-01-29T11:16:19.392915079Z",
-      "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "diff": {
         "bundles": {
           "deleted": null,

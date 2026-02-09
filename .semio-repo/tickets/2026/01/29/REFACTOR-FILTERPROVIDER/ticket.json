@@ -8,15 +8,16 @@
   "finished": "2026-01-29T19:52:09.147100888Z",
   "interactions": [
     {
-      "prompt": "Refactor FilterProvider to use menus instead of tree items and fix tests",
-      "llm": "",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-01-29T19:46:19.428576563Z",
+        "finished": "2026-01-29T19:52:09.147100888Z"
       },
-      "started": "2026-01-29T19:46:19.428576563Z",
-      "finished": "2026-01-29T19:52:09.147100888Z",
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
+      "prompt": "Refactor FilterProvider to use menus instead of tree items and fix tests",
       "diff": {
         "bundles": {
           "deleted": null,

@@ -11,16 +11,17 @@
   "finished": "2026-02-02T20:13:15.398081345Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-02T19:33:28.636156242Z",
+        "finished": "2026-02-02T20:13:15.398081345Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Make sure all list commands are streaming and extend tests to cover all commands in normal, json and markdown mode.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-02T19:33:28.636156242Z",
-      "finished": "2026-02-02T20:13:15.398081345Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "diff": {
         "bundles": {
           "deleted": null,

@@ -209,7 +209,7 @@ Your file directory should now look like this:
 
 ---
 
-<Aside type="note">⚙️This method combines the **parametric power of Grasshopper** with the **modular logic of Semio** 📤 Every time a parameter changes, the file can be **re-exported automatically** — ready to be referenced in the next step</Aside>
+<Aside type="note">⚙️️This method combines the **parametric power of Grasshopper** with the **modular logic of Semio** 📤 Every time a parameter changes, the file can be **re-exported automatically** — ready to be referenced in the next step</Aside>
 
 ---
 
@@ -235,7 +235,7 @@ a static file that captures what your brick mold looks like at a specific moment
 
 Here’s why that matters:
 
-- ⚙️If your geometry is dynamic or parametric, it still needs to be **exported to a file**
+- ⚙️️If your geometry is dynamic or parametric, it still needs to be **exported to a file**
 - 🔗 semio connects to that file — not the live Grasshopper preview
 
 > 💡 This keeps geometry **modular**, **connectorable**, and easy to reuse  
@@ -311,7 +311,7 @@ Best for:
 
 <TabsContent value="sheet">
 
-This version is a **flat sheet simplification** 📄 
+This version is a **flat sheet simplification** 📄
 A single-surface geometry that represents the general size of the piece 📐  
 It captures only **one dimension** and skips all 3D detail 🚫
 
@@ -328,7 +328,7 @@ Use this when:
 
 <TabsContent value="block">
 
-This version is a **bounding box simplification** 📦 
+This version is a **bounding box simplification** 📦
 A simple block that approximates the piece's volume ➕  
 It includes **two dimensions** but omits exact geometry 🧊
 
@@ -338,7 +338,7 @@ It includes **two dimensions** but omits exact geometry 🧊
 Best for:
 
 - 🧪Early-stage layouts and feasibility checks
-- ⚙️Quick interactions and high-speed previews
+- ⚙️️Quick interactions and high-speed previews
 - 🧊 Placeholder geometry before final detailing
 
 </TabsContent>
@@ -353,7 +353,7 @@ They both belong to the **same Type** ✅
 The **Name**, **Variant**, **Connectors**, and **logic** stay exactly the same  
 Only the appearance changes 🎭
 
-This means you can **design and assemble** everything using lightweight placeholders 🧩 
+This means you can **design and assemble** everything using lightweight placeholders 🧩
 Then **swap in the detailed version** when you're ready for presentation, communication, or fabrication 🧰
 
 This separation of **logic and form** is what makes semio workflows flexible, scalable, and robust 🔄  
@@ -403,7 +403,7 @@ it’s about building a **clear and reusable logic** that works across all Varia
 Here’s how to define your Connectors effectively:
 
 - 🧱 **Choose stable, meaningful locations**  
-  Choose positions that are geometrically logical — like the **center of a face**, an **edge midpoint**, or a **corner** 🧩 
+  Choose positions that are geometrically logical — like the **center of a face**, an **edge midpoint**, or a **corner** 🧩
   Avoid placing them randomly — symmetry and regular patterns help your logic stay clean ♻️
 
 - 📐 **Keep positions consistent across Variants**  
@@ -412,7 +412,7 @@ Here’s how to define your Connectors effectively:
 
 - 🎯**Don’t worry about perfect alignment**  
   Connectors don’t need to be _exactly_ placed.  
-  semio lets you adjust each Piece’s **position and rotation** _after_ snapping 🛠️ 
+  semio lets you adjust each Piece’s **position and rotation** _after_ snapping 🛠️
   So prioritize clear logic over micrometer precision 😌
 
 ---
@@ -448,7 +448,7 @@ Here’s how to define Connector directions clearly:
 
 #### 🏷️Connector ID (Id)
 
-A **Connector ID** is the name you give to each Connector 🏷️ 
+A **Connector ID** is the name you give to each Connector 🏷️
 This name is how semio knows **which Connector to connect** when snapping Pieces together
 
 For example, you might say:

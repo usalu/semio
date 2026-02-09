@@ -11,16 +11,17 @@
   "finished": "2026-02-03T19:30:14.41809036Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-03T17:28:19.164406822Z",
+        "finished": "2026-02-03T19:30:14.41809036Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Refactor the semio-repo/vscode extension sideview to consolidate into 'Monorepo' and 'Filter' sections with specific navigation hierarchy and filtering capabilities. Extend tests to cover new features.",
       "llm": "sonnet-4-5",
-      "ui": "windsurf-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T17:28:19.164406822Z",
-      "finished": "2026-02-03T19:30:14.41809036Z",
-      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "diff": {
         "bundles": {
           "deleted": null,

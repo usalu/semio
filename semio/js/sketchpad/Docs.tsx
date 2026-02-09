@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/sketchpad/Docs.tsx
+// 💻 semio/js/sketchpad/Docs.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -498,7 +506,7 @@ export interface DocsPage {
   concepts?: string[];
 }
 
-export interface DocsSection extends SectionInfo {}
+export interface DocsSection extends SectionInfo { }
 
 class DocsRegistry {
   getAllSections(): DocsSection[] {
@@ -676,7 +684,7 @@ export interface DocsAppDiff {
   sectionStatesDiff?: Record<string, Partial<DocsAppSectionState>>;
 }
 
-export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> {}
+export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> { }
 
 export interface DocsCommandContext {
   docs: DocsAppState;
@@ -944,17 +952,17 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     return {
       prev: prev
         ? {
-            path: prev.path,
-            title: prev.title,
-            section: prev.section,
-          }
+          path: prev.path,
+          title: prev.title,
+          section: prev.section,
+        }
         : undefined,
       next: next
         ? {
-            path: next.path,
-            title: next.title,
-            section: next.section,
-          }
+          path: next.path,
+          title: next.title,
+          section: next.section,
+        }
         : undefined,
     };
   }, [currentPath]);
@@ -1035,8 +1043,8 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
             onClick={
               childNode.page
                 ? () => {
-                    navigate(`/${childNode.page!.path}`);
-                  }
+                  navigate(`/${childNode.page!.path}`);
+                }
                 : undefined
             }
           >
@@ -1101,7 +1109,7 @@ export const DocsAppFooter: FC = () => {
 
     // TODO: Add docs-specific footer items here
 
-    return () => {};
+    return () => { };
   }, [appType, addFooterItem, removeFooterItem]);
 
   return null;

@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.709Z",
   "interactions": [
     {
-      "prompt": "CI/CD automation and canonical commands",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.709Z"
       },
-      "started": "2025-12-16T17:06:07.709Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "CI/CD automation and canonical commands",
+      "llm": "sonnet-4"
     }
   ]
 }

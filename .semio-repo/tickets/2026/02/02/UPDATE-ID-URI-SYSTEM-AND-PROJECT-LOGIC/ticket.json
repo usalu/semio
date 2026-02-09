@@ -11,16 +11,17 @@
   "finished": "2026-02-03T08:50:12.330002114Z",
   "interactions": [
     {
-      "prompt": "Update ID/URI system and Project Logic",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-02-02T13:39:28.036876534Z",
+        "finished": "2026-02-03T08:50:12.330002114Z"
       },
-      "started": "2026-02-02T13:39:28.036876534Z",
-      "finished": "2026-02-03T08:50:12.330002114Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
+      "prompt": "Update ID/URI system and Project Logic",
+      "llm": "gemini-3-pro"
     }
   ]
 }

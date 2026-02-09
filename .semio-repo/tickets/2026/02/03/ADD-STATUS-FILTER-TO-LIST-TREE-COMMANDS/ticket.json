@@ -10,16 +10,17 @@
   "finished": "2026-02-03T19:27:53.408490618Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-03T19:16:30.746786544Z",
+        "finished": "2026-02-03T19:27:53.408490618Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
       "prompt": "Extend all list and tree commands with a filter for status. Support both --open and --status open syntax. Different meanings: bundles shows bundles where at least one ticket/todo is open, tickets filters by status. Also extend goals to have a bundle field.",
       "llm": "opus-4-5",
-      "ui": "claude-code",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T19:16:30.746786544Z",
-      "finished": "2026-02-03T19:27:53.408490618Z",
-      "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
       "diff": {
         "bundles": {
           "deleted": null,

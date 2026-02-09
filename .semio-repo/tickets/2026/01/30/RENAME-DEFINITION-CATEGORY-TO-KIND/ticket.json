@@ -11,15 +11,17 @@
   "finished": "2026-01-30T01:17:46.995883944Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-30T00:20:00.522069632Z",
+        "finished": "2026-01-30T01:17:46.995883944Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "Remove DefinitionKind and rename DefinitionCategory to DefinitionKind.",
       "llm": "opus-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-30T00:20:00.522069632Z",
-      "finished": "2026-01-30T01:17:46.995883944Z",
-      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "diff": {
         "bundles": {
           "deleted": null,

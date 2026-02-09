@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.76Z",
   "interactions": [
     {
-      "prompt": "Fix drag and drop piece placement in diagram and scene",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.76Z"
       },
-      "started": "2025-12-16T17:06:07.76Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix drag and drop piece placement in diagram and scene",
+      "llm": "sonnet-4"
     }
   ]
 }

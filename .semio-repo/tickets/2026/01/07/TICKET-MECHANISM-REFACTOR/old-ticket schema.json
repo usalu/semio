@@ -3,7 +3,7 @@
   "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
   "llm": "OPUS",
   "status": "closed",
-  "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+  "author": "Ueli Saluz <ueli.saluz@iek.uni-hannover.de>",
   "date": {
     "created": "2026-01-07T11:23:05Z"
   },
@@ -14,7 +14,7 @@
       "date": {
         "created": "2026-01-07T11:38:32Z"
       },
-      "author": "Ueli Saluz \u003cueli.saluz@iek.uni-hannover.de\u003e",
+      "author": "Ueli Saluz <ueli.saluz@iek.uni-hannover.de>",
       "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
       "files": [
         "./semio-repo/cli/cli.go",

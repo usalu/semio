@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.792Z",
   "interactions": [
     {
-      "prompt": "Fix Y.js Invalid access warnings when importing kits",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.792Z"
       },
-      "started": "2025-12-16T17:06:07.792Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix Y.js Invalid access warnings when importing kits",
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -4,6 +4,8 @@
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
+// #region 🔖License
+
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
@@ -17,6 +19,17 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// #endregion 🔖License
+
+// #region 🔖Specs
+
+// TestFormatHeaderStructure MUST validate all header components (ID, summary, contributors, license, specs).
+// TestFormatHeaderAllLanguages MUST verify FormatHeader for all languages that support headers and reject those that don't.
+// TestHeaderPolicyMissingSubregions MUST verify missing-specs-region and wrong-license violations.
+// TestFixtureViolationsByLanguage clean files MUST produce zero violations.
+
+// #endregion 🔖Specs
+
 // #endregion 🔖Header
 
 package main
@@ -26,6 +39,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -162,6 +176,93 @@ func TestInteractionUnmarshalAuthorShapes(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestContributorDiscovery(t *testing.T) {
+	// Setup temporary workspace
+	tmpDir, err := os.MkdirTemp("", "semio-test-discovery")
+	if err != nil {
+		t.Fatalf("failed to create tmp dir: %v", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	// Update rootDir for testing
+	originalRootDir := GetRootDir()
+	SetRootDir(tmpDir)
+	defer SetRootDir(originalRootDir)
+
+	contributorsDir := filepath.Join(tmpDir, ".semio-repo", "contributors")
+	os.MkdirAll(contributorsDir, 0755)
+
+	t.Run("Match and update email", func(t *testing.T) {
+		// Mock existing contributor
+		github := "usalu"
+		c := Contributor{
+			Github: github,
+			Name:   "Ueli Saluz",
+			Names:  []string{"Ueli Saluz"},
+			Email:  "ueli@semio-tech.com",
+			Emails: []string{"ueli@semio-tech.com"},
+		}
+		if err := SaveContributor(c); err != nil {
+			t.Fatalf("failed to save: %v", err)
+		}
+
+		// Discovery with same email but different name
+		authorStr := "Ueli <ueli@semio-tech.com>"
+		gotGithub := FindAndUpdateContributor(authorStr)
+		if gotGithub != github {
+			t.Errorf("expected github %q, got %q", github, gotGithub)
+		}
+
+		updated, err := LoadContributor(github)
+		if err != nil {
+			t.Fatalf("failed to load: %v", err)
+		}
+		if len(updated.Names) != 2 || updated.Names[1] != "Ueli" {
+			t.Errorf("expected names updated, got %v", updated.Names)
+		}
+	})
+
+	t.Run("Match and update name", func(t *testing.T) {
+		// Existing contributor
+		github := "octocat"
+		c := Contributor{
+			Github: github,
+			Name:   "The Octocat",
+			Names:  []string{"The Octocat"},
+			Email:  "octocat@github.com",
+			Emails: []string{"octocat@github.com"},
+		}
+		SaveContributor(c)
+
+		// Discovery with same name but different email
+		authorStr := "The Octocat <octo@github.com>"
+		gotGithub := FindAndUpdateContributor(authorStr)
+		if gotGithub != github {
+			t.Errorf("expected github %q, got %q", github, gotGithub)
+		}
+
+		updated, _ := LoadContributor(github)
+		found := false
+		for _, e := range updated.Emails {
+			if e == "octo@github.com" {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("expected emails updated with octo@github.com, got %v", updated.Emails)
+		}
+	})
+
+	t.Run("No match returns original string", func(t *testing.T) {
+		authorStr := "Stranger <stranger@danger.com>"
+		gotGithub := FindAndUpdateContributor(authorStr)
+		if gotGithub != authorStr {
+			t.Errorf("expected original string, got %q", gotGithub)
+		}
+	})
 }
 
 func parseTicketCloseStatus(t *testing.T, output string) string {
@@ -495,7 +596,6 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 		tickets {
 			id
 			slug
-			foobar123
 		}
 		policies {
 			id
@@ -651,7 +751,7 @@ func TestNodesAndEdges(t *testing.T) {
 			id
 		}
 		violations {
-			id: uid
+			id
 			file { id }
 			folder { id }
 		}
@@ -1322,7 +1422,7 @@ func TestFileKindEmoji(t *testing.T) {
 		{"test", "test", "\U0001F9EA"},
 		{"script", "script", "\U0001F4DC"},
 		{"docs", "docs", "\U0001F4C3"},
-		{"config", "config", "FOO"},
+		{"config", "config", "\u2699"},
 		{"resource", "resource", "\U0001F4BE"},
 		{"license", "license", "\u2696"},
 		{"unknown", "unknown", "\U0001F4C4"},
@@ -2897,6 +2997,381 @@ func TestFixtureViolationsByLanguage(t *testing.T) {
 	}
 }
 
+func TestSpecsViolation(t *testing.T) {
+	t.Run("isSpecText detects RFC 2119 keywords", func(t *testing.T) {
+		cases := []struct {
+			text   string
+			expect bool
+		}{
+			{"File headers MUST contain License subregions.", true},
+			{"Implementations SHOULD follow the standard.", true},
+			{"This feature MAY be omitted.", true},
+			{"Clients SHALL NOT modify the data.", true},
+			{"This is REQUIRED for all files.", true},
+			{"This approach is RECOMMENDED.", true},
+			{"This field is OPTIONAL.", true},
+			{"MUST NOT contain inline code.", true},
+			{"This is a normal comment.", false},
+			{"Just some text here.", false},
+			{"", false},
+		}
+		for _, tc := range cases {
+			got := isSpecText(tc.text)
+			if got != tc.expect {
+				t.Errorf("isSpecText(%q) = %v, want %v", tc.text, got, tc.expect)
+			}
+		}
+	})
+
+	t.Run("hasImplementationSyntax detects backticks", func(t *testing.T) {
+		cases := []struct {
+			text      string
+			hasSyntax bool
+		}{
+			{"File headers MUST contain `License` subregions.", true},
+			{"Use `FormatHeader` to build headers.", true},
+			{"File headers MUST contain License subregions.", false},
+			{"Specs MUST be implementation-agnostic.", false},
+		}
+		for _, tc := range cases {
+			got, _ := hasImplementationSyntax(tc.text)
+			if got != tc.hasSyntax {
+				t.Errorf("hasImplementationSyntax(%q) = %v, want %v", tc.text, got, tc.hasSyntax)
+			}
+		}
+	})
+
+	t.Run("hasImplementationSyntax detects function calls", func(t *testing.T) {
+		cases := []struct {
+			text      string
+			hasSyntax bool
+		}{
+			{"FormatHeader() MUST build the header.", true},
+			{"Call ctx.ReadText() for content.", true},
+			{"File headers MUST contain License subregions.", false},
+			{"Specs MUST be clean.", false},
+		}
+		for _, tc := range cases {
+			got, _ := hasImplementationSyntax(tc.text)
+			if got != tc.hasSyntax {
+				t.Errorf("hasImplementationSyntax(%q) = %v, want %v", tc.text, got, tc.hasSyntax)
+			}
+		}
+	})
+
+	t.Run("specsPolicy detects implementation syntax in header Specs", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+
+		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n\n// File headers MUST contain `License` subregions.\n\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		violations := specsPolicy(ctx)
+
+		found := false
+		for _, v := range violations {
+			if v.Kind == ViolationCodeSpecsSyntax {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected ViolationCodeSpecsSyntax for backtick-wrapped code in header Specs")
+		}
+	})
+
+	t.Run("specsPolicy clean specs no violation", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+
+		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n\n// File headers MUST contain License subregions.\n\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		violations := specsPolicy(ctx)
+
+		for _, v := range violations {
+			if v.Kind == ViolationCodeSpecsSyntax {
+				t.Errorf("unexpected ViolationCodeSpecsSyntax for clean spec: %s", v.Summary)
+			}
+		}
+	})
+
+	t.Run("specsPolicy detects implementation syntax in section specs", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+
+		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST call `ctx.Check()` internally.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		violations := specsPolicy(ctx)
+
+		found := false
+		for _, v := range violations {
+			if v.Kind == ViolationCodeSpecsSyntax {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected ViolationCodeSpecsSyntax for backtick in section spec")
+		}
+	})
+
+	t.Run("section spec comments exempt from inline violation", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+
+		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST check constraints.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		violations := commentPolicy(ctx)
+
+		for _, v := range violations {
+			if v.Kind == ViolationCodeCommentInline {
+				t.Errorf("spec comment should be exempt from inline violation: line %d %s", v.Line, v.Excerpt)
+			}
+		}
+	})
+
+	t.Run("JSDoc spec comments exempt from JSDoc violation", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+
+		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n/**\n * Kits MUST be editable offline.\n */\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		violations := commentPolicy(ctx)
+
+		for _, v := range violations {
+			if v.Kind == ViolationCodeCommentJSDoc {
+				t.Errorf("JSDoc spec comment should be exempt from JSDoc violation: line %d", v.Line)
+			}
+		}
+	})
+
+	t.Run("non-spec JSDoc still flagged", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+
+		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n/**\n * This is a regular docstring without spec keywords.\n */\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		violations := commentPolicy(ctx)
+
+		found := false
+		for _, v := range violations {
+			if v.Kind == ViolationCodeCommentJSDoc {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected non-spec JSDoc to still be flagged")
+		}
+	})
+
+	t.Run("non-spec inline comment still flagged", func(t *testing.T) {
+		tmpDir := t.TempDir()
+		oldRoot := rootDir
+		rootDir = tmpDir
+		defer func() { rootDir = oldRoot }()
+
+		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// This is a regular comment not a spec.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		testFile := "test.ts"
+		absPath := filepath.Join(tmpDir, testFile)
+		if err := WriteTextFile(absPath, content); err != nil {
+			t.Fatalf("failed to write: %v", err)
+		}
+
+		bundles := []Bundle{}
+		scope := Scope{Kind: ScopeFile, FilePath: testFile}
+		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
+		violations := commentPolicy(ctx)
+
+		found := false
+		for _, v := range violations {
+			if v.Kind == ViolationCodeCommentInline {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Error("expected non-spec inline comment to be flagged")
+		}
+	})
+
+	t.Run("ViolationCodeSpecsSyntax in violation info table", func(t *testing.T) {
+		info := ViolationCodeSpecsSyntax.Info()
+		if info.Kind != ViolationCodeSpecsSyntax {
+			t.Errorf("expected kind %s, got %s", ViolationCodeSpecsSyntax, info.Kind)
+		}
+		if info.Autofixable {
+			t.Error("specs syntax violation should not be autofixable")
+		}
+	})
+}
+
+func TestFormatHeaderStructure(t *testing.T) {
+	lang := NewTypeScriptLanguage()
+	header := lang.FormatHeader("💻test/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some specs")
+	if !strings.Contains(header, "// #region 🔖Header") {
+		t.Error("header missing Header region start")
+	}
+	if !strings.Contains(header, "// #endregion 🔖Header") {
+		t.Error("header missing Header region end")
+	}
+	if !strings.Contains(header, "// #region 🔖License") {
+		t.Error("header missing License subregion start")
+	}
+	if !strings.Contains(header, "// #endregion 🔖License") {
+		t.Error("header missing License subregion end")
+	}
+	if !strings.Contains(header, "// #region 🔖Specs") {
+		t.Error("header missing Specs subregion start")
+	}
+	if !strings.Contains(header, "// #endregion 🔖Specs") {
+		t.Error("header missing Specs subregion end")
+	}
+	if !strings.Contains(header, "💻test/file.ts") {
+		t.Error("header missing file ID")
+	}
+	if !strings.Contains(header, "A test file") {
+		t.Error("header missing summary")
+	}
+	if !strings.Contains(header, "2025 Test User <test@test.com>") {
+		t.Error("header missing contributors")
+	}
+	if !strings.Contains(header, "AGPL license text here") {
+		t.Error("header missing license text")
+	}
+	if !strings.Contains(header, "Some specs") {
+		t.Error("header missing specs text")
+	}
+}
+
+func TestFormatHeaderEmptySpecs(t *testing.T) {
+	lang := NewGoLanguage()
+	header := lang.FormatHeader("💻test/file.go", "", "2025 Dev <dev@dev.com>", "AGPL text", "")
+	if !strings.Contains(header, "// #region 🔖Specs") {
+		t.Error("header missing Specs subregion even when empty")
+	}
+	if !strings.Contains(header, "// #endregion 🔖Specs") {
+		t.Error("header missing Specs endregion even when empty")
+	}
+}
+
+func TestFormatHeaderAllLanguages(t *testing.T) {
+	languages := []LanguagePlugin{
+		NewTypeScriptLanguage(),
+		NewGoLanguage(),
+		NewPythonLanguage(),
+		NewCSharpLanguage(),
+		NewRustLanguage(),
+		NewRubyLanguage(),
+		NewShellLanguage(),
+		NewSqlLanguage(),
+		NewGraphqlLanguage(),
+	}
+	for _, lang := range languages {
+		header := lang.FormatHeader("💻test/file", "", "2025 Dev <d@d.com>", "AGPL", "")
+		if header == "" {
+			t.Errorf("%s: FormatHeader returned empty", lang.Name())
+		}
+		if !strings.Contains(header, "License") {
+			t.Errorf("%s: header missing License region", lang.Name())
+		}
+		if !strings.Contains(header, "Specs") {
+			t.Errorf("%s: header missing Specs region", lang.Name())
+		}
+	}
+	noHeader := []LanguagePlugin{
+		NewMarkdownLanguage(),
+		NewTomlLanguage(),
+		NewYamlLanguage(),
+	}
+	for _, lang := range noHeader {
+		header := lang.FormatHeader("💻test/file", "", "2025 Dev <d@d.com>", "AGPL", "")
+		if header != "" {
+			t.Errorf("%s: FormatHeader should return empty for non-header language", lang.Name())
+		}
+	}
+}
+
+func TestHeaderPolicyMissingSubregions(t *testing.T) {
+	bundles := LoadBundles()
+	path := "semio/assets/repo/some/folder/file_invalid.tsx"
+	scope := Scope{Kind: ScopeFile, FilePath: path}
+	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check failed: %v", err)
+	}
+	counts := map[ViolationKind]int{}
+	for _, v := range violations {
+		counts[v.Kind]++
+	}
+	if counts[ViolationCodeHeaderMissingSpecsRegion] == 0 {
+		t.Error("expected missing-specs-region violation")
+	}
+	if counts[ViolationCodeHeaderWrongLicense] == 0 {
+		t.Error("expected wrong-license violation")
+	}
+}
+
 // #endregion 🔖Policy Tests
 
 // #region 🔖Bundle Tests
@@ -4111,7 +4586,7 @@ func TestFormatResult_Bundle(t *testing.T) {
 	result := formatResult("bundle list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"📚︎MyBundle",
+		"📚MyBundle",
 		"/path/to/bundle",
 	}
 
@@ -4133,7 +4608,7 @@ func TestFormatResult_Folder(t *testing.T) {
 	result := formatResult("folder list", json.RawMessage(bytes), false)
 
 	expectedParts := []string{
-		"📁︎path/to/folder",
+		"📁path/to/folder",
 	}
 
 	for _, part := range expectedParts {
@@ -5746,7 +6221,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "draft",
 			data:    map[string]interface{}{"slug": "my-draft"},
 			wantID:  fmt.Sprintf("%smy-draft", emojiText(EmojiDraft)),
-			wantURI: "semiorepo://draft/my-draft",
+			wantURI: "semiorepo://draft/MY-DRAFT",
 		},
 		{
 			name:    "todos collection",
@@ -5774,7 +6249,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "policy",
 			data:    map[string]interface{}{"id": "/code-hygiene"},
 			wantID:  fmt.Sprintf("%s/code-hygiene", emojiText(EmojiPolicy)),
-			wantURI: "semiorepo://policy//code-hygiene",
+			wantURI: "semiorepo://policy/CODE-HYGIENE",
 		},
 		{
 			name:    "violationKinds collection",
@@ -5786,9 +6261,9 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "violationKind",
 			kind:    "violationKind",
-			data:    map[string]interface{}{"id": "code-hygiene/inline-comment"},
-			wantID:  fmt.Sprintf("%scode-hygiene/inline-comment", emojiText(EmojiViolationKind)),
-			wantURI: "semiorepo://violationKind/code-hygiene/inline-comment",
+			data:    map[string]interface{}{"id": "code:inline-comment"},
+			wantID:  fmt.Sprintf("%scode:inline-comment", emojiText(EmojiViolationKind)),
+			wantURI: "semiorepo://violationKind/CODE/INLINE-COMMENT",
 		},
 		{
 			name:    "contributors collection",
@@ -5802,7 +6277,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "contributor",
 			data:    map[string]interface{}{"github": "usalu"},
 			wantID:  fmt.Sprintf("%susalu", emojiText(EmojiContributor)),
-			wantURI: "semiorepo://contributor/usalu",
+			wantURI: "semiorepo://contributor/USALU",
 		},
 		{
 			name:    "commits collection",
@@ -5816,7 +6291,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "commit",
 			data:    map[string]interface{}{"sha": "abc123"},
 			wantID:  fmt.Sprintf("%sabc123", emojiText(EmojiCommit)),
-			wantURI: "semiorepo://commit/abc123",
+			wantURI: "semiorepo://commit/ABC123",
 		},
 	}
 
@@ -5841,7 +6316,7 @@ func TestIdToUri(t *testing.T) {
 		want string
 	}{
 		{"repo", "🌍", "semiorepo://repo"},
-		{"projects", "🏗", "semiorepo://projects"},
+		{"projects", "🏗️", "semiorepo://projects"},
 		{"project user", "👤@semio", "semiorepo://project/@semio"},
 		{"project infra", "🧰@semio-repo", "semiorepo://project/@semio-repo"},
 		{"bundle", "📚semio/js", "semiorepo://bundle/semio/js"},
@@ -5849,16 +6324,16 @@ func TestIdToUri(t *testing.T) {
 		{"file", "📃test.txt", "semiorepo://file/test.txt"},
 		{"section", "🔖semio/js/src/Design.tsx#State Management#Design Store", "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE"},
 		{"definition", "🛠semio/js/src/file.ts#Section§myFunc", "semiorepo://definition/semio/js/src/file.ts/SECTION/MYFUNC"},
-		{"ticket", "📅2025/02/04/test-ticket", "semiorepo://ticket/2025/02/04/test-ticket"},
-		{"ticket with status", "📅2025/02/04/test-ticket?open", "semiorepo://ticket/2025/02/04/test-ticket"},
+		{"ticket", "🎫2025/02/04/test-ticket", "semiorepo://ticket/2025/02/04/test-ticket"},
+		{"ticket with status", "🎫2025/02/04/test-ticket?open", "semiorepo://ticket/2025/02/04/test-ticket"},
 		{"goal", "🎯R26-02/RUNNING-SKETCHPAD", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD"},
-		{"draft", "✍my-draft", "semiorepo://draft/my-draft"},
+		{"draft", "✍my-draft", "semiorepo://draft/MY-DRAFT"},
 		{"todo", "📝my-todo", "semiorepo://todo/my-todo"},
-		{"policy", "🛡/code-hygiene", "semiorepo://policy/code-hygiene"},
-		{"violationKind", "🚫code-hygiene/inline-comment", "semiorepo://violationKind/code-hygiene/inline-comment"},
-		{"contributor", "👤usalu", "semiorepo://contributor/usalu"},
-		{"commit", "🔀abc123", "semiorepo://commit/abc123"},
-		{"tickets collection", "📅", "semiorepo://tickets"},
+		{"policy", "🛡/code-hygiene", "semiorepo://policy/CODE-HYGIENE"},
+		{"violationKind", "🚫code:inline-comment", "semiorepo://violationKind/CODE/INLINE-COMMENT"},
+		{"contributor", "👤usalu", "semiorepo://contributor/USALU"},
+		{"commit", "🔀abc123", "semiorepo://commit/ABC123"},
+		{"tickets collection", "🎫", "semiorepo://tickets"},
 		{"goals collection", "🎯", "semiorepo://goals"},
 		{"empty string", "", ""},
 	}
@@ -5879,7 +6354,7 @@ func TestUriToId(t *testing.T) {
 		want string
 	}{
 		{"repo", "semiorepo://repo", "🌍"},
-		{"projects", "semiorepo://projects", "🏗"},
+		{"projects", "semiorepo://projects", emojiText("🏗️")},
 		{"project", "semiorepo://project/@semio", "👤@semio"},
 		{"bundles", "semiorepo://bundles", "📦"},
 		{"bundle", "semiorepo://bundle/semio/js", "📚semio/js"},
@@ -5890,22 +6365,22 @@ func TestUriToId(t *testing.T) {
 		{"section", "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "🔖semio/js/src/Design.tsx#STATE-MANAGEMENT#DESIGN-STORE"},
 		{"definition single", "semiorepo://definition/semio/js/src/file.ts/MY-FUNC", "🛠semio/js/src/file.ts§MY-FUNC"},
 		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/SECTION/MY-FUNC", "🛠semio/js/src/file.ts#SECTION§MY-FUNC"},
-		{"tickets", "semiorepo://tickets", "📅"},
-		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", "📅2025/02/04/test-ticket"},
+		{"tickets", "semiorepo://tickets", "🎫"},
+		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", "🎫2025/02/04/test-ticket"},
 		{"goals", "semiorepo://goals", "🎯"},
 		{"goal", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", "🎯R26-02/RUNNING-SKETCHPAD"},
 		{"drafts", "semiorepo://drafts", "✍"},
-		{"draft", "semiorepo://draft/my-draft", "✍my-draft"},
+		{"draft", "semiorepo://draft/MY-DRAFT", "✍MY-DRAFT"},
 		{"todos", "semiorepo://todos", "📝"},
 		{"todo", "semiorepo://todo/my-todo", "📝my-todo"},
 		{"policies", "semiorepo://policies", "🛡"},
-		{"policy", "semiorepo://policy/code-hygiene", "🛡/code-hygiene"},
+		{"policy", "semiorepo://policy/CODE-HYGIENE", "🛡/code-hygiene"},
 		{"violationKinds", "semiorepo://violationKinds", "🚫"},
-		{"violationKind", "semiorepo://violationKind/code-hygiene/inline-comment", "🚫code-hygiene/inline-comment"},
+		{"violationKind", "semiorepo://violationKind/CODE/INLINE-COMMENT", "🚫code:inline-comment"},
 		{"contributors", "semiorepo://contributors", "👤"},
-		{"contributor", "semiorepo://contributor/usalu", "👤usalu"},
+		{"contributor", "semiorepo://contributor/USALU", "👤usalu"},
 		{"commits", "semiorepo://commits", "🔀"},
-		{"commit", "semiorepo://commit/abc123", "🔀abc123"},
+		{"commit", "semiorepo://commit/ABC123", "🔀abc123"},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -5984,6 +6459,79 @@ func TestParseSectionUriPath(t *testing.T) {
 						t.Errorf("ParseSectionUriPath(%q) slug[%d] = %q, want %q", tt.uriPath, i, s, tt.wantSlugs[i])
 					}
 				}
+			}
+		})
+	}
+}
+
+func TestViolationKindIdToUriPath(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		want string
+	}{
+		{"single segment", "code", "CODE"},
+		{"two segments", "code:inline-comment", "CODE/INLINE-COMMENT"},
+		{"three segments", "code:header:missing-region", "CODE/HEADER/MISSING-REGION"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ViolationKindIdToUriPath(tt.id)
+			if got != tt.want {
+				t.Errorf("ViolationKindIdToUriPath(%q) = %q, want %q", tt.id, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestViolationKindUriPathToId(t *testing.T) {
+	tests := []struct {
+		name    string
+		uriPath string
+		want    string
+	}{
+		{"single segment", "CODE", "code"},
+		{"two segments", "CODE/INLINE-COMMENT", "code:inline-comment"},
+		{"three segments", "CODE/HEADER/MISSING-REGION", "code:header:missing-region"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ViolationKindUriPathToId(tt.uriPath)
+			if got != tt.want {
+				t.Errorf("ViolationKindUriPathToId(%q) = %q, want %q", tt.uriPath, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIdUriRoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		id   string
+		uri  string
+	}{
+		{"policy", fmt.Sprintf("%s/code", emojiText(EmojiPolicy)), "semiorepo://policy/CODE"},
+		{"violationKind", fmt.Sprintf("%scode:header:missing-region", emojiText(EmojiViolationKind)), "semiorepo://violationKind/CODE/HEADER/MISSING-REGION"},
+		{"contributor", fmt.Sprintf("%susalu", emojiText(EmojiContributor)), "semiorepo://contributor/USALU"},
+		{"commit", fmt.Sprintf("%sabc123", emojiText(EmojiCommit)), "semiorepo://commit/ABC123"},
+		{"draft", fmt.Sprintf("%sMY-DRAFT", emojiText(EmojiDraft)), "semiorepo://draft/MY-DRAFT"},
+		{"section", fmt.Sprintf("%ssemio/js/src/file.ts#Section", emojiText(EmojiSection)), "semiorepo://section/semio/js/src/file.ts/SECTION"},
+		{"file", fmt.Sprintf("%ssemio/js/index.ts", emojiText(EmojiFileCode)), "semiorepo://file/semio/js/index.ts"},
+		{"ticket", fmt.Sprintf("%s2026/01/15/SOME-TICKET", emojiText(EmojiTicket)), "semiorepo://ticket/2026/01/15/SOME-TICKET"},
+		{"goal", fmt.Sprintf("%sR26-02/RUNNING", emojiText(EmojiGoal)), "semiorepo://goal/R26-02/RUNNING"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name+"_IdToUri", func(t *testing.T) {
+			gotUri := IdToUri(tt.id)
+			if gotUri != tt.uri {
+				t.Errorf("IdToUri(%q) = %q, want %q", tt.id, gotUri, tt.uri)
+			}
+		})
+		t.Run(tt.name+"_UriToId_then_IdToUri", func(t *testing.T) {
+			gotId := UriToId(tt.uri)
+			gotUri := IdToUri(gotId)
+			if gotUri != tt.uri {
+				t.Errorf("IdToUri(UriToId(%q)) = %q, want %q (intermediate id: %q)", tt.uri, gotUri, tt.uri, gotId)
 			}
 		})
 	}
@@ -7103,13 +7651,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders basic tree", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTree(tree)
-		if !strings.Contains(output, "🏗️Projects") {
+		if !strings.Contains(output, "🏗️️Projects") {
 			t.Error("output should contain Projects label")
 		}
 		if !strings.Contains(output, "semio") {
@@ -7155,13 +7703,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("markdown renderer uses list bullets", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTreeMarkdown(tree)
-		if !strings.Contains(output, "- [🏗️Projects](semiorepo://projects)") {
+		if !strings.Contains(output, "- [🏗️️Projects](semiorepo://projects)") {
 			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
 		}
 		if !strings.Contains(output, "  - semio") {
@@ -7992,6 +8540,331 @@ func TestCollectEntityPropsConsistency(t *testing.T) {
 			t.Errorf("definition props should contain line range: %v", props)
 		}
 	})
+
+	t.Run("props strip newlines from multi-line content", func(t *testing.T) {
+		data := map[string]interface{}{
+			"slug": "T1", "title": "Fix Bug", "status": "closed",
+			"finished": "2025-01-02T00:00:00Z",
+			"summary":  "Line one.\nLine two.\nLine three.",
+			"year":     float64(2025), "month": float64(1), "day": float64(1),
+		}
+		props := collectEntityProps("ticket", data, false)
+		for _, p := range props {
+			if strings.Contains(p, "\n") {
+				t.Errorf("prop contains newline: %q", p)
+			}
+			if strings.Contains(p, "\r") {
+				t.Errorf("prop contains carriage return: %q", p)
+			}
+		}
+	})
+
+	t.Run("props strip backticks from content", func(t *testing.T) {
+		data := map[string]interface{}{
+			"slug": "T1", "title": "Fix `title` Bug", "status": "closed",
+			"finished": "2025-01-02T00:00:00Z",
+			"summary":  "Fixed the `title` parameter in `UpdateTicketTitle`.",
+			"year":     float64(2025), "month": float64(1), "day": float64(1),
+		}
+		props := collectEntityProps("ticket", data, false)
+		for _, p := range props {
+			if strings.Contains(p, "`") {
+				t.Errorf("prop contains backtick: %q", p)
+			}
+		}
+	})
+
+	t.Run("props collapse multiple spaces", func(t *testing.T) {
+		data := map[string]interface{}{
+			"slug": "T1", "title": "Fix Bug", "status": "closed",
+			"finished": "2025-01-02T00:00:00Z",
+			"summary":  "Fixed.\n\n1. First.\n2. Second.",
+			"year":     float64(2025), "month": float64(1), "day": float64(1),
+		}
+		props := collectEntityProps("ticket", data, false)
+		for _, p := range props {
+			if strings.Contains(p, "  ") {
+				t.Errorf("prop contains double space: %q", p)
+			}
+		}
+	})
+
+	t.Run("props handle Windows line endings", func(t *testing.T) {
+		data := map[string]interface{}{
+			"slug": "T1", "title": "Fix Bug", "status": "closed",
+			"finished": "2025-01-02T00:00:00Z",
+			"summary":  "Line one.\r\nLine two.\r\nLine three.",
+			"year":     float64(2025), "month": float64(1), "day": float64(1),
+		}
+		props := collectEntityProps("ticket", data, false)
+		for _, p := range props {
+			if strings.Contains(p, "\r") || strings.Contains(p, "\n") {
+				t.Errorf("prop contains line break: %q", p)
+			}
+		}
+	})
+
+	t.Run("goal props strip newlines from description", func(t *testing.T) {
+		data := map[string]interface{}{
+			"id": "G1", "title": "My Goal", "status": "open",
+			"dueDate":     "2030-01-01",
+			"createdAt":   "2025-01-01T00:00:00Z",
+			"description": "Goal with\nmultiple\nlines and `backticks`.",
+		}
+		props := collectEntityProps("goal", data, false)
+		for _, p := range props {
+			if strings.Contains(p, "\n") {
+				t.Errorf("goal prop contains newline: %q", p)
+			}
+			if strings.Contains(p, "`") {
+				t.Errorf("goal prop contains backtick: %q", p)
+			}
+		}
+	})
+
+	t.Run("commit props strip newlines from message", func(t *testing.T) {
+		data := map[string]interface{}{
+			"sha":     "abc1234567890",
+			"message": "feat: add feature\n\nDetailed description\nwith `code` refs.",
+		}
+		props := collectEntityProps("commit", data, false)
+		for _, p := range props {
+			if strings.Contains(p, "\n") {
+				t.Errorf("commit prop contains newline: %q", p)
+			}
+			if strings.Contains(p, "`") {
+				t.Errorf("commit prop contains backtick: %q", p)
+			}
+		}
+	})
+
+	t.Run("policy props strip newlines", func(t *testing.T) {
+		data := map[string]interface{}{
+			"id":          "code-hygiene",
+			"name":        "Code Hygiene",
+			"description": "Clean code\npolicy with `rules`.",
+		}
+		props := collectEntityProps("policy", data, false)
+		for _, p := range props {
+			if strings.Contains(p, "\n") {
+				t.Errorf("policy prop contains newline: %q", p)
+			}
+			if strings.Contains(p, "`") {
+				t.Errorf("policy prop contains backtick: %q", p)
+			}
+		}
+	})
+}
+
+func TestSingleLineOutput(t *testing.T) {
+	multiLineEntities := []struct {
+		kind     string
+		nodeKind TreeNodeKind
+		data     map[string]interface{}
+	}{
+		{"ticket", TreeNodeTicket, map[string]interface{}{
+			"slug": "T1", "title": "Fix `title` Bug", "status": "closed",
+			"finished": "2025-01-02T00:00:00Z",
+			"summary":  "Added folder renaming.\n\n1. MCP ticketReopen handler: reads the `title` parameter.\n2. MCP ticketClose handler: reads `title`.\n3. Goals: added `UpdateGoalTitle()` helper.\n\nAlso fixed a test bug.",
+			"year":     float64(2025), "month": float64(1), "day": float64(1),
+		}},
+		{"ticket", TreeNodeTicket, map[string]interface{}{
+			"slug": "T2", "title": "Open Ticket", "status": "open",
+			"started": "2025-01-01T00:00:00Z",
+			"prompt":  "Fix the `config` module.\nIt has multiple issues:\n- Issue 1\n- Issue 2",
+			"year":    float64(2025), "month": float64(1), "day": float64(1),
+		}},
+		{"goal", TreeNodeGoal, map[string]interface{}{
+			"id": "G1", "title": "Multi\nLine\nGoal", "status": "open",
+			"dueDate":     "2030-01-01",
+			"createdAt":   "2025-01-01T00:00:00Z",
+			"description": "Description with `code`\nand\r\nnewlines.",
+		}},
+		{"commit", TreeNodeCommit, map[string]interface{}{
+			"sha":     "abc1234567890",
+			"message": "feat: add feature\n\nDetailed description\nwith `code` refs.",
+		}},
+		{"policy", TreeNodePolicy, map[string]interface{}{
+			"id": "p1", "name": "Policy", "description": "Rule 1\nRule 2\n`Rule 3`",
+		}},
+		{"project", TreeNodeProject, map[string]interface{}{
+			"name": "proj1", "description": "Project\nwith\nnewlines",
+		}},
+	}
+
+	assertSingleLine := func(t *testing.T, label, output string) {
+		t.Helper()
+		lines := strings.Split(output, "\n")
+		if len(lines) > 1 {
+			t.Errorf("%s is multi-line (%d lines):\n%q", label, len(lines), output)
+		}
+		if strings.Contains(output, "\r") {
+			t.Errorf("%s contains carriage return:\n%q", label, output)
+		}
+	}
+
+	assertNoRawBackticks := func(t *testing.T, label, output string) {
+		t.Helper()
+		for _, p := range collectEntityProps("ticket", multiLineEntities[0].data, false) {
+			if strings.Contains(p, "`") {
+				t.Errorf("%s prop contains backtick: %q", label, p)
+			}
+		}
+		_ = output
+	}
+
+	for _, tt := range multiLineEntities {
+		t.Run(tt.kind+"_renderEntityMarkdownLink_single_line", func(t *testing.T) {
+			output := renderEntityMarkdownLink(tt.kind, tt.data)
+			assertSingleLine(t, "renderEntityMarkdownLink("+tt.kind+")", output)
+		})
+
+		t.Run(tt.kind+"_renderEntityMarkdown_single_line", func(t *testing.T) {
+			output := renderEntityMarkdown(tt.kind, tt.data)
+			assertSingleLine(t, "renderEntityMarkdown("+tt.kind+")", output)
+		})
+
+		t.Run(tt.kind+"_renderEntityHuman_single_line", func(t *testing.T) {
+			output := renderEntityHuman(tt.kind, tt.data, false)
+			assertSingleLine(t, "renderEntityHuman("+tt.kind+")", output)
+		})
+
+		t.Run(tt.kind+"_renderEntityHuman_tty_single_line", func(t *testing.T) {
+			output := renderEntityHuman(tt.kind, tt.data, true)
+			assertSingleLine(t, "renderEntityHuman_tty("+tt.kind+")", output)
+		})
+
+		t.Run(tt.kind+"_props_no_backticks", func(t *testing.T) {
+			props := collectEntityProps(tt.kind, tt.data, false)
+			for _, p := range props {
+				if strings.Contains(p, "`") {
+					t.Errorf("prop contains backtick: %q", p)
+				}
+			}
+			assertNoRawBackticks(t, tt.kind, "")
+		})
+
+		t.Run(tt.kind+"_monorepoTreeNodeMarkdown_single_line", func(t *testing.T) {
+			treeNode := &TreeNode{Kind: tt.nodeKind, ID: "test", Label: "test", Data: tt.data}
+			var sb strings.Builder
+			renderTreeNodeMarkdown(&sb, treeNode, "")
+			output := strings.TrimRight(sb.String(), "\n")
+			assertSingleLine(t, "renderTreeNodeMarkdown("+tt.kind+")", output)
+		})
+
+		t.Run(tt.kind+"_monorepoTreeNodeText_single_line", func(t *testing.T) {
+			treeNode := &TreeNode{Kind: tt.nodeKind, ID: "test", Label: "test", Data: tt.data}
+			var sb strings.Builder
+			renderTreeNodeText(&sb, treeNode, "", true, true)
+			output := strings.TrimRight(sb.String(), "\n")
+			assertSingleLine(t, "renderTreeNodeText("+tt.kind+")", output)
+		})
+	}
+
+	t.Run("goal_tree_with_multi_line_tickets_all_single_line", func(t *testing.T) {
+		roots := []*GoalNode{{
+			ID: "G1", Title: "Parent\nGoal", Status: "open",
+			Tickets: []*TicketNode{
+				{
+					Slug: "T1", Title: "Ticket `One`", Status: "closed",
+					Created:  "2025-01-01T00:00:00Z",
+					Finished: "2025-01-02T00:00:00Z",
+					Summary:  "Fixed things.\n\n1. First fix.\n2. Second fix with `code`.",
+				},
+				{
+					Slug: "T2", Title: "Ticket Two", Status: "open",
+					Created: "2025-01-01T00:00:00Z",
+					Prompt:  "Please fix:\n- Item 1\n- Item 2",
+				},
+			},
+			Children: []*GoalNode{{
+				ID: "G2", Title: "Child Goal", Status: "open",
+				Description: "Description\nwith\nnewlines.",
+			}},
+		}}
+		for _, format := range []string{"md", "text"} {
+			output := renderGoalTreeNodes(roots, format)
+			for i, line := range strings.Split(strings.TrimRight(output, "\n"), "\n") {
+				trimmed := strings.TrimLeft(line, " ")
+				if trimmed == "" {
+					t.Errorf("goal tree (%s) line %d is empty (blank line in output)", format, i)
+				}
+			}
+		}
+	})
+
+	t.Run("ticket_list_with_multi_line_summary_single_line", func(t *testing.T) {
+		tickets := []interface{}{
+			map[string]interface{}{
+				"slug": "T1", "title": "Ticket", "status": "closed",
+				"finished": "2025-01-02T00:00:00Z",
+				"summary":  "Summary with\nnewlines and `backticks`.",
+				"year":     float64(2025), "month": float64(1), "day": float64(1),
+			},
+		}
+		for _, useMD := range []bool{true, false} {
+			output := renderTicketList(tickets, false, useMD)
+			for i, line := range strings.Split(strings.TrimRight(output, "\n"), "\n") {
+				trimmed := strings.TrimLeft(line, " ")
+				if trimmed == "" {
+					t.Errorf("ticket list (md=%v) line %d is empty", useMD, i)
+				}
+			}
+		}
+	})
+
+	t.Run("formatMarkdownResult_ticket_list_single_line", func(t *testing.T) {
+		payload := map[string]interface{}{
+			"repo": map[string]interface{}{
+				"tickets": []interface{}{
+					map[string]interface{}{
+						"slug": "T1", "title": "Ticket", "status": "closed",
+						"finished": "2025-01-02T00:00:00Z",
+						"summary":  "Line 1\nLine 2\n`code`",
+						"year":     float64(2025), "month": float64(1), "day": float64(1),
+					},
+				},
+			},
+		}
+		data, _ := json.Marshal(payload)
+		output := formatMarkdownResult("ticket list", data)
+		for i, line := range strings.Split(strings.TrimRight(output, "\n"), "\n") {
+			trimmed := strings.TrimLeft(line, " ")
+			if trimmed == "" {
+				t.Errorf("formatMarkdownResult ticket list line %d is empty", i)
+			}
+		}
+	})
+
+	t.Run("formatMarkdownResult_goal_tree_single_line", func(t *testing.T) {
+		payload := map[string]interface{}{
+			"repo": map[string]interface{}{
+				"goals": []interface{}{
+					map[string]interface{}{
+						"id": "G1", "title": "Goal", "status": "open",
+						"dueDate": "2030-01-01", "createdAt": "2025-01-01T00:00:00Z",
+						"description": "Desc\nwith\nnewlines",
+					},
+				},
+				"tickets": []interface{}{
+					map[string]interface{}{
+						"id": "T1", "slug": "T1", "title": "Ticket", "status": "closed",
+						"goal":    "G1",
+						"date":    map[string]interface{}{"created": "2025-01-01T00:00:00Z", "finished": "2025-01-02T00:00:00Z"},
+						"summary": "Summary\nwith `code`\nrefs.",
+					},
+				},
+			},
+		}
+		data, _ := json.Marshal(payload)
+		output := formatMarkdownResult("goal tree", data)
+		for i, line := range strings.Split(strings.TrimRight(output, "\n"), "\n") {
+			trimmed := strings.TrimLeft(line, " ")
+			if trimmed == "" {
+				t.Errorf("formatMarkdownResult goal tree line %d is empty", i)
+			}
+		}
+	})
 }
 
 func TestNoDoubleDashInMarkdownOutput(t *testing.T) {
@@ -8098,3 +8971,71 @@ func TestNoDoubleDashInMarkdownOutput(t *testing.T) {
 // #endregion 🔖Unified Rendering Identity Tests
 
 // #endregion 🔖Monorepo Tree Tests
+
+func TestMigrateAuthorFieldsToString(t *testing.T) {
+	ctx := context.Background()
+
+	// Migrate tickets via StreamTickets
+	ticketCh := make(chan Ticket)
+	var ticketErr error
+	go func() {
+		ticketErr = StreamTickets(ctx, nil, nil, nil, ticketCh)
+	}()
+	ticketCount := 0
+	for ticket := range ticketCh {
+		if err := SaveTicket(&ticket); err != nil {
+			t.Errorf("failed to save ticket %s: %v", ticket.Slug, err)
+		}
+		ticketCount++
+	}
+	if ticketErr != nil {
+		t.Fatalf("stream tickets failed: %v", ticketErr)
+	}
+	t.Logf("migrated %d tickets via stream", ticketCount)
+
+	// Migrate remaining tickets by walking the filesystem directly
+	ticketsDir := GetTicketsDir()
+	remainingCount := 0
+	filepath.WalkDir(ticketsDir, func(path string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() || d.Name() != "ticket.json" {
+			return nil
+		}
+		raw, err := ReadTextFile(path)
+		if err != nil {
+			return nil
+		}
+		if !strings.Contains(raw, `"author": {`) {
+			return nil // already migrated
+		}
+		var ticket Ticket
+		if err := json.Unmarshal([]byte(raw), &ticket); err != nil {
+			t.Logf("failed to parse %s: %v", path, err)
+			return nil
+		}
+		ticket.JsonPath = path
+		if err := SaveTicket(&ticket); err != nil {
+			t.Errorf("failed to save remaining ticket %s: %v", path, err)
+		}
+		remainingCount++
+		return nil
+	})
+	t.Logf("migrated %d remaining tickets", remainingCount)
+
+	// Migrate goals
+	goalCh := make(chan *Goal)
+	var goalErr error
+	go func() {
+		goalErr = StreamGoals(ctx, goalCh)
+	}()
+	goalCount := 0
+	for goal := range goalCh {
+		if err := SaveGoal(*goal); err != nil {
+			t.Errorf("failed to save goal %s: %v", goal.ID, err)
+		}
+		goalCount++
+	}
+	if goalErr != nil {
+		t.Fatalf("stream goals failed: %v", goalErr)
+	}
+	t.Logf("migrated %d goals", goalCount)
+}

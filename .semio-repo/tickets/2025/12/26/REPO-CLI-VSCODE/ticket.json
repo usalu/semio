@@ -1,18 +1,21 @@
 {
   "title": "REPO-CLI-VSCODE",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "started": "2025-12-26T02:41:46.068Z",
   "interactions": [
     {
-      "prompt": ">-",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-26T02:41:46.068Z"
       },
-      "started": "2025-12-26T02:41:46.068Z",
-      "commit": "d20b7f8143fbee8696b534c8a6465753544ce37d"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "d20b7f8143fbee8696b534c8a6465753544ce37d",
+      "prompt": "\u003e-",
+      "llm": "sonnet-4-5"
     }
   ]
 }

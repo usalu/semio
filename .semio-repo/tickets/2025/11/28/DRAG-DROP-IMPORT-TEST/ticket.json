@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.762Z",
   "interactions": [
     {
-      "prompt": "Create test for kit import drag and drop",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.762Z"
       },
-      "started": "2025-12-16T17:06:07.762Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Create test for kit import drag and drop",
+      "llm": "sonnet-4"
     }
   ]
 }

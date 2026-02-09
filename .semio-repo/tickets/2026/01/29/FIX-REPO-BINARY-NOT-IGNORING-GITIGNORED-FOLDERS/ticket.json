@@ -11,15 +11,17 @@
   "finished": "2026-01-29T09:35:48.329226376Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-29T09:31:48.512717551Z",
+        "finished": "2026-01-29T09:35:48.329226376Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "The repo binary is not properly ignoring folders that are in .gitignore. For example, js/storybook-static is gitignored but still shows up as a folder in repo tool output. Investigate and fix the folder listing/tree logic to respect .gitignore rules.",
       "llm": "opus-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T09:31:48.512717551Z",
-      "finished": "2026-01-29T09:35:48.329226376Z",
-      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "diff": {
         "bundles": {
           "deleted": null,

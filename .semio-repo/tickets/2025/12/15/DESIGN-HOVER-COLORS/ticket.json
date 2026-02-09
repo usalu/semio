@@ -1,18 +1,21 @@
 {
   "title": "Fix design piece hover/select colors",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2026-01-07T13:45:28.013Z",
   "interactions": [
     {
-      "prompt": ">-",
-      "llm": "gpt-5-2",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2026-01-07T13:45:28.013Z"
       },
-      "started": "2026-01-07T13:45:28.013Z",
-      "commit": "67126961d64c89450f396abedd5d477670f1ad4d"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "67126961d64c89450f396abedd5d477670f1ad4d",
+      "prompt": "\u003e-",
+      "llm": "gpt-5-2"
     }
   ]
 }

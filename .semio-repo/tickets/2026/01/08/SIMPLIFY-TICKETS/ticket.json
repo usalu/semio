@@ -7,14 +7,17 @@
   "finished": "2026-01-08T23:16:25Z",
   "interactions": [
     {
-      "prompt": "Simplify the ticket mechanism to remove checkpoints and interactions. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.",
-      "llm": "opus-4",
-      "author": {
-        "name": "Ueli Saluz"
+      "dates": {
+        "started": "2026-01-08T22:46:58Z",
+        "finished": "2026-01-08T23:16:25Z"
       },
-      "started": "2026-01-08T22:46:58Z",
-      "finished": "2026-01-08T23:16:25Z",
-      "commit": "79da2464ffc4c4a0a0a4f490e3f140b38a57ffe3"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "79da2464ffc4c4a0a0a4f490e3f140b38a57ffe3",
+      "prompt": "Simplify the ticket mechanism to remove checkpoints and interactions. All computation that was performed on a checkpoint (affected sections with line metrics and the list of affected definitions.) should be performed when finishing a ticket. Add a summary field and files as necessary arguments for the ticket close command.",
+      "llm": "opus-4"
     }
   ]
 }

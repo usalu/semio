@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.827Z",
   "interactions": [
     {
-      "prompt": "Fix store overfetching and overrendering in design app",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.827Z"
       },
-      "started": "2025-12-16T17:06:07.827Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix store overfetching and overrendering in design app",
+      "llm": "sonnet-4-5"
     }
   ]
 }

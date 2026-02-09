@@ -6,13 +6,16 @@
   "started": "2025-12-17T19:03:09.836Z",
   "interactions": [
     {
-      "prompt": "Add window and overlay levels to UI hierarchy. The hierarchy is base, window, panel, overlay, temporary. All ui elements need to work in all 5 levels with a level context, provider and useLevel hook.",
-      "llm": "opus-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-17T19:03:09.836Z"
       },
-      "started": "2025-12-17T19:03:09.836Z",
-      "commit": "671d6b386b077914f2bdbab4e853923102a5903e"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "671d6b386b077914f2bdbab4e853923102a5903e",
+      "prompt": "Add window and overlay levels to UI hierarchy. The hierarchy is base, window, panel, overlay, temporary. All ui elements need to work in all 5 levels with a level context, provider and useLevel hook.",
+      "llm": "opus-4-5"
     }
   ]
 }

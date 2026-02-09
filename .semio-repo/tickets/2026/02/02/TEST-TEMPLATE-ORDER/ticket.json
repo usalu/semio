@@ -8,16 +8,17 @@
   "finished": "2026-02-02T21:35:43.482893941Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-02T21:33:04.943283208Z",
+        "finished": "2026-02-02T21:35:43.482893941Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Testing the section order in ticket.md",
       "llm": "opus-4-5",
-      "ui": "claude-code",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-02T21:33:04.943283208Z",
-      "finished": "2026-02-02T21:35:43.482893941Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "diff": {
         "bundles": {
           "deleted": null,

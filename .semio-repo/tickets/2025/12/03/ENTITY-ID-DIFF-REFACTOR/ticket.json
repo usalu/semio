@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.836Z",
   "interactions": [
     {
-      "prompt": "Refactor EntityId and Diff Schemas",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.836Z"
       },
-      "started": "2025-12-16T17:06:07.836Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Refactor EntityId and Diff Schemas",
+      "llm": "sonnet-4-5"
     }
   ]
 }

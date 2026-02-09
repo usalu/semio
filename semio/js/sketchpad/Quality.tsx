@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/sketchpad/Quality.tsx
+// 💻 semio/js/sketchpad/Quality.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -131,7 +139,7 @@ export interface QualityAppDiff {
   windowLayout?: any;
 }
 
-export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> {}
+export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> { }
 
 export interface QualityAppState {
   fullscreenWindow: QualityAppFullscreenWindow;
@@ -773,7 +781,7 @@ const qualityAppPlugin: AppPlugin = {
       windowLayout: undefined,
     }),
   },
-  registerStores: () => {},
+  registerStores: () => { },
 };
 
 if (typeof window !== "undefined") {
@@ -831,11 +839,11 @@ export function useQualityAppCommands(id?: QualityAppId) {
   const store = useQualityAppStore(undefined, id) as QualityAppStore | null;
   if (!store) {
     return {
-      startTransaction: () => {},
-      finalizeTransaction: () => {},
-      abortTransaction: () => {},
-      undo: () => {},
-      redo: () => {},
+      startTransaction: () => { },
+      finalizeTransaction: () => { },
+      abortTransaction: () => { },
+      undo: () => { },
+      redo: () => { },
       toggleFormulaFullscreen: () => Promise.resolve(),
       toggleDiagramFullscreen: () => Promise.resolve(),
       setActiveTool: (_origin: string, _tool: ToolKind) => Promise.resolve(),
@@ -847,7 +855,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
       hoverFormulaNode: (_origin: string, _nodeId: Guid) => Promise.resolve(),
       clearHover: () => Promise.resolve(),
       connectNodes: (_origin: string, _sourceId: Guid, _targetId: Guid) => Promise.resolve(),
-      togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => {},
+      togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => { },
       execute: (_origin: string, _command: string, ..._args: any[]) => Promise.resolve(),
     };
   }
@@ -1226,7 +1234,7 @@ const Formula: FC = () => {
     const loadMathJax = () => {
       if (window.MathJax) {
         if (mathRef.current) {
-          window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
+          window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
         }
         return;
       }
@@ -1235,10 +1243,10 @@ const Formula: FC = () => {
       script.async = true;
       script.onload = () => {
         if (window.MathJax && mathRef.current) {
-          window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
+          window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
         }
       };
-      script.onerror = () => {};
+      script.onerror = () => { };
       document.head.appendChild(script);
     };
     loadMathJax();
@@ -1249,7 +1257,7 @@ const Formula: FC = () => {
       mathRef.current.innerHTML = "";
       const latex = formulaToLatexString(quality?.formula);
       mathRef.current.textContent = `\\[${latex}\\]`;
-      window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
+      window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
     }
   }, [quality?.formula, formulaToLatexString]);
 
@@ -1596,7 +1604,7 @@ const QualityWorkbenchQualities: FC = () => {
 
 // #region 🔖App
 
-export interface AppProps {}
+export interface AppProps { }
 
 const FormulaWindow = memo(() => <Formula />);
 FormulaWindow.displayName = "FormulaWindow";

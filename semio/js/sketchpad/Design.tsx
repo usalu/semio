@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/sketchpad/Design.tsx
+// 💻 semio/js/sketchpad/Design.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -278,7 +286,7 @@ export interface DesignAppDiff {
   selectedModelTags?: Record<Guid, string[]>;
   windowLayout?: any;
 }
-export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> {}
+export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> { }
 export interface DesignAppState {
   fullscreenWindow: DesignAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -2048,58 +2056,58 @@ export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id
 //#endregion 🔖Action Hooks
 
 const EMPTY_COMMANDS = {
-  togglePanel: () => {},
-  execute: () => {},
-  startTransaction: () => {},
-  finalizeTransaction: () => {},
-  abortTransaction: () => {},
-  undo: () => {},
-  redo: () => {},
-  selectAll: () => {},
-  deselectAll: () => {},
-  selectPiece: () => {},
-  selectPieces: () => {},
-  addPieceToSelection: () => {},
-  removePieceFromSelection: () => {},
-  selectConnection: () => {},
-  addConnectionToSelection: () => {},
-  removeConnectionFromSelection: () => {},
-  selectPiecePort: () => {},
-  deselectPiecePort: () => {},
-  deleteSelected: () => {},
-  toggleDiagramFullscreen: () => {},
-  toggleAccesslFullscreen: () => {},
-  setActiveTool: () => {},
-  addPiece: () => {},
-  addPieces: () => {},
-  removePiece: () => {},
-  removePieces: () => {},
-  addConnection: () => {},
-  addConnections: () => {},
-  removeConnection: () => {},
-  removeConnections: () => {},
-  updatePiece: () => {},
-  updatePieces: () => {},
-  updateConnection: () => {},
-  updateConnections: () => {},
-  setCamera: () => {},
-  focusPiece: () => {},
-  clearFocus: () => {},
-  setDiagramCenter: () => {},
-  setDiagramScale: () => {},
-  hoverPiece: () => {},
-  hoverPieces: () => {},
-  hoverConnection: () => {},
-  hoverConnections: () => {},
-  hoverPort: () => {},
-  hoverType: () => {},
-  hoverTypes: () => {},
-  hoverDesign: () => {},
-  hoverDesigns: () => {},
-  clearHover: () => {},
-  setModelTagsForType: () => {},
-  addModelTagForAllTypes: () => {},
-  removeModelTagFromAllTypes: () => {},
+  togglePanel: () => { },
+  execute: () => { },
+  startTransaction: () => { },
+  finalizeTransaction: () => { },
+  abortTransaction: () => { },
+  undo: () => { },
+  redo: () => { },
+  selectAll: () => { },
+  deselectAll: () => { },
+  selectPiece: () => { },
+  selectPieces: () => { },
+  addPieceToSelection: () => { },
+  removePieceFromSelection: () => { },
+  selectConnection: () => { },
+  addConnectionToSelection: () => { },
+  removeConnectionFromSelection: () => { },
+  selectPiecePort: () => { },
+  deselectPiecePort: () => { },
+  deleteSelected: () => { },
+  toggleDiagramFullscreen: () => { },
+  toggleAccesslFullscreen: () => { },
+  setActiveTool: () => { },
+  addPiece: () => { },
+  addPieces: () => { },
+  removePiece: () => { },
+  removePieces: () => { },
+  addConnection: () => { },
+  addConnections: () => { },
+  removeConnection: () => { },
+  removeConnections: () => { },
+  updatePiece: () => { },
+  updatePieces: () => { },
+  updateConnection: () => { },
+  updateConnections: () => { },
+  setCamera: () => { },
+  focusPiece: () => { },
+  clearFocus: () => { },
+  setDiagramCenter: () => { },
+  setDiagramScale: () => { },
+  hoverPiece: () => { },
+  hoverPieces: () => { },
+  hoverConnection: () => { },
+  hoverConnections: () => { },
+  hoverPort: () => { },
+  hoverType: () => { },
+  hoverTypes: () => { },
+  hoverDesign: () => { },
+  hoverDesigns: () => { },
+  clearHover: () => { },
+  setModelTagsForType: () => { },
+  addModelTagForAllTypes: () => { },
+  removeModelTagFromAllTypes: () => { },
 } as any;
 
 export function useDesignAppCommands(id?: DesignAppId) {
@@ -3608,13 +3616,13 @@ const PiecesSectionForm: FC = () => {
     () =>
       commonTypeName && !isDesignPiece
         ? [
-            ...new Set(
-              allReplacableTypes
-                .filter((t) => t.name === commonTypeName)
-                .map((t) => (t as any).variant)
-                .filter((v): v is string => Boolean(v)),
-            ),
-          ]
+          ...new Set(
+            allReplacableTypes
+              .filter((t) => t.name === commonTypeName)
+              .map((t) => (t as any).variant)
+              .filter((v): v is string => Boolean(v)),
+          ),
+        ]
         : [],
     [commonTypeName, isDesignPiece, allReplacableTypes],
   );
@@ -3628,24 +3636,24 @@ const PiecesSectionForm: FC = () => {
 
   const availableDesignVariants = pieceDesign
     ? [
-        ...new Set(
-          availableDesigns
-            .filter((d) => d.name === pieceDesign.name)
-            .map((d) => (d as any).variant)
-            .filter((v): v is string => Boolean(v)),
-        ),
-      ]
+      ...new Set(
+        availableDesigns
+          .filter((d) => d.name === pieceDesign.name)
+          .map((d) => (d as any).variant)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ]
     : [];
 
   const availableDesignViews = pieceDesign
     ? [
-        ...new Set(
-          availableDesigns
-            .filter((d) => d.name === pieceDesign.name && ((d as any).variant || "") === ((pieceDesign as any).variant || ""))
-            .map((d) => (d as any).view)
-            .filter((v): v is string => Boolean(v)),
-        ),
-      ]
+      ...new Set(
+        availableDesigns
+          .filter((d) => d.name === pieceDesign.name && ((d as any).variant || "") === ((pieceDesign as any).variant || ""))
+          .map((d) => (d as any).view)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    ]
     : [];
 
   let parentConnection: Connection | null = null;
@@ -4396,7 +4404,7 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
       onPointerEnter={() => {
         if (connector.guid && hoverPort) hoverPort(pieceId, connector.guid);
       }}
-      onPointerLeave={() => {}}
+      onPointerLeave={() => { }}
     />
   );
 };
@@ -4580,9 +4588,9 @@ const PieceNodeInner: React.FC<PieceNodeInnerProps> = ({ id, piece, type, connec
 
   const originalPixelPos = hasCenterDiff
     ? {
-        x: (piece.center?.u ?? 0) * ICON_WIDTH,
-        y: -(piece.center?.v ?? 0) * ICON_WIDTH,
-      }
+      x: (piece.center?.u ?? 0) * ICON_WIDTH,
+      y: -(piece.center?.v ?? 0) * ICON_WIDTH,
+    }
     : null;
 
   return (
@@ -6898,7 +6906,7 @@ const PieceMesh: FC<{ highlightColor: string | null }> = ({ highlightColor }) =>
   );
 };
 
-interface ModelPieceProps {}
+interface ModelPieceProps { }
 
 const ModelPiece: FC<ModelPieceProps> = () => {
   const piece = usePiece() as Piece;
@@ -7285,7 +7293,7 @@ const DesignAppScene: FC = () => {
 
 // #endregion 🔖Canvas
 
-export interface AppProps {}
+export interface AppProps { }
 
 const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => {
   return (

@@ -11,16 +11,17 @@
   "finished": "2026-02-03T08:50:10.998635185Z",
   "interactions": [
     {
-      "prompt": "The  extension sideview should be changed/refactored/consolidated into two sections: Monorepo and Filter.",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-02-02T17:49:17.002455262Z",
+        "finished": "2026-02-03T08:50:10.998635185Z"
       },
-      "started": "2026-02-02T17:49:17.002455262Z",
-      "finished": "2026-02-03T08:50:10.998635185Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
+      "prompt": "The  extension sideview should be changed/refactored/consolidated into two sections: Monorepo and Filter.",
+      "llm": "gemini-3-pro"
     }
   ]
 }

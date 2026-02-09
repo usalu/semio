@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.868Z",
   "interactions": [
     {
-      "prompt": "Simplified panel tests to verify toggle existence",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.868Z"
       },
-      "started": "2025-12-16T17:06:07.868Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Simplified panel tests to verify toggle existence",
+      "llm": "sonnet-4-5"
     }
   ]
 }

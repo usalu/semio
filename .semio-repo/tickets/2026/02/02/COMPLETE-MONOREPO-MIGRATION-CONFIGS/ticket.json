@@ -11,16 +11,17 @@
   "finished": "2026-02-03T08:50:07.099094674Z",
   "interactions": [
     {
-      "prompt": "Find all outdated configs after monorepo restructuring: git configs, formatters, tools, settings, MCP, devcontainer setup, etc.",
-      "llm": "opus-4-5",
-      "ui": "claude-code",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-02-02T14:51:05.478554652Z",
+        "finished": "2026-02-03T08:50:07.099094674Z"
       },
-      "started": "2026-02-02T14:51:05.478554652Z",
-      "finished": "2026-02-03T08:50:07.099094674Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
+      "prompt": "Find all outdated configs after monorepo restructuring: git configs, formatters, tools, settings, MCP, devcontainer setup, etc.",
+      "llm": "opus-4-5"
     }
   ]
 }

@@ -4,6 +4,12 @@
 //
 // 2025 Test User <test@test.com>
 //
+// #region 🔖License
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
+
 // #endregion 🔖Header
 
 // #region 🔖Package

@@ -7,14 +7,17 @@
   "finished": "2026-01-12T13:21:50Z",
   "interactions": [
     {
-      "prompt": "Fix npm Invalid Version error on npm install",
-      "llm": "gemini-3-flash-preview",
-      "author": {
-        "name": "KinanSarak"
+      "dates": {
+        "started": "2026-01-12T13:20:33Z",
+        "finished": "2026-01-12T13:21:50Z"
       },
-      "started": "2026-01-12T13:20:33Z",
-      "finished": "2026-01-12T13:21:50Z",
-      "commit": "f4899e1b56c66902ea910f895010f6490189705e"
+      "author": "kinansarak",
+      "system": {
+        "client": ""
+      },
+      "commit": "f4899e1b56c66902ea910f895010f6490189705e",
+      "prompt": "Fix npm Invalid Version error on npm install",
+      "llm": "gemini-3-flash-preview"
     }
   ]
 }

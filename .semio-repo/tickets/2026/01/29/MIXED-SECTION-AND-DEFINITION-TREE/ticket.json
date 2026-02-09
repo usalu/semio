@@ -11,15 +11,17 @@
   "finished": "2026-02-03T08:49:59.580474675Z",
   "interactions": [
     {
-      "prompt": "The section tree items are not showing the child definitions. Make sure the children are both sections and definitions, both in the same order as in the source code.",
-      "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-01-29T07:15:06.512665441Z",
+        "finished": "2026-02-03T08:49:59.580474675Z"
       },
-      "started": "2026-01-29T07:15:06.512665441Z",
-      "finished": "2026-02-03T08:49:59.580474675Z",
-      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
+      "prompt": "The section tree items are not showing the child definitions. Make sure the children are both sections and definitions, both in the same order as in the source code.",
+      "llm": "gemini-3-pro"
     }
   ]
 }

@@ -6,13 +6,16 @@
   "started": "2025-12-18T15:18:04.589Z",
   "interactions": [
     {
-      "prompt": "\"Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas\"",
-      "llm": "gpt-5.2-codex",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-18T15:18:04.589Z"
       },
-      "started": "2025-12-18T15:18:04.589Z",
-      "commit": ""
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "\"Implement unified multi-window system: canonical window contracts + JSON layout persistence + migrate apps to LayoutCanvas\"",
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

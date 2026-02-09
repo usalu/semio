@@ -15,7 +15,7 @@
         "started": "2026-02-09 07:37:28",
         "finished": "2026-02-09 07:44:09"
       },
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": {
         "version": "linux",
         "client": "claude-code"
@@ -49,7 +49,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻︎semio-repo/cli/main.go",
+              "path": "💻semio-repo/cli/main.go",
               "lines": {
                 "added": 203,
                 "removed": 77
@@ -70,49 +70,49 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻︎semio-repo/cli/main.go#Default Context",
+              "path": "💻semio-repo/cli/main.go#Default Context",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Entity Resolvers",
+              "path": "💻semio-repo/cli/main.go#Entity Resolvers",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types",
               "lines": {
                 "added": 126,
                 "removed": 18
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Policies",
+              "path": "💻semio-repo/cli/main.go#Policies",
               "lines": {
                 "added": 4,
                 "removed": 6
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Schema Builder",
+              "path": "💻semio-repo/cli/main.go#Schema Builder",
               "lines": {
                 "added": 8,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID",
               "lines": {
                 "added": 54,
                 "removed": 52
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Entity Rendering",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Entity Rendering",
               "lines": {
                 "added": 3,
                 "removed": 0
@@ -168,315 +168,315 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻︎semio-repo/cli/main.go#Default Context§Analyze",
+              "path": "💻semio-repo/cli/main.go#Default Context§Analyze",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Entity Resolvers§Violations",
+              "path": "💻semio-repo/cli/main.go#Entity Resolvers§Violations",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§Bundle",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§Bundle",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§DeriveFileKind",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§DeriveFileKind",
               "lines": {
                 "added": 0,
                 "removed": 10
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 18,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 18,
                 "removed": 2
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 20,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 0,
                 "removed": 8
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetID",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetID",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
-              "lines": {
-                "added": 0,
-                "removed": 1
-              }
-            },
-            {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
-              "lines": {
-                "added": 0,
-                "removed": 1
-              }
-            },
-            {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
-              "lines": {
-                "added": 0,
-                "removed": 1
-              }
-            },
-            {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§GetURI",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§GetURI",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#GraphQL Types§IsGeneratedFolder",
+              "path": "💻semio-repo/cli/main.go#GraphQL Types§IsGeneratedFolder",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Policies§emojiPolicy",
+              "path": "💻semio-repo/cli/main.go#Policies§emojiPolicy",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Policies§emojiPolicy",
+              "path": "💻semio-repo/cli/main.go#Policies§emojiPolicy",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Policies§sectionPolicy",
+              "path": "💻semio-repo/cli/main.go#Policies§sectionPolicy",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Schema Builder§buildSchema",
+              "path": "💻semio-repo/cli/main.go#Schema Builder§buildSchema",
               "lines": {
                 "added": 8,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Schema Builder§buildSchema",
+              "path": "💻semio-repo/cli/main.go#Schema Builder§buildSchema",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§DefinitionIdValueToUriPath",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§DefinitionIdValueToUriPath",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§FindSectionBySlug",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§FindSectionBySlug",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§GetArtifactID",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§GetArtifactID",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§ParseArtifactRef",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§ParseArtifactRef",
               "lines": {
                 "added": 0,
                 "removed": 5
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§ParseSectionUriPath",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§ParseSectionUriPath",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§ResolveSectionName",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§ResolveSectionName",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§SectionIdValueToUriPath",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§SectionIdValueToUriPath",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§UnSlugify",
+              "path": "💻semio-repo/cli/main.go#Todos#Entity Rendering#Artifact ID§UnSlugify",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos§TodoChange",
+              "path": "💻semio-repo/cli/main.go#Todos§TodoChange",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos§TodoCreate",
+              "path": "💻semio-repo/cli/main.go#Todos§TodoCreate",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos§TodoDelete",
+              "path": "💻semio-repo/cli/main.go#Todos§TodoDelete",
               "lines": {
                 "added": 0,
                 "removed": 8
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos§TodoToTicket",
+              "path": "💻semio-repo/cli/main.go#Todos§TodoToTicket",
               "lines": {
                 "added": 0,
                 "removed": 8
               }
             },
             {
-              "path": "💻︎semio-repo/cli/main.go#Todos§removeLineFromMarkdown",
+              "path": "💻semio-repo/cli/main.go#Todos§removeLineFromMarkdown",
               "lines": {
                 "added": 0,
                 "removed": 1

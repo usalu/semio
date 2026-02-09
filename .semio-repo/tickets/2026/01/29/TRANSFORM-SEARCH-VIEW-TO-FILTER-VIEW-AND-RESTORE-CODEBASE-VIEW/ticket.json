@@ -8,15 +8,17 @@
   "finished": "2026-02-03T08:50:01.813844829Z",
   "interactions": [
     {
-      "prompt": "Replace Search view with Filter view and restore Codebase view functionality",
-      "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-01-29T11:33:05.852316932Z",
+        "finished": "2026-02-03T08:50:01.813844829Z"
       },
-      "started": "2026-01-29T11:33:05.852316932Z",
-      "finished": "2026-02-03T08:50:01.813844829Z",
-      "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
+      "prompt": "Replace Search view with Filter view and restore Codebase view functionality",
+      "llm": "gemini-3-pro"
     }
   ]
 }

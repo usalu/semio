@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/sketchpad/Kit.tsx
+// 💻 semio/js/sketchpad/Kit.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -312,7 +320,7 @@ export interface KitAppDiff {
   windowLayout?: any;
   diagramForce?: Partial<DiagramForceSettings>;
 }
-export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> {}
+export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> { }
 export interface KitAppState {
   fullscreenWindow: KitAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -906,7 +914,7 @@ const kitAppPlugin: AppPlugin = {
       diagramForce: { ...defaultDiagramForceSettings },
     }),
   },
-  registerStores: () => {},
+  registerStores: () => { },
 };
 
 if (typeof window !== "undefined") {
@@ -1179,7 +1187,7 @@ export function useKitAppTransaction(): Transaction {
 export function useKitAppCommands(id?: KitAppId) {
   const controller = useKitStore(undefined, id) as KitStore | null;
   const getOrigin = useOrigin();
-  const noOp = () => {};
+  const noOp = () => { };
   if (!controller) {
     return {
       undo: noOp,
@@ -4575,44 +4583,44 @@ const AppContent: FC = () => {
           columns={[
             ...(!selectedKind
               ? [
-                  {
-                    id: "kind",
-                    header: (
-                      <div className="inline-flex items-center gap-single">
-                        <span>{labelKind}</span>
-                        <Toggle
-                          kind="dropdown"
-                          pressed={sortColumn === "kind"}
-                          value={sortColumn === "kind" ? sortDirection : "asc"}
-                          onValueChange={(value) => {
-                            kitAppCommands.setSortColumn("kind");
-                            kitAppCommands.setSortDirection(value as "asc" | "desc");
-                          }}
-                          items={[
-                            { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
-                            { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
-                          ]}
-                          id="semio.sketchpad.app.kit.sortByKind"
-                        />
-                      </div>
-                    ),
-                    accessor: (row: TableRow) => (
-                      <>
-                        {row.kind === "designs" && <LayoutIcon />}
-                        {row.kind === "types" && <TypeIcon />}
-                        {row.kind === "qualities" && <AwardIcon />}
-                        {row.kind === "ports" && <PortIcon />}
-                        {row.kind === "tags" && <HashIcon />}
-                        {row.kind === "concepts" && <LightbulbIcon />}
-                        {row.kind === "files" && <DocumentIcon />}
-                        {row.kind === "folders" && <FolderIcon />}
-                        {row.kind === "authors" && <UserIcon />}
-                      </>
-                    ),
-                    width: "w-small",
-                    headerClassName: "relative group w-0 whitespace-nowrap",
-                  },
-                ]
+                {
+                  id: "kind",
+                  header: (
+                    <div className="inline-flex items-center gap-single">
+                      <span>{labelKind}</span>
+                      <Toggle
+                        kind="dropdown"
+                        pressed={sortColumn === "kind"}
+                        value={sortColumn === "kind" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          kitAppCommands.setSortColumn("kind");
+                          kitAppCommands.setSortDirection(value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
+                          { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
+                        ]}
+                        id="semio.sketchpad.app.kit.sortByKind"
+                      />
+                    </div>
+                  ),
+                  accessor: (row: TableRow) => (
+                    <>
+                      {row.kind === "designs" && <LayoutIcon />}
+                      {row.kind === "types" && <TypeIcon />}
+                      {row.kind === "qualities" && <AwardIcon />}
+                      {row.kind === "ports" && <PortIcon />}
+                      {row.kind === "tags" && <HashIcon />}
+                      {row.kind === "concepts" && <LightbulbIcon />}
+                      {row.kind === "files" && <DocumentIcon />}
+                      {row.kind === "folders" && <FolderIcon />}
+                      {row.kind === "authors" && <UserIcon />}
+                    </>
+                  ),
+                  width: "w-small",
+                  headerClassName: "relative group w-0 whitespace-nowrap",
+                },
+              ]
               : []),
             {
               id: "artifact",
@@ -4769,7 +4777,7 @@ class ErrorBoundary extends React.Component<{ children: React.ReactNode; fallbac
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {}
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) { }
 
   componentDidUpdate(prevProps: { children: React.ReactNode; fallback: React.ReactNode }) {
     if (prevProps.children !== this.props.children && this.state.hasError) {
@@ -5190,7 +5198,7 @@ const buildKitDiagramData = (kit: Kit): { nodes: Node<KitDiagramNode>[]; edges: 
   return { nodes, edges };
 };
 
-interface KitDiagramProps {}
+interface KitDiagramProps { }
 
 interface ForceNode extends SimulationNodeDatum {
   id: string;
@@ -6555,7 +6563,7 @@ export const KitAppFooter: FC = () => {
 
     // TODO: Add kit-specific footer items here
 
-    return () => {};
+    return () => { };
   }, [appType, addFooterItem, removeFooterItem]);
 
   return null;

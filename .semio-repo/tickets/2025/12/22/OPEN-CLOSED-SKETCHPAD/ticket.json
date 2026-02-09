@@ -1,18 +1,21 @@
 {
   "title": "OPEN-CLOSED-SKETCHPAD",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "started": "2025-12-22T20:43:22.25Z",
   "interactions": [
     {
-      "prompt": ">-",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-22T20:43:22.25Z"
       },
-      "started": "2025-12-22T20:43:22.25Z",
-      "commit": ""
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "\u003e-",
+      "llm": "sonnet-4"
     }
   ]
 }

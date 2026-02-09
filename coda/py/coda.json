@@ -86,10 +86,22 @@
             "id": "room-program",
             "rules": [
                 {
-                    "id": "enough-buro-space",
-                    "description": "At least 300m² buro spaces.",
+                    "id": "not-enough-program-area",
+                    "description": "Not enough area for the program.",
+                    "data": {
+                        "program": "string",
+                        "target-area": "number",
+                        "actual-area": "number"
+                    },
                     "measures": [
-                        "increase-floor-area"
+                        "increase-gross-floor-area"
+                    ]
+                },
+                {
+                    "id": "too-much-program-area",
+                    "description": "Too much area for the program.",
+                    "measures": [
+                        "decrease-gross-floor-area"
                     ]
                 }
             ]

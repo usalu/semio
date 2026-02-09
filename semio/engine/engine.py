@@ -1,8 +1,10 @@
 # region Header
 
-# 💻︎ semio/engine/engine.py
+# 💻 semio/engine/engine.py
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
+
+# region License
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+# endregion License
+
+# region Specs
+# endregion Specs
 
 # endregion Header
 
@@ -246,7 +254,7 @@ class Store(abc.ABC):
 
     @abc.abstractmethod
     def initialize(self: "Store") -> None:
-        """🏗️Initialize the store and perform nothing if was already initialized."""
+        """🏗️️Initialize the store and perform nothing if was already initialized."""
         pass
 
     @abc.abstractmethod

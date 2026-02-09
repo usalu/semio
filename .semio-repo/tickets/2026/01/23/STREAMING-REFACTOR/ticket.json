@@ -8,14 +8,16 @@
   "finished": "2026-02-03T08:49:39.986270315Z",
   "interactions": [
     {
-      "prompt": "Migrated from legacy files",
-      "llm": "",
-      "author": {
-        "name": "Migration Script"
+      "dates": {
+        "started": "2026-01-29T19:44:05.302393Z",
+        "finished": "2026-02-03T08:49:39.986270315Z"
       },
-      "started": "2026-01-29T19:44:05.302393Z",
-      "finished": "2026-02-03T08:49:39.986270315Z",
-      "commit": ""
+      "author": "Migration Script",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "Migrated from legacy files"
     }
   ]
 }

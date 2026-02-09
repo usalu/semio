@@ -7,14 +7,17 @@
   "finished": "2025-12-31T00:00:00Z",
   "interactions": [
     {
-      "prompt": "Debug report for VS Code extension tickets section appearing empty",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "unknown"
+      "dates": {
+        "started": "2025-12-31T00:00:00Z",
+        "finished": "2025-12-31T00:00:00Z"
       },
-      "started": "2025-12-31T00:00:00Z",
-      "finished": "2025-12-31T00:00:00Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "unknown",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Debug report for VS Code extension tickets section appearing empty",
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -11,16 +11,17 @@
   "finished": "2026-02-03T10:42:50.265712858Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-03T10:17:50.032999406Z",
+        "finished": "2026-02-03T10:42:50.265712858Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Refactor the goal and ticket system so that hierarchy is defined by folder structure instead of metadata keys. Move folders when assigning parents. Nest existing goals to match the specified tree.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T10:17:50.032999406Z",
-      "finished": "2026-02-03T10:42:50.265712858Z",
-      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "diff": {
         "bundles": {
           "deleted": null,

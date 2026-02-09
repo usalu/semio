@@ -11,15 +11,17 @@
   "finished": "2026-01-30T17:22:59.892071894Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-30T17:22:18.893576529Z",
+        "finished": "2026-01-30T17:22:59.892071894Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "923068ca75f4196ae30974c0e0ae39733780e301",
       "prompt": "Make sure that reading bundles, folders, files, sections, definitions, contributors, goals, tickets, policies, and violation-kinds are turned into resources",
       "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-30T17:22:18.893576529Z",
-      "finished": "2026-01-30T17:22:59.892071894Z",
-      "commit": "923068ca75f4196ae30974c0e0ae39733780e301",
       "diff": {
         "bundles": {
           "deleted": null,

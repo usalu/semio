@@ -11,15 +11,17 @@
   "finished": "2026-01-28T16:44:34.412281118Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-28T16:43:28.735847694Z",
+        "finished": "2026-01-28T16:44:34.412281118Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
       "prompt": "Implement goal change and ticket change commands in CLI and GraphQL, and fix milestone date propagation",
       "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-28T16:43:28.735847694Z",
-      "finished": "2026-01-28T16:44:34.412281118Z",
-      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
       "diff": {
         "bundles": {
           "deleted": null,

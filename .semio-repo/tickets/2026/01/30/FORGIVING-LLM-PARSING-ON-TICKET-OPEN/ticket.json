@@ -11,15 +11,17 @@
   "finished": "2026-01-30T13:54:28.835750274Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-30T13:39:57.753259032Z",
+        "finished": "2026-01-30T13:43:48.234994063Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "923068ca75f4196ae30974c0e0ae39733780e301",
       "prompt": "The llm string should be more forgiving during ticket open. For example, 'claude-opus-4-5-20251101' should resolve to 'opus-4-5'. This should be achieved by slugifying the input and checking if any allowed LLM is a substring of it.",
       "llm": "sonnet-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-30T13:39:57.753259032Z",
-      "finished": "2026-01-30T13:43:48.234994063Z",
-      "commit": "923068ca75f4196ae30974c0e0ae39733780e301",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -509,15 +511,17 @@
       }
     },
     {
+      "dates": {
+        "started": "2026-01-30T13:45:31.029188564Z",
+        "finished": "2026-01-30T13:54:28.835750274Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "923068ca75f4196ae30974c0e0ae39733780e301",
       "prompt": "Fix LLM resolution edge cases and add tests. Specifically, handle identifiers with dots like 'swe-1.5' correctly and ensure the resolution logic is robust.",
       "llm": "sonnet-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-30T13:45:31.029188564Z",
-      "finished": "2026-01-30T13:54:28.835750274Z",
-      "commit": "923068ca75f4196ae30974c0e0ae39733780e301",
       "diff": {
         "bundles": {
           "deleted": null,

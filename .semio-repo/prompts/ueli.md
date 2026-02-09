@@ -5,11 +5,11 @@
 Implement the following plan:
 Continue.
 
-Extend the existing test file to cover everything. Dont create any new test files. A single tests should always cover one unit and do multiple tests for that unit.
+Extend/Change/Refactor the existing test file to cover everything. Dont create any new test files. A single tests should always cover one unit and do multiple tests for that unit.
 Make sure all tests pass.
 
-Change/refactor/extend whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
-Dont ask in between, no confirmations, no matter the issue. Figure it out.
+Extend/Change/Refactor whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
+Dont ask in between, no confirmations, no matter the issue. Figure it out. Create as many tickets as needed.
 Be sure that it works everywhere before stopping.
 Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG*/ticket.md`
 Dont keep any legacy api or backwards compatiblity.
@@ -18,13 +18,152 @@ Make a refactor plan that cleanly achieves this.
 
 The plan should be a downloadable markdown file. Add as much details as you can.
 
+## Later
+
+elements:
+- Update tree to not have sections but every section should have a tree. A tab should have multiple sections. A side panel has multiple tabs.
+
 ## History
+
+The software requirements specification is currently separated from the source code. It should be merged into the source code. Introduce a new violation kind for the code policy that checks if the docstrings are correct (for file, section and definition). Specs should never be tied to code and implementation-agnostic. It should not contain any syntax or implementation details of the source code.
+The specs that affect a bundle should be placed in a `.bundle.md` file at the root of the bundle.
+The specs that affect a folder should be placed in a `.folder.md` file at the root of the folder.
+The specs that affect a file should be placed in the header specs section.
+The specs that affect a section should be placed under the section start.
+The specs that affect a definition should be placed in the definition docstring. Use all language native docstring mechanism.
+
+Make sure to completely migrate all existing specs from the `AGENTS.md` and `README.md` into the proper location with the new format.
+
+e.g. in typescript:
+```ts
+// #region 🔖<SECTIONNAME>
+
+// <SECTIONREQUIREMENT1>
+// <SECTIONREQUIREMENT2>
+//  …
+
+/**
+ * <DEFINITIONREQUIREMENT1>
+ * <DEFINITIONREQUIREMENT2>
+ *  …
+ */
+<DEFINITION>
+
+// …
+```
+e.g.
+```ts
+
+// #region 🔖State Managment
+
+// There MUST be two mechnasism for state which interact together: local and shared.
+
+/**
+ * Kits MUST be shared and be synchronized between the different users that work on the same kit.
+ * A kit must be editable offline and synchronize with the server when online.
+ *  …
+**/
+export class KitStore {
+  …
+
+/**
+ * Sketchpad state MUST be local and MAY be persisted locally.
+ *  …
+**/
+export class SketchpadStore {
+  …
+// …
+```
+
+The ids and uris in semio-repo are not consistent.
+E.g. every single id and uri that comes out of `./semio-repo/cli/cli tree` should resolve.
+E.g. every file has the id on the header. It should be tested that all ids actually resolve (to the correct entity). Extend the policy and violation kind with autofixes to automatically replace it with the correct id.
+e.g. "💻 semio/js/index.ts" contains a space after the emoji which it shouldnt.
+
+All items returned from the cli (either tree or list) should always be on a single line and all properties should be separated by `-` and wrapped in backticks. e.g. this shouldnt be possible:
+```md
+            - [🎫︎2026/01/29/MIGRATE-TICKETS-TO-NEW-FORMAT?closed](semiorepo://ticket/2026/01/29/MIGRATE-TICKETS-TO-NEW-FORMAT) - `Migrate Tickets To New Format` - `closed` - `closed 1 week ago` - `Successfully migrated all tickets to the new format. Merged plan.md, log.md, and summary.md into a single ticket.md file. Updated ticket.json structure to match the new schema. Verified migration on 394 tickets.`
+            - [🎫︎2026/01/29/RENAME-GOAL-AND-TICKET-FOLDERS-ON-TITLE-CHANGE?closed](semiorepo://ticket/2026/01/29/RENAME-GOAL-AND-TICKET-FOLDERS-ON-TITLE-CHANGE) - `Rename Goal And Ticket Folders On Title Change` - `closed` - `closed 1 week ago` - `Added folder renaming when titles change for both tickets and goals. Three areas were fixed:
+```
+
+
+
+1. MCP ticketReopen handler: now reads the `title` parameter and calls UpdateTicketTitle (which renames the folder) before reopening.
+2. MCP ticketClose handler: now reads the `title` parameter and calls UpdateTicketTitle before closing.
+3. Goals (GoalReopen and GoalUpdate): added new UpdateGoalTitle() helper that slugifies the new title, renames the goal folder, and updates goal.ID. Both GoalReopen and GoalUpdate now use this helper instead of directly setting goal.Title.
+
+Also fixed a pre-existing test bug in nogithub_test.go where ReopenTicket was called with missing goal/parent arguments.`
+
+The semio repo vscode extension is not clean. All buisness logic should be in the cli. The vscode extension should only be a ui for the cli. Refactor everything to just use the cli.
+E.g. the file emojis of the ids dont match the one kind and it either shows the general 📄 which it should never show because all files have a specific kind or emojis like 🐍 which dont exist.
+The search should not be on client side but use the tree with search from the cli.
+The copied ids are all wrong e.g. `semio/js/sketchpad/Design.tsx§useDesignAppInitialize` should be `🛠️semio/js/sketchpad/Design.tsx#State Managment#Design App Plugin Registration§useDesignAppInitialize` or `📚📚semio/rb` should be `📚semio/rb`
+
+Make sure the violation kind id/uri work correctly.
+Currently we have `:` separated paths e.g. "code:header:missing-region"
+but the violation kind the violation kind with path `header:missing region` should have 
+path: `header/missing-region`
+id: "🚫Code# Header#Missing Region"
+uri: `semiorepo://violationKind/CODE/HEADER/MISSING-REGION`
+
+The violation kind id follows the pattern `🚫<policy-id>#<path*>` and 
+The violation kind uri follows the pattern `semiorepo://violationKind/<POLICY-ID>/{<PATH*>}`
+
+Remove the list and tree mcp commands and instead make sure that the plural of the source always returns a tree.
+e.g. `semiorepo://goals` should return the same as `./semio-repo/cli/cli goal tree`.
+
+Make sure that author is never stored as object with name and email but always as a string (the githubusername if one of the contributors matches or otherwise the `NAME <EMAIL>` format).
+e.g.
+```
+"author": {
+  "name": "Ueli Saluz",
+  "email": "ueli@semio-tech.com"
+},
+```
+should be:
+```
+"author": "usalu",
+```
+or
+```
+"author": "Someone Unknown <someone.unknown@example.com>",
+```
+Make sure that all existing json files are migrated. No backwards compatibility needed.
+
+The contributors should have more information `contributor.json`. There should always be the prefered information and the plural has alternatives.
+From a string (such as "Ueli Saluz <ueli.saluz@semio-tech.com>") the contributor should be found and if the string contains more information then update the contributor.json with the new information.
+1. Try to find the contributor with a matching email/emails. If the name is different from the name/names then add it to names.
+2. Try to find the contributor with a matching name/names. Add the email to emails.
+This should happen when e.g. for an interaction the author is searched from gitconfig.
+```json
+{
+  "name": "Ueli",
+  "names": [
+    "Ueli Saluz",
+  ],
+  "email": "ueli@semio-tech.com",
+  "emails": [
+    "ueli.saluz@iek.uni-hannover.de"
+  ],
+  "links": {
+    "github": "https://github.com/usalu"
+  },
+  "fingerprint": "2WqkU0K8sI1dp0ceZefVPQ1wdUuvUAW3Nlc5cVTsFf8",
+  "fingerprints": [  ]
+}
+```
+
+semio repo cli:
+The author string is stored as \u003c and \u003 instead of < and > from gitconfig.
+
+semio repo vscode extension:
+The section in the explorer sideview for the current file isnt showing any sections. Unlike the tree items in monorepo tree view.
 
 All source code headers should be extended/changed/refactored to look like this:
 ```md
 // #region 🔖Header
 
-// <ID> e.g. 💻︎ semio-repo/cli/main.go
+// <ID> e.g. 💻 semio-repo/cli/main.go
 
 // <SUMMARY> e.g. 
 
@@ -56,6 +195,7 @@ All source code headers should be extended/changed/refactored to look like this:
 
 // #endregion 🔖Header
 ```
+Only stop once all languages are supported and 100% of all source code files have the new header with summary and requirements. Some requirements are in `AGENTS.md` and `README.md` and should be moved to the source code headers.
 
 All trees of policies are currently flat but it should be in the same tree as the id of the violation kind. Both in semio repo cli and semio repo vscode extension.
 
@@ -149,7 +289,7 @@ $ ./semio-repo/cli/cli extract --file ./semio/js/sketchpad/Sketchpad.tsx --secti
 
 Introduce a new command: `search <query>` that gathers all the information from the semio repo regarding the given query. It lists all the resources that fuzzy match the query.
 ```
-# [🏗️Projects](semiorepo://projects)
+# [🏗️️Projects](semiorepo://projects)
 
 {FILTEREDPROJECTTREEWITHBUNDLESFOLDERSFILESSECTIONSDEFINITIONSTODOS}
 
@@ -194,7 +334,7 @@ $ ./semio-repo/cli/cli tree "semio repo cli filter mechanism"
 
 ```
 $ ./semio-repo/cli/cli tree
-- [🏗️Projects](semiorepo://projects)
+- [🏗️️Projects](semiorepo://projects)
   - <PROJECTITEM>
     - <BUNDLEITEM>
       - <FOLDERITEM*>
@@ -228,11 +368,11 @@ The semio repo cli should be thoroughly tested. The items of trees or list all m
 
 ```
 $ ./semio-repo/cli/cli ticket list
-- [📅︎2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS?closed](semiorepo://ticket/2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS) - Top-level Only Definitions - closed - 22 hours ago
+- [🎫︎2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS?closed](semiorepo://ticket/2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS) - Top-level Only Definitions - closed - 22 hours ago
 ```
 should be
 ```
-- [📅2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS?closed](semiorepo://ticket/2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS) - Top-level Only Definitions - closed - 22 hours ago
+- [🎫2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS?closed](semiorepo://ticket/2026/02/06/TOP-LEVEL-ONLY-DEFINITIONS) - Top-level Only Definitions - closed - 22 hours ago
 ```
 
 $ ./semio-repo/cli/cli ticket tree
@@ -244,22 +384,22 @@ $ ./semio-repo/cli/cli ticket tree
 should be
 ```
 $ ./semio-repo/cli/cli ticket tree
-- [📅2026](semiorepo://tickets?year=2026)
-  - [📅2026/01](semiorepo://tickets?year=2026&month=01)
-    - [📅2026/01/26](semiorepo://tickets?year=2026&month=01&day=26)
-      - [📅2026/01/26/ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT?closed](semiorepo://ticket/2026/01/26/ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT) - Zero Touch Devcontainer Extension Support - closed - 1 week ago
+- [🎫2026](semiorepo://tickets?year=2026)
+  - [🎫2026/01](semiorepo://tickets?year=2026&month=01)
+    - [🎫2026/01/26](semiorepo://tickets?year=2026&month=01&day=26)
+      - [🎫2026/01/26/ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT?closed](semiorepo://ticket/2026/01/26/ZERO-TOUCH-DEVCONTAINER-EXTENSION-SUPPORT) - Zero Touch Devcontainer Extension Support - closed - 1 week ago
 ```
 
 ```
 $ ./semio-repo/cli/cli file list
-- [⚙︎📄.codex/config.toml](semiorepo://file/📄.codex/config.toml)
+- [⚙️︎📄.codex/config.toml](semiorepo://file/📄.codex/config.toml)
 - [📄︎📄.devcontainer/post-attach.sh](semiorepo://file/📄.devcontainer/post-attach.sh)
-- [💻︎📄semio/py/semio.py](semiorepo://file/📄semio/py/semio.py)
+- [💻📄semio/py/semio.py](semiorepo://file/📄semio/py/semio.py)
 ```
 should be
 ```
 $ ./semio-repo/cli/cli file list
-- [⚙️.codex/config.toml](semiorepo://file/.codex/config.toml)
+- [⚙️️.codex/config.toml](semiorepo://file/.codex/config.toml)
 - [📜.devcontainer/post-attach.sh](semiorepo://file/.devcontainer/post-attach.sh)
 - [💻semio/py/semio.py](semiorepo://file/semio/py/semio.py)
 ```
@@ -271,7 +411,7 @@ $ ./semio-repo/cli/cli file list
 - [📁︎.cursor](semiorepo://folder/.cursor) - required
 - [📁︎.devcontainer](semiorepo://folder/.devcontainer) - required
 - [📁︎.github](semiorepo://folder/.github) - required
-- [🗃︎.github/agents](semiorepo://folder/.github/agents) - organization
+- [🗃️︎.github/agents](semiorepo://folder/.github/agents) - organization
 ```
 should be
 ```
@@ -281,7 +421,7 @@ $ ./semio-repo/cli/cli folder list
 - [📁.cursor](semiorepo://folder/.cursor)
 - [📁.devcontainer](semiorepo://folder/.devcontainer)
 - [📁.github](semiorepo://folder/.github)
-- [🗃️.github/agents](semiorepo://folder/.github/agents)
+- [🗃️️.github/agents](semiorepo://folder/.github/agents)
 ```
 
 etc for all commands.
@@ -375,7 +515,7 @@ should be:
 ```
 $ ./semio-repo/cli/cli bundle list
 - [📔coda/examples](semiorepo://bundle/coda/examples) - coda/examples
-- [⌨️coda/py](semiorepo://bundle/coda/py) - coda/py
+- [⌨️️coda/py](semiorepo://bundle/coda/py) - coda/py
 - [📚semio/examples](semiorepo://bundle/semio/examples) - semio/examples
 ```
 
@@ -410,7 +550,7 @@ Create a new command: `sync github` that syncs the local semio-repo artifacts wi
 semio repo vscode extension:
 The current project tree view looks like this:
 ```
-├─ 🏗️Projects
+├─ 🏗️️Projects
 │ ├─ 📦coda
 │ ├─ 📦semio
 │ │ ├─ 🏪semio/gh
@@ -420,7 +560,7 @@ The current project tree view looks like this:
 │ │ │ │ │ ├─ 🔖State Managment
 │ │ │ │ │ │ ├─ 🛠️DesignAppSelection
 │ │ │ │ │ │ ├─ 🛠️useDesignAppPieceStatus
-│ │ │ │ ├─ ⚙️tailwind.config.ts
+│ │ │ │ ├─ ⚙️️tailwind.config.ts
 │ ├─ 📦semio-repo
 ```
 but it should look like this:
@@ -428,7 +568,7 @@ but it should look like this:
 ├─ Projects
 │ ├─ 🔬coda
 │ ├─ 👤semio
-│ │ ├─ 🖱️gh
+│ │ ├─ 🖱️️gh
 │ │ ├─ 📚js
 │ │ │ ├─ 📁sketchpad
 │ │ │ │ ├─ 💻Design.tsx
@@ -436,7 +576,7 @@ but it should look like this:
 │ │ │ │ │ │ ├─ ✂️DesignAppSelection
 │ │ │ │ │ │ ├─ 🔖Hooks
 │ │ │ │ │ │ │ ├─ 🛠️useDesignAppPieceStatus
-│ │ │ │ ├─ ⚙️tailwind.config.ts
+│ │ │ │ ├─ ⚙️️tailwind.config.ts
 │ ├─ 🧰semio-repo
 ```
 
@@ -473,7 +613,7 @@ but it should look something like this, always using the <kind> emoji before the
 ├─ Projects
 │ ├─ 🔬coda
 │ ├─ 👤semio
-│ │ ├─ 🖱️gh
+│ │ ├─ 🖱️️gh
 │ │ ├─ 📚js
 │ │ │ ├─ 📁sketchpad
 │ │ │ │ ├─ 📄Design.tsx
@@ -497,7 +637,7 @@ All list commands currently output dfferent formats. They should have the follow
   👤usalu - Ueli Saluz
 
 ./semio-repo/cli/cli file list
-  ⚙️📄.codex/config.toml
+  ⚙️️📄.codex/config.toml
   📄📄.devcontainer/post-attach.sh
 
 ./semio-repo/cli/cli section list
@@ -533,8 +673,8 @@ Kit (lines 3925-7742)
     └── Validation serialization (lines 7657-7738)
 
 ./semio-repo/cli/cli ticket list
-  📅2026/02/04/RENAME-ITERATION-TO-INTERACTION - Rename Iteration to Interaction - open - 2026-02-04
-  📅2026/02/04/STANDARDIZE-LIST-AND-TREE-COMMANDS - Standardize List and Tree Commands - open - 2026-02-04
+  🎫2026/02/04/RENAME-ITERATION-TO-INTERACTION - Rename Iteration to Interaction - open - 2026-02-04
+  🎫2026/02/04/STANDARDIZE-LIST-AND-TREE-COMMANDS - Standardize List and Tree Commands - open - 2026-02-04
 
 ./semio-repo/cli/cli tree
 DEBUG: Markdown=false
@@ -731,12 +871,12 @@ The author should not be
 {
   "author": {
     "name": "Ueli Saluz",
-    "email": "ueli@semio-tech.de"
+    "email": "ueli@semio-tech.com"
   }
 }
 but instead:
 {
-  "author": "usalu" // or "GITAUTHOR <GITAUTHOR>" e.g. "Ueli Saluz <ueli@semio-tech.de>" when no contributor is found
+  "author": "usalu" // or "GITAUTHOR <GITAUTHOR>" e.g. "Ueli Saluz <ueli@semio-tech.com>" when no contributor is found
 }
 
 Extend all `list` and `tree` commands with a filter for status. Again support either `--open` or `--status open` syntax.
@@ -796,7 +936,7 @@ goal iteraterions should be instead of this:
       "ui": "windsurf-chat",
       "author": {
         "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+        "email": "ueli@semio-tech.com"
       },
       "started": "2026-02-02T20:23:00.362160845Z",
       "commit": ""
@@ -829,7 +969,7 @@ ticket iteraterions should be instead of this:
       "ui": "windsurf-chat",
       "author": {
         "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+        "email": "ueli@semio-tech.com"
       },
       "started": "2026-02-02T20:23:00.362160845Z",
       "commit": ""
@@ -893,7 +1033,7 @@ The `semio-repo/vscode` extension sideview should be changed/refactored/consolid
 Here the tree view (% for on click, # for menu button actions)
 All tree items should have a 🆔 button to copy the id to the clipboard.
 ├─ Monorepo # 🆔,🔄️
-│ ├─ 🏗️Projects # 🆔,🔄️
+│ ├─ 🏗️️Projects # 🆔,🔄️
 │ │ ├─ <kind>{PROJECTNAME} % NAVIGATE TO PROJECT  # 🆔,🔄️
 │ │ │ ├─ <kind>{BUNDLENAME} % NAVIGATE TO BUNDLE # 🆔,🔄️
 │ │ │ │ ├─ <kind>{FOLDERNAME*} % NAVIGATE TO FOLDER # 🆔,🔄️
@@ -902,12 +1042,12 @@ All tree items should have a 🆔 button to copy the id to the clipboard.
 │ │ │ │ │ │ │ ├─ <kind>{DEFINITIONNAME} % NAVIGATE TO DEFINITION # 🆔,🔄️
 │ ├─ 🎯Goals # 🆔,🔄️
 │ │ ├─ 🎯{GOALNAME*} % NAVIGATE TO GOAL # 🆔,🔄️
-│ │ │ ├─ 📅{TICKETNAME*} % NAVIGATE TO TICKET # 🆔,🔄️
-│ ├─ 📅Tickets % NAVIGATE TO PROJECT # 🆔,🔄️
+│ │ │ ├─ 🎫{TICKETNAME*} % NAVIGATE TO TICKET # 🆔,🔄️
+│ ├─ 🎫Tickets % NAVIGATE TO PROJECT # 🆔,🔄️
 │ │ ├─ {YEAR} % NAVIGATE TO YEAR # 🆔,🔄️
 │ │ │ ├─ {MONTH} % NAVIGATE TO MONTH # 🆔,🔄️
 │ │ │ │ ├─ {DAY} % NAVIGATE TO DAY # 🆔,🔄️
-│ │ │ │ │ ├─ 📅{TICKETNAME*} % NAVIGATE TO TICKET # 🆔,🔄️
+│ │ │ │ │ ├─ 🎫{TICKETNAME*} % NAVIGATE TO TICKET # 🆔,🔄️
 │ ├─ 🛡️Policies % NAVIGATE TO PROJECT # 🆔,🔄️
 │ │ ├─ POLICYNAME % NAVIGATE TO POLICY # 🆔,🔄️
 │ │ │ ├─ VIOLATIONKINDNAME* % NAVIGATE TO VIOLATIONKIND # 🆔,🔄️
@@ -922,18 +1062,18 @@ All tree items should have a 🆔 button to copy the id to the clipboard.
 │ │ │ │ ├─ {GOALNAME*} % NAVIGATE TO GOAL
 ├─ 🔍Filter
 │ ├─ SEARCHINPUTWITHMATCHOPTIONS # match case, match whole word, regex
-│ ├─ 📅Dates # None, All
+│ ├─ 🎫Dates # None, All
 │ │ └─ {YEAR} # None, All
 │ │ │ └─ {MONTH} # None, All
 │ │ │ │ └─ {DAY} # None, All  
-│ ├─ 🏗️Projects # 👤,🧰,🔬, None, All
-│ ├─ 📦Bundles # 📚, ⌨️, 🖱️, 📔, 🌐, 🏪, None, All
-│ ├─ 📂Folders # 🗃️, 📁, None, All
+│ ├─ 🏗️️Projects # 👤,🧰,🔬, None, All
+│ ├─ 📦Bundles # 📚, ⌨️️, 🖱️️, 📔, 🌐, 🏪, None, All
+│ ├─ 📂Folders # 🗃️️, 📁, None, All
 │ ├─ 🔖Sections # None, All
 │ ├─ 🏷️Definitions # 🛠️, ✂️, 🪨, None, All
 │ ├─ 🎯Goals # 🔵,🟢, None, All
-│ ├─ 📅Tickets # 🔵,🟢, None, All
-│ ├─ 📅Policies # None, All
+│ ├─ 🎫Tickets # 🔵,🟢, None, All
+│ ├─ 🎫Policies # None, All
 │ ├─ 👤Contributors # None, All
 │ ├─ 🔀Commits # None, All
 
@@ -969,20 +1109,20 @@ The semio repo mcp server should expose the following
 resources:
 The id system in semio-repo is:
 repo: `🌍`
-projects: `🏗️`
+projects: `🏗️️`
 project: `<kind>{project-code}` (<kind> - 👤:user e.g. `semio`, 🧰:infrastructure e.g. `semio-repo`, 🔬:research e.g. `coda`)
 bundles: `📦{project-code}`
-bundle: `<kind>{project-code}/{code}` (<kind> - 📚:library, 🛂:schema, ⌨️:binary, 🖱️:ui, 📔:example, 🌐:site, 🏪:assets)
+bundle: `<kind>{project-code}/{code}` (<kind> - 📚:library, 🛂:schema, ⌨️️:binary, 🖱️️:ui, 📔:example, 🌐:site, 🏪:assets)
 folders: `📁{parent-path*}`
-folder: `<kind>{path*}` (<kind> - 🗃️:organization, 📁:required)
+folder: `<kind>{path*}` (<kind> - 🗃️️:organization, 📁:required)
 files: `📄{folder-path*}` 
-file: `<kind>{path*}` (<kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️:config, 💾:resource, ⚖️:license)
+file: `<kind>{path*}` (<kind> - 💻:code, 🧪:test, 📜:script, 📃:docs, ⚙️️:config, 💾:resource, ⚖️:license)
 sections: `🔖{file-path*}#{parent-path*}`
 section: `🔖{path*}` 
 definitions: `🏷️{file-path*}#{section-path*}§{path*}`
 definition: `<kind>{file-path*}#{section-path*}§{path*}` (<kind> - 🛠️:implementation, ✂️:interface, 🪨:constant)
-tickets: `📅`
-ticket: `📅{year}/{month}/{day}/{slug}{?status}`
+tickets: `🎫`
+ticket: `🎫{year}/{month}/{day}/{slug}{?status}`
 goals: `🎯`
 goal: `🎯{path*}`
 drafts: `✍️`
@@ -1022,7 +1162,7 @@ todo: `semiorepo://todo/{SLUG}`
 policies: `semiorepo://policies`
 policy: `semiorepo://policy/{ID}`
 violationKinds: `semiorepo://violationKinds`
-violationKind: `semiorepo://violationKind/{POLICY-ID}/{PATH*}`
+violationKind: `semiorepo://violationKind/{POLICY-ID}#{PATH*}` # {PATH*} is uppercase slug path of violation id e.g. "🚫Code# Header#Missing Region" is `semiorepo://violationKind/CODE/HEADER/MISSING-REGION*}`
 contributors: `semiorepo://contributors`
 contributor: `semiorepo://contributor/{GITHUB}`
 commits: `semiorepo://commits`
@@ -1247,7 +1387,7 @@ The `ticket.json` and `goal.json` should change:
 ```json
  "author": {
         "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+        "email": "ueli@semio-tech.com"
       },
 ```
 to:
@@ -3880,7 +4020,7 @@ Every feature, decision should be undocumented/uncommented in the code and docum
 
 ## ✏️ sketchpad [↑](#%EF%B8%8F-products-)
 
-[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️
+[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️️
 It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍️
 ![sketchpad demo](/assets/images/sketchpad-demo.gif)
 ```
@@ -4076,7 +4216,7 @@ large: band, navbar, table header
 Update elements and all usages in sketchpad. No need to worry about breaking changes the ui elements are only used in this codebase. Just refactor everything cleanly.
 
 The git section of the dev docs is outdated.
-The git repo has a compressed main branch. If the release receives updates after main already has progressed, then a parallel release branch is created that works like main but for this release. The first symbol is a summary of the main task of the commit. The last symbol is encoded the amount of work (🪛🔨🛠️🏗️).
+The git repo has a compressed main branch. If the release receives updates after main already has progressed, then a parallel release branch is created that works like main but for this release. The first symbol is a summary of the main task of the commit. The last symbol is encoded the amount of work (🪛🔨🛠️🏗️️).
 The ai part is outdated.
 Due to token vs request based we use mainly copilot for most tickets, windsurf for the most token-heavy test-driven-development workflows with mcp (such as playwright), claude code for small bugs, cursor when docs are needed and as main editor with tab autocomplete, codex for simple tasks.
 opus 4.5 is the current model.

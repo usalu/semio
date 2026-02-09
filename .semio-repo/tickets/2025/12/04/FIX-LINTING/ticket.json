@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.865Z",
   "interactions": [
     {
-      "prompt": "\"Fix TypeScript, C# and Python linting errors\"",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.865Z"
       },
-      "started": "2025-12-16T17:06:07.865Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "\"Fix TypeScript, C# and Python linting errors\"",
+      "llm": "sonnet-4-5"
     }
   ]
 }

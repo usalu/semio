@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.815Z",
   "interactions": [
     {
-      "prompt": "Fix Tambour model warning by regenerating metabolism.zip with models",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.815Z"
       },
-      "started": "2025-12-16T17:06:07.815Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix Tambour model warning by regenerating metabolism.zip with models",
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -6,13 +6,16 @@
   "started": "2025-12-18T15:27:45.865Z",
   "interactions": [
     {
-      "prompt": "The buttons for every window should be action ui elements.",
-      "llm": "gpt-5.2-codex",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-18T15:27:45.865Z"
       },
-      "started": "2025-12-18T15:27:45.865Z",
-      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
+      "prompt": "The buttons for every window should be action ui elements.",
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

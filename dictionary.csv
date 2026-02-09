@@ -49,7 +49,7 @@ Symbol,Code,Abbreviation,Name,Description
 🖼️,Im,Img,Image,"The optional url to the image of the {{NAME}}. The url must point to a quadratic image [ png | jpg | svg ] which will be cropped by a circle. The image must be at least 720x720 pixels and smaller than 5 MB."
 🦶,Ip?,Imp?,Imperial,"Set the unit of the value to the imperial unit system, otherwise it is metric."
 📊,Jc,Jac,Jaccard Index,"The similarity of the two sets, written in decimal numbers."
-🗃️,Kt,Kit,Kit,"A kit is a collection of designs that use types."
+🗃️️,Kt,Kit,Kit,"A kit is a collection of designs that use types."
 📄,Ln?,Lcn?,License,"The optional license [ spdx id | url ] of the kit."
 📚,LN,LNa,Layer Name,"The {{NAME}} of the layer where the geometry is."
 ❌,Lg,Log,Log,"Outputs a message with a warning info, containing the wrong data and a suggestion for fixing it."

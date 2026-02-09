@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.684Z",
   "interactions": [
     {
-      "prompt": "Migration from 2025-11-21_KIT-IMPORT-EXPORT.md",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.684Z"
       },
-      "started": "2025-12-16T17:06:07.684Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Migration from 2025-11-21_KIT-IMPORT-EXPORT.md",
+      "llm": "sonnet-4"
     }
   ]
 }

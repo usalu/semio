@@ -11,16 +11,17 @@
   "finished": "2026-02-03T08:50:13.321832652Z",
   "interactions": [
     {
-      "prompt": "Update ID/URI system, implement project commands, support multi-package bundles, and update vscode extension projects view.",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-02-02T10:51:01.122959639Z",
+        "finished": "2026-02-03T08:50:13.321832652Z"
       },
-      "started": "2026-02-02T10:51:01.122959639Z",
-      "finished": "2026-02-03T08:50:13.321832652Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
+      "prompt": "Update ID/URI system, implement project commands, support multi-package bundles, and update vscode extension projects view.",
+      "llm": "gemini-3-pro"
     }
   ]
 }

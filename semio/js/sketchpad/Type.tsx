@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/sketchpad/Type.tsx
+// 💻 semio/js/sketchpad/Type.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -151,7 +159,7 @@ export interface TypeAppDiff {
   selectedModelTags?: string[];
   windowLayout?: any;
 }
-export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> {}
+export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> { }
 export interface TypeAppState {
   fullscreenWindow: TypeAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -557,9 +565,9 @@ interface Transaction {
 export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
   // TODO: Implement transaction via XState events
   return {
-    start: () => {},
-    finalize: () => {},
-    abort: () => {},
+    start: () => { },
+    finalize: () => { },
+    abort: () => { },
   };
 }
 
@@ -571,7 +579,7 @@ export function useTypeAppCommands(id?: TypeAppId) {
   const typeGuid = typeScope?.guid ?? id?.type ?? "";
 
   return useMemo(() => {
-    const noOp = () => {};
+    const noOp = () => { };
     if (!kitGuid || !typeGuid) {
       return {
         startTransaction: noOp,
@@ -3058,7 +3066,7 @@ const App: FC = () => {
       id: "semio.sketchpad.app.type.settings",
       specificity: 30,
       order: 0,
-      content: () => <>{}</>,
+      content: () => <>{ }</>,
     });
 
     addSection("settings", {

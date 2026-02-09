@@ -11,15 +11,17 @@
   "finished": "2026-01-29T20:31:41.255849207Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-29T20:27:48.92524607Z",
+        "finished": "2026-01-29T20:31:41.255849207Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "The extension is slow/exceeds buffer. Implement lazy fetching. Sections for current file are missing.",
       "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T20:27:48.92524607Z",
-      "finished": "2026-01-29T20:31:41.255849207Z",
-      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "diff": {
         "bundles": {
           "deleted": null,

@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// ⚙ vitest.config.ts
+// ⚙️ vitest.config.ts
 
 // 225 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,14 +19,20 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
+
 // #endregion 🔖Header
 
-import  defineConfig  from "vitest/config";
+import defineConfig from "vitest/config";
 
 eport default defineConfig(
-  test: 
-    projects: [
-      "./semio/js/vite.config.ts",
-    ],
+  test:
+  projects: [
+  "./semio/js/vite.config.ts",
+],
   ,
 );

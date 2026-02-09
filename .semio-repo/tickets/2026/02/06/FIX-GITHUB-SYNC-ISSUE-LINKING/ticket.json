@@ -15,7 +15,7 @@
         "started": "2026-02-06 21:17:13",
         "finished": "2026-02-06 21:21:47"
       },
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": {
         "version": "linux",
         "client": "codex"
@@ -230,7 +230,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Validation#Validation Types",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
               "lines": {
                 "added": 46,
                 "removed": 46
@@ -1221,7 +1221,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
               "to": "AGENTS.md#Codebase#📁js/semio/#Validation#Validation Types",
               "lines": {
                 "added": 46,

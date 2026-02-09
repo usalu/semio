@@ -1,7 +1,7 @@
 {
   "title": "Pure Markdown Cli Output",
   "status": "closed",
-  "prompt": "All CLI commands must return pure markdown output instead of JSON/NDJSON. Format: [\u003cid\u003e](\u003curi\u003e) - \u003cproperty1\u003e - \u003cproperty2\u003e. List/tree commands use markdown lists. All tests must verify syntactically correct markdown output.",
+  "prompt": "All CLI commands must return pure markdown output instead of JSON/NDJSON. Format: [\u003cid\u003ee](\u003curi\u003ee) - \u003cproperty1\u003ee - \u003cproperty2\u003ee. List/tree commands use markdown lists. All tests must verify syntactically correct markdown output.",
   "summary": "Eliminated all JSON/NDJSON fallback from markdown and text CLI output. All commands return pure markdown or human-readable text via generic inferEntityKind dispatch. Added renderEntityMarkdownLink, formatMarkdownFile, isList streaming detection. Comprehensive unit tests (130+ subtests) covering all entity kinds, mutations, lists, and edge cases.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/426"
@@ -15,13 +15,13 @@
         "started": "2026-02-06 17:18:41",
         "finished": "2026-02-06 17:46:56"
       },
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": {
         "version": "linux",
         "client": "copilot-chat"
       },
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
-      "prompt": "All CLI commands must return pure markdown output instead of JSON/NDJSON. Format: [\u003cid\u003e](\u003curi\u003e) - \u003cproperty1\u003e - \u003cproperty2\u003e. List/tree commands use markdown lists. All tests must verify syntactically correct markdown output.",
+      "prompt": "All CLI commands must return pure markdown output instead of JSON/NDJSON. Format: [\u003cid\u003ee](\u003curi\u003ee) - \u003cproperty1\u003ee - \u003cproperty2\u003ee. List/tree commands use markdown lists. All tests must verify syntactically correct markdown output.",
       "llm": "opus-4-6",
       "diff": {
         "bundles": {
@@ -818,7 +818,7 @@
               }
             },
             {
-              "path": "📄README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "path": "📄README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
               "lines": {
                 "added": 1,
                 "removed": 1

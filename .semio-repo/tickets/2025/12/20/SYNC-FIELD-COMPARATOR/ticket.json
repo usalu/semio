@@ -7,14 +7,17 @@
   "finished": "2025-12-20T13:30:40.966Z",
   "interactions": [
     {
-      "prompt": "Add optional comparator parameter to useSyncField and useSyncFields to allow custom equality checks instead of JSON.stringify",
-      "llm": "opus-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-20T13:30:21.713Z",
+        "finished": "2025-12-20T13:30:40.966Z"
       },
-      "started": "2025-12-20T13:30:21.713Z",
-      "finished": "2025-12-20T13:30:40.966Z",
-      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
+      "prompt": "Add optional comparator parameter to useSyncField and useSyncFields to allow custom equality checks instead of JSON.stringify",
+      "llm": "opus-4-5"
     }
   ]
 }

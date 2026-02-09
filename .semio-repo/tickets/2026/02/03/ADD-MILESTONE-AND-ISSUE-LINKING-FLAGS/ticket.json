@@ -11,16 +11,17 @@
   "finished": "2026-02-03T09:40:06.049718601Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-03T09:25:40.640225464Z",
+        "finished": "2026-02-03T09:40:06.049718601Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Add --milestone flag to goal creation to link existing milestone instead of creating new one. Add --issue flag to ticket creation to link existing issue instead of creating new one.",
       "llm": "opus-4-5",
-      "ui": "claude-code",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-03T09:25:40.640225464Z",
-      "finished": "2026-02-03T09:40:06.049718601Z",
-      "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "diff": {
         "bundles": {
           "deleted": null,

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/.storybook/vitest.setup.ts
+// 💻 semio/js/.storybook/vitest.setup.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

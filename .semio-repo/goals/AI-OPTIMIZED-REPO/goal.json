@@ -13,15 +13,16 @@
   },
   "interactions": [
     {
-      "prompt": "Goal for AI-optimized repository improvements",
-      "llm": "sonnet-4-5",
-      "ui": "windsurf-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-02-02T20:28:52.977788529Z"
       },
-      "started": "2026-02-02T20:28:52.977788529Z",
-      "commit": ""
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "Goal for AI-optimized repository improvements",
+      "llm": "sonnet-4-5"
     }
   ]
 }

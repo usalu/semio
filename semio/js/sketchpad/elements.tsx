@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/sketchpad/elements.tsx
+// 💻 semio/js/sketchpad/elements.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -167,7 +175,7 @@ export interface ElementBaseProps {
   id: string;
 }
 
-export interface ElementProps extends ElementBaseProps {}
+export interface ElementProps extends ElementBaseProps { }
 
 export const getLevelBgClass = (level: Level): string => {
   switch (level) {
@@ -848,12 +856,12 @@ export const TableAvatar: React.FC<TableAvatarProps> = ({ icon, name, className 
   const normalizedName = nameStr.trim();
   const initials = normalizedName
     ? normalizedName
-        .split(" ")
-        .slice(0, 2)
-        .map((word) => word.charAt(0))
-        .join("")
-        .toUpperCase()
-        .substring(0, 2)
+      .split(" ")
+      .slice(0, 2)
+      .map((word) => word.charAt(0))
+      .join("")
+      .toUpperCase()
+      .substring(0, 2)
     : "";
   const isImageIcon = typeof icon === "string";
   const isReactIcon = icon && !isImageIcon;
@@ -3233,7 +3241,7 @@ interface TreeItemProps {
 }
 
 interface SortableTreeItemsProps {
-  items: { id: string; [key: string]: any }[];
+  items: { id: string;[key: string]: any }[];
   onReorder: (oldIndex: number, newIndex: number) => void;
   children: (item: any, index: number) => React.ReactNode;
 }
@@ -3882,7 +3890,7 @@ function BreadcrumbItem({ className, id, content, children, onNavigate, options,
           </span>
         );
       }
-      const elementProps = itemContent.props as { className?: string; ["data-slot"]?: string };
+      const elementProps = itemContent.props as { className?: string;["data-slot"]?: string };
       return React.cloneElement(itemContent as React.ReactElement<any>, {
         className: cn("cursor-selectable", elementProps?.className),
         "data-slot": elementProps?.["data-slot"] ?? "breadcrumb-link",

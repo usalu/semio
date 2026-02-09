@@ -7,14 +7,17 @@
   "finished": "2025-12-20T13:18:04.01Z",
   "interactions": [
     {
-      "prompt": "\"Fix Smell 4: Module-level mutable state (globalHoverClearTimeout, currentHoveredPieceGuid, isPanning, isDraggingNode) replaced with HoverIntentContext using refs\"",
-      "llm": "opus-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-20T13:17:39.445Z",
+        "finished": "2025-12-20T13:18:04.01Z"
       },
-      "started": "2025-12-20T13:17:39.445Z",
-      "finished": "2025-12-20T13:18:04.01Z",
-      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
+      "prompt": "\"Fix Smell 4: Module-level mutable state (globalHoverClearTimeout, currentHoveredPieceGuid, isPanning, isDraggingNode) replaced with HoverIntentContext using refs\"",
+      "llm": "opus-4-5"
     }
   ]
 }

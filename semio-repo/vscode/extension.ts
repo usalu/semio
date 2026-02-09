@@ -4,6 +4,8 @@
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
+// #region 🔖License
+
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
@@ -17,44 +19,27 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
+
 // #endregion 🔖Header
 
 // #region 🔖Imports
 
-// @ts-ignore
-import { TypedDocumentNode } from "@graphql-typed-document-node/core";
 import { deserializeKit, Problem, validateKit } from "@semio/js/semio";
-import { cacheExchange, Client, fetchExchange } from "@urql/core";
 import { exec, execFile } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { promisify } from "util";
 import * as vscode from "vscode";
-import {
-  Bundle,
-  Contributor,
-  Policy,
-  Repo,
-  Ticket,
-  TicketStatus,
-  ViolationKind
-} from "./generated/graphql";
-import {
-  BundlesDocument,
-  ContributorsDocument,
-  FileContentDocument,
-  FolderContentDocument,
-  GoalsDocument,
-  PoliciesDocument,
-  RepoCommitsDocument,
-  RepoStructureDocument,
-  TicketsDocument
-} from "./queries";
 
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 
-type RepoEvent = {
+export type RepoEvent = {
   kind: string;
   data?: unknown;
   result?: unknown;
@@ -219,7 +204,7 @@ interface AutoFix {
 interface Violation {
   id: string;
   summary: string;
-  kind: ViolationKind;
+  kind: { id: string };
   scope: string;
   line?: number;
   column?: number;
@@ -269,12 +254,11 @@ interface GraphqlSection {
 // #region 🔖Globals
 
 let outputChannel: vscode.OutputChannel;
-let urqlClient: Client | null = null;
 let repoDiagnosticCollection: vscode.DiagnosticCollection;
 let kitDiagnosticCollection: vscode.DiagnosticCollection;
 const fileViolationsMap = new Map<string, Violation[]>();
-let bundleCache: Bundle[] = [];
-let cachedProjects: ProjectData[] | undefined = undefined;
+interface BundleInfo { id: string; root: string; }
+let bundleCache: BundleInfo[] = [];
 let cachedRepoBaseUrl: string | undefined = undefined;
 const runningProcesses = new Map<string, AbortController>();
 
@@ -440,101 +424,11 @@ export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> 
   return { data: lastResult };
 }
 
-function getUrqlClient(): Client | null {
-  if (urqlClient) return urqlClient;
-  const root = getWorkspaceRoot();
-  const command = getRepoCommand();
-  if (!root || !command) {
-    return null;
-  }
-
-  urqlClient = new Client({
-    url: "local://graphql",
-    exchanges: [cacheExchange, fetchExchange],
-    fetch: async (_input: RequestInfo | URL, init?: RequestInit) => {
-      try {
-        const body = init?.body ? JSON.parse(init.body as string) : {};
-        const query = (body.query as string) || "";
-        const variables = body.variables || {};
-        const variablesJson = JSON.stringify(variables);
-        const repoPath = getRepoCommand();
-        if (!repoPath) throw new Error("Repo command not found");
-        const repoArgs = ["--json", "graphql", query];
-        if (Object.keys(variables).length > 0) {
-          repoArgs.push("-v", variablesJson);
-        }
-        const { stdout, stderr } = await execFileAsync(repoPath, repoArgs, {
-          cwd: root,
-          timeout: 45000,
-          maxBuffer: 500 * 1024 * 1024,
-        });
-        if (!stdout.trim()) {
-          throw new Error("Empty output from repo command");
-        }
-        const events = parseRepoEvents(stdout);
-        const payload = extractRepoResult(events);
-        const responseBody = JSON.stringify(payload);
-        if (typeof Response !== "undefined") {
-          return new Response(responseBody, {
-            status: 200,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-        return {
-          status: 200,
-          ok: true,
-          headers: {
-            get: (name: string) => (name.toLowerCase() === "content-type" ? "application/json" : null),
-            has: (name: string) => name.toLowerCase() === "content-type",
-            forEach: (cb: any) => cb("application/json", "content-type"),
-          },
-          json: async () => payload,
-          text: async () => responseBody,
-        } as any;
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        const errorBody = JSON.stringify({ errors: [{ message: errorMessage }] });
-
-        if (typeof Response !== "undefined") {
-          return new Response(errorBody, {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-
-        return {
-          status: 500,
-          ok: false,
-          headers: {
-            get: (name: string) => (name.toLowerCase() === "content-type" ? "application/json" : null),
-            has: (name: string) => name.toLowerCase() === "content-type",
-            forEach: (cb: any) => cb("application/json", "content-type"),
-          },
-          json: async () => ({ errors: [{ message: errorMessage }] }),
-          text: async () => errorBody,
-        } as any;
-      }
-    },
-  });
-  return urqlClient;
-}
-
-function resetUrqlClient(): void {
-  urqlClient = null;
-}
-
-function isSectionNode(value: any): boolean {
-  if (!value || typeof value !== "object") return false;
-  if (value.__typename === "Section") return true;
-  if (typeof value.id === "string" && value.id.startsWith("section:")) return true;
-  return false;
-}
-
 // #endregion 🔖Utilities
 
 // #region 🔖URI Resolution
 
-interface TreeNodeData {
+export interface TreeNodeData {
   Kind: string;
   ID: string;
   Label: string;
@@ -545,23 +439,93 @@ interface TreeNodeData {
   Month?: number;
   Day?: number;
   Status?: string;
+  Contributor?: string;
+  Data?: Record<string, any>;
   Children?: TreeNodeData[];
 }
 
 let treeNodeCache: Map<string, TreeNodeData> | null = null;
+let treeRootCache: TreeNodeData | null = null;
 let treeNodeCacheTime = 0;
 const TREE_CACHE_TTL = 30000;
 
-export function bundleKindEmoji(kind: string): string {
-  switch (kind) {
-    case "schema": return "🛂";
-    case "binary": return "⌨";
-    case "ui": return "🖱";
-    case "site": return "🌐";
-    case "assets": return "🏪";
-    case "library": return "📚";
-    default: return "📚";
+export function extractLeadingEmoji(text: string): string {
+  const match = text.match(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}][\u{FE0E}\u{FE0F}\u{200D}\p{Emoji_Component}]*/u);
+  return match ? match[0] : "";
+}
+
+export function treeNodeDisplayLabel(node: TreeNodeData): string {
+  if (node.Kind === "category") return node.Label;
+  const emoji = extractLeadingEmoji(node.ID);
+  let statusIcon = "";
+  if (node.Status === "open") statusIcon = "🔵";
+  else if (node.Status === "closed") statusIcon = "🟢";
+  const fallbackEmojis: Record<string, string> = {
+    contributor: "👤", commit: "🔀", policy: "🛡", violationKind: "⚠",
+  };
+  const prefix = emoji || fallbackEmojis[node.Kind] || "";
+  return `${prefix}${statusIcon}${node.Label}`;
+}
+
+export function treeNodeContextValue(node: TreeNodeData): string {
+  if (node.Kind === "ticket") return node.Status === "open" ? "ticketOpen" : "ticketClosed";
+  return node.Kind;
+}
+
+export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined {
+  if (node.Kind === "category") return undefined;
+  if (node.URI) return { command: "semio.navigate", title: "Navigate", arguments: [node.URI] };
+  return undefined;
+}
+
+export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
+  const args: string[] = [];
+  if (!fp) return args;
+  const query = fp.searchQuery?.trim();
+  if (query) args.push(query);
+  const ff = fp.filters.file;
+  if (!ff.code) args.push("--no-code");
+  if (!ff.script) args.push("--no-script");
+  if (!ff.config) args.push("--no-config");
+  if (!ff.test) args.push("--no-test");
+  if (!ff.docs) args.push("--no-docs");
+  if (!ff.resource) args.push("--no-resource");
+  if (!ff.license) args.push("--no-license");
+  if (!fp.filters.section.all) {
+    args.push("--no-section", "--no-definition");
+  } else {
+    const df = fp.filters.definition;
+    if (!df.implementation) args.push("--no-implementation");
+    if (!df.interface) args.push("--no-interface");
+    if (!df.constant) args.push("--no-constant");
   }
+  const fo = fp.filters.folder;
+  if (!fo.organization && !fo.required) args.push("--no-folder");
+  else if (!fo.organization && fo.required) args.push("--only-required");
+  else if (fo.organization && !fo.required) args.push("--only-organization");
+  const bf = fp.filters.bundle;
+  if (!bf.library) args.push("--no-library");
+  if (!bf.schema) args.push("--no-schema");
+  if (!bf.binary) args.push("--no-binary");
+  if (!bf.ui) args.push("--no-client");
+  if (!bf.site) args.push("--no-site");
+  if (!bf.assets) args.push("--no-assets");
+  const gf = fp.filters.goal;
+  const tf = fp.filters.ticket;
+  if (!gf.open && !gf.closed) args.push("--no-goal");
+  if (!tf.open && !tf.closed) args.push("--no-ticket");
+  if (gf.open && !gf.closed && tf.open && !tf.closed) args.push("--only-open");
+  else if (!gf.open && gf.closed && !tf.open && tf.closed) args.push("--only-closed");
+  for (const year of fp.excludedYears) args.push("--no-year", String(year));
+  for (const month of fp.excludedMonths) args.push("--no-month", String(month));
+  for (const day of fp.excludedDays) args.push("--no-day", String(day));
+  if (Object.values(ff).every(v => !v)) args.push("--no-file");
+  if (!fp.filters.policy.all) args.push("--no-policy");
+  if (!fp.filters.contributor.all) args.push("--no-contributor");
+  if (!fp.filters.commit.all) args.push("--no-commit");
+  const pf = fp.filters.project;
+  if (!pf.user && !pf.infrastructure && !pf.research) args.push("--no-project");
+  return args;
 }
 
 export function slugify(text: string): string {
@@ -597,6 +561,7 @@ async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
       const cache = new Map<string, TreeNodeData>();
       flattenTree(tree, cache);
       treeNodeCache = cache;
+      treeRootCache = tree;
       treeNodeCacheTime = now;
       return cache;
     }
@@ -606,8 +571,31 @@ async function getTreeNodeCache(): Promise<Map<string, TreeNodeData>> {
   return treeNodeCache ?? new Map();
 }
 
+async function getTreeRoot(): Promise<TreeNodeData | null> {
+  await getTreeNodeCache();
+  return treeRootCache;
+}
+
+async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | null> {
+  const root = getWorkspaceRoot();
+  const command = getRepoCommand();
+  if (!root || !command) return null;
+  try {
+    const fullArgs = ["--json", "tree", ...args];
+    const { stdout } = await execFileAsync(command, fullArgs, { cwd: root, timeout: 60000, maxBuffer: 50 * 1024 * 1024 });
+    if (!stdout.trim()) return null;
+    const events = parseRepoEvents(stdout);
+    const result = extractRepoResult(events);
+    return result.data as TreeNodeData | null;
+  } catch (error) {
+    logError("[fetchTreeWithArgs] error:", error);
+    return null;
+  }
+}
+
 export function invalidateTreeNodeCache(): void {
   treeNodeCache = null;
+  treeRootCache = null;
   treeNodeCacheTime = 0;
 }
 
@@ -663,32 +651,26 @@ async function navigateToUri(uri: string): Promise<void> {
       if (!node) break;
 
       switch (node.Kind) {
-        case "project":
+        case "project": {
+          const name = node.Data?.name || node.Label;
+          const abs = path.join(wsRoot, name);
+          if (fs.existsSync(abs)) {
+            return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+          }
+          break;
+        }
         case "bundle": {
-          const repo = await fetchRepoStructureViaGraphQL();
-          if (repo) {
-            if (node.Kind === "project") {
-              const proj = repo.projects?.find((p: any) => p.uri === uri || slugify(p.name) === slugify(node.Label));
-              if (proj) {
-                const abs = path.join(wsRoot, proj.root);
-                if (fs.existsSync(abs)) {
-                  return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
-                }
-              }
-            } else {
-              const bundle = repo.bundles?.find((b: any) => b.uri === uri || slugify(b.name) === slugify(node.Label));
-              if (bundle) {
-                const abs = path.join(wsRoot, bundle.root);
-                if (fs.existsSync(abs)) {
-                  return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
-                }
-              }
+          const root = node.Data?.root;
+          if (root) {
+            const abs = path.join(wsRoot, root);
+            if (fs.existsSync(abs)) {
+              return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
             }
           }
           break;
         }
         case "folder": {
-          const folderPath = node.ID.replace(/^folder:/, "");
+          const folderPath = node.Data?.path || node.Label;
           const abs = path.join(wsRoot, folderPath);
           if (fs.existsSync(abs)) {
             return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
@@ -696,7 +678,7 @@ async function navigateToUri(uri: string): Promise<void> {
           break;
         }
         case "file": {
-          const filePath = node.ID.replace(/^file:/, "");
+          const filePath = node.Data?.path || node.Label;
           return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
         }
         case "section": {
@@ -711,8 +693,8 @@ async function navigateToUri(uri: string): Promise<void> {
                 const { stdout } = await execAsync(`"${binaryPath}" --json section list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
                 const events = parseRepoEvents(stdout);
                 for (const event of events) {
-                  if (event.kind === "result" && (event as any).data?.section) {
-                    const section = (event as any).data.section;
+                  const section = (event as any).section;
+                  if (section) {
                     if (findSectionByPath(section, sectionPath)) {
                       const found = findSectionByPath(section, sectionPath)!;
                       return openFileAtLine(filePath, found.startLine, found.endLine);
@@ -738,11 +720,9 @@ async function navigateToUri(uri: string): Promise<void> {
                 const { stdout } = await execAsync(`"${binaryPath}" --json definition list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
                 const events = parseRepoEvents(stdout);
                 for (const event of events) {
-                  if (event.kind === "result" && (event as any).data?.definition) {
-                    const def = (event as any).data.definition;
-                    if (def.name === node.Label && def.startLine) {
-                      return openFileAtLine(filePath, def.startLine, def.endLine);
-                    }
+                  const def = (event as any).definition;
+                  if (def && def.name === node.Label && def.startLine) {
+                    return openFileAtLine(filePath, def.startLine, def.endLine);
                   }
                 }
               } catch { /* fall through */ }
@@ -780,71 +760,6 @@ function findSectionByPath(section: any, sectionPath: string): any | null {
 
 // #endregion 🔖URI Resolution
 
-// #region 🔖Data Fetching
-
-async function queryGraphQL<T>(doc: TypedDocumentNode<any, any>, vars: Record<string, unknown>, extract: (data: any) => T, fallback: T): Promise<T> {
-  const client = getUrqlClient();
-  if (!client) return fallback;
-  const result = await client.query(doc, vars).toPromise();
-  if (result.error) {
-    logError("[GraphQL] error:", result.error);
-    return fallback;
-  }
-  return extract(result.data) ?? fallback;
-}
-
-async function fetchRepoStructureViaGraphQL(): Promise<Repo | null> {
-  return queryGraphQL(RepoStructureDocument as TypedDocumentNode<any, any>, {}, d => d?.repo as unknown as Repo, null);
-}
-
-async function fetchBundlesViaGraphQL(): Promise<Bundle[]> {
-  return queryGraphQL(BundlesDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.bundles, []);
-}
-
-async function fetchFolderContent(folderPath: string): Promise<any | null> {
-  return queryGraphQL(FolderContentDocument as TypedDocumentNode<any, any>, { path: folderPath }, d => d?.folder, null);
-}
-
-async function fetchTicketsViaGraphQL(year?: number, month?: number, day?: number, status?: TicketStatus): Promise<Ticket[]> {
-  return queryGraphQL(TicketsDocument as TypedDocumentNode<any, any>, { year, month, day, status }, d => d?.repo?.tickets, []);
-}
-
-async function fetchContributorsViaGraphQL(): Promise<Contributor[]> {
-  return queryGraphQL(ContributorsDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.contributors, []);
-}
-
-async function fetchPoliciesViaGraphQL(): Promise<Policy[]> {
-  return queryGraphQL(PoliciesDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.policies, []);
-}
-
-async function fetchGoalsViaGraphQL(): Promise<any[]> {
-  return queryGraphQL(GoalsDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.goals, []);
-}
-
-async function getProjectList(): Promise<ProjectData[]> {
-  if (cachedProjects) return cachedProjects;
-  if (!hasRepoAccess()) return [];
-  const repo = await fetchRepoStructureViaGraphQL();
-  if (repo && repo.bundles) {
-    cachedProjects = repo.bundles.map((b) => ({
-      name: b.id,
-      kind: (b as any).kind ?? undefined,
-      root: b.root,
-      projectType: b.projectType ?? undefined,
-      tags: b.tags,
-    }));
-    bundleCache = repo.bundles;
-    return cachedProjects;
-  }
-  return [];
-}
-
-async function fetchCommitsViaGraphQL(): Promise<any[]> {
-  return queryGraphQL(RepoCommitsDocument as TypedDocumentNode<any, any>, {}, d => d?.repo?.commits, []);
-}
-
-// #endregion 🔖Data Fetching
-
 // #region 🔖Helpers
 
 function extractFilePathFromScope(scope: string): string | undefined {
@@ -853,7 +768,7 @@ function extractFilePathFromScope(scope: string): string | undefined {
     cleanScope = cleanScope.replace("@semio/violations/", "");
   }
 
-  let bestBundle: Bundle | undefined;
+  let bestBundle: BundleInfo | undefined;
   for (const b of bundleCache) {
     if (cleanScope.startsWith(b.id + "/")) {
       if (!bestBundle || b.id.length > bestBundle.id.length) {
@@ -890,15 +805,7 @@ function extractFilePathFromScope(scope: string): string | undefined {
   return undefined;
 }
 
-function resolveTicketData(
-  ticket?: TicketData | ContributorTicketData | { ticket: TicketData | ContributorTicketData } | undefined,
-): TicketData | ContributorTicketData | undefined {
-  if (!ticket) return undefined;
-  if ("ticket" in ticket) return ticket.ticket;
-  return ticket;
-}
-
-function resolveTicketPath(ticket: TicketData | ContributorTicketData): string | undefined {
+function resolveTicketPath(ticket: { year: number; month: number; day: number; slug: string; filePath?: string }): string | undefined {
   if (ticket.filePath) return ticket.filePath;
   const root = getWorkspaceRoot();
   if (!root) return undefined;
@@ -925,26 +832,22 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
   editor.revealRange(range, vscode.TextEditorRevealType.InCenter);
 }
 
-export function getFileKindIcon(name: string): string {
-  if (name.endsWith(".ts") || name.endsWith(".tsx") || name.endsWith(".js") || name.endsWith(".jsx")) return "📄";
-  if (name.endsWith(".py")) return "🐍";
-  if (name.endsWith(".go")) return "🔷";
-  if (name.endsWith(".cs")) return "🟣";
-  if (name.endsWith(".json") || name.endsWith(".yaml") || name.endsWith(".toml")) return "⚙";
-  if (name.endsWith(".md") || name.endsWith(".txt")) return "📝";
-  if (name.endsWith(".sh") || name.endsWith(".ps1")) return "🖥";
-  return "📄";
-}
-
 // #endregion 🔖Helpers
 
 // #region 🔖File Analysis & Diagnostics
 
 async function updateBundleCache() {
-  const bundles = await fetchBundlesViaGraphQL();
-  if (bundles.length > 0) {
-    bundleCache = bundles;
+  const root = await getTreeRoot();
+  if (!root) return;
+  const bundles: BundleInfo[] = [];
+  function walk(node: TreeNodeData) {
+    if (node.Kind === "bundle" && node.Data) {
+      bundles.push({ id: node.Data.name || node.Label, root: node.Data.root || "" });
+    }
+    for (const child of node.Children || []) walk(child);
   }
+  walk(root);
+  if (bundles.length > 0) bundleCache = bundles;
 }
 
 const ignoredDirectories = new Set([
@@ -1174,15 +1077,15 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
     if (!element) {
       return [
         this.createSearchItem(),
-        this.createFilterItem("🏗Projects", "filter_project", "Projects filter"),
+        this.createFilterItem("🏗️Projects", "filter_project", "Projects filter"),
         this.createFilterItem("📦Bundles", "filter_bundle", "Bundles filter"),
         this.createFilterItem("📂Folders", "filter_folder", "Folders filter"),
         this.createFilterItem("📄Files", "filter_file", "Files filter"),
         this.createFilterItem("🔖Sections", "filter_section", "Sections filter"),
         this.createFilterItem("🏷Definitions", "filter_definition", "Definitions filter"),
         this.createFilterItem("🎯Goals", "filter_goal", "Goals filter"),
-        this.createFilterItem("📅Tickets", "filter_ticket", "Tickets filter"),
-        this.createFilterItem("📅Dates", "filter_time", "Dates filter", vscode.TreeItemCollapsibleState.Collapsed),
+        this.createFilterItem("🎫Tickets", "filter_ticket", "Tickets filter"),
+        this.createFilterItem("🎫Dates", "filter_time", "Dates filter", vscode.TreeItemCollapsibleState.Collapsed),
         this.createFilterItem("🛡Policies", "filter_policy", "Policies filter"),
         this.createFilterItem("👤Contributors", "filter_contributor", "Contributors filter"),
         this.createFilterItem("🔄Commits", "filter_commit", "Commits filter"),
@@ -1329,72 +1232,27 @@ export class MonorepoTreeItem extends vscode.TreeItem {
   }
 }
 
+function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
+  const label = treeNodeDisplayLabel(node);
+  const hasChildren = (node.Children && node.Children.length > 0);
+  const collapsible = hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
+  const ctx = treeNodeContextValue(node);
+  const item = new MonorepoTreeItem(label, collapsible, ctx, node, node.ID || undefined);
+  item.command = treeNodeCommand(node);
+  if (node.Description) item.tooltip = node.Description;
+  if (node.Kind === "commit" && node.Data?.sha) item.description = node.Data.sha.substring(0, 7);
+  if (node.Kind === "violationKind") {
+    item.description = node.Data?.autofixable ? "🔧" : "";
+    if (node.Description) item.tooltip = node.Description;
+  }
+  return item;
+}
+
 export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<MonorepoTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
   constructor(public filterProvider?: FilterTreeDataProvider) { }
-
-  matchesSearch(text: string): boolean {
-    const fp = this.filterProvider;
-    if (!fp) return true;
-    const query = fp.searchQuery || "";
-    if (!query.trim()) return true;
-
-    const target = fp.matchCase ? text : text.toLowerCase();
-    const raw = fp.matchCase ? query : query.toLowerCase();
-
-    if (fp.useRegex) {
-      try {
-        return new RegExp(query, fp.matchCase ? "" : "i").test(text);
-      } catch {
-        return true;
-      }
-    }
-
-    if (fp.matchWholeWord) {
-      const escaped = raw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      return new RegExp(`\\b${escaped}\\b`, fp.matchCase ? "" : "i").test(text);
-    }
-
-    return target.includes(raw);
-  }
-
-  passesTicketFilter(t: any): boolean {
-    if (!this.filterProvider) return true;
-    if (t.status === "OPEN" && !this.filterProvider.filters.ticket.open) return false;
-    if (t.status === "CLOSED" && !this.filterProvider.filters.ticket.closed) return false;
-    if (this.filterProvider.excludedYears.includes(t.year)) return false;
-    if (this.filterProvider.excludedMonths.includes(t.month)) return false;
-    if (this.filterProvider.excludedDays.includes(t.day)) return false;
-    return true;
-  }
-
-  buildTicketItem(t: any): MonorepoTreeItem {
-    const statusIcon = t.status === "OPEN" ? "🔵" : "🟢";
-    const ticketId = `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`;
-    const item = new MonorepoTreeItem(`📅${statusIcon}${t.slug}`, vscode.TreeItemCollapsibleState.None, "ticket", t, ticketId);
-    item.command = { command: "semio.ticketOpen", title: "Open", arguments: [t] };
-    return item;
-  }
-
-  private buildFolderItems(content: any): MonorepoTreeItem[] {
-    const items: MonorepoTreeItem[] = [];
-    for (const c of content.children || []) {
-      if (!this.matchesSearch(c.name)) continue;
-      const item = new MonorepoTreeItem(`📂${c.name}`, vscode.TreeItemCollapsibleState.Collapsed, "folder", c, c.path);
-      item.command = { command: "semio.navigateToFolder", title: "Open", arguments: [c.path] };
-      items.push(item);
-    }
-    for (const f of content.files || []) {
-      if (!this.matchesSearch(f.name)) continue;
-      const kindIcon = getFileKindIcon(f.name);
-      const item = new MonorepoTreeItem(`${kindIcon}${f.name}`, vscode.TreeItemCollapsibleState.Collapsed, "file", f, f.path);
-      item.command = { command: "semio.navigateToFile", title: "Open", arguments: [f.path] };
-      items.push(item);
-    }
-    return items;
-  }
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
@@ -1410,297 +1268,14 @@ export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<Monorep
 
   async getChildren(element?: MonorepoTreeItem): Promise<MonorepoTreeItem[]> {
     if (!element) {
-      return [
-        new MonorepoTreeItem("🏗Projects", vscode.TreeItemCollapsibleState.Collapsed, "root_projects", undefined, "🏗Projects"),
-        new MonorepoTreeItem("🎯Goals", vscode.TreeItemCollapsibleState.Collapsed, "root_goals", undefined, "🎯Goals"),
-        new MonorepoTreeItem("📅Tickets", vscode.TreeItemCollapsibleState.Collapsed, "root_tickets", undefined, "📅Tickets"),
-        new MonorepoTreeItem("🛡Policies", vscode.TreeItemCollapsibleState.Collapsed, "root_policies", undefined, "🛡Policies"),
-        new MonorepoTreeItem("👤Contributors", vscode.TreeItemCollapsibleState.Collapsed, "root_contributors", undefined, "👤Contributors"),
-        new MonorepoTreeItem("🔀Commits", vscode.TreeItemCollapsibleState.Collapsed, "root_commits", undefined, "🔀Commits"),
-      ];
+      const args = buildCliTreeArgs(this.filterProvider);
+      const tree = await fetchTreeWithArgs(args);
+      if (!tree?.Children) return [];
+      return tree.Children.map(treeNodeToItem);
     }
-
-    const client = getUrqlClient();
-    if (!client) return [];
-
-    if (element.contextValue === "root_projects") {
-      const repo = await fetchRepoStructureViaGraphQL();
-      const projects = repo?.projects || [];
-      return projects
-        .filter((p: any) => this.matchesSearch(p.name))
-        .map((p: any) => {
-          const kindIcon = p.kind || "🏗";
-          const item = new MonorepoTreeItem(`${kindIcon}${p.name}`, vscode.TreeItemCollapsibleState.Collapsed, "project", p, `${kindIcon}${p.id}`);
-          item.command = { command: "semio.navigateToFolder", title: "Open", arguments: [p.root] };
-          return item;
-        });
-    }
-
-    if (element.contextValue === "project") {
-      const project = element.data;
-      return (project.bundles || [])
-        .filter((b: any) => this.matchesSearch(b.name))
-        .map((b: any) => {
-          const kindIcon = bundleKindEmoji(b.kind);
-          const shortName = b.name.includes("/") ? b.name.split("/").pop()! : b.name;
-          const item = new MonorepoTreeItem(`${kindIcon}${shortName}`, vscode.TreeItemCollapsibleState.Collapsed, "bundle", b, `${kindIcon}${b.id}`);
-          item.command = { command: "semio.navigateToBundle", title: "Open", arguments: [b.root] };
-          return item;
-        });
-    }
-
-    if (element.contextValue === "bundle" || element.contextValue === "folder") {
-      const folderPath = element.contextValue === "bundle" ? element.data.root : element.data.path;
-      const content = await fetchFolderContent(folderPath);
-      return content ? this.buildFolderItems(content) : [];
-    }
-
-    if (element.contextValue === "file") {
-      const file = element.data;
-      const res = await client.query(FileContentDocument as TypedDocumentNode<any, any>, { path: file.path }).toPromise();
-      const fileData = res.data?.file;
-      if (!fileData) return [];
-      const items: MonorepoTreeItem[] = [];
-      if (this.filterProvider?.filters.section.all) {
-        const sections = fileData.sections || [];
-        for (const s of sections) {
-          if (!this.matchesSearch(s.name)) continue;
-          const hasChildren = (s.children && s.children.length > 0);
-          const hasDefs = (fileData.definitions || []).some((d: any) => d.section?.id === s.id);
-          const collapsible = (hasChildren || hasDefs) ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
-          const payload = { filePath: file.path, section: s, definitions: fileData.definitions || [] };
-          const item = new MonorepoTreeItem(`🔖${s.name}`, collapsible, "section", payload, `${file.path}#${s.name}`);
-          item.command = { command: "semio.navigateToSection", title: "Open", arguments: [payload] };
-          items.push(item);
-        }
-      }
-      return items;
-    }
-
-    if (element.contextValue === "section") {
-      const payload = element.data as { filePath: string; section: any; definitions: any[] };
-      const section = payload.section;
-      const items: MonorepoTreeItem[] = [];
-      const children = (section.children || []).filter((child: any) => isSectionNode(child));
-      for (const child of children) {
-        if (!this.matchesSearch(child.name)) continue;
-        const hasGrandChildren = (child.children || []).some((grandChild: any) => isSectionNode(grandChild));
-        const hasDefs = (payload.definitions || []).some((d: any) => d.section?.id === child.id);
-        const collapsible = (hasGrandChildren || hasDefs) ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;
-        const childPayload = { filePath: payload.filePath, section: child, definitions: payload.definitions };
-        const item = new MonorepoTreeItem(`🔖${child.name}`, collapsible, "section", childPayload, `${payload.filePath}#${child.name}`);
-        item.command = { command: "semio.navigateToSection", title: "Open", arguments: [childPayload] };
-        items.push(item);
-      }
-      const defs = (payload.definitions || []).filter((d: any) => d.section?.id === section.id);
-      const filteredDefs = defs.filter((d: any) => {
-        if (!this.matchesSearch(d.name)) return false;
-        if (!this.filterProvider) return true;
-        if (d.kind === "IMPLEMENTATION" && !this.filterProvider.filters.definition.implementation) return false;
-        if (d.kind === "INTERFACE" && !this.filterProvider.filters.definition.interface) return false;
-        if (d.kind === "CONSTANT" && !this.filterProvider.filters.definition.constant) return false;
-        return true;
-      });
-      for (const d of filteredDefs) {
-        const kindIcon = d.kind === "IMPLEMENTATION" ? "🛠" : d.kind === "INTERFACE" ? "✂" : "🪨";
-        const data = { filePath: payload.filePath, definition: d };
-        const item = new MonorepoTreeItem(`${kindIcon}${d.name}`, vscode.TreeItemCollapsibleState.None, "definition", data, `${payload.filePath}§${d.name}`);
-        item.command = { command: "semio.navigateToDefinition", title: "Open", arguments: [data] };
-        items.push(item);
-      }
-      return items;
-    }
-
-    if (element.contextValue === "root_goals") {
-      const goals = await fetchGoalsViaGraphQL();
-      return goals
-        .filter((g: any) => !g.id.includes("/"))
-        .filter((g: any) => this.matchesSearch(g.title || g.id))
-        .map((g: any) => {
-          const item = new MonorepoTreeItem(`🎯${g.title || g.id}`, vscode.TreeItemCollapsibleState.Collapsed, "goal", g, g.id);
-          item.command = { command: "semio.navigate", title: "Open", arguments: [`semiorepo://goal/${g.id}`] };
-          return item;
-        });
-    }
-
-    if (element.contextValue === "goal") {
-      const goal = element.data;
-      const goalId = goal.id;
-      const allGoals = await fetchGoalsViaGraphQL();
-      const subgoals = allGoals
-        .filter((g: any) => g.id.startsWith(goalId + "/") && g.id.split("/").length === goalId.split("/").length + 1)
-        .filter((g: any) => this.matchesSearch(g.title || g.id));
-      const subgoalItems = subgoals.map((g: any) => {
-        const item = new MonorepoTreeItem(`🎯${g.title || g.id}`, vscode.TreeItemCollapsibleState.Collapsed, "goal", g, g.id);
-        item.command = { command: "semio.navigate", title: "Open", arguments: [`semiorepo://goal/${g.id}`] };
-        return item;
-      });
-      const goalTickets = await fetchTicketsViaGraphQL();
-      const ticketItems = goalTickets
-        .filter((t: any) => t.goal === goalId)
-        .filter((t: any) => this.passesTicketFilter(t))
-        .filter((t: any) => this.matchesSearch(t.slug))
-        .map((t: any) => this.buildTicketItem(t));
-      return [...subgoalItems, ...ticketItems];
-    }
-
-    if (element.contextValue === "root_tickets") {
-      const tickets = await fetchTicketsViaGraphQL();
-      const filteredTickets = tickets.filter((t: any) => this.passesTicketFilter(t));
-      const years = [...new Set(filteredTickets.map((t: any) => t.year))].sort((a: any, b: any) => b - a);
-      return years
-        .filter((y: any) => this.matchesSearch(String(y)))
-        .map((y: any) => new MonorepoTreeItem(String(y), vscode.TreeItemCollapsibleState.Collapsed, "ticket_year", y, String(y)));
-    }
-
-    if (element.contextValue === "ticket_year") {
-      const year = element.data;
-      const tickets = await fetchTicketsViaGraphQL(year);
-      const filteredTickets = tickets.filter((t: any) => this.passesTicketFilter(t));
-      const months = [...new Set(filteredTickets.map((t: any) => t.month))].sort((a: any, b: any) => b - a);
-      return months
-        .filter((m: any) => this.matchesSearch(String(m).padStart(2, "0")))
-        .map((m: any) => new MonorepoTreeItem(String(m).padStart(2, "0"), vscode.TreeItemCollapsibleState.Collapsed, "ticket_month", { year, month: m }, `${year}/${String(m).padStart(2, "0")}`));
-    }
-
-    if (element.contextValue === "ticket_month") {
-      const { year, month } = element.data;
-      const tickets = await fetchTicketsViaGraphQL(year, month);
-      const filteredTickets = tickets.filter((t: any) => this.passesTicketFilter(t));
-      const days = [...new Set(filteredTickets.map((t: any) => t.day))].sort((a: any, b: any) => b - a);
-      return days
-        .filter((d: any) => this.matchesSearch(String(d).padStart(2, "0")))
-        .map((d: any) => new MonorepoTreeItem(String(d).padStart(2, "0"), vscode.TreeItemCollapsibleState.Collapsed, "ticket_day", { year, month, day: d }, `${year}/${String(month).padStart(2, "0")}/${String(d).padStart(2, "0")}`));
-    }
-
-    if (element.contextValue === "ticket_day") {
-      const { year, month, day } = element.data;
-      const tickets = await fetchTicketsViaGraphQL(year, month, day);
-      return tickets
-        .filter((t: any) => this.passesTicketFilter(t))
-        .filter((t: any) => this.matchesSearch(t.slug))
-        .map((t: any) => this.buildTicketItem(t));
-    }
-
-    if (element.contextValue === "root_policies") {
-      const policies = await fetchPoliciesViaGraphQL();
-      return policies
-        .filter((p: any) => this.matchesSearch(p.name))
-        .map((p: any) => new MonorepoTreeItem(`🛡${p.name}`, vscode.TreeItemCollapsibleState.Collapsed, "policy", p, p.id));
-    }
-
-    if (element.contextValue === "policy") {
-      const policy = element.data;
-      return (policy.violationKinds || [])
-        .filter((v: any) => this.matchesSearch(v.id))
-        .map((v: any) => {
-          const priorityIcon = v.priority === "HIGH" ? "🔴" : v.priority === "MEDIUM" ? "🟡" : "🟢";
-          const item = new MonorepoTreeItem(`${priorityIcon}${v.id}`, vscode.TreeItemCollapsibleState.None, "violation", v, v.id);
-          item.description = v.autofixable ? "🔧" : "";
-          item.tooltip = `${v.reason}\n${v.solution}`;
-          return item;
-        });
-    }
-
-    if (element.contextValue === "root_contributors") {
-      const contributors = await fetchContributorsViaGraphQL();
-      return contributors
-        .filter((c: any) => this.matchesSearch(c.name || c.github))
-        .map((c: any) => new MonorepoTreeItem(`👤${c.name || c.github}`, vscode.TreeItemCollapsibleState.Collapsed, "contributor", c, c.id || c.github));
-    }
-
-    if (element.contextValue === "contributor") {
-      const contributor = element.data;
-      const items: MonorepoTreeItem[] = [];
-      if (contributor.emails && contributor.emails.length > 0) {
-        items.push(new MonorepoTreeItem("Emails", vscode.TreeItemCollapsibleState.Collapsed, "contributor_emails_group", contributor.emails));
-      }
-      if (contributor.links && contributor.links.length > 0) {
-        items.push(new MonorepoTreeItem("Links", vscode.TreeItemCollapsibleState.Collapsed, "contributor_links_group", contributor.links));
-      }
-      items.push(new MonorepoTreeItem("Contributions", vscode.TreeItemCollapsibleState.None, "contributor_contributions", contributor));
-      return items;
-    }
-
-    if (element.contextValue === "contributor_emails_group") {
-      const emails = element.data as string[];
-      return emails.map((email: string) => {
-        const item = new MonorepoTreeItem(email, vscode.TreeItemCollapsibleState.None, "contributor_email", email, email);
-        item.command = { command: "semio.mailto", title: "Send Email", arguments: [email] };
-        return item;
-      });
-    }
-
-    if (element.contextValue === "contributor_links_group") {
-      const links = element.data as { name: string; url: string }[];
-      return links.map((link: { name: string; url: string }) => {
-        const item = new MonorepoTreeItem(link.name, vscode.TreeItemCollapsibleState.None, "contributor_link", link, link.url);
-        item.command = { command: "semio.openLink", title: "Open Link", arguments: [link.url] };
-        item.description = link.url;
-        return item;
-      });
-    }
-
-    if (element.contextValue === "root_commits") {
-      const commits = await fetchCommitsViaGraphQL();
-      return commits
-        .filter((c: any) => this.matchesSearch(c.title || c.sha))
-        .map((c: any) => {
-          const title = c.title || c.sha.substring(0, 7);
-          const item = new MonorepoTreeItem(title, vscode.TreeItemCollapsibleState.Collapsed, "commit", c, c.sha);
-          item.description = c.sha.substring(0, 7);
-          return item;
-        });
-    }
-
-    if (element.contextValue === "commit") {
-      const commit = element.data;
-      return [
-        new MonorepoTreeItem("Tickets", vscode.TreeItemCollapsibleState.Collapsed, "commit_tickets", commit.sha),
-        new MonorepoTreeItem("Goals", vscode.TreeItemCollapsibleState.Collapsed, "commit_goals", commit.sha)
-      ];
-    }
-
-    if (element.contextValue === "commit_tickets") {
-      const sha = element.data;
-      const tickets = await fetchTicketsViaGraphQL();
-      const commitTickets = tickets
-        .filter((t: any) => t.commit === sha)
-        .filter((t: any) => this.passesTicketFilter(t));
-      const goals = [...new Set(commitTickets.map((t: any) => t.goal).filter((g: any) => !!g))];
-      const items: MonorepoTreeItem[] = goals
-        .filter((g: any) => this.matchesSearch(g))
-        .map((g: any) => new MonorepoTreeItem(`🎯${g}`, vscode.TreeItemCollapsibleState.Collapsed, "commit_ticket_goal", { goal: g, tickets: commitTickets.filter((t: any) => t.goal === g) }, g));
-      const noGoalTickets = commitTickets.filter((t: any) => !t.goal);
-      for (const t of noGoalTickets) {
-        if (!this.matchesSearch(t.slug)) continue;
-        items.push(this.buildTicketItem(t));
-      }
-      return items;
-    }
-
-    if (element.contextValue === "commit_ticket_goal") {
-      const { tickets } = element.data;
-      return tickets
-        .filter((t: any) => this.matchesSearch(t.slug))
-        .map((t: any) => this.buildTicketItem(t));
-    }
-
-    if (element.contextValue === "commit_goals") {
-      const sha = element.data;
-      const allTickets = await fetchTicketsViaGraphQL();
-      const tickets = allTickets.filter((t: any) => t.commit === sha);
-      const goalIds = [...new Set(tickets.map((t: any) => t.goal).filter((g: any) => !!g))];
-      return goalIds
-        .filter((g: any) => this.matchesSearch(g))
-        .map((g: any) => {
-          const item = new MonorepoTreeItem(`🎯${g}`, vscode.TreeItemCollapsibleState.None, "goal", { id: g }, g);
-          item.command = { command: "semio.navigate", title: "Open", arguments: [`semiorepo://goal/${g}`] };
-          return item;
-        });
-    }
-
-    return [];
+    const node = element.data as TreeNodeData;
+    if (!node?.Children) return [];
+    return node.Children.map(treeNodeToItem);
   }
 
 }
@@ -1775,8 +1350,6 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
       if (!binaryPath) return [];
 
       try {
-        // Use JSON format which returns Events
-        // The output contains multiple JSON objects (one per line)
         const output = await execShell(`"${binaryPath}" section list --file "${filePath}" --json`, root);
 
         const sections: SectionInfo[] = [];
@@ -1784,9 +1357,9 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
         for (const line of lines) {
           if (!line.trim()) continue;
           try {
-            const event = JSON.parse(line);
-            if (event.kind === "result" && event.data && event.data.section) {
-              sections.push(event.data.section);
+            const parsed = JSON.parse(line);
+            if (parsed.section) {
+              sections.push(parsed.section);
             }
           } catch (e) {
             // Ignore parse errors
@@ -1980,18 +1553,29 @@ function registerCommands(context: vscode.ExtensionContext): void {
     }
   });
 
-  register("semio.ticketOpen", (ticket: any) => {
-    const t = resolveTicketData(ticket);
-    if (!t) return;
+  register("semio.ticketOpen", (item: MonorepoTreeItem) => {
+    const node = item?.data as TreeNodeData | undefined;
+    if (!node) return;
+    const year = node.Year ?? node.Data?.year;
+    const month = node.Month ?? node.Data?.month;
+    const day = node.Day ?? node.Data?.day;
+    const slug = node.Data?.slug ?? node.Label;
+    if (!year || !month || !day || !slug) return;
+    const t = { year, month, day, slug, filePath: undefined as string | undefined };
     const p = resolveTicketPath(t);
     if (!p) return;
     return vscode.commands.executeCommand("semio.navigateToFile", p);
   });
 
   register("semio.ticketClose", (item: MonorepoTreeItem) => {
-    const t = item?.data;
-    if (!t) return;
-    const ticketId = `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`;
+    const node = item?.data as TreeNodeData | undefined;
+    if (!node) return;
+    const year = node.Year ?? node.Data?.year;
+    const month = node.Month ?? node.Data?.month;
+    const day = node.Day ?? node.Data?.day;
+    const slug = node.Data?.slug ?? node.Label;
+    if (!year || !month || !day || !slug) return;
+    const ticketId = `${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${slug}`;
     return vscode.window.showInformationMessage(`Close ticket: ${ticketId}?`, "Yes", "No").then(answer => {
       if (answer === "Yes") {
         const binaryPath = getRepoBinaryPath();
@@ -2004,9 +1588,14 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   register("semio.ticketReopen", (item: MonorepoTreeItem) => {
-    const t = item?.data;
-    if (!t) return;
-    const ticketId = `${t.year}/${String(t.month).padStart(2, "0")}/${String(t.day).padStart(2, "0")}/${t.slug}`;
+    const node = item?.data as TreeNodeData | undefined;
+    if (!node) return;
+    const year = node.Year ?? node.Data?.year;
+    const month = node.Month ?? node.Data?.month;
+    const day = node.Day ?? node.Data?.day;
+    const slug = node.Data?.slug ?? node.Label;
+    if (!year || !month || !day || !slug) return;
+    const ticketId = `${year}/${String(month).padStart(2, "0")}/${String(day).padStart(2, "0")}/${slug}`;
     return vscode.window.showInputBox({ prompt: "Reopen prompt" }).then(prompt => {
       if (!prompt) return;
       const binaryPath = getRepoBinaryPath();
@@ -2018,7 +1607,8 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   register("semio.copyCommitSha", (item: MonorepoTreeItem) => {
-    const sha = item?.data?.sha;
+    const node = item?.data as TreeNodeData | undefined;
+    const sha = node?.Data?.sha;
     if (sha) {
       vscode.env.clipboard.writeText(sha);
       vscode.window.showInformationMessage(`Copied SHA: ${sha.substring(0, 7)}`);
@@ -2026,17 +1616,19 @@ function registerCommands(context: vscode.ExtensionContext): void {
   });
 
   register("semio.openCommitInGitHub", (item: MonorepoTreeItem) => {
-    const sha = item?.data?.sha;
+    const node = item?.data as TreeNodeData | undefined;
+    const sha = node?.Data?.sha;
     if (sha) vscode.env.openExternal(vscode.Uri.parse(`https://github.com/usalu/semio/commit/${sha}`));
   });
 
   register("semio.policyCheck", (item: MonorepoTreeItem) => {
-    const policy = item?.data;
-    if (!policy) return;
+    const node = item?.data as TreeNodeData | undefined;
+    const policyId = node?.Data?.id || node?.Label;
+    if (!policyId) return;
     const binaryPath = getRepoBinaryPath();
     if (!binaryPath) return;
     const cp = require("child_process");
-    cp.execSync(`${binaryPath} policy check ${policy.id}`, { cwd: getWorkspaceRoot() });
+    cp.execSync(`${binaryPath} policy check ${policyId}`, { cwd: getWorkspaceRoot() });
   });
 
   const contributedCommands: string[] = [
@@ -2070,21 +1662,23 @@ async function loadAvailableFilterValues(): Promise<void> {
   const policies = new Set<string>();
   const violations = new Set<string>();
 
-  const tickets = await fetchTicketsViaGraphQL();
-  tickets.forEach(t => {
-    years.add(t.year);
-    months.add(t.month);
-    days.add(t.day);
-  });
-
-  const contribs = await fetchContributorsViaGraphQL();
-  contribs.forEach(c => contributors.add(c.name || c.github));
-
-  const pols = await fetchPoliciesViaGraphQL();
-  pols.forEach(p => {
-    policies.add(p.id);
-    p.violationKinds.forEach(v => violations.add(v.id));
-  });
+  const tree = await getTreeRoot();
+  if (tree?.Children) {
+    const walk = (nodes: TreeNodeData[]) => {
+      for (const n of nodes) {
+        if (n.Kind === "ticket") {
+          if (n.Year) years.add(n.Year);
+          if (n.Month) months.add(n.Month);
+          if (n.Day) days.add(n.Day);
+        }
+        if (n.Kind === "contributor") contributors.add(n.Label || "");
+        if (n.Kind === "policy") policies.add(n.Data?.id || n.Label || "");
+        if (n.Kind === "violationKind") violations.add(n.Data?.id || n.ID || "");
+        if (n.Children) walk(n.Children);
+      }
+    };
+    walk(tree.Children);
+  }
 
   if (filterProvider) {
     filterProvider.availableYears = Array.from(years).sort((a, b) => b - a);

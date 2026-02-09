@@ -1,20 +1,23 @@
 {
   "title": "Consolidate three Metabolism scripts into single update-metabolism.tsx",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-KIT-APP",
   "started": "2025-12-23T13:42:09.548Z",
   "finished": "2025-12-23T13:42:09.548Z",
   "interactions": [
     {
-      "prompt": ">-",
-      "llm": "composer-1",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-23T13:42:09.548Z",
+        "finished": "2025-12-23T13:42:09.548Z"
       },
-      "started": "2025-12-23T13:42:09.548Z",
-      "finished": "2025-12-23T13:42:09.548Z",
-      "commit": "b41e500849192cc526ed0ce105fff7e2a478e3f0"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "b41e500849192cc526ed0ce105fff7e2a478e3f0",
+      "prompt": "\u003e-",
+      "llm": "composer-1"
     }
   ]
 }

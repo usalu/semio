@@ -11,15 +11,17 @@
   "finished": "2026-01-29T09:48:14.115939646Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-29T09:39:45.008242038Z",
+        "finished": "2026-01-29T09:48:14.115939646Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "When a goal or ticket title is changed (via reopen), the folder name should also be renamed to match the new title. Currently the folder keeps the old slug even after a title change.",
       "llm": "opus-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T09:39:45.008242038Z",
-      "finished": "2026-01-29T09:48:14.115939646Z",
-      "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "diff": {
         "bundles": {
           "deleted": null,

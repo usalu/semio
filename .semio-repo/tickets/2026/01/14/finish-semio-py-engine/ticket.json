@@ -6,13 +6,15 @@
   "started": "2026-01-29T19:44:03.9672Z",
   "interactions": [
     {
-      "prompt": "Migrated from legacy files",
-      "llm": "",
-      "author": {
-        "name": "Migration Script"
+      "dates": {
+        "started": "2026-01-29T19:44:03.9672Z"
       },
-      "started": "2026-01-29T19:44:03.9672Z",
-      "commit": ""
+      "author": "Migration Script",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "Migrated from legacy files"
     }
   ]
 }

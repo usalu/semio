@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.801Z",
   "interactions": [
     {
-      "prompt": "Extend/adjust/refactor code to comply with sketchpad tests",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.801Z"
       },
-      "started": "2025-12-16T17:06:07.801Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Extend/adjust/refactor code to comply with sketchpad tests",
+      "llm": "sonnet-4-5"
     }
   ]
 }

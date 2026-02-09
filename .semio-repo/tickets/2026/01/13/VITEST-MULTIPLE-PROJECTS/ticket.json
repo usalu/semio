@@ -7,14 +7,17 @@
   "finished": "2026-01-12T23:13:02Z",
   "interactions": [
     {
-      "prompt": "Investigate Vitest multiple projects warning and suggest solutions",
-      "llm": "opus-4-5",
-      "author": {
-        "name": "Ueli Saluz"
+      "dates": {
+        "started": "2026-01-12T23:10:17Z",
+        "finished": "2026-01-12T23:13:02Z"
       },
-      "started": "2026-01-12T23:10:17Z",
-      "finished": "2026-01-12T23:13:02Z",
-      "commit": "3dd947fa6070f83e97789aa59d612cd61e1d3902"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "3dd947fa6070f83e97789aa59d612cd61e1d3902",
+      "prompt": "Investigate Vitest multiple projects warning and suggest solutions",
+      "llm": "opus-4-5"
     }
   ]
 }

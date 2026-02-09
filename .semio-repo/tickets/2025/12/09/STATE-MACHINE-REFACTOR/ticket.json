@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.902Z",
   "interactions": [
     {
-      "prompt": "Refactor state management to triadic hooks and proper state machine",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.902Z"
       },
-      "started": "2025-12-16T17:06:07.902Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Refactor state management to triadic hooks and proper state machine",
+      "llm": "sonnet-4-5"
     }
   ]
 }

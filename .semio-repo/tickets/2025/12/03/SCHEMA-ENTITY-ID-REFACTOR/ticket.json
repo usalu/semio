@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.855Z",
   "interactions": [
     {
-      "prompt": "Refactor IDs and diffs to use typed EntityId objects",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.855Z"
       },
-      "started": "2025-12-16T17:06:07.855Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Refactor IDs and diffs to use typed EntityId objects",
+      "llm": "sonnet-4-5"
     }
   ]
 }

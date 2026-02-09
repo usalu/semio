@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.962Z",
   "interactions": [
     {
-      "prompt": "\"Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...\"",
-      "llm": "gpt-5-2",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.962Z"
       },
-      "started": "2025-12-16T17:06:07.962Z",
-      "commit": "76900221ecf5cfb30a37d69fbb66abb3e0a0e45a"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "76900221ecf5cfb30a37d69fbb66abb3e0a0e45a",
+      "prompt": "\"Finish (currently table rows are still heigher than toggles): Table rows have a fixed height...\"",
+      "llm": "gpt-5-2"
     }
   ]
 }

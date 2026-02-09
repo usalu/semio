@@ -11,15 +11,17 @@
   "finished": "2026-01-29T20:48:36.676735465Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-29T20:45:00.224180552Z",
+        "finished": "2026-01-29T20:48:36.676735465Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "Sections in codebase explorer and Ticket view are empty after previous optimization.",
       "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T20:45:00.224180552Z",
-      "finished": "2026-01-29T20:48:36.676735465Z",
-      "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "diff": {
         "bundles": {
           "deleted": null,

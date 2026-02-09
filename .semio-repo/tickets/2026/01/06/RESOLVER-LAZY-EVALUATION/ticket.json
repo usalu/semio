@@ -6,13 +6,16 @@
   "started": "2026-01-06T20:32:28Z",
   "interactions": [
     {
-      "prompt": "\"\"",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2026-01-06T20:32:28Z"
       },
-      "started": "2026-01-06T20:32:28Z",
-      "commit": "499de7aa26b90905b08ea93d1f95d61b80f2c54d"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "499de7aa26b90905b08ea93d1f95d61b80f2c54d",
+      "prompt": "\"\"",
+      "llm": "sonnet-4-5"
     }
   ]
 }

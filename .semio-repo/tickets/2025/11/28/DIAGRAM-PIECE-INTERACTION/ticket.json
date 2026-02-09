@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.758Z",
   "interactions": [
     {
-      "prompt": "Fix piece hover and selection in diagram after drag and drop",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.758Z"
       },
-      "started": "2025-12-16T17:06:07.758Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix piece hover and selection in diagram after drag and drop",
+      "llm": "sonnet-4"
     }
   ]
 }

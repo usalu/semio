@@ -15,7 +15,7 @@
         "started": "2026-02-06 17:45:32",
         "finished": "2026-02-06 19:14:12"
       },
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": {
         "version": "linux",
         "client": "windsurf-chat"
@@ -931,7 +931,7 @@
               }
             },
             {
-              "path": "📄README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "path": "📄README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
               "lines": {
                 "added": 1,
                 "removed": 1

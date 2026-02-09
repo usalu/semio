@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.845Z",
   "interactions": [
     {
-      "prompt": "Fix broken panel code and extend sketchpad tests for all panel types",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.845Z"
       },
-      "started": "2025-12-16T17:06:07.845Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix broken panel code and extend sketchpad tests for all panel types",
+      "llm": "sonnet-4-5"
     }
   ]
 }

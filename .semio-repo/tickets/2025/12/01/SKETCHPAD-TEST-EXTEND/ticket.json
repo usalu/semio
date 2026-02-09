@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.798Z",
   "interactions": [
     {
-      "prompt": "Extend sketchpad tests for type app and design app panels",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.798Z"
       },
-      "started": "2025-12-16T17:06:07.798Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Extend sketchpad tests for type app and design app panels",
+      "llm": "sonnet-4-5"
     }
   ]
 }

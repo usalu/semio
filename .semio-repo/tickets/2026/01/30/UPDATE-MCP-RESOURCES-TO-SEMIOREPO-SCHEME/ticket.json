@@ -11,15 +11,17 @@
   "finished": "2026-02-03T08:50:06.112936216Z",
   "interactions": [
     {
-      "prompt": "Update MCP resources to use semiorepo:// scheme, add missing resources (repo, bundle, section, definition, etc), and ensure output is text (not JSON).",
-      "llm": "gemini-3-pro",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
+      "dates": {
+        "started": "2026-01-30T22:06:26.071327319Z",
+        "finished": "2026-02-03T08:50:06.112936216Z"
       },
-      "started": "2026-01-30T22:06:26.071327319Z",
-      "finished": "2026-02-03T08:50:06.112936216Z",
-      "commit": "f334fb7b76ab21e8c49a670174e2f431cfe0e0dd"
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "f334fb7b76ab21e8c49a670174e2f431cfe0e0dd",
+      "prompt": "Update MCP resources to use semiorepo:// scheme, add missing resources (repo, bundle, section, definition, etc), and ensure output is text (not JSON).",
+      "llm": "gemini-3-pro"
     }
   ]
 }

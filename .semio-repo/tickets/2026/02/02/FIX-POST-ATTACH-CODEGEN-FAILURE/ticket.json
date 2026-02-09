@@ -11,16 +11,17 @@
   "finished": "2026-02-02T20:43:44.318156429Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-02T20:39:40.342728758Z",
+        "finished": "2026-02-02T20:43:44.318156429Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Fix post-attach codegen failure: duplicate identifier 'filterProvider' in semio-repo/vscode/extension.ts during graphql-codegen.",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-02T20:39:40.342728758Z",
-      "finished": "2026-02-02T20:43:44.318156429Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "diff": {
         "bundles": {
           "deleted": null,

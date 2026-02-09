@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/sketchpad/Home.tsx
+// 💻 semio/js/sketchpad/Home.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -129,7 +137,7 @@ export interface HomeDiff {
   sortDirection?: HomeSortDirection;
 }
 
-export interface HomeEdit extends AppEdit<HomeSelectionDiff> {}
+export interface HomeEdit extends AppEdit<HomeSelectionDiff> { }
 
 export interface HomeCommandContext {
   home: HomeState;
@@ -208,7 +216,7 @@ export { useHome };
 
 // #region 🔖Table
 
-export {};
+export { };
 
 // #endregion 🔖Table
 
@@ -476,7 +484,7 @@ const HomeAppFooter: FC = () => {
   useEffect(() => {
     if (appType !== "home") return;
 
-    return () => {};
+    return () => { };
   }, [appType, addFooterItem, removeFooterItem]);
 
   return null;
@@ -1365,39 +1373,39 @@ const HomeTableContent: FC = () => {
         columns={[
           ...(!selectedKind
             ? [
-                {
-                  id: "type",
-                  header: (
-                    <div className="inline-flex items-center gap-single">
-                      <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
-                      <Toggle
-                        kind="dropdown"
-                        pressed={sortColumn === "type"}
-                        value={sortColumn === "type" ? sortDirection : "asc"}
-                        onValueChange={(value) => {
-                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
-                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
-                        }}
-                        items={[
-                          { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
-                          { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
-                        ]}
-                        id={"semio.sketchpad.app.home.sortByType"}
-                      />
-                    </div>
-                  ),
-                  accessor: (row) => (
-                    <>
-                      {row.type === "temporary" && <TemporaryKitIcon />}
-                      {row.type === "local" && <LocalKitIcon />}
-                      {row.type === "remote" && <RemoteKitIcon />}
-                      {row.type === "docs" && <DocumentIcon className="size-small" />}
-                    </>
-                  ),
-                  width: "w-0 whitespace-nowrap",
-                  headerClassName: "relative group w-0 whitespace-nowrap",
-                } as TableColumn<TableRow>,
-              ]
+              {
+                id: "type",
+                header: (
+                  <div className="inline-flex items-center gap-single">
+                    <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
+                    <Toggle
+                      kind="dropdown"
+                      pressed={sortColumn === "type"}
+                      value={sortColumn === "type" ? sortDirection : "asc"}
+                      onValueChange={(value) => {
+                        homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
+                        homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
+                      }}
+                      items={[
+                        { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
+                        { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
+                      ]}
+                      id={"semio.sketchpad.app.home.sortByType"}
+                    />
+                  </div>
+                ),
+                accessor: (row) => (
+                  <>
+                    {row.type === "temporary" && <TemporaryKitIcon />}
+                    {row.type === "local" && <LocalKitIcon />}
+                    {row.type === "remote" && <RemoteKitIcon />}
+                    {row.type === "docs" && <DocumentIcon className="size-small" />}
+                  </>
+                ),
+                width: "w-0 whitespace-nowrap",
+                headerClassName: "relative group w-0 whitespace-nowrap",
+              } as TableColumn<TableRow>,
+            ]
             : []),
           {
             id: "name",

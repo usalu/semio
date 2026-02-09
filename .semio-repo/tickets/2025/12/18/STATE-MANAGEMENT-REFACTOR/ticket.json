@@ -6,13 +6,16 @@
   "started": "2025-12-18T07:25:30.399Z",
   "interactions": [
     {
-      "prompt": "Analyze js/semio codebase for state management inconsistencies and refactor to triadic hooks pattern",
-      "llm": "gpt-5.2-codex",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-18T07:25:30.399Z"
       },
-      "started": "2025-12-18T07:25:30.399Z",
-      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
+      "prompt": "Analyze js/semio codebase for state management inconsistencies and refactor to triadic hooks pattern",
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

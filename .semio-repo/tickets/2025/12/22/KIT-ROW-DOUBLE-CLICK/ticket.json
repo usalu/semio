@@ -1,18 +1,21 @@
 {
   "title": "KIT-ROW-DOUBLE-CLICK",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "started": "2025-12-22T22:49:38.256Z",
   "interactions": [
     {
-      "prompt": ">-",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-22T22:49:38.256Z"
       },
-      "started": "2025-12-22T22:49:38.256Z",
-      "commit": ""
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "\u003e-",
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/.storybook/main.ts
+// 💻 semio/js/.storybook/main.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

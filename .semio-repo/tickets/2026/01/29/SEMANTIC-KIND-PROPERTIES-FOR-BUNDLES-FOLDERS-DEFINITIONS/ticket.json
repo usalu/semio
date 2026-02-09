@@ -11,15 +11,17 @@
   "finished": "2026-01-29T17:24:09.584333056Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-29T13:19:57.322659711Z",
+        "finished": "2026-01-29T17:24:09.584333056Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "prompt": "Expand bundle, folder, definition to have semantic kind properties. Add filtering by kind, time, contributor, policy, and violation-kind dimensions. Update VS Code extension filter tree.",
       "llm": "opus-4-5",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-29T13:19:57.322659711Z",
-      "finished": "2026-01-29T17:24:09.584333056Z",
-      "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "diff": {
         "bundles": {
           "deleted": null,

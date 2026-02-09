@@ -1,5 +1,13 @@
 // #region 🔖Header
+// #region 🔖License
+
 // SPDX-License-Identifier: AGPL-3.0-or-later
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
+
 // #endregion 🔖Header
 
 // #region 🔖Package

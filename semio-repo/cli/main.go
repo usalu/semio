@@ -4,6 +4,8 @@
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
+// #region 🔖License
+
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
@@ -16,6 +18,23 @@
 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+
+// File headers MUST contain nested License and Specs subregions.
+// File header generation MUST programmatically build headers from file path, summary, contributors, license, and specs arguments.
+// Languages that support headers MUST declare support and inherit the header formatting behavior.
+// The header policy MUST validate that License and Specs subregions exist inside the Header region.
+// The section policy MUST exempt License and Specs children of the Header region from empty-section violations.
+// Autofixable violation kinds: file header artifact ID, empty section, missing end name, name mismatch, inline comment, block comment, JSDoc comment.
+// Spec comments after section starts that contain RFC 2119 keywords MUST be exempt from inline comment violations.
+// JSDoc and block comments containing RFC 2119 keywords MUST be exempt from comment violations.
+// Specs MUST be implementation-agnostic and MUST NOT contain backtick-wrapped code or function call syntax.
+// The specs policy MUST detect implementation-specific syntax in spec text within header Specs regions and section-start spec comments.
+
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -38,6 +57,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -1709,7 +1729,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 								sb.WriteString(indent + renderEntityMarkdown("ticket", ticketData) + "\n")
 							} else {
 								parts := strings.Split(child.path, "/")
-								id := "📅" + child.path
+								id := "🎫" + child.path
 								query := "year=" + parts[0]
 								if len(parts) >= 2 {
 									query += "&month=" + parts[1]
@@ -4466,7 +4486,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 		f := &allFiles[fi]
 		fileNode := &TreeNode{
 			Kind:    TreeNodeFile,
-			ID:      f.Path,
+			ID:      f.GetID(),
 			Label:   f.Name,
 			URI:     f.GetURI(),
 			SubKind: f.Kind,
@@ -4650,9 +4670,9 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 		for _, d := range drafts {
 			dNode := &TreeNode{
 				Kind:  TreeNodeDraft,
-				ID:    "draft:" + d.ID,
+				ID:    d.GetID(),
 				Label: d.ID,
-				URI:   "semiorepo://draft/" + strings.ToUpper(Slugify(d.ID)),
+				URI:   d.GetURI(),
 				Data:  map[string]interface{}{"id": d.ID, "slug": d.ID},
 			}
 			draftsNode.Children = append(draftsNode.Children, dNode)
@@ -4665,7 +4685,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 	for _, p := range policies {
 		pNode := &TreeNode{
 			Kind:        TreeNodePolicy,
-			ID:          "policy:" + p.ID,
+			ID:          fmt.Sprintf("%s/%s", emojiText(EmojiPolicy), p.ID),
 			Label:       p.Name,
 			URI:         "semiorepo://policy/" + strings.ToUpper(Slugify(p.ID)),
 			Description: p.Description,
@@ -4675,9 +4695,9 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			meta := k.Info()
 			vkNode := &TreeNode{
 				Kind:        TreeNodeViolationKindNode,
-				ID:          "violation_kind:" + string(k),
+				ID:          meta.GetID(),
 				Label:       string(k),
-				URI:         "semiorepo://violationKind/" + strings.ToUpper(Slugify(string(k))),
+				URI:         meta.GetURI(),
 				SubKind:     string(meta.Priority),
 				Description: meta.Reason,
 				Data:        map[string]interface{}{"id": string(k), "description": meta.Reason},
@@ -6292,20 +6312,20 @@ const (
 	EmojiBundles             = "📦"
 	EmojiBundleLibrary       = "📚"
 	EmojiBundleSchema        = "🛂"
-	EmojiBundleBinary        = "⌨️"
-	EmojiBundleUI            = "🖱️"
+	EmojiBundleBinary        = "⌨️️"
+	EmojiBundleUI            = "🖱️️"
 	EmojiBundleExample       = "📔"
 	EmojiBundleSite          = "🌐"
 	EmojiBundleAssets        = "🏪"
 	EmojiFolders             = "📁"
-	EmojiFolderOrg           = "🗃️"
+	EmojiFolderOrg           = "🗃️️"
 	EmojiFolderRequired      = "📁"
 	EmojiFiles               = "📄"
 	EmojiFileCode            = "💻"
 	EmojiFileTest            = "🧪"
 	EmojiFileScript          = "📜"
 	EmojiFileDocs            = "📃"
-	EmojiFileConfig          = "⚙️"
+	EmojiFileConfig          = "⚙️️"
 	EmojiFileResource        = "💾"
 	EmojiFileLicense         = "⚖️"
 	EmojiSections            = "🔖"
@@ -6314,8 +6334,8 @@ const (
 	EmojiDefinitionImpl      = "🛠️"
 	EmojiDefinitionInterface = "✂️"
 	EmojiDefinitionConstant  = "🪨"
-	EmojiTickets             = "📅"
-	EmojiTicket              = "📅"
+	EmojiTickets             = "🎫"
+	EmojiTicket              = "🎫"
 	EmojiGoals               = "🎯"
 	EmojiGoal                = "🎯"
 	EmojiDrafts              = "✍️"
@@ -6579,9 +6599,13 @@ func (d *Definition) GetURI() string {
 
 type Contributor struct {
 	Github        string                          `yaml:"github" json:"github"`
-	Name          string                          `yaml:"name,omitempty" json:"name,omitempty"`
+	Name          string                          `yaml:"name" json:"name"`
+	Names         []string                        `yaml:"names,omitempty" json:"names,omitempty"`
+	Email         string                          `yaml:"email" json:"email"`
 	Emails        []string                        `yaml:"emails,omitempty" json:"emails,omitempty"`
 	Links         map[string]string               `yaml:"links,omitempty" json:"links,omitempty"`
+	Fingerprint   string                          `yaml:"fingerprint,omitempty" json:"fingerprint,omitempty"`
+	Fingerprints  []string                        `yaml:"fingerprints,omitempty" json:"fingerprints,omitempty"`
 	Contributions ContributorContributionsStorage `yaml:"contributions,omitempty" json:"contributions,omitempty"`
 }
 
@@ -6622,15 +6646,11 @@ type ContributorDefinition struct {
 
 func (c *Contributor) IsNode() {}
 func (c *Contributor) GetID() string {
-	raw := c.Name
-	if raw == "" {
-		raw = c.Github
-	}
-	return "contributor:" + raw
+	return fmt.Sprintf("%s%s", emojiText(EmojiContributor), c.Github)
 }
 
 func (c *Contributor) GetURI() string {
-	return "semiorepo://contributor/" + strings.ToUpper(Slugify(c.Github))
+	return "semiorepo://contributor/" + strings.ToUpper(c.Github)
 }
 
 type Commit struct {
@@ -6647,6 +6667,13 @@ func (c *Commit) IsNode() {}
 
 type Draft struct {
 	ID string `json:"id"`
+}
+
+func (d *Draft) GetID() string {
+	return fmt.Sprintf("%s%s", emojiText(EmojiDraft), d.ID)
+}
+func (d *Draft) GetURI() string {
+	return "semiorepo://draft/" + strings.ToUpper(d.ID)
 }
 
 func GetDraftsPath() string {
@@ -6706,8 +6733,10 @@ func DeleteDraft(id string) error {
 
 // #endregion 🔖Drafts
 
-func (c *Commit) GetID() string  { return "commit:" + c.SHA }
-func (c *Commit) GetURI() string { return "semiorepo://commit/" + strings.ToUpper(Slugify(c.SHA)) }
+func (c *Commit) GetID() string  { return fmt.Sprintf("%s%s", emojiText(EmojiCommit), c.SHA) }
+func (c *Commit) GetURI() string {
+	return "semiorepo://commit/" + strings.ToUpper(c.SHA)
+}
 
 type Ticket struct {
 	Year          int               `json:"-" yaml:"-"`
@@ -6868,11 +6897,7 @@ func (p *Policy) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiPolicy), slug)
 }
 func (p *Policy) GetURI() string {
-	slug := p.ID
-	if !strings.HasPrefix(slug, "/") {
-		slug = "/" + slug
-	}
-	return "semiorepo://policy" + slug
+	return "semiorepo://policy/" + strings.ToUpper(Slugify(p.ID))
 }
 
 type ViolationKindMeta struct {
@@ -6890,7 +6915,7 @@ func (v *ViolationKindMeta) GetID() string {
 }
 
 func (v *ViolationKindMeta) GetURI() string {
-	return "semiorepo://violationKind/" + string(v.Kind)
+	return "semiorepo://violationKind/" + ViolationKindIdToUriPath(string(v.Kind))
 }
 
 type AnalyzeResult struct {
@@ -7557,9 +7582,13 @@ type TicketChangeInput struct {
 }
 
 type ContributorAddInput struct {
-	Github string   `json:"github"`
-	Name   *string  `json:"name,omitempty"`
-	Emails []string `json:"emails,omitempty"`
+	Github       string   `json:"github"`
+	Name         *string  `json:"name,omitempty"`
+	Names        []string `json:"names,omitempty"`
+	Email        *string  `json:"email,omitempty"`
+	Emails       []string `json:"emails,omitempty"`
+	Fingerprint  *string  `json:"fingerprint,omitempty"`
+	Fingerprints []string `json:"fingerprints,omitempty"`
 }
 
 type FilterInput struct {
@@ -8146,7 +8175,7 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 		if scanState.InBlockComment && !charLevelBlock {
 			trimmed := strings.TrimSpace(line)
 			if trimmed == blockEnd {
-				if !scanState.BlockCommentHasTodo {
+				if !scanState.BlockCommentHasTodo && !ctx.IsSpecBlock(file, scanState.BlockCommentStartLine, lineNum, lines) {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Block comment in %s:%d", file, scanState.BlockCommentStartLine),
 						ViolationCodeCommentBlock,
@@ -8183,7 +8212,7 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 					scanState.BlockCommentHasTodo = true
 				}
 				if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
-					if !scanState.BlockCommentHasTodo {
+					if !scanState.BlockCommentHasTodo && !ctx.IsSpecBlock(file, scanState.BlockCommentStartLine, lineNum, lines) {
 						if l.hasJSDoc && scanState.BlockCommentIsJsDoc {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
@@ -8376,6 +8405,11 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 					inlineCommentActive = true
 					break
 				}
+				if ctx.IsSpecLine(file, lineNum) {
+					foundInline = true
+					inlineCommentActive = true
+					break
+				}
 				scanState.InTodoBlock = false
 				debugMarker := strings.Contains(line, "[DEBUG]")
 				if !debugMarker {
@@ -8477,7 +8511,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					scanState.BlockCommentHasTodo = true
 				}
 				if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
-					if !scanState.BlockCommentHasTodo {
+					if !scanState.BlockCommentHasTodo && !ctx.IsSpecBlock(file, scanState.BlockCommentStartLine, lineNum, lines) {
 						if scanState.BlockCommentIsJsDoc {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
@@ -8599,6 +8633,11 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 				}
 				if scanState.InTodoBlock && strings.HasPrefix(trimmed, "//") {
 					foundInline = true // Mark as found so we don't reset InTodoBlock, but don't report violation
+					inlineCommentActive = true
+					break
+				}
+				if ctx.IsSpecLine(file, lineNum) {
+					foundInline = true
 					inlineCommentActive = true
 					break
 				}
@@ -9335,6 +9374,93 @@ func parseGitAuthor(s string) GitAuthor {
 	return res
 }
 
+func FindAndUpdateContributor(authorStr string) string {
+	parsed := parseGitAuthor(authorStr)
+	if parsed.Name == "" && parsed.Email == "" {
+		return "unknown"
+	}
+
+	contributors, _ := ListContributors()
+
+	var found *Contributor
+
+	// 1. Try to find by email
+	if parsed.Email != "" {
+		for i := range contributors {
+			matches := false
+			if strings.EqualFold(contributors[i].Email, parsed.Email) {
+				matches = true
+			} else {
+				for _, e := range contributors[i].Emails {
+					if strings.EqualFold(e, parsed.Email) {
+						matches = true
+						break
+					}
+				}
+			}
+			if matches {
+				found = &contributors[i]
+				// If the name is different from the name/names then add it to names.
+				nameExists := strings.EqualFold(found.Name, parsed.Name)
+				if !nameExists && parsed.Name != "" {
+					for _, n := range found.Names {
+						if strings.EqualFold(n, parsed.Name) {
+							nameExists = true
+							break
+						}
+					}
+				}
+				if !nameExists && parsed.Name != "" {
+					found.Names = append(found.Names, parsed.Name)
+					SaveContributor(*found)
+				}
+				break
+			}
+		}
+	}
+
+	// 2. Try to find by name
+	if found == nil && parsed.Name != "" {
+		for i := range contributors {
+			matches := false
+			if strings.EqualFold(contributors[i].Name, parsed.Name) {
+				matches = true
+			} else {
+				for _, n := range contributors[i].Names {
+					if strings.EqualFold(n, parsed.Name) {
+						matches = true
+						break
+					}
+				}
+			}
+			if matches {
+				found = &contributors[i]
+				// Add the email to emails.
+				emailExists := strings.EqualFold(found.Email, parsed.Email)
+				if !emailExists && parsed.Email != "" {
+					for _, e := range found.Emails {
+						if strings.EqualFold(e, parsed.Email) {
+							emailExists = true
+							break
+						}
+					}
+				}
+				if !emailExists && parsed.Email != "" {
+					found.Emails = append(found.Emails, parsed.Email)
+					SaveContributor(*found)
+				}
+				break
+			}
+		}
+	}
+
+	if found != nil {
+		return found.Github
+	}
+
+	return authorStr
+}
+
 func GetSystem() string {
 	switch runtime.GOOS {
 	case "darwin":
@@ -9407,6 +9533,41 @@ func (i *Interaction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
+func resolveAuthorToGithub(name, email string) string {
+	contributors, err := ListContributors()
+	if err == nil {
+		for _, c := range contributors {
+			if email != "" {
+				for _, e := range c.Emails {
+					if strings.EqualFold(e, email) {
+						return c.Github
+					}
+				}
+			}
+			if name != "" {
+				if strings.EqualFold(c.Name, name) {
+					return c.Github
+				}
+				for _, n := range c.Names {
+					if strings.EqualFold(n, name) {
+						return c.Github
+					}
+				}
+			}
+		}
+	}
+	if name != "" && email != "" {
+		return fmt.Sprintf("%s <%s>", name, email)
+	}
+	if name != "" {
+		return name
+	}
+	if email != "" {
+		return email
+	}
+	return ""
+}
+
 func parseInteractionAuthor(raw json.RawMessage) (string, error) {
 	if len(raw) == 0 || string(raw) == "null" {
 		return "", nil
@@ -9419,17 +9580,12 @@ func parseInteractionAuthor(raw json.RawMessage) (string, error) {
 
 	var asAuthor GitAuthor
 	if err := json.Unmarshal(raw, &asAuthor); err == nil {
-		if asAuthor.Name != "" && asAuthor.Email != "" {
-			return fmt.Sprintf("%s <%s>", asAuthor.Name, asAuthor.Email), nil
-		}
-		if asAuthor.Name != "" {
-			return asAuthor.Name, nil
-		}
 		if asAuthor.GitHub != "" {
 			return asAuthor.GitHub, nil
 		}
-		if asAuthor.Email != "" {
-			return asAuthor.Email, nil
+		resolved := resolveAuthorToGithub(asAuthor.Name, asAuthor.Email)
+		if resolved != "" {
+			return resolved, nil
 		}
 	}
 
@@ -9539,6 +9695,7 @@ const (
 	ViolationCodeCommentInline              ViolationKind = "code:comment:inline"
 	ViolationCodeCommentBlock               ViolationKind = "code:comment:block"
 	ViolationCodeCommentJSDoc               ViolationKind = "code:comment:jsdoc"
+	ViolationCodeSpecsSyntax                ViolationKind = "code:specs:implementation-syntax"
 	ViolationDevDocsMissingFile             ViolationKind = "dev-docs:missing-file"
 	ViolationDevDocsMissingFolder           ViolationKind = "dev-docs:missing-folder"
 	ViolationDevDocsWrongFilePath           ViolationKind = "dev-docs:wrong-file-path"
@@ -9687,6 +9844,13 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Reason:      "JSDoc comments are forbidden",
 		Solution:    "Remove JSDoc comment",
 		Autofixable: true,
+	},
+	ViolationCodeSpecsSyntax: {
+		Kind:        ViolationCodeSpecsSyntax,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Specs must be implementation-agnostic and must not contain code syntax",
+		Solution:    "Remove backticks, function calls, and other code syntax from spec text",
+		Autofixable: false,
 	},
 	ViolationCodeUnicodeEmojiVariation: {
 		Kind:        ViolationCodeUnicodeEmojiVariation,
@@ -10604,21 +10768,7 @@ func GetGitAuthorGithub() string {
 		fallback = fmt.Sprintf("%s <%s>", name, email)
 	}
 
-	// Try to find a matching contributor by email
-	if email != "" {
-		contributors, err := ListContributors()
-		if err == nil {
-			for _, c := range contributors {
-				for _, e := range c.Emails {
-					if strings.EqualFold(e, email) {
-						return c.Github
-					}
-				}
-			}
-		}
-	}
-
-	return fallback
+	return FindAndUpdateContributor(fallback)
 }
 
 func GetGitCommit() string {
@@ -11394,6 +11544,7 @@ var policies = []PolicyDef{
 			ViolationCodeCommentInline,
 			ViolationCodeCommentBlock,
 			ViolationCodeCommentJSDoc,
+			ViolationCodeSpecsSyntax,
 			ViolationCodeUnicodeEmojiVariation,
 		},
 		Run: codePolicy,
@@ -11517,6 +11668,7 @@ type PolicyContext struct {
 	fileCache     map[string]string
 	sectionCache  map[string][]Section
 	ignoreCache   map[string]map[int][]string // file -> line -> ignore patterns
+	specLineCache map[string]map[int]bool     // file -> line -> is spec line
 	filesOverride []string
 }
 
@@ -11545,6 +11697,9 @@ func (ctx *PolicyContext) Files() ([]string, error) {
 }
 
 func (ctx *PolicyContext) ReadText(filePath string) string {
+	if ctx.fileCache == nil {
+		ctx.fileCache = make(map[string]string)
+	}
 	absPath := filepath.Join(rootDir, filePath)
 	if content, ok := ctx.fileCache[absPath]; ok {
 		return content
@@ -11559,6 +11714,9 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 }
 
 func (ctx *PolicyContext) Sections(filePath string) []Section {
+	if ctx.sectionCache == nil {
+		ctx.sectionCache = make(map[string][]Section)
+	}
 	if sections, ok := ctx.sectionCache[filePath]; ok {
 		return sections
 	}
@@ -11659,6 +11817,102 @@ func (ctx *PolicyContext) FilterIgnored(violations []Violation) []Violation {
 		}
 	}
 	return result
+}
+
+var specKeywordPattern = regexp.MustCompile(`\b(MUST(\s+NOT)?|SHOULD(\s+NOT)?|SHALL(\s+NOT)?|MAY|REQUIRED|RECOMMENDED|OPTIONAL)\b`)
+
+func isSpecText(text string) bool {
+	return specKeywordPattern.MatchString(text)
+}
+
+var specImplSyntaxBacktick = regexp.MustCompile("`[^`]+`")
+var specImplSyntaxFuncCall = regexp.MustCompile(`[A-Za-z_]\w*\.\w+\(|[A-Z]\w+\(`)
+
+func hasImplementationSyntax(text string) (bool, string) {
+	if specImplSyntaxBacktick.MatchString(text) {
+		return true, "backtick-wrapped code"
+	}
+	if specImplSyntaxFuncCall.MatchString(text) {
+		match := specImplSyntaxFuncCall.FindString(text)
+		if match != "MUST(" && match != "SHOULD(" && match != "SHALL(" && match != "MAY(" {
+			return true, "function/method call: " + match
+		}
+	}
+	return false, ""
+}
+
+func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
+	if ctx.specLineCache == nil {
+		ctx.specLineCache = make(map[string]map[int]bool)
+	}
+	if cached, ok := ctx.specLineCache[filePath]; ok {
+		return cached
+	}
+	result := make(map[int]bool)
+	content := ctx.ReadText(filePath)
+	if content == "" {
+		ctx.specLineCache[filePath] = result
+		return result
+	}
+	language := GetLanguage(filePath)
+	if language == nil {
+		ctx.specLineCache[filePath] = result
+		return result
+	}
+	lines := strings.Split(content, "\n")
+	sections := ctx.Sections(filePath)
+	prefix := language.CommentPrefix()
+	var markSectionSpecLines func(s Section)
+	markSectionSpecLines = func(s Section) {
+		if strings.ToLower(s.Name) == "header" {
+			for _, child := range s.Children {
+				markSectionSpecLines(child)
+			}
+			return
+		}
+		inSpecZone := true
+		for i := s.StartLine + 1; i < s.EndLine && i <= len(lines); i++ {
+			line := strings.TrimSpace(lines[i-1])
+			if line == "" {
+				continue
+			}
+			isComment := strings.HasPrefix(line, prefix)
+			if isComment && inSpecZone {
+				commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+				if isSpecText(commentText) {
+					result[i] = true
+				} else {
+					inSpecZone = false
+				}
+			} else if !isComment {
+				inSpecZone = false
+			}
+			if matched, _ := language.PolicySectionStartMatch(lines[i-1]); matched {
+				break
+			}
+		}
+		for _, child := range s.Children {
+			markSectionSpecLines(child)
+		}
+	}
+	for _, s := range sections {
+		markSectionSpecLines(s)
+	}
+	ctx.specLineCache[filePath] = result
+	return result
+}
+
+func (ctx *PolicyContext) IsSpecLine(filePath string, lineNum int) bool {
+	return ctx.SpecLines(filePath)[lineNum]
+}
+
+func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, lines []string) bool {
+	for i := startLine; i <= endLine && i <= len(lines); i++ {
+		if isSpecText(lines[i-1]) {
+			return true
+		}
+	}
+	return false
 }
 
 func randomString(n int) string {
@@ -11780,7 +12034,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				stripped := strings.TrimSpace(strings.TrimPrefix(trimmed, prefix))
 				if stripped != "" && !strings.HasPrefix(trimmed, prefix+" #region") && !strings.HasPrefix(trimmed, prefix+" #endregion") && !strings.HasPrefix(trimmed, "#region") && !strings.HasPrefix(trimmed, "#endregion") {
 					hasExt := strings.Contains(stripped, ".ts") || strings.Contains(stripped, ".tsx") || strings.Contains(stripped, ".go") || strings.Contains(stripped, ".cs") || strings.Contains(stripped, ".py") || strings.Contains(stripped, ".sh") || strings.Contains(stripped, ".sql")
-					hasEmoji := strings.ContainsAny(stripped, "💻🧪��📃⚙💾⚖")
+					hasEmoji := strings.ContainsAny(stripped, "💻🧪��📃⚙️💾⚖")
 					if (hasExt || hasEmoji) && wrongFileIdLine == 0 {
 						wrongFileIdLine = headerSection.StartLine + lineIdx
 					}
@@ -12175,11 +12429,95 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen]
 }
 
+func specsPolicy(ctx *PolicyContext) []Violation {
+	var violations []Violation
+	files, err := ctx.Files()
+	if err != nil {
+		return violations
+	}
+	for _, file := range files {
+		content := ctx.ReadText(file)
+		if content == "" {
+			continue
+		}
+		language := GetLanguage(file)
+		if language == nil || !language.SupportsHeaders() {
+			continue
+		}
+		lines := strings.Split(content, "\n")
+		sections := ctx.Sections(file)
+		prefix := language.CommentPrefix()
+		var headerSection *Section
+		for i := range sections {
+			if strings.ToLower(sections[i].Name) == "header" {
+				headerSection = &sections[i]
+				break
+			}
+		}
+		if headerSection != nil {
+			for _, child := range headerSection.Children {
+				if strings.ToLower(child.Name) == "specs" {
+					for i := child.StartLine + 1; i < child.EndLine && i <= len(lines); i++ {
+						line := strings.TrimSpace(lines[i-1])
+						if line == "" {
+							continue
+						}
+						commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+						if commentText == "" {
+							continue
+						}
+						if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+							violations = append(violations, ctx.CreateViolation(
+								fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+								ViolationCodeSpecsSyntax,
+								fmt.Sprintf("%s#Header/Specs", file), i, 0, commentText))
+						}
+					}
+					break
+				}
+			}
+		}
+		var checkSectionSpecs func(s Section)
+		checkSectionSpecs = func(s Section) {
+			if strings.ToLower(s.Name) == "header" {
+				return
+			}
+			for i := s.StartLine + 1; i < s.EndLine && i <= len(lines); i++ {
+				line := strings.TrimSpace(lines[i-1])
+				if line == "" {
+					continue
+				}
+				if !strings.HasPrefix(line, prefix) {
+					break
+				}
+				commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+				if !isSpecText(commentText) {
+					break
+				}
+				if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+					violations = append(violations, ctx.CreateViolation(
+						fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+						ViolationCodeSpecsSyntax,
+						fmt.Sprintf("%s#%s", file, s.Name), i, 0, commentText))
+				}
+			}
+			for _, child := range s.Children {
+				checkSectionSpecs(child)
+			}
+		}
+		for _, s := range sections {
+			checkSectionSpecs(s)
+		}
+	}
+	return ctx.FilterIgnored(violations)
+}
+
 func codePolicy(ctx *PolicyContext) []Violation {
 	var violations []Violation
 	violations = append(violations, headerPolicy(ctx)...)
 	violations = append(violations, sectionPolicy(ctx)...)
 	violations = append(violations, commentPolicy(ctx)...)
+	violations = append(violations, specsPolicy(ctx)...)
 	violations = append(violations, emojiPolicy(ctx)...)
 	return violations
 }
@@ -19162,7 +19500,53 @@ func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*F
 }
 
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
-	return nil, nil
+	contributor, err := LoadContributor(input.Github)
+	if err != nil {
+		contributor, err = CreateContributor(input.Github)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	changed := false
+	if input.Name != nil && *input.Name != "" && contributor.Name == "" {
+		contributor.Name = *input.Name
+		changed = true
+	}
+	for _, n := range input.Names {
+		if !slices.Contains(contributor.Names, n) {
+			contributor.Names = append(contributor.Names, n)
+			changed = true
+		}
+	}
+	if input.Email != nil && *input.Email != "" && contributor.Email == "" {
+		contributor.Email = *input.Email
+		changed = true
+	}
+	for _, e := range input.Emails {
+		if !slices.Contains(contributor.Emails, e) {
+			contributor.Emails = append(contributor.Emails, e)
+			changed = true
+		}
+	}
+	if input.Fingerprint != nil && *input.Fingerprint != "" && contributor.Fingerprint == "" {
+		contributor.Fingerprint = *input.Fingerprint
+		changed = true
+	}
+	for _, f := range input.Fingerprints {
+		if !slices.Contains(contributor.Fingerprints, f) {
+			contributor.Fingerprints = append(contributor.Fingerprints, f)
+			changed = true
+		}
+	}
+
+	if changed {
+		if err := SaveContributor(*contributor); err != nil {
+			return nil, err
+		}
+	}
+
+	return contributor, nil
 }
 
 func (c *repoContext) ContributorRemove(github string) error { return nil }
@@ -20960,9 +21344,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return contributor.GetID(), nil
 					},
 				},
-				"github": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"name":   &graphql.Field{Type: graphql.String},
-				"emails": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"github":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"name":         &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"names":        &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"email":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"emails":       &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"fingerprint":  &graphql.Field{Type: graphql.String},
+				"fingerprints": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
 				"links": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(contributorLinkType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -21692,9 +22080,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	contributorAddInputType := graphql.NewInputObject(graphql.InputObjectConfig{
 		Name: "ContributorAddInput",
 		Fields: graphql.InputObjectConfigFieldMap{
-			"github": &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"name":   &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
-			"emails": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+			"github":       &graphql.InputObjectFieldConfig{Type: graphql.NewNonNull(graphql.String)},
+			"name":         &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"names":        &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+			"email":        &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"emails":       &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
+			"fingerprint":  &graphql.InputObjectFieldConfig{Type: graphql.String},
+			"fingerprints": &graphql.InputObjectFieldConfig{Type: graphql.NewList(graphql.NewNonNull(graphql.String))},
 		},
 	})
 
@@ -22067,13 +22459,33 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					input := ContributorAddInput{
 						Github: inputMap["github"].(string),
 					}
-					if n, ok := inputMap["name"].(string); ok {
-						input.Name = &n
+					if v, ok := inputMap["name"].(string); ok {
+						input.Name = &v
+					}
+					if names, ok := inputMap["names"].([]interface{}); ok {
+						for _, v := range names {
+							if s, ok := v.(string); ok {
+								input.Names = append(input.Names, s)
+							}
+						}
+					}
+					if v, ok := inputMap["email"].(string); ok {
+						input.Email = &v
 					}
 					if emails, ok := inputMap["emails"].([]interface{}); ok {
-						for _, e := range emails {
-							if s, ok := e.(string); ok {
+						for _, v := range emails {
+							if s, ok := v.(string); ok {
 								input.Emails = append(input.Emails, s)
+							}
+						}
+					}
+					if v, ok := inputMap["fingerprint"].(string); ok {
+						input.Fingerprint = &v
+					}
+					if fingerprints, ok := inputMap["fingerprints"].([]interface{}); ok {
+						for _, v := range fingerprints {
+							if s, ok := v.(string); ok {
+								input.Fingerprints = append(input.Fingerprints, s)
 							}
 						}
 					}
@@ -22262,6 +22674,90 @@ func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 }
 
 func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
+	// Clean potentially invisible characters
+	cleanID := strings.ReplaceAll(id, "\uFE0E", "")
+	cleanID = strings.ReplaceAll(cleanID, "\uFE0F", "")
+
+	// 1. Emoji-based resolution (Primary)
+	// Repo
+	if cleanID == emojiText(EmojiRepo) {
+		return r.Repo(ctx)
+	}
+
+	// Projects
+	for _, e := range []string{EmojiProjects, EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch} {
+		prefix := emojiText(e)
+		if strings.HasPrefix(cleanID, prefix) {
+			rest := strings.TrimPrefix(cleanID, prefix)
+			name := strings.TrimPrefix(rest, "@")
+			return &Project{Name: name}, nil
+		}
+	}
+
+	// Bundles
+	for _, e := range []string{EmojiBundles, EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets} {
+		prefix := emojiText(e)
+		if strings.HasPrefix(cleanID, prefix) {
+			name := strings.TrimPrefix(cleanID, prefix)
+			return r.Bundle(ctx, name)
+		}
+	}
+
+	// Folders
+	for _, e := range []string{EmojiFolders, EmojiFolderOrg, EmojiFolderRequired} {
+		prefix := emojiText(e)
+		if strings.HasPrefix(cleanID, prefix) {
+			path := strings.TrimPrefix(cleanID, prefix)
+			return r.Folder(ctx, path)
+		}
+	}
+
+	// Files
+	for _, e := range []string{EmojiFiles, EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense} {
+		prefix := emojiText(e)
+		if strings.HasPrefix(cleanID, prefix) {
+			path := strings.TrimPrefix(cleanID, prefix)
+			return r.File(ctx, path)
+		}
+	}
+
+	// Tickets
+	if strings.HasPrefix(cleanID, emojiText(EmojiTicket)) {
+		slugID := strings.TrimPrefix(cleanID, emojiText(EmojiTicket))
+		parts := strings.Split(slugID, "/")
+		if len(parts) == 4 {
+			y, _ := strconv.Atoi(parts[0])
+			m, _ := strconv.Atoi(parts[1])
+			d, _ := strconv.Atoi(parts[2])
+			return r.Ticket(ctx, y, m, d, parts[3])
+		}
+	}
+
+	// Goals
+	if strings.HasPrefix(cleanID, emojiText(EmojiGoal)) {
+		slug := strings.TrimPrefix(cleanID, emojiText(EmojiGoal))
+		return &Goal{ID: slug, Title: slug}, nil
+	}
+
+	// Policies
+	if strings.HasPrefix(cleanID, emojiText(EmojiPolicy)) {
+		name := strings.TrimPrefix(cleanID, emojiText(EmojiPolicy))
+		return r.Policy(ctx, name)
+	}
+
+	// Contributors
+	if strings.HasPrefix(cleanID, emojiText(EmojiContributor)) {
+		name := strings.TrimPrefix(cleanID, emojiText(EmojiContributor))
+		return r.Contributor(ctx, name)
+	}
+
+	// Commits
+	if strings.HasPrefix(cleanID, emojiText(EmojiCommit)) {
+		sha := strings.TrimPrefix(cleanID, emojiText(EmojiCommit))
+		return &Commit{SHA: sha}, nil
+	}
+
+	// 2. Legacy / Text-prefix resolution (Fallback)
 	if strings.HasPrefix(id, "repo:") {
 		return r.Repo(ctx)
 	}
@@ -25917,6 +26413,34 @@ func CreateContributor(github string) (*Contributor, error) {
 	return &c, nil
 }
 
+func LoadContributor(github string) (*Contributor, error) {
+	path := filepath.Join(GetContributorPath(github), "contributor.json")
+	if !FileExists(path) {
+		return nil, fmt.Errorf("contributor not found: %s", github)
+	}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var c Contributor
+	if err := json.Unmarshal(data, &c); err != nil {
+		return nil, err
+	}
+	return &c, nil
+}
+
+func SaveContributor(c Contributor) error {
+	dir := GetContributorPath(c.Github)
+	if !FileExists(dir) {
+		EnsureDir(dir)
+	}
+	data, err := json.MarshalIndent(c, "", "  ")
+	if err != nil {
+		return err
+	}
+	return WriteTextFile(filepath.Join(dir, "contributor.json"), string(data))
+}
+
 func RemoveContributor(github string) error {
 	dir := filepath.Join(GetRepoMetaDir(), "contributors", github)
 	if !FileExists(dir) {
@@ -27582,82 +28106,82 @@ func projectKindEmoji(data map[string]interface{}) string {
 	if val, ok := data["kind"].(string); ok {
 		switch val {
 		case "infrastructure":
-			return EmojiProjectInfra
+			return emojiText(EmojiProjectInfra)
 		case "research":
-			return EmojiProjectResearch
+			return emojiText(EmojiProjectResearch)
 		case "user":
-			return EmojiProjectUser
+			return emojiText(EmojiProjectUser)
 		}
 	}
 	name, _ := data["name"].(string)
 	if strings.Contains(name, "repo") {
-		return EmojiProjectInfra
+		return emojiText(EmojiProjectInfra)
 	}
 	if strings.HasPrefix(name, "coda") {
-		return EmojiProjectResearch
+		return emojiText(EmojiProjectResearch)
 	}
-	return EmojiProjectUser
+	return emojiText(EmojiProjectUser)
 }
 
 func bundleKindEmoji(data map[string]interface{}) string {
 	bKind, _ := data["kind"].(string)
 	switch bKind {
 	case "schema":
-		return EmojiBundleSchema
+		return emojiText(EmojiBundleSchema)
 	case "binary":
-		return EmojiBundleBinary
+		return emojiText(EmojiBundleBinary)
 	case "ui":
-		return EmojiBundleUI
+		return emojiText(EmojiBundleUI)
 	case "site":
-		return EmojiBundleSite
+		return emojiText(EmojiBundleSite)
 	case "assets":
-		return EmojiBundleAssets
+		return emojiText(EmojiBundleAssets)
 	case "library":
-		return EmojiBundleLibrary
+		return emojiText(EmojiBundleLibrary)
 	case "example":
-		return EmojiBundleExample
+		return emojiText(EmojiBundleExample)
 	}
-	return EmojiBundleLibrary
+	return emojiText(EmojiBundleLibrary)
 }
 
 func fileKindEmoji(data map[string]interface{}) string {
 	fkind, _ := data["kind"].(string)
 	switch fkind {
 	case "code":
-		return EmojiFileCode
+		return emojiText(EmojiFileCode)
 	case "test":
-		return EmojiFileTest
+		return emojiText(EmojiFileTest)
 	case "script":
-		return EmojiFileScript
+		return emojiText(EmojiFileScript)
 	case "docs":
-		return EmojiFileDocs
+		return emojiText(EmojiFileDocs)
 	case "config":
-		return EmojiFileConfig
+		return emojiText(EmojiFileConfig)
 	case "resource":
-		return EmojiFileResource
+		return emojiText(EmojiFileResource)
 	case "license":
-		return EmojiFileLicense
+		return emojiText(EmojiFileLicense)
 	}
-	return EmojiFiles
+	return emojiText(EmojiFiles)
 }
 
 func folderKindEmoji(data map[string]interface{}) string {
 	fkind, _ := data["kind"].(string)
 	if fkind == "organization" {
-		return EmojiFolderOrg
+		return emojiText(EmojiFolderOrg)
 	}
-	return EmojiFolderRequired
+	return emojiText(EmojiFolderRequired)
 }
 
 func definitionKindEmoji(data map[string]interface{}) string {
 	kind, _ := data["kind"].(string)
 	switch kind {
 	case "interface":
-		return EmojiDefinitionInterface
+		return emojiText(EmojiDefinitionInterface)
 	case "constant":
-		return EmojiDefinitionConstant
+		return emojiText(EmojiDefinitionConstant)
 	}
-	return EmojiDefinitionImpl
+	return emojiText(EmojiDefinitionImpl)
 }
 
 type ArtifactRef struct {
@@ -27692,7 +28216,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 		}
 	}
 
-	folderEmojis := []string{"📁", "🗃", "📂"}
+	folderEmojis := []string{"📁", "🗃️", "📂"}
 	for _, e := range folderEmojis {
 		if strings.HasPrefix(clean, e) {
 			rest := clean[len(e):]
@@ -27700,7 +28224,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 		}
 	}
 
-	fileEmojis := []string{"💻", "🧪", "📜", "📃", "⚙", "💾", "⚖", "📄"}
+	fileEmojis := []string{"💻", "🧪", "📜", "📃", "⚙️", "💾", "⚖", "📄"}
 	for _, e := range fileEmojis {
 		if strings.HasPrefix(clean, e) {
 			rest := clean[len(e):]
@@ -27823,6 +28347,22 @@ func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string
 		sectionSlugs = parts[fileEnd+1:]
 	}
 	return
+}
+
+func ViolationKindIdToUriPath(id string) string {
+	parts := strings.Split(id, ":")
+	for i, p := range parts {
+		parts[i] = Slugify(p)
+	}
+	return strings.Join(parts, "/")
+}
+
+func ViolationKindUriPathToId(uriPath string) string {
+	parts := strings.Split(uriPath, "/")
+	for i, p := range parts {
+		parts[i] = strings.ToLower(strings.ReplaceAll(p, "-", "-"))
+	}
+	return strings.Join(parts, ":")
 }
 
 func GetArtifactID(kind string, data map[string]interface{}) string {
@@ -28039,7 +28579,7 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 		if slug == "" {
 			slug, _ = data["id"].(string)
 		}
-		return fmt.Sprintf("semiorepo://draft/%s", slug)
+		return fmt.Sprintf("semiorepo://draft/%s", strings.ToUpper(slug))
 	case "todos":
 		return "semiorepo://todos"
 	case "todo":
@@ -28049,22 +28589,22 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 		return "semiorepo://policies"
 	case "policy":
 		id, _ := data["id"].(string)
-		return fmt.Sprintf("semiorepo://policy/%s", id)
+		return fmt.Sprintf("semiorepo://policy/%s", strings.ToUpper(Slugify(id)))
 	case "violationKinds":
 		return "semiorepo://violationKinds"
 	case "violationKind":
 		id, _ := data["id"].(string)
-		return fmt.Sprintf("semiorepo://violationKind/%s", id)
+		return fmt.Sprintf("semiorepo://violationKind/%s", ViolationKindIdToUriPath(id))
 	case "contributors":
 		return "semiorepo://contributors"
 	case "contributor":
 		id, _ := data["github"].(string)
-		return fmt.Sprintf("semiorepo://contributor/%s", id)
+		return fmt.Sprintf("semiorepo://contributor/%s", strings.ToUpper(id))
 	case "commits":
 		return "semiorepo://commits"
 	case "commit":
 		sha, _ := data["sha"].(string)
-		return fmt.Sprintf("semiorepo://commit/%s", sha)
+		return fmt.Sprintf("semiorepo://commit/%s", strings.ToUpper(sha))
 	}
 	return ""
 }
@@ -28083,17 +28623,17 @@ func IdToUri(id string) string {
 		{"📦", "", "bundles"},
 		{"📚", "bundle", ""},
 		{"🛂", "bundle", ""},
-		{"⌨️", "bundle", ""},
-		{"🖱️", "bundle", ""},
+		{"⌨️️", "bundle", ""},
+		{"🖱️️", "bundle", ""},
 		{"📔", "bundle", ""},
 		{"🌐", "bundle", ""},
 		{"🏪", "bundle", ""},
-		{"🗃️", "folder", ""},
+		{"🗃️️", "folder", ""},
 		{"📁", "folder", "folders"},
 		{"💻", "file", ""},
 		{"🧪", "file", ""},
 		{"📃", "file", ""},
-		{"⚙️", "file", ""},
+		{"⚙️️", "file", ""},
 		{"💾", "file", ""},
 		{"⚖️", "file", ""},
 		{"📄", "file", "files"},
@@ -28102,7 +28642,7 @@ func IdToUri(id string) string {
 		{"🛠️", "definition", ""},
 		{"✂️", "definition", ""},
 		{"🪨", "definition", ""},
-		{"📅", "ticket", "tickets"},
+		{"🎫", "ticket", "tickets"},
 		{"🎯", "goal", "goals"},
 		{"✍️", "draft", "drafts"},
 		{"📝", "todo", "todos"},
@@ -28138,7 +28678,7 @@ func IdToUri(id string) string {
 			if strings.HasPrefix(value, "@") {
 				return "semiorepo://project/" + value
 			}
-			return "semiorepo://contributor/" + value
+			return "semiorepo://contributor/" + strings.ToUpper(value)
 		}
 
 		if m.emoji == "📁" {
@@ -28167,17 +28707,17 @@ func IdToUri(id string) string {
 		case "goal":
 			return "semiorepo://goal/" + value
 		case "draft":
-			return "semiorepo://draft/" + value
+			return "semiorepo://draft/" + strings.ToUpper(value)
 		case "todo":
 			return "semiorepo://todo/" + value
 		case "policy":
-			return "semiorepo://policy" + value
+			return "semiorepo://policy" + strings.ToUpper(value)
 		case "violationKind":
-			return "semiorepo://violationKind/" + value
+			return "semiorepo://violationKind/" + ViolationKindIdToUriPath(value)
 		case "contributor":
-			return "semiorepo://contributor/" + value
+			return "semiorepo://contributor/" + strings.ToUpper(value)
 		case "commit":
-			return "semiorepo://commit/" + value
+			return "semiorepo://commit/" + strings.ToUpper(value)
 		}
 	}
 	return ""
@@ -28248,10 +28788,10 @@ func UriToId(uri string) string {
 		defPart := slugs[len(slugs)-1]
 		return fmt.Sprintf("%s%s#%s§%s", emojiText("🛠️"), filePath, sectionPart, defPart)
 	case p == "tickets":
-		return emojiText("📅")
+		return emojiText("🎫")
 	case strings.HasPrefix(p, "ticket/"):
 		v := strings.TrimPrefix(p, "ticket/")
-		return fmt.Sprintf("%s%s", emojiText("📅"), v)
+		return fmt.Sprintf("%s%s", emojiText("🎫"), v)
 	case p == "goals":
 		return emojiText("🎯")
 	case strings.HasPrefix(p, "goal/"):
@@ -28271,6 +28811,7 @@ func UriToId(uri string) string {
 		return emojiText("🛡️")
 	case strings.HasPrefix(p, "policy/"):
 		v := strings.TrimPrefix(p, "policy/")
+		v = strings.ToLower(v)
 		if !strings.HasPrefix(v, "/") {
 			v = "/" + v
 		}
@@ -28279,17 +28820,17 @@ func UriToId(uri string) string {
 		return emojiText("🚫")
 	case strings.HasPrefix(p, "violationKind/"):
 		v := strings.TrimPrefix(p, "violationKind/")
-		return fmt.Sprintf("%s%s", emojiText("🚫"), v)
+		return fmt.Sprintf("%s%s", emojiText("🚫"), ViolationKindUriPathToId(v))
 	case p == "contributors":
 		return emojiText("👤")
 	case strings.HasPrefix(p, "contributor/"):
 		v := strings.TrimPrefix(p, "contributor/")
-		return fmt.Sprintf("%s%s", emojiText("👤"), v)
+		return fmt.Sprintf("%s%s", emojiText("👤"), strings.ToLower(v))
 	case p == "commits":
 		return emojiText("🔀")
 	case strings.HasPrefix(p, "commit/"):
 		v := strings.TrimPrefix(p, "commit/")
-		return fmt.Sprintf("%s%s", emojiText("🔀"), v)
+		return fmt.Sprintf("%s%s", emojiText("🔀"), strings.ToLower(v))
 	}
 	return ""
 }
@@ -28346,15 +28887,33 @@ func extractFinishedStr(data map[string]interface{}) string {
 	return finishedStr
 }
 
+func sanitizeProp(v string) string {
+	v = strings.ReplaceAll(v, "\r\n", " ")
+	v = strings.ReplaceAll(v, "\n", " ")
+	v = strings.ReplaceAll(v, "\r", " ")
+	v = strings.ReplaceAll(v, "`", "'")
+	for strings.Contains(v, "  ") {
+		v = strings.ReplaceAll(v, "  ", " ")
+	}
+	return strings.TrimSpace(v)
+}
+
+func sanitizeSingleLine(v string) string {
+	v = strings.ReplaceAll(v, "\r\n", " ")
+	v = strings.ReplaceAll(v, "\n", " ")
+	v = strings.ReplaceAll(v, "\r", " ")
+	return v
+}
+
 func collectEntityProps(kind string, data map[string]interface{}, truncateDesc bool) []string {
 	var props []string
 	appendNonEmpty := func(vals ...string) {
 		for _, v := range vals {
 			if v != "" {
-				v = strings.ReplaceAll(v, "\r\n", " ")
-				v = strings.ReplaceAll(v, "\n", " ")
-				v = strings.ReplaceAll(v, "\r", " ")
-				props = append(props, v)
+				v = sanitizeProp(v)
+				if v != "" {
+					props = append(props, v)
+				}
 			}
 		}
 	}
@@ -28496,11 +29055,11 @@ func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) str
 			return ColorDim
 		}
 	}
-	out := fmt.Sprintf("%s", colorize(id, ColorBold, isTTY))
+	out := fmt.Sprintf("%s", colorize(sanitizeProp(id), ColorBold, isTTY))
 	for i, p := range props {
 		out += fmt.Sprintf(" %s", colorize(p, propColor(i), isTTY))
 	}
-	return out
+	return sanitizeSingleLine(out)
 }
 
 func inferEntityKind(key string) string {
@@ -28541,11 +29100,11 @@ func renderEntityMarkdownLink(kind string, data map[string]interface{}) string {
 	id := GetArtifactID(kind, data)
 	uri := GetArtifactURI(kind, data)
 	props := collectEntityProps(kind, data, false)
-	out := fmt.Sprintf("[%s](%s)", id, uri)
+	out := fmt.Sprintf("[%s](%s)", sanitizeProp(id), uri)
 	for _, p := range props {
 		out += fmt.Sprintf(" - `%s`", p)
 	}
-	return out
+	return sanitizeSingleLine(out)
 }
 
 func renderEntityMarkdown(kind string, data map[string]interface{}) string {

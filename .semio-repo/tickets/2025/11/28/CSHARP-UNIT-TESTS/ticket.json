@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.751Z",
   "interactions": [
     {
-      "prompt": "Sync C# unit tests with JS semio.ts tests using same fixtures",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.751Z"
       },
-      "started": "2025-12-16T17:06:07.751Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Sync C# unit tests with JS semio.ts tests using same fixtures",
+      "llm": "sonnet-4"
     }
   ]
 }

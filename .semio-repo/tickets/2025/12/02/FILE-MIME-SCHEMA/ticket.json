@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.803Z",
   "interactions": [
     {
-      "prompt": "Add mime field to File schema and migrate kit_metabolism.json",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.803Z"
       },
-      "started": "2025-12-16T17:06:07.803Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Add mime field to File schema and migrate kit_metabolism.json",
+      "llm": "sonnet-4-5"
     }
   ]
 }

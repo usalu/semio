@@ -11,16 +11,17 @@
   "finished": "2026-02-02T18:42:29.434170976Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-02-02T18:35:37.524566499Z",
+        "finished": "2026-02-02T18:42:29.434170976Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Introduce a global --md flag that outputs the result in markdown format. Markdown should be used by the mcp server. Make sure every command has three different output formats: human colored text with ids used by the cli, markdown with uris used by mcp and json mode that has all information.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-02-02T18:35:37.524566499Z",
-      "finished": "2026-02-02T18:42:29.434170976Z",
-      "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "diff": {
         "bundles": {
           "deleted": null,

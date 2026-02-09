@@ -6,13 +6,16 @@
   "started": "2025-12-18T07:37:49.084Z",
   "interactions": [
     {
-      "prompt": "Consolidate all sketchpad tests from feature-based to app-based organization. One test per app covering all features.",
-      "llm": "opus-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-18T07:37:49.084Z"
       },
-      "started": "2025-12-18T07:37:49.084Z",
-      "commit": ""
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "Consolidate all sketchpad tests from feature-based to app-based organization. One test per app covering all features.",
+      "llm": "opus-4-5"
     }
   ]
 }

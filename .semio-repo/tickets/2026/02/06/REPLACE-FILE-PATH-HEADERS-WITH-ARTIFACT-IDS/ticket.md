@@ -26,7 +26,7 @@ Replaced plain file paths in source code headers with emoji-prefixed artifact ID
 
 - Explored current header system: `headerFmt`, `generateFileHeader`, `headerPolicy`, `ViolationCodeHeaderMissingFilename`
 - Current headers use plain paths like `// js/vscode/extension.ts` or `// ./semio-repo/cli/cli_test.go`
-- Replaced with artifact IDs like `// 💻︎ semio-repo/cli/cli.go` using `fileKindEmoji` + `\uFE0E` + space + path
+- Replaced with artifact IDs like `// 💻 semio-repo/cli/cli.go` using `fileKindEmoji` + `\uFE0E` + space + path
 - Fixed pre-existing `BundleKindClient` undefined bug (should be `BundleKindUI`)
 - Fixed pre-existing inline comment count expectation (2 not 1, blank lines reset grouping)
 - Repo-wide fix needed extra pass for `.storybook` files not enumerated by bundle scope

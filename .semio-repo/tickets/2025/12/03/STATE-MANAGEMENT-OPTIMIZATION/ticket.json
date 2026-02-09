@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.858Z",
   "interactions": [
     {
-      "prompt": "Optimize Yjs state management to prevent overfetching and infinite rerenders",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.858Z"
       },
-      "started": "2025-12-16T17:06:07.858Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Optimize Yjs state management to prevent overfetching and infinite rerenders",
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -6,13 +6,16 @@
   "started": "2026-01-03T02:39:23Z",
   "interactions": [
     {
-      "prompt": "Show VS Code extension commands in a command/subcommand tree",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2026-01-03T02:39:23Z"
       },
-      "started": "2026-01-03T02:39:23Z",
-      "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",
+      "prompt": "Show VS Code extension commands in a command/subcommand tree",
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.901Z",
   "interactions": [
     {
-      "prompt": "Fix sql-wasm.wasm not being included in sketchpad production build",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.901Z"
       },
-      "started": "2025-12-16T17:06:07.901Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix sql-wasm.wasm not being included in sketchpad production build",
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.948Z",
   "interactions": [
     {
-      "prompt": "\"Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE → {\\\\navigation\\\\:\\\\design\\\\}\"",
-      "llm": "gpt-5-2",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.948Z"
       },
-      "started": "2025-12-16T17:06:07.948Z",
-      "commit": "7765b633fe739bc29cd811ac7ec884e782e2e945"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "7765b633fe739bc29cd811ac7ec884e782e2e945",
+      "prompt": "\"Yjs should only be used to synchronize the kit data. All app state should be stored in the state machine. E.g. when updating sketchpad settings I get: [Machine] Y_UPDATE → {\\\\navigation\\\\:\\\\design\\\\}\"",
+      "llm": "gpt-5-2"
     }
   ]
 }

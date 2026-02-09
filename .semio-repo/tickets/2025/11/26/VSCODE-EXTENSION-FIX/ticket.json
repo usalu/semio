@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.722Z",
   "interactions": [
     {
-      "prompt": "Fix VS Code extension linting and test setup",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.722Z"
       },
-      "started": "2025-12-16T17:06:07.722Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix VS Code extension linting and test setup",
+      "llm": "sonnet-4"
     }
   ]
 }

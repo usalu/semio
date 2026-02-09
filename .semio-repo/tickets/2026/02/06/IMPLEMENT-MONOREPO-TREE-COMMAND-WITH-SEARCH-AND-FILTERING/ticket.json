@@ -1,7 +1,7 @@
 {
   "title": "Implement Monorepo Tree Command with Search and Filtering",
   "status": "closed",
-  "prompt": "Implement the `tree \u003cquery\u003e?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, violation kinds, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-\u003cvalue\u003e` and `--no-\u003cfilter\u003e` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
+  "prompt": "Implement the `tree \u003cquery\u003ee?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, violation kinds, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-\u003cvalue\u003ee` and `--no-\u003cfilter\u003ee` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
   "summary": "Implemented the monorepo `tree` command with fuzzy full-text search via bleve and comprehensive filtering. Added `TreeNodeKind` enum and `TreeNode` struct modeling the complete monorepo hierarchy (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, contributors, commits). Added `TreeFilter` with kind-level, sub-kind-level, date, status, and contributor filtering with case-insensitive matching. `BuildMonorepoTree` streams all data sources concurrently with a single filesystem walk, assigns folders/files to bundles by path prefix. `FilterMonorepoTree` recursively filters and `collapseFilteredKinds` promotes children of excluded kinds. `SearchMonorepoTree` uses bleve in-memory index for fuzzy matching with parent chain preservation. Section/definition parsing is opt-in via `TreeBuildOptions.IncludeSections`. Added `bindTreeFlags` with 60+ CLI flags. 46 tests added covering all units (TreeNodeKind, TreeFilter methods, FilterMonorepoTree, SearchMonorepoTree, RenderMonorepoTree, BuildMonorepoTree, collapseFilteredKinds, sortTreeChildren, flag binding). Updated README.md and AGENTS.md documentation.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS",
   "started": "2026-02-06T23:38:34.836679723Z",
@@ -12,13 +12,13 @@
         "started": "2026-02-06 23:38:34",
         "finished": "2026-02-07 00:23:37"
       },
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": {
         "version": "linux",
         "client": "windsurf-chat"
       },
       "commit": "0289c4bd83eb052f0aaeaa8256cff387196d7b60",
-      "prompt": "Implement the `tree \u003cquery\u003e?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, violation kinds, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-\u003cvalue\u003e` and `--no-\u003cfilter\u003e` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
+      "prompt": "Implement the `tree \u003cquery\u003ee?` command that shows the complete monorepo as a tree with all entity types (projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, violation kinds, contributors, commits). Add positional query parameter for fuzzy search using bleve. Add `--only-\u003cvalue\u003ee` and `--no-\u003cfilter\u003ee` flags for filtering. Handle parent chain preservation when filtering. Collapse intermediate parents when filtered. Extend existing tests.",
       "llm": "sonnet-4-5",
       "diff": {
         "bundles": {

@@ -11,15 +11,17 @@
   "finished": "2026-01-28T14:09:56.918733579Z",
   "interactions": [
     {
+      "dates": {
+        "started": "2026-01-28T14:08:03.230808637Z",
+        "finished": "2026-01-28T14:09:56.918733579Z"
+      },
+      "author": "usalu",
+      "system": {
+        "client": ""
+      },
+      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
       "prompt": "Windsurf MCP config at ~/.codeium/windsurf/mcp_config.json after rebuild.",
       "llm": "gpt-5-2",
-      "author": {
-        "name": "Ueli Saluz",
-        "email": "ueli@semio-tech.de"
-      },
-      "started": "2026-01-28T14:08:03.230808637Z",
-      "finished": "2026-01-28T14:09:56.918733579Z",
-      "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
       "diff": {
         "bundles": {
           "deleted": null,

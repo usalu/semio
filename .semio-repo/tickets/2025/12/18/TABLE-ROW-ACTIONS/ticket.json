@@ -6,13 +6,16 @@
   "started": "2025-12-18T15:36:11.11Z",
   "interactions": [
     {
-      "prompt": "Create actions in table rows are not right aligned; tags strip should appear between name and action.",
-      "llm": "gpt-5.2-codex",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-18T15:36:11.11Z"
       },
-      "started": "2025-12-18T15:36:11.11Z",
-      "commit": ""
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "Create actions in table rows are not right aligned; tags strip should appear between name and action.",
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

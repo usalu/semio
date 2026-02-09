@@ -1,18 +1,21 @@
 {
   "title": "HOVER-STATE-MACHINE",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "started": "2025-12-22T22:15:05.755Z",
   "interactions": [
     {
-      "prompt": ">-",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-22T22:15:05.755Z"
       },
-      "started": "2025-12-22T22:15:05.755Z",
-      "commit": ""
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "",
+      "prompt": "\u003e-",
+      "llm": "sonnet-4-5"
     }
   ]
 }

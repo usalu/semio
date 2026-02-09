@@ -6,13 +6,16 @@
   "started": "2026-01-07T11:23:05Z",
   "interactions": [
     {
-      "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
-      "llm": "OPUS",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2026-01-07T11:23:05Z"
       },
-      "started": "2026-01-07T11:23:05Z",
-      "commit": "864921b472c3d45c3c0d70e8940686a9678caad0"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "864921b472c3d45c3c0d70e8940686a9678caad0",
+      "prompt": "Fix/Refactor/Extend repo_test.go to ensure every node is tested for non-empty collection",
+      "llm": "OPUS"
     }
   ]
 }

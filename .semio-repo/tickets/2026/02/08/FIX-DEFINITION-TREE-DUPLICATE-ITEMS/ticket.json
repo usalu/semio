@@ -15,7 +15,7 @@
         "started": "2026-02-08 00:16:27",
         "finished": "2026-02-08 00:19:49"
       },
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": {
         "version": "linux",
         "client": "codex"
@@ -49,7 +49,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻︎semio-repo/vscode/extension.ts",
+              "path": "💻semio-repo/vscode/extension.ts",
               "lines": {
                 "added": 557,
                 "removed": 337
@@ -78,49 +78,49 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Activation",
+              "path": "💻semio-repo/vscode/extension.ts#Activation",
               "lines": {
                 "added": 83,
                 "removed": 177
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Data Fetching",
+              "path": "💻semio-repo/vscode/extension.ts#Data Fetching",
               "lines": {
                 "added": 32,
                 "removed": 61
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Helpers",
+              "path": "💻semio-repo/vscode/extension.ts#Helpers",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Imports",
+              "path": "💻semio-repo/vscode/extension.ts#Imports",
               "lines": {
                 "added": 1,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers",
+              "path": "💻semio-repo/vscode/extension.ts#Providers",
               "lines": {
                 "added": 179,
                 "removed": 98
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution",
               "lines": {
                 "added": 234,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Utilities",
+              "path": "💻semio-repo/vscode/extension.ts#Utilities",
               "lines": {
                 "added": 16,
                 "removed": 0
@@ -198,182 +198,182 @@
           "renamed": [],
           "modified": [
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Activation§activate",
+              "path": "💻semio-repo/vscode/extension.ts#Activation§activate",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "path": "💻semio-repo/vscode/extension.ts#Activation§registerCommands",
               "lines": {
                 "added": 0,
                 "removed": 177
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Activation§registerCommands",
+              "path": "💻semio-repo/vscode/extension.ts#Activation§registerCommands",
               "lines": {
                 "added": 72,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Activation§registerSidebarViews",
+              "path": "💻semio-repo/vscode/extension.ts#Activation§registerSidebarViews",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§validateKitDocument",
+              "path": "💻semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§validateKitDocument",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Helpers§getFileKindIcon",
+              "path": "💻semio-repo/vscode/extension.ts#Helpers§getFileKindIcon",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "path": "💻semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
+              "path": "💻semio-repo/vscode/extension.ts#Providers§FilterTreeDataProvider",
               "lines": {
                 "added": 17,
                 "removed": 61
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "path": "💻semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
               "lines": {
                 "added": 0,
                 "removed": 92
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
+              "path": "💻semio-repo/vscode/extension.ts#Providers§MonorepoTreeDataProvider",
               "lines": {
                 "added": 58,
                 "removed": 148
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers§SectionTreeItem",
+              "path": "💻semio-repo/vscode/extension.ts#Providers§SectionTreeItem",
               "lines": {
                 "added": 25,
                 "removed": 25
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers§SectionsTreeDataProvider",
+              "path": "💻semio-repo/vscode/extension.ts#Providers§SectionsTreeDataProvider",
               "lines": {
                 "added": 77,
                 "removed": 30
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§TREE_CACHE_TTL",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§TREE_CACHE_TTL",
               "lines": {
                 "added": 13,
                 "removed": 9
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§TreeNodeData",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§TreeNodeData",
               "lines": {
                 "added": 13,
                 "removed": 10
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§bundleKindEmoji",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§bundleKindEmoji",
               "lines": {
                 "added": 11,
                 "removed": 8
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§findSectionByPath",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§findSectionByPath",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§flattenTree",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§flattenTree",
               "lines": {
                 "added": 8,
                 "removed": 6
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§invalidateTreeNodeCache",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§invalidateTreeNodeCache",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§parseUri",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§parseUri",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§slugify",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§slugify",
               "lines": {
                 "added": 3,
                 "removed": 2
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§treeNodeCache",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§treeNodeCache",
               "lines": {
                 "added": 15,
                 "removed": 10
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§treeNodeCacheTime",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§treeNodeCacheTime",
               "lines": {
                 "added": 14,
                 "removed": 9
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Utilities§execShell",
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§execShell",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Utilities§getUrqlClient",
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§getUrqlClient",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Utilities§isSectionNode",
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§isSectionNode",
               "lines": {
                 "added": 6,
                 "removed": 3
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Utilities§resetUrqlClient",
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§resetUrqlClient",
               "lines": {
                 "added": 0,
                 "removed": 3
@@ -382,105 +382,105 @@
           ],
           "added": [
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Helpers§getFileKindIcon",
+              "path": "💻semio-repo/vscode/extension.ts#Helpers§getFileKindIcon",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers§SectionTreeItem",
+              "path": "💻semio-repo/vscode/extension.ts#Providers§SectionTreeItem",
               "lines": {
                 "added": 25,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Providers§SectionsTreeDataProvider",
+              "path": "💻semio-repo/vscode/extension.ts#Providers§SectionsTreeDataProvider",
               "lines": {
                 "added": 79,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§TREE_CACHE_TTL",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§TREE_CACHE_TTL",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§TreeNodeData",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§TreeNodeData",
               "lines": {
                 "added": 13,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§bundleKindEmoji",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§bundleKindEmoji",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§findSectionByPath",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§findSectionByPath",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§flattenTree",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§flattenTree",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§invalidateTreeNodeCache",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§invalidateTreeNodeCache",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§parseUri",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§parseUri",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§slugify",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§slugify",
               "lines": {
                 "added": 3,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§treeNodeCache",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§treeNodeCache",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#URI Resolution§treeNodeCacheTime",
+              "path": "💻semio-repo/vscode/extension.ts#URI Resolution§treeNodeCacheTime",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Utilities§execShell",
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§execShell",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "💻︎semio-repo/vscode/extension.ts#Utilities§isSectionNode",
+              "path": "💻semio-repo/vscode/extension.ts#Utilities§isSectionNode",
               "lines": {
                 "added": 6,
                 "removed": 0

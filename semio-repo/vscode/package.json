@@ -977,27 +977,21 @@
   "scripts": {
     "dev": "vite build --watch",
     "test": "vscode-test",
-    "build": "npm run build:codegen && vite build && vite build --config vite.test.config.ts",
-    "build:codegen": "graphql-codegen --config codegen.ts",
+    "build": "vite build && vite build --config vite.test.config.ts",
     "package": "vsce package --no-dependencies --out semio-repo.vsix",
     "preflight": "tsc --noEmit",
     "vscode:prepublish": "npm run build"
   },
   "devDependencies": {
     "@vscode/vsce": "^3.5.0",
-    "@graphql-codegen/cli": "^5.0.7",
-    "@graphql-codegen/client-preset": "^4.8.3",
-    "@graphql-typed-document-node/core": "^3.2.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "^24.10.1",
     "@types/vscode": "^1.104.0",
     "@vscode/test-cli": "^0.0.10",
     "@vscode/test-electron": "^2.5.2",
-    "graphql": "^16.12.0",
     "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "@semio/js": "^0.1.0",
-    "@urql/core": "^5.2.0",
     "jsonc-parser": "^3.3.1"
   },
   "dependencies": {},

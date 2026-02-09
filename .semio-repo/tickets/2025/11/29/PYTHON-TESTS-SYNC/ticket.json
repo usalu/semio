@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.775Z",
   "interactions": [
     {
-      "prompt": "Sync Python unit tests with JS fixtures and extend engine.py",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.775Z"
       },
-      "started": "2025-12-16T17:06:07.775Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Sync Python unit tests with JS fixtures and extend engine.py",
+      "llm": "sonnet-4"
     }
   ]
 }

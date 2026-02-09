@@ -665,7 +665,7 @@
       "type": "object"
     }
   },
-  "description": "🗃️A kit is a collection of types and designs.",
+  "description": "🗃️️A kit is a collection of types and designs.",
   "properties": {
     "uri": {
       "description": "🆔 The uri of the kit.",

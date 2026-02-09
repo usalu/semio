@@ -6,13 +6,16 @@
   "started": "2026-01-06T10:16:32Z",
   "interactions": [
     {
-      "prompt": "Consolidate types and refactor to use GraphQL as the primary API layer",
-      "llm": "opus-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2026-01-06T10:16:32Z"
       },
-      "started": "2026-01-06T10:16:32Z",
-      "commit": "d02bd230eadd0eee9725309c0bb7d6abae6607f9"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "d02bd230eadd0eee9725309c0bb7d6abae6607f9",
+      "prompt": "Consolidate types and refactor to use GraphQL as the primary API layer",
+      "llm": "opus-4"
     }
   ]
 }

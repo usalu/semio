@@ -1,8 +1,10 @@
 // #region 🔖Header
 
-// 💻︎ semio/js/sketchpad/Sketchpad.tsx
+// 💻 semio/js/sketchpad/Sketchpad.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
+
+// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -16,6 +18,12 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -248,6 +256,8 @@ import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from
 
 // #endregion 🔖Imports
 
+// #region 🔖State Management
+
 // #region 🔖Store
 
 export function identitySelector<T>(value: T): T {
@@ -358,7 +368,7 @@ export abstract class Store<TState> {
 
   onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubscribe {
     const subscriberCallback = () => {
-      subscribe(() => {});
+      subscribe(() => { });
     };
 
     if (!this.fieldSubscribers.has(key)) {
@@ -373,7 +383,7 @@ export abstract class Store<TState> {
             subscribers.forEach((cb) => cb());
           }
           callback();
-          return () => {};
+          return () => { };
         },
         deep,
       );
@@ -411,14 +421,14 @@ export abstract class Store<TState> {
   onPathChanged(path: YPath, subscribe: Subscribe): Unsubscribe {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yMap, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => {};
+        return () => { };
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -855,7 +865,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 
   onFieldChanged(key: string, subscribe: Subscribe, _deep?: boolean): Disposable {
     const wrappedCallback = () => {
-      subscribe(() => {});
+      subscribe(() => { });
     };
     this.listeners.add(wrappedCallback);
     const dispose = () => this.listeners.delete(wrappedCallback);
@@ -3925,11 +3935,11 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => {};
+      if (!designStore) return () => { };
       return designStore.onConnectionsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [designStore],
@@ -5245,7 +5255,7 @@ export class DesignStore {
   onPiecesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._piecesCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yPieces.observeDeep(notifySubscriber);
@@ -5258,7 +5268,7 @@ export class DesignStore {
   onConnectionsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._connectionsCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yConnections.observeDeep(notifySubscriber);
@@ -5280,14 +5290,14 @@ export class DesignStore {
   onPathChanged = (path: YPath, subscribe: Subscribe): Unsubscribe => {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yDesign, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => {};
+        return () => { };
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -5349,11 +5359,11 @@ export function usePieces(): Piece[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => {};
+      if (!designStore) return () => { };
       return designStore.onPiecesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [designStore],
@@ -5372,11 +5382,11 @@ export function useConnections(): Connection[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => {};
+      if (!designStore) return () => { };
       return designStore.onConnectionsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [designStore],
@@ -5406,14 +5416,14 @@ export function useDesignId() {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => {};
+      if (!designStore) return () => { };
       const unsubName = designStore.onScalarFieldChanged("name", () => {
         callback();
-        return () => {};
+        return () => { };
       });
       const unsubParent = designStore.onScalarFieldChanged("parent", () => {
         callback();
-        return () => {};
+        return () => { };
       });
       return () => {
         unsubName();
@@ -6491,14 +6501,14 @@ export class KitStore {
   onPathChanged = (path: YPath, subscribe: Subscribe): Unsubscribe => {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yKit, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => {};
+        return () => { };
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -6596,7 +6606,7 @@ export class KitStore {
   onConceptsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._conceptsCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yConcepts.observeDeep(notifySubscriber);
@@ -6609,7 +6619,7 @@ export class KitStore {
   onTypesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._typesCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yTypes.observeDeep(notifySubscriber);
@@ -6622,7 +6632,7 @@ export class KitStore {
   onFilesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._filesCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yFiles.observeDeep(notifySubscriber);
@@ -6635,7 +6645,7 @@ export class KitStore {
   onDesignsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._designsCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yDesigns.observeDeep(notifySubscriber);
@@ -6648,7 +6658,7 @@ export class KitStore {
   onQualitiesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._qualitiesCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yQualities.observeDeep(notifySubscriber);
@@ -6661,7 +6671,7 @@ export class KitStore {
   onAuthorsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._authorsCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yAuthors.observeDeep(notifySubscriber);
@@ -6674,7 +6684,7 @@ export class KitStore {
   onFoldersChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._foldersCache = undefined;
-      subscribe(() => {});
+      subscribe(() => { });
     };
     if (deep) {
       this.yFolders.observeDeep(notifySubscriber);
@@ -6854,11 +6864,11 @@ export function useKitTypes(guid?: Guid): Type[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => {};
+      if (!kitStore) return () => { };
       return kitStore.onTypesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [kitStore],
@@ -6879,10 +6889,10 @@ export function useKitName(guid?: Guid): string {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => {};
+      if (!kitStore) return () => { };
       return kitStore.onScalarFieldChanged("name", () => {
         callback();
-        return () => {};
+        return () => { };
       });
     },
     [kitStore],
@@ -6903,10 +6913,10 @@ export function useKitDescription(guid?: Guid): string | undefined {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => {};
+      if (!kitStore) return () => { };
       return kitStore.onScalarFieldChanged("description", () => {
         callback();
-        return () => {};
+        return () => { };
       });
     },
     [kitStore],
@@ -6927,11 +6937,11 @@ export function useKitAuthors(guid?: Guid): Author[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => {};
+      if (!kitStore) return () => { };
       return kitStore.onAuthorsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [kitStore],
@@ -6952,11 +6962,11 @@ export function useKitFiles(guid?: Guid): SemioFile[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => {};
+      if (!kitStore) return () => { };
       return kitStore.onFilesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [kitStore],
@@ -6977,11 +6987,11 @@ export function useKitQualities(guid?: Guid): Quality[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => {};
+      if (!kitStore) return () => { };
       return kitStore.onQualitiesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [kitStore],
@@ -7002,11 +7012,11 @@ export function useKitDesigns(guid?: Guid): Design[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => {};
+      if (!kitStore) return () => { };
       return kitStore.onDesignsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [kitStore],
@@ -7031,11 +7041,11 @@ export function useKitFolders(guid?: Guid): Folder[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => {};
+      if (!kitStore) return () => { };
       return kitStore.onFoldersChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       }, true);
     },
     [kitStore],
@@ -7099,10 +7109,10 @@ export function useKitTransaction(): Transaction {
   const kitStore = store.kit(kitGuid);
   return {
     start: () => {
-      kitStore.yDoc.transact(() => {}, getOrigin());
+      kitStore.yDoc.transact(() => { }, getOrigin());
     },
-    finalize: () => {},
-    abort: () => {},
+    finalize: () => { },
+    abort: () => { },
   };
 }
 
@@ -7379,7 +7389,7 @@ export const kitCommands = {
               const fileBlob = await fileResponse.blob();
               const fileName = file.path.split("/").pop() || file.path;
               files.push(new File([fileBlob], fileName));
-            } catch (error) {}
+            } catch (error) { }
           }
           return {
             diff: {
@@ -7431,7 +7441,7 @@ export const kitCommands = {
               const blob = await response.blob();
               files.set(path, blob);
             }
-          } catch (error) {}
+          } catch (error) { }
         }
 
         const zipBlob = await exportKit(kit, files);
@@ -7462,13 +7472,13 @@ export const kitCommands = {
                     piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece.guid === piece.guid || connection.connecting.piece.guid === piece.guid)
                       ? piece
                       : {
-                          ...piece,
-                          plane: {
-                            origin: { x: 0, y: 0, z: 0 },
-                            xAxis: { x: 1, y: 0, z: 0 },
-                            yAxis: { x: 0, y: 1, z: 0 },
-                          },
+                        ...piece,
+                        plane: {
+                          origin: { x: 0, y: 0, z: 0 },
+                          xAxis: { x: 1, y: 0, z: 0 },
+                          yAxis: { x: 0, y: 1, z: 0 },
                         },
+                      },
                   ],
                 },
               },
@@ -7492,13 +7502,13 @@ export const kitCommands = {
                     candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece.guid === candidate.guid || connection.connecting.piece.guid === candidate.guid)
                       ? candidate
                       : {
-                          ...candidate,
-                          plane: {
-                            origin: { x: 0, y: 0, z: 0 },
-                            xAxis: { x: 1, y: 0, z: 0 },
-                            yAxis: { x: 0, y: 1, z: 0 },
-                          },
+                        ...candidate,
+                        plane: {
+                          origin: { x: 0, y: 0, z: 0 },
+                          xAxis: { x: 1, y: 0, z: 0 },
+                          yAxis: { x: 0, y: 1, z: 0 },
                         },
+                      },
                   ),
                 },
               },
@@ -7956,28 +7966,28 @@ function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
   const settings = settingsStr
     ? JSON.parse(settingsStr)
     : {
-        apps: {
-          design: {
-            diagram: { proximityConnectDistance: 10 },
-            scene: { gridSize: 24 },
-          },
+      apps: {
+        design: {
+          diagram: { proximityConnectDistance: 10 },
+          scene: { gridSize: 24 },
         },
-      };
+      },
+    };
 
   const panelSizesStr = ySketchpad.get("panelSizes") as string;
   const panelSizes = panelSizesStr
     ? JSON.parse(panelSizesStr)
     : {
-        toolbarHeight: 52,
-        workbenchWidth: 230,
-        toolsWidth: 230,
-        hudWidth: 230,
-        statsWidth: 230,
-        detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
-        consoleHeight: 200,
-      };
+      toolbarHeight: 52,
+      workbenchWidth: 230,
+      toolsWidth: 230,
+      hudWidth: 230,
+      statsWidth: 230,
+      detailsWidth: 230,
+      chatWidth: 230,
+      settingsWidth: 230,
+      consoleHeight: 200,
+    };
 
   const navigationHistoryStr = ySketchpad.get("navigationHistory") as string;
   const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
@@ -8212,7 +8222,7 @@ function writeSketchpadStateToLocalStorage(id: string, state: SketchpadState): v
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(`semio.sketchpad.state.${id}`, JSON.stringify(state));
-  } catch {}
+  } catch { }
 }
 
 function toSketchpadInitialState(initialState?: ExtendedInitialState): Partial<SketchpadState> | undefined {
@@ -8330,7 +8340,7 @@ export const sketchpadMachine = setup({
     },
   },
   actions: {
-    navigate: () => {},
+    navigate: () => { },
     navigateImpl: assign(({ context, event }) => {
       if (event.type !== "NAVIGATE") return {};
       const currentNav = context.sketchpad.navigation;
@@ -8385,7 +8395,7 @@ export const sketchpadMachine = setup({
       if (event.type !== "CHANGE") return {};
       return { sketchpad: applySketchpadDiffToState(context.sketchpad, event.diff) };
     }),
-    markDirty: () => {},
+    markDirty: () => { },
 
     dispatchAppEvent: assign(({ context, event }) => executeEventHandler(context, event)),
 
@@ -9576,7 +9586,7 @@ export function useDiffedDesign(): Design {
 
 export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscribe, deep: boolean = false): Disposable {
   const callback = () => {
-    subscribe(() => {});
+    subscribe(() => { });
   };
   if (deep) {
     yMap.observeDeep(callback);
@@ -9590,7 +9600,7 @@ export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscr
 export function createFieldObserver<T>(yMap: Y.Map<T>, key: string, subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
   let currentValue = yMap.get(key);
-  const notifySubscriber = () => subscribe(() => {});
+  const notifySubscriber = () => subscribe(() => { });
   const setupNestedObserver = (value: any) => {
     if (deep && value instanceof Y.Map) {
       const nestedCallback = () => notifySubscriber();
@@ -9623,7 +9633,7 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
   const disposables: Disposable[] = [];
   const keySet = new Set(keys);
   const nestedDisposables = new Map<string, Disposable[]>();
-  const notifySubscriber = () => subscribe(() => {});
+  const notifySubscriber = () => subscribe(() => { });
   const setupNestedObserver = (key: string, value: any) => {
     const keyDisposables: Disposable[] = [];
     if (deep && value instanceof Y.Map) {
@@ -9670,7 +9680,7 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
 
 export function createArrayItemMembershipObserver(getYArray: () => Y.Array<string> | undefined, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
-  const notifySubscriber = () => subscribe(() => {});
+  const notifySubscriber = () => subscribe(() => { });
 
   const checkMembership = () => {
     const yArray = getYArray();
@@ -9712,7 +9722,7 @@ export function createNestedArrayItemMembershipObserver(yMap: Y.Map<any>, mapKey
   let currentArray: Y.Array<string> | undefined;
   let nestedMapDisposer: Disposable | null = null;
   let arrayDisposer: Disposable | null = null;
-  const notifySubscriber = () => subscribe(() => {});
+  const notifySubscriber = () => subscribe(() => { });
 
   const checkMembership = (): boolean => {
     const nestedMap = yMap.get(mapKey) as Y.Map<any> | undefined;
@@ -9840,7 +9850,7 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
       return store.onChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       });
     },
     [store],
@@ -9855,11 +9865,11 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
 export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => {};
+      if (!store) return () => { };
       return store.onChanged((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       });
     },
     [store],
@@ -9875,11 +9885,11 @@ export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe
 export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => {};
+      if (!store) return () => { };
       return store.onChangedDeep((cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       });
     },
     [store],
@@ -9906,7 +9916,7 @@ export function useSyncField<T, TSelected = T>(
         (cb: () => void) => {
           cb();
           callback();
-          return () => {};
+          return () => { };
         },
         deep,
       );
@@ -9970,7 +9980,7 @@ export function useSyncFields<T, TSelected = T>(
         (cb: () => void) => {
           cb();
           callback();
-          return () => {};
+          return () => { };
         },
         deep,
       );
@@ -10014,11 +10024,11 @@ export function useSyncFields<T, TSelected = T>(
 export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => {};
+      if (!store) return () => { };
       return createNestedArrayItemMembershipObserver(store.yMap, mapKey, arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       });
     },
     [store, mapKey, arrayKey, itemId],
@@ -10039,12 +10049,12 @@ export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | n
 export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | null, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => {};
+      if (!store) return () => { };
 
       return createNestedArrayItemMembershipObserver(store.yMap, "selection", arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
-        return () => {};
+        return () => { };
       });
     },
     [store, arrayKey, itemId],
@@ -10070,10 +10080,10 @@ export function usePath<T, TSelected = T>(
   const pathKey = useMemo(() => JSON.stringify(path), [path]);
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => {};
+      if (!store) return () => { };
       return store.onPathChanged(path, () => {
         callback();
-        return () => {};
+        return () => { };
       });
     },
     [store, pathKey],
@@ -10109,7 +10119,7 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
   }, [derivedStore, key, depsKey]);
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!nodeRef.current) return () => {};
+      if (!nodeRef.current) return () => { };
       return nodeRef.current.subscribe(callback);
     },
     [derivedStore, key, depsKey],
@@ -10167,8 +10177,8 @@ function updateDocsPanelVisibilityState(update: DocsPanelVisibilityUpdate) {
 }
 
 const nullStore: Synchronizable<null> = {
-  onChanged: () => () => {},
-  onChangedDeep: () => () => {},
+  onChanged: () => () => { },
+  onChangedDeep: () => () => { },
   snapshot: () => null,
 };
 
@@ -10176,23 +10186,23 @@ export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchro
   const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl> & Store<TAccessl>);
   const state = deep
     ? useSyncExternalStore(
-        (onStoreChange: () => void) =>
-          actualStore.onChangedDeep((cb: () => void) => {
-            cb();
-            onStoreChange();
-            return () => {};
-          }),
-        actualStore.snapshot.bind(actualStore),
-      )
+      (onStoreChange: () => void) =>
+        actualStore.onChangedDeep((cb: () => void) => {
+          cb();
+          onStoreChange();
+          return () => { };
+        }),
+      actualStore.snapshot.bind(actualStore),
+    )
     : useSyncExternalStore(
-        (onStoreChange: () => void) =>
-          actualStore.onChanged((cb: () => void) => {
-            cb();
-            onStoreChange();
-            return () => {};
-          }),
-        actualStore.snapshot.bind(actualStore),
-      );
+      (onStoreChange: () => void) =>
+        actualStore.onChanged((cb: () => void) => {
+          cb();
+          onStoreChange();
+          return () => { };
+        }),
+      actualStore.snapshot.bind(actualStore),
+    );
   if (!store) {
     return { status: StoreStatus.IDLE, data: null as any };
   }
@@ -10303,7 +10313,7 @@ export class SketchpadStore {
       import("./Quality").then((m) => {
         qualityAppModuleCache = m;
       }),
-    ]).catch((err) => {});
+    ]).catch((err) => { });
   }
   private readonly id: string | undefined;
   private readonly remote: RemoteProviders | undefined;
@@ -10513,27 +10523,27 @@ export class SketchpadStore {
     const settings = settingsStr
       ? JSON.parse(settingsStr)
       : {
-          apps: {
-            design: {
-              diagram: { proximityConnectDistance: 10 },
-              scene: { gridSize: 24 },
-            },
+        apps: {
+          design: {
+            diagram: { proximityConnectDistance: 10 },
+            scene: { gridSize: 24 },
           },
-        };
+        },
+      };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-          toolbarHeight: 52,
-          workbenchWidth: 230,
-          toolsWidth: 230,
-          hudWidth: 230,
-          statsWidth: 230,
-          detailsWidth: 230,
-          chatWidth: 230,
-          settingsWidth: 230,
-          consoleHeight: 200,
-        };
+        toolbarHeight: 52,
+        workbenchWidth: 230,
+        toolsWidth: 230,
+        hudWidth: 230,
+        statsWidth: 230,
+        detailsWidth: 230,
+        chatWidth: 230,
+        settingsWidth: 230,
+        consoleHeight: 200,
+      };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
     const recentSearchesStr = this.ySketchpad.get("recentSearches") as string;
@@ -10620,7 +10630,7 @@ export class SketchpadStore {
       });
 
       await Promise.all(filePromises);
-    } catch (error) {}
+    } catch (error) { }
   };
 
   createKitApp = (kit: Guid) => {
@@ -10781,7 +10791,7 @@ export class SketchpadStore {
   onChanged = (subscribe: Subscribe): Unsubscribe => {
     if (this.actor) {
       const subscription = this.actor.subscribe(() => {
-        subscribe(() => {});
+        subscribe(() => { });
       });
       return () => subscription.unsubscribe();
     }
@@ -10791,7 +10801,7 @@ export class SketchpadStore {
   onChangedDeep = (subscribe: Subscribe): Unsubscribe => {
     if (this.actor) {
       const subscription = this.actor.subscribe(() => {
-        subscribe(() => {});
+        subscribe(() => { });
       });
       return () => subscription.unsubscribe();
     }
@@ -11276,30 +11286,30 @@ export class SketchpadStore {
           const concepts =
             yConcepts.length > 0
               ? Array.from(yConcepts).map((yConcept: any) => {
-                  const yMap = yConcept[0] as Y.Map<any>;
-                  const concept: Concept = {
-                    guid: yMap.get("guid") as string,
-                    name: yMap.get("name") as string,
-                  };
-                  const description = yMap.get("description") as string | undefined;
-                  if (description) concept.description = description;
-                  const icon = yMap.get("icon") as string | undefined;
-                  if (icon) concept.icon = icon;
-                  const yAttrs = yMap.get("attributes") as Y.Array<any> | undefined;
-                  if (yAttrs && yAttrs.length > 0) {
-                    const attributes = Array.from(yAttrs).map((yAttr: any) => {
-                      const attrMap = yAttr[0] as Y.Map<any>;
-                      const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
-                      const value = attrMap.get("value") as string | undefined;
-                      if (value) attribute.value = value;
-                      const definition = attrMap.get("definition") as string | undefined;
-                      if (definition) attribute.definition = definition;
-                      return attribute;
-                    });
-                    if (attributes.length > 0) concept.attributes = attributes;
-                  }
-                  return concept;
-                })
+                const yMap = yConcept[0] as Y.Map<any>;
+                const concept: Concept = {
+                  guid: yMap.get("guid") as string,
+                  name: yMap.get("name") as string,
+                };
+                const description = yMap.get("description") as string | undefined;
+                if (description) concept.description = description;
+                const icon = yMap.get("icon") as string | undefined;
+                if (icon) concept.icon = icon;
+                const yAttrs = yMap.get("attributes") as Y.Array<any> | undefined;
+                if (yAttrs && yAttrs.length > 0) {
+                  const attributes = Array.from(yAttrs).map((yAttr: any) => {
+                    const attrMap = yAttr[0] as Y.Map<any>;
+                    const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
+                    const value = attrMap.get("value") as string | undefined;
+                    if (value) attribute.value = value;
+                    const definition = attrMap.get("definition") as string | undefined;
+                    if (definition) attribute.definition = definition;
+                    return attribute;
+                  });
+                  if (attributes.length > 0) concept.attributes = attributes;
+                }
+                return concept;
+              })
               : conceptGuids?.map((g) => ({ guid: g, name: g }));
           const kit: Kit = {
             guid: yKit.get("guid") as string,
@@ -11328,7 +11338,7 @@ export class SketchpadStore {
           const kitStore = new KitStore(this, kit, local, remote, this.remote);
           this.kits.set(kit.guid, kitStore);
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
-        } catch (error) {}
+        } catch (error) { }
       } else {
         this.yDoc.transact(() => {
           const index = kitMetadataArray.findIndex((meta) => meta.get("guid") === kitGuid);
@@ -11801,7 +11811,7 @@ export function useKitShallows(): KitShallow[] {
         return kitStore.onChanged((cb: () => void) => {
           cb();
           onStoreChange();
-          return () => {};
+          return () => { };
         });
       });
       return () => {
@@ -11834,12 +11844,12 @@ export function useKitKind(kitGuid: string): "temporary" | "local" | "remote" | 
   const hasKit = useHasKit(kitGuid);
   return useSyncExternalStore(
     (onStoreChange) => {
-      if (!hasKit) return () => {};
+      if (!hasKit) return () => { };
       const kitStore = store.kit(kitGuid);
       return kitStore.onChanged((cb: () => void) => {
         cb();
         onStoreChange();
-        return () => {};
+        return () => { };
       });
     },
     () => {
@@ -11949,7 +11959,7 @@ export function useAppCommands() {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
             actor.send({ type: "HOME.TOGGLE_PANEL", panel: panelKey } as any);
           },
-          execute: (_origin: string, _command: string, ..._args: any[]) => {},
+          execute: (_origin: string, _command: string, ..._args: any[]) => { },
         };
       case "kit":
         return {
@@ -11963,7 +11973,7 @@ export function useAppCommands() {
             try {
               const app = store.kitApp(kitGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) {}
+            } catch (e) { }
           },
         };
       case "design":
@@ -11978,7 +11988,7 @@ export function useAppCommands() {
             try {
               const app = store.designApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) {}
+            } catch (e) { }
           },
         };
       case "type":
@@ -11993,7 +12003,7 @@ export function useAppCommands() {
             try {
               const app = store.typeApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) {}
+            } catch (e) { }
           },
         };
       case "quality":
@@ -12008,7 +12018,7 @@ export function useAppCommands() {
             try {
               const app = store.qualityApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) {}
+            } catch (e) { }
           },
         };
       case "docs":
@@ -12019,12 +12029,12 @@ export function useAppCommands() {
               [panelKey]: !prev[panelKey],
             }));
           },
-          execute: (_origin: string, _command: string, ..._args: any[]) => {},
+          execute: (_origin: string, _command: string, ..._args: any[]) => { },
         };
       default:
         return {
-          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => {},
-          execute: (_origin: string, _command: string, ..._args: any[]) => {},
+          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => { },
+          execute: (_origin: string, _command: string, ..._args: any[]) => { },
         };
     }
   }, [store, appType, kitGuid, itemGuid, actor]);
@@ -12180,7 +12190,7 @@ export function useKits(): KitShallow[] {
         return kitStore.onChanged((cb: () => void) => {
           cb();
           onStoreChange();
-          return () => {};
+          return () => { };
         });
       });
       return () => {
@@ -12420,6 +12430,8 @@ export const devCommands = {
 
 // #endregion 🔖Commands
 
+// #endregion 🔖State Management
+
 // #region 🔖Apps Registry
 
 export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
@@ -12428,7 +12440,7 @@ export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
     if (module && module.panels) {
       return module.panels;
     }
-  } catch (e) {}
+  } catch (e) { }
   return [];
 }
 
@@ -12858,7 +12870,7 @@ export function useOrigin(): () => string {
 export function useOriginValue(): string {
   const store = useContext(OriginContext);
   return useSyncExternalStore(
-    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => {}), [store]),
+    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => { }), [store]),
     useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]),
   );
 }
@@ -14019,7 +14031,7 @@ const buildSearchResultPath = (result: SearchResult): string => {
   return "";
 };
 
-const Search: FC = ({}) => {
+const Search: FC = ({ }) => {
   const navigate = useNavigate();
   const recentSearches = (useSketchpad((s) => s.recentSearches) as string[]) || [];
   const updateRecentSearches = useUpdateRecentSearches();
@@ -14237,7 +14249,7 @@ const Search: FC = ({}) => {
   );
 };
 
-const Focus: FC = ({}) => {
+const Focus: FC = ({ }) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const focusContext = useFocusSafe();
@@ -14344,7 +14356,7 @@ const Focus: FC = ({}) => {
   );
 };
 
-const PanelToggles: FC = ({}) => {
+const PanelToggles: FC = ({ }) => {
   const appType = useAppType();
   const visiblePanels = useAppPanelVisibility();
   const appCommands = useAppCommands();
@@ -15358,7 +15370,7 @@ const LayoutWrapper: FC = () => {
       if (i18n.language !== language) {
         i18n
           .changeLanguage(language)
-          .then(() => {})
+          .then(() => { })
           .catch((err) => {
             console.error("[Language Sync] Failed to change language:", err);
           });
@@ -15558,7 +15570,7 @@ const LayoutWrapper: FC = () => {
                 if (target && target.requestFullscreen) {
                   const result = target.requestFullscreen();
                   if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => {});
+                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => { });
                   } else {
                     sketchpadCommands.toggleFullscreen(fullscreenToggleId);
                   }
@@ -15567,7 +15579,7 @@ const LayoutWrapper: FC = () => {
                 if (document.fullscreenElement && document.exitFullscreen) {
                   const result = document.exitFullscreen();
                   if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => {});
+                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => { });
                   } else {
                     sketchpadCommands.toggleFullscreen(fullscreenToggleId);
                   }
@@ -15677,82 +15689,82 @@ const LayoutWrapper: FC = () => {
             leftPanel={
               panelVisibility.leftSidePanel || panelVisibility.workbench || panelVisibility.tools
                 ? {
-                    visible: true,
-                    size: panelVisibility.tools ? panelSizes.toolsWidth : panelSizes.workbenchWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.tools ? "toolsWidth" : "workbenchWidth", size),
-                    sections: panelVisibility.tools ? toolsSections : workbenchSections,
-                    opacity: panelOpacity,
-                    panelKey: panelVisibility.tools ? "tools" : "workbench",
-                  }
+                  visible: true,
+                  size: panelVisibility.tools ? panelSizes.toolsWidth : panelSizes.workbenchWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.tools ? "toolsWidth" : "workbenchWidth", size),
+                  sections: panelVisibility.tools ? toolsSections : workbenchSections,
+                  opacity: panelOpacity,
+                  panelKey: panelVisibility.tools ? "tools" : "workbench",
+                }
                 : undefined
             }
             middlePanel={
               panelVisibility.hudPanel || panelVisibility.hud || panelVisibility.stats
                 ? {
-                    visible: true,
-                    size: panelVisibility.stats ? panelSizes.statsWidth : panelSizes.hudWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.stats ? "statsWidth" : "hudWidth", size),
-                    sections: panelVisibility.stats ? statsSections : hudSections,
-                    panelKey: panelVisibility.stats ? "stats" : "hud",
-                  }
+                  visible: true,
+                  size: panelVisibility.stats ? panelSizes.statsWidth : panelSizes.hudWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.stats ? "statsWidth" : "hudWidth", size),
+                  sections: panelVisibility.stats ? statsSections : hudSections,
+                  panelKey: panelVisibility.stats ? "stats" : "hud",
+                }
                 : undefined
             }
             rightPanel={
               panelVisibility.rightSidePanel || panelVisibility.details || panelVisibility.chat || panelVisibility.settings
                 ? {
-                    visible: true,
-                    size: panelVisibility.chat ? panelSizes.chatWidth : panelVisibility.settings ? panelSizes.settingsWidth : panelSizes.detailsWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.chat ? "chatWidth" : panelVisibility.settings ? "settingsWidth" : "detailsWidth", size),
-                    sections: panelVisibility.chat ? chatSections : panelVisibility.settings ? settingsSections : detailsSections,
-                    panelKey: panelVisibility.chat ? "chat" : panelVisibility.settings ? "settings" : "details",
-                  }
+                  visible: true,
+                  size: panelVisibility.chat ? panelSizes.chatWidth : panelVisibility.settings ? panelSizes.settingsWidth : panelSizes.detailsWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.chat ? "chatWidth" : panelVisibility.settings ? "settingsWidth" : "detailsWidth", size),
+                  sections: panelVisibility.chat ? chatSections : panelVisibility.settings ? settingsSections : detailsSections,
+                  panelKey: panelVisibility.chat ? "chat" : panelVisibility.settings ? "settings" : "details",
+                }
                 : undefined
             }
             bottomPanel={
               consoleSections.length > 0
                 ? {
-                    visible: true,
-                    size: panelSizes.consoleHeight,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
-                    sections: consoleSections,
-                    panelKey: "console",
-                  }
+                  visible: true,
+                  size: panelSizes.consoleHeight,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
+                  sections: consoleSections,
+                  panelKey: "console",
+                }
                 : undefined
             }
             leftSidePanel={
               leftSidePanelTabs.length > 0 && panelVisibility.leftSidePanel
                 ? {
-                    visible: true,
-                    size: panelSizes.leftSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
-                    tabs: leftSidePanelTabs,
-                    activeTabId: activeLeftTabId,
-                    onActiveTabChange: setActiveLeftTabId,
-                  }
+                  visible: true,
+                  size: panelSizes.leftSidePanelWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
+                  tabs: leftSidePanelTabs,
+                  activeTabId: activeLeftTabId,
+                  onActiveTabChange: setActiveLeftTabId,
+                }
                 : undefined
             }
             rightSidePanel={
               rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
                 ? {
-                    visible: true,
-                    size: panelSizes.rightSidePanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
-                    tabs: rightSidePanelTabs,
-                    activeTabId: activeRightTabId,
-                    onActiveTabChange: setActiveRightTabId,
-                  }
+                  visible: true,
+                  size: panelSizes.rightSidePanelWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                  tabs: rightSidePanelTabs,
+                  activeTabId: activeRightTabId,
+                  onActiveTabChange: setActiveRightTabId,
+                }
                 : undefined
             }
             hudPanel={
               hudPanelTabs.length > 0 && panelVisibility.hudPanel
                 ? {
-                    visible: true,
-                    size: panelSizes.hudPanelWidth,
-                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "hudPanelWidth", size),
-                    tabs: hudPanelTabs,
-                    activeTabId: activeHudTabId,
-                    onActiveTabChange: setActiveHudTabId,
-                  }
+                  visible: true,
+                  size: panelSizes.hudPanelWidth,
+                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "hudPanelWidth", size),
+                  tabs: hudPanelTabs,
+                  activeTabId: activeHudTabId,
+                  onActiveTabChange: setActiveHudTabId,
+                }
                 : undefined
             }
             toolbar={

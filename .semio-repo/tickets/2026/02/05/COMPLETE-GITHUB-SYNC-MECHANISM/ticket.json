@@ -15,7 +15,7 @@
         "started": "2026-02-05 12:42:15",
         "finished": "2026-02-05 13:10:57"
       },
-      "author": "Ueli Saluz \u003cueli@semio-tech.de\u003e",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": {
         "version": "linux",
         "client": "copilot-chat"
@@ -892,7 +892,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
+              "path": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
               "lines": {
                 "added": 46,
                 "removed": 0

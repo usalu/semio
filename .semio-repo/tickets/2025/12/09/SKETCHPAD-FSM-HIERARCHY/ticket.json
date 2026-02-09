@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.899Z",
   "interactions": [
     {
-      "prompt": "Migrate sketchpad FSM to hierarchical states with proper constraints",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.899Z"
       },
-      "started": "2025-12-16T17:06:07.899Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Migrate sketchpad FSM to hierarchical states with proper constraints",
+      "llm": "sonnet-4-5"
     }
   ]
 }

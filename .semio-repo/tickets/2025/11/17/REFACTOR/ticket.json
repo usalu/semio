@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.669Z",
   "interactions": [
     {
-      "prompt": "Migration from REFACTOR.md",
-      "llm": "sonnet-4",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.669Z"
       },
-      "started": "2025-12-16T17:06:07.669Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Migration from REFACTOR.md",
+      "llm": "sonnet-4"
     }
   ]
 }

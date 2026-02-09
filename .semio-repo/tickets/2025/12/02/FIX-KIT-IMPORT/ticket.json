@@ -6,13 +6,16 @@
   "started": "2025-12-16T17:06:07.813Z",
   "interactions": [
     {
-      "prompt": "Fix kit import and design app infinite loop",
-      "llm": "sonnet-4-5",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-16T17:06:07.813Z"
       },
-      "started": "2025-12-16T17:06:07.813Z",
-      "commit": "0000000000000000000000000000000000000000"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Fix kit import and design app infinite loop",
+      "llm": "sonnet-4-5"
     }
   ]
 }

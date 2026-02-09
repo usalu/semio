@@ -7,14 +7,17 @@
   "finished": "2025-12-17T16:10:02.845Z",
   "interactions": [
     {
-      "prompt": "\"The border mechanism of all UI elements should be more flexible: add semantic border kinds with different styles. Introduce Tailwind classes border-element (element borders use hover color) and border-window (window borders use current normal border).\"",
-      "llm": "gpt-5.2-codex",
-      "author": {
-        "name": "uelisaluz"
+      "dates": {
+        "started": "2025-12-17T15:50:11.288Z",
+        "finished": "2025-12-17T16:10:02.845Z"
       },
-      "started": "2025-12-17T15:50:11.288Z",
-      "finished": "2025-12-17T16:10:02.845Z",
-      "commit": "7c4820638369104ae259b238d9240f08e429e67e"
+      "author": "uelisaluz",
+      "system": {
+        "client": ""
+      },
+      "commit": "7c4820638369104ae259b238d9240f08e429e67e",
+      "prompt": "\"The border mechanism of all UI elements should be more flexible: add semantic border kinds with different styles. Introduce Tailwind classes border-element (element borders use hover color) and border-window (window borders use current normal border).\"",
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

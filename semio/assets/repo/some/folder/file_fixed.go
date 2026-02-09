@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻︎semio/assets/repo/some/folder/file_fixed.go
+// 💻semio/assets/repo/some/folder/file_fixed.go
 
 // 2025 Test User <test@test.com>
 
