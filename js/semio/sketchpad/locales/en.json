@@ -377,6 +377,14 @@
               }
             }
           },
+          "console": {
+            "show": {
+              "label": {
+                "normal": "Show",
+                "beginner": "Show"
+              }
+            }
+          },
           "settings": {
             "show": {
               "label": {
@@ -2102,6 +2110,18 @@
           "label": {
             "normal": "Design",
             "beginner": "Design"
+          },
+          "console": {
+            "label": {
+              "normal": "Console",
+              "beginner": "Console"
+            },
+            "empty": {
+              "label": {
+                "normal": "Console output will appear here.",
+                "beginner": "Console output will appear here."
+              }
+            }
           },
           "defaultName": {
             "label": {
@@ -3942,6 +3962,7 @@
           "beginner": "Toolbar"
         },
         "parent": {
+          "hand": "Hand",
           "selection": "Selection",
           "filter": "Filter",
           "create": "Create",
@@ -3949,7 +3970,11 @@
           "actions": "Actions"
         },
         "subtool": {
-          "select": "Select"
+          "select": "Select",
+          "hand": "Hand",
+          "additive": "Additive",
+          "subtractive": "Subtractive",
+          "intersect": "Intersect"
         }
       },
       "tutorial": {

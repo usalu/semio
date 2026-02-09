@@ -14,14 +14,7 @@
 
 import React, { FC, useCallback } from "react";
 import { Guid } from "../semio";
-import {
-  useKitAppAddTypeToSelection,
-  useKitAppRemoveTypeFromSelection,
-  useKitAppToggleTypeInSelection,
-  useKitAppSelectSingleType,
-  useKitAppClearSelection,
-  useKitAppSelectAll,
-} from "./Kit";
+import { useKitAppAddTypeToSelection, useKitAppRemoveTypeFromSelection, useKitAppToggleTypeInSelection, useKitAppSelectSingleType, useKitAppClearSelection, useKitAppSelectAll } from "./Kit";
 
 // #endregion Imports
 
@@ -29,7 +22,7 @@ import {
 
 /**
  * Example table component demonstrating modifier key selection patterns.
- * 
+ *
  * Modifier Key Behavior:
  * - Click (no modifier): Replace selection with single item
  * - Ctrl/Cmd + Click: Toggle item in selection
@@ -75,7 +68,7 @@ export const KitTypeTableExample: FC<{ types: Array<{ guid: Guid; name: string }
         selectSingleType?.(typeGuid);
       }
     },
-    [selectSingleType, addTypeToSelection, removeTypeFromSelection, toggleTypeInSelection]
+    [selectSingleType, addTypeToSelection, removeTypeFromSelection, toggleTypeInSelection],
   );
 
   /**
@@ -88,7 +81,7 @@ export const KitTypeTableExample: FC<{ types: Array<{ guid: Guid; name: string }
         clearSelection?.();
       }
     },
-    [clearSelection]
+    [clearSelection],
   );
 
   return (
@@ -102,11 +95,7 @@ export const KitTypeTableExample: FC<{ types: Array<{ guid: Guid; name: string }
         </thead>
         <tbody>
           {types.map((type) => (
-            <tr
-              key={type.guid}
-              onClick={(e) => handleRowClick(type.guid, e)}
-              className="cursor-pointer hover:bg-hover"
-            >
+            <tr key={type.guid} onClick={(e) => handleRowClick(type.guid, e)} className="cursor-pointer hover:bg-hover">
               <td>{type.name}</td>
               <td>{type.guid}</td>
             </tr>
@@ -169,7 +158,7 @@ export const KitMultiDimensionExample: FC = () => {
       selectSingleType?.(typeGuid);
       // Selection now: { types: [typeGuid], designs: [...kept...] }
     },
-    [selectSingleType]
+    [selectSingleType],
   );
 
   // Selecting a design doesn't clear types
@@ -178,7 +167,7 @@ export const KitMultiDimensionExample: FC = () => {
       selectSingleDesign?.(designGuid);
       // Selection now: { types: [...kept...], designs: [designGuid] }
     },
-    [selectSingleDesign]
+    [selectSingleDesign],
   );
 
   // Clear all dimensions
@@ -224,17 +213,13 @@ export const KitDiagramExample: FC<{ nodes: Array<{ id: Guid; kind: "type" | "de
         selectSingleType?.(nodeId);
       }
     },
-    [selectSingleType, toggleTypeInSelection, addTypeToSelection]
+    [selectSingleType, toggleTypeInSelection, addTypeToSelection],
   );
 
   return (
     <div>
       {nodes.map((node) => (
-        <div
-          key={node.id}
-          onClick={(e) => handleNodeClick(node.id, node.kind, e)}
-          className="cursor-pointer"
-        >
+        <div key={node.id} onClick={(e) => handleNodeClick(node.id, node.kind, e)} className="cursor-pointer">
           {node.kind}: {node.id}
         </div>
       ))}
@@ -249,47 +234,47 @@ export const KitDiagramExample: FC<{ nodes: Array<{ id: Guid; kind: "type" | "de
 /**
  * SELECTION HOOK USAGE SUMMARY
  * ============================
- * 
+ *
  * ## Available Hooks (per dimension)
- * 
+ *
  * - useKitAppAdd{Dimension}ToSelection() - Add without clearing others
  * - useKitAppRemove{Dimension}FromSelection() - Remove from selection
  * - useKitAppToggle{Dimension}InSelection() - Toggle (add/remove)
  * - useKitAppSelectSingle{Dimension}() - Replace dimension selection
  * - useKitAppSelect{Dimension}() - Replace with multiple items
  * - useKitAppClear{Dimension}() - Clear dimension only
- * 
+ *
  * ## Global Hooks
- * 
+ *
  * - useKitAppSelectAll() - Select all artifacts
  * - useKitAppClearSelection() - Clear all dimensions
- * 
+ *
  * ## All Dimensions
- * 
+ *
  * Types, Designs, Qualities, Ports, Tags, Concepts, Files, Folders, Authors
- * 
+ *
  * ## Modifier Key Pattern
- * 
+ *
  * - No modifier: selectSingle{Dimension}()
  * - Ctrl/Cmd: toggle{Dimension}InSelection()
  * - Shift: add{Dimension}ToSelection()
  * - Alt: remove{Dimension}FromSelection()
- * 
+ *
  * ## Return Pattern
- * 
+ *
  * All hooks return: [action, canAct]
  * - action: Function to call (undefined if canAct is false)
  * - canAct: Boolean indicating if action is available
- * 
+ *
  * ## Example Usage
- * 
+ *
  * ```typescript
  * const [selectType] = useKitAppSelectSingleType();
  * const [toggleType] = useKitAppToggleTypeInSelection();
- * 
+ *
  * // Simple click
  * onClick={() => selectType?.(typeGuid)}
- * 
+ *
  * // With modifier detection
  * onClick={(e) => {
  *   if (e.ctrlKey || e.metaKey) {
@@ -299,19 +284,19 @@ export const KitDiagramExample: FC<{ nodes: Array<{ id: Guid; kind: "type" | "de
  *   }
  * }}
  * ```
- * 
+ *
  * ## Dimension Independence
- * 
+ *
  * Selecting a type NEVER clears designs/ports/tags/etc.
  * Each dimension is independent unless explicitly cleared.
- * 
+ *
  * ```typescript
  * selectSingleType(guid1);
  * // Selection: { types: [guid1] }
- * 
+ *
  * selectSingleDesign(guid2);
  * // Selection: { types: [guid1], designs: [guid2] }
- * 
+ *
  * clearTypes();
  * // Selection: { designs: [guid2] }
  * ```

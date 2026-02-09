@@ -2933,14 +2933,7 @@ export const TypeSelectSettings: FC = () => {
   return (
     <div className="flex shrink-0 gap-single h-full items-center px-single">
       {modes.map((mode) => (
-        <Toggle
-          key={mode.id}
-          id={mode.id}
-          pressed={activeTool === mode.id}
-          onPressedChange={() => setActiveTool && setActiveTool(mode.id as ToolKind)}
-          icon={mode.icon}
-          text={mode.text}
-        />
+        <Toggle key={mode.id} id={mode.id} pressed={activeTool === mode.id} onPressedChange={() => setActiveTool && setActiveTool(mode.id as ToolKind)} icon={mode.icon} text={mode.text} />
       ))}
     </div>
   );
@@ -2960,13 +2953,7 @@ export const TypeConnectorSettings: FC = () => {
 
   return (
     <div className="flex shrink-0 gap-single h-full items-center px-single">
-      <Toggle
-        id={ToolKind.CONNECTOR}
-        pressed={isActive}
-        onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)}
-        icon={<ConnectorIcon className="size-tiny" />}
-        text="Connector"
-      />
+      <Toggle id={ToolKind.CONNECTOR} pressed={isActive} onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)} icon={<ConnectorIcon className="size-tiny" />} text="Connector" />
     </div>
   );
 };

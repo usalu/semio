@@ -72,7 +72,7 @@ const config: StorybookConfig = {
           if (resolved && typeof resolved === "object" && resolved.name === "storybook:mdx-plugin") {
             indicesToRemove.push(i);
           }
-        } catch (e) { }
+        } catch (e) {}
       }
     }
 

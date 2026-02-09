@@ -1,5 +1,11 @@
 {
   "playwright.reuseBrowser": false,
   "playwright.showTrace": true,
-  "playwright.useTestServer": false
+  "playwright.useTestServer": false,
+  "playwright.runOptions": {
+    "headless": true
+  },
+  "playwright.env": {
+    "PWDEBUG": "console"
+  }
 }

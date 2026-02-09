@@ -28,6 +28,7 @@
 ### The Business Problem It Solves
 
 Imagine you're an architect working with a modular building system (like LEGO for buildings). You have:
+
 - **Types**: The blueprints/templates (like "Wall", "Window", "Door")
 - **Designs**: The actual arrangements of pieces (like "Kitchen Layout", "Office Floor Plan")
 - **Qualities**: Measurement definitions (like "Area", "Height", "Weight")
@@ -39,6 +40,7 @@ Imagine you're an architect working with a modular building system (like LEGO fo
 - **Authors**: People who contributed
 
 Kit.tsx lets you:
+
 1. **View** all these artifacts in a table or diagram
 2. **Create** new types, designs, qualities, etc.
 3. **Edit** their properties
@@ -71,6 +73,7 @@ Kit.tsx lets you:
 ```
 
 **Navigation Flow:**
+
 1. **Home App** → Lists all kits (temporary, local, remote)
 2. **Kit App** → Where you manage ONE kit's contents (**THIS FILE**)
 3. **Design App** → Where you edit a specific design's pieces
@@ -166,13 +169,13 @@ Kit.tsx lets you:
 
 ### Key Design Patterns Used
 
-| Pattern | What It Does | Where in Kit.tsx |
-|---------|--------------|------------------|
-| **Plugin Architecture** | Apps register themselves; Sketchpad doesn't know about specific apps | `kitAppPlugin` object |
-| **Command Pattern** | All state changes go through named commands | `commands` object |
-| **Triadic Hooks** | All hooks return `[value, setter, canSet]` | `useKitAppSelection()` |
-| **CRDT Sync** | Y.js data syncs with XState machine | `useKitAppYjsToXStateSync()` |
-| **Scope Providers** | React context provides current kit/design/type GUIDs | `KitScopeProvider` |
+| Pattern                 | What It Does                                                         | Where in Kit.tsx             |
+| ----------------------- | -------------------------------------------------------------------- | ---------------------------- |
+| **Plugin Architecture** | Apps register themselves; Sketchpad doesn't know about specific apps | `kitAppPlugin` object        |
+| **Command Pattern**     | All state changes go through named commands                          | `commands` object            |
+| **Triadic Hooks**       | All hooks return `[value, setter, canSet]`                           | `useKitAppSelection()`       |
+| **CRDT Sync**           | Y.js data syncs with XState machine                                  | `useKitAppYjsToXStateSync()` |
+| **Scope Providers**     | React context provides current kit/design/type GUIDs                 | `KitScopeProvider`           |
 
 ---
 
@@ -242,43 +245,43 @@ Kit.tsx lets you:
 // Selection: Which items are currently selected (highlighted in blue)
 // This is an OBJECT with arrays of GUIDs for each artifact type
 interface KitAppSelection {
-  types?: Guid[];           // Selected type GUIDs (e.g., ["abc-123", "def-456"])
-  designs?: Guid[];         // Selected design GUIDs
-  qualities?: string[];     // Selected quality keys
-  ports?: Guid[];           // Selected port GUIDs
-  tags?: Guid[];            // Selected tag GUIDs
-  concepts?: Guid[];        // Selected concept GUIDs
-  files?: string[];         // Selected file GUIDs
-  folders?: Guid[];         // Selected folder GUIDs
-  authors?: string[];       // Selected author names
+  types?: Guid[]; // Selected type GUIDs (e.g., ["abc-123", "def-456"])
+  designs?: Guid[]; // Selected design GUIDs
+  qualities?: string[]; // Selected quality keys
+  ports?: Guid[]; // Selected port GUIDs
+  tags?: Guid[]; // Selected tag GUIDs
+  concepts?: Guid[]; // Selected concept GUIDs
+  files?: string[]; // Selected file GUIDs
+  folders?: Guid[]; // Selected folder GUIDs
+  authors?: string[]; // Selected author names
 }
 
 // Hover: Which single item is being hovered (highlighted differently)
 // Only ONE thing can be hovered at a time
 interface KitAppHover {
-  type?: Guid;              // Hovered type GUID
-  design?: Guid;            // Hovered design GUID
-  quality?: string;         // Hovered quality key
-  port?: Guid;              // Hovered port GUID
-  tag?: Guid;               // Hovered tag GUID
-  concept?: Guid;           // Hovered concept GUID
-  file?: string;            // Hovered file GUID
-  folder?: Guid;            // Hovered folder GUID
-  author?: string;          // Hovered author name
+  type?: Guid; // Hovered type GUID
+  design?: Guid; // Hovered design GUID
+  quality?: string; // Hovered quality key
+  port?: Guid; // Hovered port GUID
+  tag?: Guid; // Hovered tag GUID
+  concept?: Guid; // Hovered concept GUID
+  file?: string; // Hovered file GUID
+  folder?: Guid; // Hovered folder GUID
+  author?: string; // Hovered author name
 }
 
 // Full app state: Everything the Kit App needs to function
 interface KitAppState {
-  panelVisibility: PanelVisibility;    // Which panels are open
-  selection?: KitAppSelection;          // Currently selected items
-  hover?: KitAppHover;                  // Currently hovered item
-  fullscreenWindow: string;             // "none" or window kind
-  filterSearch?: string;                // Search box text
-  expandedRows?: Set<string>;           // Which tree rows are expanded
-  sortColumn?: SortColumn;              // Which column is sorted
-  sortDirection?: "asc" | "desc";       // Sort direction
-  windowLayout?: any;                   // Golden Layout config
-  diagramForce?: DiagramForceSettings;  // Force simulation params
+  panelVisibility: PanelVisibility; // Which panels are open
+  selection?: KitAppSelection; // Currently selected items
+  hover?: KitAppHover; // Currently hovered item
+  fullscreenWindow: string; // "none" or window kind
+  filterSearch?: string; // Search box text
+  expandedRows?: Set<string>; // Which tree rows are expanded
+  sortColumn?: SortColumn; // Which column is sorted
+  sortDirection?: "asc" | "desc"; // Sort direction
+  windowLayout?: any; // Golden Layout config
+  diagramForce?: DiagramForceSettings; // Force simulation params
 }
 ```
 
@@ -297,10 +300,10 @@ interface KitAppState {
 export const kitAppPlugin: AppPlugin = {
   // Unique identifier for this app
   id: "kit",
-  
+
   // Event prefix - all events start with "KIT."
   namespace: "KIT",
-  
+
   // Machine contributions
   machine: {
     // Actions that modify state
@@ -320,13 +323,13 @@ export const kitAppPlugin: AppPlugin = {
         },
       }),
     },
-    
+
     // Guards that check conditions
     guards: {
       // Example: Only allow selection if we're in the kit app
       isInKitApp: (context) => context.navigation === "kit",
     },
-    
+
     // Default state when kit app first loads
     createDefaultState: () => ({
       panelVisibility: defaultPanelVisibility,
@@ -360,61 +363,61 @@ const commands = {
   // ─────────────────────────────────────────────────────────
   // SELECTION COMMANDS
   // ─────────────────────────────────────────────────────────
-  
+
   selectType: (typeGuid: Guid) => {
     // Sends event to XState machine
     // Machine updates context.kitApp.selection.types
     actor.send({ type: "KIT.SELECT_TYPE", kitGuid, typeGuid });
   },
-  
+
   deselectType: (typeGuid: Guid) => {
     actor.send({ type: "KIT.DESELECT_TYPE", kitGuid, typeGuid });
   },
-  
+
   selectAll: () => {
     // Select everything visible
     actor.send({ type: "KIT.SELECT_ALL", kitGuid });
   },
-  
+
   deselectAll: () => {
     // Clear all selection
     actor.send({ type: "KIT.DESELECT_ALL", kitGuid });
   },
-  
+
   // ─────────────────────────────────────────────────────────
   // CRUD COMMANDS (Create, Read, Update, Delete)
   // ─────────────────────────────────────────────────────────
-  
+
   createType: (type: Type) => {
     // Calls the underlying KitStore method
     kitStore.addType(type);
   },
-  
+
   updateType: (typeGuid: Guid, changes: Partial<Type>) => {
     kitStore.updateType(typeGuid, changes);
   },
-  
+
   removeType: (typeGuid: Guid) => {
     kitStore.removeType(typeGuid);
   },
-  
+
   // ─────────────────────────────────────────────────────────
   // UI STATE COMMANDS
   // ─────────────────────────────────────────────────────────
-  
+
   togglePanel: (panel: PanelKind) => {
     actor.send({ type: "KIT.TOGGLE_PANEL", kitGuid, panel });
   },
-  
+
   setSortColumn: (column: SortColumn) => {
     actor.send({ type: "KIT.SET_SORT_COLUMN", kitGuid, column });
   },
-  
+
   toggleRow: (rowId: string) => {
     // Expand or collapse a tree row
     actor.send({ type: "KIT.TOGGLE_ROW", kitGuid, rowId });
   },
-  
+
   // ... 40+ more commands
 };
 ```
@@ -436,19 +439,19 @@ All hooks follow the same pattern: `[value, setter, canSet]`
 function useKitAppSelection(): HookResult<KitAppSelection | undefined> {
   const actor = useSketchpadActor();
   const kitGuid = useKitScope()?.guid ?? "";
-  
+
   // Read current selection from XState machine
   const selection = useSelector(
     actor,
     (state) => state.context.kitApp?.[kitGuid]?.selection
   );
-  
+
   // Check if we CAN set selection (are we in the right state?)
   const canSet = useSelector(
     actor,
     (state) => state.can({ type: "KIT.SET_SELECTION", kitGuid })
   );
-  
+
   // Create setter function (only if allowed)
   const setSelection = useMemo(() => {
     if (!canSet) return undefined;
@@ -456,7 +459,7 @@ function useKitAppSelection(): HookResult<KitAppSelection | undefined> {
       actor.send({ type: "KIT.SET_SELECTION", kitGuid, selection: newSelection });
     };
   }, [actor, kitGuid, canSet]);
-  
+
   // Return the triadic tuple
   return [selection, setSelection, canSet];
 }
@@ -464,7 +467,7 @@ function useKitAppSelection(): HookResult<KitAppSelection | undefined> {
 // USAGE IN COMPONENTS:
 function MyComponent() {
   const [selection, setSelection, canSetSelection] = useKitAppSelection();
-  
+
   return (
     <Button
       onClick={() => setSelection?.({ types: ["abc-123"] })}
@@ -490,16 +493,16 @@ The most complex part of Kit.tsx is building the hierarchical table data:
 // list for the table.
 
 interface TableRow {
-  id: string;           // Unique row identifier (e.g., "type-abc-123")
-  kind: ArtifactKind;   // "types" | "designs" | "qualities" | etc.
-  artifact: string;     // Display name
-  level: number;        // Nesting depth (0 = root, 1 = child, etc.)
+  id: string; // Unique row identifier (e.g., "type-abc-123")
+  kind: ArtifactKind; // "types" | "designs" | "qualities" | etc.
+  artifact: string; // Display name
+  level: number; // Nesting depth (0 = root, 1 = child, etc.)
   hasChildren: boolean; // Does this row have children?
-  isExpanded: boolean;  // Is this row expanded?
-  data: any;            // The actual Type/Design/Quality/etc. object
-  updatedAt?: string;   // Formatted date
-  createdAt?: string;   // Formatted date
-  concepts?: string[];  // Concept names for filtering
+  isExpanded: boolean; // Is this row expanded?
+  data: any; // The actual Type/Design/Quality/etc. object
+  updatedAt?: string; // Formatted date
+  createdAt?: string; // Formatted date
+  concepts?: string[]; // Concept names for filtering
 }
 
 // The algorithm:
@@ -511,12 +514,12 @@ interface TableRow {
 
 function buildRows(kit: Kit, expandedRows: Set<string>, filterSearch: string): TableRow[] {
   const result: TableRow[] = [];
-  
+
   // Build lookup maps for fast parent finding
   const typesByParent = new Map<string | null, Type[]>();
   const designsByParent = new Map<string | null, Design[]>();
   const foldersByParent = new Map<string | null, Folder[]>();
-  
+
   // Group types by parent
   for (const type of kit.types ?? []) {
     const parentKey = type.parent?.guid ?? type.folder ?? null;
@@ -525,14 +528,14 @@ function buildRows(kit: Kit, expandedRows: Set<string>, filterSearch: string): T
     }
     typesByParent.get(parentKey)!.push(type);
   }
-  
+
   // Recursive function to add a type and its children
   function addTypeAndChildren(type: Type, level: number) {
     const rowId = `type-${type.guid}`;
     const children = typesByParent.get(type.guid) ?? [];
     const hasChildren = children.length > 0;
     const isExpanded = expandedRows.has(rowId);
-    
+
     // Apply search filter
     if (filterSearch && !type.name.toLowerCase().includes(filterSearch.toLowerCase())) {
       // Skip this row if it doesn't match search
@@ -544,7 +547,7 @@ function buildRows(kit: Kit, expandedRows: Set<string>, filterSearch: string): T
       }
       return;
     }
-    
+
     // Add this row
     result.push({
       id: rowId,
@@ -556,9 +559,9 @@ function buildRows(kit: Kit, expandedRows: Set<string>, filterSearch: string): T
       data: type,
       updatedAt: formatDate(type.updatedAt),
       createdAt: formatDate(type.createdAt),
-      concepts: type.concepts?.map(c => c.name),
+      concepts: type.concepts?.map((c) => c.name),
     });
-    
+
     // Add children if expanded
     if (isExpanded) {
       for (const child of children) {
@@ -566,15 +569,15 @@ function buildRows(kit: Kit, expandedRows: Set<string>, filterSearch: string): T
       }
     }
   }
-  
+
   // Start with root-level types (no parent, no folder)
   for (const type of typesByParent.get(null) ?? []) {
     addTypeAndChildren(type, 0);
   }
-  
+
   // Similar logic for designs, folders, qualities, etc.
   // ...
-  
+
   return result;
 }
 ```
@@ -593,26 +596,26 @@ Kit.tsx includes a force-directed graph visualization:
 
 // Force simulation parameters (user-adjustable)
 interface DiagramForceSettings {
-  chargeStrength: number;  // How much nodes repel each other (-300 default)
-  linkDistance: number;    // Target distance between connected nodes (100)
-  collideRadius: number;   // Minimum distance between node centers (50)
-  centerStrength: number;  // How strongly nodes are pulled to center (0.1)
+  chargeStrength: number; // How much nodes repel each other (-300 default)
+  linkDistance: number; // Target distance between connected nodes (100)
+  collideRadius: number; // Minimum distance between node centers (50)
+  centerStrength: number; // How strongly nodes are pulled to center (0.1)
 }
 
 // Build nodes and edges from kit data
-function buildKitDiagramData(kit: Kit): { nodes: Node[], edges: Edge[] } {
+function buildKitDiagramData(kit: Kit): { nodes: Node[]; edges: Edge[] } {
   const nodes: Node[] = [];
   const edges: Edge[] = [];
-  
+
   // Add nodes for each artifact type
   for (const type of kit.types ?? []) {
     nodes.push({
       id: type.guid,
       type: "artifact",
-      position: { x: 0, y: 0 },  // Will be set by simulation
+      position: { x: 0, y: 0 }, // Will be set by simulation
       data: { guid: type.guid, name: type.name, kind: "type" },
     });
-    
+
     // Add edge to parent if exists
     if (type.parent?.guid) {
       edges.push({
@@ -625,7 +628,7 @@ function buildKitDiagramData(kit: Kit): { nodes: Node[], edges: Edge[] } {
       });
     }
   }
-  
+
   // Add "reference" edges for type usage in designs
   for (const design of kit.designs ?? []) {
     for (const piece of design.pieces ?? []) {
@@ -641,7 +644,7 @@ function buildKitDiagramData(kit: Kit): { nodes: Node[], edges: Edge[] } {
       }
     }
   }
-  
+
   return { nodes, edges };
 }
 ```
@@ -663,15 +666,15 @@ function buildKitDiagramData(kit: Kit): { nodes: Node[], edges: Edge[] } {
 function useSimpleSelection() {
   // Step 1: Get the XState actor (state machine)
   const actor = useSketchpadActor();
-  
+
   // Step 2: Read state using a selector
   const selection = useSelector(actor, state => state.context.selection);
-  
+
   // Step 3: Create a function to change it
   const setSelection = (newSelection) => {
     actor.send({ type: "SET_SELECTION", selection: newSelection });
   };
-  
+
   // Step 4: Return value and setter
   return [selection, setSelection];
 }
@@ -679,7 +682,7 @@ function useSimpleSelection() {
 // Usage:
 function SelectButton() {
   const [selection, setSelection] = useSimpleSelection();
-  
+
   return (
     <button onClick={() => setSelection({ types: ["my-type-id"] })}>
       Select My Type
@@ -700,12 +703,12 @@ function SelectButton() {
 const simpleCommands = {
   // Toggle a panel open/closed
   togglePanel: (panelName) => {
-    actor.send({ 
-      type: "KIT.TOGGLE_PANEL", 
-      panel: panelName 
+    actor.send({
+      type: "KIT.TOGGLE_PANEL",
+      panel: panelName,
     });
   },
-  
+
   // Create a new type
   createType: (name) => {
     // 1. Generate a new unique ID
@@ -714,16 +717,16 @@ const simpleCommands = {
       name: name,
       connectors: [],
     };
-    
+
     // 2. Add to the kit store (which updates Y.js)
     kitStore.addType(newType);
-    
+
     // 3. Select the new type
     actor.send({
       type: "KIT.SELECT_TYPE",
       typeGuid: newType.guid,
     });
-    
+
     return newType;
   },
 };
@@ -738,18 +741,18 @@ const simpleCommands = {
 
 function buildSimpleRows(items, expandedIds) {
   const rows = [];
-  
+
   for (const item of items) {
     // Skip if doesn't match search (simplified)
-    
+
     // Create the row
     rows.push({
       id: item.id,
       name: item.name,
       isExpanded: expandedIds.has(item.id),
-      level: 0,  // Root level
+      level: 0, // Root level
     });
-    
+
     // Add children if expanded
     if (expandedIds.has(item.id) && item.children) {
       for (const child of item.children) {
@@ -757,12 +760,12 @@ function buildSimpleRows(items, expandedIds) {
           id: child.id,
           name: child.name,
           isExpanded: expandedIds.has(child.id),
-          level: 1,  // Child level
+          level: 1, // Child level
         });
       }
     }
   }
-  
+
   return rows;
 }
 ```
@@ -930,7 +933,7 @@ setSelection?.({ types: ["abc"] });
 ```typescript
 // ❌ WRONG: Mutating the selection object directly
 const [selection] = useKitAppSelection();
-selection.types.push("new-guid");  // MUTATION! React won't re-render!
+selection.types.push("new-guid"); // MUTATION! React won't re-render!
 
 // ✅ CORRECT: Use the setter with a new object
 const [selection, setSelection] = useKitAppSelection();
@@ -987,11 +990,11 @@ function MyComponent() {
 // ✅ CORRECT: Handle loading/missing states
 function MyComponent() {
   const kit = useKit();
-  
+
   if (!kit) {
     return <LoadingSpinner />;
   }
-  
+
   return <div>{kit.types?.length ?? 0} types</div>;
 }
 ```
@@ -1010,19 +1013,20 @@ The Diagram Window provides a **visual force-directed graph** representation of 
 
 Every artifact in your kit becomes a node in the diagram:
 
-| Node Kind | Represents | Visual |
-|-----------|------------|--------|
-| `type` | Type definitions (blueprints) | Avatar with type icon |
-| `design` | Design compositions | Avatar with design icon |
-| `quality` | Quality definitions | Avatar with quality icon |
-| `port` | Connection ports | Avatar with port icon |
-| `tag` | Model tags | Avatar with tag icon |
-| `concept` | Semantic concepts | Avatar with concept icon |
-| `file` | Kit files | Avatar with file icon |
-| `folder` | Organizational folders | Avatar with folder icon |
-| `author` | Contributors | Avatar with author icon |
+| Node Kind | Represents                    | Visual                   |
+| --------- | ----------------------------- | ------------------------ |
+| `type`    | Type definitions (blueprints) | Avatar with type icon    |
+| `design`  | Design compositions           | Avatar with design icon  |
+| `quality` | Quality definitions           | Avatar with quality icon |
+| `port`    | Connection ports              | Avatar with port icon    |
+| `tag`     | Model tags                    | Avatar with tag icon     |
+| `concept` | Semantic concepts             | Avatar with concept icon |
+| `file`    | Kit files                     | Avatar with file icon    |
+| `folder`  | Organizational folders        | Avatar with folder icon  |
+| `author`  | Contributors                  | Avatar with author icon  |
 
 Each node displays:
+
 - **Avatar** - Icon + name (first letter if no icon)
 - **Selection ring** - Blue ring when selected
 - **Hover ring** - Gray ring when hovered
@@ -1031,12 +1035,13 @@ Each node displays:
 
 Edges represent relationships between artifacts:
 
-| Relationship | Visual | Meaning | Example |
-|-------------|--------|---------|---------|
-| **part-of** | Solid line (width: 2) | Parent-child hierarchy | Design is child of another design |
-| **reference** | Dashed line (width: 1) | Usage relationship | Design uses a type through its pieces |
+| Relationship  | Visual                 | Meaning                | Example                               |
+| ------------- | ---------------------- | ---------------------- | ------------------------------------- |
+| **part-of**   | Solid line (width: 2)  | Parent-child hierarchy | Design is child of another design     |
+| **reference** | Dashed line (width: 1) | Usage relationship     | Design uses a type through its pieces |
 
 **Edge routing:**
+
 - Edges connect at the **closest point** on each node's circle
 - Automatically calculate handle positions (Top/Bottom/Left/Right)
 - Use Bezier curves for smooth paths
@@ -1047,14 +1052,15 @@ The diagram uses D3's force-directed layout with configurable physics:
 
 ```typescript
 interface DiagramForceSettings {
-  chargeStrength: -80;   // Node repulsion (negative = push apart)
-  linkDistance: 60;      // Target edge length in pixels
-  collideRadius: 30;     // Collision detection radius
-  centerStrength: 0.15;  // Gravity toward center (0-1)
+  chargeStrength: -80; // Node repulsion (negative = push apart)
+  linkDistance: 60; // Target edge length in pixels
+  collideRadius: 30; // Collision detection radius
+  centerStrength: 0.15; // Gravity toward center (0-1)
 }
 ```
 
 **How it works:**
+
 1. **Initialization** - Nodes start in a circular pattern
 2. **120 tick simulation** - Runs synchronously on mount
 3. **Forces applied:**
@@ -1069,6 +1075,7 @@ interface DiagramForceSettings {
 #### 🎯 **Selection**
 
 Click any node to select its artifact:
+
 - **Single click** - Selects the node's artifact
 - **Background click** - Deselects all
 - **Visual feedback** - Blue ring appears around selected nodes
@@ -1077,6 +1084,7 @@ Click any node to select its artifact:
 #### 🖱️ **Hover**
 
 Mouse over nodes to highlight them:
+
 - **Hover ring** - Gray ring appears on hover
 - **Tooltip** - Shows artifact name
 - **Synced with table** - Hovering in diagram highlights table row
@@ -1085,6 +1093,7 @@ Mouse over nodes to highlight them:
 #### 🎨 **Drag & Drop**
 
 Reposition nodes manually:
+
 - **Grab node** - Cursor changes to `grab`
 - **Drag** - Cursor changes to `grabbing`, node follows mouse
 - **Release** - Node stays in new position
@@ -1095,16 +1104,19 @@ Reposition nodes manually:
 The diagram respects filter settings from the toolbar:
 
 **Search filter:**
+
 - Type in search box
 - Only nodes matching the search term appear
 - Case-insensitive matching
 
 **Expanded rows:**
+
 - Only nodes whose ancestors are expanded in the table view appear
 - Collapse a folder in the table → its contents disappear from diagram
 - This creates a "focus mode" for specific parts of your kit
 
 **Kind filters:**
+
 - Toggle artifact kinds (types, designs, qualities, etc.)
 - Hidden kinds are removed from diagram
 - Edges connecting to hidden nodes are also removed
@@ -1112,16 +1124,19 @@ The diagram respects filter settings from the toolbar:
 #### 🔗 **Relationship Visualization**
 
 **Part-of relationships (solid lines):**
+
 - Type → Parent Type (type hierarchy)
 - Design → Parent Design (design hierarchy)
 - File → Folder (containment)
 - Folder → Parent Folder (folder hierarchy)
 
 **Reference relationships (dashed lines):**
+
 - Type → Design (design uses type via pieces)
 - Design → Design (nested design reference)
 
 **Automatic edge calculation:**
+
 - Edges only appear if both source and target nodes are visible
 - No duplicate edges (checked by ID)
 - Edge style automatically applied based on relationship type
@@ -1129,12 +1144,14 @@ The diagram respects filter settings from the toolbar:
 #### 📐 **Layout & Navigation**
 
 **Viewport controls:**
+
 - **Pan** - Disabled by default (prevents accidental panning)
 - **Zoom** - Disabled by default (prevents accidental zooming)
 - **Fit view** - Automatically fits all nodes on first render
 - **Background grid** - 20px grid for spatial reference
 
 **Window integration:**
+
 - **Split screen** - Default 50/50 split with table view
 - **Fullscreen toggle** - Maximize diagram to full canvas
 - **Layout persistence** - Window arrangement saved in Y.js
@@ -1175,21 +1192,25 @@ The diagram respects filter settings from the toolbar:
 #### Key Components
 
 **1. KitDiagram**
+
 - Wrapper providing React Flow context
 - Ensures single provider instance
 
 **2. KitDiagramInner**
+
 - Main logic component
 - Manages force simulation
 - Handles node/edge state
 - Processes interactions
 
 **3. KitArtifactNode**
+
 - Custom React Flow node type
 - Renders avatar with selection/hover state
 - Invisible handles at 4 positions (Top/Bottom/Left/Right)
 
 **4. FloatingEdge**
+
 - Custom edge type
 - Calculates intersection points dynamically
 - Routes edges to closest handle position
@@ -1270,39 +1291,47 @@ const { fitView } = useReactFlow();
 #### Common Issues
 
 **Issue: Nodes overlap**
+
 - **Cause**: `collideRadius` too small or too many nodes
 - **Solution**: Increase `collideRadius` in diagram force settings
 
 **Issue: Graph is too spread out**
+
 - **Cause**: `chargeStrength` too high (more negative)
 - **Solution**: Decrease absolute value (e.g., -80 → -50)
 
 **Issue: Edges cross through nodes**
+
 - **Cause**: Edge routing calculates intersection incorrectly
 - **Solution**: This is a known limitation of 2D projection
 
 **Issue: Node positions reset**
+
 - **Cause**: Filter changes trigger re-simulation
 - **Solution**: Manual positions are not persisted currently
 
 **Issue: Diagram is blank**
+
 - **Cause**: All nodes filtered out or kit is empty
 - **Solution**: Clear search filter or add artifacts to kit
 
 ### Performance Considerations
 
 **Current implementation:**
+
 - ✅ **Synchronous simulation** - 120 ticks on mount
 - ✅ **Filtered nodes** - Only visible nodes simulated
 - ✅ **Static after init** - No continuous simulation
 - ✅ **Manual drag** - Direct position update
 
 **Performance limits:**
+
 - **< 50 nodes** - Instant layout
 - **50-200 nodes** - Slight delay (< 500ms)
 - **> 200 nodes** - Noticeable delay (> 1s)
 
 **Optimization strategies:**
+
 1. **Filter aggressively** - Use search and expanded rows
 2. **Split by kind** - View only types, or only designs
 3. **Use folders** - Organize kit into smaller sections
@@ -1314,6 +1343,7 @@ const { fitView } = useReactFlow();
 **Problem:** Manual node positions are lost on filter change or remount.
 
 **Solution:**
+
 ```typescript
 // Add to KitAppState
 interface KitAppState {
@@ -1335,10 +1365,12 @@ const handleNodeDragStop = (node: Node) => {
 useEffect(() => {
   const savedPositions = state.diagramNodePositions;
   if (savedPositions) {
-    setNodes(nodes.map(n => ({
-      ...n,
-      position: savedPositions[n.id] || n.position,
-    })));
+    setNodes(
+      nodes.map((n) => ({
+        ...n,
+        position: savedPositions[n.id] || n.position,
+      })),
+    );
   }
 }, []);
 ```
@@ -1348,6 +1380,7 @@ useEffect(() => {
 **Problem:** Currently disabled - users can't zoom or pan.
 
 **Solution:**
+
 ```typescript
 // Add zoom controls
 <ReactFlow
@@ -1368,6 +1401,7 @@ useEffect(() => {
 **Problem:** Force settings are hardcoded, users can't customize layout.
 
 **Solution:**
+
 - Add slider controls in settings panel:
   - Charge Strength (-200 to -20)
   - Link Distance (20 to 200)
@@ -1381,9 +1415,10 @@ useEffect(() => {
 **Problem:** Edges show relationship type only via style (solid/dashed).
 
 **Solution:**
+
 ```typescript
-<BaseEdge 
-  id={id} 
+<BaseEdge
+  id={id}
   path={edgePath}
   label="uses" // Add text label
   labelStyle={{ fontSize: 10 }}
@@ -1396,6 +1431,7 @@ useEffect(() => {
 **Problem:** No visual grouping of related nodes.
 
 **Solution:**
+
 - Add background rectangles around node clusters
 - Group by: folder, concept, author
 - Collapsible groups (click to hide/show children)
@@ -1405,6 +1441,7 @@ useEffect(() => {
 **Problem:** Force-directed layout isn't always optimal.
 
 **Alternative layouts to add:**
+
 - **Hierarchical** - Tree-like top-down layout (dagre)
 - **Circular** - Arrange nodes in circle
 - **Grid** - Snap nodes to grid
@@ -1415,6 +1452,7 @@ useEffect(() => {
 **Problem:** Can't filter by relationship type.
 
 **Solution:**
+
 - Toggle switches:
   - [ ] Show part-of relationships
   - [ ] Show reference relationships
@@ -1427,6 +1465,7 @@ useEffect(() => {
 **Problem:** Can only select one node at a time.
 
 **Solution:**
+
 - **Ctrl+Click** - Add to selection
 - **Shift+Click** - Range selection
 - **Drag box** - Rectangle selection
@@ -1437,6 +1476,7 @@ useEffect(() => {
 **Problem:** Can't save or share diagram view.
 
 **Solution:**
+
 - Export as PNG/SVG
 - Export layout coordinates as JSON
 - Import layout from JSON
@@ -1447,6 +1487,7 @@ useEffect(() => {
 **Problem:** Layout changes happen instantly (jarring).
 
 **Solution:**
+
 - Animate node positions with spring physics
 - Fade in/out nodes when filtering
 - Smooth zoom/pan transitions
@@ -1468,13 +1509,13 @@ const NODE_HEIGHT = 140; // Height in pixels
 // Node wrapper styling
 <div
   data-kit-node="v3"
-  style={{ 
-    width: NODE_WIDTH, 
-    height: NODE_HEIGHT, 
+  style={{
+    width: NODE_WIDTH,
+    height: NODE_HEIGHT,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    background: "transparent", 
+    background: "transparent",
     border: "0",
     outline: "0",
     boxShadow: "none",
@@ -1487,14 +1528,14 @@ const NODE_HEIGHT = 140; // Height in pixels
 
 **What You Can Change:**
 
-| Property | Current Value | Purpose | Suggested Range |
-|----------|---------------|---------|-----------------|
-| `NODE_WIDTH` | 220px | Node width | 100-400px |
-| `NODE_HEIGHT` | 140px | Node height | 80-300px |
-| `background` | transparent | Node background | Any CSS color |
-| `border` | 0 | Node border | "1px solid #ccc" |
-| `boxShadow` | none | Drop shadow | "0 2px 8px rgba(0,0,0,0.1)" |
-| `padding` | 0 | Inner spacing | 0-20px |
+| Property      | Current Value | Purpose         | Suggested Range             |
+| ------------- | ------------- | --------------- | --------------------------- |
+| `NODE_WIDTH`  | 220px         | Node width      | 100-400px                   |
+| `NODE_HEIGHT` | 140px         | Node height     | 80-300px                    |
+| `background`  | transparent   | Node background | Any CSS color               |
+| `border`      | 0             | Node border     | "1px solid #ccc"            |
+| `boxShadow`   | none          | Drop shadow     | "0 2px 8px rgba(0,0,0,0.1)" |
+| `padding`     | 0             | Inner spacing   | 0-20px                      |
 
 **Node Shape Options:**
 
@@ -1517,16 +1558,17 @@ clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
 #### 🎨 Avatar Styling
 
 Nodes use the `TableAvatar` component which displays:
+
 - **Image icon** (if provided)
 - **React icon** (if no image)
 - **Initials** (fallback)
 
 ```typescript
-<TableAvatar 
-  name={data.name} 
-  icon={data.icon} 
-  isSelected={isSelected} 
-  isHovered={isHovered} 
+<TableAvatar
+  name={data.name}
+  icon={data.icon}
+  isSelected={isSelected}
+  isHovered={isHovered}
 />
 ```
 
@@ -1534,25 +1576,25 @@ Nodes use the `TableAvatar` component which displays:
 
 ```typescript
 // Normal state
-className="shrink-0"
+className = "shrink-0";
 
 // Selected state
-className="ring-1 ring-[color:var(--active-base)]"
-AvatarFallback: "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]"
+className = "ring-1 ring-[color:var(--active-base)]";
+AvatarFallback: "bg-[color:var(--active-base)] text-[color:var(--active-foreground)]";
 
 // Hovered state
-className="ring-1 ring-[color:var(--hover-base)]"
-AvatarFallback: "bg-[color:var(--hover-base)]"
+className = "ring-1 ring-[color:var(--hover-base)]";
+AvatarFallback: "bg-[color:var(--hover-base)]";
 ```
 
 **CSS Variables Used:**
 
 ```css
 /* In globals.css */
---active-base: #3b82f6;      /* Blue for selection */
+--active-base: #3b82f6; /* Blue for selection */
 --active-foreground: #ffffff; /* White text on selection */
---hover-base: #9ca3af;        /* Gray for hover */
---foreground: #000000;        /* Default text color */
+--hover-base: #9ca3af; /* Gray for hover */
+--foreground: #000000; /* Default text color */
 ```
 
 **Customization Examples:**
@@ -1592,27 +1634,27 @@ AvatarFallback: "bg-[color:var(--hover-base)]"
 
 ```typescript
 const edgeStyle = {
-  "part-of": { 
-    stroke: "var(--accent-secondary)", 
-    strokeWidth: 3 
+  "part-of": {
+    stroke: "var(--accent-secondary)",
+    strokeWidth: 3,
   },
-  reference: { 
-    stroke: "var(--foreground)", 
-    strokeWidth: 1, 
-    strokeDasharray: "5,5" 
+  reference: {
+    stroke: "var(--foreground)",
+    strokeWidth: 1,
+    strokeDasharray: "5,5",
   },
 };
 ```
 
 **What You Can Change:**
 
-| Property | Part-of | Reference | Purpose |
-|----------|---------|-----------|---------|
-| `stroke` | var(--accent-secondary) | var(--foreground) | Line color |
-| `strokeWidth` | 3 | 1 | Line thickness |
-| `strokeDasharray` | - | "5,5" | Dash pattern |
-| `strokeLinecap` | - | - | Line end style |
-| `opacity` | - | - | Transparency |
+| Property          | Part-of                 | Reference         | Purpose        |
+| ----------------- | ----------------------- | ----------------- | -------------- |
+| `stroke`          | var(--accent-secondary) | var(--foreground) | Line color     |
+| `strokeWidth`     | 3                       | 1                 | Line thickness |
+| `strokeDasharray` | -                       | "5,5"             | Dash pattern   |
+| `strokeLinecap`   | -                       | -                 | Line end style |
+| `opacity`         | -                       | -                 | Transparency   |
 
 **Edge Style Options:**
 
@@ -1630,7 +1672,7 @@ const edgeStyle = {
 { stroke: "url(#myGradient)" }
 
 // Animated dashes
-{ 
+{
   strokeDasharray: "10,5",
   animation: "dash 1s linear infinite"
 }
@@ -1667,10 +1709,10 @@ const color = `hsl(${hue}, 70%, 60%)`;
 Handles are invisible connection points at node edges:
 
 ```typescript
-<Handle 
-  type="target" 
-  position={Position.Top} 
-  className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0" 
+<Handle
+  type="target"
+  position={Position.Top}
+  className="!bg-transparent !border-none !w-0 !h-0 !min-w-0 !min-h-0"
 />
 ```
 
@@ -1678,16 +1720,16 @@ Handles are invisible connection points at node edges:
 
 ```typescript
 // Small circles
-className="!bg-blue-500 !w-2 !h-2 !border-2 !border-white"
+className = "!bg-blue-500 !w-2 !h-2 !border-2 !border-white";
 
 // Larger targets
-className="!bg-green-500 !w-4 !h-4 !rounded-full"
+className = "!bg-green-500 !w-4 !h-4 !rounded-full";
 
 // Color by position
-Top: "!bg-red-500"
-Right: "!bg-blue-500"
-Bottom: "!bg-green-500"
-Left: "!bg-yellow-500"
+Top: "!bg-red-500";
+Right: "!bg-blue-500";
+Bottom: "!bg-green-500";
+Left: "!bg-yellow-500";
 ```
 
 #### 📊 Background Grid
@@ -1703,15 +1745,15 @@ Left: "!bg-yellow-500"
 <Background gap={50} size={2} />
 
 // Dots instead of lines
-<Background 
-  variant={BackgroundVariant.Dots} 
-  gap={20} 
-  size={2} 
+<Background
+  variant={BackgroundVariant.Dots}
+  gap={20}
+  size={2}
 />
 
 // Custom color
-<Background 
-  gap={20} 
+<Background
+  gap={20}
   size={1}
   style={{ backgroundColor: '#f0f0f0' }}
 />
@@ -1740,7 +1782,7 @@ Left: "!bg-yellow-500"
 
 /* Custom cursor */
 .react-flow__node {
-  cursor: url('custom-cursor.png'), auto;
+  cursor: url("custom-cursor.png"), auto;
 }
 ```
 
@@ -1816,24 +1858,24 @@ The diagram includes inline `<style>` to override React Flow defaults:
 
 ```css
 /* Warm theme */
---active-base: #f59e0b;        /* Orange */
---hover-base: #fbbf24;         /* Yellow */
---accent-secondary: #dc2626;   /* Red */
+--active-base: #f59e0b; /* Orange */
+--hover-base: #fbbf24; /* Yellow */
+--accent-secondary: #dc2626; /* Red */
 
 /* Cool theme */
---active-base: #0ea5e9;        /* Sky blue */
---hover-base: #06b6d4;         /* Cyan */
---accent-secondary: #6366f1;   /* Indigo */
+--active-base: #0ea5e9; /* Sky blue */
+--hover-base: #06b6d4; /* Cyan */
+--accent-secondary: #6366f1; /* Indigo */
 
 /* Nature theme */
---active-base: #10b981;        /* Green */
---hover-base: #84cc16;         /* Lime */
---accent-secondary: #14b8a6;   /* Teal */
+--active-base: #10b981; /* Green */
+--hover-base: #84cc16; /* Lime */
+--accent-secondary: #14b8a6; /* Teal */
 
 /* Monochrome */
---active-base: #000000;        /* Black */
---hover-base: #6b7280;         /* Gray */
---accent-secondary: #374151;   /* Dark gray */
+--active-base: #000000; /* Black */
+--hover-base: #6b7280; /* Gray */
+--accent-secondary: #374151; /* Dark gray */
 ```
 
 #### 📏 Layout & Spacing
@@ -1867,12 +1909,12 @@ defaultViewport={{ x: 100, y: 50, zoom: 1 }}
 **Fit view settings:**
 
 ```typescript
-fitView({ 
-  padding: 0.3,    // 30% padding around nodes
-  duration: 200,   // Animation duration in ms
-  minZoom: 1,      // Don't zoom below 1x
-  maxZoom: 1       // Don't zoom above 1x (prevents over-zoom)
-})
+fitView({
+  padding: 0.3, // 30% padding around nodes
+  duration: 200, // Animation duration in ms
+  minZoom: 1, // Don't zoom below 1x
+  maxZoom: 1, // Don't zoom above 1x (prevents over-zoom)
+});
 ```
 
 #### 🎬 Animation Options
@@ -1887,13 +1929,19 @@ fitView({
 
 /* Animate edge opacity */
 .react-flow__edge path {
-  transition: opacity 0.2s, stroke-width 0.2s;
+  transition:
+    opacity 0.2s,
+    stroke-width 0.2s;
 }
 
 /* Fade in on appear */
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .react-flow__node {
@@ -1905,11 +1953,12 @@ fitView({
 
 ```css
 @keyframes pulse {
-  0%, 100% { 
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); 
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
   }
-  50% { 
-    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); 
+  50% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
   }
 }
 
@@ -2065,13 +2114,13 @@ Here's a fully customized diagram with all styling options:
 const CustomKitNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data }) => {
   const isSelected = /* selection logic */;
   const isHovered = /* hover logic */;
-  
+
   return (
     <div
       style={{
         width: 200,
         height: 120,
-        background: isSelected 
+        background: isSelected
           ? "linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
           : "linear-gradient(135deg, #f6f8fb 0%, #e9ecef 100%)",
         borderRadius: "12px",
@@ -2089,8 +2138,8 @@ const CustomKitNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data }) => {
         cursor: "pointer",
       }}
     >
-      <TableAvatar 
-        name={data.name} 
+      <TableAvatar
+        name={data.name}
         icon={data.icon}
         className="mb-2"
       />
@@ -2133,21 +2182,25 @@ const customEdgeStyle = {
 ### Learning Resources
 
 **Force-Directed Graphs:**
+
 - [D3 Force Simulation](https://github.com/d3/d3-force)
 - [Observable: Force-Directed Graph](https://observablehq.com/@d3/force-directed-graph)
 
 **React Flow:**
+
 - [React Flow Docs](https://reactflow.dev/)
 - [Custom Nodes](https://reactflow.dev/learn/customization/custom-nodes)
 - [Custom Edges](https://reactflow.dev/learn/customization/custom-edges)
 - [Styling Guide](https://reactflow.dev/learn/customization/theming)
 
 **CSS & Animations:**
+
 - [CSS Animations](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Animations)
 - [CSS Variables](https://developer.mozilla.org/en-US/docs/Web/CSS/Using_CSS_custom_properties)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 
 **Graph Theory:**
+
 - Understanding node degree (connections per node)
 - Detecting connected components
 - Finding shortest paths
@@ -2156,22 +2209,22 @@ const customEdgeStyle = {
 
 ## 9. Glossary of Terms
 
-| Term | Definition |
-|------|------------|
-| **Artifact** | Any entity in a kit: Type, Design, Quality, Port, Tag, Concept, File, Folder, or Author |
-| **CRDT** | Conflict-free Replicated Data Type - allows multiple users to edit simultaneously |
-| **DnD Kit** | Drag and Drop Kit - library for drag and drop interactions |
-| **Force Simulation** | Physics-based algorithm that positions nodes by simulating forces (repulsion, attraction) |
-| **GUID** | Globally Unique Identifier - a string like "abc-123-def-456" that uniquely identifies an entity |
-| **Hook (React)** | A function starting with `use` that lets you use React features in function components |
-| **KitStore** | The Y.js-backed store that holds kit data and enables real-time collaboration |
-| **Plugin** | A module that registers itself with the Sketchpad to add functionality |
-| **React Flow** | Library for building interactive node-based graphs and diagrams |
-| **Scope Provider** | React context provider that makes a GUID available to child components |
-| **Selector** | A function that extracts a specific piece of state from a larger state object |
-| **Triadic Hook** | A hook that returns `[value, setter, canSet]` - the standard pattern in Sketchpad |
-| **XState** | State machine library used for managing application state transitions |
-| **Y.js** | CRDT library that enables real-time collaborative editing |
+| Term                 | Definition                                                                                      |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| **Artifact**         | Any entity in a kit: Type, Design, Quality, Port, Tag, Concept, File, Folder, or Author         |
+| **CRDT**             | Conflict-free Replicated Data Type - allows multiple users to edit simultaneously               |
+| **DnD Kit**          | Drag and Drop Kit - library for drag and drop interactions                                      |
+| **Force Simulation** | Physics-based algorithm that positions nodes by simulating forces (repulsion, attraction)       |
+| **GUID**             | Globally Unique Identifier - a string like "abc-123-def-456" that uniquely identifies an entity |
+| **Hook (React)**     | A function starting with `use` that lets you use React features in function components          |
+| **KitStore**         | The Y.js-backed store that holds kit data and enables real-time collaboration                   |
+| **Plugin**           | A module that registers itself with the Sketchpad to add functionality                          |
+| **React Flow**       | Library for building interactive node-based graphs and diagrams                                 |
+| **Scope Provider**   | React context provider that makes a GUID available to child components                          |
+| **Selector**         | A function that extracts a specific piece of state from a larger state object                   |
+| **Triadic Hook**     | A hook that returns `[value, setter, canSet]` - the standard pattern in Sketchpad               |
+| **XState**           | State machine library used for managing application state transitions                           |
+| **Y.js**             | CRDT library that enables real-time collaborative editing                                       |
 
 ---
 
@@ -2213,23 +2266,15 @@ const customEdgeStyle = {
 ### Next Development Priorities
 
 **High Priority:**
+
 1. ✅ Layout persistence (save manual node positions)
 
-**Medium Priority:**
-2. ✅ Zoom & pan controls with UI widgets
-3. ✅ Force settings UI panel
+**Medium Priority:** 2. ✅ Zoom & pan controls with UI widgets 3. ✅ Force settings UI panel
 
-**Low Priority:**
-4. ✅ Edge labels for relationship types
-5. ✅ Node grouping by folder/concept
+**Low Priority:** 4. ✅ Edge labels for relationship types 5. ✅ Node grouping by folder/concept
 
-**Future Enhancements:**
-6. ⬜ Alternative layout algorithms (hierarchical, circular, grid)
-7. ⬜ Relationship filters and opacity controls
-8. ⬜ Multi-selection (Ctrl+Click, box selection)
-9. ⬜ Export diagram (PNG, SVG, JSON)
-10. ⬜ Smooth animations for layout changes
+**Future Enhancements:** 6. ⬜ Alternative layout algorithms (hierarchical, circular, grid) 7. ⬜ Relationship filters and opacity controls 8. ⬜ Multi-selection (Ctrl+Click, box selection) 9. ⬜ Export diagram (PNG, SVG, JSON) 10. ⬜ Smooth animations for layout changes
 
 ---
 
-*Tutorial created for Kit.tsx in the semio Sketchpad application. Last updated: January 26, 2026.*
+_Tutorial created for Kit.tsx in the semio Sketchpad application. Last updated: January 26, 2026._

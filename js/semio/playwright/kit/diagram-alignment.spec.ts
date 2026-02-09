@@ -104,9 +104,7 @@ test.describe("Kit Diagram Node-Edge Alignment", () => {
             })
             .sort((a, b) => a.distance - b.distance)[0]?.node;
           if (!nearestNode) continue;
-          const pointDistances = snapPoints(nearestNode.shape, nearestNode.x, nearestNode.y, nearestNode.width, nearestNode.height).map((point) =>
-            Math.hypot(point.x - endpoint.x, point.y - endpoint.y),
-          );
+          const pointDistances = snapPoints(nearestNode.shape, nearestNode.x, nearestNode.y, nearestNode.width, nearestNode.height).map((point) => Math.hypot(point.x - endpoint.x, point.y - endpoint.y));
           const minDistance = Math.min(...pointDistances);
           checks += 1;
           if (minDistance > 8) invalid += 1;
@@ -207,9 +205,7 @@ test.describe("Kit Diagram Node-Edge Alignment", () => {
             })
             .sort((a, b) => a.distance - b.distance)[0]?.node;
           if (!nearestNode) continue;
-          const pointDistances = snapPoints(nearestNode.shape, nearestNode.x, nearestNode.y, nearestNode.width, nearestNode.height).map((point) =>
-            Math.hypot(point.x - endpoint.x, point.y - endpoint.y),
-          );
+          const pointDistances = snapPoints(nearestNode.shape, nearestNode.x, nearestNode.y, nearestNode.width, nearestNode.height).map((point) => Math.hypot(point.x - endpoint.x, point.y - endpoint.y));
           const minDistance = Math.min(...pointDistances);
           checks += 1;
           if (minDistance > 8) invalid += 1;

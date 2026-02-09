@@ -42,4 +42,3 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";
 export { default as tailwindConfig } from "./tailwind.config";
-

@@ -1,5 +1,67 @@
 
 
+sketchpad toolbar:
+hand is currently a subtool from select. it should be seperate to the left of  select tool 
+
+sketchpad toolbar:
+the select tools should have 3 subtools: normal, lasso.
+
+sketchpad toolbar:
+aditive, substractive, intersect are not subtools. but they should be instead setting for the selection tools
+
+ rendered in the tools setting bars while select is activated 
+
+
+the select drop down menu has following selection sub-tools ( )
+
+sketchpad kit app toolbar:
+Currently 1 select, 
+
+
+add five selection sub-tools for the select. it should be a single column with 5 rows for each subtool
+
+
+sketchpad toolbar:
+
+
+
+drop down toggle (select) in the toolbar, currently when clicked on its arrow it should open an single column (list) upward and align to it, and exactly the same width as the button (and visually matching its height/shape style). 
+
+The dropdown column contains a compact list/table of Selection sub-tools (one row per sub-tool). Each row has a clear hover state (background highlight + optional icon emphasis) and is clickable to select that sub-tool. 
+
+The dropdown must feel anchored to the button (same left/right edges), open instantly with no animation, and close when a sub-tool is selected or when clicking outside. The selected sub-tool should be indicated (e.g., checkmark or active row highlight)
+
+
+
+
+When running `npx playwright test sketchpad/toolbar.spec.ts` over the cli it works but when trying to debug the test over vscode I get:
+Error: browserType.connect: Target page, context or browser has been closed
+Browser logs:
+
+
+╔════════════════════════════════════════════════════════════════════════════════════════════════╗
+║ Looks like you launched a headed browser without having a XServer running.                     ║
+║ Set either 'headless: true' or use 'xvfb-run <your-playwright-app>' before running Playwright. ║
+║                                                                                                ║
+║ <3 Playwright Team
+
+You’re working in repo on a new Design editor build.
+The old build (.old files) has working logic that’s missing or incomplete in the new one
+
+Please migrate behavior, not UI, from the old build into the new architecture.
+
+Focus on:
+
+Details panel edits: make type, variant, and design fields editable again (single + multi-select), and re-implement “fix selected pieces” using the new store/command patterns.
+
+Diagram actions: implement cluster and expand/explode as real commands (undo/redo must work).
+
+Diagram correctness: ensure port/handle mapping and connection rules match the old behavior, especially for design pieces and external connections.
+
+Follow the new build’s patterns (commands, transactions, hooks).
+Don’t copy old layout code — only logic and semantics.
+Work in small, clean diffs and keep behavior consistent with the old editor
+
 fix these in the toolbar 
 
 fix these : 

@@ -1419,7 +1419,7 @@ function ButtonGroup({ className, id, showLabel, children, ...props }: ButtonGro
   const borderClass = getLevelBorderElementClass(level);
   const divideClass = getLevelDivideElementClass(level);
   const buttonGroupElement = (
-    <div data-slot="button-group" data-level={level} className={cn("group/button-group flex w-fit shrink-0 items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)} {...props}>
+    <div data-slot="button-group" id={id} data-level={level} className={cn("group/button-group flex w-fit shrink-0 items-center border divide-x overflow-hidden h-medium", borderClass, divideClass, className)} {...props}>
       <ButtonGroupContext.Provider value={{ level }}>{children as React.ReactNode}</ButtonGroupContext.Provider>
     </div>
   );
@@ -2730,7 +2730,7 @@ function Toggle<T extends string = string>(props: ToggleProps<T>) {
       }
     };
 
-    const availableItems = items.filter((item) => item.value !== value);
+    const availableItems = items;
 
     const dropdownAction = (
       <Popover open={open} onOpenChange={setOpen}>
@@ -4922,6 +4922,8 @@ export interface DiagramProps {
   panOnScroll?: boolean;
   proOptions?: { hideAttribution: boolean };
   onSelectionChange?: (selection: OnSelectionChangeParams) => void;
+  onSelectionStart?: (event: React.MouseEvent) => void;
+  onSelectionEnd?: (event: React.MouseEvent) => void;
   defaultViewport?: { x: number; y: number; zoom: number };
 }
 
@@ -4980,6 +4982,8 @@ const DiagramInner: React.FC<DiagramProps> = ({
   panOnScroll = false,
   proOptions = { hideAttribution: true },
   onSelectionChange,
+  onSelectionStart,
+  onSelectionEnd,
   defaultViewport,
 }) => {
   const forceConfig = React.useMemo(() => ({ ...defaultDiagramForceConfig, ...forceConfigProp }), [forceConfigProp]);
@@ -5262,6 +5266,8 @@ const DiagramInner: React.FC<DiagramProps> = ({
         onMoveStart={onMoveStart}
         onMoveEnd={onMoveEnd}
         onSelectionChange={onSelectionChange}
+        onSelectionStart={onSelectionStart}
+        onSelectionEnd={onSelectionEnd}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         connectionLineComponent={connectionLineComponent}

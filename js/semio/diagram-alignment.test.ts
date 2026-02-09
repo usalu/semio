@@ -72,10 +72,7 @@ describe("Kit Diagram Shape Strategy", () => {
 
 describe("Kit Diagram Anchor Resolution", () => {
   it("should resolve east-west anchors for horizontal circle-rectangle edges", () => {
-    const anchors = resolveKitDiagramAnchorPair(
-      { kind: "design", position: { x: 0, y: 0 } },
-      { kind: "type", position: { x: 300, y: 0 } },
-    );
+    const anchors = resolveKitDiagramAnchorPair({ kind: "design", position: { x: 0, y: 0 } }, { kind: "type", position: { x: 300, y: 0 } });
     expect(anchors.source.localPoint.id).toBe("e");
     expect(anchors.target.localPoint.id).toBe("w");
     expect(anchors.source.absolutePoint).toEqual({ x: 100, y: 50 });
@@ -83,10 +80,7 @@ describe("Kit Diagram Anchor Resolution", () => {
   });
 
   it("should resolve south-north anchors for vertical rectangle-circle edges", () => {
-    const anchors = resolveKitDiagramAnchorPair(
-      { kind: "type", position: { x: 0, y: 0 } },
-      { kind: "design", position: { x: 0, y: 280 } },
-    );
+    const anchors = resolveKitDiagramAnchorPair({ kind: "type", position: { x: 0, y: 0 } }, { kind: "design", position: { x: 0, y: 280 } });
     expect(anchors.source.localPoint.id).toBe("s");
     expect(anchors.target.localPoint.id).toBe("n");
     expect(anchors.source.absolutePoint).toEqual({ x: 60, y: 80 });
@@ -94,10 +88,7 @@ describe("Kit Diagram Anchor Resolution", () => {
   });
 
   it("should resolve apex anchor for upward triangle connections", () => {
-    const anchors = resolveKitDiagramAnchorPair(
-      { kind: "file", position: { x: 220, y: 320 } },
-      { kind: "design", position: { x: 220, y: 40 } },
-    );
+    const anchors = resolveKitDiagramAnchorPair({ kind: "file", position: { x: 220, y: 320 } }, { kind: "design", position: { x: 220, y: 40 } });
     expect(anchors.source.localPoint.id).toBe("apex");
     expect(anchors.target.localPoint.id).toBe("s");
   });

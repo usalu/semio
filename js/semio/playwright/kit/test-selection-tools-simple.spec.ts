@@ -37,7 +37,7 @@ test.describe("Kit App Selection Tools - Simple DOM Tests", () => {
 
   test("check if selection tool components are rendered", async ({ page }) => {
     await page.goto("http://127.0.0.1:5173/", { waitUntil: "networkidle" });
-    
+
     // Wait a bit for React to render
     await page.waitForTimeout(2000);
 
@@ -69,19 +69,19 @@ test.describe("Kit App Selection Tools - Simple DOM Tests", () => {
     // This test verifies the code is properly compiled
     // We're just checking that the file exists and has expected exports
     const kitFilePath = "/workspaces/semio/js/semio/sketchpad/Kit.tsx";
-    
+
     if (fs.existsSync(kitFilePath)) {
       const content = fs.readFileSync(kitFilePath, "utf-8");
-      
+
       // Check for KIT.INIT event handler registration
       expect(content).toContain('registerEventHandler("KIT.INIT"');
-      
+
       // Check for KitToolbarTools component export
       expect(content).toContain("export const KitToolbarTools");
-      
+
       // Check for the guard condition
       expect(content).toContain("if (!canSet)");
-      
+
       console.log("✓ Kit.tsx contains all expected code");
     }
   });
@@ -89,38 +89,38 @@ test.describe("Kit App Selection Tools - Simple DOM Tests", () => {
   test("verify event handler registry can handle KIT.INIT", () => {
     // Load the shared module and verify event handler registry works
     const sharedPath = "/workspaces/semio/js/semio/sketchpad/shared.ts";
-    
+
     if (fs.existsSync(sharedPath)) {
       const content = fs.readFileSync(sharedPath, "utf-8");
-      
+
       // Check that executeEventHandler function exists
       expect(content).toContain("executeEventHandler");
-      
+
       // Check that event handler registry mechanism exists
       expect(content).toContain("registerEventHandler");
-      
+
       console.log("✓ shared.ts contains event handler registry");
     }
   });
 
   test("verify useKitAppActiveTool hook references hook system correctly", () => {
     const kitPath = "/workspaces/semio/js/semio/sketchpad/Kit.tsx";
-    
+
     if (fs.existsSync(kitPath)) {
       const content = fs.readFileSync(kitPath, "utf-8");
-      
+
       // Check for useKitAppActiveTool hook definition
       expect(content).toContain("export function useKitAppActiveTool");
-      
+
       // Check for proper hook result pattern
       expect(content).toContain("HookResult");
-      
+
       // Check for useKitScope usage
       expect(content).toContain("useKitScope");
-      
+
       // Check for useSketchpadActor usage
       expect(content).toContain("useSketchpadActor");
-      
+
       console.log("✓ useKitAppActiveTool hook properly implemented");
     }
   });

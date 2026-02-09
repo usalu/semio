@@ -33,15 +33,14 @@ test.describe("Navbar Panel Toggles", () => {
 
     // Test toggle functionality - Left Panel
     await leftToggle.click();
-    // Assuming the panel opens and has some identifiable element or width change. 
+    // Assuming the panel opens and has some identifiable element or width change.
     // Checking for aria-pressed or visual indication if possible, or side panel visibility.
     // The test description asks to check for functionality.
-    
+
     // Check if aria-checked is now true (since it uses ToggleGroup single which renders as radio) or check side panel visibility
     await expect(leftToggle).toHaveAttribute("aria-checked", "true");
-    
+
     await leftToggle.click();
     await expect(leftToggle).toHaveAttribute("aria-checked", "false");
-
   });
 });

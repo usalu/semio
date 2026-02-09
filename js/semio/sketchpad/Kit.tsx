@@ -112,7 +112,7 @@ import {
   useSyncDeep,
   useTheme,
   useTypeScope,
-  Window
+  Window,
 } from "./Sketchpad";
 import type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "./elements";
 import {
@@ -151,7 +151,7 @@ import {
   TreeContent,
   TreeItem,
   useInternalNode,
-  useReactFlow
+  useReactFlow,
 } from "./elements";
 import {
   addToSelection,
@@ -226,6 +226,37 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
 // #region Constants
 
 const artifactKinds = ["designs", "types", "qualities", "ports", "tags", "concepts", "files", "folders", "authors"];
+
+const kitToolbarSelectionSubTools = [
+  {
+    sectionId: "semio.sketchpad.app.kit.toolbar.selection.select.subtool",
+    order: 10,
+    subToolId: "select",
+    subToolLabelId: "semio.sketchpad.toolbar.subtool.select",
+    subToolIcon: <MousePointerIcon className="size-tiny" />,
+  },
+  {
+    sectionId: "semio.sketchpad.app.kit.toolbar.selection.additive.subtool",
+    order: 12,
+    subToolId: "additive",
+    subToolLabelId: "semio.sketchpad.toolbar.subtool.additive",
+    subToolIcon: <AddIcon className="size-tiny" />,
+  },
+  {
+    sectionId: "semio.sketchpad.app.kit.toolbar.selection.subtractive.subtool",
+    order: 13,
+    subToolId: "subtractive",
+    subToolLabelId: "semio.sketchpad.toolbar.subtool.subtractive",
+    subToolIcon: <SortDescendingIcon className="size-tiny" />,
+  },
+  {
+    sectionId: "semio.sketchpad.app.kit.toolbar.selection.intersect.subtool",
+    order: 14,
+    subToolId: "intersect",
+    subToolLabelId: "semio.sketchpad.toolbar.subtool.intersect",
+    subToolIcon: <HashIcon className="size-tiny" />,
+  },
+] as const;
 
 // #endregion Constants
 
@@ -449,7 +480,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
 
     yMap.set("fullscreenWindow", state?.fullscreenWindow || KitAppFullscreenWindow.None);
     yMap.set("activeTool", state?.activeTool ?? ToolKind.SELECTION_NORMAL);
-    
+
     if (state?.hover) {
       const hoverMap = new Y.Map<any>();
       if (state.hover.type) hoverMap.set("type", state.hover.type);
@@ -717,7 +748,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
         if (diff.hover === null) {
           this.yMap.delete("hover");
         } else {
-          const hoverMap = this.yMap.get("hover") as Y.Map<any> || new Y.Map<any>();
+          const hoverMap = (this.yMap.get("hover") as Y.Map<any>) || new Y.Map<any>();
           if (diff.hover.type !== undefined) hoverMap.set("type", diff.hover.type);
           if (diff.hover.design !== undefined) hoverMap.set("design", diff.hover.design);
           if (diff.hover.quality !== undefined) hoverMap.set("quality", diff.hover.quality);
@@ -731,7 +762,7 @@ class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff
         }
       }
       if (diff.diagramForce !== undefined) {
-        const forceMap = this.yMap.get("diagramForce") as Y.Map<any> || new Y.Map<any>();
+        const forceMap = (this.yMap.get("diagramForce") as Y.Map<any>) || new Y.Map<any>();
         if (diff.diagramForce.chargeStrength !== undefined) forceMap.set("chargeStrength", diff.diagramForce.chargeStrength);
         if (diff.diagramForce.linkDistance !== undefined) forceMap.set("linkDistance", diff.diagramForce.linkDistance);
         if (diff.diagramForce.collideRadius !== undefined) forceMap.set("collideRadius", diff.diagramForce.collideRadius);
@@ -2422,7 +2453,7 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       const files = kit.files?.map((f: SemioFile) => f.name);
       const folders = kit.folders?.map((f: Folder) => f.guid);
       const authors = kit.authors?.map((a: Author) => a.name);
-      
+
       if (types && types.length > 0) allSelection.types = types;
       if (designs && designs.length > 0) allSelection.designs = designs;
       if (qualities && qualities.length > 0) allSelection.qualities = qualities;
@@ -2432,7 +2463,7 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
       if (files && files.length > 0) allSelection.files = files;
       if (folders && folders.length > 0) allSelection.folders = folders;
       if (authors && authors.length > 0) allSelection.authors = authors;
-      
+
       setSelection(allSelection);
     };
   }, [kit, setSelection, canAct]);
@@ -3496,111 +3527,111 @@ const KitKindToggles: FC = () => {
 };
 
 const KitCreateActions: FC = () => {
-    const [searchParams, setSearchParams] = useSearchParams();
-    const kit = useKit() as Kit | undefined;
-    const kitCommands = useKitCommands();
-    const sketchpadCommands = useSketchpadCommands();
-  
-    const defaultDesignName = useLabel("semio.sketchpad.app.kit.defaultDesignName");
-    const defaultTypeName = useLabel("semio.sketchpad.app.kit.defaultTypeName");
-    const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
-    const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
-    const defaultTagName = useLabel("semio.sketchpad.app.tag.defaultName");
-    const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
-    const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
-  
-    const setKindActive = (kind: ArtifactKind) => {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.delete("kind");
-      newParams.append("kind", kind);
-      newParams.delete("name");
-      newParams.delete("variant");
-      newParams.delete("view");
-      setSearchParams(newParams);
-    };
-  
-    const handleCreateArtifact = (kind: ArtifactKind) => {
-      if (!kit || !kitCommands) return;
-      switch (kind) {
-        case "designs": {
-          const existingNames = (kit.designs || []).map((d: Design) => d.name);
-          const uniqueName = generateUniqueName(defaultDesignName || "", existingNames);
-          const newDesign: Design = { guid: guid(), name: uniqueName, pieces: [], connections: [] };
-          kitCommands.createDesign(newDesign);
-          sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
-          break;
-        }
-        case "types": {
-          const existingNames = (kit.types || []).map((t: Type) => t.name);
-          const uniqueName = generateUniqueName(defaultTypeName || "", existingNames);
-          const newType: Type = { guid: guid(), name: uniqueName, connectors: [] };
-          kitCommands.createType(newType);
-          sketchpadCommands.navigateToType(kit.guid, newType.guid);
-          break;
-        }
-        case "qualities": {
-          const existingNames = (kit.qualities || []).map((q: Quality) => q.name || "");
-          const uniqueName = generateUniqueName(defaultQualityName || "", existingNames);
-          const existingKeys = (kit.qualities || []).map((q: Quality) => q.key);
-          const uniqueKey = generateUniqueName("new.quality", existingKeys, ".");
-          const newQuality: Quality = {
-            guid: guid(),
-            key: uniqueKey,
-            name: uniqueName,
-          };
-          kitCommands.createQuality(newQuality);
-          setKindActive("qualities");
-          sketchpadCommands.navigateToQuality(kit.guid, newQuality.guid);
-          break;
-        }
-        case "ports": {
-          const existingNames = (kit.ports || []).map((p: Port) => p.name);
-          const uniqueName = generateUniqueName(defaultPortName || "", existingNames);
-          const newPort: Port = {
-            guid: guid(),
-            name: uniqueName,
-          };
-          kitCommands.createPort(newPort);
-          setKindActive("ports");
-          break;
-        }
-        case "tags": {
-          const existingNames = (kit.tags || []).map((t: Tag) => t.name);
-          const uniqueName = generateUniqueName(defaultTagName || "", existingNames);
-          const newTag: Tag = {
-            guid: guid(),
-            name: uniqueName,
-          };
-          kitCommands.createTag(newTag);
-          setKindActive("tags");
-          break;
-        }
-        case "concepts": {
-          const existingNames = (kit.concepts || []).map((c: Concept) => c.name);
-          const uniqueName = generateUniqueName(defaultConceptName || "", existingNames);
-          const newConcept: Concept = {
-            guid: guid(),
-            name: uniqueName,
-          };
-          kitCommands.createConcept(newConcept);
-          setKindActive("concepts");
-          break;
-        }
-        case "folders": {
-          const existingNames = (kit.folders || []).map((f: Folder) => f.name);
-          const uniqueName = generateUniqueName(defaultFolderName || "", existingNames);
-          const newFolder: Folder = {
-            guid: guid(),
-            name: uniqueName,
-          };
-          kitCommands.createFolder(newFolder);
-          setKindActive("folders");
-          break;
-        }
+  const [searchParams, setSearchParams] = useSearchParams();
+  const kit = useKit() as Kit | undefined;
+  const kitCommands = useKitCommands();
+  const sketchpadCommands = useSketchpadCommands();
+
+  const defaultDesignName = useLabel("semio.sketchpad.app.kit.defaultDesignName");
+  const defaultTypeName = useLabel("semio.sketchpad.app.kit.defaultTypeName");
+  const defaultQualityName = useLabel("semio.sketchpad.app.quality.defaultName");
+  const defaultPortName = useLabel("semio.sketchpad.app.port.defaultName");
+  const defaultTagName = useLabel("semio.sketchpad.app.tag.defaultName");
+  const defaultConceptName = useLabel("semio.sketchpad.app.concept.defaultName");
+  const defaultFolderName = useLabel("semio.sketchpad.app.folder.defaultName");
+
+  const setKindActive = (kind: ArtifactKind) => {
+    const newParams = new URLSearchParams(searchParams);
+    newParams.delete("kind");
+    newParams.append("kind", kind);
+    newParams.delete("name");
+    newParams.delete("variant");
+    newParams.delete("view");
+    setSearchParams(newParams);
+  };
+
+  const handleCreateArtifact = (kind: ArtifactKind) => {
+    if (!kit || !kitCommands) return;
+    switch (kind) {
+      case "designs": {
+        const existingNames = (kit.designs || []).map((d: Design) => d.name);
+        const uniqueName = generateUniqueName(defaultDesignName || "", existingNames);
+        const newDesign: Design = { guid: guid(), name: uniqueName, pieces: [], connections: [] };
+        kitCommands.createDesign(newDesign);
+        sketchpadCommands.navigateToDesign(kit.guid, newDesign.guid);
+        break;
       }
-    };
-  
-    const labelDesign = useLabel("semio.sketchpad.app.kit.toolbar.createDesign");
+      case "types": {
+        const existingNames = (kit.types || []).map((t: Type) => t.name);
+        const uniqueName = generateUniqueName(defaultTypeName || "", existingNames);
+        const newType: Type = { guid: guid(), name: uniqueName, connectors: [] };
+        kitCommands.createType(newType);
+        sketchpadCommands.navigateToType(kit.guid, newType.guid);
+        break;
+      }
+      case "qualities": {
+        const existingNames = (kit.qualities || []).map((q: Quality) => q.name || "");
+        const uniqueName = generateUniqueName(defaultQualityName || "", existingNames);
+        const existingKeys = (kit.qualities || []).map((q: Quality) => q.key);
+        const uniqueKey = generateUniqueName("new.quality", existingKeys, ".");
+        const newQuality: Quality = {
+          guid: guid(),
+          key: uniqueKey,
+          name: uniqueName,
+        };
+        kitCommands.createQuality(newQuality);
+        setKindActive("qualities");
+        sketchpadCommands.navigateToQuality(kit.guid, newQuality.guid);
+        break;
+      }
+      case "ports": {
+        const existingNames = (kit.ports || []).map((p: Port) => p.name);
+        const uniqueName = generateUniqueName(defaultPortName || "", existingNames);
+        const newPort: Port = {
+          guid: guid(),
+          name: uniqueName,
+        };
+        kitCommands.createPort(newPort);
+        setKindActive("ports");
+        break;
+      }
+      case "tags": {
+        const existingNames = (kit.tags || []).map((t: Tag) => t.name);
+        const uniqueName = generateUniqueName(defaultTagName || "", existingNames);
+        const newTag: Tag = {
+          guid: guid(),
+          name: uniqueName,
+        };
+        kitCommands.createTag(newTag);
+        setKindActive("tags");
+        break;
+      }
+      case "concepts": {
+        const existingNames = (kit.concepts || []).map((c: Concept) => c.name);
+        const uniqueName = generateUniqueName(defaultConceptName || "", existingNames);
+        const newConcept: Concept = {
+          guid: guid(),
+          name: uniqueName,
+        };
+        kitCommands.createConcept(newConcept);
+        setKindActive("concepts");
+        break;
+      }
+      case "folders": {
+        const existingNames = (kit.folders || []).map((f: Folder) => f.name);
+        const uniqueName = generateUniqueName(defaultFolderName || "", existingNames);
+        const newFolder: Folder = {
+          guid: guid(),
+          name: uniqueName,
+        };
+        kitCommands.createFolder(newFolder);
+        setKindActive("folders");
+        break;
+      }
+    }
+  };
+
+  const labelDesign = useLabel("semio.sketchpad.app.kit.toolbar.createDesign");
   const labelType = useLabel("semio.sketchpad.app.kit.toolbar.createType");
   const labelQuality = useLabel("semio.sketchpad.app.kit.toolbar.createQuality");
   const labelPort = useLabel("semio.sketchpad.app.kit.toolbar.createPort");
@@ -5664,7 +5695,9 @@ const AppContent: FC = () => {
                       <span id="semio.sketchpad.app.kit.mobileTable.row.expandSpacer" className="size-small shrink-0" />
                     )}
                     <TableAvatar id="semio.sketchpad.app.kit.mobileTable.row.avatar" className="size-small" name={row.artifact} icon={getRowIcon(row)} />
-                    <span id="semio.sketchpad.app.kit.mobileTable.row.name" className="text-left min-w-0 truncate">{row.artifact}</span>
+                    <span id="semio.sketchpad.app.kit.mobileTable.row.name" className="text-left min-w-0 truncate">
+                      {row.artifact}
+                    </span>
                   </div>
                   {row.concepts && row.concepts.length > 0 && (
                     <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
@@ -5832,7 +5865,9 @@ const AppContent: FC = () => {
                       <span id="semio.sketchpad.app.kit.desktopTable.row.expandSpacer" className="size-small shrink-0" />
                     )}
                     <TableAvatar id="semio.sketchpad.app.kit.desktopTable.row.avatar" className="size-small" name={row.artifact} icon={getRowIcon(row)} />
-                    <span id="semio.sketchpad.app.kit.desktopTable.row.name" className="text-left min-w-0 truncate">{row.artifact}</span>
+                    <span id="semio.sketchpad.app.kit.desktopTable.row.name" className="text-left min-w-0 truncate">
+                      {row.artifact}
+                    </span>
                   </div>
                   {row.concepts && row.concepts.length > 0 && (
                     <Scrollable orientation="horizontal" className="shrink-0 min-w-0 max-w-[200px]">
@@ -5993,7 +6028,7 @@ function useKitAppYjsToXStateSync() {
     if (sketchpadStore.hasKitApp({ kit: kitGuid })) {
       const store = sketchpadStore.kitApp(kitGuid);
       const initialState = store.snapshot();
-      console.log('[DEBUG] [Kit Init] Store snapshot:', initialState);
+      console.log("[DEBUG] [Kit Init] Store snapshot:", initialState);
 
       xstateInitialState = {
         ...initialState,
@@ -6007,7 +6042,7 @@ function useKitAppYjsToXStateSync() {
         },
       };
     } else {
-      console.log('[DEBUG] [Kit Init] No store, using defaults');
+      console.log("[DEBUG] [Kit Init] No store, using defaults");
       xstateInitialState = {
         panelVisibility: defaultPanelVisibility,
         selection: undefined,
@@ -6162,7 +6197,7 @@ const KitArtifactNode: FC<NodeProps<Node<KitDiagramNode>>> = ({ data }) => {
         boxShadow: "none",
         pointerEvents: "auto",
         padding: 0,
-        margin: 0
+        margin: 0,
       }}
       title={data.name || data.guid.substring(0, 8)}
     >
@@ -6231,10 +6266,7 @@ const resolveDiagramEdgeAnchors = (sourceNode: any, targetNode: any) => {
   const targetPosition = resolveDiagramNodePosition(targetNode);
   const sourceFrame = resolveDiagramNodeFrame(sourceNode, sourceKind);
   const targetFrame = resolveDiagramNodeFrame(targetNode, targetKind);
-  const anchors = resolveKitDiagramAnchorPair(
-    { kind: sourceKind, position: sourcePosition, frame: sourceFrame },
-    { kind: targetKind, position: targetPosition, frame: targetFrame },
-  );
+  const anchors = resolveKitDiagramAnchorPair({ kind: sourceKind, position: sourcePosition, frame: sourceFrame }, { kind: targetKind, position: targetPosition, frame: targetFrame });
   return {
     sx: anchors.source.absolutePoint.x,
     sy: anchors.source.absolutePoint.y,
@@ -6278,27 +6310,6 @@ const FloatingEdge: FC<EdgeProps> = ({ id, source, target, markerEnd, style, sel
     opacity = 1;
   }
 
-  if (KIT_DIAGRAM_DEBUG) {
-    const now = Date.now();
-    if (now - debugLogRef.current > KIT_DIAGRAM_DEBUG_INTERVAL_MS) {
-      debugLogRef.current = now;
-      console.debug("[DEBUG] KitDiagram edge", {
-        id,
-        source,
-        target,
-        sourcePosition: sourceNode.position,
-        sourcePositionAbsolute: sourceNode.internals?.positionAbsolute,
-        sourceWidth: sourceNode.width,
-        sourceHeight: sourceNode.height,
-        targetPosition: targetNode.position,
-        targetPositionAbsolute: targetNode.internals?.positionAbsolute,
-        targetWidth: targetNode.width,
-        targetHeight: targetNode.height,
-        endpoints: { sx, sy, tx, ty },
-      });
-    }
-  }
-
   return (
     <g>
       <BaseEdge
@@ -6325,10 +6336,7 @@ const FloatingConnectionLine: FC<ConnectionLineComponentProps> = ({ fromX, fromY
   const fromPosition = resolveDiagramNodePosition(fromNode);
   const fromFrame = resolveDiagramNodeFrame(fromNode, fromKind);
   const targetPoint = pointer ?? { x: toX, y: toY };
-  const sourceDirection = kitDiagramVector(
-    kitDiagramToAbsolutePoint(fromPosition, { x: fromFrame.width / 2, y: fromFrame.height / 2 }),
-    targetPoint,
-  );
+  const sourceDirection = kitDiagramVector(kitDiagramToAbsolutePoint(fromPosition, { x: fromFrame.width / 2, y: fromFrame.height / 2 }), targetPoint);
   const sourceAnchor = getKitDiagramShapeStrategy(fromKind).resolveNearestPoint(sourceDirection, fromFrame);
   let sourceX = kitDiagramToAbsolutePoint(fromPosition, sourceAnchor).x;
   let sourceY = kitDiagramToAbsolutePoint(fromPosition, sourceAnchor).y;
@@ -6676,25 +6684,27 @@ const KitDiagramInner: FC = () => {
     if (!kit) return { nodes: [], edges: [] };
     const { nodes: rfNodes, edges: rfEdges } = buildKitDiagramData(kit);
 
-    const filteredNodes = rfNodes.filter((n) => visibleGuids.has(n.data.guid)).map((node) => {
-      const [kind, guid] = node.id.split(":");
-      let isSelected = false;
-      if (kind === "type") isSelected = selection?.types?.includes(guid) ?? false;
-      else if (kind === "design") isSelected = selection?.designs?.includes(guid) ?? false;
-      else if (kind === "quality") isSelected = selection?.qualities?.includes(guid) ?? false;
-      else if (kind === "port") isSelected = selection?.ports?.includes(guid) ?? false;
-      else if (kind === "tag") isSelected = selection?.tags?.includes(guid) ?? false;
-      else if (kind === "concept") isSelected = selection?.concepts?.includes(guid) ?? false;
-      else if (kind === "file") isSelected = selection?.files?.includes(guid) ?? false;
-      else if (kind === "folder") isSelected = selection?.folders?.includes(guid) ?? false;
-      else if (kind === "author") isSelected = selection?.authors?.includes(guid) ?? false;
+    const filteredNodes = rfNodes
+      .filter((n) => visibleGuids.has(n.data.guid))
+      .map((node) => {
+        const [kind, guid] = node.id.split(":");
+        let isSelected = false;
+        if (kind === "type") isSelected = selection?.types?.includes(guid) ?? false;
+        else if (kind === "design") isSelected = selection?.designs?.includes(guid) ?? false;
+        else if (kind === "quality") isSelected = selection?.qualities?.includes(guid) ?? false;
+        else if (kind === "port") isSelected = selection?.ports?.includes(guid) ?? false;
+        else if (kind === "tag") isSelected = selection?.tags?.includes(guid) ?? false;
+        else if (kind === "concept") isSelected = selection?.concepts?.includes(guid) ?? false;
+        else if (kind === "file") isSelected = selection?.files?.includes(guid) ?? false;
+        else if (kind === "folder") isSelected = selection?.folders?.includes(guid) ?? false;
+        else if (kind === "author") isSelected = selection?.authors?.includes(guid) ?? false;
 
-      return {
-        ...node,
-        selected: isSelected,
-        style: { ...node.style, width: node.width ?? getKitDiagramNodeFrameForKind(node.data.kind).width, height: node.height ?? getKitDiagramNodeFrameForKind(node.data.kind).height },
-      };
-    });
+        return {
+          ...node,
+          selected: isSelected,
+          style: { ...node.style, width: node.width ?? getKitDiagramNodeFrameForKind(node.data.kind).width, height: node.height ?? getKitDiagramNodeFrameForKind(node.data.kind).height },
+        };
+      });
 
     const filteredNodeIds = new Set(filteredNodes.map((n) => n.id));
     const filteredEdges = rfEdges.filter((e) => filteredNodeIds.has(e.source) && filteredNodeIds.has(e.target));
@@ -6704,13 +6714,10 @@ const KitDiagramInner: FC = () => {
   const baseNodeIdsKey = useMemo(() => baseNodes.map((node) => node.id).join("|"), [baseNodes]);
   const baseEdgeIdsKey = useMemo(() => baseEdges.map((edge) => edge.id).join("|"), [baseEdges]);
 
-  const commitDiagramNodes = useCallback(
-    (nextNodes: Node<KitDiagramNode>[]) => {
-      diagramNodesRef.current = nextNodes;
-      setDiagramNodes(nextNodes);
-    },
-    [],
-  );
+  const commitDiagramNodes = useCallback((nextNodes: Node<KitDiagramNode>[]) => {
+    diagramNodesRef.current = nextNodes;
+    setDiagramNodes(nextNodes);
+  }, []);
 
   const syncSimulationPositions = useCallback((positions: Map<string, Node["position"]>) => {
     const simulation = simulationRef.current;
@@ -6747,25 +6754,11 @@ const KitDiagramInner: FC = () => {
     }
   }, []);
 
-  const logSimulationState = useCallback(
-    (label: string, node?: Node) => {
-      if (!KIT_DIAGRAM_DEBUG) return;
-      const simulation = simulationRef.current;
-      if (!simulation) return;
-      const draggingNodeId = draggingNodeIdRef.current;
-      const simNode = draggingNodeId ? simulation.nodes().find((n) => n.id === draggingNodeId) : undefined;
-      console.debug("[DEBUG] KitDiagram simulation", {
-        label,
-        alpha: simulation.alpha(),
-        alphaTarget: simulation.alphaTarget(),
-        draggingNodeId,
-        fx: simNode?.fx,
-        fy: simNode?.fy,
-        nodePosition: node?.position,
-      });
-    },
-    [],
-  );
+  const logSimulationState = useCallback((label: string, node?: Node) => {
+    if (!KIT_DIAGRAM_DEBUG) return;
+    const simulation = simulationRef.current;
+    if (!simulation) return;
+  }, []);
 
   const startDragReheat = useCallback(() => {
     const simulation = simulationRef.current;
@@ -6801,20 +6794,6 @@ const KitDiagramInner: FC = () => {
       return { ...node, position: { x: simNode.x ?? 0, y: simNode.y ?? 0 } };
     });
     commitDiagramNodes(nextNodes);
-    if (KIT_DIAGRAM_DEBUG) {
-      const now = Date.now();
-      if (now - debugTickRef.current > KIT_DIAGRAM_DEBUG_INTERVAL_MS) {
-        debugTickRef.current = now;
-        console.debug("[DEBUG] KitDiagram tick", {
-          alpha: simulation.alpha(),
-          alphaTarget: simulation.alphaTarget(),
-          draggingNodeId: draggingNodeIdRef.current,
-          pinned: Array.from(pinnedNodeIds),
-          nodes: baseNodeIdsKey,
-          edges: baseEdgeIdsKey,
-        });
-      }
-    }
   }, [commitDiagramNodes, baseEdgeIdsKey, baseNodeIdsKey]);
 
   useEffect(() => {
@@ -6871,13 +6850,7 @@ const KitDiagramInner: FC = () => {
     }
     updateNodesFromSimulation();
     simulation.on("tick", updateNodesFromSimulation);
-    if (KIT_DIAGRAM_DEBUG) {
-      console.debug("[DEBUG] KitDiagram simulation start", {
-        nodes: baseNodeIdsKey,
-        edges: baseEdgeIdsKey,
-        ticks: numTicks,
-      });
-    }
+
     simulation.alpha(1).restart();
     return () => {
       stopDragReheat();
@@ -6885,17 +6858,7 @@ const KitDiagramInner: FC = () => {
       simulation.stop();
       simulationRef.current = null;
     };
-  }, [
-    baseEdgeIdsKey,
-    baseNodeIdsKey,
-    diagramForceConfig.centerStrength,
-    diagramForceConfig.chargeStrength,
-    diagramForceConfig.collideRadius,
-    diagramForceConfig.linkDistance,
-    stopDragReheat,
-    syncSimulationPositions,
-    updateNodesFromSimulation,
-  ]);
+  }, [baseEdgeIdsKey, baseNodeIdsKey, diagramForceConfig.centerStrength, diagramForceConfig.chargeStrength, diagramForceConfig.collideRadius, diagramForceConfig.linkDistance, stopDragReheat, syncSimulationPositions, updateNodesFromSimulation]);
 
   const handleNodesChange = useCallback(
     (changes: any[]) => {
@@ -7149,23 +7112,43 @@ const MultiWindowApp: FC = () => {
     if (appType !== "kit") return;
     if (!kitGuid) return;
 
+    console.log("[DEBUG] Kit.tsx registering toolbar sections for kit:", kitGuid);
+
     addSection("toolbar", {
-      id: "semio.sketchpad.app.kit.toolbar.selection",
+      id: "semio.sketchpad.app.kit.toolbar.hand",
       specificity: 20,
       order: 10,
       toolbarGroup: {
-        id: "selection",
-        labelId: "semio.sketchpad.toolbar.parent.selection",
-        order: 10,
-        subToolId: "select",
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.select",
-        subToolIcon: <MousePointerIcon className="size-tiny" />,
+        id: "hand",
+        labelId: "semio.sketchpad.toolbar.parent.hand",
+        order: 5,
       },
       content: () => (
         <KitScopeProvider guid={kitGuid}>
-            <KitToolbarSelection />
+            <KitToolbarHand />
         </KitScopeProvider>
       ),
+    });
+
+    kitToolbarSelectionSubTools.forEach((subTool) => {
+      addSection("toolbar", {
+        id: subTool.sectionId,
+        specificity: 20,
+        order: subTool.order,
+        toolbarGroup: {
+          id: "selection",
+          labelId: "semio.sketchpad.toolbar.parent.selection",
+          order: subTool.order,
+          subToolId: subTool.subToolId,
+          subToolLabelId: subTool.subToolLabelId,
+          subToolIcon: subTool.subToolIcon,
+        },
+        content: () => (
+          <KitScopeProvider guid={kitGuid}>
+            <KitToolbarSelection />
+          </KitScopeProvider>
+        ),
+      });
     });
 
     addSection("toolbar", {
@@ -7179,7 +7162,7 @@ const MultiWindowApp: FC = () => {
       },
       content: () => (
         <KitScopeProvider guid={kitGuid}>
-            <KitFilters />
+          <KitFilters />
         </KitScopeProvider>
       ),
     });
@@ -7193,15 +7176,21 @@ const MultiWindowApp: FC = () => {
         labelId: "semio.sketchpad.toolbar.parent.create",
         order: 30,
       },
-      content: () => (
-        <KitScopeProvider guid={kitGuid}>
+      content: () => {
+        console.log("[DEBUG] Rendering KitCreateActions content wrapper");
+        return (
+          <KitScopeProvider guid={kitGuid}>
             <KitCreateActions />
-        </KitScopeProvider>
-      ),
+          </KitScopeProvider>
+        );
+      },
     });
 
     return () => {
-      removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.selection");
+      removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.hand");
+      kitToolbarSelectionSubTools.forEach((subTool) => {
+        removeSection("toolbar", subTool.sectionId);
+      });
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.filters");
       removeSection("toolbar", "semio.sketchpad.app.kit.toolbar.create");
       removeSection("toolbar", "semio.sketchpad.app.kit.kitApp.toolsGroup");
@@ -7345,7 +7334,6 @@ export const KitFilters: FC = () => {
 export const KitToolbarSelection: FC = () => {
   const [activeTool, setActiveTool] = useKitAppActiveTool();
   const labelPointer = useLabel("semio.sketchpad.app.kit.tool.pointer");
-  const labelHand = useLabel("semio.sketchpad.app.kit.tool.hand");
 
   return (
     <div className="flex shrink-0 items-center gap-single">
@@ -7355,18 +7343,29 @@ export const KitToolbarSelection: FC = () => {
         onPressedChange={() => setActiveTool?.(ToolKind.SELECTION_NORMAL)}
         icon={<MousePointerIcon />}
         text={labelPointer}
+        showLabel={false}
       />
+    </div>
+  );
+};
+
+export const KitToolbarHand: FC = () => {
+  const [activeTool, setActiveTool] = useKitAppActiveTool();
+  const labelHand = useLabel("semio.sketchpad.app.kit.tool.hand");
+
+  return (
+    <div className="flex shrink-0 items-center gap-single">
       <Toggle
         id="semio.sketchpad.app.kit.tool.hand"
         pressed={activeTool === ToolKind.HAND}
         onPressedChange={() => setActiveTool?.(ToolKind.HAND)}
         icon={<HandIcon />}
         text={labelHand}
+        showLabel={false}
       />
     </div>
   );
 };
-
 // #endregion Tools
 
 // #endregion Windows

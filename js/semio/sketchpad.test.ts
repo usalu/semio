@@ -158,7 +158,7 @@ async function openSettingsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => { });
+    .catch(() => {});
 }
 
 async function getSettingsSections(page: Page): Promise<string[]> {
@@ -195,7 +195,7 @@ async function openDetailsPanel(page: Page) {
 
   await expect(rightSidePanel)
     .toBeVisible({ timeout: 10000 })
-    .catch(() => { });
+    .catch(() => {});
 }
 
 async function getDetailsSections(page: Page): Promise<string[]> {
@@ -409,11 +409,13 @@ async function initHome(page: Page) {
 
   console.log("[TEST] Looking for table row with data-row-id...");
   const dataRowIds = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll("[data-row-id]")).map(el => el.getAttribute("data-row-id")).slice(0, 10);
+    return Array.from(document.querySelectorAll("[data-row-id]"))
+      .map((el) => el.getAttribute("data-row-id"))
+      .slice(0, 10);
   });
   console.log("[TEST] Found data-row-id values:", dataRowIds);
 
-  const tableRow = page.locator('tr[data-row-id]').filter({ hasText: "Metabolism" }).first();
+  const tableRow = page.locator("tr[data-row-id]").filter({ hasText: "Metabolism" }).first();
   const isTableRowVisible = await tableRow.isVisible().catch(() => false);
   console.log("[TEST] Table row with Metabolism visible:", isTableRowVisible);
 
@@ -448,27 +450,29 @@ async function initDesign(page: Page) {
   await page.waitForTimeout(3000);
 
   console.log(`[initDesign] Current URL: ${page.url()}`);
-  
+
   // Wait for design rows to appear
   await page.waitForTimeout(2000);
-  
+
   // First, log what rows exist
   const allRowIds = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll("[data-row-id]")).map(el => el.getAttribute("data-row-id")).slice(0, 20);
+    return Array.from(document.querySelectorAll("[data-row-id]"))
+      .map((el) => el.getAttribute("data-row-id"))
+      .slice(0, 20);
   });
   console.log(`[initDesign] Available row IDs: ${JSON.stringify(allRowIds)}`);
-  
+
   // Look for any design row
-  const designRowIds = allRowIds.filter(id => id?.startsWith("design-"));
+  const designRowIds = allRowIds.filter((id) => id?.startsWith("design-"));
   console.log(`[initDesign] Design row IDs: ${JSON.stringify(designRowIds)}`);
-  
+
   if (designRowIds.length === 0) {
     console.log(`[initDesign] No design rows found, looking for Nakagin Capsule Tower text...`);
     // Try to find "Nakagin Capsule Tower" text and click its parent row
     const designElement = page.getByText("Nakagin Capsule Tower", { exact: true }).first();
     const hasDesign = await designElement.isVisible({ timeout: 5000 }).catch(() => false);
     console.log(`[initDesign] Nakagin Capsule Tower text visible: ${hasDesign}`);
-    
+
     if (hasDesign) {
       await designElement.dblclick({ force: true });
       console.log(`[initDesign] Double-clicked on Nakagin Capsule Tower text`);
@@ -486,14 +490,14 @@ async function initDesign(page: Page) {
     }, designRowIds[0]);
     console.log(`[initDesign] Double-clicked on design via JS: ${dblClickedDesign}`);
   }
-  
+
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(5000);
-  
+
   // Wait for navigation to design page
   const finalUrl = page.url();
   console.log(`[initDesign] Final URL: ${finalUrl}`);
-  
+
   return { errors, warnings, messages };
 }
 
@@ -502,37 +506,39 @@ async function initType(page: Page) {
   await page.waitForTimeout(3000);
 
   console.log(`[initType] Current URL: ${page.url()}`);
-  
+
   // Check if we need to filter to types
   const typesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
   const hasTypesToggle = await typesToggle.isVisible({ timeout: 5000 }).catch(() => false);
   console.log(`[initType] Types toggle visible: ${hasTypesToggle}`);
-  
+
   if (hasTypesToggle) {
     await typesToggle.click();
     await page.waitForTimeout(3000);
   }
-  
+
   // Wait for type rows to appear
   await page.waitForTimeout(2000);
-  
+
   // First, log what rows exist
   const allRowIds = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll("[data-row-id]")).map(el => el.getAttribute("data-row-id")).slice(0, 20);
+    return Array.from(document.querySelectorAll("[data-row-id]"))
+      .map((el) => el.getAttribute("data-row-id"))
+      .slice(0, 20);
   });
   console.log(`[initType] Available row IDs: ${JSON.stringify(allRowIds)}`);
-  
+
   // Look for any type row
-  const typeRowIds = allRowIds.filter(id => id?.startsWith("type-"));
+  const typeRowIds = allRowIds.filter((id) => id?.startsWith("type-"));
   console.log(`[initType] Type row IDs: ${JSON.stringify(typeRowIds)}`);
-  
+
   if (typeRowIds.length === 0) {
     console.log(`[initType] No type rows found, looking for Tambour text...`);
     // Try to find "Tambour" text and click its parent row
     const tambourElement = page.getByText("Tambour", { exact: true }).first();
     const hasTambour = await tambourElement.isVisible({ timeout: 5000 }).catch(() => false);
     console.log(`[initType] Tambour text visible: ${hasTambour}`);
-    
+
     if (hasTambour) {
       await tambourElement.dblclick({ force: true });
       console.log(`[initType] Double-clicked on Tambour text`);
@@ -550,14 +556,14 @@ async function initType(page: Page) {
     }, typeRowIds[0]);
     console.log(`[initType] Double-clicked on type via JS: ${dblClickedType}`);
   }
-  
+
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(5000);
-  
+
   // Wait for navigation to type page
   const finalUrl = page.url();
   console.log(`[initType] Final URL: ${finalUrl}`);
-  
+
   return { errors, warnings, messages };
 }
 
@@ -1097,46 +1103,46 @@ test.describe("sketchpad", () => {
 
         // #region Diagram Node Click Selection
         console.log("[Kit] Verifying clicking diagram node updates selection");
-        
+
         // Debug: Check what views are visible
         const diagramContainerForClick = page.locator(".react-flow").first();
         const isDiagramVisibleForClick = await diagramContainerForClick.isVisible().catch(() => false);
         console.log(`[Kit] Diagram container visible for click test: ${isDiagramVisibleForClick}`);
-        
+
         // If diagram is not visible, try to scroll or navigate back to it
         if (!isDiagramVisibleForClick) {
           console.log("[Kit] Diagram not visible, checking for golden layout windows...");
           const windowCount = await page.locator(".lm_content").count();
           console.log(`[Kit] Golden layout windows: ${windowCount}`);
         }
-        
+
         const diagramNodesClick = page.locator(".react-flow__node");
         const nodeCountClick = await diagramNodesClick.count();
         console.log(`[Kit] Found ${nodeCountClick} diagram nodes for click test`);
-        
+
         if (nodeCountClick > 0) {
           await waitForDiagramStabilization(page);
           const firstNodeClick = diagramNodesClick.first();
           await firstNodeClick.click();
           await page.waitForTimeout(500);
 
-        const afterClickSelection = await page.evaluate(() => {
-          const actor = (window as any).__SEMIO_ACTOR__;
-          if (!actor) return null;
-          const snapshot = actor.getSnapshot();
-          const url = window.location.pathname;
-          const kitGuidMatch = url.match(/\/kits\/([^/]+)/);
-          const kitGuid = kitGuidMatch?.[1];
-          return snapshot?.context?.kitApps?.[kitGuid || ""]?.selection;
-        });
-        console.log(`[Kit] Selection after node click: ${JSON.stringify(afterClickSelection)}`);
+          const afterClickSelection = await page.evaluate(() => {
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return null;
+            const snapshot = actor.getSnapshot();
+            const url = window.location.pathname;
+            const kitGuidMatch = url.match(/\/kits\/([^/]+)/);
+            const kitGuid = kitGuidMatch?.[1];
+            return snapshot?.context?.kitApps?.[kitGuid || ""]?.selection;
+          });
+          console.log(`[Kit] Selection after node click: ${JSON.stringify(afterClickSelection)}`);
 
-        const selectedTypesClick = afterClickSelection?.types || [];
-        const selectedDesignsClick = afterClickSelection?.designs || [];
-        const totalSelected = selectedTypesClick.length + selectedDesignsClick.length;
-        console.log(`[Kit] Total selected: ${totalSelected} (types: ${selectedTypesClick.length}, designs: ${selectedDesignsClick.length})`);
-        expect(totalSelected).toBeGreaterThan(0);
-        console.log("[Kit] Diagram node click selection test complete");
+          const selectedTypesClick = afterClickSelection?.types || [];
+          const selectedDesignsClick = afterClickSelection?.designs || [];
+          const totalSelected = selectedTypesClick.length + selectedDesignsClick.length;
+          console.log(`[Kit] Total selected: ${totalSelected} (types: ${selectedTypesClick.length}, designs: ${selectedDesignsClick.length})`);
+          expect(totalSelected).toBeGreaterThan(0);
+          console.log("[Kit] Diagram node click selection test complete");
         } else {
           console.log("[Kit] No diagram nodes found for click test, skipping selection verification");
         }
@@ -1148,42 +1154,41 @@ test.describe("sketchpad", () => {
         const nodeCountHover = await diagramNodesHover.count();
         console.log(`[Kit] Found ${nodeCountHover} diagram nodes for hover test`);
         if (nodeCountHover > 0) {
+          const firstNodeHover = diagramNodesHover.first();
+          const nodeBoxHover = await firstNodeHover.boundingBox();
+          expect(nodeBoxHover).not.toBeNull();
 
-        const firstNodeHover = diagramNodesHover.first();
-        const nodeBoxHover = await firstNodeHover.boundingBox();
-        expect(nodeBoxHover).not.toBeNull();
+          const centerXHover = nodeBoxHover!.x + nodeBoxHover!.width / 2;
+          const centerYHover = nodeBoxHover!.y + nodeBoxHover!.height / 2;
 
-        const centerXHover = nodeBoxHover!.x + nodeBoxHover!.width / 2;
-        const centerYHover = nodeBoxHover!.y + nodeBoxHover!.height / 2;
+          await page.mouse.move(centerXHover, centerYHover);
+          await page.waitForTimeout(300);
 
-        await page.mouse.move(centerXHover, centerYHover);
-        await page.waitForTimeout(300);
+          const hoverState = await page.evaluate(() => {
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return null;
+            const snapshot = actor.getSnapshot();
+            const url = window.location.pathname;
+            const kitGuidMatch = url.match(/\/kits\/([^/]+)/);
+            const kitGuid = kitGuidMatch?.[1];
+            return snapshot?.context?.kitApps?.[kitGuid || ""]?.hover;
+          });
+          console.log(`[Kit] Hover state after mouse enter: ${JSON.stringify(hoverState)}`);
 
-        const hoverState = await page.evaluate(() => {
-          const actor = (window as any).__SEMIO_ACTOR__;
-          if (!actor) return null;
-          const snapshot = actor.getSnapshot();
-          const url = window.location.pathname;
-          const kitGuidMatch = url.match(/\/kits\/([^/]+)/);
-          const kitGuid = kitGuidMatch?.[1];
-          return snapshot?.context?.kitApps?.[kitGuid || ""]?.hover;
-        });
-        console.log(`[Kit] Hover state after mouse enter: ${JSON.stringify(hoverState)}`);
+          await page.mouse.move(0, 0);
+          await page.waitForTimeout(300);
 
-        await page.mouse.move(0, 0);
-        await page.waitForTimeout(300);
-
-        const hoverStateAfter = await page.evaluate(() => {
-          const actor = (window as any).__SEMIO_ACTOR__;
-          if (!actor) return null;
-          const snapshot = actor.getSnapshot();
-          const url = window.location.pathname;
-          const kitGuidMatch = url.match(/\/kits\/([^/]+)/);
-          const kitGuid = kitGuidMatch?.[1];
-          return snapshot?.context?.kitApps?.[kitGuid || ""]?.hover;
-        });
-        console.log(`[Kit] Hover state after mouse leave: ${JSON.stringify(hoverStateAfter)}`);
-        console.log("[Kit] Diagram hover sync test complete");
+          const hoverStateAfter = await page.evaluate(() => {
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return null;
+            const snapshot = actor.getSnapshot();
+            const url = window.location.pathname;
+            const kitGuidMatch = url.match(/\/kits\/([^/]+)/);
+            const kitGuid = kitGuidMatch?.[1];
+            return snapshot?.context?.kitApps?.[kitGuid || ""]?.hover;
+          });
+          console.log(`[Kit] Hover state after mouse leave: ${JSON.stringify(hoverStateAfter)}`);
+          console.log("[Kit] Diagram hover sync test complete");
         } else {
           console.log("[Kit] No diagram nodes found for hover test, skipping");
         }
@@ -1194,29 +1199,28 @@ test.describe("sketchpad", () => {
         const initialNodeCountFilter = await page.locator(".react-flow__node").count();
         console.log(`[Kit] Initial diagram node count: ${initialNodeCountFilter}`);
         if (initialNodeCountFilter > 0) {
+          const searchInput = page.locator('[id="semio.sketchpad.app.kit.filter.search"] input').first();
+          const hasSearchInput = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
+          console.log(`[Kit] Search input visible: ${hasSearchInput}`);
 
-        const searchInput = page.locator('[id="semio.sketchpad.app.kit.filter.search"] input').first();
-        const hasSearchInput = await searchInput.isVisible({ timeout: 5000 }).catch(() => false);
-        console.log(`[Kit] Search input visible: ${hasSearchInput}`);
+          if (hasSearchInput) {
+            await searchInput.fill("Tambour");
+            await page.waitForTimeout(1500);
 
-        if (hasSearchInput) {
-          await searchInput.fill("Tambour");
-          await page.waitForTimeout(1500);
+            const filteredNodeCount = await page.locator(".react-flow__node").count();
+            console.log(`[Kit] Diagram node count after filter: ${filteredNodeCount}`);
 
-          const filteredNodeCount = await page.locator(".react-flow__node").count();
-          console.log(`[Kit] Diagram node count after filter: ${filteredNodeCount}`);
+            expect(filteredNodeCount).toBeLessThan(initialNodeCountFilter);
+            console.log(`[Kit] Filter reduced nodes from ${initialNodeCountFilter} to ${filteredNodeCount}`);
 
-          expect(filteredNodeCount).toBeLessThan(initialNodeCountFilter);
-          console.log(`[Kit] Filter reduced nodes from ${initialNodeCountFilter} to ${filteredNodeCount}`);
+            await searchInput.clear();
+            await page.waitForTimeout(1500);
 
-          await searchInput.clear();
-          await page.waitForTimeout(1500);
-
-          const restoredNodeCount = await page.locator(".react-flow__node").count();
-          console.log(`[Kit] Diagram node count after clearing filter: ${restoredNodeCount}`);
-          expect(restoredNodeCount).toBeGreaterThanOrEqual(filteredNodeCount);
-        }
-        console.log("[Kit] Diagram filter sync test complete");
+            const restoredNodeCount = await page.locator(".react-flow__node").count();
+            console.log(`[Kit] Diagram node count after clearing filter: ${restoredNodeCount}`);
+            expect(restoredNodeCount).toBeGreaterThanOrEqual(filteredNodeCount);
+          }
+          console.log("[Kit] Diagram filter sync test complete");
         } else {
           console.log("[Kit] No diagram nodes found for filter test, skipping");
         }
@@ -1228,60 +1232,58 @@ test.describe("sketchpad", () => {
         const nodeCountAll = await diagramNodesAll.count();
         console.log(`[Kit] Total diagram nodes: ${nodeCountAll}`);
         if (nodeCountAll > 0) {
+          const kitData = await page.evaluate(() => {
+            const actor = (window as any).__SEMIO_ACTOR__;
+            if (!actor) return null;
+            const snapshot = actor.getSnapshot();
+            const url = window.location.pathname;
+            const kitGuidMatch = url.match(/\/kits\/([^/]+)/);
+            const kitGuid = kitGuidMatch?.[1];
+            const kit = snapshot?.context?.kits?.[kitGuid || ""];
+            if (!kit) return null;
+            return {
+              types: kit.types?.length || 0,
+              designs: kit.designs?.length || 0,
+              qualities: kit.qualities?.length || 0,
+              ports: kit.ports?.length || 0,
+              tags: kit.tags?.length || 0,
+              concepts: kit.concepts?.length || 0,
+              files: kit.files?.length || 0,
+              folders: kit.folders?.length || 0,
+              authors: kit.authors?.length || 0,
+            };
+          });
+          console.log(`[Kit] Kit data: ${JSON.stringify(kitData)}`);
 
-        const kitData = await page.evaluate(() => {
-          const actor = (window as any).__SEMIO_ACTOR__;
-          if (!actor) return null;
-          const snapshot = actor.getSnapshot();
-          const url = window.location.pathname;
-          const kitGuidMatch = url.match(/\/kits\/([^/]+)/);
-          const kitGuid = kitGuidMatch?.[1];
-          const kit = snapshot?.context?.kits?.[kitGuid || ""];
-          if (!kit) return null;
-          return {
-            types: kit.types?.length || 0,
-            designs: kit.designs?.length || 0,
-            qualities: kit.qualities?.length || 0,
-            ports: kit.ports?.length || 0,
-            tags: kit.tags?.length || 0,
-            concepts: kit.concepts?.length || 0,
-            files: kit.files?.length || 0,
-            folders: kit.folders?.length || 0,
-            authors: kit.authors?.length || 0,
-          };
-        });
-        console.log(`[Kit] Kit data: ${JSON.stringify(kitData)}`);
+          if (kitData) {
+            const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
+            console.log(`[Kit] Expected total artifacts: ${totalArtifacts}`);
+            expect(nodeCountAll).toBe(totalArtifacts);
+          }
+          console.log("[Kit] Diagram all artifact types test complete");
+          // #endregion Diagram All Artifact Types
 
-        if (kitData) {
-          const totalArtifacts = kitData.types + kitData.designs + kitData.qualities + kitData.ports + kitData.tags + kitData.concepts + kitData.files + kitData.folders + kitData.authors;
-          console.log(`[Kit] Expected total artifacts: ${totalArtifacts}`);
-          expect(nodeCountAll).toBe(totalArtifacts);
-        }
-        console.log("[Kit] Diagram all artifact types test complete");
-        // #endregion Diagram All Artifact Types
+          // #region Diagram Edges
+          console.log("[Kit] Verifying edges connect nodes properly");
+          const edges = page.locator(".react-flow__edge");
+          const edgeCount = await edges.count();
+          console.log(`[Kit] Found ${edgeCount} edges`);
+          if (edgeCount > 0) {
+            const edgePaths = page.locator(".react-flow__edge path");
+            const pathCount = await edgePaths.count();
+            console.log(`[Kit] Found ${pathCount} edge paths`);
+            expect(pathCount).toBeGreaterThan(0);
 
-        // #region Diagram Edges
-        console.log("[Kit] Verifying edges connect nodes properly");
-        const edges = page.locator(".react-flow__edge");
-        const edgeCount = await edges.count();
-        console.log(`[Kit] Found ${edgeCount} edges`);
-        if (edgeCount > 0) {
-
-        const edgePaths = page.locator(".react-flow__edge path");
-        const pathCount = await edgePaths.count();
-        console.log(`[Kit] Found ${pathCount} edge paths`);
-        expect(pathCount).toBeGreaterThan(0);
-
-        const firstPath = edgePaths.first();
-        const pathD = await firstPath.getAttribute("d");
-        console.log(`[Kit] First edge path d: ${pathD?.substring(0, 50)}...`);
-        expect(pathD).not.toBeNull();
-        expect(pathD!.length).toBeGreaterThan(10);
-        console.log("[Kit] Diagram edges test complete");
-        } else {
-          console.log("[Kit] No edges found, skipping edge test");
-        }
-        // #endregion Diagram Edges
+            const firstPath = edgePaths.first();
+            const pathD = await firstPath.getAttribute("d");
+            console.log(`[Kit] First edge path d: ${pathD?.substring(0, 50)}...`);
+            expect(pathD).not.toBeNull();
+            expect(pathD!.length).toBeGreaterThan(10);
+            console.log("[Kit] Diagram edges test complete");
+          } else {
+            console.log("[Kit] No edges found, skipping edge test");
+          }
+          // #endregion Diagram Edges
         } else {
           console.log("[Kit] No diagram nodes found for artifact types test, skipping");
         }

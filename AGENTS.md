@@ -61,6 +61,13 @@ Claude Code auth files MUST live in the persisted Claude volume and be linked in
 Devcontainer named volume mount points MUST be pre-created in the Dockerfile with correct user ownership.
 Devcontainer disk hygiene MUST be maintained by purging unused images, volumes, and builder caches when available space is low.
 
+### Playwright Debugging
+
+VS Code Playwright debug runs MUST default to headless execution in containerized environments.
+Playwright debug workflows MUST rely on trace artifacts instead of headed browser windows when no X server is available.
+VS Code app dev launch configurations in remote/devcontainer workflows MUST run with Node launch targets and MUST open URLs through `serverReadyAction` with `openExternally`.
+VS Code app dev launch configurations MUST NOT require browser attach to start local development URLs.
+
 ### Sections
 
 File section trees MUST be derived from language-aware section parsing per file.
@@ -75,6 +82,16 @@ Engine startup MUST support a pure stdio MCP server mode.
 ### State Management
 
 App hover and selection state MUST be managed by the Sketchpad state machine.
+
+### Design Details
+
+Design details edits MUST apply to all selected pieces within a single transaction scope.
+
+Design piece name, variant, and view edits MUST support legacy `name-variant-view` identifiers and explicit design references.
+
+Clustered design pieces MUST reject name, variant, and view edits.
+
+Fixing pieces MUST detach selected pieces from their parent connections.
 
 ### Diagrams
 
@@ -92,6 +109,9 @@ Connection preview and proximity-connect targeting MUST reuse the same snap-poin
 Port visuals MUST use deterministic color assignment by compatibility family across Kit, Type, and Design diagrams.
 Ports without explicit compatibility mappings MUST keep deterministic per-port identity colors.
 Design app diagram simulation MUST prioritize overlap prevention with minimal-force collision-only resolution, no global centering forces, and pinned existing nodes.
+Design clustering MUST create nested designs and rewrite external connections to reference the nested design via `designPiece` identifiers.
+Design expansion MUST reinsert nested design pieces and clear `designPiece` references while preventing duplicate connections.
+Design diagram edge routing for clustered designs MUST use deterministic external-connection ordering for synthetic port indices.
 
 ### Ticket
 
@@ -393,6 +413,11 @@ Stats provide computed or measured performance data for entire designs using the
 
 ## UI/UX
 
+### Playwright Debugging
+
+Playwright debug sessions in VS Code MUST surface trace-based inspection as the primary visual feedback.
+Headed browser windows MUST NOT be required for debug workflows in devcontainer sessions.
+
 ### Sketchpad
 
 #### Kit Editor
@@ -407,6 +432,7 @@ Stats provide computed or measured performance data for entire designs using the
 - Kit artifact multi-selection MUST support Shift+Click for additive/subtractive selection and rectangular selection to select multiple nodes simultaneously.
 - Diagram selection MUST synchronize with the application state machine to ensure consistency across all views.
 - Kit diagram windows MUST allow direct node selection interactions (click, Shift+Click, lasso) and persist those selections through the shared Kit selection state.
+- Kit toolbar Selection dropdown MUST expose five placeholder sub-tools: `Select`, `Hand`, `Additive`, `Subtractive`, and `Intersect`.
 - Port avatars and connector visuals MUST share a consistent compatibility-family color language across table, diagram, and scene surfaces.
 
 #### Design Editor
@@ -416,6 +442,18 @@ Stats provide computed or measured performance data for entire designs using the
 - Design diagram primary-pointer selection interactions (click, Shift+Click, lasso) MUST remain independent from panning-state tracking.
 - Design scene selection MUST resolve selected piece identity from traversable object ancestry metadata (`pieceId`/`id`) so click and box-selection stay synchronized.
 - Design scene piece render wrappers MUST expose selection identity metadata on transform ancestors so loaded model meshes propagate deterministic selection identity.
+- Design details panel edits MUST apply to all selected pieces and surface mixed-selection state for differing values.
+- Design details panel MUST be visible by default in the Design app.
+- Design details panel MUST treat clustered design pieces as read-only for name, variant, and view edits.
+- Design diagram cluster actions MUST select the clustered design node after grouping.
+- Design diagram expand actions MUST clear selection after removing clustered nodes.
+- Sketchpad navbar panel toggles MUST control workbench, console, details, and chat visibility using the same toggle behavior as the legacy Design editor.
+- Sketchpad navbar panel toggles MUST render icon and hover/active feedback from panel definitions at the toggle button surface.
+- Sketchpad navbar MUST provide a single panel-toggle strip and MUST NOT render duplicate panel-toggle controls.
+- Design app hotkeys MUST map `mod+j` to Workbench, `mod+k` to Console, `mod+l` to Details, and `mod+[` to Chat.
+- Design app hotkeys MUST dispatch panel visibility updates through active Design app panel-toggle actions and MUST NOT reference undefined command containers.
+- Opening Chat MUST close Details, and opening Details MUST close Chat.
+- Design app panel toggles MUST only expose Workbench, Console, Details, and Chat.
 
 ### Ticket UX
 
@@ -435,6 +473,10 @@ The toolbar is a fixed bottom-center single-band control surface. Each app regis
 - Toolbar section registrations MUST declare parent metadata (`toolbarGroup.id`, `toolbarGroup.labelId`, `toolbarGroup.order`) so grouping is deterministic.
 - Parent activation MUST expose sub-tools through vertical upward dropdown toggles attached to the source tool button.
 - Selection MUST expose its full tool family through one upward dropdown.
+- Design Selection MUST expose `Select` and `Hand` subtools as a vertical dropdown list directly above the Selection trigger.
+- Design Selection MUST expose five stacked dropdown subtools: `Select`, `Hand`, `Additive`, `Subtractive`, and `Intersect`.
+- Selection dropdown subtools MUST render as stacked full-width rows with visible separators.
+- Selection dropdown subtools MUST indicate the active row with explicit visual state (highlight and/or checkmark) while preserving instant open/close behavior.
 - Filter and Create MUST activate directly from toolbar buttons without dropdown expansion.
 - Dropdown expansion MUST never open downward.
 - Toolbar interaction MUST provide deterministic pointer and keyboard behavior for category activation, sub-tool dropdown selection, and focus return.
@@ -450,8 +492,9 @@ The toolbar is a fixed bottom-center single-band control surface. Each app regis
 - Tool Setting Bar controls MUST include both icon and name text.
 - Tool Setting Bar MUST expose all filter controls when Filter is active and all create controls when Create is active.
 - Tool Setting Bar for Selection MUST provide selection mode switching including additive/subtractive controls; Filter/Create Tool Setting Bar content MAY use placeholder settings scaffolding.
+- Design Selection Tool Setting Bar MUST prioritize additive/subtractive selection controls over subtool switching controls.
 - Toolbar containers MUST not display scrollbars; overflow is handled by clipping without scroll UI.
-- Subtool dropdowns MUST open upward and align centered above the triggering control with no collision-driven repositioning.
+- Subtool dropdowns MUST open upward directly above the triggering control with deterministic non-colliding placement.
 - Toolbar borders MUST remain visually clean by clipping overflow within the toolbar containers.
 - **Home app** MUST map to filter/create branches for kit kind visibility and create actions.
 - **Kit app** MUST map to filter/create/selection branches for artifact visibility, artifact creation, and selection mode tools.
@@ -1434,7 +1477,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── constraints
 │ │ └── repo.mdc # \*_/_.\*
 ├── .vscode
-│ ├── launch.json # Lifecycle-ordered per-package launch configs with dev/test/build/publish variants
+│ ├── launch.json # Lifecycle-ordered per-package launch configs with attach-free node dev launches and serverReadyAction URL opening
+│ ├── settings.json # Workspace Playwright settings including headless debug defaults
 │ ├── tasks.json # Per-package task catalog for dev, test variants, build, publish flows
 │ └── extensions.json
 ├── .github
@@ -2572,6 +2616,7 @@ Sketchpad UI elements resolve transactions via React context (not props):
 - `js/semio/sketchpad/elements.tsx` defines `TransactionProvider` and `useTransaction()`.
 - `js/semio/sketchpad/elements.tsx` `Geometry` treats `color` as the base (non-interactive) color and uses selection/hover theme colors for the rendered material/edges when `selected`/`hovered` are true.
 - `js/semio/sketchpad/Design.tsx` diagram piece nodes use non-inset rings (`ring-*`, not `ring-inset`) so rings remain visible on `Avatar` nodes with full-size `AvatarFallback` backgrounds.
+- `js/semio/sketchpad/Design.tsx` details panel piece edits route through `updatePiece`/`updatePieces` transactions, parse legacy design variant strings, and apply fix actions via `fixPiecesInDesign`.
 - Elements such as `Input`, `Textarea`, `Select`, `Slider`, `Stepper`, `Combobox`, and `ActionDropdown` call `useTransaction()` internally and do not accept a `transaction` prop.
 - Apps are responsible for scoping transactions by wrapping their UI subtree with `TransactionProvider` using the appropriate transaction hook (per-app or kit-level), so all descendant elements participate consistently.
 
@@ -2752,6 +2797,10 @@ executeCommand<T>(command: string, ...args): Promise<T>
 - `js/semio/sketchpad/Docs.tsx` - DocsAppStore and documentation app
 - `js/semio/sketchpad/Tutorials.tsx` - Tutorial system (consolidated)
 - `js/semio/sketchpad/shared.ts` - Shared types and utilities
+
+#### Design app panel hotkeys
+
+- `js/semio/sketchpad/Design.tsx` binds `mod+j`, `mod+k`, `mod+l`, and `mod+[` panel toggles through `useDesignAppTogglePanel()` and `togglePanelHotkey`.
 
 #### Kit app artifact creation
 
@@ -3908,6 +3957,7 @@ Home app hover state is stored in the Sketchpad state machine and updated via ho
 Kit app hover state covers all artifact kinds and is updated via table and diagram hover dispatch.
 Kit diagram maintains a local D3 force simulation with React Flow as a controlled renderer, pinning dragged selections via fx/fy and skipping pinned nodes during tick sync.
 Edge endpoint calculations rely on internal positionAbsolute coordinates plus measured node dimensions, with optional KIT_DIAGRAM_DEBUG diagnostics and endpoint markers.
+Toolbar registration publishes five Selection sub-tool entries (`select`, `hand`, `additive`, `subtractive`, `intersect`) for the shared Selection dropdown toggle.
 
 ## 📄 js/semio/sketchpad/Sketchpad.tsx
 
@@ -4405,17 +4455,25 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 - Toolbar layout keeps a center-origin split with left-growing tool controls and right-growing Tool Setting Bar content on the same visual surface without full-width stretching.
 - Toolbar rendering uses fixed-width rectangular tool buttons, right-aligned Tool Zone anchoring, and static layout state so dropdown selection and Tool Setting Bar swaps remain instant without motion effects.
 - Toolbar containers clamp overflow with no scrollbars so borders remain clean while wide tool sets are clipped.
-- Selection subtool dropdowns are anchored to the triggering control and open upward with centered alignment and collision avoidance disabled.
+- Selection subtool dropdowns are anchored to the triggering control and open upward with deterministic top alignment and collision avoidance disabled.
+- Design toolbar selection subtools register `select` and `hand`; Sketchpad renders them as the Selection dropdown rows while Design selection-mode controls remain in the Tool Setting Bar.
 - Tool Setting Bar control rows are rendered as direct named `Toggle`/`Button` controls without static title/group label elements.
 - Selection-mode tool families in Design/Type rely on tool definitions and group mode switching; filter/create families in Home/Kit rely on toggle + action semantics.
 - Filter branches expose explicit reset behavior and selected-state indicators while preserving URL/query synchronization where applicable; create branches use dedicated action sets.
 - Toolbar adaptation draft specifications are stored in `.semio-repo/drafts/Toolbar.md` for cross-agent alignment before implementation passes.
+- `Sketchpad.tsx` renders one app-panel toggle strip in the navbar from panel definitions, uses panel icon metadata for icon/hover feedback, filters Design toggles to the legacy set, and routes all clicks through per-app toggle handlers.
 - `kitSelectionHelpers.ts` defines kit diagram shape strategies, the node-kind strategy registry, geometry normalization/vector utilities, and snap-point anchor-pair/proximity resolution.
 - `Kit.tsx` renders node visuals from strategy payloads and routes floating edges plus connection preview anchors through shared snap-point resolution with side-to-ReactFlow position mapping.
 - `Kit.tsx` enables React Flow element selection/focus on the diagram canvas so diagram click/lasso selection emits `onSelectionChange` updates into `KIT.SET_SELECTION`.
 - `Kit.tsx`, `Design.tsx`, and `Type.tsx` consume a shared compatibility-family port color strategy for port avatars, handle markers, and connector scene visuals.
 - Compatibility-family grouping merges explicitly compatible ports; ports without compatibility edges keep their own deterministic identity color.
+- `Design.tsx` routes cluster/expand actions through design app commands and maps clustered-design edges using `designPiece` GUIDs with deterministic connector indices.
+- `Design.tsx` and `Sketchpad.tsx` default Design app panel visibility to show the Details panel on entry.
 
 ## js/semio/sketchpad/portColor.ts
 
 - Exports deterministic port tone resolution keyed by compatibility-family grouping, connector-port guid extraction helpers, and compatibility-state classification for selected-versus-target port interactions.
+
+## js/semio/semio.ts
+
+- Cluster helpers create nested designs, rewrite external connections with `designPiece` GUID markers, and expose included-design metadata keyed by design GUIDs.

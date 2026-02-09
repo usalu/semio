@@ -121,11 +121,7 @@ export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTo
   return getToneForKey(groupKey);
 };
 
-export const getPortCompatibilityState = (
-  candidatePortGuid: string | undefined,
-  selectedPortGuid: string | undefined,
-  ports: Port[],
-): PortCompatibilityState => {
+export const getPortCompatibilityState = (candidatePortGuid: string | undefined, selectedPortGuid: string | undefined, ports: Port[]): PortCompatibilityState => {
   const normalizedCandidate = normalizeGuid(candidatePortGuid);
   const normalizedSelected = normalizeGuid(selectedPortGuid);
   if (!normalizedSelected) return "none";

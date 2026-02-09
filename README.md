@@ -1164,12 +1164,35 @@ The devcontainer installs all Playwright browsers (Chromium, Firefox, WebKit) du
 Browser binaries live in the workspace `node_modules/.cache/ms-playwright` volume path, keeping the cache stable across rebuilds and avoiding repeated downloads.
 Playwright tools and tests resolve the same shared cache path, so browser availability is consistent between CLI runs, editor tooling, and Playwright UI sessions.
 
+## 🧭 Playwright VS Code Debugging [↑](#-bundles-)
+
+VS Code Playwright debug runs in headless mode inside the devcontainer so tests do not depend on a host X server.
+Use Playwright traces and logs for visual inspection instead of relying on headed browser windows in containerized sessions.
+Workspace dev launch profiles in `.vscode/launch.json` run app servers with Node and open URLs via `serverReadyAction` so browser attach is not required.
+This avoids `Unable to attach browser` failure paths in remote/devcontainer sessions while keeping one-click app launch from the Run and Debug panel.
+
 ## 🛰️ Repo Dev Server [↑](#-bundles-)
 
 The repo dev server is a stateful Go service that persists ticket state, semantic scopes, claims, and warnings so collaboration stays consistent even when the CLI is stateless.
 The CLI sends unified diffs or file snapshots; the server parses them, reindexes affected files, updates claims, and emits conflict warnings and precommit blockers.
 HTTP endpoints cover ticket lifecycle commands, diff ingestion, precommit checks, indexing, and read-only queries for warnings, violations, and scopes.
 Webhook receivers enrich GitHub issue events, and Discord notifications format prompt/summary headings to match ticket workflow conventions.
+
+## 🧾 Design Details Editing [↑](#-bundles-)
+
+The Design Details panel treats every change as a scoped edit inside the Design app transaction system so undo/redo groups related field updates into a single action.
+The Design app defaults to showing the Details panel so the tree editor is immediately available on entry.
+Piece edits resolve from the UI selection into `updatePiece` and `updatePieces` commands, applying the same change to all selected pieces while honoring mixed-value display when values differ.
+Design-piece edits interpret legacy design identifiers stored as `name-variant-view` strings and rebuild them when the user changes name, variant, or view, while design references stored as explicit design GUIDs update by selecting the matching design entry.
+Clustered design pieces are read-only in the Details panel, so rename, variant, and view edits stop before they can mutate connected design aggregates.
+The Fix Pieces action converts connected pieces into fixed placement by removing parent connections through `fixPiecesInDesign`, keeping the piece's plane and center consistent after the change.
+
+## 🧭 Design Diagram Clustering [↑](#-bundles-)
+
+Clustering turns a selected, connected piece group into a nested design, adds that design to the kit, and rewrites external connections to reference the new design through `designPiece` markers while preserving the original piece IDs for expansion.
+Expanding reverses clustering by reinserting the nested design's pieces and connections into the parent design and clearing `designPiece` markers from affected connections, while filtering out duplicate connections by semantic equality.
+Design diagram nodes for clustered designs use the nested design GUID as their node identity so selection, edge routing, and connection lookups remain stable across renders.
+Design-node connector handles are indexed by external connection order, keeping port IDs and edge endpoints deterministic for clustered designs.
 
 ## 🧭 Kit Diagram Simulation Sync [↑](#-bundles-)
 
@@ -1178,6 +1201,15 @@ When no drag is active, simulation ticks push positions into React Flow every fr
 Drag starts always reheat the simulation with alphaTarget(0.3).restart(), drag ends always cool it with alphaTarget(0), and pointer-leave/blur fallbacks prevent the simulation from staying hot or dead after interrupted drags.
 Edge endpoints are calculated from absolute node positions and measured node sizes so the intersection math lines up with the rendered avatar.
 Debug instrumentation is gated behind the `KIT_DIAGRAM_DEBUG` flag and can log alpha state plus render tiny endpoint markers for alignment verification without polluting normal output.
+
+## 🧭 Panel Toggle Groups [↑](#-bundles-)
+
+Navbar panel toggles reflect the active app's panel definitions and map directly to panel visibility state.
+Panel toggle icons are rendered from each panel definition's icon metadata, so hover/active states align with the actual toggle button location.
+The navbar uses a single toggle strip for app panels to avoid duplicate toggle controls.
+Design hotkeys follow the legacy editor mapping: `mod+j` (Workbench), `mod+k` (Console), `mod+l` (Details), `mod+[` (Chat).
+Opening Chat automatically closes Details, and opening Details automatically closes Chat, while Workbench and Console remain independent.
+Design app panel toggles only surface Workbench, Console, Details, and Chat to match the legacy toggle set.
 
 ## 🧰 Toolbar Layout Discipline [↑](#-bundles-)
 
@@ -1450,15 +1482,23 @@ The core which is shared in the [semio JavaScript ecosystem](#-javascript-) 🥜
 - The toolbar band is content-sized (not full viewport width); both halves expand from the page center only as controls require.
 - Tool buttons are uniform rectangular dropdown toggles; only one tool is active at a time and active state is highlighted on that tool button.
 - Selection tools are grouped in one upward dropdown; Filter and Create are direct toolbar tools without dropdown expansion.
+- In Design, the Selection dropdown lists `Select` and `Hand` as vertical subtool rows directly above the Selection tool button.
+- In Design, the Selection dropdown renders one-column stacked rows for five subtools: `Select`, `Hand`, `Additive`, `Subtractive`, and `Intersect`.
+- In Kit, the Selection dropdown renders five placeholder subtool rows: `Select`, `Hand`, `Additive`, `Subtractive`, and `Intersect`.
+- Selection dropdown content is width-locked to the Selection tool and right-edge aligned so the subtool table opens directly above the trigger.
+- Selection dropdown rows are rendered as stacked full-width list entries with visible row separators.
+- Selection dropdown rows include active-row indication (highlight + checkmark) and retain instant open/close behavior.
 - Toolbar registrations carry parent metadata through `PanelSection.toolbarGroup` (`id`, `labelId`, `order`) so branch grouping is declarative at app registration time.
 - Toolbar state enforces one active path per app (active tool + optional sub-tool), and selecting a new tool collapses unrelated dropdown branches.
 - Selection and Filter stay as concrete branches with their app-specific subtools; Create, View, and Actions are always present with placeholder subtool scaffolding.
 - Home maps to filter/create, Kit maps to filter/create/selection, Design/Type map to selection, Feedback maps to actions, and Docs/Quality still register empty toolbar sections without breaking the shared shell.
 - The Tool Setting Bar resolves only the active path (sub-tool first, then tool) and never mixes unrelated/global settings.
 - Tool Setting Bar content is rendered as named icon+label toggles/buttons only, without static heading rows or group-title labels.
+- Design Selection Tool Setting Bar content shows selection-mode controls (`Additive`, `Subtractive`) instead of subtool switching controls.
 - Selecting `Filter` shows all filter controls in Tool Setting Bar; selecting `Create` shows all create controls in Tool Setting Bar.
 - Toolbar expansion/collapse and settings swaps are instantaneous with no motion behavior or transition effects.
 - Pointer and keyboard interactions remain deterministic through category activation + upward dropdown selection contracts.
+- `js/semio/sketchpad/Design.tsx` panel hotkeys (`mod+j`, `mod+k`, `mod+l`, `mod+[`) invoke `useDesignAppTogglePanel` actions directly so panel toggles never depend on undefined app command objects.
 - Toolbar adaptation specifications for ongoing structural evolution are tracked in `.semio-repo/drafts/Toolbar.md`.
 
 #### Sketchpad windows

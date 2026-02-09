@@ -23,7 +23,7 @@
 
 import { useSelector } from "@xstate/react";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
-import type { AppConfig, AppPlugin, AppWindowConfig, DesignAppId, Field, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolDefinition, ToolRenderContext } from "./shared";
+import type { AppConfig, AppPlugin, AppWindowConfig, DesignAppId, Field, HookResult, KitCommandContext, KitDiffAppEdit, PanelDefinition, PanelVisibility, Tool, ToolRenderContext } from "./shared";
 import {
   conditionalHookResult,
   createField as createFieldValue,
@@ -75,7 +75,7 @@ import { DragEndEvent, useDraggable } from "@dnd-kit/core";
 import { arrayMove } from "@dnd-kit/sortable";
 import { Edges, Line, Select, useFBX, useGLTF } from "@react-three/drei";
 import { ThreeEvent, useLoader } from "@react-three/fiber";
-import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
+import { AddIcon, AwardIcon, CodeIcon, ConnectionIcon, DiagramIcon, DisconnectIcon, HandIcon, IntersectIcon, MonitorIcon, MoonIcon, MousePointerIcon, RemoveIcon, SceneIcon, SelectToolIcon, SunIcon, TableViewIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import React, { createContext, FC, memo, ReactNode, Suspense, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
@@ -93,15 +93,19 @@ import {
   Connection,
   Connector,
   Coord,
+  createClusteredDesign,
   Design,
   DiffStatus,
+  expandDesignPieces,
   findConnectionsInDesign,
   findConnectorInType,
   findDesignInKit,
   findModel,
   findPieceInDesign,
   findTypeInKit,
+  fixPiecesInDesign,
   generateUniqueName,
+  getDesignDiff,
   getIncludedDesigns,
   guid,
   ICON_WIDTH,
@@ -111,13 +115,13 @@ import {
   Piece,
   Plane,
   planeToMatrix,
+  replaceClusterWithDesign,
   selectBestModel,
   TOLERANCE,
   toSemioRotation,
   toThreeRotation,
   Type,
 } from "../semio";
-import { getConnectorPortGuid, getPortCompatibilityState, getPortTone } from "./portColor";
 import type { ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Connection as RFConnection } from "./elements";
 import {
   applyNodeChanges,
@@ -151,6 +155,7 @@ import {
   useReactFlow,
   ViewportPortal,
 } from "./elements";
+import { getConnectorPortGuid, getPortCompatibilityState, getPortTone } from "./portColor";
 import { getKitAppHooks, registerDesignAppHooks, registerDesignAppStoreFactory } from "./shared";
 import {
   Canvas,
@@ -163,7 +168,6 @@ import {
   PieceScopeProvider,
   PlainKitDiffAppStore,
   SketchpadStore,
-  ToolGroup,
   useAddFooterItem,
   useAddPanelSection,
   useAppPanelVisibility,
@@ -185,6 +189,7 @@ import {
   useExplodeableDesignNodes,
   useFlatPiecePlane,
   useFocusSafe,
+  useIncludedDesigns,
   useIsConnectionHovered,
   useIsInDesignScope,
   useIsPieceHovered,
@@ -210,8 +215,12 @@ import {
   useSketchpadCommands,
   useSketchpadStore,
   useTooltip,
-  useType,
+  useType
 } from "./Sketchpad";
+
+// #endregion Imports
+
+// #region Types
 
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
 
@@ -305,6 +314,10 @@ export interface DesignAppCommandResult {
   diff?: DesignAppDiff;
   kitDiff?: KitDiff;
 }
+
+// #endregion Types
+
+// #region Commands
 
 export const commands: Record<string, (context: DesignAppCommandContext, ...args: any[]) => DesignAppCommandResult> = {
   "semio.designApp.selectAll": (context: DesignAppCommandContext): DesignAppCommandResult => {
@@ -896,9 +909,125 @@ export const commands: Record<string, (context: DesignAppCommandContext, ...args
       },
     };
   },
+  "semio.designApp.clusterPieces": (context: DesignAppCommandContext, pieceGuids: Guid[]): DesignAppCommandResult => {
+    if (!pieceGuids || pieceGuids.length === 0) {
+      return {};
+    }
+    const designPieceGuids = new Set((context.design.pieces || []).map((piece) => piece.guid));
+    const validPieceGuids = pieceGuids.filter((guid) => designPieceGuids.has(guid));
+    if (validPieceGuids.length === 0) {
+      return {};
+    }
+    const existingNames = (context.kit.designs || []).map((d) => d.name);
+    const clusterName = generateUniqueName(`${context.design.name} Cluster`, existingNames);
+    const { clusteredDesign, externalConnections } = createClusteredDesign(context.design, validPieceGuids, clusterName);
+    const designDiff = replaceClusterWithDesign(context.design, validPieceGuids, clusteredDesign, externalConnections);
+    const currentSelection = context.designApp.selection || {};
+    const piecesRemoved = currentSelection.pieces || [];
+    const connectionsRemoved = currentSelection.connections || [];
+    return {
+      diff: {
+        selection: {
+          pieces: {
+            removed: piecesRemoved,
+            added: [clusteredDesign.guid],
+          },
+          connections: {
+            removed: connectionsRemoved,
+          },
+        },
+      },
+      kitDiff: {
+        designs: {
+          added: [clusteredDesign],
+          updated: [
+            {
+              design: { guid: context.design.guid },
+              diff: designDiff,
+            },
+          ],
+        },
+      },
+    };
+  },
+  "semio.designApp.expandDesign": (context: DesignAppCommandContext, designGuid: Guid): DesignAppCommandResult => {
+    if (!designGuid) {
+      return {};
+    }
+    const referencedDesign = (context.kit.designs || []).find((d) => d.guid === designGuid);
+    if (!referencedDesign) {
+      return {};
+    }
+
+    const expandedReferencedDesign = expandDesignPieces(referencedDesign, context.kit);
+    const existingPieceGuids = new Set((context.design.pieces || []).map((piece) => piece.guid));
+    const addedPieces = (expandedReferencedDesign.pieces || []).filter((piece) => !existingPieceGuids.has(piece.guid));
+    const existingConnections = context.design.connections || [];
+    const addedConnections = (expandedReferencedDesign.connections || []).filter((connection) => !existingConnections.some((existing) => areSameConnection(existing, connection)));
+
+    const updatedExternalConnections = (context.design.connections || []).map((connection) => {
+      if (connection.connected.designPiece?.guid === designGuid) {
+        return {
+          ...connection,
+          connected: {
+            ...connection.connected,
+            designPiece: undefined,
+          },
+        };
+      }
+      if (connection.connecting.designPiece?.guid === designGuid) {
+        return {
+          ...connection,
+          connecting: {
+            ...connection.connecting,
+            designPiece: undefined,
+          },
+        };
+      }
+      return connection;
+    });
+
+    const expandedDesign: Design = {
+      ...context.design,
+      pieces: [...(context.design.pieces || []), ...addedPieces],
+      connections: [...updatedExternalConnections, ...addedConnections],
+    };
+
+    const designDiff = getDesignDiff(context.design, expandedDesign);
+    const currentSelection = context.designApp.selection || {};
+    const piecesRemoved = currentSelection.pieces || [];
+    const connectionsRemoved = currentSelection.connections || [];
+
+    return {
+      diff: {
+        selection: {
+          pieces: {
+            removed: piecesRemoved,
+          },
+          connections: {
+            removed: connectionsRemoved,
+          },
+        },
+      },
+      kitDiff: {
+        designs: {
+          updated: [
+            {
+              design: { guid: context.design.guid },
+              diff: designDiff,
+            },
+          ],
+        },
+      },
+    };
+  },
 };
 
 designAppCommands = commands;
+
+// #endregion Commands
+
+// #region Store
 
 export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, diff: DesignAppSelectionDiff): DesignAppSelectionDiff => {
   const inverseDiff: DesignAppSelectionDiff = {};
@@ -943,7 +1072,7 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
   constructor(parent: SketchpadStore, id: DesignAppId, initialState?: DesignAppState) {
     const defaultState: DesignAppState = {
       fullscreenWindow: initialState?.fullscreenWindow || DesignAppFullscreenWindow.None,
-      panelVisibility: initialState?.panelVisibility || { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      panelVisibility: initialState?.panelVisibility || { toolbar: true, workbench: false, details: true, chat: false, settings: false },
       activeTool: initialState?.activeTool || ToolKind.SELECTION_NORMAL,
       selection: initialState?.selection,
       hover: initialState?.hover,
@@ -1140,7 +1269,7 @@ const designAppPlugin: AppPlugin = {
     eventHandlers: {},
     selectors: {},
     createDefaultState: (): DesignAppState => ({
-      panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+      panelVisibility: { toolbar: true, workbench: false, details: true, chat: false, settings: false },
       selection: undefined,
       hover: undefined,
       presence: undefined,
@@ -1305,7 +1434,7 @@ function useDesignAppInitialize() {
       kitGuid,
       designGuid,
       state: {
-        panelVisibility: { toolbar: true, workbench: false, details: false, chat: false, settings: false },
+        panelVisibility: { toolbar: true, workbench: false, details: true, chat: false, settings: false },
         selection: undefined,
         hover: undefined,
         focusedPiece: undefined,
@@ -1324,6 +1453,10 @@ function useDesignAppInitialize() {
     initializedKeyRef.current = initKey;
   }, [actor, kitGuid, designGuid]);
 }
+
+// #endregion Store
+
+// #region Components
 
 export const DesignAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = { id: props.id };
@@ -1370,7 +1503,7 @@ export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: De
 const EMPTY_SELECTION: DesignAppSelection = {};
 const EMPTY_OTHERS: DesignAppPresenceOther[] = [];
 const EMPTY_MODEL_TAGS: Record<Guid, string[]> = {};
-const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, workbench: false, details: false, chat: false, settings: false };
+const DEFAULT_PANEL_VISIBILITY: PanelVisibility = { toolbar: false, workbench: false, details: true, chat: false, settings: false };
 
 type GranularSelectorFactory<T> = (kitGuid: Guid, designGuid: Guid) => (state: any) => T | undefined;
 
@@ -1586,7 +1719,7 @@ export function useDesignAppPanelVisibility(): HookResult<PanelVisibility> {
   return fieldToHookResult(useDesignAppPanelVisibilityField());
 }
 
-//#region Action Hooks
+// #region Action Hooks
 
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
@@ -2043,7 +2176,27 @@ export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id
   return [action, !!store];
 }
 
-//#endregion Action Hooks
+export function useDesignAppClusterPieces(): ActionHookResult<[pieceGuids: Guid[]]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (pieceGuids: Guid[]) => store.execute("semio.designApp.clusterPieces", getOrigin(), pieceGuids);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+export function useDesignAppExpandDesign(): ActionHookResult<[designGuid: Guid]> {
+  const store = useDesignStore() as DesignStore | null;
+  const getOrigin = useOrigin();
+  const action = useMemo(() => {
+    if (!store) return undefined;
+    return (designGuid: Guid) => store.execute("semio.designApp.expandDesign", getOrigin(), designGuid);
+  }, [store, getOrigin]);
+  return [action, !!store];
+}
+
+// #endregion Action Hooks
 
 const EMPTY_COMMANDS = {
   togglePanel: () => {},
@@ -2660,8 +2813,6 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
   return finalPieceId ? metadata.get(finalPieceId)?.plane : undefined;
 }
 
-// #endregion Imports
-
 // #region Footer
 
 export const DesignAppFooter: FC = () => {
@@ -2810,28 +2961,63 @@ export const LassoFreeformTool: Tool<DesignAppState> = {
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
-export const DesignAppTools: Tool<DesignAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, LassoRectangularTool, LassoFreeformTool];
+export const HandTool: Tool<DesignAppState> = {
+  id: ToolKind.HAND,
+  icon: <HandIcon className="size-tiny" />,
+  render: (context: ToolRenderContext<DesignAppState>) => ({}),
+};
+
+export const DesignAppTools: Tool<DesignAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, LassoRectangularTool, LassoFreeformTool, HandTool];
 
 export const DesignSelectSettings: FC = () => {
     const [activeTool, setActiveTool] = useDesignAppActiveTool();
-    const normalLabel = useLabel("semio.sketchpad.app.design.tools.select.normal");
     const additiveLabel = useLabel("semio.sketchpad.app.design.tools.select.additive");
     const subtractiveLabel = useLabel("semio.sketchpad.app.design.tools.select.subtractive");
+    const intersectLabel = useLabel("semio.sketchpad.app.design.tools.select.intersect");
+
+    useEffect(() => {
+        if (activeTool === ToolKind.HAND && setActiveTool) {
+            setActiveTool(ToolKind.SELECTION_NORMAL);
+        }
+    }, [setActiveTool]);
 
     return (
        <div className="flex shrink-0 items-center gap-single h-full px-single">
-         <ToggleGroup 
-            items={[
-                { value: String(ToolKind.SELECTION_NORMAL), icon: <SelectToolIcon className="size-tiny" />, text: normalLabel, id: "semio.sketchpad.app.design.tools.select.normal" },
-                { value: String(ToolKind.SELECTION_ADDITIVE), icon: <AddIcon className="size-tiny" />, text: additiveLabel, id: "semio.sketchpad.app.design.tools.select.additive" },
-                { value: String(ToolKind.SELECTION_SUBTRACTIVE), icon: <RemoveIcon className="size-tiny" />, text: subtractiveLabel, id: "semio.sketchpad.app.design.tools.select.subtractive" }
-            ]}
-            value={activeTool !== undefined ? [String(activeTool)] : []}
-            onValueChange={(vals) => vals[0] && setActiveTool && setActiveTool(Number(vals[0]) as ToolKind)}
-            kind="single"
+         <Toggle 
+            id="semio.sketchpad.app.design.tools.select.additive"
+            icon={<AddIcon className="size-tiny" />}
+            text={additiveLabel}
+            pressed={activeTool === ToolKind.SELECTION_ADDITIVE}
+            onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_ADDITIVE : ToolKind.SELECTION_NORMAL)}
+         />
+         <Toggle 
+            id="semio.sketchpad.app.design.tools.select.subtractive"
+            icon={<RemoveIcon className="size-tiny" />}
+            text={subtractiveLabel}
+            pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
+            onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
+         />
+         <Toggle 
+            id="semio.sketchpad.app.design.tools.select.intersect"
+            icon={<IntersectIcon className="size-tiny" />}
+            text={intersectLabel}
+            pressed={activeTool === ToolKind.SELECTION_INTERSECT}
+            onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
          />
        </div>
     );
+};
+
+export const DesignHandSettings: FC = () => {
+    const [activeTool, setActiveTool] = useDesignAppActiveTool();
+
+    useEffect(() => {
+        if (activeTool !== ToolKind.HAND && setActiveTool) {
+            setActiveTool(ToolKind.HAND);
+        }
+    }, [setActiveTool]);
+
+    return null;
 };
 
 export const DesignLassoSettings: FC = () => {
@@ -3416,6 +3602,9 @@ const PiecesSectionForm: FC = () => {
   const [updatePieces] = useDesignAppUpdatePieces();
   const design = useDesign() as Design;
   const kit = useKit() as Kit;
+  const kitCommands = useKitCommands();
+  const includedDesigns = useIncludedDesigns();
+  const includedDesignMap = useMemo(() => new Map(includedDesigns.map((includedDesign) => [includedDesign.guid, includedDesign])), [includedDesigns]);
   const metadata = new Map();
   const [selection] = useDesignAppSelection();
   const pieces = usePiecesFromIds(selection.pieces || []);
@@ -3423,9 +3612,15 @@ const PiecesSectionForm: FC = () => {
   const isSingle = pieces.length === 1;
   const piece = isSingle ? pieces[0] : null;
 
-  const isDesignPiece = isSingle ? typeof piece?.type === "string" && piece?.type === "design" : pieces.every((p) => typeof p.type === "string" && p.type === "design");
-  const hasDesignPieces = pieces.some((p) => typeof p.type === "string" && p.type === "design");
-  const hasMixedTypes = hasDesignPieces && pieces.some((p) => typeof p.type === "string" && p.type !== "design");
+  const isDesignPieceEntry = (target: any) => {
+    if (target?.design) return true;
+    if (typeof target?.type === "string") return target.type === "design";
+    return target?.type?.name === "design";
+  };
+
+  const isDesignPiece = isSingle ? isDesignPieceEntry(piece) : pieces.every((p) => isDesignPieceEntry(p));
+  const hasDesignPieces = pieces.some((p) => isDesignPieceEntry(p));
+  const hasMixedTypes = hasDesignPieces && pieces.some((p) => !isDesignPieceEntry(p));
 
   const getCommonValue = <T,>(getter: (piece: any) => T | undefined): T | undefined => {
     const values = pieces.map(getter).filter((v) => v !== undefined);
@@ -3435,29 +3630,261 @@ const PiecesSectionForm: FC = () => {
   };
 
   const getPieceId = (p: any): string => (p as any).guid || (p as any).id_;
+  const isRealPiece = (p: any): boolean => typeof (p as any).guid === "string";
+  const parseDesignVariant = (variant: string) => {
+    const [name, variantPart, viewPart] = variant.split("-");
+    return { name, variant: variantPart || undefined, view: viewPart || undefined };
+  };
+  const buildDesignVariant = (name: string, variant?: string, view?: string) => {
+    const parts = [name, variant, view].filter((part) => part && part.length > 0) as string[];
+    return parts.join("-");
+  };
 
   const handleTypeNameChange = (value: string) => {
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (!value) return;
+    if (isDesignPiece) return;
+    const match = availableTypes.find((t) => t.name === value) || allReplacableTypes.find((t) => t.name === value);
+    if (!match) return;
+    if (isSingle && piece && isRealPiece(piece)) {
+      transaction?.start();
+      updatePiece?.(getPieceId(piece), { type: { guid: match.guid } });
+      transaction?.finalize();
+      return;
+    }
+    const updates = pieces.filter(isRealPiece).map((p) => ({ id: getPieceId(p), diff: { type: { guid: match.guid } } }));
+    if (updates.length === 0) return;
+    transaction?.start();
+    updatePieces?.(updates);
+    transaction?.finalize();
   };
 
   const handleTypeVariantChange = (value: string) => {
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (isDesignPiece) return;
+    const variantValue = value || undefined;
+    const resolveType = (name: string, variant?: string) => {
+      const candidates = allReplacableTypes.filter((t) => t.name === name);
+      if (variant !== undefined) {
+        const exact = candidates.find((t) => ((t as any).variant || "") === variant);
+        if (exact) return exact;
+      } else {
+        const base = candidates.find((t) => !((t as any).variant));
+        if (base) return base;
+      }
+      return candidates[0];
+    };
+
+    if (isSingle && piece && isRealPiece(piece)) {
+      const currentType = piece.type && typeof piece.type === "string" ? findTypeInKit(kit, piece.type) : piece.type?.guid ? findTypeInKit(kit, piece.type.guid) : null;
+      if (!currentType) return;
+      const match = resolveType(currentType.name, variantValue);
+      if (!match) return;
+      transaction?.start();
+      updatePiece?.(getPieceId(piece), { type: { guid: match.guid } });
+      transaction?.finalize();
+      return;
+    }
+
+    const updates = pieces
+      .filter(isRealPiece)
+      .map((p) => {
+        const currentType = p.type && typeof p.type === "string" ? findTypeInKit(kit, p.type) : p.type?.guid ? findTypeInKit(kit, p.type.guid) : null;
+        if (!currentType) return null;
+        const match = resolveType(currentType.name, variantValue);
+        if (!match) return null;
+        return { id: getPieceId(p), diff: { type: { guid: match.guid } } };
+      })
+      .filter((update): update is { id: Guid; diff: PieceDiff } => update !== null);
+
+    if (updates.length === 0) return;
+    transaction?.start();
+    updatePieces?.(updates);
+    transaction?.finalize();
   };
 
   const handleDesignNameChange = (value: string) => {
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (!isDesignPiece || !value) return;
+    const updateDesignGuid = (targetPiece: any, name: string) => {
+      const currentDesign = targetPiece.design?.guid ? findDesignInKit(kit, targetPiece.design.guid) : null;
+      const variant = (currentDesign as any)?.variant || undefined;
+      const view = (currentDesign as any)?.view || undefined;
+      const options = currentDesign ? [currentDesign, ...availableDesigns] : availableDesigns.length > 0 ? availableDesigns : kit.designs || [];
+      const match = options.find((d) => d.name === name && ((d as any).variant || "") === (variant || "") && ((d as any).view || "") === (view || ""));
+      return match?.guid;
+    };
+
+    if (isSingle && piece) {
+      const pieceId = getPieceId(piece);
+      const includedDesign = includedDesignMap.get(pieceId);
+      if (includedDesign?.type === "connected") {
+        console.warn("Connected design pieces cannot be renamed - they represent clustered designs");
+        return;
+      }
+      if (!isRealPiece(piece)) return;
+      if (piece.design?.guid) {
+        const matchGuid = updateDesignGuid(piece, value);
+        if (!matchGuid) return;
+        transaction?.start();
+        updatePiece?.(pieceId, { design: { guid: matchGuid } });
+        transaction?.finalize();
+        return;
+      }
+      const current = parseDesignVariant((piece as any).type?.variant || "");
+      const newVariant = buildDesignVariant(value, current.variant, current.view);
+      transaction?.start();
+      updatePiece?.(pieceId, { type: { ...(piece as any).type, name: "design", variant: newVariant } as any });
+      transaction?.finalize();
+      return;
+    }
+
+    const updates = pieces
+      .filter(isRealPiece)
+      .map((p) => {
+        if (p.design?.guid) {
+          const matchGuid = updateDesignGuid(p, value);
+          if (!matchGuid) return null;
+          return { id: getPieceId(p), diff: { design: { guid: matchGuid } } };
+        }
+        if ((p as any).type?.name === "design") {
+          const current = parseDesignVariant((p as any).type?.variant || "");
+          const newVariant = buildDesignVariant(value, current.variant, current.view);
+          return { id: getPieceId(p), diff: { type: { ...(p as any).type, name: "design", variant: newVariant } as any } };
+        }
+        return null;
+      })
+      .filter((update): update is { id: Guid; diff: PieceDiff } => update !== null);
+
+    if (updates.length === 0) return;
+    transaction?.start();
+    updatePieces?.(updates);
+    transaction?.finalize();
   };
 
   const handleDesignVariantChange = (value: string) => {
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (!isDesignPiece) return;
+    const nextVariant = value || undefined;
+    const updateDesignGuid = (targetPiece: any, variant?: string) => {
+      const currentDesign = targetPiece.design?.guid ? findDesignInKit(kit, targetPiece.design.guid) : null;
+      const name = currentDesign?.name || "";
+      const view = (currentDesign as any)?.view || undefined;
+      const options = currentDesign ? [currentDesign, ...availableDesigns] : availableDesigns.length > 0 ? availableDesigns : kit.designs || [];
+      const match = options.find((d) => d.name === name && ((d as any).variant || "") === (variant || "") && ((d as any).view || "") === (view || ""));
+      return match?.guid;
+    };
+
+    if (isSingle && piece) {
+      const pieceId = getPieceId(piece);
+      const includedDesign = includedDesignMap.get(pieceId);
+      if (includedDesign?.type === "connected") {
+        console.warn("Connected design pieces cannot have their variants changed - they represent clustered designs");
+        return;
+      }
+      if (!isRealPiece(piece)) return;
+      if (piece.design?.guid) {
+        const matchGuid = updateDesignGuid(piece, nextVariant);
+        if (!matchGuid) return;
+        transaction?.start();
+        updatePiece?.(pieceId, { design: { guid: matchGuid } });
+        transaction?.finalize();
+        return;
+      }
+      const current = parseDesignVariant((piece as any).type?.variant || "");
+      const newVariant = buildDesignVariant(current.name, nextVariant, current.view);
+      transaction?.start();
+      updatePiece?.(pieceId, { type: { ...(piece as any).type, name: "design", variant: newVariant } as any });
+      transaction?.finalize();
+      return;
+    }
+
+    const updates = pieces
+      .filter(isRealPiece)
+      .map((p) => {
+        if (p.design?.guid) {
+          const matchGuid = updateDesignGuid(p, nextVariant);
+          if (!matchGuid) return null;
+          return { id: getPieceId(p), diff: { design: { guid: matchGuid } } };
+        }
+        if ((p as any).type?.name === "design") {
+          const current = parseDesignVariant((p as any).type?.variant || "");
+          const newVariant = buildDesignVariant(current.name, nextVariant, current.view);
+          return { id: getPieceId(p), diff: { type: { ...(p as any).type, name: "design", variant: newVariant } as any } };
+        }
+        return null;
+      })
+      .filter((update): update is { id: Guid; diff: PieceDiff } => update !== null);
+
+    if (updates.length === 0) return;
+    transaction?.start();
+    updatePieces?.(updates);
+    transaction?.finalize();
   };
 
   const handleDesignViewChange = (value: string) => {
-    // TODO: Implement using updatePiece/updatePieces commands
+    if (!isDesignPiece) return;
+    const nextView = value || undefined;
+    const updateDesignGuid = (targetPiece: any, view?: string) => {
+      const currentDesign = targetPiece.design?.guid ? findDesignInKit(kit, targetPiece.design.guid) : null;
+      const name = currentDesign?.name || "";
+      const variant = (currentDesign as any)?.variant || undefined;
+      const options = currentDesign ? [currentDesign, ...availableDesigns] : availableDesigns.length > 0 ? availableDesigns : kit.designs || [];
+      const match = options.find((d) => d.name === name && ((d as any).variant || "") === (variant || "") && ((d as any).view || "") === (view || ""));
+      return match?.guid;
+    };
+
+    if (isSingle && piece) {
+      const pieceId = getPieceId(piece);
+      const includedDesign = includedDesignMap.get(pieceId);
+      if (includedDesign?.type === "connected") {
+        console.warn("Connected design pieces cannot have views changed - they represent clustered designs");
+        return;
+      }
+      if (!isRealPiece(piece)) return;
+      if (piece.design?.guid) {
+        const matchGuid = updateDesignGuid(piece, nextView);
+        if (!matchGuid) return;
+        transaction?.start();
+        updatePiece?.(pieceId, { design: { guid: matchGuid } });
+        transaction?.finalize();
+        return;
+      }
+      const current = parseDesignVariant((piece as any).type?.variant || "");
+      const newVariant = buildDesignVariant(current.name, current.variant, nextView);
+      transaction?.start();
+      updatePiece?.(pieceId, { type: { ...(piece as any).type, name: "design", variant: newVariant } as any });
+      transaction?.finalize();
+      return;
+    }
+
+    const updates = pieces
+      .filter(isRealPiece)
+      .map((p) => {
+        if (p.design?.guid) {
+          const matchGuid = updateDesignGuid(p, nextView);
+          if (!matchGuid) return null;
+          return { id: getPieceId(p), diff: { design: { guid: matchGuid } } };
+        }
+        if ((p as any).type?.name === "design") {
+          const current = parseDesignVariant((p as any).type?.variant || "");
+          const newVariant = buildDesignVariant(current.name, current.variant, nextView);
+          return { id: getPieceId(p), diff: { type: { ...(p as any).type, name: "design", variant: newVariant } as any } };
+        }
+        return null;
+      })
+      .filter((update): update is { id: Guid; diff: PieceDiff } => update !== null);
+
+    if (updates.length === 0) return;
+    transaction?.start();
+    updatePieces?.(updates);
+    transaction?.finalize();
   };
 
   const fixPieces = async () => {
-    // TODO: Implement using execute command
+    if (!design || !kit) return;
+    const pieceGuids = pieces.filter(isRealPiece).map((p) => getPieceId(p));
+    if (pieceGuids.length === 0) return;
+    const diff = fixPiecesInDesign(kit, design.guid, pieceGuids);
+    transaction?.start();
+    kitCommands?.updateDesign(design.guid, diff);
+    transaction?.finalize();
   };
 
   const handleCenterXChange = (value: number) => {
@@ -3780,7 +4207,7 @@ const PiecesSectionForm: FC = () => {
           <TreeContent>
             <div className="flex flex-col gap-single">
               <p className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.app.design.piece.connectedPieceInfo")}</p>
-              <Button id="semio.sketchpad.app.design.piece.fixPiece">
+              <Button id="semio.sketchpad.app.design.piece.fixPiece" onClick={fixPieces}>
                 <DisconnectIcon className="size-tiny" />
                 {useLabel("semio.sketchpad.app.design.piece.fixPiece")}
               </Button>
@@ -4270,8 +4697,9 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
       {explodeableDesignNodes.map((node) => {
         const boundingBox = getBoundingBoxForNode(node);
         const piece = node.data.piece as Piece;
-        const type = piece.type ? findTypeInKit(kit, piece.type.guid) : null;
-        const designName = type?.name ?? "";
+        const designGuid = piece.type?.guid;
+        const design = designGuid ? findDesignInKit(kit, designGuid) : null;
+        const designName = design?.name ?? "";
 
         return (
           <div
@@ -4286,7 +4714,7 @@ const ExpandMenu: FC<ExpandMenuProps> = ({ nodes, edges, onExpand }) => {
           >
             <div className="absolute inset-0 border-2 border-dashed border-accent/50 rounded-md" style={{ pointerEvents: "none" }} />
             <div className="absolute -top-10 -right-2 pointer-events-auto">
-              <Button id="semio.sketchpad.app.design.diagram.expandMenu.expand" className="px-3 py-single text-sm" onClick={() => onExpand(designName)}>
+              <Button id="semio.sketchpad.app.design.diagram.expandMenu.expand" className="px-3 py-single text-sm" onClick={() => designGuid && onExpand(designGuid)}>
                 Expand
               </Button>
             </div>
@@ -4417,9 +4845,7 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
       onPointerEnter={() => {
         if (connector.guid && hoverPort) hoverPort(pieceId, connector.guid);
       }}
-      onPointerLeave={() => {
-        // Do nothing - let parent handle hover clear
-      }}
+      onPointerLeave={() => {}}
     />
   );
 };
@@ -5153,40 +5579,42 @@ const connectionToEdge = (
 
   if (SemioConnection.connecting.designPiece && allConnections) {
     const designPieceId = SemioConnection.connecting.designPiece;
+    const designPieceGuid = designPieceId.guid;
     sourcePieceId = designPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designPiece === SemioConnection.connecting.designPiece;
-      const connectingToDesign = conn.connecting.designPiece === SemioConnection.connecting.designPiece;
+      const connectedToDesign = conn.connected.designPiece?.guid === designPieceGuid;
+      const connectingToDesign = conn.connecting.designPiece?.guid === designPieceGuid;
       return connectedToDesign || connectingToDesign;
     });
 
     const connectorIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece === SemioConnection.connected.piece &&
-        conn.connecting.piece === SemioConnection.connecting.piece &&
-        conn.connected.connector === SemioConnection.connected.connector &&
-        conn.connecting.connector === SemioConnection.connecting.connector,
+        conn.connected.piece.guid === SemioConnection.connected.piece.guid &&
+        conn.connecting.piece.guid === SemioConnection.connecting.piece.guid &&
+        conn.connected.connector?.guid === SemioConnection.connected.connector?.guid &&
+        conn.connecting.connector?.guid === SemioConnection.connecting.connector?.guid,
     );
     sourcePortId = connectorIndex >= 0 ? { guid: `connector-${connectorIndex}` } : { guid: "connector-0" };
   }
 
   if (SemioConnection.connected.designPiece && allConnections) {
     const designPieceId = SemioConnection.connected.designPiece;
+    const designPieceGuid = designPieceId.guid;
     targetPieceId = designPieceId;
 
     const externalConnections = allConnections.filter((conn) => {
-      const connectedToDesign = conn.connected.designPiece === SemioConnection.connected.designPiece;
-      const connectingToDesign = conn.connecting.designPiece === SemioConnection.connected.designPiece;
+      const connectedToDesign = conn.connected.designPiece?.guid === designPieceGuid;
+      const connectingToDesign = conn.connecting.designPiece?.guid === designPieceGuid;
       return connectedToDesign || connectingToDesign;
     });
 
     const connectorIndex = externalConnections.findIndex(
       (conn) =>
-        conn.connected.piece === SemioConnection.connected.piece &&
-        conn.connecting.piece === SemioConnection.connecting.piece &&
-        conn.connected.connector === SemioConnection.connected.connector &&
-        conn.connecting.connector === SemioConnection.connecting.connector,
+        conn.connected.piece.guid === SemioConnection.connected.piece.guid &&
+        conn.connecting.piece.guid === SemioConnection.connecting.piece.guid &&
+        conn.connected.connector?.guid === SemioConnection.connected.connector?.guid &&
+        conn.connecting.connector?.guid === SemioConnection.connecting.connector?.guid,
     );
     targetConnectorId = connectorIndex >= 0 ? { guid: `connector-${connectorIndex}` } : { guid: "connector-0" };
   }
@@ -5370,6 +5798,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   const [addConnection] = useDesignAppAddConnection();
   const [addConnections] = useDesignAppAddConnections();
   const [updateConnections] = useDesignAppUpdateConnections();
+  const [clusterPieces] = useDesignAppClusterPieces();
+  const [expandDesign] = useDesignAppExpandDesign();
 
   const [deselectAll] = useDesignAppDeselectAll();
   const [selectPiece] = useDesignAppSelectPiece();
@@ -5512,6 +5942,19 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     [isDraggingNodeRef, isPanningRef],
   );
 
+  const isLassoingRef = useRef(false);
+  const baseSelectionRef = useRef<{ pieces?: string[]; connections?: string[] } | null>(null);
+
+  const onSelectionStart = useCallback(() => {
+    isLassoingRef.current = true;
+    baseSelectionRef.current = selectionRef.current;
+  }, []);
+
+  const onSelectionEnd = useCallback(() => {
+    isLassoingRef.current = false;
+    baseSelectionRef.current = null;
+  }, []);
+
   const onSelectionChange = useCallback(
     ({ nodes, edges }: { nodes: Array<Node>; edges: Array<Edge> }) => {
       if (isDraggingNodeRef.current || isPanningRef.current) return;
@@ -5523,24 +5966,45 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         .map((e) => (e as any).data?.SemioConnection?.guid || e.id.split("-").pop())
         .filter((guid): guid is string => !!guid);
 
+      let finalPieceGuids = selectedPieceGuids;
+      let finalConnectionGuids = selectedConnectionGuids;
+
+      if (isLassoingRef.current && (activeTool === ToolKind.SELECTION_ADDITIVE || activeTool === ToolKind.SELECTION_SUBTRACTIVE || activeTool === ToolKind.SELECTION_INTERSECT)) {
+        const base = baseSelectionRef.current || { pieces: [], connections: [] };
+        const basePieces = base.pieces || [];
+        const baseConnections = base.connections || [];
+
+        if (activeTool === ToolKind.SELECTION_ADDITIVE) {
+          finalPieceGuids = [...new Set([...basePieces, ...selectedPieceGuids])];
+          finalConnectionGuids = [...new Set([...baseConnections, ...selectedConnectionGuids])];
+        } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) {
+          finalPieceGuids = basePieces.filter((id) => !selectedPieceGuids.includes(id));
+          finalConnectionGuids = baseConnections.filter((id) => !selectedConnectionGuids.includes(id));
+        } else if (activeTool === ToolKind.SELECTION_INTERSECT) {
+          finalPieceGuids = basePieces.filter((id) => selectedPieceGuids.includes(id));
+          finalConnectionGuids = baseConnections.filter((id) => selectedConnectionGuids.includes(id));
+        }
+      }
+
       const currentSelection = selectionRef.current || {};
       const currentPieces = currentSelection.pieces || [];
       const currentConnections = currentSelection.connections || [];
 
-      const piecesChanged = selectedPieceGuids.length !== currentPieces.length || selectedPieceGuids.some((id) => !currentPieces.includes(id));
-      const connectionsChanged = selectedConnectionGuids.length !== currentConnections.length || selectedConnectionGuids.some((id) => !currentConnections.includes(id));
+      const piecesChanged = finalPieceGuids.length !== currentPieces.length || finalPieceGuids.some((id) => !currentPieces.includes(id));
+      const connectionsChanged =
+        finalConnectionGuids.length !== currentConnections.length || finalConnectionGuids.some((id) => !currentConnections.includes(id));
 
       if (piecesChanged || connectionsChanged) {
         if (setSelection) {
           setSelection({
             ...currentSelection,
-            pieces: selectedPieceGuids,
-            connections: selectedConnectionGuids,
+            pieces: finalPieceGuids,
+            connections: finalConnectionGuids,
           });
         }
       }
     },
-    [setSelection, isDraggingNodeRef, isPanningRef],
+    [setSelection, isDraggingNodeRef, isPanningRef, activeTool],
   );
 
   const focusContext = useFocusSafe();
@@ -5789,9 +6253,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   activeToolRef.current = activeTool;
 
   const onNodeClick = useCallback(
-    (e: React.MouseEvent, node: DiagramNode) => {
-      // React Flow handles selection through elementsSelectable={true} and onSelectionChange
-    },
+    (e: React.MouseEvent, node: DiagramNode) => {},
     [],
   );
 
@@ -5811,16 +6273,12 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 
   const onEdgeClick = useCallback(
-    (e: React.MouseEvent, edge: DiagramEdge) => {
-      // React Flow handles selection through elementsSelectable={true} and onSelectionChange
-    },
+    (e: React.MouseEvent, edge: DiagramEdge) => {},
     [],
   );
 
   const onPaneClick = useCallback(
-    (e: React.MouseEvent) => {
-      // React Flow handles deselection on pane click through elementsSelectable={true} and onSelectionChange
-    },
+    (e: React.MouseEvent) => {},
     [],
   );
 
@@ -5832,13 +6290,25 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
     [toggleDiagramFullscreen],
   );
 
-  const onCluster = useCallback((clusterPieceIds: string[]) => {
-    // TODO: Implement cluster command
-  }, []);
+  const onCluster = useCallback(
+    (clusterPieceIds: string[]) => {
+      if (!clusterPieces || clusterPieceIds.length === 0) return;
+      transaction?.start();
+      clusterPieces(clusterPieceIds);
+      transaction?.finalize();
+    },
+    [clusterPieces, transaction],
+  );
 
-  const onExpand = useCallback((target: string) => {
-    // TODO: Implement explode command
-  }, []);
+  const onExpand = useCallback(
+    (target: string) => {
+      if (!expandDesign || !target) return;
+      transaction?.start();
+      expandDesign(target);
+      transaction?.finalize();
+    },
+    [expandDesign, transaction],
+  );
 
   const onNodeMouseEnter = useCallback(
     (e: React.MouseEvent, node: DiagramNode) => {
@@ -5899,6 +6369,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         pendingSelectionRef.current = { pieceId, action: "add" };
       } else if (activeTool === ToolKind.SELECTION_SUBTRACTIVE) {
         pendingSelectionRef.current = { pieceId, action: "remove" };
+      } else if (activeTool === ToolKind.SELECTION_INTERSECT) {
+        pendingSelectionRef.current = { pieceId, action: "intersect" as any };
       } else if (!isNodeSelected) {
         pendingSelectionRef.current = { pieceId, action: "select" };
       } else {
@@ -6509,6 +6981,13 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
         if (action === "select" && selectPiece) selectPiece(pieceId);
         else if (action === "add" && addPieceToSelection) addPieceToSelection(pieceId);
         else if (action === "remove" && removePieceFromSelection) removePieceFromSelection(pieceId);
+        else if (action === "intersect") {
+          if (selectionRef.current?.pieces?.includes(pieceId) && selectPiece) {
+            selectPiece(pieceId);
+          } else if (deselectAll) {
+            deselectAll();
+          }
+        }
         pendingSelectionRef.current = null;
       }
 
@@ -6544,7 +7023,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       dragPositionRef.current = null;
       pendingPieceUpdatesRef.current = [];
     },
-    [transaction, updatePieces, nodes, selectPiece, addPieceToSelection, removePieceFromSelection, isDraggingNodeRef],
+    [transaction, updatePieces, nodes, selectPiece, addPieceToSelection, removePieceFromSelection, isDraggingNodeRef, deselectAll],
   );
 
   const onConnect = useCallback(
@@ -6631,6 +7110,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             selectionOnDrag={true}
             zoomOnDoubleClick={false}
             onSelectionChange={onSelectionChange}
+            onSelectionStart={onSelectionStart}
+            onSelectionEnd={onSelectionEnd}
             onNodeClick={onNodeClick as any}
             onNodeDoubleClick={onNodeDoubleClick as any}
             onNodeMouseEnter={onNodeMouseEnter as any}
@@ -6681,8 +7162,8 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
             }
           />
           <HelperLines lines={helperLines} nodes={nodes} />
-          {/* <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} /> */}
-          {/* <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} /> */}
+          <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} />
+          <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} />
           </div>
         </SelectedConnectorPortContext.Provider>
       </SelectedConnectorContext.Provider>
@@ -7373,6 +7854,10 @@ const SceneWindow = memo(() => {
   );
 });
 SceneWindow.displayName = "SceneWindow";
+
+// #endregion Components
+
+// #region App
 
 const renderCountRef = { current: 0 };
 
@@ -8199,23 +8684,20 @@ const DesignApp: FC = () => {
     });
 
     addSection("toolbar", {
-      id: "semio.sketchpad.app.design.tools.lasso",
+      id: "semio.sketchpad.app.design.tools.hand",
       specificity: 20,
       order: 10,
       toolbarGroup: {
-        id: "selection",
-        labelId: "semio.sketchpad.toolbar.parent.selection",
-        order: 10,
-        subToolId: "lasso",
-        subToolLabelId: "semio.sketchpad.toolbar.subtool.lasso",
-        subToolIcon: <DiagramIcon className="size-tiny" />,
+        id: "hand",
+        labelId: "semio.sketchpad.toolbar.parent.hand",
+        order: 5,
       },
-      content: <DesignLassoSettings />,
+      content: <DesignHandSettings />,
     });
 
     return () => {
       removeSection("toolbar", "semio.sketchpad.app.design.tools.select");
-      removeSection("toolbar", "semio.sketchpad.app.design.tools.lasso");
+      removeSection("toolbar", "semio.sketchpad.app.design.tools.hand");
     };
   }, [appType, addSection, removeSection]);
 
@@ -8231,6 +8713,8 @@ const DesignApp: FC = () => {
     </DesignAppTransactionProvider>
   );
 };
+
+// #endregion App
 
 // #region Config
 
@@ -8266,6 +8750,6 @@ export const config: AppConfig = {
   order: 20,
 };
 
-// #endregion Config
-
 export default DesignApp;
+
+// #endregion Config

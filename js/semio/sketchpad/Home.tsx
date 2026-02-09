@@ -621,27 +621,9 @@ const HomeToolbarFilters: FC = () => {
 
   return (
     <div className="flex shrink-0 items-center gap-single h-full px-single">
-      <Toggle
-        pressed={selectedKind === "temporary"}
-        onPressedChange={() => toggleKind("temporary")}
-        id="semio.sketchpad.app.home.toolbar.showTemporary"
-        icon={<TemporaryKitIcon />}
-        text={labelTemporary}
-      />
-      <Toggle
-        pressed={selectedKind === "local"}
-        onPressedChange={() => toggleKind("local")}
-        id="semio.sketchpad.app.home.toolbar.showLocal"
-        icon={<LocalKitIcon />}
-        text={labelLocal}
-      />
-      <Toggle
-        pressed={selectedKind === "remote"}
-        onPressedChange={() => toggleKind("remote")}
-        id="semio.sketchpad.app.home.toolbar.showRemote"
-        icon={<RemoteKitIcon />}
-        text={labelRemote}
-      />
+      <Toggle pressed={selectedKind === "temporary"} onPressedChange={() => toggleKind("temporary")} id="semio.sketchpad.app.home.toolbar.showTemporary" icon={<TemporaryKitIcon />} text={labelTemporary} />
+      <Toggle pressed={selectedKind === "local"} onPressedChange={() => toggleKind("local")} id="semio.sketchpad.app.home.toolbar.showLocal" icon={<LocalKitIcon />} text={labelLocal} />
+      <Toggle pressed={selectedKind === "remote"} onPressedChange={() => toggleKind("remote")} id="semio.sketchpad.app.home.toolbar.showRemote" icon={<RemoteKitIcon />} text={labelRemote} />
     </div>
   );
 };

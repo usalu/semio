@@ -41,12 +41,12 @@ export type SelectionValue<K extends keyof KitAppSelection> = NonNullable<KitApp
 
 /**
  * Adds a value to a selection dimension without clearing other dimensions.
- * 
+ *
  * @param selection - Current selection object
  * @param key - Dimension key (e.g., "types", "designs")
  * @param value - Value to add (e.g., guid)
  * @returns New selection object with value added
- * 
+ *
  * @example
  * const newSelection = addToSelection(
  *   { types: ["guid1"] },
@@ -55,17 +55,13 @@ export type SelectionValue<K extends keyof KitAppSelection> = NonNullable<KitApp
  * );
  * // Result: { types: ["guid1", "guid2"] }
  */
-export function addToSelection<K extends keyof KitAppSelection>(
-  selection: KitAppSelection,
-  key: K,
-  value: SelectionValue<K>
-): KitAppSelection {
+export function addToSelection<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, value: SelectionValue<K>): KitAppSelection {
   const currentArray = (selection[key] || []) as SelectionValue<K>[];
-  
+
   if (currentArray.includes(value)) {
     return selection;
   }
-  
+
   return {
     ...selection,
     [key]: [...currentArray, value],
@@ -74,12 +70,12 @@ export function addToSelection<K extends keyof KitAppSelection>(
 
 /**
  * Removes a value from a selection dimension without affecting other dimensions.
- * 
+ *
  * @param selection - Current selection object
  * @param key - Dimension key
  * @param value - Value to remove
  * @returns New selection object with value removed
- * 
+ *
  * @example
  * const newSelection = removeFromSelection(
  *   { types: ["guid1", "guid2"], designs: ["guid3"] },
@@ -88,19 +84,15 @@ export function addToSelection<K extends keyof KitAppSelection>(
  * );
  * // Result: { types: ["guid1"], designs: ["guid3"] }
  */
-export function removeFromSelection<K extends keyof KitAppSelection>(
-  selection: KitAppSelection,
-  key: K,
-  value: SelectionValue<K>
-): KitAppSelection {
+export function removeFromSelection<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, value: SelectionValue<K>): KitAppSelection {
   const currentArray = (selection[key] || []) as SelectionValue<K>[];
   const newArray = currentArray.filter((v) => v !== value);
-  
+
   if (newArray.length === 0) {
     const { [key]: _, ...rest } = selection;
     return rest;
   }
-  
+
   return {
     ...selection,
     [key]: newArray,
@@ -109,26 +101,22 @@ export function removeFromSelection<K extends keyof KitAppSelection>(
 
 /**
  * Toggles a value in a selection dimension (add if missing, remove if present).
- * 
+ *
  * @param selection - Current selection object
  * @param key - Dimension key
  * @param value - Value to toggle
  * @returns New selection object with value toggled
- * 
+ *
  * @example
- * toggleInSelection({ types: ["guid1"] }, "types", "guid2") 
+ * toggleInSelection({ types: ["guid1"] }, "types", "guid2")
  * // => { types: ["guid1", "guid2"] }
- * 
+ *
  * toggleInSelection({ types: ["guid1", "guid2"] }, "types", "guid2")
  * // => { types: ["guid1"] }
  */
-export function toggleInSelection<K extends keyof KitAppSelection>(
-  selection: KitAppSelection,
-  key: K,
-  value: SelectionValue<K>
-): KitAppSelection {
+export function toggleInSelection<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, value: SelectionValue<K>): KitAppSelection {
   const currentArray = (selection[key] || []) as SelectionValue<K>[];
-  
+
   if (currentArray.includes(value)) {
     return removeFromSelection(selection, key, value);
   } else {
@@ -138,12 +126,12 @@ export function toggleInSelection<K extends keyof KitAppSelection>(
 
 /**
  * Replaces an entire selection dimension without affecting other dimensions.
- * 
+ *
  * @param selection - Current selection object
  * @param key - Dimension key
  * @param values - New values for the dimension (undefined to clear)
  * @returns New selection object with dimension replaced
- * 
+ *
  * @example
  * replaceSelectionDimension(
  *   { types: ["guid1"], designs: ["guid2"] },
@@ -152,16 +140,12 @@ export function toggleInSelection<K extends keyof KitAppSelection>(
  * );
  * // Result: { types: ["guid3", "guid4"], designs: ["guid2"] }
  */
-export function replaceSelectionDimension<K extends keyof KitAppSelection>(
-  selection: KitAppSelection,
-  key: K,
-  values: KitAppSelection[K] | undefined
-): KitAppSelection {
+export function replaceSelectionDimension<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, values: KitAppSelection[K] | undefined): KitAppSelection {
   if (!values || (Array.isArray(values) && values.length === 0)) {
     const { [key]: _, ...rest } = selection;
     return rest;
   }
-  
+
   return {
     ...selection,
     [key]: values,
@@ -170,28 +154,25 @@ export function replaceSelectionDimension<K extends keyof KitAppSelection>(
 
 /**
  * Clears a single selection dimension without affecting others.
- * 
+ *
  * @param selection - Current selection object
  * @param key - Dimension key to clear
  * @returns New selection object with dimension cleared
- * 
+ *
  * @example
  * clearSelectionDimension({ types: ["guid1"], designs: ["guid2"] }, "types")
  * // Result: { designs: ["guid2"] }
  */
-export function clearSelectionDimension<K extends keyof KitAppSelection>(
-  selection: KitAppSelection,
-  key: K
-): KitAppSelection {
+export function clearSelectionDimension<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K): KitAppSelection {
   const { [key]: _, ...rest } = selection;
   return rest;
 }
 
 /**
  * Clears all selection dimensions.
- * 
+ *
  * @returns Empty selection object
- * 
+ *
  * @example
  * clearSelection()
  * // Result: {}
@@ -202,37 +183,29 @@ export function clearSelection(): KitAppSelection {
 
 /**
  * Selects all items in a dimension (replaces existing selection for that dimension).
- * 
+ *
  * @param selection - Current selection object
  * @param key - Dimension key
  * @param allValues - All available values for the dimension
  * @returns New selection object with all values selected
- * 
+ *
  * @example
  * selectAllInDimension({ types: ["guid1"] }, "types", ["guid1", "guid2", "guid3"])
  * // Result: { types: ["guid1", "guid2", "guid3"] }
  */
-export function selectAllInDimension<K extends keyof KitAppSelection>(
-  selection: KitAppSelection,
-  key: K,
-  allValues: SelectionValue<K>[]
-): KitAppSelection {
+export function selectAllInDimension<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, allValues: SelectionValue<K>[]): KitAppSelection {
   return replaceSelectionDimension(selection, key, allValues as KitAppSelection[K]);
 }
 
 /**
  * Checks if a value is selected in a dimension.
- * 
+ *
  * @param selection - Current selection object
  * @param key - Dimension key
  * @param value - Value to check
  * @returns True if value is selected
  */
-export function isSelected<K extends keyof KitAppSelection>(
-  selection: KitAppSelection,
-  key: K,
-  value: SelectionValue<K>
-): boolean {
+export function isSelected<K extends keyof KitAppSelection>(selection: KitAppSelection, key: K, value: SelectionValue<K>): boolean {
   const currentArray = (selection[key] || []) as SelectionValue<K>[];
   return currentArray.includes(value);
 }
@@ -464,11 +437,9 @@ export const KIT_DIAGRAM_SHAPE_STRATEGY_REGISTRY: Record<KitDiagramNodeKind, Kit
   author: kitDiagramLongRectangleStrategy,
 };
 
-export const getKitDiagramShapeStrategy = (kind: KitDiagramNodeKind): KitDiagramShapeStrategy =>
-  KIT_DIAGRAM_SHAPE_STRATEGY_REGISTRY[kind] ?? KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY;
+export const getKitDiagramShapeStrategy = (kind: KitDiagramNodeKind): KitDiagramShapeStrategy => KIT_DIAGRAM_SHAPE_STRATEGY_REGISTRY[kind] ?? KIT_DIAGRAM_DEFAULT_SHAPE_STRATEGY;
 
-export const getKitDiagramNodeFrameForKind = (kind: KitDiagramNodeKind, override?: Partial<KitDiagramFrame>): KitDiagramFrame =>
-  normalizeKitDiagramFrame(override, getKitDiagramShapeStrategy(kind).frame);
+export const getKitDiagramNodeFrameForKind = (kind: KitDiagramNodeKind, override?: Partial<KitDiagramFrame>): KitDiagramFrame => normalizeKitDiagramFrame(override, getKitDiagramShapeStrategy(kind).frame);
 
 export const resolveKitDiagramAnchorPair = (sourceNode: KitDiagramNodeGeometryInput, targetNode: KitDiagramNodeGeometryInput): KitDiagramResolvedAnchorPair => {
   const sourceStrategy = getKitDiagramShapeStrategy(sourceNode.kind);
@@ -535,14 +506,17 @@ export const resolveKitDiagramProximityAnchor = (nodeId: string, node: KitDiagra
   const strategy = getKitDiagramShapeStrategy(node.kind);
   const frame = normalizeKitDiagramFrame(node.frame, strategy.frame);
   const points = strategy.getSnapPoints(frame);
-  const bestPoint = points.reduce((best, point) => {
-    const absolutePoint = kitDiagramToAbsolutePoint(node.position, point);
-    const distance = Math.sqrt(kitDiagramDistanceSquared(absolutePoint, targetPoint));
-    if (!best || distance < best.distance) {
-      return { point, absolutePoint, distance };
-    }
-    return best;
-  }, null as null | { point: KitDiagramSnapPoint; absolutePoint: KitDiagramPoint; distance: number });
+  const bestPoint = points.reduce(
+    (best, point) => {
+      const absolutePoint = kitDiagramToAbsolutePoint(node.position, point);
+      const distance = Math.sqrt(kitDiagramDistanceSquared(absolutePoint, targetPoint));
+      if (!best || distance < best.distance) {
+        return { point, absolutePoint, distance };
+      }
+      return best;
+    },
+    null as null | { point: KitDiagramSnapPoint; absolutePoint: KitDiagramPoint; distance: number },
+  );
   const resolvedPoint = bestPoint?.point ?? strategy.resolveNearestPoint(kitDiagramVector(kitDiagramCenter(frame, strategy.frame), targetPoint), frame);
   const resolvedAbsolutePoint = bestPoint?.absolutePoint ?? kitDiagramToAbsolutePoint(node.position, resolvedPoint);
   return {

@@ -28,6 +28,7 @@ import {
   DocumentIcon,
   MessageCircle as FeedbackIcon,
   FocusIcon,
+  HandIcon,
   HomeIcon,
   LayoutIcon,
   LocalKitIcon,
@@ -246,11 +247,20 @@ import {
   YLeafMapString,
   YPath,
   yPathMapKey,
-  YStringArray,
+  YStringArray
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
 
 // #endregion Imports
+
+function getToolbarGroupIcon(groupId: string): ReactNode {
+  if (groupId === "selection") return <FocusIcon size={16} />;
+  if (groupId === "filter") return <SearchIcon size={16} />;
+  if (groupId === "create") return <LayoutIcon size={16} />;
+  if (groupId === "view") return <DocumentIcon size={16} />;
+  if (groupId === "actions") return <FeedbackIcon size={16} />;
+  return <FocusIcon size={16} />;
+}
 
 // #region Store
 
@@ -15245,170 +15255,6 @@ const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   return wrapped;
 };
 
-interface ToolbarGroupSection {
-  id: string;
-  labelId: string;
-  order: number;
-  sections: PanelSection[];
-}
-
-interface ToolbarSettingsField {
-  id: string;
-  kind: "toggle" | "select" | "input" | "placeholder";
-  label: string;
-  iconGroupId?: string;
-}
-
-interface ToolbarSubtoolNode {
-  id: string;
-  label: string;
-  labelId?: string;
-  settingsFields: ToolbarSettingsField[];
-}
-
-interface ToolbarRootNode {
-  id: string;
-  label: string;
-  labelId?: string;
-  icon: ReactNode;
-  order: number;
-  subtools: ToolbarSubtoolNode[];
-  settingsFields: ToolbarSettingsField[];
-}
-
-interface ToolbarPathState {
-  rootId?: string;
-  subtoolId?: string;
-}
-
-const toolbarGroupOrderMap: Record<string, number> = {
-  selection: 10,
-  filter: 20,
-  create: 30,
-  view: 40,
-  actions: 50,
-};
-
-const resolveDefaultToolbarRootId = (appType: string, roots: ToolbarRootNode[]): string | undefined => {
-  if (roots.length === 0) return undefined;
-  const selectionRoot = roots.find((root) => root.id === "selection");
-  const filterRoot = roots.find((root) => root.id === "filter");
-  const actionsRoot = roots.find((root) => root.id === "actions");
-  if ((appType === "home" || appType === "kit") && filterRoot) return filterRoot.id;
-  if ((appType === "design" || appType === "type") && selectionRoot) return selectionRoot.id;
-  if (appType === "feedback" && actionsRoot) return actionsRoot.id;
-  if (selectionRoot) return selectionRoot.id;
-  return roots[0].id;
-};
-
-const getToolbarGroupIcon = (groupId: string): ReactNode => {
-  if (groupId === "selection") return <FocusIcon size={16} />;
-  if (groupId === "filter") return <SearchIcon size={16} />;
-  if (groupId === "create") return <LayoutIcon size={16} />;
-  if (groupId === "view") return <DocumentIcon size={16} />;
-  if (groupId === "actions") return <FeedbackIcon size={16} />;
-  return <FocusIcon size={16} />;
-};
-
-const getToolbarFieldIcon = (groupId?: string): ReactNode => {
-  if (groupId === "filter") return <SearchIcon size={14} />;
-  if (groupId === "create") return <LayoutIcon size={14} />;
-  if (groupId === "view") return <DocumentIcon size={14} />;
-  if (groupId === "actions") return <FeedbackIcon size={14} />;
-  return <FocusIcon size={14} />;
-};
-
-const ToolbarSettingsFields: FC<{ fields: ToolbarSettingsField[] }> = ({ fields }) => {
-  return (
-    <div className="flex flex-wrap items-center gap-single">
-      {fields.map((field) =>
-        field.kind === "toggle" ? (
-          <Toggle key={field.id} id={`semio.sketchpad.toolbar.settings.${field.id}`} icon={getToolbarFieldIcon(field.iconGroupId)} text={field.label} className="transition-none" />
-        ) : (
-          <Button key={field.id} id={`semio.sketchpad.toolbar.settings.${field.id}`} icon={getToolbarFieldIcon(field.iconGroupId)} text={field.label} />
-        ),
-      )}
-    </div>
-  );
-};
-
-const ToolbarCategoryToggle: FC<{
-  root: ToolbarRootNode;
-  activeSubtoolId?: string;
-  open: boolean;
-  isActive: boolean;
-  onOpenChange: (open: boolean) => void;
-  onRootSelect: (rootId: string) => void;
-  onSubtoolSelect: (rootId: string, subtoolId: string) => void;
-}> = ({ root, activeSubtoolId, open, isActive, onOpenChange, onRootSelect, onSubtoolSelect }) => {
-  const rootLabel = useLabel(root.labelId || "") || root.label || root.id;
-  if (root.id !== "selection") {
-    return (
-      <Toggle
-        id={`semio.sketchpad.toolbar.root.${root.id}`}
-        pressed={isActive}
-        onPressedChange={(pressed) => {
-          if (pressed) onRootSelect(root.id);
-        }}
-        icon={root.icon}
-        text={rootLabel}
-        className="w-auto transition-none"
-      />
-    );
-  }
-
-  const activeSubtool = root.subtools.find((subtool) => subtool.id === activeSubtoolId);
-  const activeSubtoolLabel = activeSubtool?.label || activeSubtool?.id;
-  const rootValue = `${root.id}.tool`;
-  const value = activeSubtool?.id || rootValue;
-  const items = [
-    {
-      value: rootValue,
-      label: root.icon,
-      text: activeSubtoolLabel ? `${rootLabel}: ${activeSubtoolLabel}` : rootLabel,
-      dropdownText: rootLabel,
-    },
-    ...root.subtools.map((subtool) => {
-      const subtoolLabel = subtool.label || subtool.id;
-      return {
-        value: subtool.id,
-        label: root.icon,
-        text: `${rootLabel}: ${subtoolLabel}`,
-        dropdownText: subtoolLabel,
-      };
-    }),
-  ];
-
-  return (
-    <Toggle
-      kind="dropdown"
-      id={`semio.sketchpad.toolbar.root.${root.id}`}
-      dropdownId={`semio.sketchpad.toolbar.root.${root.id}.dropdown`}
-      pressed={isActive}
-      onPressedChange={(pressed) => {
-        if (pressed) onRootSelect(root.id);
-      }}
-      value={value}
-      onValueChange={(nextValue) => {
-        if (nextValue === rootValue) {
-          onRootSelect(root.id);
-          return;
-        }
-        onSubtoolSelect(root.id, nextValue);
-      }}
-      items={items}
-      open={open}
-      onOpenChange={onOpenChange}
-      dropdownSide="top"
-      dropdownAlign="end"
-      dropdownSideOffset={4}
-      dropdownAvoidCollisions={false}
-      dropdownInstant={true}
-      dropdownContentClassName="transition-none"
-      className="w-[10.5rem] max-w-[10.5rem] transition-none"
-    />
-  );
-};
 
 const LayoutWrapper: FC = () => {
   const location = useLocation();
@@ -15428,7 +15274,6 @@ const LayoutWrapper: FC = () => {
   const appType = useAppType();
   const panelSizes = usePanelSizes();
   const footerItems = useFooterItems();
-  const [toolbarPathByApp, setToolbarPathByApp] = useState<Record<string, ToolbarPathState>>({});
   const workbenchSections = usePanelSections("workbench");
   const toolsSections = usePanelSections("tools");
   const toolbarSections = usePanelSections("toolbar");
@@ -15777,6 +15622,7 @@ const LayoutWrapper: FC = () => {
   const [activeDragData, setActiveDragData] = useState<any>(null);
   const [activeToolbarGroup, setActiveToolbarGroup] = useState<string | null>(null);
 
+
   // Group toolbar sections
   const toolbarGroups = useMemo(() => {
     const groups: Record<string, PanelSection[]> = {};
@@ -15795,7 +15641,9 @@ const LayoutWrapper: FC = () => {
   }, [toolbarSections]);
 
   const toggleToolbarGroup = useCallback((id: string) => {
-    setActiveToolbarGroup(prev => prev === id ? null : id);
+    setActiveToolbarGroup(prev => {
+        return prev === id ? null : id;
+    });
   }, []);
 
   const [activeSubToolByGroup, setActiveSubToolByGroup] = useState<Record<string, string>>({});
@@ -15807,6 +15655,8 @@ const LayoutWrapper: FC = () => {
 
   const getGroupIcon = useCallback((groupId: string) => {
     switch (groupId) {
+      case "hand":
+        return <HandIcon className="size-tiny" />;
       case "selection":
         return <MousePointerIcon className="size-tiny" />;
       case "filter":
@@ -15866,153 +15716,6 @@ const LayoutWrapper: FC = () => {
     }
     return null;
   }, [activeDragData, kitShallows]);
-
-
-  const toolbarRoots = useMemo<ToolbarRootNode[]>(() => {
-    const toId = (value: string): string => value.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    const toSettingsFields = (prefix: string, labels: string[], kind: ToolbarSettingsField["kind"], iconGroupId: string): ToolbarSettingsField[] =>
-      labels.map((label) => ({
-        id: `${prefix}.${toId(label)}`,
-        kind,
-        label,
-        iconGroupId,
-      }));
-    const makeSubtools = (prefix: string, labels: string[]): ToolbarSubtoolNode[] =>
-      labels.map((label) => {
-        const id = `${prefix}.${toId(label)}`;
-        return {
-          id,
-          label,
-          settingsFields: toSettingsFields(id, [label], "toggle", prefix.split(".")[0]),
-        };
-      });
-    const groupsById = new Map(Object.entries(toolbarGroups).map(([id, sections]) => { const first = sections[0]; return [id, { id, labelId: first?.toolbarGroup?.labelId, order: first?.toolbarGroup?.order, sections }]; }));
-    const canonicalRoots: Array<{ id: string; label: string; labelId: string; order: number }> = [
-      { id: "selection", label: "Selection", labelId: "semio.sketchpad.toolbar.parent.selection", order: 10 },
-      { id: "filter", label: "Filter", labelId: "semio.sketchpad.toolbar.parent.filter", order: 20 },
-      { id: "create", label: "Create", labelId: "semio.sketchpad.toolbar.parent.create", order: 30 },
-      { id: "view", label: "View", labelId: "semio.sketchpad.toolbar.parent.view", order: 40 },
-      { id: "actions", label: "Actions", labelId: "semio.sketchpad.toolbar.parent.actions", order: 50 },
-    ];
-    const rootsFromGroups = canonicalRoots.map((canonical): ToolbarRootNode => {
-      const group = groupsById.get(canonical.id);
-      const selectionLabels = appType === "kit" ? ["Selection Tool", "Selection Mode"] : ["Selection Mode", "Additive", "Subtractive", "Intersect"];
-      const filterLabels = appType === "home" ? ["Filter Type", "Filter Design"] : ["Filter Type", "Filter Design", "Filter Status", "Reset Filters"];
-      const createPlaceholderLabels = appType === "home" ? ["Create Kit", "Create Design"] : ["Create Kit", "Create Design", "Create Variant"];
-      const viewPlaceholderLabels = ["View Layers", "View Density", "View Connections"];
-      const actionsPlaceholderLabels = ["Action Placeholder 1", "Action Placeholder 2", "Action Placeholder 3"];
-      const subtools =
-        canonical.id === "selection"
-          ? makeSubtools("selection", selectionLabels)
-          : canonical.id === "filter"
-            ? makeSubtools("filter", filterLabels)
-            : canonical.id === "create"
-              ? makeSubtools("create", createPlaceholderLabels)
-              : canonical.id === "view"
-                ? makeSubtools("view", viewPlaceholderLabels)
-                : makeSubtools("actions", actionsPlaceholderLabels);
-      return {
-        id: canonical.id,
-        label: canonical.label,
-        labelId: group?.labelId || canonical.labelId,
-        icon: getToolbarGroupIcon(canonical.id),
-        order: group?.order ?? canonical.order,
-        subtools,
-        settingsFields:
-          canonical.id === "selection"
-            ? toSettingsFields("selection", ["Selective", "Additive", "Subtractive", "Intersect"], "toggle", "selection")
-            : canonical.id === "filter"
-              ? toSettingsFields("filter", ["Filter Type", "Filter Design", "Filter Status", "Reset Filters"], "select", "filter")
-              : canonical.id === "create"
-                ? toSettingsFields("create", ["Create Kit", "Create Design", "Create Variant"], "input", "create")
-                : canonical.id === "view"
-                  ? toSettingsFields("view", viewPlaceholderLabels, "placeholder", "view")
-                  : toSettingsFields("actions", actionsPlaceholderLabels, "placeholder", "actions"),
-      };
-    });
-    return rootsFromGroups.sort((a, b) => {
-      const orderDiff = a.order - b.order;
-      if (orderDiff !== 0) return orderDiff;
-      return a.id.localeCompare(b.id);
-    });
-  }, [appType, toolbarGroups]);
-
-  useEffect(() => {
-    if (toolbarRoots.length === 0) return;
-    setToolbarPathByApp((prev) => {
-      const current = prev[appType] || {};
-      const nextRootId = current.rootId && toolbarRoots.some((root) => root.id === current.rootId) ? current.rootId : resolveDefaultToolbarRootId(appType, toolbarRoots);
-      const activeRoot = toolbarRoots.find((root) => root.id === nextRootId);
-      const nextSubtoolId = current.subtoolId && activeRoot?.subtools.some((subtool) => subtool.id === current.subtoolId) ? current.subtoolId : undefined;
-      const hasChanges = current.rootId !== nextRootId || current.subtoolId !== nextSubtoolId;
-      if (!hasChanges) return prev;
-      return {
-        ...prev,
-        [appType]: {
-          rootId: nextRootId,
-          subtoolId: nextSubtoolId,
-        },
-      };
-    });
-  }, [appType, toolbarGroups]);
-
-  const toolbarPath = toolbarPathByApp[appType] || {};
-  const activeToolbarRoot = useMemo(() => toolbarRoots.find((root) => root.id === toolbarPath.rootId), [toolbarRoots, toolbarPath.rootId]);
-  const activeToolbarSubtool = useMemo(() => activeToolbarRoot?.subtools.find((subtool) => subtool.id === toolbarPath.subtoolId), [activeToolbarRoot, toolbarPath.subtoolId]);
-  const [toolbarOpenRootByApp, setToolbarOpenRootByApp] = useState<Record<string, string | undefined>>({});
-
-  const setToolbarPath = useCallback(
-    (next: Partial<ToolbarPathState>) => {
-      setToolbarPathByApp((prev) => {
-        const current = prev[appType] || {};
-        return {
-          ...prev,
-          [appType]: {
-            ...current,
-            ...next,
-          },
-        };
-      });
-    },
-    [appType],
-  );
-
-  const selectRoot = useCallback(
-    (rootId: string) => {
-      const root = toolbarRoots.find((candidate) => candidate.id === rootId);
-      if (!root) return;
-      setToolbarPath({
-        rootId: root.id,
-        subtoolId: undefined,
-      });
-      setToolbarOpenRootByApp((prev) => ({ ...prev, [appType]: undefined }));
-    },
-    [appType, setToolbarPath, toolbarRoots],
-  );
-
-  const selectRootAndSubtool = useCallback(
-    (rootId: string, subtoolId: string) => {
-      const root = toolbarRoots.find((candidate) => candidate.id === rootId);
-      if (!root) return;
-      const subtool = root.subtools.find((candidate) => candidate.id === subtoolId);
-      if (!subtool) return;
-      setToolbarPath({
-        rootId,
-        subtoolId,
-      });
-      setToolbarOpenRootByApp((prev) => ({ ...prev, [appType]: undefined }));
-    },
-    [appType, setToolbarPath, toolbarRoots],
-  );
-
-  const openToolbarRootId = toolbarOpenRootByApp[appType];
-  const setOpenToolbarRoot = useCallback(
-    (rootId: string, open: boolean) => {
-      setToolbarOpenRootByApp((prev) => ({ ...prev, [appType]: open ? rootId : undefined }));
-    },
-    [appType],
-  );
-
   return (
     <TutorialProvider store={tutorialStore}>
       <GlobalFooterItems />
@@ -16134,13 +15837,20 @@ const LayoutWrapper: FC = () => {
                 : undefined
             }
             toolbar={
-              panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" ? (
+              panelVisibility.toolbar ||
+              appType === "type" ||
+              appType === "design" ||
+              appType === "feedback" ||
+              appType === "kit" ||
+              appType === "home" ||
+              appType === "quality" ||
+              appType === "docs" ? (
                 toolbarSections.length > 0 ? (
-                  <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 flex justify-center pointer-events-none h-medium px-2">
-                    <div className="flex gap-single items-center pointer-events-auto w-fit max-w-[calc(100vw_-_var(--spacing)*4)] overflow-hidden">
+                  <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 flex justify-center pointer-events-none h-[40px] px-2">
+                    <div className="flex gap-single items-center pointer-events-auto max-w-[calc(100vw-2rem)] overflow-hidden shrink-0">
                       <LevelProvider level="panel">
                         <div className="bg-panel flex shrink-0 items-center gap-single border rounded-md px-single h-full shadow-sm overflow-hidden">
-                          {["selection", "filter", "create", "view", "actions"].map((groupId) => {
+                          {["hand", "selection", "filter", "create", "view", "actions"].map((groupId) => {
                             if (!toolbarGroups[groupId]) return null;
                             const isActive = activeToolbarGroup === groupId;
 
@@ -16155,13 +15865,16 @@ const LayoutWrapper: FC = () => {
                                   id={`semio.sketchpad.toolbar.group.${groupId}`}
                                   value={activeSubToolId}
                                   pressed={isActive}
-                                  onPressedChange={(pressed) => setActiveToolbarGroup(pressed ? groupId : null)}
+                                  onPressedChange={(pressed) => {
+                                    setActiveToolbarGroup(pressed ? groupId : null)
+                                  }}
                                   onValueChange={(val) => val && setSubTool(groupId, val)}
                                   dropdownSide="top"
-                                  dropdownAlign="center"
-                                  dropdownSideOffset={0}
+                                  dropdownAlign="end"
+                                  dropdownSideOffset={2}
                                   dropdownAvoidCollisions={false}
                                   dropdownInstant={true}
+                                  dropdownContentClassName="w-[10.5rem] min-w-[10.5rem] p-0 overflow-hidden border transition-none"
                                   items={uniqueSubTools.map((subToolId) => {
                                     const section = toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId === subToolId);
                                     return {
