@@ -1027,6 +1027,104 @@ suite("slugify Test Suite", () => {
 });
 
 suite("parseUri Test Suite", () => {
+  test("Parses repo URI (no path)", () => {
+    const result = parseUri("semiorepo://repo");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "repo");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses projects collection URI (no path)", () => {
+    const result = parseUri("semiorepo://projects");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "projects");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses project URI", () => {
+    const result = parseUri("semiorepo://project/semio");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "project");
+    assert.strictEqual(result!.path, "semio");
+  });
+
+  test("Parses bundles collection URI (no path)", () => {
+    const result = parseUri("semiorepo://bundles");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "bundles");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses bundle URI", () => {
+    const result = parseUri("semiorepo://bundle/semio-js");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "bundle");
+    assert.strictEqual(result!.path, "semio-js");
+  });
+
+  test("Parses folders collection URI with parent path", () => {
+    const result = parseUri("semiorepo://folders/semio/js");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "folders");
+    assert.strictEqual(result!.path, "semio/js");
+  });
+
+  test("Parses folder URI with deep path", () => {
+    const result = parseUri("semiorepo://folder/semio/js/sketchpad/pages/getting-started");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "folder");
+    assert.strictEqual(result!.path, "semio/js/sketchpad/pages/getting-started");
+  });
+
+  test("Parses files collection URI with folder path", () => {
+    const result = parseUri("semiorepo://files/semio/js");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "files");
+    assert.strictEqual(result!.path, "semio/js");
+  });
+
+  test("Parses file URI with path", () => {
+    const result = parseUri("semiorepo://file/semio/js/semio.ts");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "file");
+    assert.strictEqual(result!.path, "semio/js/semio.ts");
+  });
+
+  test("Parses sections collection URI with file path", () => {
+    const result = parseUri("semiorepo://sections/semio/js/semio.ts");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "sections");
+    assert.strictEqual(result!.path, "semio/js/semio.ts");
+  });
+
+  test("Parses section URI with file and section path", () => {
+    const result = parseUri("semiorepo://section/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "section");
+    assert.strictEqual(result!.path, "semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE");
+  });
+
+  test("Parses definitions collection URI", () => {
+    const result = parseUri("semiorepo://definitions/semio/js/semio.ts");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "definitions");
+    assert.strictEqual(result!.path, "semio/js/semio.ts");
+  });
+
+  test("Parses definition URI", () => {
+    const result = parseUri("semiorepo://definition/semio/js/semio.ts/VALIDATE-KIT");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "definition");
+    assert.strictEqual(result!.path, "semio/js/semio.ts/VALIDATE-KIT");
+  });
+
+  test("Parses tickets collection URI (no path)", () => {
+    const result = parseUri("semiorepo://tickets");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "tickets");
+    assert.strictEqual(result!.path, "");
+  });
+
   test("Parses ticket URI", () => {
     const result = parseUri("semiorepo://ticket/2026/02/07/MY-TICKET");
     assert.ok(result);
@@ -1034,39 +1132,25 @@ suite("parseUri Test Suite", () => {
     assert.strictEqual(result!.path, "2026/02/07/MY-TICKET");
   });
 
-  test("Parses goal URI", () => {
-    const result = parseUri("semiorepo://goal/AI-OPTIMIZED-REPO/REPO-CLIENT");
+  test("Parses goals collection URI (no path)", () => {
+    const result = parseUri("semiorepo://goals");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "goals");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses goal URI with path", () => {
+    const result = parseUri("semiorepo://goal/R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP");
     assert.ok(result);
     assert.strictEqual(result!.type, "goal");
-    assert.strictEqual(result!.path, "AI-OPTIMIZED-REPO/REPO-CLIENT");
+    assert.strictEqual(result!.path, "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP");
   });
 
-  test("Parses file URI", () => {
-    const result = parseUri("semiorepo://file/SEMIO-JS-SEMIO-TS");
+  test("Parses drafts collection URI (no path)", () => {
+    const result = parseUri("semiorepo://drafts");
     assert.ok(result);
-    assert.strictEqual(result!.type, "file");
-    assert.strictEqual(result!.path, "SEMIO-JS-SEMIO-TS");
-  });
-
-  test("Parses contributor URI", () => {
-    const result = parseUri("semiorepo://contributor/USALU");
-    assert.ok(result);
-    assert.strictEqual(result!.type, "contributor");
-    assert.strictEqual(result!.path, "USALU");
-  });
-
-  test("Parses commit URI", () => {
-    const result = parseUri("semiorepo://commit/ABC123DEF");
-    assert.ok(result);
-    assert.strictEqual(result!.type, "commit");
-    assert.strictEqual(result!.path, "ABC123DEF");
-  });
-
-  test("Parses section URI", () => {
-    const result = parseUri("semiorepo://section/SEMIO-JS-SEMIO-TS-HEADER");
-    assert.ok(result);
-    assert.strictEqual(result!.type, "section");
-    assert.strictEqual(result!.path, "SEMIO-JS-SEMIO-TS-HEADER");
+    assert.strictEqual(result!.type, "drafts");
+    assert.strictEqual(result!.path, "");
   });
 
   test("Parses draft URI", () => {
@@ -1076,11 +1160,74 @@ suite("parseUri Test Suite", () => {
     assert.strictEqual(result!.path, "MY-DRAFT");
   });
 
+  test("Parses todos collection URI (no path)", () => {
+    const result = parseUri("semiorepo://todos");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "todos");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses todo URI", () => {
+    const result = parseUri("semiorepo://todo/FIX-BUG");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "todo");
+    assert.strictEqual(result!.path, "FIX-BUG");
+  });
+
+  test("Parses policies collection URI (no path)", () => {
+    const result = parseUri("semiorepo://policies");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "policies");
+    assert.strictEqual(result!.path, "");
+  });
+
   test("Parses policy URI", () => {
-    const result = parseUri("semiorepo://policy/CODE-HYGIENE");
+    const result = parseUri("semiorepo://policy/code");
     assert.ok(result);
     assert.strictEqual(result!.type, "policy");
-    assert.strictEqual(result!.path, "CODE-HYGIENE");
+    assert.strictEqual(result!.path, "code");
+  });
+
+  test("Parses violationKinds collection URI (no path)", () => {
+    const result = parseUri("semiorepo://violationKinds");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "violationKinds");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses violationKind URI with path", () => {
+    const result = parseUri("semiorepo://violationKind/CODE/HEADER/MISSING-REGION");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "violationKind");
+    assert.strictEqual(result!.path, "CODE/HEADER/MISSING-REGION");
+  });
+
+  test("Parses contributors collection URI (no path)", () => {
+    const result = parseUri("semiorepo://contributors");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "contributors");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses contributor URI", () => {
+    const result = parseUri("semiorepo://contributor/usalu");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "contributor");
+    assert.strictEqual(result!.path, "usalu");
+  });
+
+  test("Parses commits collection URI (no path)", () => {
+    const result = parseUri("semiorepo://commits");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "commits");
+    assert.strictEqual(result!.path, "");
+  });
+
+  test("Parses commit URI", () => {
+    const result = parseUri("semiorepo://commit/abc123def");
+    assert.ok(result);
+    assert.strictEqual(result!.type, "commit");
+    assert.strictEqual(result!.path, "abc123def");
   });
 
   test("Returns null for non-semiorepo URIs", () => {
@@ -1125,6 +1272,99 @@ suite("Navigation Commands Test Suite", function () {
   test("semio.navigate handles unknown URI type gracefully", async function () {
     await vscode.commands.executeCommand("semio.navigate", "semiorepo://unknown/SOMETHING");
     assert.ok(true, "Should not throw on unknown URI type");
+  });
+
+  test("semio.navigate handles repo URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://repo");
+    assert.ok(true, "Should not throw on repo URI");
+  });
+
+  test("semio.navigate handles collection URIs gracefully", async function () {
+    const collections = ["projects", "bundles", "folders", "files", "sections", "definitions", "tickets", "goals", "drafts", "todos", "policies", "violationKinds", "contributors", "commits"];
+    for (const collection of collections) {
+      await vscode.commands.executeCommand("semio.navigate", `semiorepo://${collection}`);
+    }
+    assert.ok(true, "Should not throw on collection URIs");
+  });
+
+  test("semio.navigate handles folder URI with real path", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://folder/semio/js");
+    assert.ok(true, "Should not throw on folder URI");
+  });
+
+  test("semio.navigate handles file URI with real path", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://file/package.json");
+    assert.ok(true, "Should not throw on file URI");
+  });
+
+  test("semio.navigate handles nonexistent folder URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://folder/nonexistent/path");
+    assert.ok(true, "Should not throw on nonexistent folder URI");
+  });
+
+  test("semio.navigate handles nonexistent file URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://file/nonexistent/path.ts");
+    assert.ok(true, "Should not throw on nonexistent file URI");
+  });
+
+  test("semio.navigate handles ticket URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://ticket/2099/01/01/NONEXISTENT");
+    assert.ok(true, "Should not throw on nonexistent ticket URI");
+  });
+
+  test("semio.navigate handles goal URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://goal/NONEXISTENT-GOAL");
+    assert.ok(true, "Should not throw on nonexistent goal URI");
+  });
+
+  test("semio.navigate handles draft URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://draft/NONEXISTENT");
+    assert.ok(true, "Should not throw on nonexistent draft URI");
+  });
+
+  test("semio.navigate handles todo URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://todo/NONEXISTENT");
+    assert.ok(true, "Should not throw on nonexistent todo URI");
+  });
+
+  test("semio.navigate handles policy URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://policy/code");
+    assert.ok(true, "Should not throw on policy URI");
+  });
+
+  test("semio.navigate handles violationKind URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://violationKind/CODE/HEADER/MISSING-REGION");
+    assert.ok(true, "Should not throw on violationKind URI");
+  });
+
+  test("semio.navigate handles contributor URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://contributor/usalu");
+    assert.ok(true, "Should not throw on contributor URI");
+  });
+
+  test("semio.navigate handles commit URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://commit/abc123");
+    assert.ok(true, "Should not throw on commit URI");
+  });
+
+  test("semio.navigate handles section URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://section/semio/js/semio.ts/HEADER");
+    assert.ok(true, "Should not throw on section URI");
+  });
+
+  test("semio.navigate handles definition URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://definition/semio/js/semio.ts/VALIDATE-KIT");
+    assert.ok(true, "Should not throw on definition URI");
+  });
+
+  test("semio.navigate handles project URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://project/semio");
+    assert.ok(true, "Should not throw on project URI");
+  });
+
+  test("semio.navigate handles bundle URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://bundle/semio-js");
+    assert.ok(true, "Should not throw on bundle URI");
   });
 });
 

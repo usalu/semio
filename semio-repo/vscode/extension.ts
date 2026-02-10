@@ -599,9 +599,9 @@ export function invalidateTreeNodeCache(): void {
 }
 
 export function parseUri(uri: string): { type: string; path: string } | null {
-  const match = uri.match(/^semiorepo:\/\/([a-zA-Z]+)\/(.*)/);
+  const match = uri.match(/^semiorepo:\/\/([a-zA-Z]+)(?:\/(.*)?)?$/);
   if (!match) return null;
-  return { type: match[1], path: match[2] };
+  return { type: match[1], path: match[2] ?? "" };
 }
 
 async function navigateToUri(uri: string): Promise<void> {
@@ -611,10 +611,33 @@ async function navigateToUri(uri: string): Promise<void> {
   if (!parsed) return;
 
   switch (parsed.type) {
+    case "repo": {
+      return vscode.commands.executeCommand("semio.monorepo.focus") as any;
+    }
+    case "projects":
+    case "bundles":
+    case "tickets":
+    case "goals":
+    case "drafts":
+    case "todos":
+    case "policies":
+    case "violationKinds":
+    case "contributors":
+    case "commits":
+    case "folders":
+    case "files":
+    case "sections":
+    case "definitions": {
+      return vscode.commands.executeCommand("semio.monorepo.focus") as any;
+    }
     case "ticket": {
       const ticketMdPath = path.join(wsRoot, ".semio-repo", "tickets", parsed.path, "ticket.md");
       if (fs.existsSync(ticketMdPath)) {
         return vscode.commands.executeCommand("semio.navigateToFile", ticketMdPath) as any;
+      }
+      const legacyTicketMdPath = path.join(wsRoot, "tickets", parsed.path, "ticket.md");
+      if (fs.existsSync(legacyTicketMdPath)) {
+        return vscode.commands.executeCommand("semio.navigateToFile", legacyTicketMdPath) as any;
       }
       break;
     }
@@ -632,117 +655,154 @@ async function navigateToUri(uri: string): Promise<void> {
       }
       break;
     }
+    case "todo": {
+      const todoPath = path.join(wsRoot, ".semio-repo", "todos", parsed.path);
+      if (fs.existsSync(todoPath)) {
+        return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(todoPath)) as any;
+      }
+      break;
+    }
     case "contributor": {
-      const github = parsed.path.toLowerCase().replace(/-/g, "");
+      const github = parsed.path;
       return vscode.env.openExternal(vscode.Uri.parse(`https://github.com/${github}`)) as any;
     }
     case "commit": {
-      const sha = parsed.path.toLowerCase().replace(/-/g, "");
+      const sha = parsed.path;
       const baseUrl = getGitHubRepoBaseUrl();
       if (baseUrl) {
         return vscode.env.openExternal(vscode.Uri.parse(`${baseUrl}/commit/${sha}`)) as any;
       }
       break;
     }
-    default: {
+    case "project": {
+      const abs = path.join(wsRoot, parsed.path);
+      if (fs.existsSync(abs)) {
+        return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+      }
+      break;
+    }
+    case "bundle": {
       const cache = await getTreeNodeCache();
       const node = cache.get(uri);
-      if (!node) break;
-
-      switch (node.Kind) {
-        case "project": {
-          const name = node.Data?.name || node.Label;
-          const abs = path.join(wsRoot, name);
-          if (fs.existsSync(abs)) {
-            return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+      if (node?.Data?.root) {
+        const abs = path.join(wsRoot, node.Data.root);
+        if (fs.existsSync(abs)) {
+          return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+        }
+      }
+      break;
+    }
+    case "folder": {
+      const abs = path.join(wsRoot, parsed.path);
+      if (fs.existsSync(abs)) {
+        return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
+      }
+      break;
+    }
+    case "file": {
+      const abs = path.join(wsRoot, parsed.path);
+      if (fs.existsSync(abs)) {
+        return vscode.commands.executeCommand("semio.navigateToFile", parsed.path) as any;
+      }
+      break;
+    }
+    case "section": {
+      const parts = parsed.path.split("/");
+      const filePathParts: string[] = [];
+      const sectionParts: string[] = [];
+      let foundFile = false;
+      for (const part of parts) {
+        if (!foundFile) {
+          filePathParts.push(part);
+          const candidatePath = filePathParts.join("/");
+          const abs = path.join(wsRoot, candidatePath);
+          if (fs.existsSync(abs) && fs.statSync(abs).isFile()) {
+            foundFile = true;
           }
-          break;
+        } else {
+          sectionParts.push(part);
         }
-        case "bundle": {
-          const root = node.Data?.root;
-          if (root) {
-            const abs = path.join(wsRoot, root);
-            if (fs.existsSync(abs)) {
-              return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
-            }
-          }
-          break;
-        }
-        case "folder": {
-          const folderPath = node.Data?.path || node.Label;
-          const abs = path.join(wsRoot, folderPath);
-          if (fs.existsSync(abs)) {
-            return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
-          }
-          break;
-        }
-        case "file": {
-          const filePath = node.Data?.path || node.Label;
-          return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
-        }
-        case "section": {
-          const sectionId = node.ID.replace(/^section:/, "");
-          const hashIdx = sectionId.indexOf("#");
-          if (hashIdx >= 0) {
-            const filePath = sectionId.substring(0, hashIdx);
-            const sectionPath = sectionId.substring(hashIdx + 1);
-            const binaryPath = getRepoBinaryPath();
-            if (binaryPath) {
-              try {
-                const { stdout } = await execAsync(`"${binaryPath}" --json section list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
-                const events = parseRepoEvents(stdout);
-                for (const event of events) {
-                  const section = (event as any).section;
-                  if (section) {
-                    if (findSectionByPath(section, sectionPath)) {
-                      const found = findSectionByPath(section, sectionPath)!;
-                      return openFileAtLine(filePath, found.startLine, found.endLine);
-                    }
-                  }
+      }
+      const filePath = filePathParts.join("/");
+      const sectionPath = sectionParts.join("/");
+      if (sectionPath) {
+        const binaryPath = getRepoBinaryPath();
+        if (binaryPath) {
+          try {
+            const { stdout } = await execAsync(`"${binaryPath}" --json section list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
+            const events = parseRepoEvents(stdout);
+            for (const event of events) {
+              const section = (event as any).section;
+              if (section) {
+                const found = findSectionByPath(section, sectionPath);
+                if (found) {
+                  return openFileAtLine(filePath, found.startLine, found.endLine);
                 }
-              } catch { }
+              }
             }
-            return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
-          }
-          break;
+          } catch { }
         }
-        case "definition": {
-          const defId = node.ID.replace(/^definition:/, "");
-          const sepIdx = defId.indexOf("§");
-          if (sepIdx >= 0) {
-            const fileSection = defId.substring(0, sepIdx);
-            const hashIdx = fileSection.indexOf("#");
-            const filePath = hashIdx >= 0 ? fileSection.substring(0, hashIdx) : fileSection;
-            const binaryPath = getRepoBinaryPath();
-            if (binaryPath) {
-              try {
-                const { stdout } = await execAsync(`"${binaryPath}" --json definition list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
-                const events = parseRepoEvents(stdout);
-                for (const event of events) {
-                  const def = (event as any).definition;
-                  if (def && def.name === node.Label && def.startLine) {
-                    return openFileAtLine(filePath, def.startLine, def.endLine);
-                  }
-                }
-              } catch { }
+      }
+      return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
+    }
+    case "definition": {
+      const parts = parsed.path.split("/");
+      const filePathParts: string[] = [];
+      let foundFile = false;
+      let defName = "";
+      for (const part of parts) {
+        if (!foundFile) {
+          filePathParts.push(part);
+          const candidatePath = filePathParts.join("/");
+          const abs = path.join(wsRoot, candidatePath);
+          if (fs.existsSync(abs) && fs.statSync(abs).isFile()) {
+            foundFile = true;
+          }
+        } else {
+          defName = part;
+        }
+      }
+      const filePath = filePathParts.join("/");
+      if (defName) {
+        const binaryPath = getRepoBinaryPath();
+        if (binaryPath) {
+          try {
+            const { stdout } = await execAsync(`"${binaryPath}" --json definition list --file "${filePath}"`, { cwd: wsRoot, timeout: 15000 });
+            const events = parseRepoEvents(stdout);
+            for (const event of events) {
+              const def = (event as any).definition;
+              if (def && slugify(def.name) === defName && def.startLine) {
+                return openFileAtLine(filePath, def.startLine, def.endLine);
+              }
             }
-            return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
-          }
-          break;
+          } catch { }
         }
-        case "policy": {
-          vscode.window.showInformationMessage(`Policy: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
-          break;
-        }
-        case "violationKind": {
-          vscode.window.showInformationMessage(`Violation Kind: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
-          break;
-        }
+      }
+      return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
+    }
+    case "policy": {
+      const cache = await getTreeNodeCache();
+      const node = cache.get(uri);
+      if (node) {
+        vscode.window.showInformationMessage(`Policy: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
+      } else {
+        vscode.window.showInformationMessage(`Policy: ${parsed.path}`);
+      }
+      break;
+    }
+    case "violationKind": {
+      const cache = await getTreeNodeCache();
+      const node = cache.get(uri);
+      if (node) {
+        vscode.window.showInformationMessage(`Violation Kind: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
+      } else {
+        vscode.window.showInformationMessage(`Violation Kind: ${parsed.path}`);
       }
       break;
     }
   }
 }
+
 
 function findSectionByPath(section: any, sectionPath: string): any | null {
   const parts = sectionPath.split("/");
@@ -1702,6 +1762,14 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
       invalidateTreeNodeCache();
       monorepoProvider?.refresh();
+    }));
+
+    context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("semiorepo", {
+      provideTextDocumentContent(uri: vscode.Uri): string {
+        const semiorepoUri = `semiorepo://${uri.authority}${uri.path}`;
+        vscode.commands.executeCommand("semio.navigate", semiorepoUri);
+        return "";
+      }
     }));
 
     context.subscriptions.push(vscode.window.registerUriHandler({

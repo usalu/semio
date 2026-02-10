@@ -68,10 +68,58 @@
                             }
                         ],
                         "tools": [
-                            "add_piece",
-                            "add_connection",
-                            "change_piece_type",
-                            "update_type"
+                            {
+                                "id": "add_piece",
+                                "instruction": "Add a piece to the building.",
+                                "parameters": [
+                                    {
+                                        "id": "piece_id",
+                                        "instruction": "The id of the piece to add. Make sure that the parameters of the piece are contributing to the gross floor area."
+                                    },
+                                    {
+                                        "id": "piece_type",
+                                        "instruction": "The type of the piece to add. Make sure the type is contributing to the gross floor area."
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "add_connection",
+                                "instruction": "Connect every new piece to the existing pieces.",
+                                "parameters": [
+                                    {
+                                        "id": "connecting_piece_id",
+                                        "instruction": "The id of the piece to connect to."
+                                    },
+                                    {
+                                        "id": "connected_piece_id",
+                                        "instruction": "The id of the piece to connect to."
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "change_piece_type",
+                                "instruction": "Change the type of the piece.",
+                                "parameters": [
+                                    {
+                                        "id": "piece_id",
+                                        "instruction": "The id of the piece to change the type of."
+                                    },
+                                    {
+                                        "id": "piece_type",
+                                        "instruction": "The new type of the piece with more gross floor area than the old type of the piece."
+                                    }
+                                ]
+                            },
+                            {
+                                "id": "update_type",
+                                "instruction": "Update the type of the piece.",
+                                "parameters": [
+                                    {
+                                        "id": "piece_type",
+                                        "instruction": "The type of the piece to update."
+                                    }
+                                ]
+                            }
                         ]
                     }
                 }

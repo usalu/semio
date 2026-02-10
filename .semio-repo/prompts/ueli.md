@@ -1258,71 +1258,9 @@ The cli should
 `./semio-repo/cli/cli bundle update <id> --id <new-id>? --folder <new-folder>?` e.g. `./semio-repo/cli/cli bundle update semio/js --id semio/javascript --folder js/javascript`
 `./semio-repo/cli/cli bundle <id>`
 
-Create a new design assistant mcp server called `coda` (Constrained Design Assistant).
-
-Expose the following resources:
-
-measures: "coda://measures"
-measure: "coda://measure/{id}"
-targets: "coda://targets"
-target: "coda://target/{id}"
-properties: "coda://{target-id}/properties"
-property:"coda://{target-id}/property/{id}"
-rules: "coda://{target-id}/rules"
-rule: "coda://{target-id}/rule/{id}"
-Expose the following tools:
-
-Expose the following tools:
-
-analyze <prompt>
+Create a new design assistant fast mcp server called `coda` (Constrained Design Assistant) together with github copilot agents.
 
 
-Expose the following prompts:
-
-change <prompt>
-
-
-It is an ai that helps in designing buildings with Automated-Compliance-Checking (ACC).
-
-There is one source `design` and many `targets` which are used to validated the design. The `design` is modeled within an authoring software that provides an mcp tool. For each `target` there is a `translator` with a corresponding `validator`.
-There is an assistant go binary that calls `translators` (each translator is an agent) and `validators` (each validator is a binary) to check if a design is compliant. The result from a `translator` is directly piped into the `validator`. Every `translator` and `validator` pair is concurrently called. The assistant fans out to all `translators` and as soon as a `translator` returns the assistant calls the `validator` with the result. Then it waits until all `validators` have returned for all `targets`. It aggregates the result to a `report`. If the `report`contains `violations`, then the `report` is provided to the `changer` (agent) which changes the `design` over the design mcp server. The `changer` iterates as much as it can to fix all the violations from the `report`. It uses both anylze tools and change tools from the design mcp. Once it thinks it fixed all the violations, it signals the `assistant`. The `assistant` then calls the `translators` and `validators` again on the changed `design`.
-
- In general there are `rules` which are validated by the `validators`. Every `rule` consists of `clauses`. A violation appears when one `clause` is not satisfied. There are  `measures`
-
-It should all be within one file `go/assistant/main.go`.
-
-As example, the design format/authoring platform/mcp server is `semio` and the targets are `BerlinBuildingCode` and `RoomProgram`.
-There is one translator
-for `semio->BerlinBuildingCode`
-and a validator
-for `BerlinBuildingCode`.
-There is one translator
-for `semio->RoomProgram`
-and a validator
-for `RoomProgram`.
-
-Make a detailed architectural plan that I can download.
-
-new design assistant 
-
-.coda
-	runs
-		RUNTIMESTAMP
-			run.json
-			interactions
-				ITERATION
-					interaction.json
-					targets
-						TARGET
-							trials
-								TRIAL
-									trial.TARGETEXTENSION
-									error.json
-							target.TARGETEXTENSION
-							report.REPORTEXTENSION
-						report.json
-					design.DESIGNEXTENSION
-					fixed.DESIGNEXTENSION
 
 
 Currently the repo mcp server is only working with tools. Make sure that reading bundles, folders, files, sections, definitions, contributors, goals, tickets, policies, violationKinds are turned into resources.
