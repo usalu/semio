@@ -1460,6 +1460,12 @@
                 "normal": "Filter",
                 "beginner": "Artefakte nach Typ filtern"
               }
+            },
+            "resetFilters": {
+              "label": {
+                "normal": "Filter Zurücksetzen",
+                "beginner": "Aktive Artefaktfilter entfernen und alle Artefaktarten anzeigen"
+              }
             }
           },
           "canvas": {
@@ -3747,6 +3753,42 @@
           }
         }
       },
+      "tool": {
+        "label": {
+          "normal": "Werkzeuge",
+          "beginner": "Werkzeuge"
+        },
+        "selection": {
+          "label": {
+            "normal": "Auswahl",
+            "beginner": "Auswahl"
+          },
+          "normal": {
+            "label": {
+              "normal": "Normale Auswahl",
+              "beginner": "Klicken Sie, um jeweils ein Element auszuwählen"
+            },
+            "manual": "selection",
+            "hotkey": "1"
+          },
+          "additive": {
+            "label": {
+              "normal": "Zur Auswahl hinzufügen",
+              "beginner": "Klicken Sie, um Elemente zur Auswahl hinzuzufügen, ohne Strg zu halten"
+            },
+            "manual": "selection",
+            "hotkey": "2"
+          },
+          "subtractive": {
+            "label": {
+              "normal": "Von Auswahl entfernen",
+              "beginner": "Klicken Sie, um Elemente aus der Auswahl zu entfernen, ohne Alt zu halten"
+            },
+            "manual": "selection",
+            "hotkey": "3"
+          }
+        }
+      },
       "sort": {
         "label": {
           "normal": "",
@@ -3785,6 +3827,38 @@
         "label": {
           "normal": "Werkzeugleiste",
           "beginner": "Werkzeugleiste"
+        },
+        "parent": {
+          "selection": {
+            "label": {
+              "normal": "Auswahl",
+              "beginner": "Auswahl"
+            }
+          },
+          "filter": {
+            "label": {
+              "normal": "Filter",
+              "beginner": "Filter"
+            }
+          },
+          "create": {
+            "label": {
+              "normal": "Erstellen",
+              "beginner": "Erstellen"
+            }
+          },
+          "view": {
+            "label": {
+              "normal": "Ansicht",
+              "beginner": "Ansicht"
+            }
+          },
+          "actions": {
+            "label": {
+              "normal": "Aktionen",
+              "beginner": "Aktionen"
+            }
+          }
         }
       },
       "tutorial": {

@@ -142,7 +142,7 @@ Bulk close
 - Updated `js/vscode/package.json` to require `vscode` version `^1.106.0` instead of `^1.108.0`.
 - Updated `@types/vscode` to `^1.106.0` for compatibility with Windsurf.
 
-### 🛠️ Devcontainer
+### 🛠️️ Devcontainer
 
 - Refactored `.devcontainer/post-attach.sh` to include a robust IDE CLI detection mechanism (`find_working_cli`).
 - The new script:

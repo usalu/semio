@@ -1,15 +1,20 @@
 import { defineConfig, devices } from "@playwright/test";
 
 export default defineConfig({
-  testMatch: "**/sketchpad.test.ts",
-  fullyParallel: true,
+  testMatch: ["**/*.spec.ts", "**/sketchpad.test.ts"],
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  workers: 1,
   reporter: [["list"], ["json", { outputFile: "../../reports/playwright.json" }]],
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:5173",
     trace: "on-first-retry",
+  },
+  webServer: {
+    command: "npx nx run @semio/js:dev:sketchpad",
+    url: "http://localhost:5173",
+    reuseExistingServer: !process.env.CI,
   },
   projects: [
     {

@@ -1,6 +1,6 @@
 # region Header
 
-# 💻 semio/engine/engine.py
+# 💻semio/engine/engine.py
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -18,7 +18,6 @@
 
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 
 # endregion License
 
@@ -254,7 +253,7 @@ class Store(abc.ABC):
 
     @abc.abstractmethod
     def initialize(self: "Store") -> None:
-        """🏗️️Initialize the store and perform nothing if was already initialized."""
+        """🏗️Initialize the store and perform nothing if was already initialized."""
         pass
 
     @abc.abstractmethod
@@ -274,7 +273,7 @@ class Store(abc.ABC):
 
     @abc.abstractmethod
     def delete(cls: "Store", operation: dict) -> typing.Any:
-        """🗑️ Delete an entity from the store."""
+        """🗑 Delete an entity from the store."""
         pass
 
 class DatabaseStore(Store, abc.ABC):
@@ -691,7 +690,7 @@ def put(code: str, input: str) -> typing.Any:
     return store.put(operation, input)
 
 def delete(code: str) -> typing.Any:
-    """🗑️ Delete an entity from the store."""
+    """🗑 Delete an entity from the store."""
     store, operation = storeAndOperationFromCode(code)
     return store.delete(operation)
 
@@ -807,7 +806,7 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
                 piece.type.name = difflib.get_close_matches(
                     piece.type.name, typeD.keys(), n=1
                 )[0]
-            except Error:  # TODO: Make more specific
+            except Error:
                 piece.type.name = list(typeD.keys())[0]
         if (
             piece.type
@@ -818,7 +817,7 @@ def healDesign(design: DesignPrediction, types: list[TypeContext]):
                 piece.type.variant = difflib.get_close_matches(
                     piece.type.variant, typeD[piece.type.name].keys(), n=1
                 )[0]
-            except Error:  # TODO: Make more specific
+            except Error:
                 piece.type.variant = list(typeD[piece.type.name].keys())[0]
 
     validConnections = []

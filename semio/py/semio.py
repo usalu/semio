@@ -1,6 +1,6 @@
 # region Header
 
-# 💻 semio/py/semio.py
+# 💻semio/py/semio.py
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 
@@ -18,7 +18,6 @@
 
 # You should have received a copy of the GNU Lesser General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 
 # endregion License
 
@@ -273,7 +272,7 @@ class Error(Exception, abc.ABC):
 
 
 class ServerError(Error, abc.ABC):
-    """🖥️ The base for all server errors."""
+    """🖥 The base for all server errors."""
 
 
 class ClientError(Error, abc.ABC):
@@ -325,14 +324,14 @@ class AlreadyExists(SpecificationError, abc.ABC):
 
 
 class Semio(sqlmodel.SQLModel, table=True):
-    """ℹ️ Metadata about the database."""
+    """ℹ Metadata about the database."""
 
     __tablename__ = "semio"
 
     release: str = sqlmodel.Field(default=RELEASE, primary_key=True)
     """🍾 The current release of semio."""
     engine: str = sqlmodel.Field(default=VERSION)
-    """⚙️️The version of the engine that created this database."""
+    """⚙️The version of the engine that created this database."""
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
     """⌚ The time when the database was created."""
 
@@ -351,7 +350,7 @@ class SModel(sqlmodel.SQLModel, abc.ABC):
 
     @classmethod
     def parse(cls, input: str | dict | typing.Any | None) -> "SModel":
-        """⚒️ Parse the entity from an input."""
+        """⚒ Parse the entity from an input."""
         if input is None:
             return cls()
         if isinstance(input, str):
@@ -391,7 +390,7 @@ class Props(Base, abc.ABC):
 
 
 class Input(Base, abc.ABC):
-    """↘️ The base for inputs. All fields that are required to create the entity."""
+    """↘ The base for inputs. All fields that are required to create the entity."""
 
 
 class Context(Base, abc.ABC):
@@ -399,7 +398,7 @@ class Context(Base, abc.ABC):
 
 
 class Output(Base, abc.ABC):
-    """↗️ The base for outputs. All fields that are returned when the entity is fetched."""
+    """↗ The base for outputs. All fields that are returned when the entity is fetched."""
 
 
 class Prediction(Base, abc.ABC):
@@ -2240,7 +2239,6 @@ class Model(
 
     def dump(self) -> "ModelOutput":
         entity = {**ModelProps.model_validate(self).model_dump()}
-        #  TODO: Fix bug with tags not being dumped correctly.
 
         entity["attributes"] = [q.dump() for q in self.attributes]
         return ModelOutput(**entity)
@@ -2462,7 +2460,6 @@ class Connector(
     )
 
     id_: str = sqlmodel.Field(
-        # alias="id",  # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column("local_id", sqlalchemy.String(ID_LENGTH_LIMIT)),
         default="",
     )
@@ -2800,7 +2797,6 @@ class Type(
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="type", cascade_delete=True)
 
     kitPk: typing.Optional[int] = sqlmodel.Field(
-        # alias="kitId", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         sa_column=sqlmodel.Column("kit_id", sqlalchemy.Integer(), sqlalchemy.ForeignKey("kit.id")),
         default=None,
         exclude=True,
@@ -3076,7 +3072,6 @@ class Layer(
 class PieceIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(
         default="",
-        # alias="id", # TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
         max_length=ID_LENGTH_LIMIT,
     )
 

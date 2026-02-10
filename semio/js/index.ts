@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/index.ts
+// 💻semio/js/index.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -50,4 +50,3 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";
 export { default as tailwindConfig } from "./tailwind.config";
-

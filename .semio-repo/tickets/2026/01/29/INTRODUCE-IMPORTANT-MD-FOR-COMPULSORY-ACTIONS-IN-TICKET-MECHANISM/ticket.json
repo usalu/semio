@@ -2348,7 +2348,7 @@
               }
             },
             {
-              "path": "README.md#⚖️ License",
+              "path": "README.md#⚖️️ License",
               "lines": {
                 "added": 14,
                 "removed": 0
@@ -2523,7 +2523,7 @@
               }
             },
             {
-              "path": "README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "path": "README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -2551,21 +2551,21 @@
               }
             },
             {
-              "path": "README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "path": "README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
               "lines": {
                 "added": 25,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "path": "README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
+              "path": "README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
               "lines": {
                 "added": 4,
                 "removed": 0
@@ -2670,21 +2670,21 @@
               }
             },
             {
-              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
               "lines": {
                 "added": 85,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
               "lines": {
                 "added": 8,
                 "removed": 0
@@ -2796,7 +2796,7 @@
               }
             },
             {
-              "path": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "path": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
               "lines": {
                 "added": 7,
                 "removed": 0
@@ -3104,7 +3104,7 @@
               }
             },
             {
-              "path": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
+              "path": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️️ Principles [↑](#-repo-)",
               "lines": {
                 "added": 189,
                 "removed": 0
@@ -3125,7 +3125,7 @@
               }
             },
             {
-              "path": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️ Tag [↑](#-gitstyle-)",
+              "path": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️️ Tag [↑](#-gitstyle-)",
               "lines": {
                 "added": 7,
                 "removed": 0
@@ -3146,7 +3146,7 @@
               }
             },
             {
-              "path": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
+              "path": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️️ Commit [↑](#-gitstyle-)",
               "lines": {
                 "added": 32,
                 "removed": 0
@@ -3223,140 +3223,140 @@
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)",
               "lines": {
                 "added": 94,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#⌨️️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
               "lines": {
                 "added": 34,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
               "lines": {
                 "added": 11,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️️ [Cursor](.cursor) [↑](#-ai-)",
               "lines": {
                 "added": 17,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
               "lines": {
                 "added": 16,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -3370,28 +3370,28 @@
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)",
               "lines": {
                 "added": 36,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#⚖️ Decision Making [↑](#-uses-cases-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#⚖️️ Decision Making [↑](#-uses-cases-)",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🔁 Refactoring [↑](#-uses-cases-)",
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#🔁 Refactoring [↑](#-uses-cases-)",
               "lines": {
                 "added": 12,
                 "removed": 0

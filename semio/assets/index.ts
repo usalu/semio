@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/assets/index.ts
+// 💻semio/assets/index.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

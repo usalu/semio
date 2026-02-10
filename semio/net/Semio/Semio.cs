@@ -1,6 +1,6 @@
 #region 🔖Header
 
-// 💻 semio/net/Semio/Semio.cs
+// 💻semio/net/Semio/Semio.cs
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

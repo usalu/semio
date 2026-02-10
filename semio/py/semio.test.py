@@ -1,6 +1,6 @@
 # region Header
 
-# 🧪︎ semio/py/semio.test.py
+# 🧪semio/py/semio.test.py
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 

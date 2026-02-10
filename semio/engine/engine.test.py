@@ -1,6 +1,6 @@
 # region Header
 
-# 🧪︎ semio/engine/engine.test.py
+# 🧪semio/engine/engine.test.py
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 

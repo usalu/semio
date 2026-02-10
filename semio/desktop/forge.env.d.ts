@@ -1,7 +1,7 @@
 
 // #region 🔖Header
 
-// 💻 semio/desktop/forge.env.d.ts
+// 💻semio/desktop/forge.env.d.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

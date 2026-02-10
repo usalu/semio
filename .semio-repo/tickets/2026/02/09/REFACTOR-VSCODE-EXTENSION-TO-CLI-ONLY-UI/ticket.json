@@ -56,7 +56,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "⚙semio-repo/vscode/package.json",
+              "path": "⚙️semio-repo/vscode/package.json",
               "lines": {
                 "added": 1,
                 "removed": 7

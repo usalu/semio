@@ -25,26 +25,55 @@ elements:
 
 ## History
 
-The software requirements specification is currently separated from the source code. It should be merged into the source code. Introduce a new violation kind for the code policy that checks if the docstrings are correct (for file, section and definition). Specs should never be tied to code and implementation-agnostic. It should not contain any syntax or implementation details of the source code.
-The specs that affect a bundle should be placed in a `.bundle.md` file at the root of the bundle.
-The specs that affect a folder should be placed in a `.folder.md` file at the root of the folder.
-The specs that affect a file should be placed in the header specs section.
-The specs that affect a section should be placed under the section start.
-The specs that affect a definition should be placed in the definition docstring. Use all language native docstring mechanism.
+All uris should resolve to the correct entity. E.g. clicking on a uri in the vscode extension should navigate to the correct resource. Same as when using `semio-repo: Navigate to` command with an id or uri.
+e.g. I get:
+2026-02-10 01:43:46.391 [error] [Window] Error: Unable to resolve resource semiorepo://folder/semio/js/sketchpad/pages/getting-started
+    at ResourceModelCollection.r (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:1609:23731)
+    at ResourceModelCollection.r (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:1609:23717)
+    at async $Jd.acquire (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:27:3734)
+    at async $FAc.createModelReference (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:1609:25146)
+    at async $g4b.resolve (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:708:17482)
+    at async $Dzc.setInput (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:988:94238)
+    at async $Ujc.S (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:993:65311)
+    at async $Ujc.L (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:993:63845)
+    at async $Ujc.openEditor (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:993:62861)
+    at async vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:1105:42321
 
-Make sure to completely migrate all existing specs from the `AGENTS.md` and `README.md` into the proper location with the new format.
+
+
+The summaries and docs are currently separated from the source code. It should be merged into the source code. Introduce a new violation kind for the code policy that checks if the summary and docs are correct (for project, bundle, folder, file, section and definition).
+The summary and docs that affect a bundle should be placed in a `README.md` file at the root of the bundle.
+The summary and docs that affect a folder should be placed in a `README.md` file at the root of the folder (a bundle root folder has no summary and specs because they are bundle-wide. same for project root folders)
+The summary and docs that affect a file should be placed in the header summary section.
+The summary and docs that affect a section should be placed under the section start.
+The summary and docs that affect a definition should be placed in the definition docstring. Use all language native docstring mechanism.
+
+Make sure to completely migrate all existing summaries from the `AGENTS.md` and `README.md` into the proper location with the new format. The `# Codebase` section in `AGENTS.md` should be completely migrated. The `Ecosystems` and `Bundles` sections in `README.md` should be completely migrated.
 
 e.g. in typescript:
 ```ts
+
 // #region 🔖<SECTIONNAME>
 
-// <SECTIONREQUIREMENT1>
-// <SECTIONREQUIREMENT2>
+// <SUMMARY>
+
+// <SECTIONREQUIREMENT>
+// <SECTIONREQUIREMENT>
+//  …
+
+// <SECTIONDOCS>
+// <SECTIONDOCS>
 //  …
 
 /**
+ * <SUMMARY>
+ * 
  * <DEFINITIONREQUIREMENT1>
  * <DEFINITIONREQUIREMENT2>
+ *  …
+ * 
+ * <DEFINITIONDOCS>
+ * <DEFINITIONDOCS>
  *  …
  */
 <DEFINITION>
@@ -59,6 +88,8 @@ e.g.
 // There MUST be two mechnasism for state which interact together: local and shared.
 
 /**
+ * The kit store is used for CRUD operations on kits. It uses Y.js as backbone.
+ * 
  * Kits MUST be shared and be synchronized between the different users that work on the same kit.
  * A kit must be editable offline and synchronize with the server when online.
  *  …
@@ -67,6 +98,8 @@ export class KitStore {
   …
 
 /**
+ * The sketchpad store is used for CRUD operations on all sketchpad state. It uses a stately machine as backbone.
+ * 
  * Sketchpad state MUST be local and MAY be persisted locally.
  *  …
 **/

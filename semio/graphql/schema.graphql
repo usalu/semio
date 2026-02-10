@@ -571,7 +571,7 @@ input KitInputNode {
   homepage: String = ""
 
   """
-  ⚖️The optional license [ spdx id | url ] of the kit.
+  ⚖️️The optional license [ spdx id | url ] of the kit.
   """
   license: String = ""
 
@@ -586,7 +586,7 @@ input KitInputNode {
   designs: [DesignInputNode] = null
 
   """
-  🏷️The attributes of the kit.
+  🏷️️The attributes of the kit.
   """
   attributes: [AttributeInputNode] = null
 }
@@ -663,34 +663,34 @@ input ModelInputNode {
   description: String = ""
 
   """
-  🏷️The optional tags to group models. No tags means default.
+  🏷️️The optional tags to group models. No tags means default.
   """
   tags: [String] = null
 
   """
-  🏷️The attributes of the model.
+  🏷️️The attributes of the model.
   """
   attributes: [AttributeInputNode] = null
 }
 
 input AttributeInputNode {
   """
-  🏷️The name of the attribute.
+  🏷️️The name of the attribute.
   """
   name: String!
 
   """
-  🏷️The optional value [ text | url ] of the attribute. No value is equivalent to true.
+  🏷️️The optional value [ text | url ] of the attribute. No value is equivalent to true.
   """
   value: String = ""
 
   """
-  🏷️The optional unit of the value of the attribute.
+  🏷️️The optional unit of the value of the attribute.
   """
   unit: String = ""
 
   """
-  🏷️The optional definition [ text | uri ] of the attribute.
+  🏷️️The optional definition [ text | uri ] of the attribute.
   """
   definition: String = ""
 }
@@ -737,7 +737,7 @@ input ConnectorInputNode {
   direction: VectorInputNode!
 
   """
-  🏷️The attributes of the connector.
+  🏷️️The attributes of the connector.
   """
   attributes: [AttributeInputNode] = null
 }
@@ -853,7 +853,7 @@ input PieceInputNode {
   center: CoordInputNode = null
 
   """
-  🏷️The attributes of the piece.
+  🏷️️The attributes of the piece.
   """
   attributes: [AttributeInputNode] = null
   type: TypeIdInputNode!

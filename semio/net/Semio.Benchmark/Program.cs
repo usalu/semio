@@ -56,16 +56,13 @@ class Program
         var diffForward = LoadAsset<KitDiff>("diff_kit_metabolism.json");
         var diffInverse = LoadAsset<KitDiff>("diff_kit_metabolism_inverted.json");
 
-        // 1. Roundtrip/Metabolism
         Bench("Roundtrip/Metabolism", () =>
         {
             var zipPath = Path.Combine(AssetsPath, "metabolism.zip");
             var importResult = ZipRoundtrip.ImportKit(zipPath);
 
             var tempZipPath = "temp_benchmark_metabolism.zip";
-            // We need schema SQL. Let's assume we can get it or pass empty if not strictly checked by implementation (it executes it).
-            // The C# implementation might need the schema to create tables.
-            // Let's try to read it.
+
             var schemaPath = Path.Combine("../../sql/sqlite/schema.sql"); // Relative to bin output?
             // AssetsPath is "../assets/semio" which is relative to execution dir?
             // "dotnet run" runs from project dir? No, usually bin/Debug/net...
@@ -79,55 +76,47 @@ class Program
             if (System.IO.File.Exists(tempZipPath)) System.IO.File.Delete(tempZipPath);
         });
 
-        // 2. Diff/Metabolism
         Bench("Diff/Metabolism", () =>
         {
             var k2 = kitMetabolism.ApplyDiff(diffForward);
             k2.ApplyDiff(diffInverse);
         });
 
-        // 3. Flatten Design/Nakagin Capsule Tower
         var d1 = FindDesign(kitMetabolism, "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower", () =>
         {
             d1.Flatten(kitMetabolism.Types);
         });
 
-        // 4. Flatten Design/Nakagin Capsule Tower/Slanted
         var d2 = FindDesign(kitMetabolism, "Slanted", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Slanted", () =>
         {
             d2.Flatten(kitMetabolism.Types);
         });
 
-        // 5. Flatten Design/Nakagin Capsule Tower/Twisted
         var d3 = FindDesign(kitMetabolism, "Twisted", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Twisted", () =>
         {
             d3.Flatten(kitMetabolism.Types);
         });
 
-        // 6. Flatten Design/Nakagin Capsule Tower/Dancing
         var d4 = FindDesign(kitMetabolism, "Dancing", "Nakagin Capsule Tower");
         Bench("Flatten Design/Nakagin Capsule Tower/Dancing", () =>
         {
             d4.Flatten(kitMetabolism.Types);
         });
 
-        // 7. Flatten Design/Capsule Dream
         var d5 = FindDesign(kitMetabolism, "Capsule Dream");
         Bench("Flatten Design/Capsule Dream", () =>
         {
             d5.Flatten(kitMetabolism.Types);
         });
 
-        // 8. Validation/Invalid Kit
         Bench("Validation/Invalid Kit", () =>
         {
             SemioValidator.ValidateKit(kitInvalid);
         });
 
-        // 9. Validation/Metabolism
         Bench("Validation/Metabolism", () =>
         {
             SemioValidator.ValidateKit(kitMetabolism);

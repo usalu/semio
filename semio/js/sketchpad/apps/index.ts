@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/sketchpad/apps/index.ts
+// 💻semio/js/sketchpad/apps/index.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -29,4 +29,3 @@
 
 export { composePluginContributions, getAppPlugin, getAppPlugins, hasAppPlugin, registerAppPlugin } from "../shared";
 export type { AppMachineContribution, AppPlugin } from "../shared";
-

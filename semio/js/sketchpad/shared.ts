@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/sketchpad/shared.ts
+// 💻semio/js/sketchpad/shared.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,6 +22,8 @@
 
 // #endregion 🔖License
 
+import { ChatIcon, CodeIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
+import { ComponentType, ReactNode } from "react";
 // #region 🔖Specs
 // #endregion 🔖Specs
 
@@ -29,8 +31,6 @@
 
 // #region 🔖Imports
 
-import { ComponentType, ReactNode } from "react";
-import { ChatIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { AnyActorRef, assign, fromCallback } from "xstate";
 import * as Y from "yjs";
 import { Guid, Kit, KitDiff } from "../semio";
@@ -107,10 +107,10 @@ export function createAction(execute: () => void, canExecute: boolean): ActionFi
     execute: canExecute
       ? execute
       : () => {
-        if (process.env.NODE_ENV === "development") {
-          console.warn("[DEBUG] Attempted to execute a disabled action");
-        }
-      },
+          if (process.env.NODE_ENV === "development") {
+            console.warn("[DEBUG] Attempted to execute a disabled action");
+          }
+        },
   };
 }
 
@@ -272,9 +272,11 @@ export enum ToolKind {
   SELECTION_NORMAL = "selection-normal",
   SELECTION_ADDITIVE = "selection-additive",
   SELECTION_SUBTRACTIVE = "selection-subtractive",
+  SELECTION_INTERSECT = "selection-intersect",
   LASSO_RECTANGULAR = "lasso-rectangular",
   LASSO_FREEFORM = "lasso-freeform",
   CONNECTOR = "connector",
+  HAND = "hand",
 }
 
 export enum WindowKind {
@@ -301,6 +303,7 @@ export enum PanelKind {
   CHAT = "chat",
   SETTINGS = "settings",
   PARAMS = "params",
+  CONSOLE = "console",
 }
 
 // #endregion 🔖Enums
@@ -316,7 +319,7 @@ export interface FileProvider {
   getUrl: (kitId: string, fileId: string, path: string) => string;
 }
 
-export interface MemoryFileProviderConfig { }
+export interface MemoryFileProviderConfig {}
 
 export interface LocalFileProviderConfig {
   dbName?: string;
@@ -446,6 +449,11 @@ export const panelKindConfigs: Record<PanelKind, PanelKindConfig> = {
     isGroupable: true,
     hotkey: "ctrl+l",
   },
+  [PanelKind.CONSOLE]: {
+    icon: CodeIcon,
+    position: PanelPosition.BOTTOM,
+    hotkey: "ctrl+k",
+  },
 };
 
 export enum SidePanelPosition {
@@ -489,6 +497,7 @@ export interface PanelVisibility {
   chat?: boolean;
   settings?: boolean;
   params?: boolean;
+  console?: boolean;
 }
 
 export interface PanelSizes {
@@ -512,6 +521,15 @@ export interface PanelSection {
   specificity?: number;
   defaultOpen?: boolean;
   order?: number;
+  toolbarGroup?: {
+    id: string;
+    labelId?: string;
+    order?: number;
+    subToolId?: string;
+    subToolLabelId?: string;
+    subToolIcon?: ReactNode;
+    onActivate?: () => void;
+  };
   actions?: Array<{
     id: string;
     icon: ReactNode;
@@ -592,7 +610,7 @@ export function enrichPanelDefinition(panel: PanelDefinition): EnrichedPanelDefi
 
 export interface PanelConfig {
   id: string;
-  key: "workbench" | "details" | "settings" | "tools" | "hud" | "stats" | "toolbar" | "chat";
+  key: "workbench" | "details" | "settings" | "tools" | "hud" | "stats" | "toolbar" | "chat" | "console";
   label: string;
   order?: number;
   defaultOpen?: boolean;
@@ -623,7 +641,7 @@ export interface AppConfig {
   order?: number;
 }
 
-export interface AppRegistration extends AppConfig { }
+export interface AppRegistration extends AppConfig {}
 
 // #endregion 🔖App Registry
 
@@ -1254,7 +1272,7 @@ export function getValueAtPath(root: Y.Map<any> | Y.Array<any>, path: YPath): an
 
 export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Subscribe): Disposable {
   if (path.length === 0) {
-    const callback = () => subscribe(() => { });
+    const callback = () => subscribe(() => {});
     root.observeDeep(callback);
     return () => root.unobserveDeep(callback);
   }
@@ -1266,7 +1284,7 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
     const newJson = JSON.stringify(newValue instanceof Y.Map || newValue instanceof Y.Array ? newValue.toJSON() : newValue);
     if (lastJson !== newJson) {
       lastValue = newValue;
-      subscribe(() => { });
+      subscribe(() => {});
     }
   };
   const setupObservers = (current: any, remainingPath: YPath, depth: number) => {
@@ -1357,7 +1375,7 @@ export class DerivedNode<T> {
     this.unsubscribers = this.deps.map((d) =>
       d.store.onPathChanged(d.path, () => {
         this.recompute();
-        return () => { };
+        return () => {};
       }),
     );
     this.recompute();
@@ -2410,7 +2428,7 @@ export interface KitAppHooks {
 }
 
 const defaultDesignAppHooks: DesignAppHooks = {
-  useDesignAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useDesignAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
   useDesignAppDiff: () => ({}),
   useDesignAppHover: () => undefined,
   useDesignAppIsPieceHovered: () => false,
@@ -2423,7 +2441,7 @@ const defaultDesignAppHooks: DesignAppHooks = {
 };
 
 const defaultKitAppHooks: KitAppHooks = {
-  useKitAppCommands: () => ({ togglePanel: () => { }, execute: () => Promise.resolve({}) }),
+  useKitAppCommands: () => ({ togglePanel: () => {}, execute: () => Promise.resolve({}) }),
 };
 
 let registeredDesignAppHooks: DesignAppHooks | null = null;

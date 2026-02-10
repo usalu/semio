@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪︎ semio/js/semio.test.ts
+// 🧪semio/js/semio.test.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -35,20 +35,33 @@ import {
   areKitDiffsEqual,
   areKitsEqual,
   areValidationResultsEqual,
+  createClusteredDesign,
   deserializeKit,
   exportKit,
   flattenDesign,
+  getIncludedDesigns,
   getKitDiff,
   hasErrors,
   importKit,
   inverseKitDiff,
   Kit,
   Plane,
+  replaceClusterWithDesign,
   serializeKit,
   toValidationResult,
   validateKit,
   ValidationResult,
 } from "./semio";
+import {
+  getKitDiagramShapeStrategy,
+  KIT_DIAGRAM_CIRCLE_FRAME,
+  KIT_DIAGRAM_COLLIDE_RADIUS,
+  KIT_DIAGRAM_LONG_RECTANGLE_FRAME,
+  KIT_DIAGRAM_RECTANGLE_FRAME,
+  KIT_DIAGRAM_TRIANGLE_FRAME,
+  resolveKitDiagramAnchorPair,
+  resolveKitDiagramProximityAnchor,
+} from "./sketchpad/kitSelectionHelpers";
 
 const TOLERANCE = 0.001;
 
@@ -76,14 +89,14 @@ const centersEqual = (c1: { u: number; v: number } | undefined, c2: { u: number;
 const findDesign = (kit: Kit, name: string, parentName?: string) => {
   let parentGuid: string | undefined;
   if (parentName) {
-    const p = kit.designs?.find(d => d.name === parentName);
+    const p = kit.designs?.find((d) => d.name === parentName);
     if (!p) throw new Error(`Parent ${parentName} not found`);
     parentGuid = p.guid;
   }
-  const d = kit.designs?.find(d => d.name === name && (parentGuid ? d.parent?.guid === parentGuid : !d.parent));
+  const d = kit.designs?.find((d) => d.name === name && (parentGuid ? d.parent?.guid === parentGuid : !d.parent));
   if (!d) throw new Error(`Design ${name} not found`);
   return d;
-}
+};
 
 describe("Diff", () => {
   describe("Metabolism", () => {
@@ -123,7 +136,7 @@ describe("Flatten", () => {
       expect(planesEqual(p.plane, expectedPiece!.plane)).toBe(true);
       expect(centersEqual(p.center, expectedPiece!.center)).toBe(true);
     });
-  }
+  };
 
   describe("Nakagin Capsule Tower", () => {
     it("Kit -> Flatten -> Diff -> Apply = Flat", () => {
@@ -208,5 +221,101 @@ describe("Validation", () => {
       const expected = InvalidKitValidation as ValidationResult;
       expect(areValidationResultsEqual(result, expected)).toBe(true);
     });
+  });
+});
+
+describe("Cluster", () => {
+  it("Cluster replacement uses design-guid designPiece and yields included design entry", () => {
+    const design = {
+      guid: "design-root",
+      name: "Root",
+      pieces: [
+        { guid: "piece-a", type: { guid: "type-a" } },
+        { guid: "piece-b", type: { guid: "type-b" } },
+        { guid: "piece-c", type: { guid: "type-c" } },
+      ],
+      connections: [
+        {
+          guid: "conn-ab",
+          connecting: { piece: { guid: "piece-a" } },
+          connected: { piece: { guid: "piece-b" } },
+        },
+        {
+          guid: "conn-bc",
+          connecting: { piece: { guid: "piece-b" } },
+          connected: { piece: { guid: "piece-c" } },
+        },
+      ],
+      createdAt: "2025-01-01T00:00:00.000Z",
+      updatedAt: "2025-01-01T00:00:00.000Z",
+    } as Kit["designs"][number];
+
+    const { clusteredDesign, externalConnections } = createClusteredDesign(design, ["piece-a", "piece-b"], "Cluster");
+    const diff = replaceClusterWithDesign(design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
+    const updatedDesign = applyDesignDiff(design, diff);
+
+    const clusterConnection = updatedDesign.connections?.find((c) => c.guid === "conn-bc");
+    expect(clusterConnection?.connecting.designPiece?.guid).toBe(clusteredDesign.guid);
+    expect(clusterConnection?.connected.designPiece?.guid).toBeUndefined();
+
+    const included = getIncludedDesigns(updatedDesign);
+    expect(included.length).toBe(1);
+    expect(included[0].guid).toBe(clusteredDesign.guid);
+    expect(included[0].designGuid).toBe(clusteredDesign.guid);
+  });
+});
+
+describe("Kit Diagram Geometry", () => {
+  it("maps shape strategies to deterministic frames and snap points", () => {
+    expect(getKitDiagramShapeStrategy("design").frame).toEqual(KIT_DIAGRAM_CIRCLE_FRAME);
+    expect(getKitDiagramShapeStrategy("type").frame).toEqual(KIT_DIAGRAM_RECTANGLE_FRAME);
+    expect(getKitDiagramShapeStrategy("file").frame).toEqual(KIT_DIAGRAM_TRIANGLE_FRAME);
+    expect(getKitDiagramShapeStrategy("quality").frame).toEqual(KIT_DIAGRAM_LONG_RECTANGLE_FRAME);
+    expect(getKitDiagramShapeStrategy("design").getSnapPoints()).toEqual([
+      { id: "n", x: 50, y: 0, side: "top" },
+      { id: "e", x: 100, y: 50, side: "right" },
+      { id: "s", x: 50, y: 100, side: "bottom" },
+      { id: "w", x: 0, y: 50, side: "left" },
+    ]);
+    expect(getKitDiagramShapeStrategy("type").getSnapPoints()).toEqual([
+      { id: "n", x: 60, y: 0, side: "top" },
+      { id: "e", x: 120, y: 40, side: "right" },
+      { id: "s", x: 60, y: 80, side: "bottom" },
+      { id: "w", x: 0, y: 40, side: "left" },
+    ]);
+    expect(getKitDiagramShapeStrategy("file").getSnapPoints()).toEqual([
+      { id: "apex", x: 50, y: 0, side: "top" },
+      { id: "base-left", x: 0, y: 100, side: "left" },
+      { id: "base-right", x: 100, y: 100, side: "right" },
+    ]);
+    expect(getKitDiagramShapeStrategy("quality").getSnapPoints()).toEqual([
+      { id: "n", x: 80, y: 0, side: "top" },
+      { id: "e", x: 160, y: 36, side: "right" },
+      { id: "s", x: 80, y: 72, side: "bottom" },
+      { id: "w", x: 0, y: 36, side: "left" },
+    ]);
+    expect(KIT_DIAGRAM_COLLIDE_RADIUS).toBe(80);
+  });
+
+  it("resolves nearest anchor pairs for shape combinations", () => {
+    const horizontal = resolveKitDiagramAnchorPair({ kind: "design", position: { x: 0, y: 0 } }, { kind: "type", position: { x: 300, y: 0 } });
+    expect(horizontal.source.localPoint.id).toBe("e");
+    expect(horizontal.target.localPoint.id).toBe("w");
+    expect(horizontal.source.absolutePoint).toEqual({ x: 100, y: 50 });
+    expect(horizontal.target.absolutePoint).toEqual({ x: 300, y: 40 });
+
+    const vertical = resolveKitDiagramAnchorPair({ kind: "type", position: { x: 0, y: 0 } }, { kind: "design", position: { x: 0, y: 280 } });
+    expect(vertical.source.localPoint.id).toBe("s");
+    expect(vertical.target.localPoint.id).toBe("n");
+
+    const triangleUp = resolveKitDiagramAnchorPair({ kind: "file", position: { x: 220, y: 320 } }, { kind: "design", position: { x: 220, y: 40 } });
+    expect(triangleUp.source.localPoint.id).toBe("apex");
+    expect(triangleUp.target.localPoint.id).toBe("s");
+  });
+
+  it("resolves proximity anchors from snap points", () => {
+    const proximity = resolveKitDiagramProximityAnchor("type:1", { kind: "type", position: { x: 200, y: 100 } }, { x: 340, y: 140 });
+    expect(proximity.anchor.localPoint.id).toBe("e");
+    expect(proximity.anchor.absolutePoint).toEqual({ x: 320, y: 140 });
   });
 });

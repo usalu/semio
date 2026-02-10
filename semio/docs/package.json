@@ -1,6 +1,7 @@
 {
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "application",
+  "type": "module",
   "name": "@semio/docs",
   "version": "0.1.0",
   "description": "semio \u22c5 docs",

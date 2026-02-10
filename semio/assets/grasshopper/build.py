@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 # region Header
 
-# 💻 semio/assets/grasshopper/build.py
+# 📜semio/assets/grasshopper/build.py
 
 # 2025 Ueli Saluz <ueli@semio-tech.com>
 

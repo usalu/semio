@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 🧪 semio-repo/vscode/extension.test.ts
+// 🧪semio-repo/vscode/extension.test.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -38,19 +38,19 @@ import {
   FilterTreeItem,
   MonorepoTreeDataProvider,
   MonorepoTreeItem,
+  RepoEvent,
   TicketData,
   TicketInteraction,
-  RepoEvent,
   TreeNodeData,
-  parseRepoEvents,
-  extractRepoResult,
-  extractLeadingEmoji,
-  treeNodeDisplayLabel,
-  treeNodeContextValue,
   buildCliTreeArgs,
-  slugify,
-  parseUri,
+  extractLeadingEmoji,
+  extractRepoResult,
   invalidateTreeNodeCache,
+  parseRepoEvents,
+  parseUri,
+  slugify,
+  treeNodeContextValue,
+  treeNodeDisplayLabel,
 } from "./extension";
 
 // #endregion 🔖Imports
@@ -581,11 +581,11 @@ suite("Filter Provider Test Suite", () => {
     assert.ok(labels.some(l => l.startsWith("📂Folders")), "Should have Folders");
     assert.ok(labels.some(l => l.startsWith("📄Files")), "Should have Files");
     assert.ok(labels.some(l => l.startsWith("🔖Sections")), "Should have Sections");
-    assert.ok(labels.some(l => l.startsWith("🏷Definitions")), "Should have Definitions");
+    assert.ok(labels.some(l => l.startsWith("🏷️Definitions")), "Should have Definitions");
     assert.ok(labels.some(l => l.startsWith("🎯Goals")), "Should have Goals");
     assert.ok(labels.some(l => l.startsWith("🎫Tickets")), "Should have Tickets");
     assert.ok(labels.some(l => l.startsWith("🎫Dates")), "Should have Dates");
-    assert.ok(labels.some(l => l.startsWith("🛡Policies")), "Should have Policies");
+    assert.ok(labels.some(l => l.startsWith("🛡️Policies")), "Should have Policies");
     assert.ok(labels.some(l => l.startsWith("👤Contributors")), "Should have Contributors");
     assert.ok(labels.some(l => l.startsWith("🔄Commits")), "Should have Commits");
   });
@@ -822,7 +822,7 @@ suite("extractLeadingEmoji Test Suite", () => {
   });
 
   test("Extracts compound emoji with variation selector", () => {
-    assert.strictEqual(extractLeadingEmoji("⚙️️config.json"), "⚙️️");
+    assert.strictEqual(extractLeadingEmoji("⚙️config.json"), "⚙️");
   });
 
   test("Returns empty string for no emoji", () => {

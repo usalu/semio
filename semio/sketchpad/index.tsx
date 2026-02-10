@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/sketchpad/index.tsx
+// 💻semio/sketchpad/index.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

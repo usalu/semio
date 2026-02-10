@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// 💻 semio/engine/post-build.ts
+// 📜semio/engine/post-build.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

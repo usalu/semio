@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// ⚙️︎ semio/sketchpad/postcss.config.ts
+// ⚙️semio/sketchpad/postcss.config.ts
 
 // 2025 Ueli Saluz
 

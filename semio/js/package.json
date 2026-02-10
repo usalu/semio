@@ -13,14 +13,14 @@
   "scripts": {
     "dev": "tsx dev.ts",
     "dev:storybook": "storybook dev -p 6006 --host 0.0.0.0 --no-open --debug",
-    "dev:sketchpad": "vite --port 3000 --host 0.0.0.0",
+    "dev:sketchpad": "vite --port 5173 --host 0.0.0.0",
     "build": "storybook build",
     "test": "vitest run",
     "test:unit": "vitest run",
-    "test:e2e": "vitest --ui",
+    "test:e2e": "playwright test",
     "test:coverage": "vitest run --coverage",
     "preflight": "prettier --write . && tsc --noEmit",
-    "postinstall": "node -e \"require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm')\""
+    "postinstall": "node -e \"try { require('fs').copyFileSync('../../node_modules/sql.js/dist/sql-wasm.wasm', 'public/sql-wasm.wasm') } catch (e) { console.error('Failed to copy sql-wasm.wasm:', e.message) }\""
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

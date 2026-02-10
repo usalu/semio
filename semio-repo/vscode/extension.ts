@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio-repo/vscode/extension.ts
+// 💻semio-repo/vscode/extension.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -18,7 +18,6 @@
 
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 
 // #endregion 🔖License
 
@@ -461,7 +460,7 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
   if (node.Status === "open") statusIcon = "🔵";
   else if (node.Status === "closed") statusIcon = "🟢";
   const fallbackEmojis: Record<string, string> = {
-    contributor: "👤", commit: "🔀", policy: "🛡", violationKind: "⚠",
+    contributor: "👤", commit: "🔀", policy: "🛡️", violationKind: "⚠",
   };
   const prefix = emoji || fallbackEmojis[node.Kind] || "";
   return `${prefix}${statusIcon}${node.Label}`;
@@ -701,7 +700,7 @@ async function navigateToUri(uri: string): Promise<void> {
                     }
                   }
                 }
-              } catch { /* fall through */ }
+              } catch { }
             }
             return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
           }
@@ -725,7 +724,7 @@ async function navigateToUri(uri: string): Promise<void> {
                     return openFileAtLine(filePath, def.startLine, def.endLine);
                   }
                 }
-              } catch { /* fall through */ }
+              } catch { }
             }
             return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
           }
@@ -1082,11 +1081,11 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         this.createFilterItem("📂Folders", "filter_folder", "Folders filter"),
         this.createFilterItem("📄Files", "filter_file", "Files filter"),
         this.createFilterItem("🔖Sections", "filter_section", "Sections filter"),
-        this.createFilterItem("🏷Definitions", "filter_definition", "Definitions filter"),
+        this.createFilterItem("🏷️Definitions", "filter_definition", "Definitions filter"),
         this.createFilterItem("🎯Goals", "filter_goal", "Goals filter"),
         this.createFilterItem("🎫Tickets", "filter_ticket", "Tickets filter"),
         this.createFilterItem("🎫Dates", "filter_time", "Dates filter", vscode.TreeItemCollapsibleState.Collapsed),
-        this.createFilterItem("🛡Policies", "filter_policy", "Policies filter"),
+        this.createFilterItem("🛡️Policies", "filter_policy", "Policies filter"),
         this.createFilterItem("👤Contributors", "filter_contributor", "Contributors filter"),
         this.createFilterItem("🔄Commits", "filter_commit", "Commits filter"),
       ];
@@ -1335,7 +1334,6 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
   async getChildren(element?: SectionTreeItem): Promise<SectionTreeItem[]> {
     if (!this.activeEditor) return [];
 
-    // Use relative path for repo commands
     const root = getWorkspaceRoot();
     if (!root) return [];
 
@@ -1362,7 +1360,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
               sections.push(parsed.section);
             }
           } catch (e) {
-            // Ignore parse errors
+
           }
         }
         return this.createSectionItems(sections, filePath);
@@ -1376,9 +1374,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
   private createSectionItems(sections: SectionInfo[], filePath: string): SectionTreeItem[] {
     return sections.map(s => {
       const item = new SectionTreeItem(s, filePath);
-      // Map JSON keys as sections effectively
-      // The CLI output already includes children recursively in the result event if filtered? 
-      // No, CLI section list returns roots.
+
       return item;
     });
   }

@@ -21,16 +21,16 @@ Standardized markdown output formats for `ticket` and `goal` commands.
 - [x] Fix `Ticket_Tree_MD`
 - [ ] Implement Unified ID System
   - [ ] Project: `<kind>@{project-code}` (👤, 🧰, 🔬)
-  - [ ] Bundle: `<kind>@{project-code}/{code}` (📚, 🛂, ⌨️️, 🖱️️, 🌐, 🏪)
-  - [ ] Folder: `<kind>{path*}` (🗃️️, 📁)
-  - [ ] File: `<kind>{path*}` (💻, 🧪, 📃, ⚙️️, 💾, ⚖️)
+  - [ ] Bundle: `<kind>@{project-code}/{code}` (📚, 🛂, ⌨️️️, 🖱️️️, 🌐, 🏪)
+  - [ ] Folder: `<kind>{path*}` (🗃️️️, 📁)
+  - [ ] File: `<kind>{path*}` (💻, 🧪, 📃, ⚙️️️, 💾, ⚖️️)
   - [ ] Section: `🔖{path*}`
-  - [ ] Definition: `<kind>{file-path*}#{section-path*}§{path*}` (🛠️, ✂️, 🪨)
+  - [ ] Definition: `<kind>{file-path*}#{section-path*}§{path*}` (🛠️️, ✂️️, 🪨)
   - [ ] Ticket: `🎫{year}/{month}/{day}/{slug}`
   - [ ] Goal: `🎯{path*}`
   - [ ] Draft: `✍️{slug}`
   - [ ] Todo: `📝{slug}`
-  - [ ] Policy: `🛡️/{slug}`
+  - [ ] Policy: `🛡️️/{slug}`
   - [ ] ViolationKind: `🚫{policy-slug}/{slug}`
   - [ ] Contributor: `👤{github}`
   - [ ] Commit: `🔀{sha}`

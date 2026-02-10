@@ -16,7 +16,7 @@ Each badge is created with [shields.io](https://shields.io) with style `flat-squ
 1. Search font on [fontsource.org](https://fontsource.org) 🔍
 1. Hit `Download` and extract zip file 📂
 1. Use kebaberized font name as folder name and remove everything else (such as version numbers) ➖
-1. Merge all types in one folder (`ttf`, `webfonts`, …) - they won't collide due to different extensions 🗃️
+1. Merge all types in one folder (`ttf`, `webfonts`, …) - they won't collide due to different extensions 🗃️️
 1. Remove all parts that repeat everywhere (such as common name prefix, single weighted fonts, …) 💯
 
 ## Icons

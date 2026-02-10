@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// 💻 semio/gh/Semio.Grasshopper/yak/login.ts
+// 📜semio/gh/Semio.Grasshopper/yak/login.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

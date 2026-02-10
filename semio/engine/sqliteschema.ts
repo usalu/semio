@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// 💻 semio/engine/sqliteschema.ts
+// 📜semio/engine/sqliteschema.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

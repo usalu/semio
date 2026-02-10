@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// ⚙️︎ semio/js/vite.config.ts
+// ⚙️semio/js/vite.config.ts
 
 // 2025 Ueli Saluz
 

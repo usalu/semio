@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/sketchpad/Sketchpad.tsx
+// 💻semio/js/sketchpad/Sketchpad.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -39,15 +39,19 @@ import { useHotkeys as useReactHotkeys } from "react-hotkeys-hook";
 import { useTranslation as useI18nTranslation } from "react-i18next";
 import { BrowserRouter, MemoryRouter, Outlet, Route, Routes, useLocation, useParams, useNavigate as useReactNavigate, useSearchParams } from "react-router";
 import {
+  AddIcon,
   AwardIcon,
   DocumentIcon,
   MessageCircle as FeedbackIcon,
   FocusIcon,
+  HandIcon,
   HomeIcon,
   LayoutIcon,
   LocalKitIcon,
   Maximize2Icon,
   Minimize2Icon,
+  MoreHorizontalIcon,
+  MousePointerIcon,
   NavigateBackIcon,
   NavigateForwardIcon,
   NavigateUpIcon,
@@ -56,7 +60,7 @@ import {
   TemporaryKitIcon,
   TutorialIcon,
   TypeIcon,
-  UserIcon,
+  UserIcon
 } from "@semio/assets";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
@@ -145,6 +149,7 @@ import {
   ActionGroup,
   ActionGroupItem,
   Breadcrumb,
+  Button,
   ButtonGroup,
   ButtonGroupItem,
   CommandDialog,
@@ -250,13 +255,22 @@ import {
   YLeafMapString,
   YPath,
   yPathMapKey,
-  YStringArray,
+  YStringArray
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
 
 // #endregion 🔖Imports
 
-// #region 🔖State Management
+function getToolbarGroupIcon(groupId: string): ReactNode {
+  if (groupId === "selection") return <FocusIcon size={16} />;
+  if (groupId === "filter") return <SearchIcon size={16} />;
+  if (groupId === "create") return <LayoutIcon size={16} />;
+  if (groupId === "view") return <DocumentIcon size={16} />;
+  if (groupId === "actions") return <FeedbackIcon size={16} />;
+  return <FocusIcon size={16} />;
+}
+
+// #region Store
 
 // #region 🔖Store
 
@@ -860,7 +874,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 
   onChangedDeep(callback: () => void): Disposable {
     this.listeners.add(callback);
-    return { dispose: () => this.listeners.delete(callback) };
+    return () => this.listeners.delete(callback);
   }
 
   onFieldChanged(key: string, subscribe: Subscribe, _deep?: boolean): Disposable {
@@ -7681,6 +7695,7 @@ export interface KitAppState {
   panelVisibility: PanelVisibility;
   selection?: KitAppSelection;
   hover?: any;
+  activeTool?: ToolKind;
   fullscreenWindow: KitAppFullscreenWindow;
   others: any[];
   filterSearch?: string;
@@ -7688,6 +7703,7 @@ export interface KitAppState {
   sortColumn?: string;
   sortDirection?: "asc" | "desc";
   diagramForce?: DiagramForceSettings;
+  windowLayout?: any;
 
   transaction: AppTransactionState;
 }
@@ -8118,6 +8134,7 @@ export function createDefaultKitAppState(): KitAppState {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
     selection: undefined,
     hover: undefined,
+    activeTool: ToolKind.SELECTION_NORMAL,
     fullscreenWindow: KitAppFullscreenWindow.None,
     others: [],
     filterSearch: undefined,
@@ -12430,7 +12447,7 @@ export const devCommands = {
 
 // #endregion 🔖Commands
 
-// #endregion 🔖State Management
+// #endregion 🔖Apps
 
 // #region 🔖Apps Registry
 
@@ -15237,6 +15254,7 @@ const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   return wrapped;
 };
 
+
 const LayoutWrapper: FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -15601,6 +15619,57 @@ const LayoutWrapper: FC = () => {
 
   const [activeDragId, setActiveDragId] = useState<string | null>(null);
   const [activeDragData, setActiveDragData] = useState<any>(null);
+  const [activeToolbarGroup, setActiveToolbarGroup] = useState<string | null>(null);
+
+
+
+  const toolbarGroups = useMemo(() => {
+    const groups: Record<string, PanelSection[]> = {};
+    toolbarSections.forEach((section) => {
+      const gid = section.toolbarGroup?.id;
+      if (gid) {
+        if (!groups[gid]) groups[gid] = [];
+        groups[gid].push(section);
+      }
+    });
+
+    Object.keys(groups).forEach(key => {
+        groups[key].sort((a,b) => (a.toolbarGroup?.order ?? 0) - (b.toolbarGroup?.order ?? 0));
+    });
+    return groups;
+  }, [toolbarSections]);
+
+  const toggleToolbarGroup = useCallback((id: string) => {
+    setActiveToolbarGroup(prev => {
+        return prev === id ? null : id;
+    });
+  }, []);
+
+  const [activeSubToolByGroup, setActiveSubToolByGroup] = useState<Record<string, string>>({});
+
+  const setSubTool = useCallback((groupId: string, subToolId: string) => {
+    setActiveSubToolByGroup((prev) => ({ ...prev, [groupId]: subToolId }));
+    setActiveToolbarGroup(groupId);
+  }, []);
+
+  const getGroupIcon = useCallback((groupId: string) => {
+    switch (groupId) {
+      case "hand":
+        return <HandIcon className="size-tiny" />;
+      case "selection":
+        return <MousePointerIcon className="size-tiny" />;
+      case "filter":
+        return <SearchIcon className="size-tiny" />;
+      case "create":
+        return <AddIcon className="size-tiny" />;
+      case "view":
+        return <LayoutIcon className="size-tiny" />;
+      case "actions":
+        return <MoreHorizontalIcon className="size-tiny" />;
+      default:
+        return <FocusIcon className="size-tiny" />;
+    }
+  }, []);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -15646,7 +15715,6 @@ const LayoutWrapper: FC = () => {
     }
     return null;
   }, [activeDragData, kitShallows]);
-
   return (
     <TutorialProvider store={tutorialStore}>
       <GlobalFooterItems />
@@ -15768,18 +15836,92 @@ const LayoutWrapper: FC = () => {
                 : undefined
             }
             toolbar={
-              panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" ? (
+              panelVisibility.toolbar ||
+              appType === "type" ||
+              appType === "design" ||
+              appType === "feedback" ||
+              appType === "kit" ||
+              appType === "home" ||
+              appType === "quality" ||
+              appType === "docs" ? (
                 toolbarSections.length > 0 ? (
-                  <div id="semio.sketchpad.toolbar" className="flex items-center justify-center pointer-events-auto">
-                    <LevelProvider level="panel">
-                      <div className="bg-panel flex items-center gap-single border p-single">
-                        <ToolbarScopeWrapper>
-                          {toolbarSections.map((section) => (
-                            <div key={section.id}>{typeof section.content === "function" ? section.content() : section.content}</div>
-                          ))}
-                        </ToolbarScopeWrapper>
-                      </div>
-                    </LevelProvider>
+                  <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 flex justify-center pointer-events-none h-[40px] px-2">
+                    <div className="flex gap-single items-center pointer-events-auto max-w-[calc(100vw-2rem)] overflow-hidden shrink-0">
+                      <LevelProvider level="panel">
+                        <div className="bg-panel flex shrink-0 items-center gap-single border rounded-md px-single h-full shadow-sm overflow-hidden">
+                          {["hand", "selection", "filter", "create", "view", "actions"].map((groupId) => {
+                            if (!toolbarGroups[groupId]) return null;
+                            const isActive = activeToolbarGroup === groupId;
+
+                            if (groupId === "selection") {
+                              const activeSubToolId = activeSubToolByGroup[groupId] || toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
+                              const uniqueSubTools = Array.from(new Set(toolbarGroups[groupId].map((s) => s.toolbarGroup?.subToolId).filter(Boolean))) as string[];
+
+                              return (
+                                <Toggle
+                                  key={groupId}
+                                  kind="dropdown"
+                                  id={`semio.sketchpad.toolbar.group.${groupId}`}
+                                  value={activeSubToolId}
+                                  pressed={isActive}
+                                  onPressedChange={(pressed) => {
+                                    setActiveToolbarGroup(pressed ? groupId : null)
+                                  }}
+                                  onValueChange={(val) => val && setSubTool(groupId, val)}
+                                  dropdownSide="top"
+                                  dropdownAlign="end"
+                                  dropdownSideOffset={2}
+                                  dropdownAvoidCollisions={false}
+                                  dropdownInstant={true}
+                                  dropdownContentClassName="w-[10.5rem] min-w-[10.5rem] p-0 overflow-hidden border transition-none"
+                                  items={uniqueSubTools.map((subToolId) => {
+                                    const section = toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId === subToolId);
+                                    return {
+                                      value: subToolId,
+                                      label: section?.toolbarGroup?.subToolIcon || <FocusIcon className="size-tiny" />,
+                                      text: section?.toolbarGroup?.subToolLabelId ? i18n.t(section.toolbarGroup.subToolLabelId) : subToolId,
+                                      id: `semio.sketchpad.toolbar.subtool.${subToolId}`,
+                                    };
+                                  })}
+                                />
+                              );
+                            }
+
+                            return (
+                              <Toggle
+                                key={groupId}
+                                kind="single"
+                                id={`semio.sketchpad.toolbar.group.${groupId}`}
+                                pressed={isActive}
+                                onPressedChange={() => toggleToolbarGroup(groupId)}
+                                icon={getGroupIcon(groupId)}
+                                text={i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`)}
+                              />
+                            );
+                          })}
+                        </div>
+                      </LevelProvider>
+
+                      {activeToolbarGroup && toolbarGroups[activeToolbarGroup] && (
+                        <LevelProvider level="panel">
+                          <div className="bg-panel flex-1 flex flex-nowrap items-center gap-single border rounded-md px-single h-full shadow-sm overflow-hidden min-w-0">
+                            <ToolbarScopeWrapper>
+                              {toolbarGroups[activeToolbarGroup]?.map((section) => {
+                                if (activeToolbarGroup === "selection") {
+                                  const activeSubToolId = activeSubToolByGroup["selection"] || toolbarGroups["selection"].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
+                                  if (section.toolbarGroup?.subToolId !== activeSubToolId) return null;
+                                }
+                                return (
+                                  <div key={section.id} className="shrink-0 flex items-center min-w-0">
+                                    {typeof section.content === "function" ? section.content() : section.content}
+                                  </div>
+                                );
+                              })}
+                            </ToolbarScopeWrapper>
+                          </div>
+                        </LevelProvider>
+                      )}
+                    </div>
                   </div>
                 ) : (
                   <div id="semio.sketchpad.toolbar" className="hidden" />
@@ -15907,4 +16049,4 @@ export { SectionSpecificity, Window } from "./elements";
 export { Sketchpad };
 export default Sketchpad;
 
-// #endregion 🔖Apps
+// #endregion 🔖Store

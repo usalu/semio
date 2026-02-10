@@ -364,24 +364,57 @@
       "preLaunchTask": "semio/js dev",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:6006",
-      "webRoot": "${workspaceRoot}/js/semio"
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev",
+        "@semio/js"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:6006)",
+        "uriFormat": "%s"
+      }
     },
     {
       "name": "semio/js dev:storybook",
       "preLaunchTask": "semio/js dev:storybook",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:6006",
-      "webRoot": "${workspaceRoot}/js/semio"
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev:storybook",
+        "@semio/js"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:6006)",
+        "uriFormat": "%s"
+      }
     },
     {
       "name": "semio/js dev:sketchpad",
       "preLaunchTask": "semio/js dev:sketchpad",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:3000",
-      "webRoot": "${workspaceRoot}/js/semio"
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev:sketchpad",
+        "@semio/js"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:5173)",
+        "uriFormat": "%s"
+      }
     },
     {
       "name": "semio/js test",
@@ -469,8 +502,19 @@
       "preLaunchTask": "semio/docs dev",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:4321",
-      "webRoot": "${workspaceRoot}/js/docs"
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev",
+        "@semio/docs"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:4321)",
+        "uriFormat": "%s"
+      }
     },
     {
       "name": "semio/docs build",
@@ -519,8 +563,19 @@
       "preLaunchTask": "semio/play dev",
       "type": "chrome",
       "request": "launch",
-      "url": "http://localhost:4000",
-      "webRoot": "${workspaceRoot}/js/play"
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "nx",
+        "dev",
+        "@semio/play"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "(http://localhost:4000)",
+        "uriFormat": "%s"
+      }
     },
     {
       "name": "semio/play build",

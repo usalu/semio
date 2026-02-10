@@ -21,7 +21,7 @@ def load_kit(filename: str) -> dict:
             if key not in data or data[key] is None:
                 data[key] = []
     
-    # Cleanup references to IDs
+
     for collection in ["types", "designs", "folders"]:
         if collection in data:
             for item in data[collection]:
@@ -34,17 +34,17 @@ def load_kit(filename: str) -> dict:
         for t in data["types"]:
             if "models" in t:
                 for m in t["models"]:
-                    # Normalize file
+
                     if "file" in m and isinstance(m["file"], dict) and "guid" in m["file"]:
                         m["file"] = m["file"]["guid"]
                     if "file" not in m or m["file"] is None:
                          m["file"] = ""
                          
-                    # Normalize url
+
                     if "url" not in m or m["url"] is None:
                         m["url"] = ""
 
-                    # Normalize tags
+
                     if "tags" in m and isinstance(m["tags"], list):
                         new_tags = []
                         for tag in m["tags"]:
@@ -97,12 +97,12 @@ def main():
     
     kit_invalid_obj = Kit.parse(kit_invalid)
     
-    # 1. Roundtrip/Metabolism
+
     def test_roundtrip():
         from semio import import_kit, export_kit
-        # Zip -> Memory
+
         kit, files = import_kit(os.path.join(ASSETS_DIR, "metabolism.zip"))
-        # Memory -> Zip (to temp file)
+
         export_kit(kit, files, "temp_benchmark_metabolism.zip")
         if os.path.exists("temp_benchmark_metabolism.zip"):
             os.remove("temp_benchmark_metabolism.zip")
@@ -110,7 +110,7 @@ def main():
     bench("Roundtrip/Metabolism", test_roundtrip)
 
 
-    # 2. Diff/Metabolism
+
     diff_forward = load_json("diff_kit_metabolism.json")
     diff_inverse = load_json("diff_kit_metabolism_inverted.json")
     
@@ -120,48 +120,48 @@ def main():
         
     bench("Diff/Metabolism", test_diff_metabolism)
     
-    # 3. Flatten Design/Nakagin Capsule Tower
+
     d1 = find_design(kit_metabolism, "Nakagin Capsule Tower")
     def test_flatten_nakagin():
         flattenDesignDict(kit_metabolism, d1["guid"])
         
     bench("Flatten Design/Nakagin Capsule Tower", test_flatten_nakagin)
     
-    # 4. Flatten Design/Nakagin Capsule Tower/Slanted
+
     d2 = find_design(kit_metabolism, "Slanted", "Nakagin Capsule Tower")
     def test_flatten_nakagin_slanted():
         flattenDesignDict(kit_metabolism, d2["guid"])
         
     bench("Flatten Design/Nakagin Capsule Tower/Slanted", test_flatten_nakagin_slanted)
 
-    # 5. Flatten Design/Nakagin Capsule Tower/Twisted
+
     d3 = find_design(kit_metabolism, "Twisted", "Nakagin Capsule Tower")
     def test_flatten_nakagin_twisted():
         flattenDesignDict(kit_metabolism, d3["guid"])
         
     bench("Flatten Design/Nakagin Capsule Tower/Twisted", test_flatten_nakagin_twisted)
 
-    # 6. Flatten Design/Nakagin Capsule Tower/Dancing
+
     d4 = find_design(kit_metabolism, "Dancing", "Nakagin Capsule Tower")
     def test_flatten_nakagin_dancing():
         flattenDesignDict(kit_metabolism, d4["guid"])
         
     bench("Flatten Design/Nakagin Capsule Tower/Dancing", test_flatten_nakagin_dancing)
 
-    # 7. Flatten Design/Capsule Dream
+
     d5 = find_design(kit_metabolism, "Capsule Dream")
     def test_flatten_capsule_dream():
         flattenDesignDict(kit_metabolism, d5["guid"])
         
     bench("Flatten Design/Capsule Dream", test_flatten_capsule_dream)
     
-    # 8. Validation/Invalid Kit
+
     def test_validate_invalid():
         validateKit(kit_invalid_obj)
         
     bench("Validation/Invalid Kit", test_validate_invalid)
     
-    # 9. Validation/Metabolism
+
     def test_validate_metabolism():
         validateKit(kit_obj)
         

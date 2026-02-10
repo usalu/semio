@@ -101,7 +101,8 @@ The folders and files are listed like this: [PATH] [DISKNAME]? # [NAME | SHORTNA
 │ ├── constraints
 │ │ └── repo.mdc # \*_/_.\*
 ├── .vscode
-│ ├── launch.json # Lifecycle-ordered per-package launch configs with dev/test/build/publish variants
+│ ├── launch.json # Lifecycle-ordered per-package launch configs with attach-free node dev launches and serverReadyAction URL opening
+│ ├── settings.json # Workspace Playwright settings including headless debug defaults
 │ ├── tasks.json # Per-package task catalog for dev, test variants, build, publish flows
 │ └── extensions.json
 ├── .github
@@ -527,3 +528,42 @@ Use this hierarchy for code organization (order of appearance of regions, classe
 13. Image
 14. Description
 15. Attributes
+
+## js/semio/sketchpad/
+
+- Toolbar rendering is centralized in `Sketchpad.tsx` and composes app-provided toolbar data through panel sections.
+- `PanelSection` exposes `toolbarGroup` metadata with `id`, `labelId`, and `order` for toolbar-specific parent clustering.
+- `PanelSection.toolbarPlaceholder` marks empty app toolbar registrations so shared toolbar orchestration can keep app-level registration parity while skipping placeholder sections during tree grouping.
+- `Sketchpad.tsx` derives canonical `ToolbarRootNode` / `ToolbarSubtoolNode` structures (Selection, Filter, Create, View, Actions) and renders one fixed bottom-center flat toolbar band with a center-split Tool Zone and Tool Setting Bar.
+- Toolbar root ordering uses `toolbarGroup.order` with fallback canonical order.
+- Toolbar selection state is stored as app-scoped `toolbarPathByApp` (`rootId`, `subtoolId`) and normalized per app via default-root resolution and subtool validation effects.
+- Dropdown open state is controlled per app through `toolbarOpenRootByApp` so only one category dropdown is open at a time and root/subtool selection collapses all branches.
+- App modules (`Home.tsx`, `Kit.tsx`, `Design.tsx`, `Type.tsx`, `Feedback.tsx`) map their controls into shared parent groups and expose app-specific tooltree nodes.
+- Apps with no active controls (`Docs.tsx`, `Quality.tsx`) still register empty toolbar branches so shared layout and ordering logic remain stable.
+- Toolbar category toggles use `Toggle` dropdown mode with upward-only placement, collision flipping disabled, and instant (no-motion) dropdown rendering.
+- Only Selection uses toolbar dropdown mode; Filter/Create/View/Actions render as direct named icon+label toolbar toggles.
+- Toolbar layout keeps a center-origin split with left-growing tool controls and right-growing Tool Setting Bar content on the same visual surface without full-width stretching.
+- Toolbar rendering uses fixed-width rectangular tool buttons, right-aligned Tool Zone anchoring, and static layout state so dropdown selection and Tool Setting Bar swaps remain instant without motion effects.
+- Toolbar containers clamp overflow with no scrollbars so borders remain clean while wide tool sets are clipped.
+- Selection subtool dropdowns are anchored to the triggering control and open upward with deterministic top alignment and collision avoidance disabled.
+- Design toolbar selection subtools register `select` and `hand`; Sketchpad renders them as the Selection dropdown rows while Design selection-mode controls remain in the Tool Setting Bar.
+- Tool Setting Bar control rows are rendered as direct named `Toggle`/`Button` controls without static title/group label elements.
+- Selection-mode tool families in Design/Type rely on tool definitions and group mode switching; filter/create families in Home/Kit rely on toggle + action semantics.
+- Filter branches expose explicit reset behavior and selected-state indicators while preserving URL/query synchronization where applicable; create branches use dedicated action sets.
+- Toolbar adaptation draft specifications are stored in `.semio-repo/drafts/Toolbar.md` for cross-agent alignment before implementation passes.
+- `Sketchpad.tsx` renders one app-panel toggle strip in the navbar from panel definitions, uses panel icon metadata for icon/hover feedback, filters Design toggles to the legacy set, and routes all clicks through per-app toggle handlers.
+- `kitSelectionHelpers.ts` defines kit diagram shape strategies, the node-kind strategy registry, geometry normalization/vector utilities, and snap-point anchor-pair/proximity resolution.
+- `Kit.tsx` renders node visuals from strategy payloads and routes floating edges plus connection preview anchors through shared snap-point resolution with side-to-ReactFlow position mapping.
+- `Kit.tsx` enables React Flow element selection/focus on the diagram canvas so diagram click/lasso selection emits `onSelectionChange` updates into `KIT.SET_SELECTION`.
+- `Kit.tsx`, `Design.tsx`, and `Type.tsx` consume a shared compatibility-family port color strategy for port avatars, handle markers, and connector scene visuals.
+- Compatibility-family grouping merges explicitly compatible ports; ports without compatibility edges keep their own deterministic identity color.
+- `Design.tsx` routes cluster/expand actions through design app commands and maps clustered-design edges using `designPiece` GUIDs with deterministic connector indices.
+- `Design.tsx` and `Sketchpad.tsx` default Design app panel visibility to show the Details panel on entry.
+
+## js/semio/sketchpad/portColor.ts
+
+- Exports deterministic port tone resolution keyed by compatibility-family grouping, connector-port guid extraction helpers, and compatibility-state classification for selected-versus-target port interactions.
+
+## js/semio/semio.ts
+
+- Cluster helpers create nested designs, rewrite external connections with `designPiece` GUID markers, and expose included-design metadata keyed by design GUIDs.

@@ -1,8 +1,6 @@
-/// <reference types="vite/client" />
-/// <reference types="vitest/globals" />
 // #region 🔖Header
 
-// 💻 semio/js/vite-env.d.ts
+// 💻semio/js/vite-env.d.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -20,7 +18,6 @@
 
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 
 // #endregion 🔖License
 

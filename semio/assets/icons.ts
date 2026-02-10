@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/assets/icons.ts
+// 💻semio/assets/icons.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -67,7 +67,9 @@ export {
   Home as HomeIcon,
   Layers as HudIcon,
   PanelTop as HudPanelIcon,
-  Info as InfoIcon, Layout as LayoutIcon,
+  Info as InfoIcon,
+  Intersect as IntersectIcon,
+  Layout as LayoutIcon,
   PanelLeft as LeftSidePanelIcon,
   Lightbulb as LightbulbIcon,
   Loader2 as LoaderIcon,

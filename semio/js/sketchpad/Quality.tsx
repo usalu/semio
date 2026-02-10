@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/sketchpad/Quality.tsx
+// 💻semio/js/sketchpad/Quality.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -1755,6 +1755,39 @@ const App: FC<AppProps> = () => {
 
     return () => {
       removeSection("details", "semio.sketchpad.app.quality.title");
+    };
+  }, [appType, addSection, removeSection]);
+
+  useEffect(() => {
+    if (appType !== "quality") return;
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.quality.toolbar.view",
+      specificity: 20,
+      order: 0,
+      toolbarGroup: {
+        id: "view",
+        labelId: "semio.sketchpad.toolbar.parent.view",
+        order: 40,
+      },
+      content: () => null,
+    });
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.quality.toolbar.actions",
+      specificity: 20,
+      order: 0,
+      toolbarGroup: {
+        id: "actions",
+        labelId: "semio.sketchpad.toolbar.parent.actions",
+        order: 50,
+      },
+      content: () => null,
+    });
+
+    return () => {
+      removeSection("toolbar", "semio.sketchpad.app.quality.toolbar.view");
+      removeSection("toolbar", "semio.sketchpad.app.quality.toolbar.actions");
     };
   }, [appType, addSection, removeSection]);
 

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// ⚙️︎ semio/js/postcss.config.ts
+// ⚙️semio/js/postcss.config.ts
 
 // 2025 Ueli Saluz
 

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/desktop/preload.ts
+// 💻semio/desktop/preload.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

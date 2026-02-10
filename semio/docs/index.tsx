@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/docs/index.tsx
+// 💻semio/docs/index.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

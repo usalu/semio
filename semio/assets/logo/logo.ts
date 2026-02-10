@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // #region 🔖Header
 
-// 💻 semio/assets/logo/logo.ts
+// 📜semio/assets/logo/logo.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

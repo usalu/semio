@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// 🧪︎ semio/engine/test.ts
+// 🧪semio/engine/test.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// 💻 semio/engine/generate-schemas.ts
+// 📜semio/engine/generate-schemas.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// ⚙️︎ semio/js/eslint.config.ts
+// ⚙️semio/js/eslint.config.ts
 
 // 2025 Ueli Saluz
 

@@ -1,5 +1,3 @@
-// SPDX-License-Identifier: LGPL-3.0-only
-// Copyright (c) 2025 Ueli Saluz and semio contributors
 
 package semio
 

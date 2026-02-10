@@ -1,0 +1,3 @@
+- Inspect Playwright config and VS Code launch/debug setup for headed vs headless behavior.
+- Add/update debug configuration to use headless or Xvfb-compatible launch in devcontainer.
+- Document the debugging setup and decision in README.md and AGENTS.md.

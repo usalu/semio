@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/sketchpad/Docs.tsx
+// 💻semio/js/sketchpad/Docs.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -1237,11 +1237,20 @@ const App: FC = () => {
       content: SettingsWrapper,
     });
 
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.docs.toolbar.empty",
+      specificity: 20,
+      order: 0,
+      toolbarPlaceholder: true,
+      content: () => null,
+    });
+
     return () => {
       removeSection("workbench", "semio.sketchpad.app.docs.docs");
       removeSection("workbench", "semio.sketchpad.app.docs.overview");
       removeSection("details", "semio.sketchpad.app.docs.page");
       removeSection("settings", "semio.sketchpad.app.docs.settings");
+      removeSection("toolbar", "semio.sketchpad.app.docs.toolbar.empty");
     };
   }, [appType, addSection, removeSection]);
 

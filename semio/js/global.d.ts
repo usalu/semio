@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/global.d.ts
+// 💻semio/js/global.d.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/sketchpad/Type.tsx
+// 💻semio/js/sketchpad/Type.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -2918,28 +2918,36 @@ export const SelectionSubtractiveTool: Tool<TypeAppState> = {
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
 
-export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, ConnectorTool];
+export const TypeSelectSettings: FC = () => {
+  const kitScope = useKitScope();
+  const typeScope = useTypeScope();
+  const kit = kitScope?.guid;
+  const type = typeScope?.guid;
+  const [activeTool, , canSetActiveTool] = useTypeAppActiveTool();
+  const [setActiveTool] = useTypeAppSetActiveTool();
 
-const getTypeTools = (): ToolDefinition[] => [
-  {
-    id: "selection",
-    defaultMode: ToolKind.SELECTION_NORMAL,
-    modes: TypeAppTools.filter((tool) => tool.id.startsWith("selection")).map((tool) => ({
-      id: tool.id,
-      icon: tool.icon,
-    })),
-  },
-  {
-    id: "connector",
-    defaultMode: ToolKind.CONNECTOR,
-    modes: TypeAppTools.filter((tool) => tool.id === ToolKind.CONNECTOR).map((tool) => ({
-      id: tool.id,
-      icon: tool.icon,
-    })),
-  },
-];
+  const labelNormal = useLabel("semio.sketchpad.app.type.tools.select.normal");
+  const labelAdditive = useLabel("semio.sketchpad.app.type.tools.select.additive");
+  const labelSubtractive = useLabel("semio.sketchpad.app.type.tools.select.subtractive");
 
-export const ToolsToggleGroup: FC = () => {
+  if (!kit || !type || !canSetActiveTool) return null;
+
+  const modes = [
+    { id: ToolKind.SELECTION_NORMAL, icon: <SelectToolIcon className="size-tiny" />, text: labelNormal },
+    { id: ToolKind.SELECTION_ADDITIVE, icon: <AddIcon className="size-tiny" />, text: labelAdditive },
+    { id: ToolKind.SELECTION_SUBTRACTIVE, icon: <RemoveIcon className="size-tiny" />, text: labelSubtractive },
+  ];
+
+  return (
+    <div className="flex shrink-0 gap-single h-full items-center px-single">
+      {modes.map((mode) => (
+        <Toggle key={mode.id} id={mode.id} pressed={activeTool === mode.id} onPressedChange={() => setActiveTool && setActiveTool(mode.id as ToolKind)} icon={mode.icon} text={mode.text} />
+      ))}
+    </div>
+  );
+};
+
+export const TypeConnectorSettings: FC = () => {
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
   const kit = kitScope?.guid;
@@ -2949,10 +2957,18 @@ export const ToolsToggleGroup: FC = () => {
 
   if (!kit || !type || !canSetActiveTool) return null;
 
-  return <ToolGroup tools={getTypeTools()} activeTool={activeTool} onToolChange={(tool) => setActiveTool && setActiveTool(tool as ToolKind)} />;
+  const isActive = activeTool === ToolKind.CONNECTOR;
+
+  return (
+    <div className="flex shrink-0 gap-single h-full items-center px-single">
+      <Toggle id={ToolKind.CONNECTOR} pressed={isActive} onPressedChange={() => setActiveTool && setActiveTool(ToolKind.CONNECTOR)} icon={<ConnectorIcon className="size-tiny" />} text="Connector" />
+    </div>
+  );
 };
 
-// #endregion 🔖Tools
+export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, ConnectorTool];
+
+// #endregion Tools
 
 // #region 🔖App
 
@@ -3222,14 +3238,38 @@ const TypeApp: FC = () => {
     if (appType !== "type") return;
 
     addSection("toolbar", {
-      id: "semio.sketchpad.app.type.tools",
+      id: "semio.sketchpad.app.type.tools.selection",
       specificity: 20,
       order: 0,
-      content: <ToolsToggleGroup />,
+      toolbarGroup: {
+        id: "selection",
+        labelId: "semio.sketchpad.toolbar.parent.selection",
+        order: 10,
+        subToolId: ToolKind.SELECTION_NORMAL,
+        subToolLabelId: "semio.sketchpad.toolbar.subtool.selection",
+        subToolIcon: <SelectToolIcon className="size-tiny" />,
+      },
+      content: <TypeSelectSettings />,
+    });
+
+    addSection("toolbar", {
+      id: "semio.sketchpad.app.type.tools.connector",
+      specificity: 20,
+      order: 10,
+      toolbarGroup: {
+        id: "create",
+        labelId: "semio.sketchpad.toolbar.parent.create",
+        order: 10,
+        subToolId: ToolKind.CONNECTOR,
+        subToolLabelId: "semio.sketchpad.toolbar.subtool.connector",
+        subToolIcon: <ConnectorIcon className="size-tiny" />,
+      },
+      content: <TypeConnectorSettings />,
     });
 
     return () => {
-      removeSection("toolbar", "semio.sketchpad.app.type.tools");
+      removeSection("toolbar", "semio.sketchpad.app.type.tools.selection");
+      removeSection("toolbar", "semio.sketchpad.app.type.tools.connector");
     };
   }, [appType, addSection, removeSection]);
 

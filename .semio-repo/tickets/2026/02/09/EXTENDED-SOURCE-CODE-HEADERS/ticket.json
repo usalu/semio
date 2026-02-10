@@ -84,7 +84,7 @@
           "renamed": [],
           "modified": [
             {
-              "path": "⚙️︎semio-repo/vscode/eslint.config.ts",
+              "path": "⚙️️︎semio-repo/vscode/eslint.config.ts",
               "lines": {
                 "added": 9,
                 "removed": 1
@@ -381,7 +381,7 @@
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
               "to": "README.md#♻ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
               "lines": {
                 "added": 6,
@@ -437,15 +437,15 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
-              "to": "README.md#⚖ License",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
+              "to": "README.md#⚖️ License",
               "lines": {
                 "added": 14,
                 "removed": 14
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
               "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
               "lines": {
                 "added": 10,
@@ -461,7 +461,7 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
               "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)",
               "lines": {
                 "added": 2,
@@ -469,7 +469,7 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
               "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)",
               "lines": {
                 "added": 2,
@@ -510,7 +510,7 @@
             },
             {
               "from": "README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#⚙️ Prop [↑](#-specs-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -525,16 +525,16 @@
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷 Attribute [↑](#-specs-)",
+              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
               "lines": {
                 "added": 25,
                 "removed": 25
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷 Concept [↑](#-specs-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#⌨️️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -542,15 +542,15 @@
             },
             {
               "from": "README.md#📦 Bundles [↑](#-overview)#🎛️ [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
-              "to": "README.md#📄 Specs [↑](#-overview)#🏷 Tag [↑](#-specs-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
               "lines": {
                 "added": 85,
                 "removed": 85
@@ -558,15 +558,15 @@
             },
             {
               "from": "README.md#🛍️ Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5529)",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
               "lines": {
                 "added": 8,
                 "removed": 8
@@ -581,7 +581,7 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
               "to": "README.md#📦 Bundles [↑](#-overview)#🎛 [semio/play](https://github.com/usalu/semio/tree/main/semio/play) [↑](#-bundles-)",
               "lines": {
                 "added": 4,
@@ -597,8 +597,8 @@
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🏷️ Artifact Kind Derivation [↑](#-bundles-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🏷 Artifact Kind Derivation [↑](#-bundles-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🏷️️ Artifact Kind Derivation [↑](#-bundles-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🏷️ Artifact Kind Derivation [↑](#-bundles-)",
               "lines": {
                 "added": 51,
                 "removed": 51
@@ -613,15 +613,15 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
-              "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷 [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
+              "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
               "lines": {
                 "added": 7,
                 "removed": 7
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)",
               "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#👁 [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)",
               "lines": {
                 "added": 12,
@@ -629,7 +629,7 @@
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
               "to": "README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)",
               "lines": {
                 "added": 8,
@@ -645,7 +645,7 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
               "to": "README.md#📦 Bundles [↑](#-overview)#🛰 Repo Dev Server [↑](#-bundles-)",
               "lines": {
                 "added": 7,
@@ -661,7 +661,7 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️️ [Cursor](.cursor) [↑](#-ai-)",
               "to": "README.md#🛍 Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
               "lines": {
                 "added": 17,
@@ -685,7 +685,7 @@
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
               "to": "README.md#🛍 Products [↑](#-overview)#🐝 semio.wasp [↑](#%EF%B8%8F-products-)",
               "lines": {
                 "added": 6,
@@ -693,7 +693,7 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
               "to": "README.md#🛍 Products [↑](#-overview)#🐞 semio.ladybug [↑](#%EF%B8%8F-products-)",
               "lines": {
                 "added": 4,
@@ -709,7 +709,7 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
               "to": "README.md#🛍 Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
               "lines": {
                 "added": 6,
@@ -725,7 +725,7 @@
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
               "to": "README.md#🛍 Products [↑](#-overview)#🦏 semio.3dm [↑](#%EF%B8%8F-products-)",
               "lines": {
                 "added": 4,
@@ -741,48 +741,48 @@
               }
             },
             {
-              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
-              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖ Principles [↑](#-repo-)",
+              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️️ Principles [↑](#-repo-)",
+              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
               "lines": {
                 "added": 189,
                 "removed": 189
               }
             },
             {
-              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️ Tag [↑](#-gitstyle-)",
-              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷 Tag [↑](#-gitstyle-)",
+              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️️ Tag [↑](#-gitstyle-)",
+              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️ Tag [↑](#-gitstyle-)",
               "lines": {
                 "added": 7,
                 "removed": 7
               }
             },
             {
-              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
-              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️ Commit [↑](#-gitstyle-)",
+              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️️ Commit [↑](#-gitstyle-)",
+              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
               "lines": {
                 "added": 32,
                 "removed": 32
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
               "lines": {
                 "added": 96,
                 "removed": 96
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🔁 Refactoring [↑](#-uses-cases-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#🔁 Refactoring [↑](#-uses-cases-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
               "lines": {
                 "added": 12,
                 "removed": 12
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)#⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "from": "README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -790,15 +790,15 @@
             },
             {
               "from": "README.md#🛍️ Products [↑](#-overview)#🐞 semio.ladybug [↑](#%EF%B8%8F-products-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#⚖️ Decision Making [↑](#-uses-cases-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#⚖️️ Decision Making [↑](#-uses-cases-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)",
               "lines": {
                 "added": 8,
                 "removed": 8
@@ -806,31 +806,31 @@
             },
             {
               "from": "README.md#🛍️ Products [↑](#-overview)#🦌 semio.monoceros [↑](#%EF%B8%8F-products-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
               "lines": {
                 "added": 6,
                 "removed": 6
               }
             },
             {
-              "from": "README.md#⚖️ License",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
+              "from": "README.md#⚖️️ License",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
               "lines": {
                 "added": 14,
                 "removed": 14
               }
             },
             {
-              "from": "README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
+              "from": "README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
               "lines": {
                 "added": 4,
                 "removed": 4
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -838,23 +838,23 @@
             },
             {
               "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
               "lines": {
                 "added": 34,
                 "removed": 34
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈ [Copilot](.github/chatmodes) [↑](#-ai-)",
               "lines": {
                 "added": 11,
                 "removed": 11
@@ -862,7 +862,7 @@
             },
             {
               "from": "README.md#🛍️ Products [↑](#-overview)#🦏 semio.3dm [↑](#%EF%B8%8F-products-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -870,15 +870,15 @@
             },
             {
               "from": "README.md#🛍️ Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️ [Cursor](.cursor) [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
               "lines": {
                 "added": 17,
                 "removed": 17
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
               "lines": {
                 "added": 16,
                 "removed": 16
@@ -886,15 +886,15 @@
             },
             {
               "from": "README.md#📦 Bundles [↑](#-overview)#🛰️ Repo Dev Server [↑](#-bundles-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕ Reorderer [↑](#-agents-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕ Reorderer [↑](#-agents-)",
               "lines": {
                 "added": 7,
                 "removed": 7
               }
             },
             {
-              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
               "lines": {
                 "added": 7,
                 "removed": 7
@@ -902,15 +902,15 @@
             },
             {
               "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
               "lines": {
                 "added": 10,
                 "removed": 10
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
               "lines": {
                 "added": 2,
                 "removed": 2
@@ -918,23 +918,23 @@
             },
             {
               "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.3 Codex [↑](#-models-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.3 Codex [↑](#-models-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.3 Codex [↑](#-models-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.3 Codex [↑](#-models-)",
               "lines": {
                 "added": 2,
                 "removed": 2
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠 Uses-Cases [↑](#-ai-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)",
               "lines": {
                 "added": 36,
                 "removed": 36
@@ -942,15 +942,15 @@
             },
             {
               "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠 Uses-Cases [↑](#-ai-)#⚖ Decision Making [↑](#-uses-cases-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#⚖️ Decision Making [↑](#-uses-cases-)",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠 Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
               "lines": {
                 "added": 12,
                 "removed": 12
@@ -958,7 +958,7 @@
             },
             {
               "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#👁️ [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)",
-              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠 Uses-Cases [↑](#-ai-)#🔁 Refactoring [↑](#-uses-cases-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🔁 Refactoring [↑](#-uses-cases-)",
               "lines": {
                 "added": 12,
                 "removed": 12
@@ -1223,21 +1223,21 @@
           ],
           "modified": [
             {
-              "path": "⚙️︎semio-repo/vscode/eslint.config.ts#Header",
+              "path": "⚙️️︎semio-repo/vscode/eslint.config.ts#Header",
               "lines": {
                 "added": 3,
                 "removed": 1
               }
             },
             {
-              "path": "⚙️︎semio-repo/vscode/eslint.config.ts#Header#License",
+              "path": "⚙️️︎semio-repo/vscode/eslint.config.ts#Header#License",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "⚙️︎semio-repo/vscode/eslint.config.ts#Header#Specs",
+              "path": "⚙️️︎semio-repo/vscode/eslint.config.ts#Header#Specs",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1965,14 +1965,14 @@
               }
             },
             {
-              "path": "📃︎README.md#⚖ License",
+              "path": "📃︎README.md#⚖️ License",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#⚖️ License",
+              "path": "📃︎README.md#⚖️️ License",
               "lines": {
                 "added": 0,
                 "removed": 1
@@ -2077,14 +2077,14 @@
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️ Prop [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#⚙️️️ Prop [↑](#-specs-)",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -2105,42 +2105,42 @@
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷 Attribute [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷 Concept [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷 Tag [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Attribute [↑](#-specs-)",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Concept [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Concept [↑](#-specs-)",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️ Tag [↑](#-specs-)",
+              "path": "📃︎README.md#📄 Specs [↑](#-overview)#🏷️️ Tag [↑](#-specs-)",
               "lines": {
                 "added": 0,
                 "removed": 1
@@ -2168,28 +2168,28 @@
               }
             },
             {
-              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#⚙️️️ [semio/engine](https://github.com/usalu/semio/tree/main/semio/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/semio/engine/engine.py#L5095)",
               "lines": {
                 "added": 0,
                 "removed": 1
@@ -2245,14 +2245,14 @@
               }
             },
             {
-              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🏷 Artifact Kind Derivation [↑](#-bundles-)",
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🏷️ Artifact Kind Derivation [↑](#-bundles-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🏷️ Artifact Kind Derivation [↑](#-bundles-)",
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🏷️️ Artifact Kind Derivation [↑](#-bundles-)",
               "lines": {
                 "added": 0,
                 "removed": 1
@@ -2266,7 +2266,7 @@
               }
             },
             {
-              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷 [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍 [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2294,7 +2294,7 @@
               }
             },
             {
-              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "path": "📃︎README.md#📦 Bundles [↑](#-overview)#🛍️ [semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -2399,14 +2399,14 @@
               }
             },
             {
-              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖ Principles [↑](#-repo-)",
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
               "lines": {
                 "added": 14,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️️ Principles [↑](#-repo-)",
               "lines": {
                 "added": 0,
                 "removed": 14
@@ -2420,14 +2420,14 @@
               }
             },
             {
-              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷 Tag [↑](#-gitstyle-)",
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️ Tag [↑](#-gitstyle-)",
               "lines": {
                 "added": 2,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️ Tag [↑](#-gitstyle-)",
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️️ Tag [↑](#-gitstyle-)",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -2441,14 +2441,14 @@
               }
             },
             {
-              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️ Commit [↑](#-gitstyle-)",
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
+              "path": "📃︎README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️️ Commit [↑](#-gitstyle-)",
               "lines": {
                 "added": 0,
                 "removed": 4
@@ -2476,154 +2476,154 @@
               }
             },
             {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)#⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈ [Copilot](.github/chatmodes) [↑](#-ai-)",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️ [Cursor](.cursor) [↑](#-ai-)",
-              "lines": {
-                "added": 2,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕ Reorderer [↑](#-agents-)",
-              "lines": {
-                "added": 1,
-                "removed": 0
-              }
-            },
-            {
               "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
               "lines": {
-                "added": 0,
-                "removed": 1
+                "added": 1,
+                "removed": 0
               }
             },
             {
               "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
               "lines": {
-                "added": 0,
-                "removed": 1
+                "added": 1,
+                "removed": 0
               }
             },
             {
               "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
-              "lines": {
-                "added": 0,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
-              "lines": {
-                "added": 0,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
-              "lines": {
-                "added": 0,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
-              "lines": {
-                "added": 0,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
-              "lines": {
-                "added": 0,
-                "removed": 2
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
-              "lines": {
-                "added": 0,
-                "removed": 1
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠 Uses-Cases [↑](#-ai-)",
-              "lines": {
-                "added": 2,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠 Uses-Cases [↑](#-ai-)#⚖ Decision Making [↑](#-uses-cases-)",
-              "lines": {
-                "added": 2,
-                "removed": 0
-              }
-            },
-            {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠 Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)",
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#⌨️️️ CLI [↑](#-tools-)#⌨️️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️️ [Cursor](.cursor) [↑](#-ai-)",
               "lines": {
                 "added": 0,
                 "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
               }
             },
             {
               "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#⚖️ Decision Making [↑](#-uses-cases-)",
               "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)",
+              "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#⚖️️ Decision Making [↑](#-uses-cases-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃︎README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
               "lines": {
                 "added": 0,
                 "removed": 1

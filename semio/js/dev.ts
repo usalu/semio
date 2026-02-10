@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/dev.ts
+// 💻semio/js/dev.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -9,10 +9,7 @@ WORKSPACE="${containerWorkspaceFolder:-/workspaces/semio}"
 sudo chown -R vscode:vscode /home/vscode/.cache 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.claude 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codex 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.config/gh 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.config/cursor 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.config/antigravity 2>/dev/null || true
-sudo chown -R vscode:vscode /home/vscode/.config/openai 2>/dev/null || true
+sudo chown -R vscode:vscode /home/vscode/.config 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.codeium 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.vscode-server 2>/dev/null || true
 sudo chown -R vscode:vscode /home/vscode/.windsurf-server 2>/dev/null || true

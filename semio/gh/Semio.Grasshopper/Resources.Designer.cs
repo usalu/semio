@@ -1,6 +1,6 @@
 #region 🔖Header
 
-// 💻 semio/gh/Semio.Grasshopper/Resources.Designer.cs
+// 💻semio/gh/Semio.Grasshopper/Resources.Designer.cs
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

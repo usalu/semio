@@ -21,7 +21,6 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 
 	kit := &Kit{}
 
-	// Load Kit
 	row := db.QueryRow("SELECT guid, name, version, description, icon, image, preview, remote, homepage, license FROM kit LIMIT 1")
 	var version, description, icon, image, preview, remote, homepage, license sql.NullString
 	if err := row.Scan(&kit.Guid, &kit.Name, &version, &description, &icon, &image, &preview, &remote, &homepage, &license); err != nil {
@@ -36,21 +35,13 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 	if homepage.Valid { kit.Homepage = &homepage.String }
 	if license.Valid { kit.License = &license.String }
 
-	// Load dependent entities...
-	// This is going to be a lot of code to implement all loaders manually.
-    // I will implement the structure and a few entities to demonstrate, then iterate.
-    
-    // Types
     types, err := loadTypes(db, kit.Guid)
     if err != nil { return nil, err }
     kit.Types = types
 
-    // Designs
     designs, err := loadDesigns(db, kit.Guid)
     if err != nil { return nil, err }
     kit.Designs = designs
-
-    // ... other entities ...
 
 	return kit, nil
 }
@@ -250,7 +241,6 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
         return fmt.Errorf("failed to create schema: %w", err)
     }
 
-    // Disable foreign key checks for bulk insert (re-enable after)
     if _, err := db.Exec("PRAGMA foreign_keys = OFF"); err != nil {
         return fmt.Errorf("failed to disable foreign keys: %w", err)
     }
@@ -264,7 +254,7 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
     for _, t := range kit.Types {
         var parentGuid *string
         if t.Parent != nil { parentGuid = &t.Parent.Guid }
-        // Handle virtual field - default to false if nil
+
         virtualVal := false
         if t.Virtual != nil { virtualVal = *t.Virtual }
         isAbstractVal := false
@@ -323,7 +313,6 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
         }
     }
     
-    // Re-enable foreign key checks
     if _, err := db.Exec("PRAGMA foreign_keys = ON"); err != nil {
         return fmt.Errorf("failed to re-enable foreign keys: %w", err)
     }

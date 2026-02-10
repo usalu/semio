@@ -1,0 +1,9 @@
+- [ ] Update `js/semio/sketchpad/Sketchpad.tsx`:
+    - [ ] Import `HandIcon` from `@semio/assets`.
+    - [ ] Add `HandIcon` to `getGroupIcon` for "hand" group.
+    - [ ] Update toolbar group rendering loop to include "hand" group.
+- [ ] Update `js/semio/sketchpad/Design.tsx`:
+    - [ ] Change `hand` tool registration to use `toolbarGroup: { id: "hand", ... }`.
+- [ ] Run `scripts/i18n.ts` to update `en.json` and `de.json` with `semio.sketchpad.toolbar.parent.hand`.
+- [ ] Verify functionality (requires manual verification or e2e test if possible).
+- [ ] Run tests.

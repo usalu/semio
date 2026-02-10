@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/js/sketchpad/Feedback.tsx
+// 💻semio/js/sketchpad/Feedback.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -482,6 +482,11 @@ const Feedback: FC = () => {
       id: "semio.sketchpad.app.feedback.toolbar.send",
       specificity: 20,
       order: 0,
+      toolbarGroup: {
+        id: "actions",
+        labelId: "semio.sketchpad.toolbar.parent.actions",
+        order: 50,
+      },
       content: <FeedbackToolbar />,
     });
 

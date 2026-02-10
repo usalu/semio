@@ -34,7 +34,7 @@
 </p>
 <br/>
 
-You want to 🧩 the next 🏘🏛🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣👥🖱️⌨️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥✒🖨🪄🚀
+You want to 🧩 the next 🏘🏛🏢🏭🏫🏨⛪🕌 with 🤖? But 📐🔢🗣👥🖱️️⌨️️ takes all your ⌚? Then try to 🧠 the 🧬 and let semio 💉🖥✒🖨🪄🚀
 
 # 👋 Hello contributor
 
@@ -66,46 +66,46 @@ Let me walk you through 🚶
    - [⭕ Piece](#-piece-)
    - [⚓ Connector](#-port-)
    - [💾 Model](#-model-)
-   - [🏷 Attribute](#%EF%B8%8F-attribute-)
-   - [🏷 Tag](#%EF%B8%8F-tag-)
+   - [🏷️ Attribute](#%EF%B8%8F-attribute-)
+   - [🏷️ Tag](#%EF%B8%8F-tag-)
    - [◳ Plane](#-plane-)
    - [🔗 Url](#-url-)
    - [🔢 Quality](#-quality-)
    - [📊 Benchmark](#-benchmark-)
-   - [🏷 Concept](#%EF%B8%8F-concept-)
+   - [🏷️ Concept](#%EF%B8%8F-concept-)
    - [👤 Author](#-author-)
    - [📋 Layer](#-layer-)
    - [👥 Group](#-group-)
-   - [⚙️ Prop](#-prop-)
+   - [⚙️️ Prop](#-prop-)
    - [📈 Stat](#-stat-)
 1. [🦑 Repo](#-repo-)
-   - [⚖ Principles](#-principles-)
+   - [⚖️ Principles](#-principles-)
    - [🔀 Git](#-git-)
      - [🦑 GitKraken](#-gitkraken-)
      - [💬 Discord](#-discord-)
      - [📢 Release](#-release-)
-     - [🏷 Tag](#%EF%B8%8F-tag-)
+     - [🏷️ Tag](#%EF%B8%8F-tag-)
      - [🌿 Branch](#-branch-)
-     - [🗃️ Commit](#%EF%B8%8F-commit-)
+     - [🗃️️ Commit](#%EF%B8%8F-commit-)
 1. [🧑‍💻 Development](#-development-)
    - [🔌 Connector Numbers](#-port-numbers-)
    - [📒 Tickets and reports](#-tickets-and-reports)
    - [🪄 AI](#-ai-)
-     - [🛠 Uses-Cases](#-uses-cases-)
-       - [⚖ Decision Making](#-decision-making-)
+     - [🛠️ Uses-Cases](#-uses-cases-)
+       - [⚖️ Decision Making](#-decision-making-)
        - [🔁 Refactoring](#-refactoring-)
        - [🐛 Bug Fixes](#-bug-fixes-)
-     - [⌨️ Tools](#-tools-)
+     - [⌨️️ Tools](#-tools-)
        - [🌐 Web-Chat](#-web-chat-)
          - [❄ ChatGPT](#-chatgpt-)
          - [🌟 Gemini](#-gemini-)
          - [AI studio](#-ai-studio-)
        - [💻 Editor](#-editor-)
          - [✈ Copilot](#-copilot-)
-         - [🖱️ Cursor](#-cursor-)
+         - [🖱️️ Cursor](#-cursor-)
          - [🌊 Windsurf](#-windsurf-)
-       - [⌨️ CLI](#-cli-)
-         - [⌨️ Claude Code](#-claude-code-)
+       - [⌨️️ CLI](#-cli-)
+         - [⌨️️ Claude Code](#-claude-code-)
          - [🧾 Codex](#-codex-)
        - [☁ Cloud](#-cloud-)
          - [🦑 Jules](#-jules-)
@@ -127,12 +127,12 @@ Let me walk you through 🚶
    - [📚 semio/docs](#-semiodocs-)
    - [🎛 semio/play](#%EF%B8%8F-semioplay-)
    - [🤖 semio/assistant](#-semioassistant-)
-   - [⚙️ semio/engine](#-semioengine-)
+   - [⚙️️ semio/engine](#-semioengine-)
    - [🟪 semio/net](#-semionet-)
    - [🦗 semio/grasshopper](#-semiograsshopper-)
      - [🪢 Scripting](#-scripting-)
    - [🛍 semio/assets](#%EF%B8%8F-semioassets-)
-     - [🏷 Badges](#%EF%B8%8F-badges-)
+     - [🏷️ Badges](#%EF%B8%8F-badges-)
      - [📄 Fonts](#-fonts-)
      - [👁 Icons](#%EF%B8%8F-icons-)
 1. [🏘 Examples](#%EF%B8%8F-examples-)
@@ -154,7 +154,7 @@ Let me walk you through 🚶
    - [📄 Typography](#-typography-)
      - [🔡 Typesetting](#-typesetting-)
    - [👀 Visual elements](#-visual-elements-)
-1. [⚖ License](#-license-)
+1. [⚖️ License](#-license-)
 1. [🔒Security](#-security-)
 1. [✨ Contributors](#-contributors-)
 1. [📊 Stats](#-stats-)
@@ -169,7 +169,7 @@ The engine can also run as a pure stdio MCP server for tool integrations.
 
 ## ✏ sketchpad [↑](#%EF%B8%8F-products-)
 
-[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️
+[sketchpad](#%EF%B8%8F-sketchpad-) is a simple-to-use, accessible and browser-based user interface for semio🖱️️
 
 It is the digital pencil for sketching plans and digital scalpel for building models in semio ✍
 
@@ -330,7 +330,7 @@ No **[`tags`](#%EF%B8%8F-tag-)** means the _default_ model 🔑
 
 The similarity of [`models`](#-model-) is determined by the [jaccard index](https://en.wikipedia.org/wiki/Jaccard_index) of their **[`tags`](#%EF%B8%8F-tag-)** 🔄
 
-## 🏷 Attribute [↑](#-specs-)
+## 🏷️ Attribute [↑](#-specs-)
 
 A [`attribute`](#%EF%B8%8F-attribute-) is metadata with a unique **name**, an optional **value**, an optional **unit** and an optional **definition** ([`url`](#-url-) or text) 🔤
 
@@ -355,7 +355,7 @@ The **unit** is a [unit identifier](https://en.wikipedia.org/wiki/Unit_of_measur
 
 A list of [attributes](#%EF%B8%8F-attribute-) is semantically equivalent to nested dictionaries where the key is the **name** and the value is the **value** ↔
 
-## 🏷 Tag [↑](#-specs-)
+## 🏷️ Tag [↑](#-specs-)
 
 A [`tag`](#%EF%B8%8F-tag-) is a [kebab-cased](https://en.wikipedia.org/wiki/Kebab_case) **name** 🔤
 
@@ -385,7 +385,7 @@ A [`benchmark`](#-benchmark-) is a performance standard within a [`quality`](#-q
 
 Benchmarks provide reference points for evaluating quality measurements against industry or design standards 📈
 
-## 🏷 Concept [↑](#-specs-)
+## 🏷️ Concept [↑](#-specs-)
 
 A [`concept`](#%EF%B8%8F-concept-) is a **name** and **order** pair that provides semantic grouping for [`kits`](#-kit-), [`types`](#-type-), or [`designs`](#%EF%B8%8F-design-) 🧠
 
@@ -409,7 +409,7 @@ A [`group`](#-group-) is a collection of [`pieces`](#-piece-) within a [`design`
 
 Groups enable semantic clustering of pieces that belong together functionally or conceptually 🔗
 
-## ⚙️ Prop [↑](#-specs-)
+## ⚙️️ Prop [↑](#-specs-)
 
 A [`prop`](#-prop-) is a **key-value** pair on a [`connector`](#-port-) that references a [`quality`](#-quality-) with a specific **value** and optional **unit** 🔧
 
@@ -425,14 +425,14 @@ Stats provide computed or measured performance data for entire designs using the
 
 This git repo has <strong>everything</strong> that exists in the open semio ecosystem 🤯
 
-## ⚖ Principles [↑](#-repo-)
+## ⚖️ Principles [↑](#-repo-)
 
 Let's start with the rules of thumbs that this codebase was built with 🫰
 
 <details>
 <summary><strong>💾 If something can be written in a single file, then it probably should ✅</strong></summary>
 
-I know, the urge to <strong>tidy</strong> up or <strong>separate</strong> things is big 🗃️
+I know, the urge to <strong>tidy</strong> up or <strong>separate</strong> things is big 🗃️️
 
 But try to withstand it 🫥
 
@@ -443,7 +443,7 @@ A single file is easier for humans and computers to understand 💡
 You will be surprised
 
 - by the awesome [fill-in-the-middle suggestions](#-cursor-) of your copilot 🤖
-- by the hassle-free [context selection](#-browser-) for your ai agent 🖱️
+- by the hassle-free [context selection](#-browser-) for your ai agent 🖱️️
 - by the smooth refactor experience by just going top-to-bottom ⬇
 - by the beautiful diff for your next code review 🔍
 - by the clean git-history when you try to find a certain change 🔁
@@ -459,7 +459,7 @@ This means that all the building blocks (functions, classes, components, …) ar
 
 If you have a cyclic depedency (really?!) then put the object with lower complexity first 🥇
 
-This means that when you start with unknown code, it is probably best to start on the bottom and go upwards 🖱️
+This means that when you start with unknown code, it is probably best to start on the bottom and go upwards 🖱️️
 
 Why? LLMs, reflection, … , work best left-to-write 🤖
 
@@ -584,16 +584,16 @@ Actually repeated code can improve the attribute of your copilots suggestion �
 
 The main question is how can your application grow?
 
-If a change requires exponentially more duplication then you'll probably have to fix it 🛠
+If a change requires exponentially more duplication then you'll probably have to fix it 🛠️
 
 If not, then you are probably good 👌
 
 </details>
 
 <details>
-<summary><strong>🏷 Never use `type` for naming enums, ports, or types. Always use `kind` instead ✅</strong></summary>
+<summary><strong>🏷️ Never use `type` for naming enums, ports, or types. Always use `kind` instead ✅</strong></summary>
 
-To avoid confusion with the native `type` concept in Semio, always use `kind` for naming enums, ports, or types that represent categories or classifications 🏷
+To avoid confusion with the native `type` concept in Semio, always use `kind` for naming enums, ports, or types that represent categories or classifications 🏷️
 
 Examples: `ArtifactType` → `ArtifactKind`, `WindowType` → `WindowKind`, etc. 🔄
 
@@ -608,7 +608,7 @@ Besides that we are sure you know about <strong>KISS</strong> (Keep-It-Simple-St
 
 But as always, the devil is in the details 😈
 
-Even if 95% of the codebase follows those principles, there are good reasons for the other 5% ⚖
+Even if 95% of the codebase follows those principles, there are good reasons for the other 5% ⚖️
 
 </details>
 
@@ -621,7 +621,7 @@ Even if 95% of the codebase follows those principles, there are good reasons for
 > [!NOTE]  
 > It is free for open-source bundles like this one ❤
 
-We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱️
+We use [GitKraken Desktop](https://www.gitkraken.com/git-client) as our git client 🖱️️
 
 It is the only nice chronological graphical overview for **all** branches at the same time that we found 🔍
 
@@ -647,8 +647,8 @@ COMPONENT
 
 **Title symbols:**
 
-- 🏗️ Foundational work
-- 🛠 Heavy work
+- 🏗️️ Foundational work
+- 🛠️ Heavy work
 - 🪛 Minor work
 - 🐛 Major Bug fix
 
@@ -663,7 +663,7 @@ COMPONENT
 
 Before every [release](#-release-) the [repo](#-repo-) is archived 📦
 
-### 🏷 Tag [↑](#-gitstyle-)
+### 🏷️ Tag [↑](#-gitstyle-)
 
 We have two different types of tags:
 
@@ -676,7 +676,7 @@ The `main` branch is compressed (squashed history) and acts as the canonical int
 
 If a release receives updates after `main` already progressed, create a parallel `release/rYY.MM-V` branch for that release and keep it compressed as well 🧵
 
-Every [contributor](#-contributor-) has their own `FIRSTNAME` general-purpose development branch 🛠
+Every [contributor](#-contributor-) has their own `FIRSTNAME` general-purpose development branch 🛠️
 
 In [GitKraken](#-gitkraken-) you will quickly find the latest development branch 👀
 
@@ -684,7 +684,7 @@ Other branches are created for [bundles](#-bundles-), [specific features](https:
 
 Usually one person works on one feature at a time and hence the `-NAME` suffix 📛
 
-### 🗃️ Commit [↑](#-gitstyle-)
+### 🗃️️ Commit [↑](#-gitstyle-)
 
 Commit messages follow this format:
 
@@ -692,7 +692,7 @@ Commit messages follow this format:
 MAIN-TASK-SYMBOL SUMMARY WORK-SYMBOL
 ```
 
-The first symbol encodes the main task of the commit and the last symbol encodes the amount of work (`🪛` < `🔨` < `🛠` < `🏗️`) 🧰
+The first symbol encodes the main task of the commit and the last symbol encodes the amount of work (`🪛` < `🔨` < `🛠️` < `🏗️️`) 🧰
 
 <details>
 <summary><strong>📦 Commit as much as you like ✅</strong></summary>
@@ -763,7 +763,7 @@ Afterwards you can install uv with this command:
 irm https://astral.sh/uv/install.ps1 | iex
 ```
 
-Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️
+Then you can run `semio-repo/cli/cli preflight build` from the root to build all packages, or run `tsx ./build.ts` in the Grasshopper directory and add your full path `LOCAL_PATH\net\Semio.Grasshopper\Debug\net48` to your GrasshopperDeveloperSettings ⚙️️
 
 ## 🎫 Tickets [↑](#-development)
 
@@ -860,11 +860,11 @@ Most of our [codebase](#-principles-) is heavily optimized for AI agents 🤖
 
 We pick tools based on billing model (request-based vs token-based), required context size, and whether a workflow needs MCP (e.g. Playwright) 🧰
 
-## 🛠 Uses-Cases [↑](#-ai-)
+## 🛠️ Uses-Cases [↑](#-ai-)
 
 Here some strategic advice for different uses-cases 🗺
 
-### ⚖ Decision Making [↑](#-uses-cases-)
+### ⚖️ Decision Making [↑](#-uses-cases-)
 
 [Model](#-models-) will always tell you that your ideas, guesses, analysis, … are great 💯
 
@@ -896,7 +896,7 @@ Secondly, if the model can't find the bug then it will often try to remove funct
 
 Therefore, it is often a good idea that after you found the bug, reset your branch and create a new ticket where you define exactly how to fix the bug 🪛
 
-## ⌨️ Tools [↑](#-ai-)
+## ⌨️️ Tools [↑](#-ai-)
 
 ### 🌐 Web-Chat [↑](#-tools-)
 
@@ -925,7 +925,7 @@ Good for larger experiments due to more generous free quota 🧪
 
 Copilot is our default for most tickets because request-based billing makes fast interaction cheap 💳
 
-#### 🖱️ [Cursor](.cursor) [↑](#-ai-)
+#### 🖱️️ [Cursor](.cursor) [↑](#-ai-)
 
 <details>
 <summary><strong>📚 Resources:</strong></summary>
@@ -946,9 +946,9 @@ But in general, we don't use the chat because it is way too expensive 💰
 
 Used for token-heavy test-driven-development workflows with MCP (especially Playwright) 🧪
 
-### ⌨️ CLI [↑](#-tools-)
+### ⌨️️ CLI [↑](#-tools-)
 
-#### ⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)
+#### ⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)
 
 We have the [Pro](https://www.anthropic.com/claude/pricing) plan 💳
 
@@ -1016,27 +1016,27 @@ Documentation for each ecosystem has been migrated to the respective bundle READ
 
 Documentation for each bundle has been migrated to the respective bundle README.md files:
 
-| Bundle | README |
-|--------|--------|
-| .devcontainer | [.devcontainer/README.md](.devcontainer/README.md) |
-| semio-repo/cli | [semio-repo/cli/README.md](semio-repo/cli/README.md) |
-| semio-repo/vscode | [semio-repo/vscode/README.md](semio-repo/vscode/README.md) |
-| semio-repo/server | [semio-repo/server/README.md](semio-repo/server/README.md) |
+| Bundle             | README                                                       |
+| ------------------ | ------------------------------------------------------------ |
+| .devcontainer      | [.devcontainer/README.md](.devcontainer/README.md)           |
+| semio-repo/cli     | [semio-repo/cli/README.md](semio-repo/cli/README.md)         |
+| semio-repo/vscode  | [semio-repo/vscode/README.md](semio-repo/vscode/README.md)   |
+| semio-repo/server  | [semio-repo/server/README.md](semio-repo/server/README.md)   |
 | semio-repo/graphql | [semio-repo/graphql/README.md](semio-repo/graphql/README.md) |
-| semio-repo/sqlite | [semio-repo/sqlite/README.md](semio-repo/sqlite/README.md) |
-| semio | [semio/README.md](semio/README.md) |
-| semio/js | [semio/js/README.md](semio/js/README.md) |
-| semio/engine | [semio/engine/README.md](semio/engine/README.md) |
-| semio/desktop | [semio/desktop/README.md](semio/desktop/README.md) |
-| semio/docs | [semio/docs/README.md](semio/docs/README.md) |
-| semio/play | [semio/play/README.md](semio/play/README.md) |
-| semio/net | [semio/net/README.md](semio/net/README.md) |
-| semio/py | [semio/py/README.md](semio/py/README.md) |
-| semio/go | [semio/go/README.md](semio/go/README.md) |
-| semio/rs | [semio/rs/README.md](semio/rs/README.md) |
-| semio/assets | [semio/assets/README.md](semio/assets/README.md) |
-| semio/sketchpad | [semio/sketchpad/README.md](semio/sketchpad/README.md) |
-| semio/sqlite | [semio/sqlite/README.md](semio/sqlite/README.md) |
+| semio-repo/sqlite  | [semio-repo/sqlite/README.md](semio-repo/sqlite/README.md)   |
+| semio              | [semio/README.md](semio/README.md)                           |
+| semio/js           | [semio/js/README.md](semio/js/README.md)                     |
+| semio/engine       | [semio/engine/README.md](semio/engine/README.md)             |
+| semio/desktop      | [semio/desktop/README.md](semio/desktop/README.md)           |
+| semio/docs         | [semio/docs/README.md](semio/docs/README.md)                 |
+| semio/play         | [semio/play/README.md](semio/play/README.md)                 |
+| semio/net          | [semio/net/README.md](semio/net/README.md)                   |
+| semio/py           | [semio/py/README.md](semio/py/README.md)                     |
+| semio/go           | [semio/go/README.md](semio/go/README.md)                     |
+| semio/rs           | [semio/rs/README.md](semio/rs/README.md)                     |
+| semio/assets       | [semio/assets/README.md](semio/assets/README.md)             |
+| semio/sketchpad    | [semio/sketchpad/README.md](semio/sketchpad/README.md)       |
+| semio/sqlite       | [semio/sqlite/README.md](semio/sqlite/README.md)             |
 
 # 🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)
 
@@ -1112,7 +1112,7 @@ Use the primary color for the most important elements of your design 🏆
 
 We use it e.g. for:
 
-- Highlighting interactive elements 🖱️
+- Highlighting interactive elements 🖱️️
 - Background for important elements 🟥
 
 ### 🥈 Secondary [↑](#-colors-)
@@ -1140,7 +1140,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - When things are analogical use the same sentence structure for it 🔄
 - One symbol after every sentance 💯
 - One symbol at a time 🥇
-- A symbol is preferably an emoji or otherwise unicode ⚖
+- A symbol is preferably an emoji or otherwise unicode ⚖️
 - 📝 One symbol to summarize a title
 - 💡 One symbol to summarize a title description and one to think about in the end 🤔
 - `.` are forbidden ⛔
@@ -1163,7 +1163,7 @@ Are you curious how a 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 and 11 colored gradient can 
 - Borders □
 - Basic geometric shapes ⚪
 
-# ⚖ License
+# ⚖️ License
 
 The files in this repository are licensed under the [GNU Affero General Public License](https://www.gnu.org/licenses/#AGPL) unless otherwise described. Most libraries, modules, extensions, objects or code herein are explicitly licensed. This is indicated in the root of the containing folder under a different license file, or in the configuration files of a bundle or in the respective file's header.
 
@@ -1197,7 +1197,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>      
         <br />
         <a href="#-semiodesktop-" title="✏semio/desktop"><sub>✏<sub></a>
-        <a href="#-semioengine-" title="⚙️semio/engine"><sub>⚙️<sub></a>
+        <a href="#-semioengine-" title="⚙️️semio/engine"><sub>⚙️️<sub></a>
         <a href="#-semioassistant-" title="🤖semio/assistant"><sub>🤖<sub></a>
         <a href="#%EF%B8%8F-semioplay-" title="🎛semio/play"><sub>🎛<sub></a>
         <br />
@@ -1250,7 +1250,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
-        <a href="#-semioengine-" title="⚙️semio/engine"><sub>⚙️<sub></a> 
+        <a href="#-semioengine-" title="⚙️️semio/engine"><sub>⚙️️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
         <img src=".semio-repo/contributors/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>

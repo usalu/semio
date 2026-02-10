@@ -50,17 +50,17 @@ This will serve as the base for generating its **Variants** 🧩
 
 Before we start building, let’s go over the essential elements that define a **Type** 🧱:
 
-- 🏷️**Name** → A unique name to identify your Type and reuse it in different designs
+- 🏷️️**Name** → A unique name to identify your Type and reuse it in different designs
 - 🧱 **Geometry (Model)** → The 3D shape attached to the Type — it gives the piece its visual form ✨
 - 🧲 **Connection Points (Connectors)** → The snap points where the piece connects to others in the system 🔗
 
-Now let's take a closer look at how these elements come together — and start modeling our first **brick mold** 🛠️
+Now let's take a closer look at how these elements come together — and start modeling our first **brick mold** 🛠️️
 
 <ol>
 
 <li>
 
-### 🏷️Name Your Mold ([Type](/think-in-semio/#type) Name - Na)
+### 🏷️️Name Your Mold ([Type](/think-in-semio/#type) Name - Na)
 
 Clear, consistent names in semio make everything easier down the line ✅  
 Especially when your project grows and you're working with many **Types**, **Variants**, and **Pieces** 🔄
@@ -84,7 +84,7 @@ because the shape we're modeling is based on a **standard manufactured wood prof
 
 ### 🧊 Attach Geometry (Model – Rp)
 
-In Semio, the process of adding geometry to a Type is called **modeling its Model** 🛠️
+In Semio, the process of adding geometry to a Type is called **modeling its Model** 🛠️️
 A **Model** is anything that visually or symbolically **represents a Type** 🧱
 It helps you **see or recognize** the Type — without defining its logic or behavior 🧠
 
@@ -98,7 +98,7 @@ But it can also be:
 💡 Because Models are separate from the logic of the system, they’re fully flexible:
 
 - You can start modeling your system without one 🚧
-- You can add or update it later 🛠️
+- You can add or update it later 🛠️️
 - You can switch between levels of detail depending on the design phase 🔍
 
 In this example, we’ll use a **simple 3D shape** to represent our brick molds we need to create 🧩
@@ -109,7 +109,7 @@ In this example, we’ll use a **simple 3D shape** to represent our brick molds 
 
 There are two simple steps to create a **Model**:
 
-- 🛠️**Build the Geometry**  
+- 🛠️️**Build the Geometry**  
   Model the physical form of your brick — the shape that will appear in your design
 
 - 📎 **Link it to the Type**  
@@ -117,7 +117,7 @@ There are two simple steps to create a **Model**:
 
 Let’s take a closer look at the **brick mold** in our example 👀  
 It always follows the **same basic shape** 🧱  
-A **rectangle that’s cut at an angle** ✂️— just repeated in different lengths 📏
+A **rectangle that’s cut at an angle** ✂️️️— just repeated in different lengths 📏
 
 As we saw in the sketch, its size is described using **two parameters**:
 
@@ -151,7 +151,7 @@ You’ll need to follow **three simple steps** to attach your geometry as a **Mo
 
 ---
 
-#### 🛠️Geometry Modeling
+#### 🛠️️Geometry Modeling
 
 Since our shape follows a clear logic 🧠  
 we use a **parametric Grasshopper definition** to generate the geometry of the brick mold 🧱
@@ -197,7 +197,7 @@ Another `Concat` merges directory + file name:
 
 ##### 📐 Prepare the Geometry
 
-> 🛠️You've already modeled the geometry earlier in your Grasshopper definition.  
+> 🛠️️You've already modeled the geometry earlier in your Grasshopper definition.  
 > Now it's time to **export** it — so semio can use it as a **referenced Model** 💾
 
 - ✅ Convert the geometry into the required format (e.g. **Mesh** for `.glb`)
@@ -209,7 +209,7 @@ Your file directory should now look like this:
 
 ---
 
-<Aside type="note">⚙️️This method combines the **parametric power of Grasshopper** with the **modular logic of Semio** 📤 Every time a parameter changes, the file can be **re-exported automatically** — ready to be referenced in the next step</Aside>
+<Aside type="note">⚙️️️This method combines the **parametric power of Grasshopper** with the **modular logic of Semio** 📤 Every time a parameter changes, the file can be **re-exported automatically** — ready to be referenced in the next step</Aside>
 
 ---
 
@@ -235,7 +235,7 @@ a static file that captures what your brick mold looks like at a specific moment
 
 Here’s why that matters:
 
-- ⚙️️If your geometry is dynamic or parametric, it still needs to be **exported to a file**
+- ⚙️️️If your geometry is dynamic or parametric, it still needs to be **exported to a file**
 - 🔗 semio connects to that file — not the live Grasshopper preview
 
 > 💡 This keeps geometry **modular**, **connectorable**, and easy to reuse  
@@ -338,7 +338,7 @@ It includes **two dimensions** but omits exact geometry 🧊
 Best for:
 
 - 🧪Early-stage layouts and feasibility checks
-- ⚙️️Quick interactions and high-speed previews
+- ⚙️️️Quick interactions and high-speed previews
 - 🧊 Placeholder geometry before final detailing
 
 </TabsContent>
@@ -377,7 +377,7 @@ They act as snap points that tell semio where and how a brick can attach to othe
 
 In the semio Grasshopper plugin, each Connector is defined with three main inputs:
 
-- 🏷️**Connector ID** ( `Id` )  
+- 🏷️️**Connector ID** ( `Id` )  
   A unique name for the Connector — like a tag or label used to connect it later  
   Examples: `"n"`, `"bottom"`, `"hingePoint"`
 
@@ -412,7 +412,7 @@ Here’s how to define your Connectors effectively:
 
 - 🎯**Don’t worry about perfect alignment**  
   Connectors don’t need to be _exactly_ placed.  
-  semio lets you adjust each Piece’s **position and rotation** _after_ snapping 🛠️
+  semio lets you adjust each Piece’s **position and rotation** _after_ snapping 🛠️️
   So prioritize clear logic over micrometer precision 😌
 
 ---
@@ -446,9 +446,9 @@ Here’s how to define Connector directions clearly:
 
 ---
 
-#### 🏷️Connector ID (Id)
+#### 🏷️️Connector ID (Id)
 
-A **Connector ID** is the name you give to each Connector 🏷️
+A **Connector ID** is the name you give to each Connector 🏷️️
 This name is how semio knows **which Connector to connect** when snapping Pieces together
 
 For example, you might say:
@@ -486,7 +486,7 @@ you can assemble them using the `Model Type` component (`Typ`) 🧰
 
 Here's what you plug in:
 
-- 🏷️**Name** — the shared identity of the mold (e.g. `"Profile"`)
+- 🏷️️**Name** — the shared identity of the mold (e.g. `"Profile"`)
 - 🔢 **Variant** — the specific version number (e.g. `"2"`)
 - 🧲 **Connectors** — the snapping points and directions (e.g. `n`, `s`, `e`, `w`)
 - 🧊 **Model** — the geometry that defines the brick's shape
@@ -533,7 +533,7 @@ Examples from our sketch:
 
 ##### ✅ What Stays the Same
 
-- 🏷️**Type name** — you’re still using the same underlying mold
+- 🏷️️**Type name** — you’re still using the same underlying mold
 
 ##### 🔄 What Changes?
 
@@ -543,9 +543,9 @@ Examples from our sketch:
 
 ---
 
-##### 🛠️Modeling Steps
+##### 🛠️️Modeling Steps
 
-1. 🏷️Set the **Type name** (same as the original mold)
+1. 🏷️️Set the **Type name** (same as the original mold)
 2. 🔢 Assign a new **Variant name**
 3. 🧊 Attach the **Model** — the geometry for this Variant
 4. 🧲 Add the **Connectors** — positioned consistently
@@ -595,7 +595,7 @@ You define the full logic:
 You only feed in the changing inputs:
 
 - 📏 `n` → the unit count (e.g. 2, 4, 5)
-- 🏷️Variant name → often also `n`
+- 🏷️️Variant name → often also `n`
 - 📁Directory of the GH file
 - 🔘 Export toggle
 
@@ -621,7 +621,7 @@ You define the full modeling logic directly, without saving external files:
 Only the changing parameters are connected:
 
 - 📏 `n` → the unit count (e.g. 2, 4, 5)
-- 🏷️Variant name → often also `n`
+- 🏷️️Variant name → often also `n`
 
 ![📁Cluster](/assets/images/type-cluster-direct-reference-Alpha.png)
 

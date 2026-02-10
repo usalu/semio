@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// 💻 semio/play/index.tsx
+// 💻semio/play/index.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

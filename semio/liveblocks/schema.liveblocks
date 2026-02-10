@@ -14,7 +14,7 @@ type Kit {
     image?: string;
     # 🕒 The last upstring string of the kit.
     lastUpstringAt?: string;
-    # ⚖️The optional license [ spdx id | url ] of the kit.
+    # ⚖️️The optional license [ spdx id | url ] of the kit.
     license?: string;
     # 📛 The name of the kit.
     name: string;
@@ -162,13 +162,13 @@ type TypeId {
 
 # ↗️ The output of a attribute.
 type Attribute {
-    # 🏷️The optional definition [ text | url ] of the attribute.
+    # 🏷️️The optional definition [ text | url ] of the attribute.
     definition?: string;
-    # 🏷️The name of the attribute.
+    # 🏷️️The name of the attribute.
     name: string;
-    # 🏷️The optional unit of the value of the attribute.
+    # 🏷️️The optional unit of the value of the attribute.
     unit?: string;
-    # 🏷️The optional value [ text | url ] of the attribute. No value is equivalent to true.
+    # 🏷️️The optional value [ text | url ] of the attribute. No value is equivalent to true.
     value?: string;
 }
 
@@ -224,7 +224,7 @@ type Model {
     lod: string;
     # ✉️ The Multipurpose Internet Mail Extensions (MIME) type of the content of the resource of the model.
     mime: string;
-    # 🏷️The optional tags to group models. No tags means default.
+    # 🏷️️The optional tags to group models. No tags means default.
     tags?: string[];
     # 🔗 The Unique Resource Locator (URL) to the resource of the model.
     url: string;

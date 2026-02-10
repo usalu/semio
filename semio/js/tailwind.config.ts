@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// ⚙️︎ semio/js/tailwind.config.ts
+// ⚙️semio/js/tailwind.config.ts
 
 // 2025 Ueli Saluz
 

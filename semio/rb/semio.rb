@@ -24,7 +24,7 @@ module Semio
   # 🪪 Identifier for a connector within a type.
   ConnectorId = Struct.new(:id_, keyword_init: true)
 
-  # 🏷️Represents a attribute, a named property with an optional value, unit, and definition.
+  # 🏷️️Represents a attribute, a named property with an optional value, unit, and definition.
   Attribute = Struct.new(:name, :value, :unit, :definition, keyword_init: true)
 
   # 📑 Represents an author.
