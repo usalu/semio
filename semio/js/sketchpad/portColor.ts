@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
 import type { Connector, Port } from "../semio";
 import { arePortsCompatible } from "../semio";

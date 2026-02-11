@@ -21,7 +21,7 @@
 
 import type { Meta, StoryObj } from "@storybook/react";
 import { FileCode, FileImage, FolderIcon } from "lucide-react";
-import { Level, LevelProvider, Table, TableAvatar, TableColumn, getLevelBgClass } from "../../../../sketchpad/elements";
+import { Level, LevelProvider, Table, TableAvatar, TableColumn, TableSkeleton, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region 🔖Table
 const meta = {
@@ -297,3 +297,24 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Table
+
+// #region 🔖TableSkeleton
+export const SkeletonDefault: Story = {
+  args: { columns: [], data: [] },
+  render: () => (
+    <div className="h-64">
+      <TableSkeleton columns={3} rowCount={5} />
+    </div>
+  ),
+};
+
+export const SkeletonMinimal: Story = {
+  args: { columns: [], data: [] },
+  render: () => (
+    <div className="h-32">
+      <TableSkeleton columns={2} rowCount={3} />
+    </div>
+  ),
+};
+// #endregion 🔖TableSkeleton
+

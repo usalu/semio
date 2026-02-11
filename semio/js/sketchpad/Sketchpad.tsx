@@ -1,10 +1,8 @@
-// #region 🔖Header
+// #region Header
 
-// 💻semio/js/sketchpad/Sketchpad.tsx
+// js/semio/sketchpad/Sketchpad.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -19,17 +17,35 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// #endregion Header
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
-
-// #endregion 🔖Header
-
-// #region 🔖Imports
+// #region Imports
 
 import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
+import {
+    AddIcon,
+    AwardIcon,
+    DocumentIcon,
+    MessageCircle as FeedbackIcon,
+    FocusIcon,
+    HandIcon,
+    HomeIcon,
+    LayoutIcon,
+    LocalKitIcon,
+    Maximize2Icon,
+    Minimize2Icon,
+    MoreHorizontalIcon,
+    MousePointerIcon,
+    NavigateBackIcon,
+    NavigateForwardIcon,
+    NavigateUpIcon,
+    RemoteKitIcon,
+    SearchIcon,
+    TemporaryKitIcon,
+    TutorialIcon,
+    TypeIcon,
+    UserIcon,
+} from "@semio/assets";
 import { useSelector } from "@xstate/react";
 import Fuse, { FuseResult } from "fuse.js";
 import React, { ComponentType, createContext, FC, ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -38,228 +54,211 @@ import { createRoot } from "react-dom/client";
 import { useHotkeys as useReactHotkeys } from "react-hotkeys-hook";
 import { useTranslation as useI18nTranslation } from "react-i18next";
 import { BrowserRouter, MemoryRouter, Outlet, Route, Routes, useLocation, useParams, useNavigate as useReactNavigate, useSearchParams } from "react-router";
-import {
-  AddIcon,
-  AwardIcon,
-  DocumentIcon,
-  MessageCircle as FeedbackIcon,
-  FocusIcon,
-  HandIcon,
-  HomeIcon,
-  LayoutIcon,
-  LocalKitIcon,
-  Maximize2Icon,
-  Minimize2Icon,
-  MoreHorizontalIcon,
-  MousePointerIcon,
-  NavigateBackIcon,
-  NavigateForwardIcon,
-  NavigateUpIcon,
-  RemoteKitIcon,
-  SearchIcon,
-  TemporaryKitIcon,
-  TutorialIcon,
-  TypeIcon,
-  UserIcon
-} from "@semio/assets";
 import { IndexeddbPersistence } from "y-indexeddb";
 import * as Y from "yjs";
 import i18n, { useHotkey, useLabel } from "../i18n";
 import {
-  applyKitDiff,
-  Attribute,
-  Author,
-  AuthorDiff,
-  Benchmark,
-  BenchmarkDiff,
-  Camera,
-  CameraDiff,
-  colorPortsForTypes,
-  Concept,
-  ConceptDiff,
-  Connection,
-  ConnectionDiff,
-  Connector,
-  ConnectorDiff,
-  Coord,
-  CoordDiff,
-  Design,
-  DesignDiff,
-  DesignShallow,
-  DiffStatus,
-  exportKit,
-  FileDiff,
-  FileId,
-  findDesignInKit,
-  findReplacableDesignsForDesignPiece,
-  findReplacableTypesForPieceInDesign,
-  findReplacableTypesForPiecesInDesign,
-  Folder,
-  FolderDiff,
-  generateUniqueName,
-  getClusterableGroups,
-  getIncludedDesigns,
-  Group,
-  GroupDiff,
-  guid,
-  Guid,
-  importKit,
-  inverseKitDiff,
-  Kit,
-  KitDiff,
-  KitShallow,
-  Layer,
-  LayerDiff,
-  Location,
-  LocationDiff,
-  Model,
-  ModelDiff,
-  Piece,
-  PieceDiff,
-  piecesMetadata,
-  Plane,
-  PlaneDiff,
-  Point,
-  PointDiff,
-  Port,
-  PortDiff,
-  Prop,
-  PropDiff,
-  Quality,
-  QualityDiff,
-  QualityId,
-  File as SemioFile,
-  Side,
-  SideDiff,
-  Stat,
-  StatDiff,
-  Tag,
-  TagDiff,
-  TagId,
-  Type,
-  TypeDiff,
-  TypeShallow,
-  Vec,
-  VecDiff,
-  Vector,
-  VectorDiff,
+    applyKitDiff,
+    Attribute,
+    Author,
+    AuthorDiff,
+    Benchmark,
+    BenchmarkDiff,
+    Camera,
+    CameraDiff,
+    colorPortsForTypes,
+    Concept,
+    ConceptDiff,
+    Connection,
+    ConnectionDiff,
+    Connector,
+    ConnectorDiff,
+    Coord,
+    CoordDiff,
+    Design,
+    DesignDiff,
+    DesignShallow,
+    DiffStatus,
+    exportKit,
+    FileDiff,
+    FileId,
+    findDesignInKit,
+    findReplacableDesignsForDesignPiece,
+    findReplacableTypesForPieceInDesign,
+    findReplacableTypesForPiecesInDesign,
+    Folder,
+    FolderDiff,
+    generateUniqueName,
+    getClusterableGroups,
+    getIncludedDesigns,
+    Group,
+    GroupDiff,
+    guid,
+    Guid,
+    importKit,
+    inverseKitDiff,
+    Kit,
+    KitDiff,
+    KitShallow,
+    Layer,
+    LayerDiff,
+    Location,
+    LocationDiff,
+    Model,
+    ModelDiff,
+    Piece,
+    PieceDiff,
+    piecesMetadata,
+    Plane,
+    PlaneDiff,
+    Point,
+    PointDiff,
+    Port,
+    PortDiff,
+    Prop,
+    PropDiff,
+    Quality,
+    QualityDiff,
+    QualityId,
+    File as SemioFile,
+    Side,
+    SideDiff,
+    Stat,
+    StatDiff,
+    Tag,
+    TagDiff,
+    TagId,
+    Type,
+    TypeDiff,
+    TypeShallow,
+    Vec,
+    VecDiff,
+    Vector,
+    VectorDiff,
 } from "../semio";
 import {
-  Action,
-  ActionGroup,
-  ActionGroupItem,
-  Breadcrumb,
-  Button,
-  ButtonGroup,
-  ButtonGroupItem,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  Footer,
-  InteractionProvider,
-  Layout as LayoutComponent,
-  LevelProvider,
-  Navbar,
-  type NavbarItem,
-  ReactFlowProvider,
-  Strip,
-  Toggle,
-  Transaction,
-  Window,
+    Action,
+    ActionGroup,
+    ActionGroupItem,
+    Breadcrumb,
+    ButtonGroup,
+    ButtonGroupItem,
+    CommandDialog,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    Footer,
+    InteractionProvider,
+    Layout as LayoutComponent,
+    LevelProvider,
+    Navbar,
+    type NavbarItem,
+    ReactFlowProvider,
+    Strip,
+    Toggle,
+    Transaction,
+    ToolbarDivider,
+    ToolbarGroup,
+    ToolbarItem,
+    ToolbarZone,
+    Tree,
+    TreeSection,
+    TreeStateProvider,
+    Window
 } from "./elements";
 import {
-  ActionField,
-  AppCommandResult,
-  AppConfig,
-  AppDiff,
-  AppEdit,
-  AppKind,
-  AppRegistration,
-  AppStep,
-  AppWindowConfig,
-  BaseDependency,
-  CompleteState,
-  CompositeFileProviderConfig,
-  conditionalHookResult,
-  createAction as createActionValue,
-  createField as createFieldValue,
-  createPathObserver,
-  DerivedNode,
-  DerivedStore,
-  DesignAppId,
-  Device,
-  Disposable,
-  EnrichedPanelDefinition,
-  enrichPanelDefinition,
-  executeEventHandler,
-  Expertise,
-  ExtendedInitialState,
-  Field,
-  FileProvider,
-  FileProviderFactory,
-  FocusItem,
-  FooterItem,
-  getDesignAppHooks,
-  getEventHandler,
-  getValueAtPath,
-  HookResult,
-  HudPanelTab,
-  KitAppId,
-  KitCommandContext,
-  KitCommandResult,
-  KitDiffAppCommandResult,
-  KitDiffAppEdit,
-  KitDiffAppStep,
-  LocalFileProviderConfig,
-  MemoryFileProviderConfig,
-  Mode,
-  PanelConfig,
-  PanelDefinition,
-  PanelKey,
-  panelKindConfigs,
-  PanelPosition,
-  PanelSection,
-  PanelSections,
-  PanelSizes,
-  PanelVisibility,
-  parseWindowLayout,
-  QualityAppId,
-  RemoteFileProviderConfig,
-  RemoteProviders,
-  RouteSegment,
-  SidePanelTab,
-  SketchpadCommandContext,
-  SketchpadCommandResult,
-  SketchpadDiff,
-  SketchpadScope,
-  SketchpadState,
-  StoreState,
-  StoreStatus,
-  Subscribe,
-  Synchronizable,
-  Theme,
-  ToolDefinition,
-  ToolGroupProps,
-  ToolKind,
-  Transact,
-  TypeAppId,
-  Unsubscribe,
-  Url,
-  WindowControl,
-  WindowEvents,
-  YAttributes,
-  YLeafMapNumber,
-  YLeafMapString,
-  YPath,
-  yPathMapKey,
-  YStringArray
+    ActionField,
+    AppCommandResult,
+    AppConfig,
+    AppDiff,
+    AppEdit,
+    AppKind,
+    AppRegistration,
+    AppStep,
+    AppWindowConfig,
+    BaseDependency,
+    CompleteState,
+    CompositeFileProviderConfig,
+    conditionalHookResult,
+    createAction as createActionValue,
+    createField as createFieldValue,
+    createPathObserver,
+    DerivedNode,
+    DerivedStore,
+    DesignAppId,
+    Device,
+    Disposable,
+    EnrichedPanelDefinition,
+    enrichPanelDefinition,
+    executeEventHandler,
+    Expertise,
+    ExtendedInitialState,
+    Field,
+    FileProvider,
+    FileProviderFactory,
+    FocusItem,
+    FooterItem,
+    getDesignAppHooks,
+    getEventHandler,
+    getValueAtPath,
+    HookResult,
+    HudPanelTab,
+    KitAppId,
+    KitCommandContext,
+    KitCommandResult,
+    KitDiffAppCommandResult,
+    KitDiffAppEdit,
+    KitDiffAppStep,
+    LocalFileProviderConfig,
+    MemoryFileProviderConfig,
+    Mode,
+    PanelConfig,
+    PanelDefinition,
+    PanelKey,
+    PanelKind,
+    panelKindConfigs,
+    PanelPosition,
+    PanelSection,
+    PanelSections,
+    PanelSizes,
+    PanelVisibility,
+    parseWindowLayout,
+    QualityAppId,
+    RemoteFileProviderConfig,
+    RemoteProviders,
+    RouteSegment,
+    SidePanelTab,
+    SketchpadCommandContext,
+    SketchpadCommandResult,
+    SketchpadDiff,
+    SketchpadScope,
+    SketchpadState,
+    StoreState,
+    StoreStatus,
+    Subscribe,
+    Synchronizable,
+    Theme,
+    ToolDefinition,
+    ToolGroupProps,
+    ToolKind,
+    Transact,
+    TypeAppId,
+    Unsubscribe,
+    Url,
+    WindowControl,
+    WindowEvents,
+    YAttributes,
+    YLeafMapNumber,
+    YLeafMapString,
+    YPath,
+    yPathMapKey,
+    YStringArray,
 } from "./shared";
 import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from "./Tutorials";
 
-// #endregion 🔖Imports
+// #endregion Imports
 
 function getToolbarGroupIcon(groupId: string): ReactNode {
   if (groupId === "selection") return <FocusIcon size={16} />;
@@ -271,8 +270,6 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
 }
 
 // #region Store
-
-// #region 🔖Store
 
 export function identitySelector<T>(value: T): T {
   return value;
@@ -382,7 +379,7 @@ export abstract class Store<TState> {
 
   onFieldChanged(key: string, subscribe: Subscribe, deep: boolean = false): Unsubscribe {
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
 
     if (!this.fieldSubscribers.has(key)) {
@@ -397,7 +394,7 @@ export abstract class Store<TState> {
             subscribers.forEach((cb) => cb());
           }
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -435,14 +432,14 @@ export abstract class Store<TState> {
   onPathChanged(path: YPath, subscribe: Subscribe): Unsubscribe {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yMap, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -465,7 +462,7 @@ export abstract class Store<TState> {
     return getValueAtPath(this.yMap, path);
   }
 
-  // #endregion 🔖Store
+  // #endregion Store
 }
 
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
@@ -841,7 +838,7 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
   }
 }
 
-// #region 🔖Plain App Store (No YJS)
+// #region Plain App Store (No YJS)
 
 export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
   public readonly guid: Guid;
@@ -879,7 +876,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
 
   onFieldChanged(key: string, subscribe: Subscribe, _deep?: boolean): Disposable {
     const wrappedCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     this.listeners.add(wrappedCallback);
     const dispose = () => this.listeners.delete(wrappedCallback);
@@ -1130,11 +1127,11 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
   }
 }
 
-// #endregion 🔖Plain App Store (No YJS)
+// #endregion Plain App Store (No YJS)
 
-// #region 🔖File Provider
+// #region File Provider
 
-// #region 🔖Memory File Provider
+// #region Memory File Provider
 
 export function createMemoryFileProvider(config?: MemoryFileProviderConfig): FileProviderFactory {
   const storage = new Map<string, Blob>();
@@ -1174,9 +1171,9 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
   };
 }
 
-// #endregion 🔖Memory File Provider
+// #endregion Memory File Provider
 
-// #region 🔖Local File Provider (IndexedDB)
+// #region Local File Provider (IndexedDB)
 
 export function createLocalFileProvider(config?: LocalFileProviderConfig): FileProviderFactory {
   const dbName = config?.dbName || "semio-files";
@@ -1270,9 +1267,9 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
   };
 }
 
-// #endregion 🔖Local File Provider (IndexedDB)
+// #endregion Local File Provider (IndexedDB)
 
-// #region 🔖Remote File Provider
+// #region Remote File Provider
 
 export function createRemoteFileProvider(config: RemoteFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
@@ -1335,9 +1332,9 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
   };
 }
 
-// #endregion 🔖Remote File Provider
+// #endregion Remote File Provider
 
-// #region 🔖Composite File Provider
+// #region Composite File Provider
 
 export function createCompositeFileProvider(config: CompositeFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
@@ -1398,11 +1395,11 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
   };
 }
 
-// #endregion 🔖Composite File Provider
+// #endregion Composite File Provider
 
-// #endregion 🔖File Provider
+// #endregion File Provider
 
-// #region 🔖Kits
+// #region Kits
 
 type YAttributeVal = string;
 type YAttribute = Y.Map<YAttributeVal>;
@@ -1478,9 +1475,9 @@ class AttributeStore {
   };
 }
 
-// #endregion 🔖Kits
+// #endregion Kits
 
-// #region 🔖Coord
+// #region Coord
 
 type YCoordVal = number;
 type YCoord = Y.Map<YCoordVal>;
@@ -1543,9 +1540,9 @@ class YCoordStore {
   };
 }
 
-// #endregion 🔖Coord
+// #endregion Coord
 
-// #region 🔖Vec
+// #region Vec
 
 type YVecVal = number;
 type YVec = Y.Map<YVecVal>;
@@ -1608,9 +1605,9 @@ class YVecStore {
   };
 }
 
-// #endregion 🔖Vec
+// #endregion Vec
 
-// #region 🔖Point
+// #region Point
 
 type YPointVal = number;
 type YPoint = Y.Map<YPointVal>;
@@ -1683,9 +1680,9 @@ class YPointStore {
   };
 }
 
-// #endregion 🔖Point
+// #endregion Point
 
-// #region 🔖Vector
+// #region Vector
 
 type YVectorVal = number;
 type YVector = Y.Map<YVectorVal>;
@@ -1758,9 +1755,9 @@ class YVectorStore {
   };
 }
 
-// #endregion 🔖Vector
+// #endregion Vector
 
-// #region 🔖Plane
+// #region Plane
 
 type YPlaneVal = YPoint | YVector;
 type YPlane = Y.Map<YPlaneVal>;
@@ -1823,9 +1820,9 @@ class YPlaneStore {
   };
 }
 
-// #endregion 🔖Plane
+// #endregion Plane
 
-// #region 🔖Camera
+// #region Camera
 
 type YCameraVal = YPoint | YVector;
 type YCamera = Y.Map<YCameraVal>;
@@ -1889,9 +1886,9 @@ class YCameraStore {
   };
 }
 
-// #endregion 🔖Camera
+// #endregion Camera
 
-// #region 🔖Location
+// #region Location
 
 type YLocationVal = number | string | YAttributes;
 type YLocation = Y.Map<YLocationVal>;
@@ -1980,9 +1977,9 @@ class YLocationStore {
   };
 }
 
-// #endregion 🔖Location
+// #endregion Location
 
-// #region 🔖Author
+// #region Author
 
 type YAuthorVal = string | YAttributes;
 type YAuthor = Y.Map<YAuthorVal>;
@@ -2113,9 +2110,9 @@ export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: 
   return synced;
 }
 
-// #endregion 🔖Author
+// #endregion Author
 
-// #region 🔖File
+// #region File
 
 type YFile = Y.Map<string | number | YAttributes>;
 type YFiles = Y.Array<YFile>;
@@ -2258,9 +2255,9 @@ class FileStore {
   };
 }
 
-// #endregion 🔖File
+// #endregion File
 
-// #region 🔖Folder
+// #region Folder
 
 type YFolder = Y.Map<string | YAttributes>;
 type YFolders = Y.Array<YFolder>;
@@ -2391,9 +2388,9 @@ class FolderStore {
   };
 }
 
-// #endregion 🔖Folder
+// #endregion Folder
 
-// #region 🔖Benchmark
+// #region Benchmark
 
 type YBenchmark = Y.Map<string | number | boolean | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
@@ -2511,9 +2508,9 @@ class BenchmarkStore {
   };
 }
 
-// #endregion 🔖Benchmark
+// #endregion Benchmark
 
-// #region 🔖Quality
+// #region Quality
 
 type YQuality = Y.Map<string | number | YAttributes>;
 type YQualities = Y.Array<YQuality>;
@@ -2628,9 +2625,9 @@ export class QualityStore {
   };
 }
 
-// #endregion 🔖Quality
+// #endregion Quality
 
-// #region 🔖Prop
+// #region Prop
 
 type YProp = Y.Map<string | number | boolean | YAttributes>;
 type YProps = Y.Array<YProp>;
@@ -2723,9 +2720,9 @@ class PropStore {
   };
 }
 
-// #endregion 🔖Prop
+// #endregion Prop
 
-// #region 🔖Model
+// #region Model
 
 type YModelVal = string | Y.Array<string> | YAttributes;
 type YModel = Y.Map<YModelVal>;
@@ -2844,9 +2841,9 @@ class ModelStore {
   };
 }
 
-// #endregion 🔖Model
+// #endregion Model
 
-// #region 🔖Connector
+// #region Connector
 
 type YConnectorVal = string | number | boolean | YAttributes | Y.Array<string> | YPoint | YVector | YProps;
 type YConnector = Y.Map<YConnectorVal>;
@@ -2969,9 +2966,9 @@ class ConnectorStore {
   };
 }
 
-// #endregion 🔖Connector
+// #endregion Connector
 
-// #region 🔖Type
+// #region Type
 
 type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YModels | YConnectors | YProps | YLocation;
 type YType = Y.Map<YTypeVal>;
@@ -3426,9 +3423,9 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
   return synced;
 }
 
-// #endregion 🔖Type
+// #endregion Type
 
-// #region 🔖Layer
+// #region Layer
 
 type YLayer = Y.Map<string | boolean | YAttributes>;
 type YLayers = Y.Array<YLayer>;
@@ -3543,9 +3540,9 @@ class LayerStore {
   };
 }
 
-// #endregion 🔖Layer
+// #endregion Layer
 
-// #region 🔖Piece
+// #region Piece
 
 type YPieceVal = string | number | boolean | YPlane | YAttributes | YCoord;
 type YPiece = Y.Map<YPieceVal>;
@@ -3949,11 +3946,11 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onConnectionsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -3968,9 +3965,9 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-// #endregion 🔖Piece
+// #endregion Piece
 
-// #region 🔖Group
+// #region Group
 
 type YGroupVal = string | Y.Array<string> | YAttributes;
 type YGroup = Y.Map<YGroupVal>;
@@ -4081,9 +4078,9 @@ class GroupStore {
   };
 }
 
-// #endregion 🔖Group
+// #endregion Group
 
-// #region 🔖Side
+// #region Side
 
 class SideStore {
   public readonly parent: DesignStore;
@@ -4219,9 +4216,9 @@ class SideStore {
   };
 }
 
-// #endregion 🔖Side
+// #endregion Side
 
-// #region 🔖Connection
+// #region Connection
 
 type YSideVal = string | number | YAttributes;
 type YSide = Y.Map<YSideVal>;
@@ -4437,9 +4434,9 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
   return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : (identitySelector as any));
 }
 
-// #endregion 🔖Connection
+// #endregion Connection
 
-// #region 🔖Stat
+// #region Stat
 
 type YStat = Y.Map<string | number | boolean>;
 type YStats = Y.Array<YStat>;
@@ -4564,9 +4561,9 @@ class StatStore {
   };
 }
 
-// #endregion 🔖Stat
+// #endregion Stat
 
-// #region 🔖Design
+// #region Design
 
 type YDesignVal = string | boolean | number | YAuthorUuids | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats | YProps | YLocation | Y.Array<string>;
 type YDesign = Y.Map<YDesignVal>;
@@ -4948,6 +4945,7 @@ export class DesignStore {
 
   markDirty = () => {
     this.dirty = true;
+    this.parent.markDirty();
   };
 
   change = (diff: DesignDiff) => {
@@ -5269,7 +5267,7 @@ export class DesignStore {
   onPiecesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._piecesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yPieces.observeDeep(notifySubscriber);
@@ -5282,7 +5280,7 @@ export class DesignStore {
   onConnectionsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._connectionsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yConnections.observeDeep(notifySubscriber);
@@ -5296,7 +5294,7 @@ export class DesignStore {
     return createFieldObserver(this.yDesign, key, subscribe, false);
   };
 
-  // #region 🔖YPath API
+  // #region YPath API
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
@@ -5304,14 +5302,14 @@ export class DesignStore {
   onPathChanged = (path: YPath, subscribe: Subscribe): Unsubscribe => {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yDesign, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -5334,7 +5332,7 @@ export class DesignStore {
     return getValueAtPath(this.yDesign, path);
   };
 
-  // #endregion 🔖YPath API
+  // #endregion YPath API
 }
 
 type DesignScope = { guid: string };
@@ -5373,11 +5371,11 @@ export function usePieces(): Piece[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onPiecesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -5396,11 +5394,11 @@ export function useConnections(): Connection[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       return designStore.onConnectionsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [designStore],
@@ -5430,14 +5428,14 @@ export function useDesignId() {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!designStore) return () => { };
+      if (!designStore) return () => {};
       const unsubName = designStore.onScalarFieldChanged("name", () => {
         callback();
-        return () => { };
+        return () => {};
       });
       const unsubParent = designStore.onScalarFieldChanged("parent", () => {
         callback();
-        return () => { };
+        return () => {};
       });
       return () => {
         unsubName();
@@ -5541,9 +5539,9 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
   }, [nodes, selection.pieces, kitDesigns]);
 }
 
-// #endregion 🔖Design
+// #endregion Design
 
-// #region 🔖Kit
+// #region Kit
 
 type YConceptVal = string | YAttributes;
 type YConcept = Y.Map<YConceptVal>;
@@ -6506,7 +6504,7 @@ export class KitStore {
     return createObserver(this.yKit, subscribe, true);
   };
 
-  // #region 🔖YPath API
+  // #region YPath API
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
@@ -6515,14 +6513,14 @@ export class KitStore {
   onPathChanged = (path: YPath, subscribe: Subscribe): Unsubscribe => {
     const pathKey = JSON.stringify(path);
     const subscriberCallback = () => {
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (!this.pathSubscribers.has(pathKey)) {
       this.pathSubscribers.set(pathKey, new Set());
       const pathObserver = createPathObserver(this.yKit, path, () => {
         const subscribers = this.pathSubscribers.get(pathKey);
         if (subscribers) subscribers.forEach((cb) => cb());
-        return () => { };
+        return () => {};
       });
       this.pathObservers.set(pathKey, pathObserver);
     }
@@ -6545,7 +6543,7 @@ export class KitStore {
     return getValueAtPath(this.yKit, path);
   };
 
-  // #endregion 🔖YPath API
+  // #endregion YPath API
 
   snapshotConcepts = (): Concept[] => {
     const currentVersion = (this.yConcepts as any)._clock || this.conceptStores.size;
@@ -6620,7 +6618,7 @@ export class KitStore {
   onConceptsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._conceptsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yConcepts.observeDeep(notifySubscriber);
@@ -6633,7 +6631,7 @@ export class KitStore {
   onTypesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._typesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yTypes.observeDeep(notifySubscriber);
@@ -6646,7 +6644,7 @@ export class KitStore {
   onFilesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._filesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yFiles.observeDeep(notifySubscriber);
@@ -6659,7 +6657,7 @@ export class KitStore {
   onDesignsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._designsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yDesigns.observeDeep(notifySubscriber);
@@ -6672,7 +6670,7 @@ export class KitStore {
   onQualitiesChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._qualitiesCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yQualities.observeDeep(notifySubscriber);
@@ -6685,7 +6683,7 @@ export class KitStore {
   onAuthorsChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._authorsCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yAuthors.observeDeep(notifySubscriber);
@@ -6698,7 +6696,7 @@ export class KitStore {
   onFoldersChanged = (subscribe: Subscribe, deep: boolean = false): Disposable => {
     const notifySubscriber = () => {
       this._foldersCache = undefined;
-      subscribe(() => { });
+      subscribe(() => {});
     };
     if (deep) {
       this.yFolders.observeDeep(notifySubscriber);
@@ -6847,7 +6845,7 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
   return deep ? syncedDeep : synced;
 }
 
-// #region 🔖Targeted Kit Hooks
+// #region Targeted Kit Hooks
 
 const EMPTY_TYPES: Type[] = [];
 const EMPTY_AUTHORS: Author[] = [];
@@ -6878,11 +6876,11 @@ export function useKitTypes(guid?: Guid): Type[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onTypesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -6903,10 +6901,10 @@ export function useKitName(guid?: Guid): string {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onScalarFieldChanged("name", () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [kitStore],
@@ -6927,10 +6925,10 @@ export function useKitDescription(guid?: Guid): string | undefined {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onScalarFieldChanged("description", () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [kitStore],
@@ -6951,11 +6949,11 @@ export function useKitAuthors(guid?: Guid): Author[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onAuthorsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -6976,11 +6974,11 @@ export function useKitFiles(guid?: Guid): SemioFile[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onFilesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -7001,11 +6999,11 @@ export function useKitQualities(guid?: Guid): Quality[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onQualitiesChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -7026,11 +7024,11 @@ export function useKitDesigns(guid?: Guid): Design[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onDesignsChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -7055,11 +7053,11 @@ export function useKitFolders(guid?: Guid): Folder[] {
 
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!kitStore) return () => { };
+      if (!kitStore) return () => {};
       return kitStore.onFoldersChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       }, true);
     },
     [kitStore],
@@ -7100,7 +7098,7 @@ export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } 
   return useMemo(() => ({ ports }), [ports]);
 }
 
-// #endregion 🔖Targeted Kit Hooks
+// #endregion Targeted Kit Hooks
 
 export function useFileUrls(): Map<Url, Url> {
   const kitStore = useKitStore() as KitStore | null;
@@ -7123,10 +7121,10 @@ export function useKitTransaction(): Transaction {
   const kitStore = store.kit(kitGuid);
   return {
     start: () => {
-      kitStore.yDoc.transact(() => { }, getOrigin());
+      kitStore.yDoc.transact(() => {}, getOrigin());
     },
-    finalize: () => { },
-    abort: () => { },
+    finalize: () => {},
+    abort: () => {},
   };
 }
 
@@ -7184,9 +7182,9 @@ export function useKitCommands() {
   };
 }
 
-// #endregion 🔖Kit
+// #endregion Kit
 
-// #region 🔖Commands
+// #region Commands
 
 const sqlWasmUrl = "https://sql.js.org/dist/sql-wasm.wasm";
 
@@ -7403,7 +7401,7 @@ export const kitCommands = {
               const fileBlob = await fileResponse.blob();
               const fileName = file.path.split("/").pop() || file.path;
               files.push(new File([fileBlob], fileName));
-            } catch (error) { }
+            } catch (error) {}
           }
           return {
             diff: {
@@ -7455,7 +7453,9 @@ export const kitCommands = {
               const blob = await response.blob();
               files.set(path, blob);
             }
-          } catch (error) { }
+          } catch (error) {
+            // File not accessible, skip
+          }
         }
 
         const zipBlob = await exportKit(kit, files);
@@ -7486,13 +7486,13 @@ export const kitCommands = {
                     piece.plane || (findDesignInKit(context.kit, guid)?.connections ?? []).some((connection) => connection.connected.piece.guid === piece.guid || connection.connecting.piece.guid === piece.guid)
                       ? piece
                       : {
-                        ...piece,
-                        plane: {
-                          origin: { x: 0, y: 0, z: 0 },
-                          xAxis: { x: 1, y: 0, z: 0 },
-                          yAxis: { x: 0, y: 1, z: 0 },
+                          ...piece,
+                          plane: {
+                            origin: { x: 0, y: 0, z: 0 },
+                            xAxis: { x: 1, y: 0, z: 0 },
+                            yAxis: { x: 0, y: 1, z: 0 },
+                          },
                         },
-                      },
                   ],
                 },
               },
@@ -7516,13 +7516,13 @@ export const kitCommands = {
                     candidate.plane || (design?.connections ?? []).some((connection) => connection.connected.piece.guid === candidate.guid || connection.connecting.piece.guid === candidate.guid)
                       ? candidate
                       : {
-                        ...candidate,
-                        plane: {
-                          origin: { x: 0, y: 0, z: 0 },
-                          xAxis: { x: 1, y: 0, z: 0 },
-                          yAxis: { x: 0, y: 1, z: 0 },
+                          ...candidate,
+                          plane: {
+                            origin: { x: 0, y: 0, z: 0 },
+                            xAxis: { x: 1, y: 0, z: 0 },
+                            yAxis: { x: 0, y: 1, z: 0 },
+                          },
                         },
-                      },
                   ),
                 },
               },
@@ -7621,11 +7621,11 @@ export const kitCommands = {
   },
 };
 
-// #endregion 🔖Commands
+// #endregion Commands
 
-// #region 🔖Machine
+// #region Machine
 
-// #region 🔖Types
+// #region Types
 
 export const defaultPanelVisibility: PanelVisibility = {
   toolbar: false,
@@ -7635,7 +7635,7 @@ export const defaultPanelVisibility: PanelVisibility = {
   settings: false,
 };
 
-// #region 🔖App State Types
+// #region App State Types
 
 export interface HomeAppSelection {
   kits?: Guid[];
@@ -7737,9 +7737,9 @@ export interface TypeAppState {
   focusedConnector?: Guid;
   selectedModelTags: Guid[];
   selectedModelGuid?: Guid;
-  camera?: { position: { x: number; y: number; z: number }; target: { x: number; y: number; z: number } };
+  camera?: any;
   windowLayout?: any;
-
+  others?: any[];
   transaction: AppTransactionState;
 }
 
@@ -7771,7 +7771,7 @@ export interface DesignAppState {
   camera?: any;
   activeTool?: ToolKind;
   fullscreenWindow?: DesignAppFullscreenWindow;
-
+  others?: any[];
   transaction: AppTransactionState;
 }
 
@@ -7806,7 +7806,7 @@ export interface TutorialContext {
   recordedEvents: any[];
 }
 
-// #endregion 🔖App State Types
+// #endregion App State Types
 
 export interface SketchpadMachineInput {
   id?: string;
@@ -7844,6 +7844,7 @@ export type SketchpadEvent =
   | { type: "CREATE_KIT"; kit: Kit; local?: boolean; remote?: boolean }
   | { type: "DELETE_KIT"; guid: Guid }
   | { type: "CHANGE"; diff: SketchpadDiff }
+  // Home app events
   | { type: "HOME.TOGGLE_PANEL"; panel: keyof PanelVisibility }
   | { type: "HOME.SET_PANEL_VISIBILITY"; panelVisibility: PanelVisibility }
   | { type: "HOME.SET_SORT"; column: string; direction: "asc" | "desc" }
@@ -7852,6 +7853,7 @@ export type SketchpadEvent =
   | { type: "HOME.CLEAR_SELECTION" }
   | { type: "HOME.SET_HOVER"; kits?: Guid[] }
   | { type: "HOME.CLEAR_HOVER" }
+  // Kit app events (scoped by kitGuid)
   | { type: "KIT.INIT"; kitGuid: Guid; state: KitAppState }
   | { type: "KIT.SYNC"; kitGuid: Guid; state: Partial<KitAppState> }
   | { type: "KIT.TOGGLE_PANEL"; kitGuid: Guid; panel: keyof PanelVisibility }
@@ -7871,6 +7873,7 @@ export type SketchpadEvent =
   | { type: "KIT.SET_FULLSCREEN"; kitGuid: Guid; window: KitAppFullscreenWindow }
   | { type: "KIT.SET_WINDOW_LAYOUT"; kitGuid: Guid; windowLayout: any }
   | { type: "KIT.SET_DIAGRAM_FORCE"; kitGuid: Guid; diagramForce: Partial<DiagramForceSettings> }
+  // Type app events (scoped by kitGuid:typeGuid)
   | { type: "TYPE.INIT"; kitGuid: Guid; typeGuid: Guid; state: TypeAppState }
   | { type: "TYPE.SYNC"; kitGuid: Guid; typeGuid: Guid; state: Partial<TypeAppState> }
   | { type: "TYPE.TOGGLE_PANEL"; kitGuid: Guid; typeGuid: Guid; panel: keyof PanelVisibility }
@@ -7899,6 +7902,7 @@ export type SketchpadEvent =
   | { type: "TYPE.ADD_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
   | { type: "TYPE.REMOVE_MODEL_TAG"; kitGuid: Guid; typeGuid: Guid; tag: string }
   | { type: "TYPE.CLEAR_MODEL_TAGS"; kitGuid: Guid; typeGuid: Guid }
+  // Design app events (scoped by kitGuid:designGuid)
   | { type: "DESIGN.INIT"; kitGuid: Guid; designGuid: Guid; state: DesignAppState }
   | { type: "DESIGN.SYNC"; kitGuid: Guid; designGuid: Guid; state: Partial<DesignAppState> }
   | { type: "DESIGN.TOGGLE_PANEL"; kitGuid: Guid; designGuid: Guid; panel: keyof PanelVisibility }
@@ -7921,35 +7925,42 @@ export type SketchpadEvent =
   | { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: any }
   | { type: "DESIGN.SELECT_ALL"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.DELETE_SELECTED"; kitGuid: Guid; designGuid: Guid }
+  // Design transaction events (scoped to design app)
   | { type: "DESIGN.TRANSACTION.START"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.COMMIT"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.ABORT"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.UNDO"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.REDO"; kitGuid: Guid; designGuid: Guid }
   | { type: "DESIGN.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; designGuid: Guid; edit: any }
+  // Type transaction events (scoped to type app)
   | { type: "TYPE.TRANSACTION.START"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.COMMIT"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.ABORT"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.UNDO"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.REDO"; kitGuid: Guid; typeGuid: Guid }
   | { type: "TYPE.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; typeGuid: Guid; edit: any }
+  // Kit transaction events (scoped to kit app)
   | { type: "KIT.TRANSACTION.START"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.COMMIT"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.ABORT"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.UNDO"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.REDO"; kitGuid: Guid }
   | { type: "KIT.TRANSACTION.RECORD_EDIT"; kitGuid: Guid; edit: any }
+  // Background operation events (for async operations that continue when navigating away)
   | { type: "BACKGROUND.START"; operationId: string; operationType: string }
   | { type: "BACKGROUND.COMPLETE"; operationId: string }
   | { type: "BACKGROUND.FAIL"; operationId: string; error: string }
+  // Quality app events (scoped by kitGuid:qualityGuid)
   | { type: "QUALITY.TOGGLE_PANEL"; kitGuid: Guid; qualityGuid: Guid; panel: keyof PanelVisibility }
   | { type: "QUALITY.TOGGLE_BENCHMARK"; kitGuid: Guid; qualityGuid: Guid; benchmarkGuid: Guid }
+  // Tutorial events
   | { type: "TUTORIAL.START"; tutorialId: string; steps: TutorialStep[] }
   | { type: "TUTORIAL.END" }
   | { type: "TUTORIAL.NEXT_STEP" }
   | { type: "TUTORIAL.PREV_STEP" }
   | { type: "TUTORIAL.GO_TO_STEP"; index: number }
   | { type: "TUTORIAL.COMPLETE_STEP"; stepId: string }
+  // Feedback app events
   | { type: "FEEDBACK.TOGGLE_PANEL"; panel: keyof PanelVisibility }
   | { type: "FEEDBACK.SET_FORM_DATA"; data: Partial<FeedbackFormData> }
   | { type: "FEEDBACK.RESET_FORM" }
@@ -7957,9 +7968,9 @@ export type SketchpadEvent =
   | { type: "FEEDBACK.SET_SUBMITTED"; isSubmitted: boolean }
   | { type: "FEEDBACK.SET_ERROR"; error: string | undefined };
 
-// #endregion 🔖Types
+// #endregion Types
 
-// #region 🔖Helpers
+// #region Helpers
 
 function migratePath(path: string): string {
   if (path.match(/^\/kit\/([^/]+)\/design\/([^/]+)/)) {
@@ -7982,28 +7993,28 @@ function buildSnapshot(ySketchpad: Y.Map<any>): SketchpadState {
   const settings = settingsStr
     ? JSON.parse(settingsStr)
     : {
-      apps: {
-        design: {
-          diagram: { proximityConnectDistance: 10 },
-          scene: { gridSize: 24 },
+        apps: {
+          design: {
+            diagram: { proximityConnectDistance: 10 },
+            scene: { gridSize: 24 },
+          },
         },
-      },
-    };
+      };
 
   const panelSizesStr = ySketchpad.get("panelSizes") as string;
   const panelSizes = panelSizesStr
     ? JSON.parse(panelSizesStr)
     : {
-      toolbarHeight: 52,
-      workbenchWidth: 230,
-      toolsWidth: 230,
-      hudWidth: 230,
-      statsWidth: 230,
-      detailsWidth: 230,
-      chatWidth: 230,
-      settingsWidth: 230,
-      consoleHeight: 200,
-    };
+        toolbarHeight: 52,
+        workbenchWidth: 230,
+        toolsWidth: 230,
+        hudWidth: 230,
+        statsWidth: 230,
+        detailsWidth: 230,
+        chatWidth: 230,
+        settingsWidth: 230,
+        consoleHeight: 200,
+      };
 
   const navigationHistoryStr = ySketchpad.get("navigationHistory") as string;
   const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
@@ -8239,7 +8250,7 @@ function writeSketchpadStateToLocalStorage(id: string, state: SketchpadState): v
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(`semio.sketchpad.state.${id}`, JSON.stringify(state));
-  } catch { }
+  } catch {}
 }
 
 function toSketchpadInitialState(initialState?: ExtendedInitialState): Partial<SketchpadState> | undefined {
@@ -8281,9 +8292,9 @@ function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): 
   return next;
 }
 
-// #endregion 🔖Helpers
+// #endregion Helpers
 
-// #region 🔖Sketchpad Machine
+// #region Sketchpad Machine
 
 export const sketchpadMachine = setup({
   types: {
@@ -8357,7 +8368,7 @@ export const sketchpadMachine = setup({
     },
   },
   actions: {
-    navigate: () => { },
+    navigate: () => {},
     navigateImpl: assign(({ context, event }) => {
       if (event.type !== "NAVIGATE") return {};
       const currentNav = context.sketchpad.navigation;
@@ -8412,7 +8423,7 @@ export const sketchpadMachine = setup({
       if (event.type !== "CHANGE") return {};
       return { sketchpad: applySketchpadDiffToState(context.sketchpad, event.diff) };
     }),
-    markDirty: () => { },
+    markDirty: () => {},
 
     dispatchAppEvent: assign(({ context, event }) => executeEventHandler(context, event)),
 
@@ -8651,7 +8662,7 @@ export const sketchpadMachine = setup({
   },
 });
 
-// #region 🔖Sketchpad Selectors
+// #region Sketchpad Selectors
 
 export type NavigationState = "home" | "kit" | "design" | "type" | "quality" | "docs";
 export const selectNavigationState = (state: { value: any }): NavigationState => {
@@ -8935,9 +8946,9 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
   return !tx.isTransactionActive && tx.redoStack.length > 0;
 };
 
-// #endregion 🔖Sketchpad Selectors
+// #endregion Sketchpad Selectors
 
-// #endregion 🔖Sketchpad Machine
+// #endregion Sketchpad Machine
 
 export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag" | "concept";
 
@@ -8968,7 +8979,7 @@ export const selectUiIsInType = selectIsInType;
 export const selectUiIsInQuality = selectIsInQuality;
 export const selectUiIsInDocs = selectIsInDocs;
 
-// #region 🔖Factory
+// #region Factory
 
 export function createSketchpadActor(input: SketchpadMachineInput) {
   return createActor(sketchpadMachine, {
@@ -8983,9 +8994,9 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
   });
 }
 
-// #endregion 🔖Factory
+// #endregion Factory
 
-// #region 🔖Legacy Type Exports
+// #region Legacy Type Exports
 
 export interface TransactionContext<TEdit = any> {
   isTransactionActive: boolean;
@@ -9105,9 +9116,9 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
   return buildKitSnapshot(context.yKit);
 }
 
-// #endregion 🔖Legacy Type Exports
+// #endregion Legacy Type Exports
 
-// #region 🔖Actor Types
+// #region Actor Types
 
 export type SketchpadActorRef = ActorRefFrom<typeof sketchpadMachine>;
 
@@ -9117,13 +9128,13 @@ export type SketchpadState$ = { context: SketchpadContext };
 
 export const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
 
-// #endregion 🔖Actor Types
+// #endregion Actor Types
 
-// #endregion 🔖Machine
+// #endregion Machine
 
-// #region 🔖Apps
+// #region Apps
 
-// #region 🔖Design
+// #region Design
 
 export function useIsPieceSelected(): boolean {
   const piece = usePieceScope();
@@ -9597,13 +9608,13 @@ export function useDiffedDesign(): Design {
   return findDesignInKit(kit, designScope.guid);
 }
 
-// #endregion 🔖Design
+// #endregion Design
 
-// #region 🔖Sketchpad
+// #region Sketchpad
 
 export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscribe, deep: boolean = false): Disposable {
   const callback = () => {
-    subscribe(() => { });
+    subscribe(() => {});
   };
   if (deep) {
     yMap.observeDeep(callback);
@@ -9617,7 +9628,7 @@ export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscr
 export function createFieldObserver<T>(yMap: Y.Map<T>, key: string, subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
   let currentValue = yMap.get(key);
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
   const setupNestedObserver = (value: any) => {
     if (deep && value instanceof Y.Map) {
       const nestedCallback = () => notifySubscriber();
@@ -9650,7 +9661,7 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
   const disposables: Disposable[] = [];
   const keySet = new Set(keys);
   const nestedDisposables = new Map<string, Disposable[]>();
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
   const setupNestedObserver = (key: string, value: any) => {
     const keyDisposables: Disposable[] = [];
     if (deep && value instanceof Y.Map) {
@@ -9697,7 +9708,7 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
 
 export function createArrayItemMembershipObserver(getYArray: () => Y.Array<string> | undefined, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
 
   const checkMembership = () => {
     const yArray = getYArray();
@@ -9739,7 +9750,7 @@ export function createNestedArrayItemMembershipObserver(yMap: Y.Map<any>, mapKey
   let currentArray: Y.Array<string> | undefined;
   let nestedMapDisposer: Disposable | null = null;
   let arrayDisposer: Disposable | null = null;
-  const notifySubscriber = () => subscribe(() => { });
+  const notifySubscriber = () => subscribe(() => {});
 
   const checkMembership = (): boolean => {
     const nestedMap = yMap.get(mapKey) as Y.Map<any> | undefined;
@@ -9867,7 +9878,7 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
       return store.onChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -9882,11 +9893,11 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
 export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onChanged((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -9902,11 +9913,11 @@ export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe
 export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onChangedDeep((cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store],
@@ -9933,7 +9944,7 @@ export function useSyncField<T, TSelected = T>(
         (cb: () => void) => {
           cb();
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -9997,7 +10008,7 @@ export function useSyncFields<T, TSelected = T>(
         (cb: () => void) => {
           cb();
           callback();
-          return () => { };
+          return () => {};
         },
         deep,
       );
@@ -10041,11 +10052,11 @@ export function useSyncFields<T, TSelected = T>(
 export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return createNestedArrayItemMembershipObserver(store.yMap, mapKey, arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, mapKey, arrayKey, itemId],
@@ -10066,12 +10077,12 @@ export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | n
 export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | null, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
 
       return createNestedArrayItemMembershipObserver(store.yMap, "selection", arrayKey, itemId, (cb: () => void) => {
         cb();
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, arrayKey, itemId],
@@ -10097,10 +10108,10 @@ export function usePath<T, TSelected = T>(
   const pathKey = useMemo(() => JSON.stringify(path), [path]);
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!store) return () => { };
+      if (!store) return () => {};
       return store.onPathChanged(path, () => {
         callback();
-        return () => { };
+        return () => {};
       });
     },
     [store, pathKey],
@@ -10136,7 +10147,7 @@ export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, 
   }, [derivedStore, key, depsKey]);
   const subscribe = useCallback(
     (callback: () => void) => {
-      if (!nodeRef.current) return () => { };
+      if (!nodeRef.current) return () => {};
       return nodeRef.current.subscribe(callback);
     },
     [derivedStore, key, depsKey],
@@ -10194,8 +10205,8 @@ function updateDocsPanelVisibilityState(update: DocsPanelVisibilityUpdate) {
 }
 
 const nullStore: Synchronizable<null> = {
-  onChanged: () => () => { },
-  onChangedDeep: () => () => { },
+  onChanged: () => () => {},
+  onChangedDeep: () => () => {},
   snapshot: () => null,
 };
 
@@ -10203,23 +10214,23 @@ export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchro
   const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl> & Store<TAccessl>);
   const state = deep
     ? useSyncExternalStore(
-      (onStoreChange: () => void) =>
-        actualStore.onChangedDeep((cb: () => void) => {
-          cb();
-          onStoreChange();
-          return () => { };
-        }),
-      actualStore.snapshot.bind(actualStore),
-    )
+        (onStoreChange: () => void) =>
+          actualStore.onChangedDeep((cb: () => void) => {
+            cb();
+            onStoreChange();
+            return () => {};
+          }),
+        actualStore.snapshot.bind(actualStore),
+      )
     : useSyncExternalStore(
-      (onStoreChange: () => void) =>
-        actualStore.onChanged((cb: () => void) => {
-          cb();
-          onStoreChange();
-          return () => { };
-        }),
-      actualStore.snapshot.bind(actualStore),
-    );
+        (onStoreChange: () => void) =>
+          actualStore.onChanged((cb: () => void) => {
+            cb();
+            onStoreChange();
+            return () => {};
+          }),
+        actualStore.snapshot.bind(actualStore),
+      );
   if (!store) {
     return { status: StoreStatus.IDLE, data: null as any };
   }
@@ -10273,14 +10284,14 @@ type HomeStoreFactory = (parent: SketchpadStore) => HomeStoreInstance;
 type DocsAppStoreFactory = (parent: SketchpadStore) => DocsAppStoreInstance;
 
 import {
-  registerDesignAppStoreFactory,
-  registerKitAppStoreFactory,
-  registerQualityAppStoreFactory,
-  registerTypeAppStoreFactory,
-  getDesignAppStoreFactory as resolveDesignAppStoreFactory,
-  getKitAppStoreFactory as resolveKitAppStoreFactory,
-  getQualityAppStoreFactory as resolveQualityAppStoreFactory,
-  getTypeAppStoreFactory as resolveTypeAppStoreFactory,
+    registerDesignAppStoreFactory,
+    registerKitAppStoreFactory,
+    registerQualityAppStoreFactory,
+    registerTypeAppStoreFactory,
+    getDesignAppStoreFactory as resolveDesignAppStoreFactory,
+    getKitAppStoreFactory as resolveKitAppStoreFactory,
+    getQualityAppStoreFactory as resolveQualityAppStoreFactory,
+    getTypeAppStoreFactory as resolveTypeAppStoreFactory,
 } from "./shared";
 
 let homeStoreFactory: HomeStoreFactory | undefined;
@@ -10309,6 +10320,12 @@ export { registerDesignAppStoreFactory, registerKitAppStoreFactory, registerQual
 type YSketchpadVal = string | number | boolean;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
+let designAppModuleCache: any;
+let homeAppModuleCache: any;
+let kitAppModuleCache: any;
+let typeAppModuleCache: any;
+let qualityAppModuleCache: any;
+
 export class SketchpadStore {
   private static _modulesLoaded = false;
   public static _loadModules() {
@@ -10330,7 +10347,7 @@ export class SketchpadStore {
       import("./Quality").then((m) => {
         qualityAppModuleCache = m;
       }),
-    ]).catch((err) => { });
+    ]).catch((err) => {});
   }
   private readonly id: string | undefined;
   private readonly remote: RemoteProviders | undefined;
@@ -10540,27 +10557,27 @@ export class SketchpadStore {
     const settings = settingsStr
       ? JSON.parse(settingsStr)
       : {
-        apps: {
-          design: {
-            diagram: { proximityConnectDistance: 10 },
-            scene: { gridSize: 24 },
+          apps: {
+            design: {
+              diagram: { proximityConnectDistance: 10 },
+              scene: { gridSize: 24 },
+            },
           },
-        },
-      };
+        };
     const panelSizesStr = this.ySketchpad.get("panelSizes") as string;
     const panelSizes = panelSizesStr
       ? JSON.parse(panelSizesStr)
       : {
-        toolbarHeight: 52,
-        workbenchWidth: 230,
-        toolsWidth: 230,
-        hudWidth: 230,
-        statsWidth: 230,
-        detailsWidth: 230,
-        chatWidth: 230,
-        settingsWidth: 230,
-        consoleHeight: 200,
-      };
+          toolbarHeight: 52,
+          workbenchWidth: 230,
+          toolsWidth: 230,
+          hudWidth: 230,
+          statsWidth: 230,
+          detailsWidth: 230,
+          chatWidth: 230,
+          settingsWidth: 230,
+          consoleHeight: 200,
+        };
     const navigationHistoryStr = this.ySketchpad.get("navigationHistory") as string;
     const navigationHistory = navigationHistoryStr ? JSON.parse(navigationHistoryStr).map(migratePath) : ["/"];
     const recentSearchesStr = this.ySketchpad.get("recentSearches") as string;
@@ -10647,7 +10664,7 @@ export class SketchpadStore {
       });
 
       await Promise.all(filePromises);
-    } catch (error) { }
+    } catch (error) {}
   };
 
   createKitApp = (kit: Guid) => {
@@ -10808,7 +10825,7 @@ export class SketchpadStore {
   onChanged = (subscribe: Subscribe): Unsubscribe => {
     if (this.actor) {
       const subscription = this.actor.subscribe(() => {
-        subscribe(() => { });
+        subscribe(() => {});
       });
       return () => subscription.unsubscribe();
     }
@@ -10818,7 +10835,7 @@ export class SketchpadStore {
   onChangedDeep = (subscribe: Subscribe): Unsubscribe => {
     if (this.actor) {
       const subscription = this.actor.subscribe(() => {
-        subscribe(() => { });
+        subscribe(() => {});
       });
       return () => subscription.unsubscribe();
     }
@@ -11303,30 +11320,30 @@ export class SketchpadStore {
           const concepts =
             yConcepts.length > 0
               ? Array.from(yConcepts).map((yConcept: any) => {
-                const yMap = yConcept[0] as Y.Map<any>;
-                const concept: Concept = {
-                  guid: yMap.get("guid") as string,
-                  name: yMap.get("name") as string,
-                };
-                const description = yMap.get("description") as string | undefined;
-                if (description) concept.description = description;
-                const icon = yMap.get("icon") as string | undefined;
-                if (icon) concept.icon = icon;
-                const yAttrs = yMap.get("attributes") as Y.Array<any> | undefined;
-                if (yAttrs && yAttrs.length > 0) {
-                  const attributes = Array.from(yAttrs).map((yAttr: any) => {
-                    const attrMap = yAttr[0] as Y.Map<any>;
-                    const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
-                    const value = attrMap.get("value") as string | undefined;
-                    if (value) attribute.value = value;
-                    const definition = attrMap.get("definition") as string | undefined;
-                    if (definition) attribute.definition = definition;
-                    return attribute;
-                  });
-                  if (attributes.length > 0) concept.attributes = attributes;
-                }
-                return concept;
-              })
+                  const yMap = yConcept[0] as Y.Map<any>;
+                  const concept: Concept = {
+                    guid: yMap.get("guid") as string,
+                    name: yMap.get("name") as string,
+                  };
+                  const description = yMap.get("description") as string | undefined;
+                  if (description) concept.description = description;
+                  const icon = yMap.get("icon") as string | undefined;
+                  if (icon) concept.icon = icon;
+                  const yAttrs = yMap.get("attributes") as Y.Array<any> | undefined;
+                  if (yAttrs && yAttrs.length > 0) {
+                    const attributes = Array.from(yAttrs).map((yAttr: any) => {
+                      const attrMap = yAttr[0] as Y.Map<any>;
+                      const attribute: Attribute = { guid: attrMap.get("guid") as string, key: attrMap.get("key") as string };
+                      const value = attrMap.get("value") as string | undefined;
+                      if (value) attribute.value = value;
+                      const definition = attrMap.get("definition") as string | undefined;
+                      if (definition) attribute.definition = definition;
+                      return attribute;
+                    });
+                    if (attributes.length > 0) concept.attributes = attributes;
+                  }
+                  return concept;
+                })
               : conceptGuids?.map((g) => ({ guid: g, name: g }));
           const kit: Kit = {
             guid: yKit.get("guid") as string,
@@ -11355,7 +11372,7 @@ export class SketchpadStore {
           const kitStore = new KitStore(this, kit, local, remote, this.remote);
           this.kits.set(kit.guid, kitStore);
           this.kitCreatedSubscribers.forEach((subscriber) => subscriber());
-        } catch (error) { }
+        } catch (error) {}
       } else {
         this.yDoc.transact(() => {
           const index = kitMetadataArray.findIndex((meta) => meta.get("guid") === kitGuid);
@@ -11604,7 +11621,7 @@ export function useNavigationHistory(): {
   };
 }
 
-// #region 🔖XState Hooks
+// #region XState Hooks
 
 export function useSketchpadActor(): SketchpadActorRef {
   const actor = useContext(SketchpadActorContext);
@@ -11718,7 +11735,7 @@ export function useXStateAction<TEvent extends { type: string }>(canEvent: TEven
   return useMemo(() => createActionValue(() => actor.send(event as Parameters<typeof actor.send>[0]), canExecute), [actor, event, canExecute]);
 }
 
-// #endregion 🔖XState Hooks
+// #endregion XState Hooks
 
 export function useDesignAppXState(kitGuid: Guid, designGuid: Guid): DesignAppState {
   const actor = useSketchpadActor();
@@ -11828,7 +11845,7 @@ export function useKitShallows(): KitShallow[] {
         return kitStore.onChanged((cb: () => void) => {
           cb();
           onStoreChange();
-          return () => { };
+          return () => {};
         });
       });
       return () => {
@@ -11861,12 +11878,12 @@ export function useKitKind(kitGuid: string): "temporary" | "local" | "remote" | 
   const hasKit = useHasKit(kitGuid);
   return useSyncExternalStore(
     (onStoreChange) => {
-      if (!hasKit) return () => { };
+      if (!hasKit) return () => {};
       const kitStore = store.kit(kitGuid);
       return kitStore.onChanged((cb: () => void) => {
         cb();
         onStoreChange();
-        return () => { };
+        return () => {};
       });
     },
     () => {
@@ -11976,7 +11993,7 @@ export function useAppCommands() {
           togglePanel: (_origin: string, panelKey: keyof PanelVisibility) => {
             actor.send({ type: "HOME.TOGGLE_PANEL", panel: panelKey } as any);
           },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
       case "kit":
         return {
@@ -11990,7 +12007,7 @@ export function useAppCommands() {
             try {
               const app = store.kitApp(kitGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "design":
@@ -12005,7 +12022,7 @@ export function useAppCommands() {
             try {
               const app = store.designApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "type":
@@ -12020,7 +12037,7 @@ export function useAppCommands() {
             try {
               const app = store.typeApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "quality":
@@ -12035,7 +12052,7 @@ export function useAppCommands() {
             try {
               const app = store.qualityApp(kitGuid, itemGuid);
               return app?.execute(command, origin, ...args);
-            } catch (e) { }
+            } catch (e) {}
           },
         };
       case "docs":
@@ -12046,12 +12063,12 @@ export function useAppCommands() {
               [panelKey]: !prev[panelKey],
             }));
           },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
       default:
         return {
-          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => { },
-          execute: (_origin: string, _command: string, ..._args: any[]) => { },
+          togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => {},
+          execute: (_origin: string, _command: string, ..._args: any[]) => {},
         };
     }
   }, [store, appType, kitGuid, itemGuid, actor]);
@@ -12207,7 +12224,7 @@ export function useKits(): KitShallow[] {
         return kitStore.onChanged((cb: () => void) => {
           cb();
           onStoreChange();
-          return () => { };
+          return () => {};
         });
       });
       return () => {
@@ -12255,9 +12272,9 @@ export function useKitCommandsById(kitGuid?: string) {
   }, [kitGuid, store]);
 }
 
-// #endregion 🔖Sketchpad
+// #endregion Sketchpad
 
-// #region 🔖Commands
+// #region Commands
 
 export const commands = {
   "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
@@ -12445,11 +12462,9 @@ export const devCommands = {
   },
 };
 
-// #endregion 🔖Commands
+// #endregion Commands
 
-// #endregion 🔖Apps
-
-// #region 🔖Apps Registry
+// #region Apps Registry
 
 export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
   try {
@@ -12457,7 +12472,7 @@ export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
     if (module && module.panels) {
       return module.panels;
     }
-  } catch (e) { }
+  } catch (e) {}
   return [];
 }
 
@@ -12575,9 +12590,9 @@ async function loadAppConfigs() {
 
 export { appRegistry, loadAppConfigs };
 
-// #endregion 🔖Apps Registry
+// #endregion Apps Registry
 
-// #region 🔖Navbar
+// #region Navbar
 
 interface FocusContextValue {
   focusItems: FocusItem[];
@@ -12645,13 +12660,16 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
     chat: [],
     settings: [],
     toolbar: [],
+    leftSidePanel: [],
+    rightSidePanel: [],
+    hudPanel: [],
   });
 
   const addSection = useCallback((panelKey: PanelKey, section: PanelSection) => {
     setSections((prev) => {
       const updated = {
         ...prev,
-        [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section].sort((a, b) => {
+        [panelKey]: [...prev[panelKey].filter((s) => s.id !== section.id), section as any].sort((a: any, b: any) => {
           const specificityDiff = (b.specificity ?? 0) - (a.specificity ?? 0);
           if (specificityDiff !== 0) return specificityDiff;
           return (a.order || 0) - (b.order || 0);
@@ -12689,9 +12707,9 @@ export const useRemovePanelSection = () => {
   return context.removeSection;
 };
 
-// #endregion 🔖Navbar
+// #endregion Navbar
 
-// #region 🔖SidePanel Tabs
+// #region SidePanel Tabs
 
 interface SidePanelTabsState {
   left: SidePanelTab[];
@@ -12820,9 +12838,9 @@ export const useActiveHudTabId = (): [string | undefined, (tabId: string) => voi
   return [context.activeHudTabId, context.setActiveHudTabId];
 };
 
-// #endregion 🔖SidePanel Tabs
+// #endregion SidePanel Tabs
 
-// #region 🔖Origin
+// #region Origin
 
 type OriginStore = {
   subscribe: (callback: () => void) => () => void;
@@ -12887,14 +12905,14 @@ export function useOrigin(): () => string {
 export function useOriginValue(): string {
   const store = useContext(OriginContext);
   return useSyncExternalStore(
-    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => { }), [store]),
+    useCallback((callback: () => void) => (store ? store.subscribe(callback) : () => {}), [store]),
     useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]),
   );
 }
 
-// #endregion 🔖Origin
+// #endregion Origin
 
-// #region 🔖Footer Items
+// #region Footer Items
 
 interface FooterItemContextValue {
   items: FooterItem[];
@@ -12941,9 +12959,9 @@ export const useRemoveFooterItem = () => {
   return context.removeItem;
 };
 
-// #endregion 🔖Footer Items
+// #endregion Footer Items
 
-// #region 🔖Global Footer Items
+// #region Global Footer Items
 
 const GlobalFooterItems: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -12966,9 +12984,9 @@ const GlobalFooterItems: FC = () => {
   return null;
 };
 
-// #endregion 🔖Global Footer Items
+// #endregion Global Footer Items
 
-// #region 🔖ConceptFilter
+// #region ConceptFilter
 
 export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = ({ allConcepts, paramName = "concepts" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -13016,9 +13034,9 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
   );
 };
 
-// #endregion 🔖ConceptFilter
+// #endregion ConceptFilter
 
-// #region 🔖ToolGroup
+// #region ToolGroup
 
 export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange }) => {
   const getActiveToolDefinition = () => {
@@ -13084,9 +13102,9 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
   );
 };
 
-// #endregion 🔖ToolGroup
+// #endregion ToolGroup
 
-// #region 🔖DragDrop
+// #region DragDrop
 
 interface DragDropContextValue {
   activeDraggedType: Type | null;
@@ -13110,9 +13128,9 @@ export const useDragDrop = () => {
   return context;
 };
 
-// #endregion 🔖DragDrop
+// #endregion DragDrop
 
-// #region 🔖Hotkeys
+// #region Hotkeys
 
 export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?: { enableOnFormTags?: boolean }, deps?: React.DependencyList) {
   const hotkeyOverrides = useSketchpad((s) => s.hotkeyOverrides) as Record<string, string> | undefined;
@@ -13127,7 +13145,7 @@ export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?:
   useReactHotkeys(finalHotkey, callback, options || {}, deps || []);
 }
 
-// #endregion 🔖Hotkeys
+// #endregion Hotkeys
 
 export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
   const { t } = useI18nTranslation();
@@ -13302,7 +13320,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const guid = crypto.randomUUID();
       const now = new Date().toISOString();
       const existingNames = kits.map((k) => k.name);
-      const uniqueName = generateUniqueName(defaultKitName, existingNames);
+      const uniqueName = generateUniqueName(defaultKitName ?? "", existingNames);
       sketchpadCommands.createKit(origin, {
         guid,
         name: uniqueName,
@@ -13322,7 +13340,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       const newGuid = crypto.randomUUID();
       const now = new Date().toISOString();
       const existingVersions = kits.filter((k) => k.name === kit.name).map((k) => k.version || "");
-      const uniqueVersion = generateUniqueName(newVersionLabel, existingVersions);
+      const uniqueVersion = generateUniqueName(newVersionLabel ?? "", existingVersions);
       sketchpadCommands.createKit(origin, {
         guid: newGuid,
         name: kit.name,
@@ -13341,7 +13359,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       if (!kitCommands || !kitGuid) return;
       const guid = crypto.randomUUID();
       const existingNames = allDesigns.map((d) => d.name);
-      const uniqueName = name || generateUniqueName(defaultDesignName, existingNames);
+      const uniqueName = name || generateUniqueName(defaultDesignName ?? "", existingNames);
       kitCommands.createDesign(origin, { guid, name: uniqueName, parent: parent ? { guid: parent } : undefined, pieces: [], connections: [] });
       sketchpadCommands.navigateToDesign(kitGuid, guid);
     },
@@ -13354,7 +13372,7 @@ const Navigation: FC<NavigationProps> = ({ mobile = false }) => {
       if (!kitCommands || !kitGuid) return;
       const guid = crypto.randomUUID();
       const existingNames = allTypes.map((t) => t.name);
-      const uniqueName = name || generateUniqueName(defaultTypeName, existingNames);
+      const uniqueName = name || generateUniqueName(defaultTypeName ?? "", existingNames);
       kitCommands.createType(origin, { guid, name: uniqueName, parent: parent ? { guid: parent } : undefined, connectors: [] });
       sketchpadCommands.navigateToType(kitGuid, guid);
     },
@@ -14048,7 +14066,7 @@ const buildSearchResultPath = (result: SearchResult): string => {
   return "";
 };
 
-const Search: FC = ({ }) => {
+const Search: FC = ({}) => {
   const navigate = useNavigate();
   const recentSearches = (useSketchpad((s) => s.recentSearches) as string[]) || [];
   const updateRecentSearches = useUpdateRecentSearches();
@@ -14266,7 +14284,7 @@ const Search: FC = ({ }) => {
   );
 };
 
-const Focus: FC = ({ }) => {
+const Focus: FC = ({}) => {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const focusContext = useFocusSafe();
@@ -14334,7 +14352,7 @@ const Focus: FC = ({ }) => {
   const groupedResults = useMemo(() => {
     const groups: Record<string, typeof focusResults> = {};
     focusResults.forEach((result) => {
-      const category = result.item.category || focusOtherLabel;
+      const category = result.item.category || focusOtherLabel || "";
       if (!groups[category]) groups[category] = [];
       groups[category].push(result);
     });
@@ -14373,7 +14391,7 @@ const Focus: FC = ({ }) => {
   );
 };
 
-const PanelToggles: FC = ({ }) => {
+const PanelToggles: FC = ({}) => {
   const appType = useAppType();
   const visiblePanels = useAppPanelVisibility();
   const appCommands = useAppCommands();
@@ -14437,7 +14455,7 @@ const PanelToggles: FC = ({ }) => {
   );
 };
 
-// #region 🔖Canvas
+// #region Canvas
 
 export { createDefaultLayout } from "./shared";
 export type { AppWindowConfig, WindowControl, WindowKindDefinition } from "./shared";
@@ -14868,7 +14886,7 @@ export const LayoutCanvas: FC<{
                 }
               };
               return (
-                <MemoryRouter initialEntries={[location.pathname + location.search]} initialIndex={0}>
+                <MemoryRouter initialEntries={[location.pathname + location.search]} initialIndex={0} unstable_useTransitions={false}>
                   <LayoutScopeWrapper>
                     <DragDropProvider>
                       <LayoutErrorBoundary
@@ -15143,9 +15161,9 @@ export const LayoutCanvas: FC<{
   );
 };
 
-// #endregion 🔖Canvas
+// #endregion Canvas
 
-// #region 🔖App Router
+// #region App Router
 
 const ScopeWrapper: FC<{ ScopeProvider: ComponentType<{ guid: string; children: ReactNode }>; paramName: string; children: ReactNode }> = ({ ScopeProvider, paramName, children }) => {
   const params = useParams();
@@ -15220,9 +15238,9 @@ const AppRouter: FC = () => {
   );
 };
 
-// #endregion 🔖App Router
+// #endregion App Router
 
-// #region 🔖Sketchpad Components
+// #region Sketchpad Components
 
 const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   const location = useLocation();
@@ -15254,6 +15272,29 @@ const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   return wrapped;
 };
 
+const PanelTabSectionItem: FC<{ section: PanelSection; defaultOpen: boolean }> = ({ section, defaultOpen }) => {
+  const sectionLabel = useLabel(section.id) ?? section.id;
+  const content = typeof section.content === "function" ? section.content() : section.content;
+  return (
+    <TreeSection label={sectionLabel} id={section.id} defaultOpen={defaultOpen} actions={section.actions} onPointerEnter={section.onPointerEnter} onPointerLeave={section.onPointerLeave} onDoubleClick={section.onDoubleClick}>
+      {content}
+    </TreeSection>
+  );
+};
+
+const PanelTabContent: FC<{ sections: PanelSection[] }> = ({ sections }) => {
+  const sortedSections = [...sections].sort((a, b) => (a.order || 0) - (b.order || 0));
+
+  return (
+    <TreeStateProvider>
+      <Tree className="min-w-0 overflow-hidden">
+        {sortedSections.map((section, index) => (
+          <PanelTabSectionItem key={section.id} section={section} defaultOpen={section.defaultOpen ?? index === 0} />
+        ))}
+      </Tree>
+    </TreeStateProvider>
+  );
+};
 
 const LayoutWrapper: FC = () => {
   const location = useLocation();
@@ -15296,6 +15337,20 @@ const LayoutWrapper: FC = () => {
   const removeHudPanelTab = useRemoveHudPanelTab();
   const panelConfigs = usePanelConfigs();
 
+  // Create mapping from PanelKind to sections
+  const sectionsByKind: Record<PanelKind, PanelSection[]> = {
+    [PanelKind.WORKBENCH]: workbenchSections,
+    [PanelKind.TOOLS]: toolsSections,
+    [PanelKind.TOOLBAR]: toolbarSections,
+    [PanelKind.HUD]: hudSections,
+    [PanelKind.STATS]: statsSections,
+    [PanelKind.DETAILS]: detailsSections,
+    [PanelKind.CHAT]: chatSections,
+    [PanelKind.SETTINGS]: settingsSections,
+    [PanelKind.PARAMS]: [],
+    [PanelKind.CONSOLE]: consoleSections,
+  };
+
   useEffect(() => {
     const panels = panelConfigs[appType] || [];
     const registeredIds: string[] = [];
@@ -15304,11 +15359,13 @@ const LayoutWrapper: FC = () => {
       const config = panelKindConfigs[panel.kind];
       if (!config) return;
 
+      const sections = sectionsByKind[panel.kind] || [];
+
       const tab = {
         id: panel.id,
         icon: config.icon,
         order: 0,
-        content: <></>,
+        content: () => <PanelTabContent sections={sections} />,
       };
 
       if (config.position === PanelPosition.LEFT) {
@@ -15335,7 +15392,23 @@ const LayoutWrapper: FC = () => {
         else if (config.position === PanelPosition.MIDDLE) removeHudPanelTab(id);
       });
     };
-  }, [appType, panelConfigs, addSidePanelTab, removeSidePanelTab, addHudPanelTab, removeHudPanelTab]);
+  }, [
+    appType,
+    panelConfigs,
+    addSidePanelTab,
+    removeSidePanelTab,
+    addHudPanelTab,
+    removeHudPanelTab,
+    workbenchSections,
+    toolsSections,
+    toolbarSections,
+    hudSections,
+    statsSections,
+    detailsSections,
+    chatSections,
+    settingsSections,
+    consoleSections,
+  ]);
 
   const sketchpadCommands = useSketchpadCommands();
 
@@ -15388,7 +15461,7 @@ const LayoutWrapper: FC = () => {
       if (i18n.language !== language) {
         i18n
           .changeLanguage(language)
-          .then(() => { })
+          .then(() => {})
           .catch((err) => {
             console.error("[Language Sync] Failed to change language:", err);
           });
@@ -15588,7 +15661,7 @@ const LayoutWrapper: FC = () => {
                 if (target && target.requestFullscreen) {
                   const result = target.requestFullscreen();
                   if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => { });
+                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => {});
                   } else {
                     sketchpadCommands.toggleFullscreen(fullscreenToggleId);
                   }
@@ -15597,7 +15670,7 @@ const LayoutWrapper: FC = () => {
                 if (document.fullscreenElement && document.exitFullscreen) {
                   const result = document.exitFullscreen();
                   if (result && typeof (result as any).then === "function") {
-                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => { });
+                    (result as Promise<void>).then(() => sketchpadCommands.toggleFullscreen(fullscreenToggleId)).catch(() => {});
                   } else {
                     sketchpadCommands.toggleFullscreen(fullscreenToggleId);
                   }
@@ -15621,8 +15694,7 @@ const LayoutWrapper: FC = () => {
   const [activeDragData, setActiveDragData] = useState<any>(null);
   const [activeToolbarGroup, setActiveToolbarGroup] = useState<string | null>(null);
 
-
-
+  // Group toolbar sections
   const toolbarGroups = useMemo(() => {
     const groups: Record<string, PanelSection[]> = {};
     toolbarSections.forEach((section) => {
@@ -15632,16 +15704,22 @@ const LayoutWrapper: FC = () => {
         groups[gid].push(section);
       }
     });
-
-    Object.keys(groups).forEach(key => {
-        groups[key].sort((a,b) => (a.toolbarGroup?.order ?? 0) - (b.toolbarGroup?.order ?? 0));
+    // Sort sections within user defined groups
+    Object.keys(groups).forEach((key) => {
+      groups[key].sort((a, b) => (a.toolbarGroup?.order ?? 0) - (b.toolbarGroup?.order ?? 0));
     });
     return groups;
   }, [toolbarSections]);
 
+  useEffect(() => {
+    const groupOrder = ["hand", "selection", "filter", "create", "view", "actions"];
+    const firstGroup = groupOrder.find((g) => g !== "hand" && toolbarGroups[g]);
+    setActiveToolbarGroup((prev) => (prev === null || (prev !== null && !toolbarGroups[prev]) ? firstGroup ?? null : prev));
+  }, [toolbarGroups]);
+
   const toggleToolbarGroup = useCallback((id: string) => {
-    setActiveToolbarGroup(prev => {
-        return prev === id ? null : id;
+    setActiveToolbarGroup((prev) => {
+      return prev === id ? null : id;
     });
   }, []);
 
@@ -15674,7 +15752,7 @@ const LayoutWrapper: FC = () => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8,
+        distance: 8, // 8px of movement required before drag starts
       },
     }),
   );
@@ -15754,172 +15832,151 @@ const LayoutWrapper: FC = () => {
                 isVisible={isFooterExpanded || !isFullscreen}
               />
             }
-            leftPanel={
-              panelVisibility.leftSidePanel || panelVisibility.workbench || panelVisibility.tools
-                ? {
-                  visible: true,
-                  size: panelVisibility.tools ? panelSizes.toolsWidth : panelSizes.workbenchWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.tools ? "toolsWidth" : "workbenchWidth", size),
-                  sections: panelVisibility.tools ? toolsSections : workbenchSections,
-                  opacity: panelOpacity,
-                  panelKey: panelVisibility.tools ? "tools" : "workbench",
-                }
-                : undefined
-            }
-            middlePanel={
-              panelVisibility.hudPanel || panelVisibility.hud || panelVisibility.stats
-                ? {
-                  visible: true,
-                  size: panelVisibility.stats ? panelSizes.statsWidth : panelSizes.hudWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.stats ? "statsWidth" : "hudWidth", size),
-                  sections: panelVisibility.stats ? statsSections : hudSections,
-                  panelKey: panelVisibility.stats ? "stats" : "hud",
-                }
-                : undefined
-            }
-            rightPanel={
-              panelVisibility.rightSidePanel || panelVisibility.details || panelVisibility.chat || panelVisibility.settings
-                ? {
-                  visible: true,
-                  size: panelVisibility.chat ? panelSizes.chatWidth : panelVisibility.settings ? panelSizes.settingsWidth : panelSizes.detailsWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", panelVisibility.chat ? "chatWidth" : panelVisibility.settings ? "settingsWidth" : "detailsWidth", size),
-                  sections: panelVisibility.chat ? chatSections : panelVisibility.settings ? settingsSections : detailsSections,
-                  panelKey: panelVisibility.chat ? "chat" : panelVisibility.settings ? "settings" : "details",
-                }
-                : undefined
-            }
             bottomPanel={
               consoleSections.length > 0
                 ? {
-                  visible: true,
-                  size: panelSizes.consoleHeight,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
-                  sections: consoleSections,
-                  panelKey: "console",
-                }
+                    visible: true,
+                    size: panelSizes.consoleHeight,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "consoleHeight", size),
+                    sections: consoleSections,
+                    panelKey: "console",
+                  }
                 : undefined
             }
             leftSidePanel={
               leftSidePanelTabs.length > 0 && panelVisibility.leftSidePanel
                 ? {
-                  visible: true,
-                  size: panelSizes.leftSidePanelWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
-                  tabs: leftSidePanelTabs,
-                  activeTabId: activeLeftTabId,
-                  onActiveTabChange: setActiveLeftTabId,
-                }
+                    position: "left" as const,
+                    visible: true,
+                    size: panelSizes.leftSidePanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "leftSidePanelWidth", size),
+                    tabs: leftSidePanelTabs,
+                    activeTabId: activeLeftTabId,
+                    onActiveTabChange: setActiveLeftTabId,
+                  }
                 : undefined
             }
             rightSidePanel={
               rightSidePanelTabs.length > 0 && panelVisibility.rightSidePanel
                 ? {
-                  visible: true,
-                  size: panelSizes.rightSidePanelWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
-                  tabs: rightSidePanelTabs,
-                  activeTabId: activeRightTabId,
-                  onActiveTabChange: setActiveRightTabId,
-                }
+                    position: "right" as const,
+                    visible: true,
+                    size: panelSizes.rightSidePanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "rightSidePanelWidth", size),
+                    tabs: rightSidePanelTabs,
+                    activeTabId: activeRightTabId,
+                    onActiveTabChange: setActiveRightTabId,
+                  }
                 : undefined
             }
             hudPanel={
               hudPanelTabs.length > 0 && panelVisibility.hudPanel
                 ? {
-                  visible: true,
-                  size: panelSizes.hudPanelWidth,
-                  onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "hudPanelWidth", size),
-                  tabs: hudPanelTabs,
-                  activeTabId: activeHudTabId,
-                  onActiveTabChange: setActiveHudTabId,
-                }
+                    visible: true,
+                    size: panelSizes.hudPanelWidth,
+                    onSizeChange: (size: number) => sketchpadCommands.setPanelSize("semio.sketchpad", "hudPanelWidth", size),
+                    tabs: hudPanelTabs,
+                    activeTabId: activeHudTabId,
+                    onActiveTabChange: setActiveHudTabId,
+                  }
                 : undefined
             }
             toolbar={
-              panelVisibility.toolbar ||
-              appType === "type" ||
-              appType === "design" ||
-              appType === "feedback" ||
-              appType === "kit" ||
-              appType === "home" ||
-              appType === "quality" ||
-              appType === "docs" ? (
+              panelVisibility.toolbar || appType === "type" || appType === "design" || appType === "feedback" || appType === "kit" || appType === "home" || appType === "quality" || appType === "docs" ? (
                 toolbarSections.length > 0 ? (
-                  <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 flex justify-center pointer-events-none h-[40px] px-2">
-                    <div className="flex gap-single items-center pointer-events-auto max-w-[calc(100vw-2rem)] overflow-hidden shrink-0">
-                      <LevelProvider level="panel">
-                        <div className="bg-panel flex shrink-0 items-center gap-single border rounded-md px-single h-full shadow-sm overflow-hidden">
-                          {["hand", "selection", "filter", "create", "view", "actions"].map((groupId) => {
-                            if (!toolbarGroups[groupId]) return null;
-                            const isActive = activeToolbarGroup === groupId;
+                  <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 h-[40px] pointer-events-none px-2">
+                    <div id="semio.sketchpad.toolbar.seam" className="absolute left-1/2 top-0 h-full w-0 -translate-x-1/2">
+                      <div id="semio.sketchpad.toolbar.zone.tools" className="absolute right-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
+                        <LevelProvider level="panel">
+                          <ToolbarZone>
+                            {["hand", "selection", "filter", "create", "view", "actions"].map((groupId) => {
+                              if (!toolbarGroups[groupId]) return null;
+                              const isActive = activeToolbarGroup === groupId;
 
-                            if (groupId === "selection") {
-                              const activeSubToolId = activeSubToolByGroup[groupId] || toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
-                              const uniqueSubTools = Array.from(new Set(toolbarGroups[groupId].map((s) => s.toolbarGroup?.subToolId).filter(Boolean))) as string[];
+                              if (groupId === "selection") {
+                                const activeSubToolId = activeSubToolByGroup[groupId] || toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
+                                const uniqueSubTools = Array.from(new Set(toolbarGroups[groupId].map((s) => s.toolbarGroup?.subToolId).filter(Boolean))) as string[];
+                                if (uniqueSubTools.length === 0) {
+                                  return (
+                                    <Toggle
+                                      key={groupId}
+                                      kind="single"
+                                      id={`semio.sketchpad.toolbar.group.${groupId}`}
+                                      pressed={isActive}
+                                      onPressedChange={() => toggleToolbarGroup(groupId)}
+                                      icon={getGroupIcon(groupId)}
+                                      text={i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`)}
+                                    />
+                                  );
+                                }
+
+                                return (
+                                  <Toggle
+                                    key={groupId}
+                                    kind="dropdown"
+                                    id={`semio.sketchpad.toolbar.group.${groupId}`}
+                                    value={activeSubToolId}
+                                    pressed={isActive}
+                                    onPressedChange={(pressed) => {
+                                      setActiveToolbarGroup(pressed ? groupId : null);
+                                    }}
+                                    onValueChange={(val) => val && setSubTool(groupId, val)}
+                                    dropdownSide="top"
+                                    dropdownAlign="end"
+                                    dropdownSideOffset={2}
+                                    dropdownAvoidCollisions={false}
+                                    dropdownInstant={true}
+                                    dropdownContentClassName="w-[10.5rem] min-w-[10.5rem] p-0 overflow-hidden border transition-none"
+                                    items={uniqueSubTools.map((subToolId) => {
+                                      const section = toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId === subToolId);
+                                      return {
+                                        value: subToolId,
+                                        label: section?.toolbarGroup?.subToolIcon || <FocusIcon className="size-tiny" />,
+                                        text: section?.toolbarGroup?.subToolLabelId ? i18n.t(section.toolbarGroup.subToolLabelId) : subToolId,
+                                        id: `semio.sketchpad.toolbar.subtool.${subToolId}`,
+                                      };
+                                    })}
+                                  />
+                                );
+                              }
 
                               return (
                                 <Toggle
                                   key={groupId}
-                                  kind="dropdown"
+                                  kind="single"
                                   id={`semio.sketchpad.toolbar.group.${groupId}`}
-                                  value={activeSubToolId}
                                   pressed={isActive}
-                                  onPressedChange={(pressed) => {
-                                    setActiveToolbarGroup(pressed ? groupId : null)
-                                  }}
-                                  onValueChange={(val) => val && setSubTool(groupId, val)}
-                                  dropdownSide="top"
-                                  dropdownAlign="end"
-                                  dropdownSideOffset={2}
-                                  dropdownAvoidCollisions={false}
-                                  dropdownInstant={true}
-                                  dropdownContentClassName="w-[10.5rem] min-w-[10.5rem] p-0 overflow-hidden border transition-none"
-                                  items={uniqueSubTools.map((subToolId) => {
-                                    const section = toolbarGroups[groupId].find((s) => s.toolbarGroup?.subToolId === subToolId);
-                                    return {
-                                      value: subToolId,
-                                      label: section?.toolbarGroup?.subToolIcon || <FocusIcon className="size-tiny" />,
-                                      text: section?.toolbarGroup?.subToolLabelId ? i18n.t(section.toolbarGroup.subToolLabelId) : subToolId,
-                                      id: `semio.sketchpad.toolbar.subtool.${subToolId}`,
-                                    };
-                                  })}
+                                  onPressedChange={() => toggleToolbarGroup(groupId)}
+                                  icon={getGroupIcon(groupId)}
+                                  text={i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`)}
                                 />
                               );
-                            }
-
-                            return (
-                              <Toggle
-                                key={groupId}
-                                kind="single"
-                                id={`semio.sketchpad.toolbar.group.${groupId}`}
-                                pressed={isActive}
-                                onPressedChange={() => toggleToolbarGroup(groupId)}
-                                icon={getGroupIcon(groupId)}
-                                text={i18n.t(`semio.sketchpad.toolbar.parent.${groupId}`)}
-                              />
-                            );
-                          })}
-                        </div>
-                      </LevelProvider>
+                            })}
+                          </ToolbarZone>
+                        </LevelProvider>
+                      </div>
 
                       {activeToolbarGroup && toolbarGroups[activeToolbarGroup] && (
-                        <LevelProvider level="panel">
-                          <div className="bg-panel flex-1 flex flex-nowrap items-center gap-single border rounded-md px-single h-full shadow-sm overflow-hidden min-w-0">
-                            <ToolbarScopeWrapper>
-                              {toolbarGroups[activeToolbarGroup]?.map((section) => {
-                                if (activeToolbarGroup === "selection") {
-                                  const activeSubToolId = activeSubToolByGroup["selection"] || toolbarGroups["selection"].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
-                                  if (section.toolbarGroup?.subToolId !== activeSubToolId) return null;
-                                }
-                                return (
-                                  <div key={section.id} className="shrink-0 flex items-center min-w-0">
-                                    {typeof section.content === "function" ? section.content() : section.content}
-                                  </div>
-                                );
-                              })}
-                            </ToolbarScopeWrapper>
-                          </div>
-                        </LevelProvider>
+                        <div id="semio.sketchpad.toolbar.zone.settings" className="absolute left-[4px] top-0 h-full max-w-[calc(50vw-1rem)] pointer-events-auto">
+                          <LevelProvider level="panel">
+                            <ToolbarZone className="flex-nowrap min-w-0">
+                              <ToolbarScopeWrapper>
+                                {toolbarGroups[activeToolbarGroup]?.map((section) => {
+                                  if (activeToolbarGroup === "selection") {
+                                    const activeSubToolId = activeSubToolByGroup["selection"] || toolbarGroups["selection"].find((s) => s.toolbarGroup?.subToolId)?.toolbarGroup?.subToolId;
+                                    const hasSelectionSubTools = toolbarGroups["selection"]?.some((s) => Boolean(s.toolbarGroup?.subToolId));
+                                    if (hasSelectionSubTools && section.toolbarGroup?.subToolId !== activeSubToolId) return null;
+                                  }
+                                  return (
+                                    <ToolbarItem key={section.id}>
+                                      {typeof section.content === "function" ? section.content() : section.content}
+                                    </ToolbarItem>
+                                  );
+                                })}
+                              </ToolbarScopeWrapper>
+                            </ToolbarZone>
+                          </LevelProvider>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -16004,7 +16061,7 @@ const Sketchpad = ({
   initialState?: ExtendedInitialState;
   importKitUrls?: string[];
   embedded?: boolean;
-}): JSX.Element => {
+}): React.JSX.Element => {
   const initialEntries = useMemo(() => {
     if (!embedded) return undefined;
     if (typeof window !== "undefined" && window.location) {
@@ -16036,17 +16093,17 @@ const Sketchpad = ({
   );
 
   if (embedded) {
-    return <MemoryRouter initialEntries={initialEntries}>{routerContent}</MemoryRouter>;
+    return <MemoryRouter initialEntries={initialEntries} unstable_useTransitions={false}>{routerContent}</MemoryRouter>;
   }
 
-  return <BrowserRouter>{routerContent}</BrowserRouter>;
+  return <BrowserRouter unstable_useTransitions={false}>{routerContent}</BrowserRouter>;
 };
 
-// #endregion 🔖Sketchpad Components
+// #endregion Sketchpad Components
 
 export { SectionSpecificity, Window } from "./elements";
 
 export { Sketchpad };
 export default Sketchpad;
 
-// #endregion 🔖Store
+// #endregion Apps

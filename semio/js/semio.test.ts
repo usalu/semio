@@ -36,6 +36,7 @@ import {
   areKitsEqual,
   areValidationResultsEqual,
   createClusteredDesign,
+  Design,
   deserializeKit,
   exportKit,
   flattenDesign,
@@ -48,10 +49,10 @@ import {
   Plane,
   replaceClusterWithDesign,
   serializeKit,
-  toValidationResult,
   validateKit,
   ValidationResult,
 } from "./semio";
+import { applySelectionComposition, resolveSelectionCompositionKind, ToolKind } from "./sketchpad/shared";
 
 const TOLERANCE = 0.001;
 
@@ -207,8 +208,8 @@ describe("Validation", () => {
   describe("Invalid", () => {
     it("Invalid Kit -> Validate = Invalid Report", () => {
       const invalidKit = InvalidKit as unknown as Kit;
-      const result = toValidationResult(validateKit(invalidKit));
-      const expected = InvalidKitValidation as ValidationResult;
+      const result = validateKit(invalidKit);
+      const expected = InvalidKitValidation as unknown as ValidationResult;
       expect(areValidationResultsEqual(result, expected)).toBe(true);
     });
   });
@@ -238,7 +239,7 @@ describe("Cluster", () => {
       ],
       createdAt: "2025-01-01T00:00:00.000Z",
       updatedAt: "2025-01-01T00:00:00.000Z",
-    } as Kit["designs"][number];
+    } as Design;
 
     const { clusteredDesign, externalConnections } = createClusteredDesign(design, ["piece-a", "piece-b"], "Cluster");
     const diff = replaceClusterWithDesign(design, ["piece-a", "piece-b"], clusteredDesign, externalConnections);
@@ -252,5 +253,27 @@ describe("Cluster", () => {
     expect(included.length).toBe(1);
     expect(included[0].guid).toBe(clusteredDesign.guid);
     expect(included[0].designGuid).toBe(clusteredDesign.guid);
+  });
+});
+
+describe("Sketchpad Selection Composition", () => {
+  it("applies replace/additive/subtractive/intersect and resolves mode from tools/modifiers", () => {
+    expect(applySelectionComposition(["a", "b", "a"], ["c", "c", "b"], "replace")).toEqual(["c", "b"]);
+    expect(applySelectionComposition(["a", "b"], ["b", "c", "c"], "additive")).toEqual(["a", "b", "c"]);
+    expect(applySelectionComposition(["a", "b", "c", "b"], ["b", "x"], "subtractive")).toEqual(["a", "c"]);
+    expect(applySelectionComposition(["a", "b", "c"], ["c", "a", "x"], "intersect")).toEqual(["a", "c"]);
+    expect(applySelectionComposition(["a", "b"], [], "replace")).toEqual([]);
+    expect(applySelectionComposition(["a", "b"], [], "additive")).toEqual(["a", "b"]);
+    expect(applySelectionComposition(["a", "b"], [], "subtractive")).toEqual(["a", "b"]);
+    expect(applySelectionComposition(["a", "b"], [], "intersect")).toEqual([]);
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL)).toBe("replace");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_ADDITIVE)).toBe("additive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_SUBTRACTIVE)).toBe("subtractive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_INTERSECT)).toBe("intersect");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { shiftKey: true })).toBe("additive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { ctrlKey: true })).toBe("subtractive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { altKey: true })).toBe("subtractive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { metaKey: true })).toBe("subtractive");
+    expect(resolveSelectionCompositionKind(ToolKind.SELECTION_NORMAL, { shiftKey: true, ctrlKey: true })).toBe("intersect");
   });
 });

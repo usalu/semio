@@ -1,10 +1,8 @@
-// #region 🔖Header
+// #region Header
 
-// 💻semio/js/sketchpad/Quality.tsx
+// js/semio/sketchpad/Quality.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -19,21 +17,15 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// #endregion Header
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
-
-// #endregion 🔖Header
-
-// #region 🔖Imports
+// #region Imports
 
 import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
+import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
 import { useHotkeys } from "react-hotkeys-hook";
 import { useTranslation } from "react-i18next";
-import { AwardIcon, CodeIcon, HandIcon, MonitorIcon, MoonIcon, MousePointerIcon, SunIcon, TutorialIcon, UserIcon } from "@semio/assets";
 import { useLabel } from "../i18n";
 import { guid, Guid, Kit, Quality, QualityDiff } from "../semio";
 import type { Connection, Edge, Node, NodeTypes, ReactFlowInstance } from "./elements";
@@ -88,9 +80,9 @@ import {
   useTheme,
 } from "./Sketchpad";
 
-// #endregion 🔖Imports
+// #endregion Imports
 
-// #region 🔖Types
+// #region Types
 
 export interface FormulaNode {
   id: Guid;
@@ -139,7 +131,7 @@ export interface QualityAppDiff {
   windowLayout?: any;
 }
 
-export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> { }
+export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> {}
 
 export interface QualityAppState {
   fullscreenWindow: QualityAppFullscreenWindow;
@@ -171,9 +163,9 @@ export interface FormulaFunction {
   toLatex: (...operands: string[]) => string;
 }
 
-// #endregion 🔖Types
+// #endregion Types
 
-// #region 🔖Functions
+// #region Functions
 
 export const formulaFunctions: Record<string, FormulaFunction> = {
   Add: {
@@ -492,9 +484,9 @@ function inverseQualityAppSelectionDiff(selection: QualityAppSelection, diff: Qu
   return inverse;
 }
 
-// #endregion 🔖Functions
+// #endregion Functions
 
-// #region 🔖Commands
+// #region Commands
 
 const qualityAppCommands = {
   "semio.qualityApp.toggleFormulaFullscreen": (context: QualityAppCommandContext): QualityAppCommandResult => {
@@ -601,9 +593,9 @@ const qualityAppCommands = {
   },
 };
 
-// #endregion 🔖Commands
+// #endregion Commands
 
-// #region 🔖Store
+// #region Store
 
 class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDiff, QualityAppSelectionDiff, QualityAppEdit, QualityAppCommandContext, QualityAppCommandResult> {
   private readonly Guid: QualityAppId;
@@ -761,7 +753,7 @@ if (typeof window !== "undefined") {
   registerQualityAppStoreFactory((parent, id) => new QualityAppStore(parent, id));
 }
 
-// #region 🔖Quality App Plugin Registration
+// #region Quality App Plugin Registration
 
 const qualityAppPlugin: AppPlugin = {
   id: "quality",
@@ -781,7 +773,7 @@ const qualityAppPlugin: AppPlugin = {
       windowLayout: undefined,
     }),
   },
-  registerStores: () => { },
+  registerStores: () => {},
 };
 
 if (typeof window !== "undefined") {
@@ -805,7 +797,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion 🔖Quality App Plugin Registration
+// #endregion Quality App Plugin Registration
 
 type QualityAppScope = { guid: string };
 const QualityAppScopeContext = createContext<QualityAppScope | null>(null);
@@ -832,18 +824,18 @@ export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: 
   const store = useQualityAppStore(identitySelector, id);
   if (!store) return null;
   const selectedSelector = selector || identitySelector;
-  return useSyncDeep<QualityAppState>(store as QualityAppStore, selectedSelector as (value: QualityAppState) => QualityAppState);
+  return useSyncDeep<QualityAppState>(store as any, selectedSelector as (value: QualityAppState) => QualityAppState);
 }
 
 export function useQualityAppCommands(id?: QualityAppId) {
   const store = useQualityAppStore(undefined, id) as QualityAppStore | null;
   if (!store) {
     return {
-      startTransaction: () => { },
-      finalizeTransaction: () => { },
-      abortTransaction: () => { },
-      undo: () => { },
-      redo: () => { },
+      startTransaction: () => {},
+      finalizeTransaction: () => {},
+      abortTransaction: () => {},
+      undo: () => {},
+      redo: () => {},
       toggleFormulaFullscreen: () => Promise.resolve(),
       toggleDiagramFullscreen: () => Promise.resolve(),
       setActiveTool: (_origin: string, _tool: ToolKind) => Promise.resolve(),
@@ -855,7 +847,7 @@ export function useQualityAppCommands(id?: QualityAppId) {
       hoverFormulaNode: (_origin: string, _nodeId: Guid) => Promise.resolve(),
       clearHover: () => Promise.resolve(),
       connectNodes: (_origin: string, _sourceId: Guid, _targetId: Guid) => Promise.resolve(),
-      togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => { },
+      togglePanel: (_origin: string, _panelKey: keyof PanelVisibility) => {},
       execute: (_origin: string, _command: string, ..._args: any[]) => Promise.resolve(),
     };
   }
@@ -979,7 +971,7 @@ export function useQualityAppWindowLayout(): HookResult<any> {
   return [windowLayout, setWindowLayout, canSet];
 }
 
-//#region 🔖Action Hooks
+//#region Action Hooks
 
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
@@ -1048,11 +1040,11 @@ export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
   return [action, canSetFullscreen];
 }
 
-//#endregion 🔖Action Hooks
+//#endregion Action Hooks
 
-// #endregion 🔖Store
+// #endregion Store
 
-// #region 🔖Components
+// #region Components
 
 declare global {
   interface Window {
@@ -1234,7 +1226,7 @@ const Formula: FC = () => {
     const loadMathJax = () => {
       if (window.MathJax) {
         if (mathRef.current) {
-          window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
+          window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
         }
         return;
       }
@@ -1243,10 +1235,10 @@ const Formula: FC = () => {
       script.async = true;
       script.onload = () => {
         if (window.MathJax && mathRef.current) {
-          window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
+          window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
         }
       };
-      script.onerror = () => { };
+      script.onerror = () => {};
       document.head.appendChild(script);
     };
     loadMathJax();
@@ -1257,7 +1249,7 @@ const Formula: FC = () => {
       mathRef.current.innerHTML = "";
       const latex = formulaToLatexString(quality?.formula);
       mathRef.current.textContent = `\\[${latex}\\]`;
-      window.MathJax.typesetPromise([mathRef.current]).catch(() => { });
+      window.MathJax.typesetPromise([mathRef.current]).catch(() => {});
     }
   }, [quality?.formula, formulaToLatexString]);
 
@@ -1480,26 +1472,26 @@ export const QualityWorkbench: FC = () => {
       <TreeItem id="semio.sketchpad.app.quality.numericFunctions">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="Add" kind="function" label={useLabel("semio.sketchpad.app.quality.add")} />
-            <FunctionNode name="Subtract" kind="function" label={useLabel("semio.sketchpad.app.quality.subtract")} />
-            <FunctionNode name="Multiply" kind="function" label={useLabel("semio.sketchpad.app.quality.multiply")} />
-            <FunctionNode name="Divide" kind="function" label={useLabel("semio.sketchpad.app.quality.divide")} />
+            <FunctionNode name="Add" kind="function" label={useLabel("semio.sketchpad.app.quality.add") ?? ""} />
+            <FunctionNode name="Subtract" kind="function" label={useLabel("semio.sketchpad.app.quality.subtract") ?? ""} />
+            <FunctionNode name="Multiply" kind="function" label={useLabel("semio.sketchpad.app.quality.multiply") ?? ""} />
+            <FunctionNode name="Divide" kind="function" label={useLabel("semio.sketchpad.app.quality.divide") ?? ""} />
           </div>
         </TreeContent>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.quality.branchingFunctions">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="If" kind="function" label={useLabel("semio.sketchpad.app.quality.if")} />
-            <FunctionNode name="Switch" kind="function" label={useLabel("semio.sketchpad.app.quality.switch")} />
+            <FunctionNode name="If" kind="function" label={useLabel("semio.sketchpad.app.quality.if") ?? ""} />
+            <FunctionNode name="Switch" kind="function" label={useLabel("semio.sketchpad.app.quality.switch") ?? ""} />
           </div>
         </TreeContent>
       </TreeItem>
       <TreeItem id="semio.sketchpad.app.quality.dataStructures">
         <TreeContent>
           <div className="flex flex-wrap gap-single p-single">
-            <FunctionNode name="List" kind="function" label={useLabel("semio.sketchpad.app.quality.list")} />
-            <FunctionNode name="Dictionary" kind="function" label={useLabel("semio.sketchpad.app.quality.dictionary")} />
+            <FunctionNode name="List" kind="function" label={useLabel("semio.sketchpad.app.quality.list") ?? ""} />
+            <FunctionNode name="Dictionary" kind="function" label={useLabel("semio.sketchpad.app.quality.dictionary") ?? ""} />
           </div>
         </TreeContent>
       </TreeItem>
@@ -1600,11 +1592,11 @@ const QualityWorkbenchQualities: FC = () => {
   return <QualityTree qualities={qualities} />;
 };
 
-// #endregion 🔖Components
+// #endregion Components
 
-// #region 🔖App
+// #region App
 
-export interface AppProps { }
+export interface AppProps {}
 
 const FormulaWindow = memo(() => <Formula />);
 FormulaWindow.displayName = "FormulaWindow";
@@ -1932,9 +1924,9 @@ const App: FC<AppProps> = () => {
 
 export default App;
 
-// #endregion 🔖App
+// #endregion App
 
-// #region 🔖Config
+// #region Config
 
 export const config: AppConfig = {
   id: "quality",
@@ -1968,4 +1960,4 @@ export const config: AppConfig = {
   order: 40,
 };
 
-// #endregion 🔖Config
+// #endregion Config

@@ -1,7 +1,12 @@
 {
   "github": "kinansarak",
   "name": "KinanSarak",
+  "email": "",
+  "emails": [
+    "kinan.sarak@gmail.com"
+  ],
   "links": {
     "github": "https://github.com/kinansarak"
-  }
+  },
+  "contributions": {}
 }

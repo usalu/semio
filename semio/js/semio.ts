@@ -7551,8 +7551,8 @@ export const toValidationResult = (result: ValidationResult): SerializableValida
   problems: result.problems.map((problem) => ({
     constraintId: problem.constraintId,
     message: problem.message,
-    entityKind: problem.location.entityKind,
-    entityGuid: problem.location.entityGuid ?? "",
+    entityKind: problem.location?.entityKind ?? (problem as any).entityKind,
+    entityGuid: problem.location?.entityGuid ?? (problem as any).entityGuid ?? "",
     fixes: problem.fixes.map((fix) => ({ title: fix.title, diff: fix.diff })),
   })),
 });

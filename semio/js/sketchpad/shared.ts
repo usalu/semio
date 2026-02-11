@@ -1,10 +1,8 @@
-// #region 🔖Header
+// #region Header
 
-// 💻semio/js/sketchpad/shared.ts
+// js/semio/sketchpad/shared.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -19,35 +17,29 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// #endregion Header
 
-// #endregion 🔖License
+// #region Imports
 
 import { ChatIcon, CodeIcon, DetailsIcon, HudIcon, SettingsIcon, StatsIcon, ToolbarIcon, ToolsIcon, WorkbenchIcon } from "@semio/assets";
 import { ComponentType, ReactNode } from "react";
-// #region 🔖Specs
-// #endregion 🔖Specs
-
-// #endregion 🔖Header
-
-// #region 🔖Imports
-
 import { AnyActorRef, assign, fromCallback } from "xstate";
 import * as Y from "yjs";
 import { Guid, Kit, KitDiff } from "../semio";
 
-// #endregion 🔖Imports
+// #endregion Imports
 
-// #region 🔖Types
+// #region Types
 
-// #region 🔖YPath Types
+// #region YPath Types
 
 export type YPathSegment = { kind: "mapKey"; key: string } | { kind: "arrayIndex"; index: number } | { kind: "arrayItemById"; id: string; idKey: string };
 
 export type YPath = YPathSegment[];
 
-// #endregion 🔖YPath Types
+// #endregion YPath Types
 
-// #region 🔖Granular Hook Types
+// #region Granular Hook Types
 
 export type HookResult<T> = readonly [T, ((value: T) => void) | undefined, boolean];
 
@@ -127,9 +119,9 @@ export function hookResultToField<T>(result: HookResult<T>): Field<T> {
   };
 }
 
-// #endregion 🔖Granular Hook Types
+// #endregion Granular Hook Types
 
-// #region 🔖Standard Empty Constants
+// #region Standard Empty Constants
 
 export const EMPTY_ARRAY: readonly any[] = Object.freeze([]);
 export const EMPTY_OBJECT: Readonly<Record<string, never>> = Object.freeze({});
@@ -144,9 +136,9 @@ export const EMPTY_PANEL_VISIBILITY: Readonly<PanelVisibility> = Object.freeze({
   settings: false,
 });
 
-// #endregion 🔖Standard Empty Constants
+// #endregion Standard Empty Constants
 
-// #region 🔖Generic Diff Types
+// #region Generic Diff Types
 
 export interface ArrayDiff<T> {
   added?: T[];
@@ -192,7 +184,7 @@ export function applySelectionDiff<TSelection extends Record<string, any[]>>(cur
   return result;
 }
 
-// #endregion 🔖Generic Diff Types
+// #endregion Generic Diff Types
 
 export type Url = string;
 
@@ -240,9 +232,9 @@ export type YLeafMapNumber = Y.Map<number>;
 
 export type YAttributes = Y.Array<Y.Map<string>>;
 
-// #endregion 🔖Types
+// #endregion Types
 
-// #region 🔖Enums
+// #region Enums
 
 export enum Theme {
   SYSTEM = "system",
@@ -279,6 +271,63 @@ export enum ToolKind {
   HAND = "hand",
 }
 
+export type SelectionCompositionKind = "replace" | "additive" | "subtractive" | "intersect";
+
+export interface SelectionKeyboardState {
+  shiftKey?: boolean;
+  altKey?: boolean;
+  ctrlKey?: boolean;
+  metaKey?: boolean;
+}
+
+export function isSelectionToolKind(toolKind: ToolKind | string): boolean {
+  return (
+    toolKind === ToolKind.SELECTION_NORMAL ||
+    toolKind === ToolKind.SELECTION_ADDITIVE ||
+    toolKind === ToolKind.SELECTION_SUBTRACTIVE ||
+    toolKind === ToolKind.SELECTION_INTERSECT
+  );
+}
+
+export function resolveSelectionCompositionKindFromTool(toolKind: ToolKind | string): SelectionCompositionKind {
+  if (toolKind === ToolKind.SELECTION_ADDITIVE) return "additive";
+  if (toolKind === ToolKind.SELECTION_SUBTRACTIVE) return "subtractive";
+  if (toolKind === ToolKind.SELECTION_INTERSECT) return "intersect";
+  return "replace";
+}
+
+export function resolveSelectionCompositionKind(toolKind: ToolKind | string, keyboard?: SelectionKeyboardState): SelectionCompositionKind {
+  const hasAdditiveModifier = keyboard?.shiftKey === true;
+  const hasSubtractiveModifier = keyboard?.altKey === true || keyboard?.ctrlKey === true || keyboard?.metaKey === true;
+  if (hasAdditiveModifier && hasSubtractiveModifier) return "intersect";
+  if (hasAdditiveModifier) return "additive";
+  if (hasSubtractiveModifier) return "subtractive";
+  return resolveSelectionCompositionKindFromTool(toolKind);
+}
+
+export function toSelectionToolKind(compositionKind: SelectionCompositionKind): ToolKind {
+  if (compositionKind === "additive") return ToolKind.SELECTION_ADDITIVE;
+  if (compositionKind === "subtractive") return ToolKind.SELECTION_SUBTRACTIVE;
+  if (compositionKind === "intersect") return ToolKind.SELECTION_INTERSECT;
+  return ToolKind.SELECTION_NORMAL;
+}
+
+export function applySelectionComposition<T>(previous: T[] | undefined, incoming: T[] | undefined, compositionKind: SelectionCompositionKind): T[] {
+  const uniquePrevious = Array.from(new Set(previous ?? []));
+  const uniqueIncoming = Array.from(new Set(incoming ?? []));
+  if (compositionKind === "replace") return uniqueIncoming;
+  if (compositionKind === "additive") {
+    const previousSet = new Set(uniquePrevious);
+    return [...uniquePrevious, ...uniqueIncoming.filter((value) => !previousSet.has(value))];
+  }
+  if (compositionKind === "subtractive") {
+    const incomingSet = new Set(uniqueIncoming);
+    return uniquePrevious.filter((value) => !incomingSet.has(value));
+  }
+  const incomingSet = new Set(uniqueIncoming);
+  return uniquePrevious.filter((value) => incomingSet.has(value));
+}
+
 export enum WindowKind {
   TABLE = "table",
   SCENE = "scene",
@@ -306,11 +355,11 @@ export enum PanelKind {
   CONSOLE = "console",
 }
 
-// #endregion 🔖Enums
+// #endregion Enums
 
-// #region 🔖Ports
+// #region Ports
 
-// #region 🔖File Provider
+// #region File Provider
 
 export interface FileProvider {
   upload: (kitId: string, fileId: string, path: string, blob: Blob) => Promise<string>;
@@ -350,9 +399,9 @@ export interface FileOperation {
   blob?: Blob;
 }
 
-// #endregion 🔖File Provider
+// #endregion File Provider
 
-// #region 🔖App IDs
+// #region App IDs
 
 export interface DesignAppId {
   kit: Guid;
@@ -373,9 +422,9 @@ export interface QualityAppId {
   quality: Guid;
 }
 
-// #endregion 🔖App IDs
+// #endregion App IDs
 
-// #region 🔖Panel
+// #region Panel
 
 export interface PanelKindConfig {
   icon: ComponentType<{ size?: number }>;
@@ -522,7 +571,7 @@ export interface PanelSection {
   defaultOpen?: boolean;
   order?: number;
   toolbarGroup?: {
-    id: string;
+    id: string; // "selection", "filter", "create", "view", "actions"
     labelId?: string;
     order?: number;
     subToolId?: string;
@@ -538,6 +587,7 @@ export interface PanelSection {
   onPointerEnter?: () => void;
   onPointerLeave?: () => void;
   onDoubleClick?: () => void;
+  toolbarPlaceholder?: boolean;
 }
 
 export interface SidePanelTabs {
@@ -621,9 +671,9 @@ export interface AppPanels {
   panels: PanelConfig[];
 }
 
-// #endregion 🔖Panel
+// #endregion Panel
 
-// #region 🔖App Registry
+// #region App Registry
 
 export interface RouteSegment {
   path: string;
@@ -643,9 +693,9 @@ export interface AppConfig {
 
 export interface AppRegistration extends AppConfig {}
 
-// #endregion 🔖App Registry
+// #endregion App Registry
 
-// #region 🔖Sketchpad State
+// #region Sketchpad State
 
 export interface MobileDevice {
   isNavbarExpanded: boolean;
@@ -719,9 +769,9 @@ export type WindowEvents = {
 
 export type SketchpadScope = { id: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents };
 
-// #endregion 🔖Sketchpad State
+// #endregion Sketchpad State
 
-// #region 🔖Commands
+// #region Commands
 
 export interface KitCommandContext {
   kit: Kit;
@@ -745,9 +795,9 @@ export interface SketchpadCommandResult {
   origin?: string;
 }
 
-// #endregion 🔖Commands
+// #endregion Commands
 
-// #region 🔖Store
+// #region Store
 
 export interface Synchronizable<TAccessl> {
   onChanged: (subscribe: Subscribe) => Unsubscribe;
@@ -802,9 +852,9 @@ export interface Synchronizable<TAccessl> {
   snapshot: () => TAccessl;
 }
 
-// #endregion 🔖Store
+// #endregion Store
 
-// #region 🔖Complete State
+// #region Complete State
 
 export interface CompleteState {
   sketchpad: SketchpadState;
@@ -822,9 +872,9 @@ export interface CompleteState {
   tutorials: any;
 }
 
-// #endregion 🔖Complete State
+// #endregion Complete State
 
-// #region 🔖Window
+// #region Window
 
 export interface WindowConfig {
   id: string;
@@ -962,9 +1012,9 @@ export function createDefaultLayout(windowIds: string[], direction: "row" | "col
   };
 }
 
-// #endregion 🔖Window
+// #endregion Window
 
-// #region 🔖Tool
+// #region Tool
 
 export interface Tool<TState = any> {
   id: ToolKind | string;
@@ -995,9 +1045,9 @@ export interface ToolGroupProps {
   onToolChange: (tool: ToolKind | string) => void;
 }
 
-// #endregion 🔖Tool
+// #endregion Tool
 
-// #region 🔖Focus
+// #region Focus
 
 export interface FocusItem {
   id: string;
@@ -1006,9 +1056,9 @@ export interface FocusItem {
   category?: string;
 }
 
-// #endregion 🔖Focus
+// #endregion Focus
 
-// #region 🔖Footer
+// #region Footer
 
 export interface FooterItem {
   id: string;
@@ -1021,9 +1071,9 @@ export interface FooterItem {
   disabled?: boolean;
 }
 
-// #endregion 🔖Footer
+// #endregion Footer
 
-// #region 🔖Panel Props
+// #region Panel Props
 
 export interface ResizablePanelProps {
   visible: boolean;
@@ -1031,13 +1081,13 @@ export interface ResizablePanelProps {
   width: number;
 }
 
-// #endregion 🔖Panel Props
+// #endregion Panel Props
 
-// #endregion 🔖Ports
+// #endregion Ports
 
-// #region 🔖XState Integration
+// #region XState Integration
 
-// #region 🔖XState Types
+// #region XState Types
 
 export interface YjsSyncContext {
   dirty: boolean;
@@ -1146,9 +1196,9 @@ export interface KitDiffAppMachineContext<TSelection = any> extends AppMachineCo
   kitGuid: Guid;
 }
 
-// #endregion 🔖XState Types
+// #endregion XState Types
 
-// #region 🔖Y.js-XState Bridge
+// #region Y.js-XState Bridge
 
 export function createYjsSyncActor(yMap: Y.Map<any>) {
   return fromCallback<{ type: "Y_UPDATE"; data: any }>(({ sendBack }: { sendBack: (event: { type: "Y_UPDATE"; data: any }) => void }) => {
@@ -1206,9 +1256,9 @@ export function createYjsSelector<TContext extends YjsSyncContext, TSnapshot>(bu
   };
 }
 
-// #endregion 🔖Y.js-XState Bridge
+// #endregion Y.js-XState Bridge
 
-// #region 🔖Machine Factories
+// #region Machine Factories
 
 export interface AppMachineInput {
   yMap: Y.Map<any>;
@@ -1229,11 +1279,11 @@ export interface TransactionMachineConfig<TEdit = any> {
   inverseKitDiff?: (kit: Kit, diff: KitDiff) => KitDiff;
 }
 
-// #endregion 🔖Machine Factories
+// #endregion Machine Factories
 
-// #endregion 🔖XState Integration
+// #endregion XState Integration
 
-// #region 🔖YPath Helpers
+// #region YPath Helpers
 
 export function yPathMapKey(key: string): YPathSegment {
   return { kind: "mapKey", key };
@@ -1346,9 +1396,9 @@ export function createPathObserver(root: Y.Map<any>, path: YPath, subscribe: Sub
   return () => disposables.forEach((d) => d());
 }
 
-// #endregion 🔖YPath Helpers
+// #endregion YPath Helpers
 
-// #region 🔖Derived Store
+// #region Derived Store
 
 export interface BaseDependency {
   store: { onPathChanged: (path: YPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: YPath) => any };
@@ -1460,9 +1510,9 @@ export class DerivedStore {
   }
 }
 
-// #endregion 🔖Derived Store
+// #endregion Derived Store
 
-// #region 🔖Store Factory Registry
+// #region Store Factory Registry
 
 export type DesignAppStoreFactory = (parent: any, id: any, state?: any) => any;
 export type KitAppStoreFactory = (parent: any, yMap: any, transact: (fn: () => void) => void, id: any, state?: any) => any;
@@ -1510,9 +1560,9 @@ export function getQualityAppStoreFactory(): QualityAppStoreFactory {
   return qualityAppStoreFactory;
 }
 
-// #endregion 🔖Store Factory Registry
+// #endregion Store Factory Registry
 
-// #region 🔖App Plugin Registry
+// #region App Plugin Registry
 
 export interface AppMachineContribution {
   eventTypes?: Record<string, any>;
@@ -1621,9 +1671,9 @@ export function getPluginDefaultStates(): Record<string, any> {
   return defaults;
 }
 
-// #endregion 🔖App Plugin Registry
+// #endregion App Plugin Registry
 
-// #region 🔖Dynamic Event Dispatch Registry
+// #region Dynamic Event Dispatch Registry
 
 export interface EventHandlerConfig<TContext = any, TEvent = any> {
   guard?: (context: TContext, event: TEvent) => boolean;
@@ -1704,9 +1754,9 @@ export function getRegisteredEventTypes(): string[] {
   return Array.from(eventHandlerRegistry.keys());
 }
 
-// #endregion 🔖Dynamic Event Dispatch Registry
+// #endregion Dynamic Event Dispatch Registry
 
-// #region 🔖App Event Handler Factories
+// #region App Event Handler Factories
 
 export interface AppEventHandlerConfig<TAppKey extends string, TAppState> {
   namespace: string;
@@ -2172,9 +2222,9 @@ export function registerSingleKeyAppEventHandlers<TAppKey extends string, TAppSt
   createSingleKeySetFullscreenWindowHandler(config);
 }
 
-// #endregion 🔖App Event Handler Factories
+// #endregion App Event Handler Factories
 
-// #region 🔖Transaction Handler Factory
+// #region Transaction Handler Factory
 
 export interface KeyedTransactionHandlerConfig {
   namespace: string;
@@ -2374,15 +2424,15 @@ export function createSingleKeyTransactionHandlers(config: SingleKeyTransactionH
   });
 }
 
-// #endregion 🔖Transaction Handler Factory
+// #endregion Transaction Handler Factory
 
-// #region 🔖Selector Factory Pattern
+// #region Selector Factory Pattern
 
 export function createAppPropertySelectorFactory<TApps extends Record<string, any>>(appKey: string) {
   return function createPropertySelector<TProperty>(propertyKey: keyof TApps[string], fallback: TProperty) {
     return (snapshot: { context: Record<string, TApps> }) => {
       const app = snapshot.context[appKey];
-      return (app?.[propertyKey] ?? fallback) as TProperty;
+      return ((app as any)?.[propertyKey] ?? fallback) as TProperty;
     };
   };
 }
@@ -2406,9 +2456,9 @@ export function getOrCreateAppState<TState>(context: Record<string, Record<strin
   return apps[key] || defaultFactory();
 }
 
-// #endregion 🔖Selector Factory Pattern
+// #endregion Selector Factory Pattern
 
-// #region 🔖App Hooks Registry
+// #region App Hooks Registry
 
 export interface DesignAppHooks {
   useDesignAppCommands: (id?: { kit: string; design: string }) => any;
@@ -2463,9 +2513,9 @@ export function getKitAppHooks(): KitAppHooks {
   return registeredKitAppHooks ?? defaultKitAppHooks;
 }
 
-// #endregion 🔖App Hooks Registry
+// #endregion App Hooks Registry
 
-// #region 🔖App Registry Exports
+// #region App Registry Exports
 
 export interface DocsRegistryPort {
   getSectionTree: (section: string) => any[];
@@ -2483,4 +2533,4 @@ export function getDocsRegistry(): DocsRegistryPort | null {
   return registeredDocsRegistry;
 }
 
-// #endregion 🔖App Registry Exports
+// #endregion App Registry Exports

@@ -1,13 +1,21 @@
 {
   "title": "Kit Selection Placeholder Subtools",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Planning ticket updated with cross-app selection composition implementation plan.",
+  "started": "0001-01-01T00:00:00Z",
+  "finished": "2026-02-12T15:11:17.599429577Z",
   "interactions": [
     {
+      "dates": {
+        "started": ""
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "create 5 different place holder selection sub-tool within the drop down toggle select in the toolbar (kit app)",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-09T17:23:27.965704048Z",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -1917,11 +1925,1838 @@
           ]
         }
       }
+    },
+    {
+      "dates": {
+        "started": "2026-02-12 15:10:16",
+        "finished": "2026-02-12 15:11:17"
+      },
+      "author": "kinansarak",
+      "system": "linux",
+      "client": "codex",
+      "commit": "04a5784181e91bd6737d00d8ecf8c049a78d5ee0",
+      "prompt": "Create implementation plan for additive, subtractive, and intersect selection modes that generalize across apps (Design/Kit/Type).",
+      "llm": "gpt-5-2-codex",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "📃README.md",
+              "lines": {
+                "added": 194,
+                "removed": 1020
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": [
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad",
+              "lines": {
+                "added": 0,
+                "removed": 64
+              }
+            },
+            {
+              "path": "README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 0,
+                "removed": 43
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 215
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Guidelines",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎟️ Ticket Workflow Signals [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Background levels",
+              "lines": {
+                "added": 0,
+                "removed": 77
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟪 [@semio/net](https://github.com/usalu/semio/tree/main/net) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 36
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Violation Diagnostics",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "README.md#🛍️ Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 94
+              }
+            },
+            {
+              "path": "README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 0,
+                "removed": 35
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎯 Design Diagram Overlap Guard [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#UI Levels",
+              "lines": {
+                "added": 0,
+                "removed": 21
+              }
+            },
+            {
+              "path": "README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Workspaces",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�️ Shared Infrastructure [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🧾 Code Report [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#?? MCP Tool Gateway [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 0,
+                "removed": 29
+              }
+            },
+            {
+              "path": "README.md#🛍️ Products [↑](#-overview)#☁️ cloud [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#🛍️ Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#👥 Contributors [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Borders",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🧭 Section Tree [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "README.md#🛍️ Products [↑](#-overview)#🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System",
+              "lines": {
+                "added": 0,
+                "removed": 53
+              }
+            },
+            {
+              "path": "README.md#🛍️ Products [↑](#-overview)#🐝 semio.wasp [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#✅ Validation System [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "README.md#♻️ Ecosystems [↑](#-overview)",
+              "lines": {
+                "added": 0,
+                "removed": 128
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad toolbar tooltree",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 84
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 85
+              }
+            },
+            {
+              "path": "README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)#🪢 Scripting",
+              "lines": {
+                "added": 0,
+                "removed": 62
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 24
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎫 Ticket System [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎭 Playwright Browser Cache [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🐚 Shell Language Support [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "README.md#🛍️ Products [↑](#-overview)",
+              "lines": {
+                "added": 0,
+                "removed": 85
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🎭 Playwright Browser Provisioning [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Kit Validation",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 35
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🤖 @semio/assistant [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�️ Shared Infrastructure [↑](#-bundles-)#🌐 Cross-App Diagram Physics",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#🧭 Command Tree [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#✅ Do [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#�🎨 Kit Editor Visualization [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            },
+            {
+              "path": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Tickets",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            }
+          ],
+          "renamed": [
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🧱 Kits",
+              "to": "README.md#🛍 Products [↑](#-overview)#🐝 semio.wasp [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🧭 Kit Diagram Simulation Sync [↑](#-bundles-)",
+              "to": "README.md#♻ Ecosystems [↑](#-overview)",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Sidebar",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[AI studio](https://ai.google.com/studio) [↑](#-web-chat-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#👥 studio [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🦌 semio.monoceros [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🧼 Code Hygiene Hooks [↑](#-bundles-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#☁ cloud [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "to": "README.md#🛍 Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🚀 [Starter](https://github.com/usalu/semio/tree/main/examples/starter) [↑](#%EF%B8%8F-examples-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Size Constants",
+              "to": "README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)",
+              "lines": {
+                "added": 13,
+                "removed": 13
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🧩 Devcontainer Extension Install [↑](#-bundles-)",
+              "to": "README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)#✅ Do [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[🌟 Gemini](https://gemini.google.com) [↑](#-web-chat-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.3 Codex [↑](#-models-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🦏 semio.3dm [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛰️ Repo Dev Server [↑](#-bundles-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#👁️ [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
+              "lines": {
+                "added": 12,
+                "removed": 12
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🦌 semio.monoceros [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#✏️ sketchpad [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#✏ sketchpad [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 20,
+                "removed": 20
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)#⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#📄 Specs [↑](#-overview)#⚙️ Prop [↑](#-specs-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#👥 studio [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🧩 Sections Explorer [↑](#-bundles-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#🔁 Formatter [↑](#-agents-)",
+              "lines": {
+                "added": 7,
+                "removed": 7
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🦏 semio.3dm [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)#🦑 Jules [↑](#-tools-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🛍️ Products [↑](#-overview)#🐞 semio.ladybug [↑](#%EF%B8%8F-products-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🐞 semio.ladybug [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#� Devcontainer Disk Hygiene [↑](#-bundles-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🧰 Toolbar Layout Discipline [↑](#-bundles-)",
+              "to": "README.md#🛍 Products [↑](#-overview)#🦗 [semio.gh](https://docs.semio-tech.com/manuals/grasshopper) [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 6
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)#🧾 Codex [↑](#-cli-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#%EF%B8%8F-examples-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🌈 [Geometry](https://github.com/usalu/semio/tree/main/examples/geometry) [↑](#%EF%B8%8F-examples-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)",
+              "lines": {
+                "added": 34,
+                "removed": 34
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)",
+              "lines": {
+                "added": 14,
+                "removed": 14
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️ [Cursor](.cursor) [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
+              "lines": {
+                "added": 17,
+                "removed": 17
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad state",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "lines": {
+                "added": 10,
+                "removed": 10
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#👋 [Hello semio](https://github.com/usalu/semio/tree/main/examples/hello-semio) [↑](#%EF%B8%8F-examples-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.2 Codex [↑](#-models-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🌈 [Geometry](https://github.com/usalu/semio/tree/main/examples/geometry) [↑](#%EF%B8%8F-examples-)",
+              "to": "README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)#🫀 [Metabolism](https://github.com/usalu/metabolism) [↑](#%EF%B8%8F-examples-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "from": "README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Platform Compatibility",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🌊 Windsurf [↑](#-editor-)",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
+              "to": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)",
+              "lines": {
+                "added": 16,
+                "removed": 16
+              }
+            },
+            {
+              "from": "README.md#📄 Specs [↑](#-overview)#🏘️ Design [↑](#-specs-)",
+              "to": "README.md#📄 Specs [↑](#-overview)#🏘 Design [↑](#-specs-)",
+              "lines": {
+                "added": 14,
+                "removed": 14
+              }
+            },
+            {
+              "from": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️ Commit [↑](#-gitstyle-)",
+              "to": "README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
+              "lines": {
+                "added": 32,
+                "removed": 32
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️️ [Cursor](.cursor) [↑](#-ai-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#📑 Overview",
+              "lines": {
+                "added": 31,
+                "removed": 30
+              }
+            },
+            {
+              "path": "📃README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🦑 GitKraken [↑](#-git-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#🧑‍💻 Development [↑](#-overview)#🪟 Windows Setup (Legacy) [↑](#-development)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🧑‍💻 Development [↑](#-overview)#🔌 Port Numbers [↑](#-development-)",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#⚖️ Decision Making [↑](#-uses-cases-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#📄 Typography [↑](#-brand-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#📄 Typography [↑](#-brand-)#🔡 [Typesetting](/assets/fonts/README.md) [↑](#-typography-)",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)#✅ Do [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🛍 Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#📄 Specs [↑](#-overview)#🏷️ Attribute [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🌿 Branch [↑](#-gitstyle-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🏘 [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#🌈 Colors [↑](#-brand-)#🥇 Primary [↑](#-colors-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#✨ [Contributors](https://github.com/usalu/semio/pulse/monthly) [↑](#-overview)",
+              "lines": {
+                "added": 25,
+                "removed": 25
+              }
+            },
+            {
+              "path": "📃README.md#🧑‍💻 Development [↑](#-overview)#🎫 Tickets [↑](#-development)",
+              "lines": {
+                "added": 4,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🛍 Products [↑](#-overview)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🛍 Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#GPT-5.3 Codex [↑](#-models-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#♻ Ecosystems [↑](#-overview)",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#✍ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🛍 Products [↑](#-overview)#☁ cloud [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#📢 Release [↑](#-gitstyle-)",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📃README.md#🧑‍💻 Development [↑](#-overview)#🔌 Port Numbers [↑](#-development-)#Launch Configurations",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#☁ Cloud [↑](#-tools-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#🛠️ Uses-Cases [↑](#-ai-)#🐛 Bug Fixes [↑](#-uses-cases-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)",
+              "lines": {
+                "added": 24,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#🛍 Products [↑](#-overview)#✏ sketchpad [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#📄 Specs [↑](#-overview)#🏘 Design [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#📄 Specs [↑](#-overview)#🔗 Connection [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#📄 Specs [↑](#-overview)#◳ Plane [↑](#-specs-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#⚖️ Principles [↑](#-repo-)",
+              "lines": {
+                "added": 9,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📃README.md#🧑‍💻 Development [↑](#-overview)#🧰 Violations [↑](#-development)",
+              "lines": {
+                "added": 6,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#⌨️️ CLI [↑](#-tools-)#⌨️️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#📄 Specs [↑](#-overview)#⚓ Connector [↑](#-specs-)",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#📄 Specs [↑](#-overview)#⚙️️ Prop [↑](#-specs-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️️ Commit [↑](#-gitstyle-)",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "📃README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🏷️ Tag [↑](#-gitstyle-)",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🧑‍💻 Development [↑](#-overview)#🔌 Port Numbers [↑](#-development-)#Running Tasks",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#🛍️ Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🎟️ Ticket Workflow Signals [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧰 Toolbar Layout Discipline [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#📚 [@semio/docs](https://github.com/usalu/semio/tree/main/js/docs) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 22
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🎯 Design Diagram Overlap Guard [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🐚 Shell Language Support [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃README.md#🛍️ Products [↑](#-overview)#🤖 assistant [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#📄 Specs [↑](#-overview)#🏘️ Design [↑](#-specs-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🦗 [@semio/grasshopper](https://github.com/usalu/semio/tree/main/net/Semio.Grasshopper) [↑](#-bundles-)#🪢 Scripting",
+              "lines": {
+                "added": 0,
+                "removed": 62
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Platform Compatibility",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🎭 Playwright Browser Cache [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad selection + hover visuals",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "📃README.md#📄 Specs [↑](#-overview)#⚙️ Prop [↑](#-specs-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)#⌨️ [Claude Code](CLAUDE.md) [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Tickets",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#� Devcontainer Disk Hygiene [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad toolbar tooltree",
+              "lines": {
+                "added": 0,
+                "removed": 19
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧭 Command Tree [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🤖 @semio/assistant [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🧱 Kits",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🎫 Ticket System [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🌐 Web-Chat [↑](#-tools-)#[❄️ ChatGPT](https://chatgpt.com) [↑](#-web-chat-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 0,
+                "removed": 23
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#?? MCP Tool Gateway [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧩 Repo Tooling Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 24
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#✏️ [@semio/desktop](https://github.com/usalu/semio/tree/main/js/desktop) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🛰️ Repo Dev Server [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad windows",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Kit Validation",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#�️ Shared Infrastructure [↑](#-bundles-)#🌐 Cross-App Diagram Physics",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad state",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Guidelines",
+              "lines": {
+                "added": 0,
+                "removed": 15
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#❌ Dont [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)#✅ Do [↑](#%EF%B8%8F-concept-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🛍️ Products [↑](#-overview)#☁️ cloud [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#☁️ Cloud [↑](#-tools-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🎭 Playwright Browser Provisioning [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧾 Code Report [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Background levels",
+              "lines": {
+                "added": 0,
+                "removed": 77
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Sketchpad transactions",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 71
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 0,
+                "removed": 16
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)#🟪 [.NET](https://github.com/usalu/semio/tree/main/net) [↑](#%EF%B8%8F-ecosystems-)",
+              "lines": {
+                "added": 0,
+                "removed": 20
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#📄 [Fonts](https://github.com/usalu/semio/tree/main/assets/fonts) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Violation Diagnostics",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#�🎨 Kit Editor Visualization [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧼 Code Hygiene Hooks [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧭 Kit Diagram Simulation Sync [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#✈️ [Copilot](.github/chatmodes) [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#⌨️ CLI [↑](#-tools-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#�️ Shared Infrastructure [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#🏷️ [Badges](https://github.com/usalu/semio/tree/main/assets/badges) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#👥 Contributors [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#✅ Validation System [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 25
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#{} [REST OpenAPI](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5529)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃README.md#🛍️ Products [↑](#-overview)#✏️ sketchpad [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "📃README.md#💯 Brand [↑](#-overview)#✍️ Concept [↑](#-brand-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🦑 [Repo](https://github.com/usalu/semio) [↑](#-overview)#🔀 [Git](https://github.com/usalu/semio.git) [↑](#-repo-)#🗃️ Commit [↑](#-gitstyle-)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Workspace",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)#🐍 [Python](https://github.com/usalu/semio/tree/main/py) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🎛️ [@semio/play](https://github.com/usalu/semio/tree/main/js/play) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#🏘️ [Examples](https://github.com/usalu/semio/tree/main/examples) [↑](#-overview)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)",
+              "lines": {
+                "added": 0,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Preflight",
+              "lines": {
+                "added": 0,
+                "removed": 18
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)#Sidebar",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧩 Sections Explorer [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#UI Levels",
+              "lines": {
+                "added": 0,
+                "removed": 21
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#⚙️ [@semio/engine](https://github.com/usalu/semio/tree/main/py/engine) [↑](#-bundles-)#⭕ [GraphQL Relay](https://github.com/usalu/semio/tree/main/py/engine/engine.py#L5095)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟪 [@semio/net](https://github.com/usalu/semio/tree/main/net) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 36
+              }
+            },
+            {
+              "path": "📃README.md#🛍️ Products [↑](#-overview)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#🔍 Agents [↑](#-ai-)#↕️ Reorderer [↑](#-agents-)",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Sketchpad#Kit app artifact creation",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧭 Section Tree [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "📃README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️ Tools [↑](#-ai-)#💻 Editor [↑](#-tools-)#🖱️ [Cursor](.cursor) [↑](#-ai-)",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "📃README.md#♻️ Ecosystems [↑](#-overview)#🟨 [JavaScript](https://github.com/usalu/semio/tree/main/js) [↑](#%EF%B8%8F-ecosystems-)#Workspaces",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🧩 Devcontainer Extension Install [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🛍️ [@semio/assets](https://github.com/usalu/semio/tree/main/assets) [↑](#-bundles-)#👁️ [Icons](https://github.com/usalu/semio/tree/main/assets/icons) [↑](#-semio-assets-)",
+              "lines": {
+                "added": 0,
+                "removed": 12
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#UI System#Size Constants",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#💻 [@semio/vscode](https://github.com/usalu/semio/tree/main/js/vscode) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)#Borders",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "📃README.md#📦 Bundles [↑](#-overview)#🟨 [@semio/js](https://github.com/usalu/semio/tree/main/js/semio) [↑](#-bundles-)",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "README.md#🛍 Products [↑](#-overview)#VS Code Extension [↑](#%EF%B8%8F-products-)",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)",
+              "lines": {
+                "added": 96,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#🛍 Products [↑](#-overview)",
+              "lines": {
+                "added": 89,
+                "removed": 0
+              }
+            },
+            {
+              "path": "README.md#🪄 [AI](AGENTS.md) [↑](#-development-)#⌨️️ Tools [↑](#-ai-)#🤖 Models [↑](#-ai-)#Claude Opus 4.5 [↑](#-models-)",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
     }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-02-09T17:26:05.448279485Z"
-  },
-  "summary": "Implemented five placeholder Kit Selection dropdown sub-tools and documented the behavior in README and AGENTS."
+  ]
 }

@@ -30,3 +30,37 @@ declare module "*.wasm?url" {
   const value: string;
   export default value;
 }
+
+declare module "*?raw" {
+  const content: string;
+  export default content;
+}
+
+declare module "*.json?raw" {
+  const content: string;
+  export default content;
+}
+
+interface ImportMetaEnv {
+  readonly VITE_APP_TITLE: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+  readonly hot?: {
+    readonly data: Record<string, any>;
+    accept(callback?: (newModule: unknown) => void): void;
+    accept(deps: string[], callback: (modules: unknown[]) => void): void;
+    accept(dep: string, callback: (newModule: unknown) => void): void;
+    dispose(callback: (data: unknown) => void): void;
+    prune(callback: () => void): void;
+    decline(): void;
+    invalidate(): void;
+    on(event: string, callback: (...args: unknown[]) => void): void;
+    send(event: string, data?: unknown): void;
+  };
+  readonly glob: {
+    <T = unknown>(pattern: string, options: { eager: true; as?: "raw" | "url"; import?: string; exhaustive?: boolean }): Record<string, T>;
+    <T = unknown>(pattern: string, options?: { eager?: false; as?: "raw" | "url"; import?: string; exhaustive?: boolean }): Record<string, () => Promise<T>>;
+  };
+}

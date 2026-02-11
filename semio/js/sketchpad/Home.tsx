@@ -1,10 +1,8 @@
-// #region 🔖Header
+// #region Header
 
-// 💻semio/js/sketchpad/Home.tsx
+// js/semio/sketchpad/Home.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -19,21 +17,10 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// #endregion Header
 
-// #endregion 🔖License
+// #region Imports
 
-// #region 🔖Specs
-// #endregion 🔖Specs
-
-// #endregion 🔖Header
-
-// #region 🔖Imports
-
-import { formatDistanceToNow } from "date-fns";
-import { de, enUS } from "date-fns/locale";
-import React, { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate, useSearchParams } from "react-router";
 import {
   AddIcon,
   AwardIcon,
@@ -54,10 +41,15 @@ import {
   TutorialIcon,
   UserIcon,
 } from "@semio/assets";
+import { formatDistanceToNow } from "date-fns";
+import { de, enUS } from "date-fns/locale";
+import React, { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useSearchParams } from "react-router";
 import i18n, { useLabel } from "../i18n";
 import { generateUniqueName, guid, Guid, importKit, Kit, KitShallow } from "../semio";
 import { docsRegistry } from "./Docs";
-import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, TreeContent, TreeItem } from "./elements";
+import { Action, Input, Scrollable, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableAvatar, TableColumn, Textarea, Toggle, ToggleGroup, ToolbarGroup, TreeContent, TreeItem } from "./elements";
 import type { AppConfig, AppEdit, AppPlugin, PanelDefinition, PanelVisibility } from "./shared";
 import { createPanelDefinition, EMPTY_PANEL_VISIBILITY, Expertise, Mode, PanelKind, registerAppPlugin, registerEventHandler, registerStandardAppEventHandlers, Theme } from "./shared";
 import {
@@ -91,9 +83,9 @@ import {
 
 const useHome = useHomeApp;
 
-// #endregion 🔖Imports
+// #endregion Imports
 
-// #region 🔖Types
+// #region Types
 
 export enum HomeAppWindowKind {
   Table = "table",
@@ -137,7 +129,7 @@ export interface HomeDiff {
   sortDirection?: HomeSortDirection;
 }
 
-export interface HomeEdit extends AppEdit<HomeSelectionDiff> { }
+export interface HomeEdit extends AppEdit<HomeSelectionDiff> {}
 
 export interface HomeCommandContext {
   home: HomeState;
@@ -148,9 +140,9 @@ export interface HomeCommandResult {
   diff?: HomeDiff;
 }
 
-// #endregion 🔖Types
+// #endregion Types
 
-// #region 🔖Home App Plugin Registration
+// #region Home App Plugin Registration
 
 const createDefaultHomeState = (): HomeState => ({
   panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
@@ -200,33 +192,33 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion 🔖Home App Plugin Registration
+// #endregion Home App Plugin Registration
 
-// #region 🔖Hooks (XState-based)
+// #region Hooks (XState-based)
 
 export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
 
 export { useHome };
 
-// #endregion 🔖Hooks (XState-based)
+// #endregion Hooks (XState-based)
 
-// #region 🔖Canvas
+// #region Canvas
 
-// #region 🔖Windows
+// #region Windows
 
-// #region 🔖Table
+// #region Table
 
-export { };
+export {};
 
-// #endregion 🔖Table
+// #endregion Table
 
-// #endregion 🔖Windows
+// #endregion Windows
 
-// #region 🔖Panels
+// #region Panels
 
-// #region 🔖Right
+// #region Right
 
-// #region 🔖Details
+// #region Details
 
 export const KitSection: FC = () => {
   const home = useHome() as HomeState;
@@ -352,9 +344,9 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
   );
 };
 
-// #endregion 🔖Details
+// #endregion Details
 
-// #region 🔖Chat
+// #region Chat
 
 const ChatPlaceholder: FC = () => {
   return (
@@ -366,9 +358,9 @@ const ChatPlaceholder: FC = () => {
   );
 };
 
-// #endregion 🔖Chat
+// #endregion Chat
 
-// #region 🔖Settings
+// #region Settings
 
 const SettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
@@ -466,15 +458,15 @@ const SettingsContent: FC = () => {
   );
 };
 
-// #endregion 🔖Settings
+// #endregion Settings
 
-// #endregion 🔖Right
+// #endregion Right
 
-// #endregion 🔖Panels
+// #endregion Panels
 
-// #endregion 🔖Canvas
+// #endregion Canvas
 
-// #region 🔖Footer
+// #region Footer
 
 const HomeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -484,15 +476,15 @@ const HomeAppFooter: FC = () => {
   useEffect(() => {
     if (appType !== "home") return;
 
-    return () => { };
+    return () => {};
   }, [appType, addFooterItem, removeFooterItem]);
 
   return null;
 };
 
-// #endregion 🔖Footer
+// #endregion Footer
 
-// #region 🔖DropZone
+// #region DropZone
 
 const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -573,6 +565,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 
         await storeKitFileBlobs(kit.guid, importedFiles);
         completeKitImport(operationId);
+        // Don't auto-navigate - let user click the now-enabled row
       } catch (error) {
         console.error("[Home] Failed to import kit:", error);
         failKitImport(operationId, error instanceof Error ? error.message : String(error));
@@ -598,9 +591,9 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   );
 };
 
-// #endregion 🔖DropZone
+// #endregion DropZone
 
-// #region 🔖App
+// #region App
 
 type KitKind = "temporary" | "local" | "remote";
 
@@ -627,11 +620,11 @@ const HomeToolbarFilters: FC = () => {
   const labelRemote = useLabel("semio.sketchpad.app.home.toolbar.showRemote");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Toggle pressed={selectedKind === "temporary"} onPressedChange={() => toggleKind("temporary")} id="semio.sketchpad.app.home.toolbar.showTemporary" icon={<TemporaryKitIcon />} text={labelTemporary} />
       <Toggle pressed={selectedKind === "local"} onPressedChange={() => toggleKind("local")} id="semio.sketchpad.app.home.toolbar.showLocal" icon={<LocalKitIcon />} text={labelLocal} />
       <Toggle pressed={selectedKind === "remote"} onPressedChange={() => toggleKind("remote")} id="semio.sketchpad.app.home.toolbar.showRemote" icon={<RemoteKitIcon />} text={labelRemote} />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -643,7 +636,7 @@ const HomeToolbarCreate: FC = () => {
   const handleCreateKit = useCallback(
     (type: KitKind) => {
       const existingNames = kits.map((kit) => kit.name);
-      const uniqueName = generateUniqueName(defaultKitName, existingNames);
+      const uniqueName = generateUniqueName(defaultKitName ?? "", existingNames) ?? defaultKitName ?? "";
       const newKit: Kit = {
         guid: guid(),
         name: uniqueName,
@@ -664,11 +657,11 @@ const HomeToolbarCreate: FC = () => {
   const labelRemote = useLabel("semio.sketchpad.app.home.toolbar.createRemote");
 
   return (
-    <div className="flex shrink-0 items-center gap-single h-full px-single">
+    <ToolbarGroup>
       <Action id="semio.sketchpad.app.home.toolbar.createTemporary" icon={<TemporaryKitIcon />} text={labelTemporary} onClick={() => handleCreateKit("temporary")} />
       <Action id="semio.sketchpad.app.home.toolbar.createLocal" icon={<LocalKitIcon />} text={labelLocal} onClick={() => handleCreateKit("local")} />
       <Action id="semio.sketchpad.app.home.toolbar.createRemote" icon={<RemoteKitIcon />} text={labelRemote} onClick={() => handleCreateKit("remote")} />
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -1090,7 +1083,7 @@ const HomeTableContent: FC = () => {
 
   const handleCreateKit = (type: KitKind) => {
     const existingNames = kits.map((k) => k.name);
-    const uniqueName = generateUniqueName(defaultKitName, existingNames);
+    const uniqueName = generateUniqueName(defaultKitName ?? "", existingNames) ?? defaultKitName ?? "";
     const newKit: Kit = {
       guid: guid(),
       name: uniqueName,
@@ -1106,7 +1099,7 @@ const HomeTableContent: FC = () => {
 
   const handleCreateVersion = (kitName: string, type: KitKind) => {
     const existingVersions = kits.filter((k) => k.name === kitName).map((k) => k.version || "");
-    const uniqueVersion = generateUniqueName(newVersionLabel, existingVersions);
+    const uniqueVersion = generateUniqueName(newVersionLabel ?? "", existingVersions) ?? newVersionLabel ?? "";
     const newKit: Kit = {
       guid: guid(),
       name: kitName,
@@ -1220,12 +1213,14 @@ const HomeTableContent: FC = () => {
         homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKitShift", kitId);
         lastClickedIdRef.current = kitId;
       }
+      // Don't update lastClickedIdRef for shift-clicks - keep the anchor stable
     } else if (e.metaKey || e.ctrlKey) {
       if (selection.includes(kitId)) {
         homeCommands.removeKitFromSelection("semio.sketchpad.app.home.canvas.table.removeKitCtrl", kitId);
       } else {
         homeCommands.addKitToSelection("semio.sketchpad.app.home.canvas.table.addKitCtrl", kitId);
       }
+      // Don't update lastClickedIdRef for ctrl/cmd clicks
     } else {
       homeCommands.selectKit("semio.sketchpad.app.home.canvas.table.selectKit", kitId);
       lastClickedIdRef.current = kitId;
@@ -1368,39 +1363,39 @@ const HomeTableContent: FC = () => {
         columns={[
           ...(!selectedKind
             ? [
-              {
-                id: "type",
-                header: (
-                  <div className="inline-flex items-center gap-single">
-                    <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
-                    <Toggle
-                      kind="dropdown"
-                      pressed={sortColumn === "type"}
-                      value={sortColumn === "type" ? sortDirection : "asc"}
-                      onValueChange={(value) => {
-                        homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
-                        homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
-                      }}
-                      items={[
-                        { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
-                        { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
-                      ]}
-                      id={"semio.sketchpad.app.home.sortByType"}
-                    />
-                  </div>
-                ),
-                accessor: (row) => (
-                  <>
-                    {row.type === "temporary" && <TemporaryKitIcon />}
-                    {row.type === "local" && <LocalKitIcon />}
-                    {row.type === "remote" && <RemoteKitIcon />}
-                    {row.type === "docs" && <DocumentIcon className="size-small" />}
-                  </>
-                ),
-                width: "w-0 whitespace-nowrap",
-                headerClassName: "relative group w-0 whitespace-nowrap",
-              } as TableColumn<TableRow>,
-            ]
+                {
+                  id: "type",
+                  header: (
+                    <div className="inline-flex items-center gap-single">
+                      <span>{useLabel("semio.sketchpad.app.home.kind")}</span>
+                      <Toggle
+                        kind="dropdown"
+                        pressed={sortColumn === "type"}
+                        value={sortColumn === "type" ? sortDirection : "asc"}
+                        onValueChange={(value) => {
+                          homeCommands.setSortColumn("semio.sketchpad.app.home.header.type.sortColumn", "type");
+                          homeCommands.setSortDirection("semio.sketchpad.app.home.header.type.sortDirection", value as "asc" | "desc");
+                        }}
+                        items={[
+                          { value: "asc", label: <SortAscendingIcon />, id: "semio.sketchpad.sort.ascending" },
+                          { value: "desc", label: <SortDescendingIcon />, id: "semio.sketchpad.sort.descending" },
+                        ]}
+                        id={"semio.sketchpad.app.home.sortByType"}
+                      />
+                    </div>
+                  ),
+                  accessor: (row) => (
+                    <>
+                      {row.type === "temporary" && <TemporaryKitIcon />}
+                      {row.type === "local" && <LocalKitIcon />}
+                      {row.type === "remote" && <RemoteKitIcon />}
+                      {row.type === "docs" && <DocumentIcon className="size-small" />}
+                    </>
+                  ),
+                  width: "w-0 whitespace-nowrap",
+                  headerClassName: "relative group w-0 whitespace-nowrap",
+                } as TableColumn<TableRow>,
+              ]
             : []),
           {
             id: "name",
@@ -1562,7 +1557,7 @@ const HomeTableContent: FC = () => {
   );
 };
 
-// #region 🔖Multi-Window App
+// #region Multi-Window App
 
 const TableWindow = memo(() => {
   return <HomeTableContent />;
@@ -1683,13 +1678,13 @@ const Home: FC = () => {
   );
 };
 
-// #endregion 🔖Multi-Window App
+// #endregion Multi-Window App
 
 export default Home;
 
-// #endregion 🔖App
+// #endregion App
 
-// #region 🔖Config
+// #region Config
 
 export const config: AppConfig = {
   id: "home",
@@ -1706,4 +1701,4 @@ export const config: AppConfig = {
   order: 0,
 };
 
-// #endregion 🔖Config
+// #endregion Config

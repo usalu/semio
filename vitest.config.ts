@@ -27,12 +27,12 @@
 
 // #endregion 🔖Header
 
-import defineConfig from "vitest/config";
+import { defineConfig } from "vitest/config";
 
-eport default defineConfig(
-  test:
-  projects: [
-  "./semio/js/vite.config.ts",
-],
-  ,
-);
+export default defineConfig({
+  test: {
+    projects: [
+      "./semio/js/vite.config.ts",
+    ],
+  },
+});

@@ -20,7 +20,8 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Cursor, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
+import { Box } from "lucide-react";
+import { Cursor, Level, LevelProvider, LoadingRow, Spinner, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region 🔖Icons
 const meta = {
@@ -105,3 +106,30 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Icons
+
+// #region 🔖Spinner
+export const SpinnerSizes: Story = {
+  args: { color: "#000000" },
+  render: () => (
+    <div className="flex items-center gap-4">
+      <Spinner size="small" />
+      <Spinner size="medium" />
+      <Spinner size="large" />
+    </div>
+  ),
+};
+// #endregion 🔖Spinner
+
+// #region 🔖LoadingRow
+export const LoadingRowDefault: Story = {
+  args: { color: "#000000" },
+  render: () => (
+    <div className="w-64 space-y-2">
+      <LoadingRow name="Loading types..." icon={<Box className="size-tiny" />} />
+      <LoadingRow name="Loading designs..." />
+      <LoadingRow name="Processing..." icon={<Spinner size="small" />} />
+    </div>
+  ),
+};
+// #endregion 🔖LoadingRow
+

@@ -20,8 +20,8 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Bell, ChevronDown, Home, Menu, Search, Settings, User } from "lucide-react";
-import { Level, LevelProvider, Navbar, NavbarItem, getLevelBgClass } from "../../../sketchpad/elements";
+import { Bell, ChevronDown, Home, Menu, Redo, Search, Settings, Undo, User, ZoomIn, ZoomOut } from "lucide-react";
+import { Button, Level, LevelProvider, Navbar, NavbarItem, Toggle, ToolbarDivider, ToolbarGroup, ToolbarItem, ToolbarZone, getLevelBgClass } from "../../../sketchpad/elements";
 
 // #region 🔖Navbar
 const meta = {
@@ -129,3 +129,41 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Navbar
+
+// #region 🔖Toolbar
+export const ToolbarDefault: Story = {
+  args: { items: defaultItems },
+  render: () => (
+    <LevelProvider level="panel">
+      <div className="p-4 bg-panel">
+        <ToolbarZone>
+          <ToolbarGroup>
+            <ToolbarItem>
+              <Button id="toolbar-undo" variant="ghost" icon={<Undo className="size-tiny" />} onClick={() => {}} />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Button id="toolbar-redo" variant="ghost" icon={<Redo className="size-tiny" />} onClick={() => {}} />
+            </ToolbarItem>
+          </ToolbarGroup>
+          <ToolbarDivider />
+          <ToolbarGroup>
+            <ToolbarItem>
+              <Toggle id="toolbar-zoom-in" pressed={false} onPressedChange={() => {}} icon={<ZoomIn className="size-tiny" />} />
+            </ToolbarItem>
+            <ToolbarItem>
+              <Toggle id="toolbar-zoom-out" pressed={false} onPressedChange={() => {}} icon={<ZoomOut className="size-tiny" />} />
+            </ToolbarItem>
+          </ToolbarGroup>
+          <ToolbarDivider />
+          <ToolbarGroup>
+            <ToolbarItem>
+              <span className="text-xs text-muted-foreground">100%</span>
+            </ToolbarItem>
+          </ToolbarGroup>
+        </ToolbarZone>
+      </div>
+    </LevelProvider>
+  ),
+};
+// #endregion 🔖Toolbar
+

@@ -1,10 +1,8 @@
-// #region 🔖Header
+// #region Header
 
-// 💻semio/js/sketchpad/Docs.tsx
+// js/semio/sketchpad/Docs.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -19,15 +17,9 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// #endregion Header
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
-
-// #endregion 🔖Header
-
-// #region 🔖Imports
+// #region Imports
 
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
 import { FC, ReactNode, Suspense, createContext, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -52,9 +44,9 @@ import {
 import { Aside, Tabs as BaseTabs, FileTree, FileTreeNode, Page, PageFrontmatter, PageNavigation, TabsContent, TabsList, TabsTrigger, TreeItem, TreeStateProvider } from "./elements";
 import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin, registerDocsRegistry, stringifyWindowLayout, type AppConfig, type AppEdit, type AppPlugin, type AppWindowConfig, type PanelVisibility } from "./shared";
 
-// #endregion 🔖Imports
+// #endregion Imports
 
-// #region 🔖MDX Loader
+// #region MDX Loader
 
 export interface MDXModule {
   default: React.ComponentType;
@@ -188,11 +180,11 @@ export function getAllSections(): SectionInfo[] {
   return Array.from(sectionsMap.values()).sort((a, b) => a.order - b.order);
 }
 
-// #endregion 🔖MDX Loader
+// #endregion MDX Loader
 
-// #region 🔖MDX Provider
+// #region MDX Provider
 
-// #region 🔖SectionTree
+// #region SectionTree
 
 export interface SectionTreeProps {
   title?: string;
@@ -221,7 +213,7 @@ export const SectionTree: React.FC<SectionTreeProps> = ({ title, section }) => {
   return <FileTree title={title} nodes={tree} currentPath={currentPath} onNavigate={handleNavigate} as="div" />;
 };
 
-// #endregion 🔖SectionTree
+// #endregion SectionTree
 
 export interface HeadingNode {
   id: string;
@@ -492,9 +484,9 @@ export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
   return <BaseMDXProvider components={components}>{children}</BaseMDXProvider>;
 };
 
-// #endregion 🔖MDX Provider
+// #endregion MDX Provider
 
-// #region 🔖Registry
+// #region Registry
 
 export interface DocsPage {
   title: string;
@@ -506,7 +498,7 @@ export interface DocsPage {
   concepts?: string[];
 }
 
-export interface DocsSection extends SectionInfo { }
+export interface DocsSection extends SectionInfo {}
 
 class DocsRegistry {
   getAllSections(): DocsSection[] {
@@ -642,9 +634,9 @@ class DocsRegistry {
 
 export const docsRegistry = new DocsRegistry();
 
-// #endregion 🔖Registry
+// #endregion Registry
 
-// #region 🔖Store
+// #region Store
 
 export interface DocsSectionState {
   isExpanded: boolean;
@@ -652,9 +644,9 @@ export interface DocsSectionState {
   completedPages?: string[];
 }
 
-// #endregion 🔖Store
+// #endregion Store
 
-// #region 🔖Types
+// #region Types
 
 export interface DocsAppSelection {
   section?: string;
@@ -684,7 +676,7 @@ export interface DocsAppDiff {
   sectionStatesDiff?: Record<string, Partial<DocsAppSectionState>>;
 }
 
-export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> { }
+export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> {}
 
 export interface DocsCommandContext {
   docs: DocsAppState;
@@ -695,9 +687,9 @@ export interface DocsCommandResult {
   diff?: DocsAppDiff;
 }
 
-// #endregion 🔖Types
+// #endregion Types
 
-// #region 🔖Docs App Store
+// #region Docs App Store
 
 export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
   constructor(_parent: SketchpadStore) {
@@ -787,9 +779,9 @@ export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsA
   }
 }
 
-// #endregion 🔖Docs App Store
+// #endregion Docs App Store
 
-// #region 🔖Commands
+// #region Commands
 
 export const docsCommands = {
   "semio.docsApp.selectPage": async (context: DocsCommandContext, section: string, page: string): Promise<DocsCommandResult> => {
@@ -847,7 +839,7 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #region 🔖Docs App Plugin Registration
+// #region Docs App Plugin Registration
 
 const docsAppPlugin: AppPlugin = {
   id: "docs",
@@ -870,15 +862,15 @@ if (typeof window !== "undefined") {
   registerDocsRegistry(docsRegistry);
 }
 
-// #endregion 🔖Docs App Plugin Registration
+// #endregion Docs App Plugin Registration
 
-// #endregion 🔖Commands
+// #endregion Commands
 
-// #region 🔖Canvas
+// #region Canvas
 
-// #region 🔖Windows
+// #region Windows
 
-// #region 🔖Page
+// #region Page
 
 interface PageCanvasProps {
   MDXContent?: React.ComponentType;
@@ -952,17 +944,17 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
     return {
       prev: prev
         ? {
-          path: prev.path,
-          title: prev.title,
-          section: prev.section,
-        }
+            path: prev.path,
+            title: prev.title,
+            section: prev.section,
+          }
         : undefined,
       next: next
         ? {
-          path: next.path,
-          title: next.title,
-          section: next.section,
-        }
+            path: next.path,
+            title: next.title,
+            section: next.section,
+          }
         : undefined,
     };
   }, [currentPath]);
@@ -1043,8 +1035,8 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
             onClick={
               childNode.page
                 ? () => {
-                  navigate(`/${childNode.page!.path}`);
-                }
+                    navigate(`/${childNode.page!.path}`);
+                  }
                 : undefined
             }
           >
@@ -1078,6 +1070,8 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
         <MDXProvider>
           <Suspense fallback={<div className="text-muted-foreground">Loading...</div>}>{MDXContent ? <MDXContent /> : <p className="text-muted-foreground">No content available</p>}</Suspense>
         </MDXProvider>
+
+        {/* Auto-inject section tree on index pages */}
         {treeData && (
           <TreeStateProvider>
             <div className="not-prose my-8 p-6 rounded-lg border border-element bg-card">
@@ -1091,13 +1085,13 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
   );
 };
 
-// #endregion 🔖Page
+// #endregion Page
 
-// #endregion 🔖Windows
+// #endregion Windows
 
-// #endregion 🔖Canvas
+// #endregion Canvas
 
-// #region 🔖Footer
+// #region Footer
 
 export const DocsAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -1109,13 +1103,15 @@ export const DocsAppFooter: FC = () => {
 
     // TODO: Add docs-specific footer items here
 
-    return () => { };
+    return () => {
+      // Cleanup
+    };
   }, [appType, addFooterItem, removeFooterItem]);
 
   return null;
 };
 
-// #endregion 🔖Footer
+// #endregion Footer
 
 const Workbench: FC = () => {
   const navigate = useNavigate();
@@ -1170,7 +1166,7 @@ const Settings: FC = () => {
   return <div className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.settings.placeholder")}</div>;
 };
 
-// #region 🔖App
+// #region App
 
 export enum DocsAppWindowKind {
   Page = "page",
@@ -1329,9 +1325,9 @@ const App: FC = () => {
 
 export default App;
 
-// #endregion 🔖App
+// #endregion App
 
-// #region 🔖Config
+// #region Config
 
 export const config: AppConfig = {
   id: "docs",
@@ -1355,4 +1351,4 @@ export const config: AppConfig = {
   order: 5,
 };
 
-// #endregion 🔖Config
+// #endregion Config

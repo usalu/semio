@@ -2035,6 +2035,56 @@
               "beginner": "Title"
             }
           },
+          "tools": {
+            "label": {
+              "normal": "Tools",
+              "beginner": "Tools"
+            },
+            "select": {
+              "mode": {
+                "additive": {
+                  "label": {
+                    "normal": "Additive",
+                    "beginner": "Additive selection mode - add to existing selection"
+                  }
+                },
+                "subtractive": {
+                  "label": {
+                    "normal": "Subtractive",
+                    "beginner": "Subtractive selection mode - remove from existing selection"
+                  }
+                },
+                "intersect": {
+                  "label": {
+                    "normal": "Intersect",
+                    "beginner": "Intersect selection mode - select only overlapping items"
+                  }
+                }
+              },
+              "shape": {
+                "rectangular": {
+                  "label": {
+                    "normal": "Rectangular",
+                    "beginner": "Rectangular selection - drag to select in a rectangle"
+                  }
+                },
+                "lasso": {
+                  "label": {
+                    "normal": "Lasso",
+                    "beginner": "Freeform lasso selection - draw a freeform shape"
+                  }
+                }
+              },
+              "navigation": {
+                "hand": {
+                  "label": {
+                    "normal": "Hand",
+                    "beginner": "Hand tool - pan and navigate the canvas"
+                  }
+                }
+              }
+            }
+          },
           "tool": {
             "pointer": {
               "label": {
@@ -2787,6 +2837,60 @@
                   "beginner": "Parent Connections"
                 }
               }
+            },
+            "hud": {
+              "overview": {
+                "label": {
+                  "normal": "HUD Overview",
+                  "beginner": "HUD Overview"
+                }
+              },
+              "selection": {
+                "pieces": {
+                  "label": {
+                    "normal": "Selected Pieces",
+                    "beginner": "Selected Pieces"
+                  }
+                },
+                "connections": {
+                  "label": {
+                    "normal": "Selected Connections",
+                    "beginner": "Selected Connections"
+                  }
+                },
+                "connector": {
+                  "label": {
+                    "normal": "Connector Selected",
+                    "beginner": "Connector Selected"
+                  }
+                }
+              }
+            },
+            "stats": {
+              "overview": {
+                "label": {
+                  "normal": "Statistics",
+                  "beginner": "Statistics"
+                }
+              },
+              "pieces": {
+                "label": {
+                  "normal": "Total Pieces",
+                  "beginner": "Total Pieces"
+                }
+              },
+              "connections": {
+                "label": {
+                  "normal": "Total Connections",
+                  "beginner": "Total Connections"
+                }
+              },
+              "windows": {
+                "label": {
+                  "normal": "Window Layout Loaded",
+                  "beginner": "Window Layout Loaded"
+                }
+              }
             }
           },
           "gridSize": {
@@ -2839,36 +2943,46 @@
               "beginner": "Tools"
             },
             "select": {
-              "normal": {
-                "label": {
-                  "normal": "Normal",
-                  "beginner": "Normal Select"
+              "mode": {
+                "additive": {
+                  "label": {
+                    "normal": "Additive",
+                    "beginner": "Additive selection mode - add to existing selection"
+                  }
+                },
+                "subtractive": {
+                  "label": {
+                    "normal": "Subtractive",
+                    "beginner": "Subtractive selection mode - remove from existing selection"
+                  }
+                },
+                "intersect": {
+                  "label": {
+                    "normal": "Intersect",
+                    "beginner": "Intersect selection mode - select only overlapping items"
+                  }
                 }
               },
-              "additive": {
-                "label": {
-                  "normal": "Additive",
-                  "beginner": "Additive Select"
+              "shape": {
+                "rectangular": {
+                  "label": {
+                    "normal": "Rectangular",
+                    "beginner": "Rectangular selection - drag to select in a rectangle"
+                  }
+                },
+                "lasso": {
+                  "label": {
+                    "normal": "Lasso",
+                    "beginner": "Freeform lasso selection - draw a freeform shape"
+                  }
                 }
               },
-              "subtractive": {
-                "label": {
-                  "normal": "Subtractive",
-                  "beginner": "Subtractive Select"
-                }
-              }
-            },
-            "lasso": {
-              "rectangular": {
-                "label": {
-                  "normal": "Rectangular",
-                  "beginner": "Rectangular Lasso"
-                }
-              },
-              "freeform": {
-                "label": {
-                  "normal": "Freeform",
-                  "beginner": "Freeform Lasso"
+              "navigation": {
+                "hand": {
+                  "label": {
+                    "normal": "Hand",
+                    "beginner": "Hand tool - pan and navigate the canvas"
+                  }
                 }
               }
             }
@@ -3387,6 +3501,12 @@
                 "label": {
                   "normal": "Subtractive",
                   "beginner": "Create Subtractive"
+                }
+              },
+              "intersect": {
+                "label": {
+                  "normal": "Intersect",
+                  "beginner": "Create Intersect"
                 }
               }
             }
@@ -3967,14 +4087,19 @@
           "filter": "Filter",
           "create": "Create",
           "view": "View",
-          "actions": "Actions"
+          "actions": "Actions",
+          "settings": "Settings"
         },
         "subtool": {
           "select": "Select",
           "hand": "Hand",
           "additive": "Additive",
           "subtractive": "Subtractive",
-          "intersect": "Intersect"
+          "intersect": "Intersect",
+          "connector": "Connector",
+          "appSettings": "App Settings",
+          "command": "Command",
+          "tools": "Tools"
         }
       },
       "tutorial": {

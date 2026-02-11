@@ -68,7 +68,7 @@ export {
   Layers as HudIcon,
   PanelTop as HudPanelIcon,
   Info as InfoIcon,
-  Intersect as IntersectIcon,
+  Combine as IntersectIcon,
   Layout as LayoutIcon,
   PanelLeft as LeftSidePanelIcon,
   Lightbulb as LightbulbIcon,

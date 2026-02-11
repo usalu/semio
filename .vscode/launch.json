@@ -362,7 +362,7 @@
     {
       "name": "semio/js dev",
       "preLaunchTask": "semio/js dev",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
@@ -381,7 +381,7 @@
     {
       "name": "semio/js dev:storybook",
       "preLaunchTask": "semio/js dev:storybook",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
@@ -400,7 +400,7 @@
     {
       "name": "semio/js dev:sketchpad",
       "preLaunchTask": "semio/js dev:sketchpad",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
@@ -500,7 +500,7 @@
     {
       "name": "semio/docs dev",
       "preLaunchTask": "semio/docs dev",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [
@@ -561,7 +561,7 @@
     {
       "name": "semio/play dev",
       "preLaunchTask": "semio/play dev",
-      "type": "chrome",
+      "type": "node",
       "request": "launch",
       "runtimeExecutable": "npx",
       "runtimeArgs": [

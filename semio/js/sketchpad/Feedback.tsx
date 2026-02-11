@@ -1,10 +1,8 @@
-// #region 🔖Header
+// #region Header
 
-// 💻semio/js/sketchpad/Feedback.tsx
+// js/semio/sketchpad/Feedback.tsx
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Lesser General Public License as
@@ -19,30 +17,24 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+// #endregion Header
 
-// #endregion 🔖License
+// #region Imports
 
-// #region 🔖Specs
-// #endregion 🔖Specs
-
-// #endregion 🔖Header
-
-// #region 🔖Imports
-
+import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
 import { useSelector } from "@xstate/react";
 import { FC, useCallback, useLayoutEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import { CheckIcon, ChatIcon as FeedbackIcon } from "@semio/assets";
 import { useLabel } from "../i18n";
-import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea } from "./elements";
+import { Button, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Textarea, ToolbarGroup } from "./elements";
 import type { AppConfig, AppPlugin, HookResult, PanelDefinition } from "./shared";
-import { conditionalHookResult, createPanelDefinition, deduplicateWindowLayout, EMPTY_PANEL_VISIBILITY, PanelKind, parseWindowLayout, registerAppPlugin, registerEventHandler, stringifyWindowLayout, type AppWindowConfig } from "./shared";
-import { Canvas, createDefaultLayout, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, LayoutCanvas, useAddPanelSection, useAppType, useRemovePanelSection, useSettings, useSketchpadActor, useSketchpadCommands } from "./Sketchpad";
+import { conditionalHookResult, createPanelDefinition, EMPTY_PANEL_VISIBILITY, PanelKind, registerAppPlugin, registerEventHandler } from "./shared";
+import { Canvas, FeedbackAppKind, FeedbackAppState, FeedbackFormData, FeedbackKind, useAddPanelSection, useAppType, useRemovePanelSection, useSketchpadActor } from "./Sketchpad";
 
-// #endregion 🔖Imports
+// #endregion Imports
 
-// #region 🔖Feedback App Plugin Registration
+// #region Feedback App Plugin Registration
 
 const createDefaultFeedbackState = (): FeedbackAppState => ({
   panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
@@ -133,9 +125,9 @@ if (typeof window !== "undefined") {
   });
 }
 
-// #endregion 🔖Feedback App Plugin Registration
+// #endregion Feedback App Plugin Registration
 
-// #region 🔖Triadic Hooks
+// #region Triadic Hooks
 
 const DEFAULT_FORM_DATA: FeedbackFormData = {
   kind: "bug",
@@ -215,11 +207,11 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
   return [reset, canReset];
 }
 
-// #endregion 🔖Triadic Hooks
+// #endregion Triadic Hooks
 
-// #region 🔖Components
+// #region Components
 
-// #region 🔖Form
+// #region Form
 
 const FeedbackForm: FC = () => {
   const { t } = useTranslation();
@@ -347,7 +339,7 @@ const FeedbackForm: FC = () => {
         <label htmlFor="semio.sketchpad.app.feedback.form.kind" className="text-sm font-medium">
           {kindLabel}
         </label>
-        <Select id="semio.sketchpad.app.feedback.form.kind" value={kind} onValueChange={(v) => setKind(v as FeedbackKind)}>
+        <Select id="semio.sketchpad.app.feedback.form.kind.select" value={kind} onValueChange={(v) => setKind(v as FeedbackKind)}>
           <SelectTrigger id="semio.sketchpad.app.feedback.form.kind">
             <SelectValue />
           </SelectTrigger>
@@ -374,7 +366,7 @@ const FeedbackForm: FC = () => {
           <label htmlFor="semio.sketchpad.app.feedback.form.app" className="text-sm font-medium">
             {appLabel}
           </label>
-          <Select id="semio.sketchpad.app.feedback.form.app" value={app || ""} onValueChange={(v) => setApp(v as FeedbackAppKind)}>
+          <Select id="semio.sketchpad.app.feedback.form.app.select" value={app || ""} onValueChange={(v) => setApp(v as FeedbackAppKind)}>
             <SelectTrigger id="semio.sketchpad.app.feedback.form.app">
               <SelectValue placeholder={t("semio.sketchpad.app.feedback.form.appPlaceholder.label.normal", "Select app...")} />
             </SelectTrigger>
@@ -433,11 +425,11 @@ const FeedbackForm: FC = () => {
   );
 };
 
-// #endregion 🔖Form
+// #endregion Form
 
-// #endregion 🔖Components
+// #endregion Components
 
-// #region 🔖App
+// #region App
 
 const FeedbackToolbar: FC = () => {
   const { t } = useTranslation();
@@ -451,12 +443,12 @@ const FeedbackToolbar: FC = () => {
   };
 
   return (
-    <div className="flex items-center gap-single">
+    <ToolbarGroup>
       <Button id="semio.sketchpad.app.feedback.toolbar.send" onClick={handleSendClick} className="gap-single">
         <CheckIcon className="size-small" />
         {submitLabel}
       </Button>
-    </div>
+    </ToolbarGroup>
   );
 };
 
@@ -464,16 +456,6 @@ const Feedback: FC = () => {
   const appType = useAppType();
   const addSection = useAddPanelSection();
   const removeSection = useRemovePanelSection();
-  const settings = useSettings();
-  const sketchpadCommands = useSketchpadCommands();
-  const feedbackWindowIds = useMemo(() => ["feedback"], []);
-  const storedWindowLayout = useMemo(() => {
-    const parsed = parseWindowLayout(settings?.apps?.feedback?.windowLayout);
-    return parsed ? deduplicateWindowLayout(parsed, feedbackWindowIds) : undefined;
-  }, [settings, feedbackWindowIds]);
-  const defaultLayout = useMemo(() => createDefaultLayout(feedbackWindowIds, "row", [100], ["feedback"]), [feedbackWindowIds]);
-  const windowLayout = useMemo(() => storedWindowLayout || defaultLayout, [storedWindowLayout, defaultLayout]);
-  const lastLayoutRef = useMemo(() => ({ current: null as any }), []);
 
   useLayoutEffect(() => {
     if (appType !== "feedback") return;
@@ -497,46 +479,16 @@ const Feedback: FC = () => {
 
   return (
     <Canvas>
-      <LayoutCanvas
-        windowConfig={
-          {
-            windowKinds: [
-              {
-                id: "feedback",
-                label: "feedback",
-                component: () => <FeedbackForm />,
-              },
-            ],
-            defaultLayout,
-          } satisfies AppWindowConfig
-        }
-        layoutState={windowLayout}
-        onLayoutChange={(layout) => {
-          const next = stringifyWindowLayout(layout);
-          if (!next) return;
-          const prev = stringifyWindowLayout(lastLayoutRef.current);
-          if (next === prev) return;
-          lastLayoutRef.current = layout;
-          sketchpadCommands.setState("semio.sketchpad.app.feedback.windowLayout", {
-            settings: {
-              apps: {
-                feedback: {
-                  windowLayout: next,
-                },
-              },
-            },
-          });
-        }}
-      />
+      <FeedbackForm />
     </Canvas>
   );
 };
 
 export default Feedback;
 
-// #endregion 🔖App
+// #endregion App
 
-// #region 🔖Config
+// #region Config
 
 export const config: AppConfig = {
   id: "feedback",
@@ -547,10 +499,10 @@ export const config: AppConfig = {
   order: 10,
 };
 
-// #endregion 🔖Config
+// #endregion Config
 
-// #region 🔖Global Footer Item
+// #region Global Footer Item
 
 export { FeedbackIcon };
 
-// #endregion 🔖Global Footer Item
+// #endregion Global Footer Item

@@ -1801,6 +1801,56 @@
               "beginner": "Titel"
             }
           },
+          "tools": {
+            "label": {
+              "normal": "Werkzeuge",
+              "beginner": "Werkzeuge"
+            },
+            "select": {
+              "mode": {
+                "additive": {
+                  "label": {
+                    "normal": "Additiv",
+                    "beginner": "Additiver Auswahlmodus - zur vorhandenen Auswahl hinzufügen"
+                  }
+                },
+                "subtractive": {
+                  "label": {
+                    "normal": "Subtraktiv",
+                    "beginner": "Subtraktiver Auswahlmodus - aus vorhandener Auswahl entfernen"
+                  }
+                },
+                "intersect": {
+                  "label": {
+                    "normal": "Schnittmenge",
+                    "beginner": "Schnittmengen-Auswahlmodus - nur überlappende Elemente auswählen"
+                  }
+                }
+              },
+              "shape": {
+                "rectangular": {
+                  "label": {
+                    "normal": "Rechteckig",
+                    "beginner": "Rechteckige Auswahl - ziehen Sie, um in einem Rechteck auszuwählen"
+                  }
+                },
+                "lasso": {
+                  "label": {
+                    "normal": "Lasso",
+                    "beginner": "Freiform-Lasso-Auswahl - zeichnen Sie eine Freiform-Form"
+                  }
+                }
+              },
+              "navigation": {
+                "hand": {
+                  "label": {
+                    "normal": "Hand",
+                    "beginner": "Hand-Werkzeug - schwenken und navigieren Sie auf der Leinwand"
+                  }
+                }
+              }
+            }
+          },
           "folder": {
             "label": {
               "normal": "Ordner",
@@ -2562,6 +2612,60 @@
                   "beginner": "Elternverbindungen"
                 }
               }
+            },
+            "hud": {
+              "overview": {
+                "label": {
+                  "normal": "HUD-Uebersicht",
+                  "beginner": "HUD-Uebersicht"
+                }
+              },
+              "selection": {
+                "pieces": {
+                  "label": {
+                    "normal": "Ausgewaehlte Bauteile",
+                    "beginner": "Ausgewaehlte Bauteile"
+                  }
+                },
+                "connections": {
+                  "label": {
+                    "normal": "Ausgewaehlte Verbindungen",
+                    "beginner": "Ausgewaehlte Verbindungen"
+                  }
+                },
+                "connector": {
+                  "label": {
+                    "normal": "Connector ausgewaehlt",
+                    "beginner": "Connector ausgewaehlt"
+                  }
+                }
+              }
+            },
+            "stats": {
+              "overview": {
+                "label": {
+                  "normal": "Statistik",
+                  "beginner": "Statistik"
+                }
+              },
+              "pieces": {
+                "label": {
+                  "normal": "Bauteile gesamt",
+                  "beginner": "Bauteile gesamt"
+                }
+              },
+              "connections": {
+                "label": {
+                  "normal": "Verbindungen gesamt",
+                  "beginner": "Verbindungen gesamt"
+                }
+              },
+              "windows": {
+                "label": {
+                  "normal": "Fensterlayout geladen",
+                  "beginner": "Fensterlayout geladen"
+                }
+              }
             }
           },
           "gridSize": {
@@ -2592,6 +2696,50 @@
             "label": {
               "normal": "Werkzeuge",
               "beginner": "Werkzeuge"
+            },
+            "select": {
+              "mode": {
+                "additive": {
+                  "label": {
+                    "normal": "Additiv",
+                    "beginner": "Additiver Auswahlmodus - zur vorhandenen Auswahl hinzufügen"
+                  }
+                },
+                "subtractive": {
+                  "label": {
+                    "normal": "Subtraktiv",
+                    "beginner": "Subtraktiver Auswahlmodus - von vorhandener Auswahl entfernen"
+                  }
+                },
+                "intersect": {
+                  "label": {
+                    "normal": "Schnittmenge",
+                    "beginner": "Schnittmengen-Auswahlmodus - nur überlappende Elemente auswählen"
+                  }
+                }
+              },
+              "shape": {
+                "rectangular": {
+                  "label": {
+                    "normal": "Rechteckig",
+                    "beginner": "Rechteckige Auswahl - ziehen Sie, um in einem Rechteck auszuwählen"
+                  }
+                },
+                "lasso": {
+                  "label": {
+                    "normal": "Lasso",
+                    "beginner": "Freiform-Lasso-Auswahl - zeichnen Sie eine Freiformform"
+                  }
+                }
+              },
+              "navigation": {
+                "hand": {
+                  "label": {
+                    "normal": "Hand",
+                    "beginner": "Hand-Werkzeug - die Leinwand schwenken und navigieren"
+                  }
+                }
+              }
             }
           },
           "windows": {
@@ -3358,6 +3506,32 @@
             "label": {
               "normal": "Werkzeuge",
               "beginner": "Werkzeuge"
+            },
+            "select": {
+              "normal": {
+                "label": {
+                  "normal": "Normal",
+                  "beginner": "Normale Auswahl erstellen"
+                }
+              },
+              "additive": {
+                "label": {
+                  "normal": "Additiv",
+                  "beginner": "Additive Auswahl erstellen"
+                }
+              },
+              "subtractive": {
+                "label": {
+                  "normal": "Subtraktiv",
+                  "beginner": "Subtraktive Auswahl erstellen"
+                }
+              },
+              "intersect": {
+                "label": {
+                  "normal": "Schnittmenge",
+                  "beginner": "Schnittmengen-Auswahl erstellen"
+                }
+              }
             }
           },
           "title": {
@@ -3835,6 +4009,12 @@
               "beginner": "Auswahl"
             }
           },
+          "hand": {
+            "label": {
+              "normal": "Hand",
+              "beginner": "Hand"
+            }
+          },
           "filter": {
             "label": {
               "normal": "Filter",
@@ -3857,6 +4037,68 @@
             "label": {
               "normal": "Aktionen",
               "beginner": "Aktionen"
+            }
+          },
+          "settings": {
+            "label": {
+              "normal": "Einstellungen",
+              "beginner": "Einstellungen"
+            }
+          }
+        },
+        "subtool": {
+          "select": {
+            "label": {
+              "normal": "Auswählen",
+              "beginner": "Auswählen"
+            }
+          },
+          "hand": {
+            "label": {
+              "normal": "Hand",
+              "beginner": "Hand"
+            }
+          },
+          "additive": {
+            "label": {
+              "normal": "Additiv",
+              "beginner": "Additiv"
+            }
+          },
+          "subtractive": {
+            "label": {
+              "normal": "Subtraktiv",
+              "beginner": "Subtraktiv"
+            }
+          },
+          "intersect": {
+            "label": {
+              "normal": "Schnittmenge",
+              "beginner": "Schnittmenge"
+            }
+          },
+          "connector": {
+            "label": {
+              "normal": "Konnektor",
+              "beginner": "Konnektor"
+            }
+          },
+          "appSettings": {
+            "label": {
+              "normal": "App Einstellungen",
+              "beginner": "App Einstellungen"
+            }
+          },
+          "command": {
+            "label": {
+              "normal": "Befehl",
+              "beginner": "Befehl"
+            }
+          },
+          "tools": {
+            "label": {
+              "normal": "Werkzeuge",
+              "beginner": "Werkzeuge"
             }
           }
         }

@@ -22,7 +22,7 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { Box, ChevronDown } from "lucide-react";
 import { useState } from "react";
-import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
+import { Button, Collapsible, CollapsibleContent, CollapsibleTrigger, Level, LevelProvider, Section, Steps, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region 🔖Collapsible
 const meta = {
@@ -121,3 +121,42 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Collapsible
+
+// #region 🔖Section
+export const SectionDefault: Story = {
+  render: () => (
+    <div className="w-96">
+      <Section title="Module Types" id="module-types">
+        <p className="text-sm">Capsule J, Capsule K, Base, Tambour A, Capital</p>
+      </Section>
+      <Section title="Design Properties" id="design-properties">
+        <p className="text-sm">Volume: 25.0 m³, Area: 10.0 m², Connections: 4</p>
+      </Section>
+    </div>
+  ),
+};
+// #endregion 🔖Section
+
+// #region 🔖Steps
+export const StepsDefault: Story = {
+  render: () => (
+    <div className="w-96">
+      <Steps>
+        <div className="border p-single">
+          <h3 className="font-semibold">Step 1: Create a Kit</h3>
+          <p className="text-sm text-muted-foreground">Initialize a new kit with types and qualities.</p>
+        </div>
+        <div className="border p-single">
+          <h3 className="font-semibold">Step 2: Add Types</h3>
+          <p className="text-sm text-muted-foreground">Define the building blocks of your design.</p>
+        </div>
+        <div className="border p-single">
+          <h3 className="font-semibold">Step 3: Create a Design</h3>
+          <p className="text-sm text-muted-foreground">Compose types into a complete design.</p>
+        </div>
+      </Steps>
+    </div>
+  ),
+};
+// #endregion 🔖Steps
+

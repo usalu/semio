@@ -20,8 +20,9 @@
 // #endregion 🔖Header
 
 import type { Meta, StoryObj } from "@storybook/react";
-import { Home } from "lucide-react";
-import { Breadcrumb, BreadcrumbItemData, Level, LevelProvider, getLevelBgClass } from "../../../../sketchpad/elements";
+import { AlertCircle, Home } from "lucide-react";
+import { MemoryRouter } from "react-router";
+import { Breadcrumb, BreadcrumbItemData, Level, LevelProvider, NotFound, PageNavigation, getLevelBgClass } from "../../../../sketchpad/elements";
 
 // #region 🔖Breadcrumb
 const meta = {
@@ -136,3 +137,55 @@ export const Temporary: Story = {
 };
 
 // #endregion 🔖Breadcrumb
+
+// #region 🔖NotFound
+export const NotFoundDefault: Story = {
+  args: { items: defaultItems },
+  render: () => (
+    <MemoryRouter>
+      <div className="h-64 w-96 border">
+        <NotFound title="Kit Not Found" description="The kit you're looking for doesn't exist or has been removed." parentPath="/" parentLabel="Back to Kits" />
+      </div>
+    </MemoryRouter>
+  ),
+};
+
+export const NotFoundMinimal: Story = {
+  args: { items: defaultItems },
+  render: () => (
+    <MemoryRouter>
+      <div className="h-48 w-80 border">
+        <NotFound title="Type Not Found" icon={<AlertCircle className="size-huge" />} />
+      </div>
+    </MemoryRouter>
+  ),
+};
+// #endregion 🔖NotFound
+
+// #region 🔖PageNavigation
+export const PageNavigationDefault: Story = {
+  args: { items: defaultItems },
+  render: () => (
+    <MemoryRouter>
+      <div className="w-[600px]">
+        <PageNavigation
+          prev={{ path: "getting-started", title: "Getting Started", section: "Basics" }}
+          next={{ path: "tutorials/hello-semio", title: "Hello Semio", section: "Tutorials" }}
+        />
+      </div>
+    </MemoryRouter>
+  ),
+};
+
+export const PageNavigationNextOnly: Story = {
+  args: { items: defaultItems },
+  render: () => (
+    <MemoryRouter>
+      <div className="w-[600px]">
+        <PageNavigation next={{ path: "tutorials", title: "Tutorials" }} />
+      </div>
+    </MemoryRouter>
+  ),
+};
+// #endregion 🔖PageNavigation
+
