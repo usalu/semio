@@ -16,10 +16,8 @@
         "finished": "2026-02-06 22:27:32"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "ed14664e8b9fd928006607e1035779b1723addc0",
       "prompt": "Add 📜:script file kind. Derive file kind from header ID for code files. All .sh files are scripts. Extend tests.",
       "llm": "opus-4-6",

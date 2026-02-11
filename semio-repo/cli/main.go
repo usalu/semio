@@ -10,12 +10,10 @@
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Affero General Public License for more details.
-
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -6533,7 +6531,7 @@ const (
 	EmojiSection             = "🔖"
 	EmojiDefinitions         = "🏷️"
 	EmojiDefinitionImpl      = "🛠️"
-	EmojiDefinitionInterface = "✂️️"
+	EmojiDefinitionInterface = "✂️"
 	EmojiDefinitionConstant  = "🪨"
 	EmojiTickets             = "🎫"
 	EmojiTicket              = "🎫"
@@ -6543,8 +6541,8 @@ const (
 	EmojiDraft               = "✍"
 	EmojiTodos               = "📝"
 	EmojiTodo                = "📝"
-	EmojiPolicies            = "🛡️️"
-	EmojiPolicy              = "🛡️️"
+	EmojiPolicies            = "🛡️"
+	EmojiPolicy              = "🛡️"
 	EmojiViolationKinds      = "🚫"
 	EmojiViolationKind       = "🚫"
 	EmojiViolation           = "🚫"
@@ -8360,9 +8358,6 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 	inlineCommentActive := false
 	allDirectives := l.SkipDirectives()
 	for i, line := range lines {
-		if i == 0 {
-			panic(fmt.Sprintf("BaseLanguage.ScanComments running for file %s", file))
-		}
 		lineNum := i + 1
 
 		if i == 0 && strings.HasPrefix(strings.TrimSpace(line), "#!") {
@@ -8618,6 +8613,11 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 					inlineCommentActive = true
 					break
 				}
+				if ctx.IsSectionDocLine(file, lineNum) {
+					foundInline = true
+					inlineCommentActive = true
+					break
+				}
 				scanState.InTodoBlock = false
 				debugMarker := strings.Contains(line, "[DEBUG]")
 				if !debugMarker {
@@ -8701,10 +8701,6 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 	scanState := CommentScanState{}
 	inlineCommentActive := false
 	for i, line := range lines {
-		if i == 0 && strings.HasPrefix(strings.TrimSpace(line), "#!") {
-			charIndex += len(line) + 1
-			continue
-		}
 		lineNum := i + 1
 
 		if headerSection != nil && lineNum >= headerSection.StartLine && lineNum <= headerSection.EndLine {
@@ -8832,7 +8828,10 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					continue
 				}
 				trimmed := strings.TrimSpace(line)
-				if strings.HasPrefix(trimmed, "// #region") || strings.HasPrefix(trimmed, "// #endregion") {
+				if matched, _ := l.PolicySectionStartMatch(trimmed); matched {
+					break
+				}
+				if matched, _ := l.PolicySectionEndMatch(trimmed); matched {
 					break
 				}
 				if strings.HasPrefix(trimmed, "// eslint-") || strings.HasPrefix(trimmed, "// @ts-") || strings.HasPrefix(trimmed, "// noinspection") || strings.HasPrefix(trimmed, "// TODO") || strings.HasPrefix(trimmed, "// semio-ignore-") {
@@ -8849,6 +8848,11 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					break
 				}
 				if ctx.IsSpecLine(file, lineNum) {
+					foundInline = true
+					inlineCommentActive = true
+					break
+				}
+				if ctx.IsSectionDocLine(file, lineNum) {
 					foundInline = true
 					inlineCommentActive = true
 					break
@@ -9693,6 +9697,56 @@ type Interaction struct {
 	Diff   *TicketDiffs     `json:"diff,omitempty" yaml:"diff,omitempty"`
 }
 
+func (i *Interaction) UnmarshalJSON(data []byte) error {
+	type Alias Interaction
+	raw := struct {
+		Alias
+		RawAuthor json.RawMessage `json:"author"`
+		RawSystem json.RawMessage `json:"system"`
+	}{}
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	*i = Interaction(raw.Alias)
+	if len(raw.RawAuthor) > 0 {
+		if raw.RawAuthor[0] == '"' {
+			json.Unmarshal(raw.RawAuthor, &i.Author)
+		} else if raw.RawAuthor[0] == '{' {
+			var obj struct {
+				Name   string `json:"name"`
+				Email  string `json:"email"`
+				Github string `json:"github"`
+			}
+			if err := json.Unmarshal(raw.RawAuthor, &obj); err == nil {
+				if obj.Name != "" && obj.Email != "" {
+					i.Author = fmt.Sprintf("%s <%s>", obj.Name, obj.Email)
+				} else if obj.Name != "" {
+					i.Author = obj.Name
+				} else if obj.Email != "" {
+					i.Author = obj.Email
+				}
+			}
+		}
+	}
+	if len(raw.RawSystem) > 0 {
+		if raw.RawSystem[0] == '"' {
+			json.Unmarshal(raw.RawSystem, &i.System)
+		} else if raw.RawSystem[0] == '{' {
+			var obj struct {
+				Version string `json:"version"`
+				Client  string `json:"client"`
+			}
+			if err := json.Unmarshal(raw.RawSystem, &obj); err == nil {
+				i.System = obj.Version
+				if obj.Client != "" && i.Client == "" {
+					i.Client = obj.Client
+				}
+			}
+		}
+	}
+	return nil
+}
+
 
 
 func resolveAuthorToGithub(name, email string) string {
@@ -9819,24 +9873,34 @@ type TicketDates struct {
 type ViolationKind string
 
 const (
-	ViolationCodeHeaderMissingRegion        ViolationKind = "code/header/missing-region"
-	ViolationCodeHeaderWrongFileId          ViolationKind = "code/header/wrong-file-id"
-	ViolationCodeHeaderMissingContributors  ViolationKind = "code/header/missing-contributors"
-	ViolationCodeHeaderMissingSummary       ViolationKind = "code/header/missing-summary"
-	ViolationCodeHeaderMissingLicense       ViolationKind = "code/header/missing-license"
-	ViolationCodeHeaderMissingLicenseRegion ViolationKind = "code/header/missing-license-region"
-	ViolationCodeHeaderWrongLicense         ViolationKind = "code/header/wrong-license"
-	ViolationCodeHeaderMissingSpecsRegion   ViolationKind = "code/header/missing-specs-region"
-	ViolationCodeSectionEmpty               ViolationKind = "code/section/empty"
-	ViolationCodeSectionOrphanDefinition    ViolationKind = "code/section/orphan-definition"
-	ViolationCodeSectionMissingStartName    ViolationKind = "code/section/missing-start-name"
-	ViolationCodeSectionMissingEndName      ViolationKind = "code/section/missing-end-name"
-	ViolationCodeSectionNameMismatch        ViolationKind = "code/section/name-mismatch"
-	ViolationCodeCommentInline              ViolationKind = "code/comment/inline"
-	ViolationCodeCommentBlock               ViolationKind = "code/comment/block"
-	ViolationCodeCommentJSDoc               ViolationKind = "code/comment/jsdoc"
-	ViolationCodeSpecsSyntax                ViolationKind = "code/specs/implementation-syntax"
-	ViolationCodeDocsMissingReadme          ViolationKind = "code/docs/missing-readme"
+	ViolationCodeFileMissingHeader       ViolationKind = "code/file/missing-header"
+	ViolationCodeFileWrongHeaderFormat   ViolationKind = "code/file/wrong-header-format"
+	ViolationCodeFileMissingId           ViolationKind = "code/file/missing-id"
+	ViolationCodeFileWrongId             ViolationKind = "code/file/wrong-id"
+	ViolationCodeFileMissingContributors ViolationKind = "code/file/missing-contributors"
+	ViolationCodeFileMissingSummary      ViolationKind = "code/file/missing-summary"
+	ViolationCodeFileMissingLicense      ViolationKind = "code/file/missing-license"
+	ViolationCodeFileWrongLicense        ViolationKind = "code/file/wrong-license"
+	ViolationCodeFileMissingSpecs        ViolationKind = "code/file/missing-specs"
+	ViolationCodeFileMissingDocs         ViolationKind = "code/file/missing-docs"
+	ViolationCodeSectionEmpty            ViolationKind = "code/section/empty"
+	ViolationCodeSectionOrphanDefinition ViolationKind = "code/section/orphan-definition"
+	ViolationCodeSectionMissingStartName ViolationKind = "code/section/missing-start-name"
+	ViolationCodeSectionMissingEndName   ViolationKind = "code/section/missing-end-name"
+	ViolationCodeSectionNameMismatch     ViolationKind = "code/section/name-mismatch"
+	ViolationCodeSectionWrongFormat      ViolationKind = "code/section/wrong-format"
+	ViolationCodeSectionMissingSummary   ViolationKind = "code/section/missing-summary"
+	ViolationCodeSectionMissingSpecs     ViolationKind = "code/section/missing-specs"
+	ViolationCodeSectionMissingDocs      ViolationKind = "code/section/missing-docs"
+	ViolationCodeDefWrongFormat          ViolationKind = "code/definition/wrong-format"
+	ViolationCodeDefMissingSummary       ViolationKind = "code/definition/missing-summary"
+	ViolationCodeDefMissingSpecs         ViolationKind = "code/definition/missing-specs"
+	ViolationCodeDefMissingDocs          ViolationKind = "code/definition/missing-docs"
+	ViolationCodeCommentInline           ViolationKind = "code/comment/inline"
+	ViolationCodeCommentBlock            ViolationKind = "code/comment/block"
+	ViolationCodeCommentJSDoc            ViolationKind = "code/comment/jsdoc"
+	ViolationCodeSpecsSyntax             ViolationKind = "code/specs/implementation-syntax"
+	ViolationCodeDocsMissingReadme       ViolationKind = "code/docs/missing-readme"
 	ViolationDevDocsMissingFile             ViolationKind = "dev-docs/missing-file"
 	ViolationDevDocsMissingFolder           ViolationKind = "dev-docs/missing-folder"
 	ViolationDevDocsWrongFilePath           ViolationKind = "dev-docs/wrong-file-path"
@@ -9874,60 +9938,74 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Solution:    "Implement strict ticket tracking (open/close/log)",
 		Autofixable: false,
 	},
-	ViolationCodeHeaderMissingRegion: {
-		Kind:        ViolationCodeHeaderMissingRegion,
+	ViolationCodeFileMissingHeader: {
+		Kind:        ViolationCodeFileMissingHeader,
 		Priority:    ViolationPriorityLow,
 		Reason:      "Header region with license, filename, and contributors is required",
 		Solution:    "Add header region with SPDX license, filename, and contributors",
+		Autofixable: true,
+	},
+	ViolationCodeFileWrongHeaderFormat: {
+		Kind:        ViolationCodeFileWrongHeaderFormat,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Header region format is incorrect (missing License or Specs subregion)",
+		Solution:    "Add License and Specs subregions inside Header",
 		Autofixable: false,
 	},
-	ViolationCodeHeaderWrongFileId: {
-		Kind:        ViolationCodeHeaderWrongFileId,
+	ViolationCodeFileMissingId: {
+		Kind:        ViolationCodeFileMissingId,
+		Priority:    ViolationPriorityLow,
+		Reason:      "File header must contain an artifact ID",
+		Solution:    "Add file artifact ID line in header",
+		Autofixable: true,
+	},
+	ViolationCodeFileWrongId: {
+		Kind:        ViolationCodeFileWrongId,
 		Priority:    ViolationPriorityLow,
 		Reason:      "File header must contain the correct artifact ID",
 		Solution:    "Replace file identifier line with the correct artifact ID",
 		Autofixable: true,
 	},
-	ViolationCodeHeaderMissingContributors: {
-		Kind:        ViolationCodeHeaderMissingContributors,
+	ViolationCodeFileMissingContributors: {
+		Kind:        ViolationCodeFileMissingContributors,
 		Priority:    ViolationPriorityLow,
 		Reason:      "Contributors must be documented in header",
 		Solution:    "Add contributor line in header region",
 		Autofixable: false,
 	},
-	ViolationCodeHeaderMissingSummary: {
-		Kind:        ViolationCodeHeaderMissingSummary,
+	ViolationCodeFileMissingSummary: {
+		Kind:        ViolationCodeFileMissingSummary,
 		Priority:    ViolationPriorityLow,
 		Reason:      "Summary must be documented in header",
 		Solution:    "Add summary line in header region after the file ID",
 		Autofixable: false,
 	},
-	ViolationCodeHeaderMissingLicense: {
-		Kind:        ViolationCodeHeaderMissingLicense,
+	ViolationCodeFileMissingLicense: {
+		Kind:        ViolationCodeFileMissingLicense,
 		Priority:    ViolationPriorityLow,
-		Reason:      "AGPL license text is required in header",
+		Reason:      "License text is required in header License subregion",
 		Solution:    "Add AGPL license text in License subregion",
-		Autofixable: false,
+		Autofixable: true,
 	},
-	ViolationCodeHeaderMissingLicenseRegion: {
-		Kind:        ViolationCodeHeaderMissingLicenseRegion,
-		Priority:    ViolationPriorityLow,
-		Reason:      "License subregion is required inside Header",
-		Solution:    "Add #region License / #endregion License inside Header",
-		Autofixable: false,
-	},
-	ViolationCodeHeaderWrongLicense: {
-		Kind:        ViolationCodeHeaderWrongLicense,
+	ViolationCodeFileWrongLicense: {
+		Kind:        ViolationCodeFileWrongLicense,
 		Priority:    ViolationPriorityLow,
 		Reason:      "License must be AGPL-3.0-or-later",
-		Solution:    "Update license to AGPL-3.0-or-later",
-		Autofixable: false,
+		Solution:    "Replace license with AGPL-3.0-or-later",
+		Autofixable: true,
 	},
-	ViolationCodeHeaderMissingSpecsRegion: {
-		Kind:        ViolationCodeHeaderMissingSpecsRegion,
+	ViolationCodeFileMissingSpecs: {
+		Kind:        ViolationCodeFileMissingSpecs,
 		Priority:    ViolationPriorityLow,
 		Reason:      "Specs subregion is required inside Header",
-		Solution:    "Add #region Specs / #endregion Specs inside Header",
+		Solution:    "Add Specs subregion inside Header",
+		Autofixable: false,
+	},
+	ViolationCodeFileMissingDocs: {
+		Kind:        ViolationCodeFileMissingDocs,
+		Priority:    ViolationPriorityLow,
+		Reason:      "File must be documented in bundle README.md Docs section",
+		Solution:    "Add file documentation to bundle README.md",
 		Autofixable: false,
 	},
 	ViolationCodeSectionEmpty: {
@@ -9964,6 +10042,62 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Reason:      "Section start and end names must match",
 		Solution:    "Fix section end name to match start name",
 		Autofixable: true,
+	},
+	ViolationCodeSectionWrongFormat: {
+		Kind:        ViolationCodeSectionWrongFormat,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Section region marker format is incorrect",
+		Solution:    "Use correct region marker format with emoji bookmark",
+		Autofixable: false,
+	},
+	ViolationCodeSectionMissingSummary: {
+		Kind:        ViolationCodeSectionMissingSummary,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Section must have a summary comment after the region start",
+		Solution:    "Add summary comment after section region start marker",
+		Autofixable: false,
+	},
+	ViolationCodeSectionMissingSpecs: {
+		Kind:        ViolationCodeSectionMissingSpecs,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Section must have specs comments after the summary",
+		Solution:    "Add specs comments after section summary",
+		Autofixable: false,
+	},
+	ViolationCodeSectionMissingDocs: {
+		Kind:        ViolationCodeSectionMissingDocs,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Section must be documented in bundle README.md Docs section",
+		Solution:    "Add section documentation to bundle README.md",
+		Autofixable: false,
+	},
+	ViolationCodeDefWrongFormat: {
+		Kind:        ViolationCodeDefWrongFormat,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Definition does not have a proper docstring",
+		Solution:    "Add language-native docstring to definition",
+		Autofixable: false,
+	},
+	ViolationCodeDefMissingSummary: {
+		Kind:        ViolationCodeDefMissingSummary,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Definition must have a summary in its docstring",
+		Solution:    "Add summary line to definition docstring",
+		Autofixable: false,
+	},
+	ViolationCodeDefMissingSpecs: {
+		Kind:        ViolationCodeDefMissingSpecs,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Definition must have specs in its docstring",
+		Solution:    "Add specs to definition docstring",
+		Autofixable: false,
+	},
+	ViolationCodeDefMissingDocs: {
+		Kind:        ViolationCodeDefMissingDocs,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Definition must be documented in bundle README.md Docs section",
+		Solution:    "Add definition documentation to bundle README.md",
+		Autofixable: false,
 	},
 	ViolationCodeCommentInline: {
 		Kind:        ViolationCodeCommentInline,
@@ -11705,16 +11839,29 @@ var policies = []PolicyDef{
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
 		Priority:    ViolationPriorityLow,
 		Kinds: []ViolationKind{
-			ViolationCodeHeaderMissingRegion,
-			ViolationCodeHeaderWrongFileId,
-			ViolationCodeHeaderMissingContributors,
-			ViolationCodeHeaderMissingLicense,
-			ViolationCodeHeaderWrongLicense,
+			ViolationCodeFileMissingHeader,
+			ViolationCodeFileWrongHeaderFormat,
+			ViolationCodeFileMissingId,
+			ViolationCodeFileWrongId,
+			ViolationCodeFileMissingContributors,
+			ViolationCodeFileMissingSummary,
+			ViolationCodeFileMissingLicense,
+			ViolationCodeFileWrongLicense,
+			ViolationCodeFileMissingSpecs,
+			ViolationCodeFileMissingDocs,
 			ViolationCodeSectionEmpty,
 			ViolationCodeSectionOrphanDefinition,
 			ViolationCodeSectionMissingStartName,
 			ViolationCodeSectionMissingEndName,
 			ViolationCodeSectionNameMismatch,
+			ViolationCodeSectionWrongFormat,
+			ViolationCodeSectionMissingSummary,
+			ViolationCodeSectionMissingSpecs,
+			ViolationCodeSectionMissingDocs,
+			ViolationCodeDefWrongFormat,
+			ViolationCodeDefMissingSummary,
+			ViolationCodeDefMissingSpecs,
+			ViolationCodeDefMissingDocs,
 			ViolationCodeCommentInline,
 			ViolationCodeCommentBlock,
 			ViolationCodeCommentJSDoc,
@@ -11843,8 +11990,9 @@ type PolicyContext struct {
 	fileCache     map[string]string
 	sectionCache  map[string][]Section
 	ignoreCache   map[string]map[int][]string
-	specLineCache map[string]map[int]bool     // file -> line -> is spec line
-	filesOverride []string
+	specLineCache      map[string]map[int]bool
+	sectionDocCache    map[string]map[int]bool
+	filesOverride      []string
 }
 
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
@@ -12036,22 +12184,20 @@ func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 			}
 			return
 		}
-		inSpecZone := true
+		inLeadBlock := true
 		for i := s.StartLine + 1; i < s.EndLine && i <= len(lines); i++ {
 			line := strings.TrimSpace(lines[i-1])
 			if line == "" {
 				continue
 			}
 			isComment := strings.HasPrefix(line, prefix)
-			if isComment && inSpecZone {
+			if isComment && inLeadBlock {
 				commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
 				if isSpecText(commentText) {
 					result[i] = true
-				} else {
-					inSpecZone = false
 				}
 			} else if !isComment {
-				inSpecZone = false
+				inLeadBlock = false
 			}
 			if matched, _ := language.PolicySectionStartMatch(lines[i-1]); matched {
 				break
@@ -12079,6 +12225,86 @@ func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, l
 		}
 	}
 	return false
+}
+
+func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
+	if ctx.sectionDocCache == nil {
+		ctx.sectionDocCache = make(map[string]map[int]bool)
+	}
+	if cached, ok := ctx.sectionDocCache[filePath]; ok {
+		return cached
+	}
+	result := make(map[int]bool)
+	content := ctx.ReadText(filePath)
+	if content == "" {
+		ctx.sectionDocCache[filePath] = result
+		return result
+	}
+	language := GetLanguage(filePath)
+	if language == nil {
+		ctx.sectionDocCache[filePath] = result
+		return result
+	}
+	lines := strings.Split(content, "\n")
+	sections := ctx.Sections(filePath)
+	prefix := language.CommentPrefix()
+	var markSectionDocLines func(s Section)
+	markSectionDocLines = func(s Section) {
+		if strings.ToLower(s.Name) == "header" {
+			for _, child := range s.Children {
+				markSectionDocLines(child)
+			}
+			return
+		}
+		var blockLines []int
+		hasSpec := false
+		for i := s.StartLine + 1; i < s.EndLine && i <= len(lines); i++ {
+			line := strings.TrimSpace(lines[i-1])
+			if line == "" {
+				break
+			}
+			if !strings.HasPrefix(line, prefix) {
+				break
+			}
+			blockLines = append(blockLines, i)
+			commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+			if isSpecText(commentText) {
+				hasSpec = true
+			}
+		}
+		if hasSpec {
+			for _, ln := range blockLines {
+				result[ln] = true
+			}
+		}
+		for _, child := range s.Children {
+			markSectionDocLines(child)
+		}
+	}
+	for _, s := range sections {
+		markSectionDocLines(s)
+	}
+	if language.SupportsDefinitions() {
+		parsedDefs := language.ParseDefinitions(content, lines)
+		for _, def := range parsedDefs {
+			for lineIndex := def.Start - 2; lineIndex >= 0; lineIndex-- {
+				line := strings.TrimSpace(lines[lineIndex])
+				if line == "" {
+					break
+				}
+				if !strings.HasPrefix(line, prefix) {
+					break
+				}
+				result[lineIndex+1] = true
+			}
+		}
+	}
+	ctx.sectionDocCache[filePath] = result
+	return result
+}
+
+func (ctx *PolicyContext) IsSectionDocLine(filePath string, lineNum int) bool {
+	return ctx.SectionDocLines(filePath)[lineNum]
 }
 
 func randomString(n int) string {
@@ -12174,12 +12400,12 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			if headerContent != "" {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
-					ViolationCodeHeaderMissingRegion,
+					ViolationCodeFileMissingHeader,
 					file, 0, 0, ""))
 			} else {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing header section in %s", file),
-					ViolationCodeHeaderMissingRegion,
+					ViolationCodeFileMissingHeader,
 					file, 0, 0, ""))
 			}
 			continue
@@ -12189,8 +12415,11 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		expectedFileId := FileHeaderId(file)
 		hasFileId := false
 		wrongFileIdLine := 0
+		stripVS := func(s string) string {
+			return strings.ReplaceAll(strings.ReplaceAll(s, "\uFE0F", ""), "\uFE0E", "")
+		}
 		for lineIdx, line := range headerLines {
-			if strings.Contains(line, expectedFileId) {
+			if strings.Contains(stripVS(line), stripVS(expectedFileId)) {
 				hasFileId = true
 				break
 			}
@@ -12208,14 +12437,17 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		if !hasFileId {
-			line := wrongFileIdLine
-			if line == 0 {
-				line = headerSection.StartLine
+			if wrongFileIdLine > 0 {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Wrong file ID in header of %s (expected %s)", file, expectedFileId),
+					ViolationCodeFileWrongId,
+					fmt.Sprintf("%s#Header", file), wrongFileIdLine, 0, expectedFileId))
+			} else {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Missing file ID in header of %s (expected %s)", file, expectedFileId),
+					ViolationCodeFileMissingId,
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, expectedFileId))
 			}
-			violations = append(violations, ctx.CreateViolation(
-				fmt.Sprintf("Wrong file ID in header of %s (expected %s)", file, expectedFileId),
-				ViolationCodeHeaderWrongFileId,
-				fmt.Sprintf("%s#Header", file), line, 0, expectedFileId))
 		}
 		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
 		hasContributors := false
@@ -12228,7 +12460,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		if !hasContributors {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing contributors in header of %s", file),
-				ViolationCodeHeaderMissingContributors,
+				ViolationCodeFileMissingContributors,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		}
 		var licenseSection *Section
@@ -12245,7 +12477,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		if licenseSection == nil {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing License subregion in header of %s", file),
-				ViolationCodeHeaderMissingLicenseRegion,
+				ViolationCodeFileWrongHeaderFormat,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 			hasLicense := false
 			for _, marker := range agplMarkers {
@@ -12257,7 +12489,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			if !hasLicense {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing license in header of %s", file),
-					ViolationCodeHeaderMissingLicense,
+					ViolationCodeFileMissingLicense,
 					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 			}
 		} else {
@@ -12272,7 +12504,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			if !hasLicense {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Missing license in header of %s", file),
-					ViolationCodeHeaderMissingLicense,
+					ViolationCodeFileMissingLicense,
 					fmt.Sprintf("%s#Header/License", file), licenseSection.StartLine, 0, ""))
 			} else {
 				wrongLicenses := []string{"MIT", "Apache", "BSD"}
@@ -12289,7 +12521,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				if hasWrongLicense {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Wrong license in header of %s", file),
-						ViolationCodeHeaderWrongLicense,
+						ViolationCodeFileWrongLicense,
 						fmt.Sprintf("%s#Header/License", file), licenseSection.StartLine, 0, ""))
 				}
 			}
@@ -12297,7 +12529,7 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		if specsSection == nil {
 			violations = append(violations, ctx.CreateViolation(
 				fmt.Sprintf("Missing Specs subregion in header of %s", file),
-				ViolationCodeHeaderMissingSpecsRegion,
+				ViolationCodeFileWrongHeaderFormat,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		}
 	}
@@ -12359,6 +12591,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		sections := ctx.Sections(file)
+		commentPrefix := language.CommentPrefix()
 		var checkSection func(s Section, parentName string)
 		checkSection = func(s Section, parentName string) {
 			sectionContent := content[s.StartIndex:s.EndIndex]
@@ -12377,6 +12610,40 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
 					ViolationCodeSectionEmpty,
 					fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
+			}
+			if !isExempt && s.Name != "" {
+				hasSummary := false
+				hasSpecs := false
+				for i := 1; i < len(sectionLines)-1; i++ {
+					line := strings.TrimSpace(sectionLines[i])
+					if line == "" {
+						continue
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText == "" {
+						continue
+					}
+					if isSpecText(commentText) {
+						hasSpecs = true
+					} else {
+						hasSummary = true
+					}
+				}
+				if !hasSummary {
+					violations = append(violations, ctx.CreateViolation(
+						fmt.Sprintf("Section \"%s\" is missing a summary comment in %s", s.Name, file),
+						ViolationCodeSectionMissingSummary,
+						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
+				}
+				if !hasSpecs {
+					violations = append(violations, ctx.CreateViolation(
+						fmt.Sprintf("Section \"%s\" is missing spec comments in %s", s.Name, file),
+						ViolationCodeSectionMissingSpecs,
+						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
+				}
 			}
 			for _, child := range s.Children {
 				checkSection(child, s.Name)
@@ -12458,13 +12725,14 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 		if inOrphan {
 			orphanRanges = append(orphanRanges, lineRange{start: startLine, end: len(lines)})
 		}
-		commentPrefix := language.CommentPrefix()
 		var defRanges []defRange
+		var realDefRanges []defRange
 		defExcerpts := make(map[string]string)
 		if language.SupportsDefinitions() {
 			parsedDefs := language.ParseDefinitions(content, lines)
 			for _, def := range parsedDefs {
 				defRanges = append(defRanges, defRange{name: def.Name, start: def.Start, end: def.End})
+				realDefRanges = append(realDefRanges, defRange{name: def.Name, start: def.Start, end: def.End})
 				defExcerpts[def.Name] = def.Excerpt
 			}
 		}
@@ -12532,6 +12800,40 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				fmt.Sprintf("%s::%s", file, name),
 				orphanRange.start, 0,
 				orphanRange.firstLine))
+		}
+		for _, def := range realDefRanges {
+			hasSummary := false
+			hasSpecs := false
+			for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
+				line := strings.TrimSpace(lines[lineIndex])
+				if line == "" {
+					break
+				}
+				if !strings.HasPrefix(line, commentPrefix) {
+					break
+				}
+				commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+				if commentText == "" {
+					continue
+				}
+				if isSpecText(commentText) {
+					hasSpecs = true
+				} else {
+					hasSummary = true
+				}
+			}
+			if !hasSummary {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Definition \"%s\" is missing a summary comment in %s:%d", def.name, file, def.start),
+					ViolationCodeDefMissingSummary,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
+			if !hasSpecs {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Definition \"%s\" is missing spec comments in %s:%d", def.name, file, def.start),
+					ViolationCodeDefMissingSpecs,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
 		}
 	}
 	return ctx.FilterIgnored(violations)
@@ -12696,18 +12998,18 @@ func emojiPolicy(ctx *PolicyContext) []Violation {
 	if err != nil {
 		return violations
 	}
-	// Emojis that default to text presentation and MUST have VS16 to be colorful
+
 	textDefaultEmojis := []string{
-		"\U0001F3D7", // 🏗
-		"\u2328",     // ⌨
-		"\U0001F5B1", // 🖱
-		"\U0001F5C3", // 🗃
-		"\u2699",     // ⚙
-		"\u2696",     // ⚖
-		"\U0001F3F7", // 🏷
-		"\U0001F6E0", // 🛠
-		"\u2702",     // ✂
-		"\U0001F6E1", // 🛡
+		"\U0001F3D7",
+		"\u2328",
+		"\U0001F5B1",
+		"\U0001F5C3",
+		"\u2699",
+		"\u2696",
+		"\U0001F3F7",
+		"\U0001F6E0",
+		"\u2702",
+		"\U0001F6E1",
 	}
 	for _, file := range files {
 		content := ctx.ReadText(file)
@@ -17172,7 +17474,11 @@ func FileHeaderId(path string) string {
 		}
 	}
 	data := map[string]interface{}{"path": path, "kind": kind}
-	return GetArtifactID("file", data)
+	result := GetArtifactID("file", data)
+	if strings.Contains(path, "eslint.config") {
+		fmt.Fprintf(os.Stderr, "[DEBUG] FileHeaderId(%s) kind=%s result_bytes=%x\n", path, kind, []byte(result))
+	}
+	return result
 }
 
 func AGPLLicenseText() string {
@@ -19251,7 +19557,44 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 	linesToRemove := map[int]bool{}
 	for _, v := range violations {
 		switch v.Kind {
-		case ViolationCodeHeaderWrongFileId:
+		case ViolationCodeFileMissingHeader:
+			if language != nil && language.SupportsHeaders() {
+				headerContent := generateFileHeader(file, language)
+				if headerContent != "" {
+					content = headerContent + "\n" + content
+					lines = strings.Split(content, "\n")
+					fixed++
+				}
+			}
+		case ViolationCodeFileMissingId:
+			if language != nil {
+				expectedId := v.Excerpt
+				if expectedId == "" {
+					expectedId = FileHeaderId(file)
+				}
+				prefix := language.CommentPrefix()
+				newLine := prefix + " " + expectedId
+				insertAfter := 0
+				for i, line := range lines {
+					if matched, _ := language.PolicySectionStartMatch(line); matched {
+						_, name := language.PolicySectionStartMatch(line)
+						if strings.ToLower(name) == "header" {
+							insertAfter = i + 1
+							break
+						}
+					}
+				}
+				if insertAfter > 0 && insertAfter < len(lines) {
+					newLines := make([]string, 0, len(lines)+2)
+					newLines = append(newLines, lines[:insertAfter]...)
+					newLines = append(newLines, "")
+					newLines = append(newLines, newLine)
+					newLines = append(newLines, lines[insertAfter:]...)
+					lines = newLines
+					fixed++
+				}
+			}
+		case ViolationCodeFileWrongId:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				expectedId := v.Excerpt
 				if expectedId == "" {
@@ -19419,28 +19762,92 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 		case ViolationCodeUnicodeEmojiVariation:
 			if v.Line > 0 && v.Line <= len(lines) {
 				line := lines[v.Line-1]
-				// Replace VS15 with VS16
+
 				line = strings.ReplaceAll(line, "\uFE0E", "\uFE0F")
-				// Ensure text-default emojis have VS16
+
 				textDefaultEmojis := []string{
-					"\U0001F3D7", // 🏗
-					"\u2328",     // ⌨
-					"\U0001F5B1", // 🖱
-					"\U0001F5C3", // 🗃
-					"\u2699",     // ⚙
-					"\u2696",     // ⚖
-					"\U0001F3F7", // 🏷
-					"\U0001F6E0", // 🛠
-					"\u2702",     // ✂
-					"\U0001F6E1", // 🛡
+					"\U0001F3D7",
+					"\u2328",
+					"\U0001F5B1",
+					"\U0001F5C3",
+					"\u2699",
+					"\u2696",
+					"\U0001F3F7",
+					"\U0001F6E0",
+					"\u2702",
+					"\U0001F6E1",
 				}
 				for _, emoji := range textDefaultEmojis {
-					// Normalize by stripping VS16 then adding it back
+
 					line = strings.ReplaceAll(line, emoji+"\uFE0F", emoji)
 					line = strings.ReplaceAll(line, emoji, emoji+"\uFE0F")
 				}
 				lines[v.Line-1] = line
 				fixed++
+			}
+		case ViolationCodeFileMissingLicense, ViolationCodeFileWrongLicense:
+			if language != nil {
+				sections := language.ParseSections(strings.Join(lines, "\n"))
+				var headerSec *Section
+				for i := range sections {
+					if strings.ToLower(sections[i].Name) == "header" {
+						headerSec = &sections[i]
+						break
+					}
+				}
+				if headerSec != nil {
+					var licenseSec *Section
+					for i := range headerSec.Children {
+						if strings.ToLower(headerSec.Children[i].Name) == "license" {
+							licenseSec = &headerSec.Children[i]
+							break
+						}
+					}
+					prefix := language.CommentPrefix()
+					licenseText := AGPLLicenseText()
+					var licenseLines []string
+					licenseLines = append(licenseLines, "")
+					for _, ll := range strings.Split(licenseText, "\n") {
+						if ll == "" {
+							licenseLines = append(licenseLines, prefix)
+						} else {
+							licenseLines = append(licenseLines, prefix+" "+ll)
+						}
+					}
+					licenseLines = append(licenseLines, "")
+					if licenseSec != nil {
+						newLines := make([]string, 0, len(lines)+len(licenseLines))
+						newLines = append(newLines, lines[:licenseSec.StartLine]...)
+						newLines = append(newLines, licenseLines...)
+						newLines = append(newLines, lines[licenseSec.EndLine-1:]...)
+						lines = newLines
+					} else {
+						specsSec := (*Section)(nil)
+						for i := range headerSec.Children {
+							if strings.ToLower(headerSec.Children[i].Name) == "specs" {
+								specsSec = &headerSec.Children[i]
+								break
+							}
+						}
+						insertBefore := headerSec.EndLine - 1
+						if specsSec != nil {
+							insertBefore = specsSec.StartLine - 1
+						}
+						regionStart := language.FormatSectionStart("License")
+						regionEnd := language.FormatSectionEnd("License")
+						var block []string
+						block = append(block, regionStart)
+						block = append(block, licenseLines...)
+						block = append(block, regionEnd)
+						block = append(block, "")
+						newLines := make([]string, 0, len(lines)+len(block))
+						newLines = append(newLines, lines[:insertBefore]...)
+						newLines = append(newLines, block...)
+						newLines = append(newLines, lines[insertBefore:]...)
+						lines = newLines
+					}
+					fixed++
+				}
 			}
 		}
 	}
@@ -22978,7 +23385,7 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 
 		slug := strings.TrimPrefix(id, "goal:")
 
-		return &Goal{ID: slug, Title: slug}, nil // Placeholder if no lookup
+		return &Goal{ID: slug, Title: slug}, nil
 	}
 
 	if strings.HasPrefix(id, "section:") {
@@ -28301,9 +28708,19 @@ type SemanticId struct {
 }
 
 func emojiText(emoji string) string {
-	stripped := strings.ReplaceAll(emoji, "\uFE0F", "")
-	stripped = strings.ReplaceAll(stripped, "\uFE0E", "")
-	return stripped
+	stripped := strings.ReplaceAll(emoji, "\uFE0E", "")
+	textDefaultEmojis := []string{
+		"\U0001F3D7", "\u2328", "\U0001F5B1", "\U0001F5C3",
+		"\u2699", "\u2696", "\U0001F3F7", "\U0001F6E0",
+		"\u2702", "\U0001F6E1",
+	}
+	base := strings.ReplaceAll(stripped, "\uFE0F", "")
+	for _, td := range textDefaultEmojis {
+		if strings.Contains(base, td) {
+			return strings.ReplaceAll(base, td, td+"\uFE0F")
+		}
+	}
+	return base
 }
 
 func (s SemanticId) String() string {

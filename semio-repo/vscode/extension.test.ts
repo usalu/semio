@@ -10,12 +10,10 @@
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Affero General Public License for more details.
-
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -51,6 +49,7 @@ import {
   slugify,
   treeNodeContextValue,
   treeNodeDisplayLabel,
+  treeNodeToItem,
 } from "./extension";
 
 // #endregion 🔖Imports
@@ -901,6 +900,54 @@ suite("treeNodeContextValue Test Suite", () => {
 
   test("Contributor returns contributor", () => {
     assert.strictEqual(treeNodeContextValue({ Kind: "contributor", ID: "", Label: "", URI: "" }), "contributor");
+  });
+});
+
+suite("Violation Kind Hierarchy Test Suite", () => {
+  test("Renders nested violation kind tree structure correctly", () => {
+
+    const violationNode: TreeNodeData = {
+      Kind: "violationKind",
+      ID: "🚫Code#Header#Missing Region",
+      Label: "🚫Code#Header#Missing Region",
+      Description: "Header required",
+      URI: "semiorepo://violationKind/CODE/HEADER/MISSING-REGION",
+      Data: { autofixable: true }
+    };
+
+    const categoryNode: TreeNodeData = {
+      Kind: "category",
+      ID: "header",
+      Label: "header",
+      URI: "",
+      Children: [violationNode]
+    };
+
+    const policyNode: TreeNodeData = {
+      Kind: "policy",
+      ID: "🛡️/code",
+      Label: "🛡️/code",
+      URI: "semiorepo://policy/CODE",
+      Children: [categoryNode]
+    };
+
+
+    const policyItem = treeNodeToItem(policyNode);
+    assert.strictEqual(policyItem.label, "🛡️/code");
+    assert.strictEqual(policyItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+
+
+    const categoryItem = treeNodeToItem(categoryNode);
+    assert.strictEqual(categoryItem.label, "header");
+    assert.strictEqual(categoryItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
+    assert.strictEqual(categoryItem.contextValue, "category");
+
+
+    const violationItem = treeNodeToItem(violationNode);
+    assert.strictEqual(violationItem.label, "🚫Code#Header#Missing Region");
+    assert.strictEqual(violationItem.description, "🔧");
+    assert.strictEqual(violationItem.tooltip, "Header required");
+    assert.strictEqual(violationItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
   });
 });
 

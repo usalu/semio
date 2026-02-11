@@ -10,12 +10,10 @@
 // it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Affero General Public License for more details.
-
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -79,7 +77,7 @@ public class Tests
         return Math.Abs(c1.U - c2.U) < Tolerance && Math.Abs(c1.V - c2.V) < Tolerance;
     }
 
-    // #region 🔖Roundtrip
+
 
     public class Roundtrip
     {
@@ -124,9 +122,9 @@ public class Tests
         }
     }
 
-    // #endregion 🔖Roundtrip
 
-    // #region 🔖Flatten
+
+
 
     public class Flatten
     {
@@ -203,9 +201,9 @@ public class Tests
         }
     }
 
-    // #endregion 🔖Flatten
 
-    // #region 🔖Diff
+
+
 
     public class Diff
     {
@@ -233,9 +231,9 @@ public class Tests
         }
     }
 
-    // #endregion 🔖Diff
 
-    // #region 🔖Validation
+
+
 
     public class Validation
     {
@@ -260,5 +258,5 @@ public class Tests
         }
     }
 
-    // #endregion 🔖Validation
+
 }

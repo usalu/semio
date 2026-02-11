@@ -16,10 +16,8 @@
         "finished": "2026-02-05 12:40:46"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "codex"
-      },
+      "system": "linux",
+      "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Run Go tests individually, identify bottlenecks, and propose an equivalent faster strategy.",
       "llm": "gpt-5-2-codex",

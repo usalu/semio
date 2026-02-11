@@ -181,24 +181,19 @@ ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO
 
 # region Utility
 
-
 def encode(value: str) -> str:
     """ᗒ Encode a string to be url safe."""
     return urllib.parse.quote(value, safe="")
-
 
 def decode(value: str) -> str:
     """ᗕ Decode a url safe string."""
     return urllib.parse.unquote(value)
 
-
 def encodeList(items: list[str]) -> str:
     return ",".join([encode(t) for t in items])
 
-
 def decodeList(encodedList: str) -> list[str]:
     return [decode(t) for t in encodedList.split(",")]
-
 
 def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Encode a `RecursiveAnyList` to a url encoded string."""
@@ -206,20 +201,17 @@ def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
         return encode(str(recursiveAnyList))
     return encode(",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList]))
 
-
 def create_id(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return ",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList])
 
-
 def pretty(number: float) -> str:
     """🦋 Pretty print a floating point number."""
     if number == -0.0:
         number = 0.0
     return f"{number:.5f}".rstrip("0").rstrip(".")
-
 
 def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
@@ -232,7 +224,6 @@ def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], t
         for v in c:
             if isinstance(v, dict) or isinstance(v, list):
                 changeValues(v, key, func)
-
 
 def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
@@ -247,11 +238,9 @@ def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) 
             if isinstance(v, dict) or isinstance(v, list):
                 changeKeys(v, func)
 
-
 def normalizeAngle(angle: float) -> float:
     """🔃 Normalize an angle to be greater or equal to 0 and smaller than 360 degrees."""
     return (angle % 360 + 360) % 360
-
 
 # endregion Utility
 
@@ -263,31 +252,25 @@ logger = loguru.logger
 
 # region Exceptions
 
-
 class Error(Exception, abc.ABC):
     """❗ The base for all exceptions."""
 
     def __str__(self):
         return "❗ " + self.__class__.__name__
 
-
 class ServerError(Error, abc.ABC):
     """🖥 The base for all server errors."""
 
-
 class ClientError(Error, abc.ABC):
     """👩‍💼 The base for all client errors."""
-
 
 class CodeUnreachable(ServerError):
     def __str__(self):
         return "🤷 This code should be unreachable."
 
-
 class FeatureNotYetSupported(ServerError):
     def __str__(self):
         return "🔜 This feature is not yet supported."
-
 
 class RemoteKitsNotYetSupported(FeatureNotYetSupported):
     def __init__(self, uri: str) -> None:
@@ -296,32 +279,25 @@ class RemoteKitsNotYetSupported(FeatureNotYetSupported):
     def __str__(self):
         return "🔜 Remote kits are not yet supported."
 
-
 class NotFound(ClientError, abc.ABC):
     """🔍 The base for not found errors."""
-
 
 class SpecificationError(ClientError, abc.ABC):
     """📋 The base for all specification errors."""
 
-
 class NoParentAssigned(SpecificationError, abc.ABC):
     """👪 The base for all no parent assigned errors."""
-
 
 class NoTypeOrDesignAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent type or design assigned."
 
-
 class NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent model, connector, type, piece, connection, design, kit or folder assigned."
 
-
 class AlreadyExists(SpecificationError, abc.ABC):
     """♊ The entity already exists in the store."""
-
 
 class Semio(sqlmodel.SQLModel, table=True):
     """ℹ Metadata about the database."""
@@ -335,13 +311,11 @@ class Semio(sqlmodel.SQLModel, table=True):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
     """⌚ The time when the database was created."""
 
-
 # endregion Exceptions
 
 # region Modeling
 
 # region Primitives
-
 
 class SModel(sqlmodel.SQLModel, abc.ABC):
     """⚪ The base for models."""
@@ -361,49 +335,37 @@ class SModel(sqlmodel.SQLModel, abc.ABC):
         """📦Dump the entity to a dictionary."""
         return self.model_dump()
 
-
 BaseModel = SModel
-
 
 class Field(SModel, abc.ABC):
     """🎫 The base for a field of a model."""
 
-
 class RealField(Field, abc.ABC):
     """🧑 The base for a real field of a model. No lie."""
-
 
 class MaskedField(Field, abc.ABC):
     """🎭 The base for a mask of a field of a model. WYSIWYG but don't expect it to be there."""
 
-
 class Base(SModel, abc.ABC):
     """👥 The base for models."""
-
 
 class Id(Base, abc.ABC):
     """🪪 The base for ids. All fields that identify the entity here."""
 
-
 class Props(Base, abc.ABC):
     """🎫 The base for props. All fields except input-only, output-only or child entities."""
-
 
 class Input(Base, abc.ABC):
     """↘ The base for inputs. All fields that are required to create the entity."""
 
-
 class Context(Base, abc.ABC):
     """📑 The base for contexts. All fields that are required to understand the entity by an llm."""
-
 
 class Output(Base, abc.ABC):
     """↗ The base for outputs. All fields that are returned when the entity is fetched."""
 
-
 class Prediction(Base, abc.ABC):
     """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
-
 
 class Entity(SModel, abc.ABC):
     """▢ The base for entities. All fields and behavior of the entity."""
@@ -447,10 +409,8 @@ class Entity(SModel, abc.ABC):
         """🔄 Update the props of the entity."""
         return self
 
-
 class Table(SModel, abc.ABC):
     """▦ The base for tables. All resources that are stored in the database."""
-
 
 class TableEntity(Entity, Table, abc.ABC):
     """▢ The base for table entities."""
@@ -458,11 +418,9 @@ class TableEntity(Entity, Table, abc.ABC):
     __tablename__: typing.ClassVar[str]
     """📛 The lowercase name of the table in the database."""
 
-
 # endregion Primitives
 
 # region Graphql
-
 
 class Node(graphene_pydantic.PydanticObjectType):
     """A base class for all nodes that are not a table in the database."""
@@ -477,13 +435,11 @@ class Node(graphene_pydantic.PydanticObjectType):
 
         super().__init_subclass_with_meta__(model=model, **options)
 
-
 class InputNode(graphene_pydantic.PydanticInputObjectType):
     """A base class for all input nodes."""
 
     class Meta:
         abstract = True
-
 
 class RelayNode(graphene.relay.Node):
     class Meta:
@@ -497,7 +453,6 @@ class RelayNode(graphene.relay.Node):
     def get_node_from_global_id(info, global_id, only_type=None):
         entity = get(global_id)
         return entity
-
 
 class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
     """A base class for all nodes that are a table in the database.
@@ -518,7 +473,6 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
 
         super().__init_subclass_with_meta__(model=model, **options)
 
-
 class TableEntityNode(TableNode):
     """A base class for all nodes that are a table in the database and are entities.
     It automatically complies to the Relay Node interface."""
@@ -538,7 +492,6 @@ class TableEntityNode(TableNode):
 
         super().__init_subclass_with_meta__(model=model, **options)
 
-
 # endregion Graphql
 
 # endregion Modeling
@@ -547,38 +500,29 @@ class TableEntityNode(TableNode):
 
 # region Attribute
 
-
 class AttributeKeyField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class AttributeValueField(RealField, abc.ABC):
     value: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
-
 class AttributeDefinitionField(RealField, abc.ABC):
     definition: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
 
 class AttributeId(AttributeKeyField, Id):
     pass
 
-
 class AttributeProps(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Props):
     pass
-
 
 class AttributeInput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Input):
     pass
 
-
 class AttributeContext(AttributeValueField, AttributeKeyField, Context):
     pass
 
-
 class AttributeOutput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Output):
     pass
-
 
 class Attribute(
     AttributeDefinitionField,
@@ -779,40 +723,31 @@ class Attribute(
             definition=obj.get("definition", ""),
         )
 
-
 class AttributeInputNode(InputNode):
     class Meta:
         model = AttributeInput
-
 
 # endregion Attribute
 
 # region Tag
 
-
 class TagGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
 
 class TagNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
-
 class TagDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
-
 
 class TagIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
-
 class TagOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field(default=0)
 
-
 class TagId(TagGuidField, Id):
     pass
-
 
 class Tag(
     TagIconField,
@@ -836,35 +771,27 @@ class Tag(
     )
     model: Model = sqlmodel.Relationship(back_populates="tags_")
 
-
 # endregion Tag
 
 # region Concept
 
-
 class ConceptGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
 
 class ConceptNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
-
 class ConceptDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
-
 
 class ConceptIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
-
 class ConceptOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field(default=0)
 
-
 class ConceptId(ConceptGuidField, Id):
     pass
-
 
 class Concept(
     ConceptIconField,
@@ -900,11 +827,9 @@ class Concept(
     type: Type = sqlmodel.Relationship(back_populates="concepts_")
     design: Design = sqlmodel.Relationship(back_populates="concepts_")
 
-
 # endregion Concept
 
 # region Coord
-
 
 class Coord(SModel):
     u: float = sqlmodel.Field()
@@ -916,37 +841,29 @@ class Coord(SModel):
     def __repr__(self) -> str:
         return f"[{pretty(self.u)}, {pretty(self.v)}]"
 
-
 class CoordInput(Coord, Input):
     pass
-
 
 class CoordContext(Coord, Context):
     pass
 
-
 class CoordOutput(Coord, Output):
     pass
 
-
 class CoordPrediction(Coord, Prediction):
     pass
-
 
 class CoordNode(Node):
     class Meta:
         model = Coord
 
-
 class CoordInputNode(InputNode):
     class Meta:
         model = CoordInput
 
-
 # endregion Coord
 
 # region Point
-
 
 class Point(SModel):
     x: float = sqlmodel.Field()
@@ -959,37 +876,29 @@ class Point(SModel):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-
 class PointInput(Point, Input):
     pass
-
 
 class PointContext(Point, Context):
     pass
 
-
 class PointOutput(Point, Output):
     pass
 
-
 class PointPrediction(Point, Prediction):
     pass
-
 
 class PointNode(Node):
     class Meta:
         model = Point
 
-
 class PointInputNode(InputNode):
     class Meta:
         model = PointInput
 
-
 # endregion Point
 
 # region Vector
-
 
 class Vector(SModel):
     x: float = sqlmodel.Field()
@@ -1002,65 +911,51 @@ class Vector(SModel):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
-
 class VectorInput(Vector, Input):
     pass
-
 
 class VectorContext(Vector, Context):
     pass
 
-
 class VectorOutput(Vector, Output):
     pass
 
-
 class VectorPrediction(Vector, Prediction):
     pass
-
 
 class VectorNode(Node):
     class Meta:
         model = Vector
 
-
 class VectorInputNode(InputNode):
     class Meta:
         model = VectorInput
-
 
 # endregion Vector
 
 # region Plane
 
-
 class PlaneOriginField(MaskedField, abc.ABC):
     origin: Point = sqlmodel.Field()
-
 
 class PlaneXAxisField(MaskedField, abc.ABC):
     xAxis: Vector = sqlmodel.Field()
 
-
 class PlaneYAxisField(MaskedField, abc.ABC):
     yAxis: Vector = sqlmodel.Field()
-
 
 class PlaneInput(Input):
     origin: PointInput = sqlmodel.Field()
     xAxis: VectorInput = sqlmodel.Field()
     yAxis: VectorInput = sqlmodel.Field()
 
-
 class PlaneContext(Context):
     origin: PointContext = sqlmodel.Field()
     xAxis: VectorContext = sqlmodel.Field()
     yAxis: VectorContext = sqlmodel.Field()
 
-
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
     pass
-
 
 class Plane(Table, table=True):
     __tablename__ = "plane"
@@ -1144,36 +1039,28 @@ class Plane(Table, table=True):
         entity["yAxis"] = self.yAxis
         return PlaneOutput(**entity)
 
-
 class PlaneInputNode(InputNode):
     class Meta:
         model = PlaneInput
-
 
 # endregion Plane
 
 # region Location
 
-
 class LocationGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
 
 class LocationLongitudeField(RealField, abc.ABC):
     longitude: float = sqlmodel.Field()
 
-
 class LocationLatitudeField(RealField, abc.ABC):
     latitude: float = sqlmodel.Field()
-
 
 class LocationAltitudeField(RealField, abc.ABC):
     altitude: typing.Optional[float] = sqlmodel.Field(default=None)
 
-
 class LocationId(LocationGuidField, Id):
     pass
-
 
 class Location(
     LocationAltitudeField,
@@ -1192,65 +1079,50 @@ class Location(
     )
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
 
-
 class LocationInput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Input):
     pass
-
 
 class LocationOutput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Output):
     pass
 
-
 class LocationContext(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Context):
     pass
 
-
 class LocationPrediction(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Prediction):
     pass
-
 
 class LocationNode(Node):
     class Meta:
         model = LocationOutput
 
-
 class LocationInputNode(InputNode):
     class Meta:
         model = LocationInput
-
 
 # endregion Location
 
 # region Author
 
-
 class AuthorNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class AuthorEmailField(RealField, abc.ABC):
     email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
-
 class AuthorRankField(RealField, abc.ABC):
     rank: int = sqlmodel.Field(default=0)
-
 
 class AuthorId(AuthorEmailField, Id):
     pass
 
-
 class AuthorProps(AuthorEmailField, AuthorNameField, Props):
     pass
-
 
 class AuthorInput(AuthorEmailField, AuthorNameField, Input):
     pass
 
-
 class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
     pass
-
 
 class Author(
     AuthorRankField,
@@ -1284,20 +1156,16 @@ class Author(
     def idMembers(self) -> RecursiveAnyList:
         return self.email
 
-
 class AuthorInputNode(InputNode):
     class Meta:
         model = AuthorInput
-
 
 # endregion Author
 
 # region ArtifactAuthor
 
-
 class ArtifactAuthorEmailField(RealField, abc.ABC):
     author_email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
 
 class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
     PLURAL = "artifact_authors"
@@ -1346,59 +1214,45 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
             self.type.idMembers() if self.type else self.design.idMembers(),
         ]
 
-
 # endregion ArtifactAuthor
 
 # region File
 
-
 class FileGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
 
 class FileNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
-
 class FileMimeField(RealField, abc.ABC):
     mime: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
-
 
 class FileRemoteField(RealField, abc.ABC):
     remote: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
-
 class FileFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
-
 
 class FileSizeField(RealField, abc.ABC):
     size: typing.Optional[int] = sqlmodel.Field(default=None)
 
-
 class FileHashField(RealField, abc.ABC):
     hash: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
-
 
 class FileCreatedAtField(RealField, abc.ABC):
     createdAt: datetime.datetime = sqlmodel.Field()
 
-
 class FileCreatedByField(RealField, abc.ABC):
     createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
-
 
 class FileUpdatedAtField(RealField, abc.ABC):
     updatedAt: datetime.datetime = sqlmodel.Field()
 
-
 class FileUpdatedByField(RealField, abc.ABC):
     updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
-
 class FileId(FileGuidField, Id):
     pass
-
 
 class FileProps(
     FileUpdatedByField,
@@ -1416,7 +1270,6 @@ class FileProps(
 ):
     pass
 
-
 class FileInput(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1433,10 +1286,8 @@ class FileInput(
 ):
     pass
 
-
 class FileContext(FileNameField, FileGuidField, Context):
     pass
-
 
 class FileOutput(
     FileUpdatedByField,
@@ -1453,7 +1304,6 @@ class FileOutput(
     Output,
 ):
     pass
-
 
 class File(
     FileUpdatedByField,
@@ -1494,52 +1344,40 @@ class File(
     def idMembers(self) -> RecursiveAnyList:
         return self.guid
 
-
 class FileInputNode(InputNode):
     class Meta:
         model = FileInput
-
 
 # endregion File
 
 # region Folder
 
-
 class FolderGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
 
 class FolderNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
-
 class FolderParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
-
 
 class FolderDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
-
 class FolderCreatedAtField(RealField, abc.ABC):
     createdAt: datetime.datetime = sqlmodel.Field()
-
 
 class FolderCreatedByField(RealField, abc.ABC):
     createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
-
 class FolderUpdatedAtField(RealField, abc.ABC):
     updatedAt: datetime.datetime = sqlmodel.Field()
-
 
 class FolderUpdatedByField(RealField, abc.ABC):
     updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
-
 class FolderId(FolderGuidField, Id):
     pass
-
 
 class FolderProps(
     FolderUpdatedByField,
@@ -1554,7 +1392,6 @@ class FolderProps(
 ):
     pass
 
-
 class FolderInput(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1568,10 +1405,8 @@ class FolderInput(
 ):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
-
 class FolderContext(FolderNameField, FolderGuidField, Context):
     pass
-
 
 class FolderOutput(
     FolderUpdatedByField,
@@ -1585,7 +1420,6 @@ class FolderOutput(
     Output,
 ):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
 
 class Folder(
     FolderUpdatedByField,
@@ -1657,44 +1491,34 @@ class Folder(
             setattr(self, key, value)
         return self
 
-
 class FolderInputNode(InputNode):
     class Meta:
         model = FolderInput
-
 
 # endregion Folder
 
 # region Benchmark
 
-
 class BenchmarkNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class BenchmarkIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
-
 class BenchmarkMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
-
 
 class BenchmarkMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=False)
 
-
 class BenchmarkMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
-
 
 class BenchmarkMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=False)
 
-
 class BenchmarkId(BenchmarkNameField, Id):
     pass
-
 
 class BenchmarkProps(
     BenchmarkMaxExcludedField,
@@ -1707,7 +1531,6 @@ class BenchmarkProps(
 ):
     pass
 
-
 class BenchmarkInput(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1719,7 +1542,6 @@ class BenchmarkInput(
 ):
     pass
 
-
 class BenchmarkOutput(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1730,7 +1552,6 @@ class BenchmarkOutput(
     Output,
 ):
     pass
-
 
 class Benchmark(
     BenchmarkMaxExcludedField,
@@ -1757,95 +1578,72 @@ class Benchmark(
     quality: Quality = sqlmodel.Relationship(back_populates="benchmarks")
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="benchmark", cascade_delete=True)
 
-
 # endregion Benchmark
 
 # region Quality
 
-
 class QualityKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, primary_key=True)
-
 
 class QualityNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
-
 class QualityDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
 
 class QualityUriField(RealField, abc.ABC):
     uri: str = sqlmodel.Field(default="", max_length=URI_LENGTH_LIMIT)
 
-
 class QualityScalableField(RealField, abc.ABC):
     scalable: bool = sqlmodel.Field(default=False)
-
 
 class QualityKindField(RealField, abc.ABC):
     kind: int = sqlmodel.Field(default=0)
 
-
 class QualitySiField(RealField, abc.ABC):
     si: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
 
 class QualityImperialField(RealField, abc.ABC):
     imperial: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
-
 class QualityMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
-
 
 class QualityMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=True)
 
-
 class QualityMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
-
 
 class QualityMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=True)
 
-
 class QualityDefaultField(RealField, abc.ABC):
     default: typing.Optional[float] = sqlmodel.Field(default=None)
-
 
 class QualityFormulaField(RealField, abc.ABC):
     formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
 
-
 class QualityFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
-
 
 class QualityIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
-
 class QualityImageField(RealField, abc.ABC):
     image: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
-
 
 class QualityUnitField(RealField, abc.ABC):
     unit: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
-
 class QualityCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
 
 class QualityUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
-
 class QualityId(QualityKeyField, Id):
     pass
-
 
 class QualityProps(
     QualityUnitField,
@@ -1870,7 +1668,6 @@ class QualityProps(
 ):
     pass
 
-
 class QualityInput(
     QualityUnitField,
     QualityImageField,
@@ -1894,10 +1691,8 @@ class QualityInput(
 ):
     pass
 
-
 class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
     pass
-
 
 class QualityOutput(
     QualityUpdatedField,
@@ -1924,7 +1719,6 @@ class QualityOutput(
 ):
     benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
 
 class Quality(
     QualityUpdatedField,
@@ -1972,35 +1766,27 @@ class Quality(
         sqlalchemy.UniqueConstraint("key", "kit_id", name="uq_qualities_key_kit_id"),
     )
 
-
 # endregion Quality
 
 # region Prop
 
-
 class PropKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class PropValueField(RealField, abc.ABC):
     value: str = sqlmodel.Field(max_length=VALUE_LENGTH_LIMIT)
 
-
 class PropUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
 
 class PropCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
-
 class PropUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
-
 class PropId(PropKeyField, Id):
     pass
-
 
 class PropProps(
     PropUpdatedField,
@@ -2012,10 +1798,8 @@ class PropProps(
 ):
     pass
 
-
 class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
     pass
-
 
 class PropOutput(
     PropUpdatedField,
@@ -2026,7 +1810,6 @@ class PropOutput(
     Output,
 ):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
 
 class Prop(
     PropUpdatedField,
@@ -2110,40 +1893,31 @@ class Prop(
         entity["attributes"] = [q.dump() for q in self.attributes]
         return PropOutput(**entity)
 
-
 class PropInputNode(InputNode):
     class Meta:
         model = PropInput
-
 
 # endregion Prop
 
 # region Model
 
-
 class ModelNameField(RealField, abc.ABC):
     name: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
-
 
 class ModelUrlField(RealField, abc.ABC):
     url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
 
-
 class ModelFileField(RealField, abc.ABC):
     file: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
-
 
 class ModelDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
-
 class ModelTagsField(MaskedField, abc.ABC):
     tags: list[str] = sqlmodel.Field(default_factory=list)
 
-
 class ModelId(ModelTagsField, Id):
     pass
-
 
 class ModelProps(
     ModelTagsField,
@@ -2155,7 +1929,6 @@ class ModelProps(
 ):
     pass
 
-
 class ModelInput(
     ModelTagsField,
     ModelDescriptionField,
@@ -2166,10 +1939,8 @@ class ModelInput(
 ):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
-
 class ModelContext(ModelTagsField, ModelDescriptionField, ModelNameField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
-
 
 class ModelOutput(
     ModelTagsField,
@@ -2180,7 +1951,6 @@ class ModelOutput(
     Output,
 ):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
 
 class Model(
     ModelDescriptionField,
@@ -2247,53 +2017,41 @@ class Model(
     def idMembers(self) -> RecursiveAnyList:
         return [self.tags]
 
-
 class NoModelAssigned(NoParentAssigned):
     def __str__(self):
         return " The entity has no parent model assigned."
-
 
 class ModelInputNode(InputNode):
     class Meta:
         model = ModelInput
 
-
 # endregion Model
 
 # region Port
 
-
 class PortNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class PortDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
-
 class PortIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
-
 
 class PortCompatiblePortsField(MaskedField, abc.ABC):
     compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
 
-
 class PortId(PortNameField, Id):
     pass
-
 
 class PortProps(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
     pass
 
-
 class PortInput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
-
 class PortOutput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
 
 class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, table=True):
     PLURAL = "ports"
@@ -2311,14 +2069,11 @@ class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, tabl
     )
     kit: Kit = sqlmodel.Relationship(back_populates="ports")
 
-
 # TODO: Fix PortNode - was incorrectly changed to TableEntityNode in latest commit
-
 
 class PortInputNode(InputNode):
     class Meta:
         model = PortInput
-
 
 # endregion Port
 
@@ -2326,14 +2081,11 @@ class PortInputNode(InputNode):
 
 # region CompatiblePort
 
-
 class CompatiblePortNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
-
 class CompatiblePortOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field()
-
 
 class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, table=True):
     __tablename__ = "compatible_port"
@@ -2349,45 +2101,34 @@ class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, t
     )
     connector: Connector = sqlmodel.Relationship(back_populates="compatiblePorts_")
 
-
 # endregion CompatiblePort
-
 
 class ConnectorIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(default="", max_length=ID_LENGTH_LIMIT)
 
-
 class ConnectorDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
 
 class ConnectorMandatoryField(RealField, abc.ABC):
     is_mandatory: bool = sqlmodel.Field(default=False)
 
-
 class ConnectorPortField(RealField, abc.ABC):
     port: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
 
 class ConnectorCompatiblePortsField(MaskedField, abc.ABC):
     compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
 
-
 class ConnectorPointField(MaskedField, abc.ABC):
     point: Point = sqlmodel.Field()
-
 
 class ConnectorDirectionField(MaskedField, abc.ABC):
     direction: Vector = sqlmodel.Field()
 
-
 class ConnectorTField(RealField, abc.ABC):
     t: float = sqlmodel.Field(default=0.0)
 
-
 class ConnectorId(ConnectorIdField, Id):
     pass
-
 
 class ConnectorProps(
     ConnectorTField,
@@ -2399,7 +2140,6 @@ class ConnectorProps(
     Props,
 ):
     pass
-
 
 class ConnectorInput(
     ConnectorTField,
@@ -2414,7 +2154,6 @@ class ConnectorInput(
     direction: VectorInput = sqlmodel.Field()
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
-
 class ConnectorContext(
     ConnectorTField,
     ConnectorDirectionField,
@@ -2428,7 +2167,6 @@ class ConnectorContext(
 ):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
-
 class ConnectorOutput(
     ConnectorTField,
     ConnectorDirectionField,
@@ -2441,7 +2179,6 @@ class ConnectorOutput(
     Output,
 ):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
 
 class Connector(
     ConnectorTField,
@@ -2572,7 +2309,6 @@ class Connector(
     def idMembers(self) -> RecursiveAnyList:
         return self.id_
 
-
 class ConnectorNotFound(NotFound):
     def __init__(self, parent: "Type", id: "ConnectorId") -> None:
         self.parent = parent
@@ -2582,89 +2318,68 @@ class ConnectorNotFound(NotFound):
         variant = f", {self.parent.variant}" if self.parent.variant else ""
         return f"Couldn't find the connector ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
 
-
 class ConnectorInputNode(InputNode):
     class Meta:
         model = ConnectorInput
-
 
 class ConnectorIdInputNode(InputNode):
     class Meta:
         model = ConnectorId
 
-
 # endregion Connector
 
 # region Type
 
-
 class TypeNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class TypeDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
-
 class TypeIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
-
 
 class TypeImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
-
 class TypeVariantField(RealField, abc.ABC):
     variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
 
 class TypeParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
-
 class TypeIsAbstractField(RealField, abc.ABC):
     is_abstract: bool = sqlmodel.Field(default=False)
-
 
 class TypeFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
-
 class TypeStockField(RealField, abc.ABC):
     stock: int = sqlmodel.Field(default=2147483647)
-
 
 class TypeVirtualField(RealField, abc.ABC):
     is_virtual: bool = sqlmodel.Field(default=False)
 
-
 class TypeScalableField(RealField, abc.ABC):
     can_scale: bool = sqlmodel.Field(default=True)
-
 
 class TypeMirrborableField(RealField, abc.ABC):
     can_mirror: bool = sqlmodel.Field(default=True)
 
-
 class TypeUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
 
 class TypeLocationField(MaskedField, abc.ABC):
     location: typing.Optional[Location] = sqlmodel.Field(default=None)
 
-
 class TypeCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
 
 class TypeUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
-
 class TypeId(TypeVariantField, TypeNameField, Id):
     pass
-
 
 class TypeProps(
     TypeUnitField,
@@ -2682,7 +2397,6 @@ class TypeProps(
     Props,
 ):
     pass
-
 
 class TypeInput(
     TypeUnitField,
@@ -2705,7 +2419,6 @@ class TypeInput(
     authors: list[str] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
-
 
 class TypeOutput(
     TypeUpdatedField,
@@ -2731,7 +2444,6 @@ class TypeOutput(
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
-
 class TypeContext(
     TypeUnitField,
     TypeVirtualField,
@@ -2745,7 +2457,6 @@ class TypeContext(
     connectors: list[ConnectorContext] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
-
 
 class Type(
     TypeUpdatedField,
@@ -2945,7 +2656,6 @@ class Type(
     def idMembers(self) -> RecursiveAnyList:
         return [self.name, self.variant]
 
-
 class TypeNotFound(NotFound):
     def __init__(self, id: "TypeId") -> None:
         self.id = id
@@ -2954,11 +2664,9 @@ class TypeNotFound(NotFound):
         variant = f", {self.id.variant}" if self.id.variant else ""
         return f"Couldn't find the type ({self.id.name}{variant})."
 
-
 class NoTypeAssigned(NoParentAssigned):
     def __str__(self):
         return " The entity has no parent type assigned."
-
 
 class TypeHasNotAllUsedConnectors(SpecificationError):
     def __init__(self, missingConnectors: set[str]) -> None:
@@ -2967,45 +2675,35 @@ class TypeHasNotAllUsedConnectors(SpecificationError):
     def __str__(self) -> str:
         return f" A design is using some connectors of the type. The new type is missing the following connectors: {', '.join(self.missingConnectors)}."
 
-
 class TypeInputNode(InputNode):
     class Meta:
         model = TypeInput
-
 
 class TypeIdInputNode(InputNode):
     class Meta:
         model = TypeId
 
-
 # endregion Type
 
 # region Layer
 
-
 class LayerNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class LayerDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
-
 class LayerColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
-
 
 class LayerIsHiddenField(RealField, abc.ABC):
     is_hidden: bool = sqlmodel.Field(default=False)
 
-
 class LayerIsLockedField(RealField, abc.ABC):
     is_locked: bool = sqlmodel.Field(default=False)
 
-
 class LayerId(LayerNameField, Id):
     pass
-
 
 class LayerProps(
     LayerIsLockedField,
@@ -3017,7 +2715,6 @@ class LayerProps(
 ):
     pass
 
-
 class LayerInput(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -3028,7 +2725,6 @@ class LayerInput(
 ):
     pass
 
-
 class LayerOutput(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -3038,7 +2734,6 @@ class LayerOutput(
     Output,
 ):
     pass
-
 
 class Layer(
     LayerIsLockedField,
@@ -3063,11 +2758,9 @@ class Layer(
     )
     design: Design = sqlmodel.Relationship(back_populates="layers")
 
-
 # endregion Layer
 
 # region Piece
-
 
 class PieceIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(
@@ -3075,50 +2768,38 @@ class PieceIdField(MaskedField, abc.ABC):
         max_length=ID_LENGTH_LIMIT,
     )
 
-
 class PieceDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
 
 class PieceTypeField(MaskedField, abc.ABC):
     type: typing.Optional[TypeId] = sqlmodel.Field(default=None)
 
-
 class PieceDesignField(MaskedField, abc.ABC):
     designPiece: typing.Optional["DesignId"] = sqlmodel.Field(default=None)
-
 
 class PiecePlaneField(MaskedField, abc.ABC):
     plane: typing.Optional[Plane] = sqlmodel.Field(default=None)
 
-
 class PieceCenterField(MaskedField, abc.ABC):
     center: typing.Optional[Coord] = sqlmodel.Field(default=None)
-
 
 class PieceScaleField(RealField, abc.ABC):
     scale: float = sqlmodel.Field(default=1.0)
 
-
 class PieceMirrorPlaneField(MaskedField, abc.ABC):
     mirrorPlane: typing.Optional[Plane] = sqlmodel.Field(default=None)
-
 
 class PieceHiddenField(RealField, abc.ABC):
     is_hidden: bool = sqlmodel.Field(default=False)
 
-
 class PieceLockedField(RealField, abc.ABC):
     is_locked: bool = sqlmodel.Field(default=False)
-
 
 class PieceColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
 
-
 class PieceId(PieceIdField, Id):
     pass
-
 
 class PieceProps(
     PieceCenterField,
@@ -3131,28 +2812,23 @@ class PieceProps(
 ):
     pass
 
-
 class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordInput] = sqlmodel.Field(default=None)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
-
 
 class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordContext] = sqlmodel.Field(default=None)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
-
 class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordOutput] = sqlmodel.Field(default=None)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
-
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     pass
-
 
 class Piece(
     PieceIdField,
@@ -3327,7 +3003,6 @@ class Piece(
     def idMembers(self) -> RecursiveAnyList:
         return self.id_
 
-
 class PieceInputNode(InputNode):
     class Meta:
         model = PieceInput
@@ -3336,45 +3011,35 @@ class PieceInputNode(InputNode):
     type = TypeIdInputNode()
     designPiece = graphene.Field(lambda: DesignIdInputNode)
 
-
 class PieceIdInputNode(InputNode):
     class Meta:
         model = PieceId
-
 
 # endregion Piece
 
 # region Group
 
-
 class GroupNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class GroupDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
-
 class GroupColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
-
 
 class GroupId(GroupNameField, Id):
     pass
 
-
 class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
     pass
-
 
 class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
     pass
 
-
 class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
     pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
-
 
 class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
     PLURAL = "groups"
@@ -3391,11 +3056,9 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity,
     )
     design: Design = sqlmodel.Relationship(back_populates="groups")
 
-
 # endregion Group
 
 # region Side
-
 
 class Side(BaseModel):
     piece: PieceId = sqlmodel.Field()
@@ -3417,22 +3080,17 @@ class Side(BaseModel):
             designPiece = None
         return cls(piece=piece, designPiece=designPiece, connector=connector)
 
-
 class SideInput(Side, Input):
     pass
-
 
 class SideContext(Side, Context):
     pass
 
-
 class SideOutput(Side, Output):
     pass
 
-
 class SidePrediction(Side, Prediction):
     pass
-
 
 class SideNode(Node):
     class Meta:
@@ -3453,7 +3111,6 @@ class SideNode(Node):
     def resolve_connector(self, info):
         return self.connector
 
-
 class SideInputNode(InputNode):
     class Meta:
         model = SideInput
@@ -3464,59 +3121,45 @@ class SideInputNode(InputNode):
     designPiece = PieceIdInputNode()
     connector = graphene.NonNull(ConnectorIdInputNode)
 
-
 # endregion Side
 
 # region Connection
 
-
 class ConnectionConnectedField(MaskedField, abc.ABC):
     connected: Side = sqlmodel.Field()
-
 
 class ConnectionConnectingField(MaskedField, abc.ABC):
     connecting: Side = sqlmodel.Field()
 
-
 class ConnectionDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
 
 class ConnectionGapField(RealField, abc.ABC):
     gap: float = sqlmodel.Field(default=0)
 
-
 class ConnectionShiftField(RealField, abc.ABC):
     shift: float = sqlmodel.Field(default=0)
-
 
 class ConnectionRiseField(MaskedField, abc.ABC):
     rise: float = sqlmodel.Field(default=0)
 
-
 class ConnectionRotationField(RealField, abc.ABC):
     rotation: float = sqlmodel.Field(ge=0, lt=360, default=0)
-
 
 class ConnectionTurnField(RealField, abc.ABC):
     turn: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
-
 class ConnectionTiltField(RealField, abc.ABC):
     tilt: float = sqlmodel.Field(ge=0, lt=360, default=0)
-
 
 class ConnectionUField(RealField, abc.ABC):
     u: float = sqlmodel.Field(default=0)
 
-
 class ConnectionVField(RealField, abc.ABC):
     v: float = sqlmodel.Field(default=0)
 
-
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
     pass
-
 
 class ConnectionProps(
     ConnectionVField,
@@ -3531,7 +3174,6 @@ class ConnectionProps(
     Props,
 ):
     pass
-
 
 class ConnectionInput(
     ConnectionVField,
@@ -3550,7 +3192,6 @@ class ConnectionInput(
     connected: SideInput = sqlmodel.Field()
     connecting: SideInput = sqlmodel.Field()
 
-
 class ConnectionContext(
     ConnectionVField,
     ConnectionUField,
@@ -3567,7 +3208,6 @@ class ConnectionContext(
 
     connected: SideContext = sqlmodel.Field()
     connecting: SideContext = sqlmodel.Field()
-
 
 class ConnectionOutput(
     ConnectionVField,
@@ -3586,7 +3226,6 @@ class ConnectionOutput(
     connected: SideOutput = sqlmodel.Field()
     connecting: SideOutput = sqlmodel.Field()
 
-
 class ConnectionPrediction(
     ConnectionVField,
     ConnectionUField,
@@ -3603,7 +3242,6 @@ class ConnectionPrediction(
 
     connected: SidePrediction = sqlmodel.Field()
     connecting: SidePrediction = sqlmodel.Field()
-
 
 class Connection(
     ConnectionVField,
@@ -3892,52 +3530,40 @@ class Connection(
             self.connecting.connector.id_,
         ]
 
-
 class ConnectionInputNode(InputNode):
     class Meta:
         model = ConnectionInput
-
 
 # endregion Connection
 
 # region Stat
 
-
 class StatKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class StatUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
-
 class StatMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
-
 
 class StatMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=False)
 
-
 class StatMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
-
 
 class StatMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=False)
 
-
 class StatCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
 
 class StatUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
-
 class StatId(StatKeyField, Id):
     pass
-
 
 class StatProps(
     StatUpdatedField,
@@ -3952,7 +3578,6 @@ class StatProps(
 ):
     pass
 
-
 class StatInput(
     StatMaxExcludedField,
     StatMaxField,
@@ -3963,7 +3588,6 @@ class StatInput(
     Input,
 ):
     pass
-
 
 class StatOutput(
     StatUpdatedField,
@@ -3977,7 +3601,6 @@ class StatOutput(
     Output,
 ):
     pass
-
 
 class Stat(
     StatUpdatedField,
@@ -4005,79 +3628,60 @@ class Stat(
     )
     design: Design = sqlmodel.Relationship(back_populates="stats")
 
-
 # endregion Stat
 
 # region Design
 
-
 class DesignNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
-
 
 class DesignDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
-
 class DesignIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
-
 
 class DesignImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
-
 class DesignVariantField(RealField, abc.ABC):
     variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
 
 class DesignViewField(RealField, abc.ABC):
     view: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
-
 class DesignParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
-
 
 class DesignIsAbstractField(RealField, abc.ABC):
     is_abstract: bool = sqlmodel.Field(default=False)
 
-
 class DesignFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
-
 
 class DesignActiveLayerField(RealField, abc.ABC):
     activeLayer: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
-
 class DesignLocationField(MaskedField, abc.ABC):
     location: typing.Optional[Location] = sqlmodel.Field(default=None)
-
 
 class DesignUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
-
 class DesignScalableField(RealField, abc.ABC):
     can_scale: bool = sqlmodel.Field(default=True)
-
 
 class DesignMirrorableField(RealField, abc.ABC):
     can_mirror: bool = sqlmodel.Field(default=True)
 
-
 class DesignCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
 
 class DesignUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
-
 class DesignId(DesignNameField, DesignVariantField, Id):
     pass
-
 
 class DesignProps(
     DesignUnitField,
@@ -4095,7 +3699,6 @@ class DesignProps(
     Props,
 ):
     pass
-
 
 class DesignInput(
     DesignUnitField,
@@ -4119,7 +3722,6 @@ class DesignInput(
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
-
 class DesignContext(
     DesignUnitField,
     DesignViewField,
@@ -4135,7 +3737,6 @@ class DesignContext(
     connections: list[ConnectionContext] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
-
 
 class DesignOutput(
     DesignUpdatedField,
@@ -4163,13 +3764,11 @@ class DesignOutput(
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
-
 class DesignPrediction(DesignDescriptionField, Prediction):
     pass
 
     pieces: list[PiecePrediction] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
-
 
 class Design(
     DesignNameField,
@@ -4364,78 +3963,60 @@ class Design(
     def idMembers(self) -> RecursiveAnyList:
         return [self.name, self.variant]
 
-
 class NoDesignAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent design assigned."
-
 
 class DesignInputNode(InputNode):
     class Meta:
         model = DesignInput
 
-
 class DesignIdInputNode(InputNode):
     class Meta:
         model = DesignId
-
 
 # endregion Design
 
 # region Kit
 
-
 class KitUriField(RealField, abc.ABC):
     uri: str = sqlmodel.Field(max_length=URI_LENGTH_LIMIT)
-
 
 class KitNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
-
 class KitDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
-
 
 class KitIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
-
 class KitImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
-
 
 class KitPreviewField(RealField, abc.ABC):
     preview: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
-
 class KitVersionField(RealField, abc.ABC):
     version: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
-
 
 class KitRemoteField(RealField, abc.ABC):
     remote: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
-
 class KitHomepageField(RealField, abc.ABC):
     homepage: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
-
 
 class KitLicenseField(RealField, abc.ABC):
     license: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
-
 class KitCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
-
 
 class KitUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
-
 class KitId(KitUriField, Id):
     pass
-
 
 class KitProps(
     KitLicenseField,
@@ -4451,7 +4032,6 @@ class KitProps(
     Props,
 ):
     pass
-
 
 class KitInput(
     KitLicenseField,
@@ -4473,14 +4053,12 @@ class KitInput(
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
-
 class KitContext(KitDescriptionField, KitNameField, Context):
     pass
 
     types: list[TypeContext] = sqlmodel.Field(default_factory=list)
     designs: list[DesignContext] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
-
 
 class KitOutput(
     KitUpdatedField,
@@ -4504,7 +4082,6 @@ class KitOutput(
     folders: list[FolderOutput] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
-
 
 class Kit(
     KitNameField,
@@ -4814,32 +4391,26 @@ class Kit(
 
     # endregion Type Family Helpers
 
-
 # endregion Kit
 
 # region Moved Graphene Nodes
-
 
 class AttributeNode(TableEntityNode):
     class Meta:
         model = Attribute
 
-
 class PlaneNode(TableNode):
     class Meta:
         model = Plane
-
 
 class AuthorNode(TableEntityNode):
     class Meta:
         model = Author
 
-
 class ModelNode(TableEntityNode):
     class Meta:
         model = Model
         excludedFields = ("tags_",)
-
 
 class ConnectorNode(TableEntityNode):
     class Meta:
@@ -4851,11 +4422,9 @@ class ConnectorNode(TableEntityNode):
     def resolve_localId(self, info):
         return getattr(self, "id_", "")
 
-
 class TypeNode(TableEntityNode):
     class Meta:
         model = Type
-
 
 class PieceNode(TableEntityNode):
     class Meta:
@@ -4866,7 +4435,6 @@ class PieceNode(TableEntityNode):
 
     def resolve_localId(self, info):
         return getattr(self, "id_", "")
-
 
 class ConnectionNode(TableEntityNode):
     class Meta:
@@ -4887,11 +4455,9 @@ class ConnectionNode(TableEntityNode):
     def resolve_connecting(self, info):
         return self.connecting
 
-
 class DesignNode(TableEntityNode):
     class Meta:
         model = Design
-
 
 # endregion Moved Graphene Nodes
 class KitNotFound(NotFound):
@@ -4901,14 +4467,12 @@ class KitNotFound(NotFound):
     def __str__(self):
         return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
 
-
 class NoKitToDelete(KitNotFound):
     def __init__(self, uri: str) -> None:
         self.uri = uri
 
     def __str__(self):
         return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
-
 
 class KitZipDoesNotContainSemioFolder(KitNotFound):
     def __init__(self, uri: str) -> None:
@@ -4917,7 +4481,6 @@ class KitZipDoesNotContainSemioFolder(KitNotFound):
     def __str__(self):
         return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
 
-
 class OnlyRemoteKitsCanBeCached(ClientError):
     def __init__(self, nonRemoteUri: str) -> None:
         self.nonRemoteUri = nonRemoteUri
@@ -4925,14 +4488,11 @@ class OnlyRemoteKitsCanBeCached(ClientError):
     def __str__(self):
         return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
 
-
 class KitUriNotValid(ClientError, abc.ABC):
     """🆔 The base for all kit uri not valid errors."""
 
-
 class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
     """📂 The base for all local kit uri not valid errors."""
-
 
 class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
     def __init__(self, uri: str) -> None:
@@ -4941,7 +4501,6 @@ class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
     def __str__(self):
         return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
 
-
 class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -4949,11 +4508,9 @@ class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
     def __str__(self):
         return f"📂 The local kit uri ({self.uri}) is not a directory."
 
-
 class NoKitAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent kit assigned."
-
 
 class KitAlreadyExists(AlreadyExists, abc.ABC):
     def __init__(self, uri: str) -> None:
@@ -4962,21 +4519,17 @@ class KitAlreadyExists(AlreadyExists, abc.ABC):
     def __str__(self) -> str:
         return f"♊ A kit under uri ({self.uri}) already exists."
 
-
 class KitInputNode(InputNode):
     class Meta:
         model = KitInput
-
 
 class KitNode(TableEntityNode):
     class Meta:
         model = Kit
 
-
 # endregion Domain
 
 # region Validation
-
 
 @dataclasses.dataclass
 class ValidationFix:
@@ -4985,7 +4538,6 @@ class ValidationFix:
 
     def toDict(self) -> dict:
         return {"title": self.title, "diff": self.diff}
-
 
 @dataclasses.dataclass
 class Problem:
@@ -5004,7 +4556,6 @@ class Problem:
             "fixes": [f.toDict() for f in self.fixes],
         }
 
-
 @dataclasses.dataclass
 class ValidationResult:
     problems: list[Problem]
@@ -5019,7 +4570,6 @@ class ValidationResult:
     def serialize(self) -> str:
         return json.dumps(self.toDict(), indent=2)
 
-
 def _isGuid(s: str) -> bool:
     import re
 
@@ -5031,7 +4581,6 @@ def _isGuid(s: str) -> bool:
         )
     )
 
-
 def _normalizeGuids(obj: typing.Any) -> typing.Any:
     if obj is None:
         return obj
@@ -5042,7 +4591,6 @@ def _normalizeGuids(obj: typing.Any) -> typing.Any:
     if isinstance(obj, dict):
         return {k: _normalizeGuids(v) for k, v in obj.items()}
     return obj
-
 
 def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
     if len(a.problems) != len(b.problems):
@@ -5064,7 +4612,6 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
                 return False
     return True
 
-
 def parseValidationResult(jsonStr: str) -> ValidationResult:
     data = json.loads(jsonStr)
     problems = []
@@ -5080,7 +4627,6 @@ def parseValidationResult(jsonStr: str) -> ValidationResult:
             )
         )
     return ValidationResult(problems=problems)
-
 
 def validateGuidUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
@@ -5118,7 +4664,6 @@ def validateGuidUniqueness(kit: Kit) -> list[Problem]:
         check("Folder", fo.guid)
     return problems
 
-
 def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Type]] = {}
@@ -5145,7 +4690,6 @@ def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
                         )
                     )
     return problems
-
 
 def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
@@ -5174,7 +4718,6 @@ def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
-
 def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for design in kit.designs or []:
@@ -5196,7 +4739,6 @@ def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
                         )
                     )
     return problems
-
 
 def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
@@ -5220,7 +4762,6 @@ def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
-
 def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for t in kit.types or []:
@@ -5243,7 +4784,6 @@ def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
-
 def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     names: dict[str, list[Quality]] = {}
@@ -5264,7 +4804,6 @@ def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
                 )
     return problems
 
-
 def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     names: dict[str, list[File]] = {}
@@ -5284,7 +4823,6 @@ def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
                     )
                 )
     return problems
-
 
 def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
@@ -5313,7 +4851,6 @@ def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
-
 def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for design in kit.designs or []:
@@ -5335,7 +4872,6 @@ def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
-
 def validateKit(kit: Kit) -> ValidationResult:
     problems: list[Problem] = []
     problems.extend(validateGuidUniqueness(kit))
@@ -5350,23 +4886,18 @@ def validateKit(kit: Kit) -> ValidationResult:
     problems.extend(validateLayerPathUniqueness(kit))
     return ValidationResult(problems=problems)
 
-
 # region Dict-based Validation
-
 
 def _makeFix(title: str, diff: dict) -> ValidationFix:
     return ValidationFix(title=title, diff=diff)
 
-
 def _deepCopy(obj: typing.Any) -> typing.Any:
     return json.loads(json.dumps(obj))
-
 
 def _newGuid() -> str:
     import uuid
 
     return str(uuid.uuid4())
-
 
 def validateKitDict(kit: dict) -> ValidationResult:
     problems: list[Problem] = []
@@ -5832,13 +5363,11 @@ def validateKitDict(kit: dict) -> ValidationResult:
                     )
     return ValidationResult(problems=problems)
 
-
 # endregion Dict-based Validation
 
 # endregion Validation
 
 # region Graph Operations
-
 
 def buildPieceGraph(design: Design | dict) -> networkx.Graph:
     G = networkx.Graph()
@@ -5858,7 +5387,6 @@ def buildPieceGraph(design: Design | dict) -> networkx.Graph:
             G.add_edge(sourceId, targetId, connection=connection)
     return G
 
-
 def findFixedPieces(design: Design | dict) -> list[str]:
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
     result = []
@@ -5871,11 +5399,9 @@ def findFixedPieces(design: Design | dict) -> list[str]:
                 result.append(p.guid)
     return result
 
-
 def getConnectedComponents(design: Design | dict) -> list[set[str]]:
     G = buildPieceGraph(design)
     return [set(c) for c in networkx.connected_components(G)]
-
 
 def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
     G = buildPieceGraph(design)
@@ -5883,18 +5409,15 @@ def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
         return {}
     return networkx.single_source_shortest_path_length(G, rootGuid)
 
-
 # endregion Graph Operations
 
 # region FlattenDesign
-
 
 def getTypeByGuid(kit: dict, guid: str) -> dict | None:
     for t in kit.get("types", []):
         if t.get("guid") == guid:
             return t
     return None
-
 
 def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
     if typeData is None:
@@ -5920,7 +5443,6 @@ def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | 
         return connectors[0]
     return None
 
-
 def planeToMatrixDict(plane: dict) -> numpy.ndarray:
     origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
     xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
@@ -5934,7 +5456,6 @@ def planeToMatrixDict(plane: dict) -> numpy.ndarray:
     matrix[:3, 3] = origin
     return matrix
 
-
 def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
     origin = matrix[:3, 3]
     xAxis = matrix[:3, 0]
@@ -5944,7 +5465,6 @@ def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
         "xAxis": {"x": float(xAxis[0]), "y": float(xAxis[1]), "z": float(xAxis[2])},
         "yAxis": {"x": float(yAxis[0]), "y": float(yAxis[1]), "z": float(yAxis[2])},
     }
-
 
 def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
     r = numpy.dot(vFrom, vTo) + 1
@@ -5958,12 +5478,10 @@ def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> n
         q = numpy.array([cross[0], cross[1], cross[2], r])
     return q / numpy.linalg.norm(q)
 
-
 def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
     halfAngle = angle / 2
     s = numpy.sin(halfAngle)
     return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
-
 
 def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
     x, y, z, w = q
@@ -5983,10 +5501,8 @@ def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
     m[2, 2] = 1 - (xx + yy)
     return m
 
-
 def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
     return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
-
 
 def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
     m = numpy.eye(4)
@@ -5994,7 +5510,6 @@ def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
     m[1, 3] = y
     m[2, 3] = z
     return m
-
 
 def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
     return numpy.array(
@@ -6004,7 +5519,6 @@ def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
             m[2, 0] * v[0] + m[2, 1] * v[1] + m[2, 2] * v[2],
         ]
     )
-
 
 def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
     parentMatrix = planeToMatrixDict(parentPlane)
@@ -6066,7 +5580,6 @@ def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnect
         "xAxis": {"x": round(result["xAxis"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["xAxis"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["xAxis"]["z"] / TOLERANCE) * TOLERANCE},
         "yAxis": {"x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE},
     }
-
 
 def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
@@ -6170,11 +5683,9 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
         }
     }
 
-
 # endregion FlattenDesign
 
 # region Kit Diff Operations
-
 
 def _normalizeValue(value: typing.Any) -> typing.Any:
     """Normalize empty values to None for comparison."""
@@ -6182,11 +5693,9 @@ def _normalizeValue(value: typing.Any) -> typing.Any:
         return None
     return value
 
-
 def _normalizeBoolean(value: bool | None) -> bool | None:
     """Normalize boolean: True stays True, False/None become None."""
     return True if value else None
-
 
 def _normalizeArray(arr: list | None) -> list:
     """Normalize None or single item to list."""
@@ -6195,7 +5704,6 @@ def _normalizeArray(arr: list | None) -> list:
     if not isinstance(arr, list):
         return [arr]
     return arr
-
 
 def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6218,7 +5726,6 @@ def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False)
             if attrA.get("updatedAt") != attrB.get("updatedAt"):
                 return False
     return True
-
 
 def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6243,7 +5750,6 @@ def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
             if propA.get("updatedAt") != propB.get("updatedAt"):
                 return False
     return True
-
 
 def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6283,7 +5789,6 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 return False
     return True
 
-
 def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6314,7 +5819,6 @@ def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
             if modelA.get("updatedAt") != modelB.get("updatedAt"):
                 return False
     return True
-
 
 def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6388,7 +5892,6 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
             if typeA.get("updatedAt") != typeB.get("updatedAt"):
                 return False
     return True
-
 
 def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6466,7 +5969,6 @@ def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
                 return False
     return True
 
-
 def _getGuidFromRef(ref: typing.Any) -> str | None:
     """Extract guid from either a string (Input format) or dict with guid (Output format)."""
     if ref is None:
@@ -6474,7 +5976,6 @@ def _getGuidFromRef(ref: typing.Any) -> str | None:
     if isinstance(ref, dict):
         return ref.get("guid")
     return ref
-
 
 def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6529,7 +6030,6 @@ def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False
                 return False
     return True
 
-
 def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6583,7 +6083,6 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
                 return False
     return True
 
-
 def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6605,7 +6104,6 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
             if ifaceA.get("updatedAt") != ifaceB.get("updatedAt"):
                 return False
     return True
-
 
 def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6629,7 +6127,6 @@ def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) 
                 return False
     return True
 
-
 def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6647,7 +6144,6 @@ def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
             if fileA.get("updatedAt") != fileB.get("updatedAt"):
                 return False
     return True
-
 
 def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6668,7 +6164,6 @@ def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) ->
             if folderA.get("updatedAt") != folderB.get("updatedAt"):
                 return False
     return True
-
 
 def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
@@ -6692,7 +6187,6 @@ def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
                 return False
     return True
 
-
 def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6715,7 +6209,6 @@ def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -
                 return False
     return True
 
-
 def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6737,7 +6230,6 @@ def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bo
             if tagA.get("updatedAt") != tagB.get("updatedAt"):
                 return False
     return True
-
 
 def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
     """Deep equality check for kits (dict-based) - recursively compares all properties including nested entities.
@@ -6797,7 +6289,6 @@ def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
             return False
     return True
 
-
 def _getCollectionDiff(
     before: list,
     after: list,
@@ -6835,7 +6326,6 @@ def _getCollectionDiff(
     if added:
         diff["added"] = added
     return diff
-
 
 def _applyCollectionDiff(
     base: list,
@@ -6876,7 +6366,6 @@ def _applyCollectionDiff(
         result.extend(diff["added"])
     return result
 
-
 def _getTypeDiff(before: dict, after: dict) -> dict:
     """Get diff between two type dicts."""
     diff: dict = {}
@@ -6907,7 +6396,6 @@ def _getTypeDiff(before: dict, after: dict) -> dict:
         diff["models"] = modelsDiff
     return diff
 
-
 def _applyTypeDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a type dict."""
     result = dict(base)
@@ -6933,7 +6421,6 @@ def _applyTypeDiff(base: dict, diff: dict) -> dict:
         result["models"] = _applyCollectionDiff(base.get("models", []), diff["models"], _applyModelDiff, "model")
     return result
 
-
 def _getConnectorDiff(before: dict, after: dict) -> dict:
     """Get diff between two connector dicts."""
     diff: dict = {}
@@ -6945,7 +6432,6 @@ def _getConnectorDiff(before: dict, after: dict) -> dict:
         diff["mandatory"] = after.get("mandatory")
     return diff
 
-
 def _applyConnectorDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a connector dict."""
     result = dict(base)
@@ -6954,7 +6440,6 @@ def _applyConnectorDiff(base: dict, diff: dict) -> dict:
             result[key] = diff[key]
     return result
 
-
 def _getModelDiff(before: dict, after: dict) -> dict:
     """Get diff between two model dicts."""
     diff: dict = {}
@@ -6962,14 +6447,12 @@ def _getModelDiff(before: dict, after: dict) -> dict:
         diff["name"] = after.get("name")
     return diff
 
-
 def _applyModelDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a model dict."""
     result = dict(base)
     if "name" in diff:
         result["name"] = diff["name"]
     return result
-
 
 def _getDesignDiff(before: dict, after: dict) -> dict:
     """Get diff between two design dicts."""
@@ -6995,7 +6478,6 @@ def _getDesignDiff(before: dict, after: dict) -> dict:
         diff["connections"] = connectionsDiff
     return diff
 
-
 def _applyDesignDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a design dict."""
     result = dict(base)
@@ -7013,7 +6495,6 @@ def _applyDesignDiff(base: dict, diff: dict) -> dict:
         )
     return result
 
-
 def _getPieceDiff(before: dict, after: dict) -> dict:
     """Get diff between two piece dicts."""
     diff: dict = {}
@@ -7023,7 +6504,6 @@ def _getPieceDiff(before: dict, after: dict) -> dict:
         diff["scale"] = after.get("scale")
     return diff
 
-
 def _applyPieceDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a piece dict."""
     result = dict(base)
@@ -7031,7 +6511,6 @@ def _applyPieceDiff(base: dict, diff: dict) -> dict:
         if key in diff:
             result[key] = diff[key]
     return result
-
 
 def _getConnectionDiff(before: dict, after: dict) -> dict:
     """Get diff between two connection dicts."""
@@ -7041,7 +6520,6 @@ def _getConnectionDiff(before: dict, after: dict) -> dict:
             diff[key] = after.get(key)
     return diff
 
-
 def _applyConnectionDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a connection dict."""
     result = dict(base)
@@ -7049,7 +6527,6 @@ def _applyConnectionDiff(base: dict, diff: dict) -> dict:
         if key in diff:
             result[key] = diff[key]
     return result
-
 
 def _getTagDiff(before: dict, after: dict) -> dict:
     """Get diff between two tag dicts."""
@@ -7060,7 +6537,6 @@ def _getTagDiff(before: dict, after: dict) -> dict:
         diff["description"] = after.get("description")
     return diff
 
-
 def _applyTagDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a tag dict."""
     result = dict(base)
@@ -7068,7 +6544,6 @@ def _applyTagDiff(base: dict, diff: dict) -> dict:
         if key in diff:
             result[key] = diff[key]
     return result
-
 
 def _getConceptDiff(before: dict, after: dict) -> dict:
     """Get diff between two concept dicts."""
@@ -7079,7 +6554,6 @@ def _getConceptDiff(before: dict, after: dict) -> dict:
         diff["description"] = after.get("description")
     return diff
 
-
 def _applyConceptDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a concept dict."""
     result = dict(base)
@@ -7087,7 +6561,6 @@ def _applyConceptDiff(base: dict, diff: dict) -> dict:
         if key in diff:
             result[key] = diff[key]
     return result
-
 
 def _getPortDiff(before: dict, after: dict) -> dict:
     """Get diff between two port dicts."""
@@ -7098,7 +6571,6 @@ def _getPortDiff(before: dict, after: dict) -> dict:
         diff["description"] = after.get("description")
     return diff
 
-
 def _applyPortDiff(base: dict, diff: dict) -> dict:
     """Apply diff to an port dict."""
     result = dict(base)
@@ -7107,14 +6579,12 @@ def _applyPortDiff(base: dict, diff: dict) -> dict:
             result[key] = diff[key]
     return result
 
-
 def _getFileDiff(before: dict, after: dict) -> dict:
     """Get diff between two file dicts."""
     diff: dict = {}
     if before.get("name") != after.get("name"):
         diff["name"] = after.get("name")
     return diff
-
 
 def _applyFileDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a file dict."""
@@ -7123,7 +6593,6 @@ def _applyFileDiff(base: dict, diff: dict) -> dict:
         result["name"] = diff["name"]
     return result
 
-
 def _getFolderDiff(before: dict, after: dict) -> dict:
     """Get diff between two folder dicts."""
     diff: dict = {}
@@ -7131,14 +6600,12 @@ def _getFolderDiff(before: dict, after: dict) -> dict:
         diff["name"] = after.get("name")
     return diff
 
-
 def _applyFolderDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a folder dict."""
     result = dict(base)
     if "name" in diff:
         result["name"] = diff["name"]
     return result
-
 
 def _getQualityDiff(before: dict, after: dict) -> dict:
     """Get diff between two quality dicts."""
@@ -7179,7 +6646,6 @@ def _getQualityDiff(before: dict, after: dict) -> dict:
         diff["unit"] = after.get("unit")
     return diff
 
-
 def _applyQualityDiff(base: dict, diff: dict) -> dict:
     """Apply diff to a quality dict."""
     result = dict(base)
@@ -7206,7 +6672,6 @@ def _applyQualityDiff(base: dict, diff: dict) -> dict:
             result[key] = diff[key]
     return result
 
-
 def _getAuthorDiff(before: dict, after: dict) -> dict:
     """Get diff between two author dicts."""
     diff: dict = {}
@@ -7216,7 +6681,6 @@ def _getAuthorDiff(before: dict, after: dict) -> dict:
         diff["email"] = after.get("email")
     return diff
 
-
 def _applyAuthorDiff(base: dict, diff: dict) -> dict:
     """Apply diff to an author dict."""
     result = dict(base)
@@ -7224,7 +6688,6 @@ def _applyAuthorDiff(base: dict, diff: dict) -> dict:
         if key in diff:
             result[key] = diff[key]
     return result
-
 
 def _getAttributeDiff(before: dict, after: dict) -> dict:
     """Get diff between two attribute dicts - used for individual attribute update diffs."""
@@ -7236,7 +6699,6 @@ def _getAttributeDiff(before: dict, after: dict) -> dict:
         diff["definition"] = after.get("definition")
     return diff
 
-
 def _applyAttributeDiff(base: dict, diff: dict) -> dict:
     """Apply diff to an attribute dict."""
     result = dict(base)
@@ -7244,7 +6706,6 @@ def _applyAttributeDiff(base: dict, diff: dict) -> dict:
         if key in diff:
             result[key] = diff[key]
     return result
-
 
 def _getAttributesDiff(before: list, after: list) -> dict:
     """Get diff for attributes collection - uses GUID for identification with EntityId format."""
@@ -7270,7 +6731,6 @@ def _getAttributesDiff(before: list, after: list) -> dict:
         diff["added"] = added
     return diff
 
-
 def _applyAttributesDiff(base: list, diff: dict | None) -> list:
     """Apply diff to attributes collection - uses GUID for identification with EntityId format."""
     if not diff:
@@ -7288,7 +6748,6 @@ def _applyAttributesDiff(base: list, diff: dict | None) -> list:
     if diff.get("added"):
         result.extend(diff["added"])
     return result
-
 
 def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
     """Compute inverse of attributes collection diff - uses GUID with EntityId format."""
@@ -7324,7 +6783,6 @@ def _inverseAttributesDiff(original: list, appliedDiff: dict) -> dict:
         inverse["added"] = [a for a in original if a.get("guid") in removedGuids]
     return inverse
 
-
 def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of an attribute diff."""
     inverse: dict = {}
@@ -7333,7 +6791,6 @@ def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
     if "definition" in appliedDiff:
         inverse["definition"] = original.get("definition")
     return inverse
-
 
 def getKitDiffDict(before: dict, after: dict) -> dict:
     """Compute the diff between two kit dicts."""
@@ -7398,7 +6855,6 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
         diff["attributes"] = attributesDiff
     return diff
 
-
 def applyKitDiffDict(base: dict, diff: dict) -> dict:
     """Apply a diff to a kit dict."""
     result = dict(base)
@@ -7449,7 +6905,6 @@ def applyKitDiffDict(base: dict, diff: dict) -> dict:
         result["attributes"] = _applyAttributesDiff(base.get("attributes", []), diff.get("attributes"))
     return result
 
-
 def _inverseCollectionDiff(
     original: list,
     appliedDiff: dict,
@@ -7492,7 +6947,6 @@ def _inverseCollectionDiff(
                     )
     return inverse
 
-
 def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a type diff."""
     inverse: dict = {}
@@ -7516,7 +6970,6 @@ def _inverseTypeDiff(original: dict, appliedDiff: dict) -> dict:
         )
     return inverse
 
-
 def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a connector diff."""
     inverse: dict = {}
@@ -7524,7 +6977,6 @@ def _inverseConnectorDiff(original: dict, appliedDiff: dict) -> dict:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     return inverse
-
 
 def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a design diff."""
@@ -7541,7 +6993,6 @@ def _inverseDesignDiff(original: dict, appliedDiff: dict) -> dict:
         )
     return inverse
 
-
 def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a piece diff."""
     inverse: dict = {}
@@ -7549,7 +7000,6 @@ def _inversePieceDiff(original: dict, appliedDiff: dict) -> dict:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     return inverse
-
 
 def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a tag diff."""
@@ -7559,7 +7009,6 @@ def _inverseTagDiff(original: dict, appliedDiff: dict) -> dict:
             inverse[key] = original.get(key)
     return inverse
 
-
 def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a concept diff."""
     inverse: dict = {}
@@ -7567,7 +7016,6 @@ def _inverseConceptDiff(original: dict, appliedDiff: dict) -> dict:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     return inverse
-
 
 def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of an port diff."""
@@ -7577,7 +7025,6 @@ def _inversePortDiff(original: dict, appliedDiff: dict) -> dict:
             inverse[key] = original.get(key)
     return inverse
 
-
 def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a file diff."""
     inverse: dict = {}
@@ -7585,14 +7032,12 @@ def _inverseFileDiff(original: dict, appliedDiff: dict) -> dict:
         inverse["name"] = original.get("name")
     return inverse
 
-
 def _inverseFolderDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a folder diff."""
     inverse: dict = {}
     if "name" in appliedDiff:
         inverse["name"] = original.get("name")
     return inverse
-
 
 def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of a quality diff."""
@@ -7620,7 +7065,6 @@ def _inverseQualityDiff(original: dict, appliedDiff: dict) -> dict:
             inverse[key] = original.get(key)
     return inverse
 
-
 def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
     """Compute inverse of an author diff."""
     inverse: dict = {}
@@ -7628,7 +7072,6 @@ def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
         if key in appliedDiff:
             inverse[key] = original.get(key)
     return inverse
-
 
 def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
     """Compute the inverse of a kit diff."""
@@ -7693,14 +7136,12 @@ def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
         inverse["attributes"] = _inverseAttributesDiff(original.get("attributes", []), appliedDiff["attributes"])
     return inverse
 
-
 def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
     """Extract guid from an updated entry which might use EntityId format or old id format."""
     for key in entityKeys:
         if key in update and isinstance(update[key], dict):
             return update[key].get("guid", "")
     return update.get("id", "")
-
 
 def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     """Deep equality check for kit diffs."""
@@ -7748,11 +7189,9 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
             return False
     return True
 
-
 # endregion Kit Diff Operations
 
 # region Kit Import/Export
-
 
 class KitData:
     """Simple in-memory kit representation that supports attribute access."""
@@ -7775,7 +7214,6 @@ class KitData:
     def to_dict(self) -> dict:
         return self._data
 
-
 def _parse_connector_from_sqlite(row: dict) -> dict:
     return {
         "guid": row.get("guid"),
@@ -7796,7 +7234,6 @@ def _parse_connector_from_sqlite(row: dict) -> dict:
         "description": row.get("description"),
     }
 
-
 def _parse_model_from_sqlite(row: dict) -> dict:
     return {
         "guid": row.get("guid"),
@@ -7804,7 +7241,6 @@ def _parse_model_from_sqlite(row: dict) -> dict:
         "file": row.get("file_guid"),
         "description": row.get("description"),
     }
-
 
 def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict]) -> dict:
     return {
@@ -7823,7 +7259,6 @@ def _parse_type_from_sqlite(row: dict, connectors: list[dict], models: list[dict
         "connectors": connectors,
         "models": models,
     }
-
 
 def _parse_piece_from_sqlite(row: dict) -> dict:
     plane = None
@@ -7885,7 +7320,6 @@ def _parse_piece_from_sqlite(row: dict) -> dict:
         "description": row.get("description"),
     }
 
-
 def _parse_connection_from_sqlite(row: dict) -> dict:
     return {
         "guid": row.get("guid"),
@@ -7909,7 +7343,6 @@ def _parse_connection_from_sqlite(row: dict) -> dict:
         "v": row.get("v"),
         "description": row.get("description"),
     }
-
 
 def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[dict]) -> dict:
     view = None
@@ -7940,7 +7373,6 @@ def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[d
         "pieces": pieces,
         "connections": connections,
     }
-
 
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
     """📦Import a kit from a .zip file (containing a .semio/kit.db sqlite database)."""
@@ -8019,7 +7451,6 @@ def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
         }
 
     return KitData(kit_data_dict), files
-
 
 def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     """Write kit data to SQLite database using the TypeScript schema."""
@@ -8391,7 +7822,6 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     conn.commit()
     conn.close()
 
-
 def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
     """📦Export a kit to a .zip file (containing a .semio/kit.db sqlite database)."""
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -8407,18 +7837,15 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
             for filename, content in files.items():
                 zip_ref.writestr(filename, content)
 
-
 # endregion Kit Import/Export
 
 # region Spatial Math
-
 
 def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
     length = numpy.linalg.norm(v)
     if length < 1e-10:
         return v
     return v / length
-
 
 def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.ndarray | None = None) -> Plane:
     if origin is None:
@@ -8444,7 +7871,6 @@ def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.
     plane.xAxis = Vector(x=float(xAxis[0]), y=float(xAxis[1]), z=float(xAxis[2]))
     plane.yAxis = Vector(x=float(yAxis[0]), y=float(yAxis[1]), z=float(yAxis[2]))
     return plane
-
 
 def computeChildPlane(
     parentPlane: Plane,
@@ -8518,6 +7944,5 @@ def computeChildPlane(
     plane.xAxis = Vector(x=float(childX[0]), y=float(childX[1]), z=float(childX[2]))
     plane.yAxis = Vector(x=float(childY[0]), y=float(childY[1]), z=float(childY[2]))
     return plane
-
 
 # endregion Spatial Math

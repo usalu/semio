@@ -13,10 +13,8 @@
         "finished": "2026-02-05 11:13:17"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Extend the GitHub sync mechanism for goals. Currently all goals are linked to milestones. Instead, only top-level goals (without parent) should be milestones. All child goals should be GitHub issues with the goal label. Migrate existing goals to the new system. No backwards compatibility needed.",
       "llm": "opus-4-5",
@@ -1117,10 +1115,8 @@
         "finished": "2026-02-05 11:20:41"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Refine hierarchical goal sync: root goals = milestones, first-generation children = issues linked to parent milestone, deeper generations = sub-issues of parent goal issue without milestone.",
       "llm": "opus-4-5",
@@ -2319,10 +2315,8 @@
         "finished": "2026-02-05 11:53:47"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Run the migration: execute sync github to convert existing child goal milestones to issues. Clean up any leftover milestone fields from non-root goal.json files.",
       "llm": "opus-4-5",

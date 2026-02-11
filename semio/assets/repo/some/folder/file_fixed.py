@@ -27,8 +27,11 @@
 # endregion Header
 
 # region Functions
+# Utility functions for fixed values.
+# Functions MUST accept typed parameters.
 
-
+# Increments a value by one.
+# fixed_function MUST return value plus one.
 def fixed_function(value: int) -> int:
     return value + 1
 

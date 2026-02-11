@@ -10,15 +10,12 @@
 // it under the terms of the GNU Lesser General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 
 // #endregion 🔖License
 
@@ -26,13 +23,6 @@
 // #endregion 🔖Specs
 
 // #endregion 🔖Header
-
-// #region 🔖TODOs
-
-// TODOs
-// TODO: Conventionalize error throwing and logging
-
-// #endregion 🔖TODOs
 
 import { ClassValue, clsx } from "clsx";
 import cytoscape from "cytoscape";
@@ -5884,20 +5874,20 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
           plane:
             p.plane_origin_x !== null
               ? {
-                  origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
-                  xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
-                  yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
-                }
+                origin: { x: p.plane_origin_x, y: p.plane_origin_y, z: p.plane_origin_z },
+                xAxis: { x: p.plane_x_axis_x, y: p.plane_x_axis_y, z: p.plane_x_axis_z },
+                yAxis: { x: p.plane_y_axis_x, y: p.plane_y_axis_y, z: p.plane_y_axis_z },
+              }
               : undefined,
           center: p.center_u !== null || p.center_v !== null ? { u: p.center_u, v: p.center_v } : undefined,
           scale: p.scale !== null ? p.scale : undefined,
           mirrorPlane:
             p.mirror_plane_origin_x !== null
               ? {
-                  origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
-                  xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
-                  yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
-                }
+                origin: { x: p.mirror_plane_origin_x, y: p.mirror_plane_origin_y, z: p.mirror_plane_origin_z },
+                xAxis: { x: p.mirror_plane_x_axis_x, y: p.mirror_plane_x_axis_y, z: p.mirror_plane_x_axis_z },
+                yAxis: { x: p.mirror_plane_y_axis_x, y: p.mirror_plane_y_axis_y, z: p.mirror_plane_y_axis_z },
+              }
               : undefined,
           isHidden: p.is_hidden ? true : undefined,
           isLocked: p.is_locked ? true : undefined,
@@ -6012,55 +6002,55 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.qualities =
     qualities.length > 0
       ? qualities.map((row: any) => {
-          const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
-          const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
-          return {
-            guid: row.guid,
-            key: row.key,
-            name: row.name,
-            kind: row.kind,
-            defaultValue: row.default_value,
-            formula: toUndefined(row.formula),
-            defaultSiUnit: toUndefined(row.default_si_unit),
-            defaultImperialUnit: toUndefined(row.default_imperial_unit),
-            min: row.min_value,
-            minExcluded: row.min_excluded ? true : undefined,
-            max: row.max_value,
-            maxExcluded: row.max_excluded ? true : undefined,
-            canScale: row.can_scale ? true : undefined,
-            uri: toUndefined(row.definition),
-            benchmarks: benchmarks.map((b: any) => {
-              const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
-              return {
-                guid: b.guid,
-                name: b.name,
-                icon: toUndefined(b.icon),
-                min: b.min_value,
-                minExcluded: b.min_excluded ? true : undefined,
-                max: b.max_value,
-                maxExcluded: b.max_excluded ? true : undefined,
-                attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
-              };
-            }),
-            attributes: mapOrUndefined(qualityAttributes, buildAttribute),
-          };
-        })
+        const benchmarks = execResult("SELECT * FROM benchmark WHERE quality_guid = ?", [row.guid]);
+        const qualityAttributes = execResult("SELECT * FROM attribute WHERE quality_guid = ?", [row.guid]);
+        return {
+          guid: row.guid,
+          key: row.key,
+          name: row.name,
+          kind: row.kind,
+          defaultValue: row.default_value,
+          formula: toUndefined(row.formula),
+          defaultSiUnit: toUndefined(row.default_si_unit),
+          defaultImperialUnit: toUndefined(row.default_imperial_unit),
+          min: row.min_value,
+          minExcluded: row.min_excluded ? true : undefined,
+          max: row.max_value,
+          maxExcluded: row.max_excluded ? true : undefined,
+          canScale: row.can_scale ? true : undefined,
+          uri: toUndefined(row.definition),
+          benchmarks: benchmarks.map((b: any) => {
+            const benchmarkAttributes = execResult("SELECT * FROM attribute WHERE benchmark_guid = ?", [b.guid]);
+            return {
+              guid: b.guid,
+              name: b.name,
+              icon: toUndefined(b.icon),
+              min: b.min_value,
+              minExcluded: b.min_excluded ? true : undefined,
+              max: b.max_value,
+              maxExcluded: b.max_excluded ? true : undefined,
+              attributes: mapOrUndefined(benchmarkAttributes, buildAttribute),
+            };
+          }),
+          attributes: mapOrUndefined(qualityAttributes, buildAttribute),
+        };
+      })
       : undefined;
 
   const files = execResult("SELECT * FROM file WHERE kit_guid = ?", [kit.guid]);
   kit.files =
     files.length > 0
       ? files.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          mime: toUndefined(row.mime),
-          remote: toUndefined(row.remote_url),
-          folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
-          size: row.size,
-          hash: row.hash,
-          createdAt: row.created,
-          updatedAt: row.updated,
-        }))
+        guid: row.guid,
+        name: row.name,
+        mime: toUndefined(row.mime),
+        remote: toUndefined(row.remote_url),
+        folder: row.folder_guid ? { guid: row.folder_guid } : undefined,
+        size: row.size,
+        hash: row.hash,
+        createdAt: row.created,
+        updatedAt: row.updated,
+      }))
       : undefined;
 
   const folders = execResult("SELECT * FROM folder WHERE kit_guid = ?", [kit.guid]);
@@ -6076,10 +6066,10 @@ const sqliteToKit = async (db: any): Promise<Kit> => {
   kit.authors =
     authors.length > 0
       ? authors.map((row: any) => ({
-          guid: row.guid,
-          name: row.name,
-          email: toUndefined(row.email),
-        }))
+        guid: row.guid,
+        name: row.name,
+        email: toUndefined(row.email),
+      }))
       : undefined;
 
   const concepts = execResult("SELECT * FROM concept WHERE kit_guid = ?", [kit.guid]);

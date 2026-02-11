@@ -13,10 +13,8 @@
         "finished": "2026-02-05 10:53:15"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Move schema.graphql and queries from semio-repo/cli to semio-repo/graphql. Fix the typo directory semio-repo/grapqhl. Update all references.",
       "llm": "opus-4-5",
@@ -538,10 +536,8 @@
         "finished": "2026-02-05 10:58:49"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Fix: move files to semio-repo/graphql/ directly, not semio-repo/graphql/repo/",
       "llm": "opus-4-5",
@@ -1063,10 +1059,8 @@
         "finished": "2026-02-06 01:41:23"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Fix VSCode extension codegen.ts which still references ../go/schema.graphql",
       "llm": "opus-4-5",

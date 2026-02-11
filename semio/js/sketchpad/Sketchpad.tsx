@@ -10,12 +10,10 @@
 // it under the terms of the GNU Lesser General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -15634,14 +15632,14 @@ const LayoutWrapper: FC = () => {
     });
 
     Object.keys(groups).forEach(key => {
-        groups[key].sort((a,b) => (a.toolbarGroup?.order ?? 0) - (b.toolbarGroup?.order ?? 0));
+      groups[key].sort((a, b) => (a.toolbarGroup?.order ?? 0) - (b.toolbarGroup?.order ?? 0));
     });
     return groups;
   }, [toolbarSections]);
 
   const toggleToolbarGroup = useCallback((id: string) => {
     setActiveToolbarGroup(prev => {
-        return prev === id ? null : id;
+      return prev === id ? null : id;
     });
   }, []);
 
@@ -15837,13 +15835,13 @@ const LayoutWrapper: FC = () => {
             }
             toolbar={
               panelVisibility.toolbar ||
-              appType === "type" ||
-              appType === "design" ||
-              appType === "feedback" ||
-              appType === "kit" ||
-              appType === "home" ||
-              appType === "quality" ||
-              appType === "docs" ? (
+                appType === "type" ||
+                appType === "design" ||
+                appType === "feedback" ||
+                appType === "kit" ||
+                appType === "home" ||
+                appType === "quality" ||
+                appType === "docs" ? (
                 toolbarSections.length > 0 ? (
                   <div role="toolbar" id="semio.sketchpad.toolbar" className="absolute bottom-1.5 left-0 right-0 flex justify-center pointer-events-none h-[40px] px-2">
                     <div className="flex gap-single items-center pointer-events-auto max-w-[calc(100vw-2rem)] overflow-hidden shrink-0">

@@ -20,11 +20,131 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 ## Later
 
+sketchpad:
+- Unify tools and commands
+
 elements:
 - Update tree to not have sections but every section should have a tree. A tab should have multiple sections. A side panel has multiple tabs.
 - Id system should be slugged to make sure no illegal characters are used.
 
 ## History
+
+All `#region <SECTIONNAME>` and `#endregion <SECTIONNAME>` for sections should be replaced with `// #region 🔖<SECTIONNAME>` and `// #endregion 🔖<SECTIONNAME>` respectively. Add a policy
+
+semio repo cli:
+The fix mechanism is not working properly. All emojis with a variation selector (such as VS15 / text presentation) should be removed and instead show the colorful emoji. Make sure to extend the existing tests to make sure after fix, just plain emojis are left.
+
+e.g 🏗,⌨,🖱,⚙,⚖,🏷,🛠,✂,🛡 should be 🏗️,⌨️,🖱️,⚙️,⚖️,🏷️,🛠️,✂️,🛡️
+e.g. this should not be possible:
+```go
+const (
+	EmojiRepo                = "🌍"
+	EmojiProjects            = "🏗"
+	EmojiProjectUser         = "👤"
+	EmojiProjectInfra        = "🧰"
+	EmojiProjectResearch     = "🔬"
+	EmojiBundles             = "📦"
+	EmojiBundleLibrary       = "📚"
+	EmojiBundleSchema        = "🛂"
+	EmojiBundleBinary        = "⌨"
+	EmojiBundleUI            = "🖱"
+	EmojiBundleExample       = "📔"
+	EmojiBundleSite          = "🌐"
+	EmojiBundleAssets        = "🏪"
+	EmojiFolders             = "📁"
+	EmojiFolderOrg           = "🗃"
+	EmojiFolderRequired      = "📁"
+	EmojiFiles               = "📄"
+	EmojiFileCode            = "💻"
+	EmojiFileTest            = "🧪"
+	EmojiFileScript          = "📜"
+	EmojiFileDocs            = "📃"
+	EmojiFileConfig          = "⚙"
+	EmojiFileResource        = "💾"
+	EmojiFileLicense         = "⚖"
+	EmojiSections            = "🔖"
+	EmojiSection             = "🔖"
+	EmojiDefinitions         = "🏷"
+	EmojiDefinitionImpl      = "🛠"
+	EmojiDefinitionInterface = "✂"
+	EmojiDefinitionConstant  = "🪨"
+	EmojiTickets             = "🎫"
+	EmojiTicket              = "🎫"
+	EmojiGoals               = "🎯"
+	EmojiGoal                = "🎯"
+	EmojiDrafts              = "✍"
+	EmojiDraft               = "✍"
+	EmojiTodos               = "📝"
+	EmojiTodo                = "📝"
+	EmojiPolicies            = "🛡"
+	EmojiPolicy              = "🛡"
+	EmojiViolationKinds      = "🚫"
+	EmojiViolationKind       = "🚫"
+	EmojiViolation           = "🚫"
+	EmojiContributors        = "👤"
+	EmojiContributor         = "👤"
+	EmojiCommits             = "🔀"
+	EmojiCommit              = "🔀"
+)
+```
+but it should be:
+```go
+const (
+	EmojiRepo                = "🌍"
+	EmojiProjects            = "🏗️"
+	EmojiProjectUser         = "👤"
+	EmojiProjectInfra        = "🧰"
+	EmojiProjectResearch     = "🔬"
+	EmojiBundles             = "📦"
+	EmojiBundleLibrary       = "📚"
+	EmojiBundleSchema        = "🛂"
+	EmojiBundleBinary        = "⌨️"
+	EmojiBundleUI            = "🖱️"
+	EmojiBundleExample       = "📔"
+	EmojiBundleSite          = "🌐"
+	EmojiBundleAssets        = "🏪"
+	EmojiFolders             = "📁"
+	EmojiFolderOrg           = "🗃️"
+	EmojiFolderRequired      = "📁"
+	EmojiFiles               = "📄"
+	EmojiFileCode            = "💻"
+	EmojiFileTest            = "🧪"
+	EmojiFileScript          = "📜"
+	EmojiFileDocs            = "📃"
+	EmojiFileConfig          = "⚙️"
+	EmojiFileResource        = "💾"
+	EmojiFileLicense         = "⚖️"
+	EmojiSections            = "🔖"
+	EmojiSection             = "🔖"
+	EmojiDefinitions         = "🏷️"
+	EmojiDefinitionImpl      = "🛠️"
+	EmojiDefinitionInterface = "✂️️"
+	EmojiDefinitionConstant  = "🪨"
+	EmojiTickets             = "🎫"
+	EmojiTicket              = "🎫"
+	EmojiGoals               = "🎯"
+	EmojiGoal                = "🎯"
+	EmojiDrafts              = "✍"
+	EmojiDraft               = "✍"
+	EmojiTodos               = "📝"
+	EmojiTodo                = "📝"
+	EmojiPolicies            = "🛡️️"
+	EmojiPolicy              = "🛡️️"
+	EmojiViolationKinds      = "🚫"
+	EmojiViolationKind       = "🚫"
+	EmojiViolation           = "🚫"
+	EmojiContributors        = "👤"
+	EmojiContributor         = "👤"
+	EmojiCommits             = "🔀"
+	EmojiCommit              = "🔀"
+)
+```
+
+semio-repo cli:
+The fix mechanism is not working properly.
+The comment fix is removing too lines. All linter or formatter specific comments should be ignored. Make sure to support all languages and frameworks. e.g. in python `# noqa: E402, F401` is currently removed.
+
+
 
 All script files (script files 📜 are programming files with a shebang header. programming files that are part of a bundle and are not exectuable are code files 💻) have a header to run them e.g. `#!/usr/bin/env python`, `#!/usr/bin/env tsx` or `#!/usr/bin/env sh`. They are not correctly identified for all languages and remove when running `./semio-repo/cli/cli fix`.
 
@@ -163,26 +283,111 @@ e.g. I get:
     at async $Ujc.openEditor (vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:993:62861)
     at async vscode-file://vscode-app/c:/Users/Ueli/AppData/Local/Programs/Windsurf/resources/app/out/vs/workbench/workbench.desktop.main.js:1105:42321
 
+Create a `generate docs` command that generates 
+
+Make sure to every single project, bundle, folder, file, section and definition has a summary, specs, todos and docs. Files additionally have id, contributors, license.
+
+The following violation kinds should be extended/implemented/refactored/changed:
+- Code
+  - File
+    - Missing Header Region # Autofixable
+    - Wrong Header Region Format
+    - Missing Id # Autofixable
+    - Wrong Id # Autofixable
+    - Missing Contributors
+    - Missing Summary
+    - Missing License # Autofixable from the bundle license file
+    - Wrong License # Autofixable from the bundle license file
+    - Missing Specs
+    - Missing Docs
+  - Section
+    - Wrong Format
+    - Missing Summary
+    - Missing Specs
+    - Missing Docs
+  - Definition
+    - Wrong Format
+    - Missing Summary
+    - Missing Specs
+    - Missing Docs
 
 
-The summaries and docs are currently separated from the source code. It should be merged into the source code. Introduce a new violation kind for the code policy that checks if the summary and docs are correct (for project, bundle, folder, file, section and definition).
-The summary and docs that affect a bundle should be placed in a `README.md` file at the root of the bundle.
-The summary and docs that affect a folder should be placed in a `README.md` file at the root of the folder (a bundle root folder has no summary and specs because they are bundle-wide. same for project root folders)
-The summary and docs that affect a file should be placed in the header summary section.
-The summary and docs that affect a section should be placed under the section start.
-The summary and docs that affect a definition should be placed in the definition docstring. Use all language native docstring mechanism.
+The information about a bundle should be placed in a `README.md` file at the root of the bundle.
+The information about a folder should be placed in a `README.md` file at the root of the folder (a bundle root folder has no information because they are bundle-wide. Same for project root folders.)
+The information about a file should be placed in the header section.
+The information about a section should be placed under the section start.
+The information about a definition should be placed in the definition docstring. Use all language native docstring mechanism.
 
-Make sure to completely migrate all existing summaries from the `AGENTS.md` and `README.md` into the proper location with the new format. The `# Codebase` section in `AGENTS.md` should be completely migrated. The `Ecosystems` and `Bundles` sections in `README.md` should be completely migrated.
+Implement and test everything for every language. Once you are done setting up the mechanism, check the violation report until all projects, bundles, folders, files, sections and definitions have the correct information.
+
+e.g. in README.md for bundles and folders:
+```md
+## [<ID>](<URI>)
+
+<BUNDLEORFOLDERSUMMARY>
+
+### Specs
+
+<BUNDLEORFOLDERSPECS>
+<BUNDLEORFOLDERSPECS>
+ …
+
+### TODOs
+
+- TODO: <BUNDLEORFOLDERTODO>
+- TODO: <BUNDLEORFOLDERTODO>
+ …
+
+### Docs
+
+<BUNDLEORFOLDERDOCS>
+<BUNDLEORFOLDERDOCS>
+ …
+```
 
 e.g. in typescript:
 ```ts
+// #region 🔖Header
+
+// [<FILEID>](<FILEURI>)
+ 
+// <FILECONTRIBUTOR>
+// <FILECONTRIBUTOR>
+//  …
+
+// <FILELICENSE>
+// <FILELICENSE>
+//  …
+
+// <FILESUMMARY>
+
+// <FILESPECS>
+// <FILESPECS>
+//  …
+
+// TODO: <FILETODO>
+// TODO: <FILETODO>
+//  …
+
+// <FILEDOCS>
+// <FILEDOCS>
+//  …
+
+// #endregion 🔖Header
+
 
 // #region 🔖<SECTIONNAME>
 
-// <SUMMARY>
+// [<SECTIONID>](<SECTIONURI>)
 
-// <SECTIONREQUIREMENT>
-// <SECTIONREQUIREMENT>
+// <SECTIONSUMMARY>
+
+// <SECTIONSPECS>
+// <SECTIONSPECS>
+//  …
+
+// TODO: <SECTIONTODO>
+// TODO: <SECTIONTODO>
 //  …
 
 // <SECTIONDOCS>
@@ -190,10 +395,16 @@ e.g. in typescript:
 //  …
 
 /**
- * <SUMMARY>
+ * [<DEFINITIONID>](<DEFINITIONURI>)
  * 
- * <DEFINITIONREQUIREMENT1>
- * <DEFINITIONREQUIREMENT2>
+ * <DEFINITIONSUMMARY>
+ * 
+ * <DEFINITIONSPECS>
+ * <DEFINITIONSPECS>
+ *  …
+ * 
+ * TODO: <DEFINITIONTODO>
+ * TODO: <DEFINITIONTODO>
  *  …
  * 
  * <DEFINITIONDOCS>
@@ -208,6 +419,8 @@ e.g.
 ```ts
 
 // #region 🔖State Managment
+
+// [🔖semio/js/sketchpad/Design.tsx#State Managment#Store](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE)
 
 // There MUST be two mechnasism for state which interact together: local and shared.
 

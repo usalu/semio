@@ -16,10 +16,8 @@
         "finished": "2026-02-05 13:10:57"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "The sync github mechanism is not complete. It should sync all local tickets and goals. This means checking that the title matches, checking that the status matches, checking that the parent matches. Whenever something doesnt match, it should be changed.",
       "llm": "gemini-3-flash",

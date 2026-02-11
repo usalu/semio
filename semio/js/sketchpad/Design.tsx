@@ -10,12 +10,10 @@
 // it under the terms of the GNU Lesser General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
-
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 // GNU Lesser General Public License for more details.
-
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
@@ -2981,74 +2979,74 @@ export const HandTool: Tool<DesignAppState> = {
 export const DesignAppTools: Tool<DesignAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, LassoRectangularTool, LassoFreeformTool, HandTool];
 
 export const DesignSelectSettings: FC = () => {
-    const [activeTool, setActiveTool] = useDesignAppActiveTool();
-    const additiveLabel = useLabel("semio.sketchpad.app.design.tools.select.additive");
-    const subtractiveLabel = useLabel("semio.sketchpad.app.design.tools.select.subtractive");
-    const intersectLabel = useLabel("semio.sketchpad.app.design.tools.select.intersect");
+  const [activeTool, setActiveTool] = useDesignAppActiveTool();
+  const additiveLabel = useLabel("semio.sketchpad.app.design.tools.select.additive");
+  const subtractiveLabel = useLabel("semio.sketchpad.app.design.tools.select.subtractive");
+  const intersectLabel = useLabel("semio.sketchpad.app.design.tools.select.intersect");
 
-    useEffect(() => {
-        if (activeTool === ToolKind.HAND && setActiveTool) {
-            setActiveTool(ToolKind.SELECTION_NORMAL);
-        }
-    }, [setActiveTool]);
+  useEffect(() => {
+    if (activeTool === ToolKind.HAND && setActiveTool) {
+      setActiveTool(ToolKind.SELECTION_NORMAL);
+    }
+  }, [setActiveTool]);
 
-    return (
-       <div className="flex shrink-0 items-center gap-single h-full px-single">
-         <Toggle 
-            id="semio.sketchpad.app.design.tools.select.additive"
-            icon={<AddIcon className="size-tiny" />}
-            text={additiveLabel}
-            pressed={activeTool === ToolKind.SELECTION_ADDITIVE}
-            onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_ADDITIVE : ToolKind.SELECTION_NORMAL)}
-         />
-         <Toggle 
-            id="semio.sketchpad.app.design.tools.select.subtractive"
-            icon={<RemoveIcon className="size-tiny" />}
-            text={subtractiveLabel}
-            pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
-            onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
-         />
-         <Toggle 
-            id="semio.sketchpad.app.design.tools.select.intersect"
-            icon={<IntersectIcon className="size-tiny" />}
-            text={intersectLabel}
-            pressed={activeTool === ToolKind.SELECTION_INTERSECT}
-            onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
-         />
-       </div>
-    );
+  return (
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.additive"
+        icon={<AddIcon className="size-tiny" />}
+        text={additiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_ADDITIVE}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_ADDITIVE : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.subtractive"
+        icon={<RemoveIcon className="size-tiny" />}
+        text={subtractiveLabel}
+        pressed={activeTool === ToolKind.SELECTION_SUBTRACTIVE}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_SUBTRACTIVE : ToolKind.SELECTION_NORMAL)}
+      />
+      <Toggle
+        id="semio.sketchpad.app.design.tools.select.intersect"
+        icon={<IntersectIcon className="size-tiny" />}
+        text={intersectLabel}
+        pressed={activeTool === ToolKind.SELECTION_INTERSECT}
+        onPressedChange={(pressed) => setActiveTool && setActiveTool(pressed ? ToolKind.SELECTION_INTERSECT : ToolKind.SELECTION_NORMAL)}
+      />
+    </div>
+  );
 };
 
 export const DesignHandSettings: FC = () => {
-    const [activeTool, setActiveTool] = useDesignAppActiveTool();
+  const [activeTool, setActiveTool] = useDesignAppActiveTool();
 
-    useEffect(() => {
-        if (activeTool !== ToolKind.HAND && setActiveTool) {
-            setActiveTool(ToolKind.HAND);
-        }
-    }, [setActiveTool]);
+  useEffect(() => {
+    if (activeTool !== ToolKind.HAND && setActiveTool) {
+      setActiveTool(ToolKind.HAND);
+    }
+  }, [setActiveTool]);
 
-    return null;
+  return null;
 };
 
 export const DesignLassoSettings: FC = () => {
-    const [activeTool, setActiveTool] = useDesignAppActiveTool();
-    const rectangularLabel = useLabel("semio.sketchpad.app.design.tools.lasso.rectangular");
-    const freeformLabel = useLabel("semio.sketchpad.app.design.tools.lasso.freeform");
+  const [activeTool, setActiveTool] = useDesignAppActiveTool();
+  const rectangularLabel = useLabel("semio.sketchpad.app.design.tools.lasso.rectangular");
+  const freeformLabel = useLabel("semio.sketchpad.app.design.tools.lasso.freeform");
 
-    return (
-       <div className="flex shrink-0 items-center gap-single h-full px-single">
-          <ToggleGroup 
-            items={[
-                { value: String(ToolKind.LASSO_RECTANGULAR), icon: <DiagramIcon className="size-tiny" />, text: rectangularLabel, id: "semio.sketchpad.app.design.tools.lasso.rectangular" },
-                { value: String(ToolKind.LASSO_FREEFORM), icon: <SceneIcon className="size-tiny" />, text: freeformLabel, id: "semio.sketchpad.app.design.tools.lasso.freeform" }
-            ]}
-            value={activeTool !== undefined ? [String(activeTool)] : []}
-            onValueChange={(vals) => vals[0] && setActiveTool && setActiveTool(Number(vals[0]) as ToolKind)}
-            kind="single"
-         />
-       </div>
-    );
+  return (
+    <div className="flex shrink-0 items-center gap-single h-full px-single">
+      <ToggleGroup
+        items={[
+          { value: String(ToolKind.LASSO_RECTANGULAR), icon: <DiagramIcon className="size-tiny" />, text: rectangularLabel, id: "semio.sketchpad.app.design.tools.lasso.rectangular" },
+          { value: String(ToolKind.LASSO_FREEFORM), icon: <SceneIcon className="size-tiny" />, text: freeformLabel, id: "semio.sketchpad.app.design.tools.lasso.freeform" }
+        ]}
+        value={activeTool !== undefined ? [String(activeTool)] : []}
+        onValueChange={(vals) => vals[0] && setActiveTool && setActiveTool(Number(vals[0]) as ToolKind)}
+        kind="single"
+      />
+    </div>
+  );
 };
 
 // #endregion Tools
@@ -4856,7 +4854,7 @@ const ConnectorHandle: React.FC<ConnectorHandleProps> = ({ connector, pieceId, s
       onPointerEnter={() => {
         if (connector.guid && hoverPort) hoverPort(pieceId, connector.guid);
       }}
-      onPointerLeave={() => {}}
+      onPointerLeave={() => { }}
     />
   );
 };
@@ -6264,7 +6262,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   activeToolRef.current = activeTool;
 
   const onNodeClick = useCallback(
-    (e: React.MouseEvent, node: DiagramNode) => {},
+    (e: React.MouseEvent, node: DiagramNode) => { },
     [],
   );
 
@@ -6284,12 +6282,12 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
   );
 
   const onEdgeClick = useCallback(
-    (e: React.MouseEvent, edge: DiagramEdge) => {},
+    (e: React.MouseEvent, edge: DiagramEdge) => { },
     [],
   );
 
   const onPaneClick = useCallback(
-    (e: React.MouseEvent) => {},
+    (e: React.MouseEvent) => { },
     [],
   );
 
@@ -7095,86 +7093,86 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
       <SelectedConnectorContext.Provider value={selectedConnector}>
         <SelectedConnectorPortContext.Provider value={selectedConnectorPortGuid}>
           <div id="semio.sketchpad.app.design.canvas.diagram" data-diagram-id={diagramId} className="h-full w-full relative" ref={setDropZoneRef}>
-          <style>{`
+            <style>{`
             [data-diagram-id="${diagramId}"][data-panning="true"] .react-flow__node,
             [data-diagram-id="${diagramId}"][data-panning="true"] .react-flow__edge {
               pointer-events: none !important;
             }
           `}</style>
-          <Diagram
-            nodes={nodes}
-            edges={edges}
-            onNodesChangeReactFlow={onNodesChangeReactFlow}
-            nodeTypes={nodeComponents as NodeTypes}
-            edgeTypes={edgeComponents as EdgeTypes}
-            connectionMode="loose"
-            connectionLineComponent={ConnectionConnectionLine}
-            elementsSelectable={true}
-            nodesFocusable={true}
-            edgesFocusable={true}
-            nodesDraggable={true}
-            minZoom={0.1}
-            defaultZoom={1}
-            maxZoom={12}
-            fitView={false}
-            panOnDrag={[1, 2]}
-            selectionOnDrag={true}
-            zoomOnDoubleClick={false}
-            onSelectionChange={onSelectionChange}
-            onSelectionStart={onSelectionStart}
-            onSelectionEnd={onSelectionEnd}
-            onNodeClick={onNodeClick as any}
-            onNodeDoubleClick={onNodeDoubleClick as any}
-            onNodeMouseEnter={onNodeMouseEnter as any}
-            onNodeMouseLeave={onNodeMouseLeave as any}
-            onEdgeClick={onEdgeClick as any}
-            onNodeDragStart={onNodeDragStart as any}
-            onNodeDrag={onNodeDrag as any}
-            onNodeDragStop={onNodeDragStop as any}
-            onPaneClick={onPaneClick}
-            onPaneDoubleClick={onDoubleClick}
-            onMoveStart={onMoveStart}
-            onMoveEnd={onMoveEnd}
-            onConnect={onConnect}
-            reactFlowInstanceRef={reactFlowInstanceRef}
-            onInit={(instance) => {
-              if (reactFlowInstanceRef) {
-                reactFlowInstanceRef.current = instance;
-              }
-              const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
-              if (diagramElement) {
-                (diagramElement as any).__reactFlowInstance = instance;
-              }
-              const isAtDefaultOrigin = savedDiagramCenter && savedDiagramCenter.u === 0 && savedDiagramCenter.v === 0;
-              if (!savedDiagramCenter || isAtDefaultOrigin) {
-                isUpdatingViewportRef.current = true;
-                setTimeout(() => {
-                  centerViewport();
+            <Diagram
+              nodes={nodes}
+              edges={edges}
+              onNodesChangeReactFlow={onNodesChangeReactFlow}
+              nodeTypes={nodeComponents as NodeTypes}
+              edgeTypes={edgeComponents as EdgeTypes}
+              connectionMode="loose"
+              connectionLineComponent={ConnectionConnectionLine}
+              elementsSelectable={true}
+              nodesFocusable={true}
+              edgesFocusable={true}
+              nodesDraggable={true}
+              minZoom={0.1}
+              defaultZoom={1}
+              maxZoom={12}
+              fitView={false}
+              panOnDrag={[1, 2]}
+              selectionOnDrag={true}
+              zoomOnDoubleClick={false}
+              onSelectionChange={onSelectionChange}
+              onSelectionStart={onSelectionStart}
+              onSelectionEnd={onSelectionEnd}
+              onNodeClick={onNodeClick as any}
+              onNodeDoubleClick={onNodeDoubleClick as any}
+              onNodeMouseEnter={onNodeMouseEnter as any}
+              onNodeMouseLeave={onNodeMouseLeave as any}
+              onEdgeClick={onEdgeClick as any}
+              onNodeDragStart={onNodeDragStart as any}
+              onNodeDrag={onNodeDrag as any}
+              onNodeDragStop={onNodeDragStop as any}
+              onPaneClick={onPaneClick}
+              onPaneDoubleClick={onDoubleClick}
+              onMoveStart={onMoveStart}
+              onMoveEnd={onMoveEnd}
+              onConnect={onConnect}
+              reactFlowInstanceRef={reactFlowInstanceRef}
+              onInit={(instance) => {
+                if (reactFlowInstanceRef) {
+                  reactFlowInstanceRef.current = instance;
+                }
+                const diagramElement = document.querySelector(`[data-diagram-id="${diagramId}"]`);
+                if (diagramElement) {
+                  (diagramElement as any).__reactFlowInstance = instance;
+                }
+                const isAtDefaultOrigin = savedDiagramCenter && savedDiagramCenter.u === 0 && savedDiagramCenter.v === 0;
+                if (!savedDiagramCenter || isAtDefaultOrigin) {
+                  isUpdatingViewportRef.current = true;
                   setTimeout(() => {
-                    isUpdatingViewportRef.current = false;
-                  }, 200);
-                }, 100);
+                    centerViewport();
+                    setTimeout(() => {
+                      isUpdatingViewportRef.current = false;
+                    }, 200);
+                  }, 100);
+                }
+              }}
+              showControls={fullscreen && panelVisibility.toolbar}
+              showMinimap={fullscreen && panelVisibility.toolbar}
+              miniMapNodeComponent={MiniMapNode}
+              focusedItemId={focusedItemId}
+              onFocusComplete={() => setFocusedItemId(undefined)}
+              panels={
+                <>
+                  <ViewportPortal>
+                    <div className="pointer-events-none">⌞</div>
+                  </ViewportPortal>
+                  {others.map((presence, idx) => (
+                    <PresenceDiagram key={`presence-${idx}-${presence.name}-${presence.cursor?.u || 0}-${presence.cursor?.v || 0}`} {...presence} />
+                  ))}
+                </>
               }
-            }}
-            showControls={fullscreen && panelVisibility.toolbar}
-            showMinimap={fullscreen && panelVisibility.toolbar}
-            miniMapNodeComponent={MiniMapNode}
-            focusedItemId={focusedItemId}
-            onFocusComplete={() => setFocusedItemId(undefined)}
-            panels={
-              <>
-                <ViewportPortal>
-                  <div className="pointer-events-none">⌞</div>
-                </ViewportPortal>
-                {others.map((presence, idx) => (
-                  <PresenceDiagram key={`presence-${idx}-${presence.name}-${presence.cursor?.u || 0}-${presence.cursor?.v || 0}`} {...presence} />
-                ))}
-              </>
-            }
-          />
-          <HelperLines lines={helperLines} nodes={nodes} />
-          <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} />
-          <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} />
+            />
+            <HelperLines lines={helperLines} nodes={nodes} />
+            <ClusterMenu nodes={nodes} edges={edges} onCluster={onCluster} />
+            <ExpandMenu nodes={nodes} edges={edges} onExpand={onExpand} />
           </div>
         </SelectedConnectorPortContext.Provider>
       </SelectedConnectorContext.Provider>
