@@ -1,6 +1,6 @@
 {
   "title": "Fix Kit App Tests",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "get the kit app test to comply. dont remove any funtionality from the test.",
       "llm": "gemini-3-pro",

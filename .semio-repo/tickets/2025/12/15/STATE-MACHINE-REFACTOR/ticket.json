@@ -10,9 +10,8 @@
         "started": "2025-12-16T17:06:07.961Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "76900221ecf5cfb30a37d69fbb66abb3e0a0e45a",
       "prompt": "\u003e-",
       "llm": "opus-4-5"

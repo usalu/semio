@@ -16,9 +16,8 @@
         "finished": "2026-01-28T15:09:17.845043498Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
       "prompt": "Remove ticket progress command and deduplicate ticket.json fields",
       "llm": "gemini-3-pro",

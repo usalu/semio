@@ -16,9 +16,8 @@
         "finished": "2026-02-03T19:30:14.41809036Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Refactor the semio-repo/vscode extension sideview to consolidate into 'Monorepo' and 'Filter' sections with specific navigation hierarchy and filtering capabilities. Extend tests to cover new features.",
       "llm": "sonnet-4-5",

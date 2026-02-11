@@ -16,10 +16,8 @@
         "finished": "2026-02-09 23:36:38"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
       "prompt": "Create README.md files for 9 bundles missing them: semio/desktop, semio/docs, semio/play, semio/assets, semio-repo/server, semio/go, semio/rs, semio/sketchpad, semio/sqlite. Each with Summary, Docs, Specs sections.",
       "llm": "opus-4-6",

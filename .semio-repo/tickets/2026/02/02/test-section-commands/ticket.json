@@ -16,9 +16,8 @@
         "finished": "2026-02-02T21:15:59.901527472Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Make sure that rename, extract and integrate section commands are tested for every single language for the semio repo cli binary.",
       "llm": "gemini-3-pro",

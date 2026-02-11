@@ -1,6 +1,6 @@
 {
   "title": "Fix D3 Force Diagram Node Edge Alignment",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix D3 Force diagram node-edge alignment issue where node avatars appear smaller than their edge connection circles, creating visual gaps. Edges connect to an invisible larger circle while the rendered node is smaller. Need to ensure node avatar radius matches edge endpoint calculation radius, verify coordinate system consistency, and ensure uniform node dimensions across simulation, rendering, and interaction handling.",
       "llm": "opus-4-5",

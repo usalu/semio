@@ -16,9 +16,8 @@
         "finished": "2026-02-03T08:50:00.799004362Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "Refactor the filter section in the semio-repo sideview of vscode to match the specified structure. Toggles should be menu items, not tree items. update tests.",
       "llm": "gemini-3-pro"

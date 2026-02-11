@@ -1,6 +1,6 @@
 {
   "title": "Separate Hand Tool in Toolbar",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Separate the hand tool from the selection group in the Sketchpad toolbar and place it to the left of the select tool.",
       "llm": "gemini-3-pro",

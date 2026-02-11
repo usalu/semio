@@ -16,10 +16,8 @@
         "finished": "2026-02-10 10:19:21"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "84678f479236c871716237dedcd7e67878643934",
       "prompt": "Fix all semiorepo:// URIs to resolve correctly in the VS Code extension. Clicking URIs and using semio-repo Navigate to command should navigate to the correct resource.",
       "llm": "opus-4-6",

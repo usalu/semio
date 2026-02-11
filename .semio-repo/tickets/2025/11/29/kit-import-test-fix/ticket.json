@@ -10,9 +10,8 @@
         "started": "2025-12-16T17:06:07.768Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Fix Kit Import Playwright Test",
       "llm": "sonnet-4"

@@ -1,6 +1,6 @@
 {
   "title": "Minimal Design Force Overlap Prevention",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "implement D3 force diagram in the design app like kit app, primarily to prevent node overlap, with minimal forces so intentional placement remains easy",
       "llm": "gpt-5-2-codex",

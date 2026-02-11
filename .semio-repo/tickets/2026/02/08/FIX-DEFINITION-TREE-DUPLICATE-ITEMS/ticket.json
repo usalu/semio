@@ -16,10 +16,8 @@
         "finished": "2026-02-08 00:19:49"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "codex"
-      },
+      "system": "linux",
+      "client": "codex",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "semio vscode extension: definition tree items appear twice, with one set incorrectly marked as sections.",
       "llm": "gpt-5-3-codex",

@@ -1,13 +1,23 @@
 {
   "title": "Kit Diagram Fixes",
-  "iterations": [
+  "status": "closed",
+  "prompt": "",
+  "summary": "Fixed Kit diagram pan/zoom, edge alignment, and styling parity with Design app.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/216"
+  },
+  "started": "0001-01-01T00:00:00Z",
+  "interactions": [
     {
+      "dates": {
+        "started": ""
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "86d699419815d98b01c413b9a7f515a727af586b",
       "prompt": "Fix Kit diagram pan/zoom, edge alignment, and styling parity with Design app.",
       "llm": "gemini-3-flash",
-      "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-01-26T16:37:45.839551654Z",
-      "commit": "86d699419815d98b01c413b9a7f515a727af586b",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -609,13 +619,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-26T16:38:23.450571851Z"
-  },
-  "summary": "Fixed Kit diagram pan/zoom, edge alignment, and styling parity with Design app.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/216"
-  }
+  ]
 }

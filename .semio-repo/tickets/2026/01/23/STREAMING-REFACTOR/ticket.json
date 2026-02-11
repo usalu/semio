@@ -13,9 +13,8 @@
         "finished": "2026-02-03T08:49:39.986270315Z"
       },
       "author": "Migration Script",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "",
       "prompt": "Migrated from legacy files"
     }

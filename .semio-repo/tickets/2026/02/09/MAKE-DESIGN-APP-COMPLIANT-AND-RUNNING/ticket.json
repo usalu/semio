@@ -1,6 +1,6 @@
 {
   "title": "Make Design App Compliant and Running",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "get the design app comliant and running",
       "llm": "gemini-3-pro",

@@ -2524,14 +2524,17 @@ func TestScanCommentsAutofix(t *testing.T) {
 }
 
 func TestEmojiVariationAutofix(t *testing.T) {
-	t.Run("strip emoji variation", func(t *testing.T) {
+	t.Run("fix emoji variation to colorful", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "This is a test \U0001F4BB\uFE0E with emoji variation.\nAnd another line \u2699\uFE0F with VS16."
-		expected := "This is a test \U0001F4BB with emoji variation.\nAnd another line \u2699 with VS16."
+		// 1F4BB (💻) + VS15 -> should become VS16
+		// 2699 (⚙) + VS16 -> should stay VS16
+		// 1F3D7 (🏗) (plain) -> should become VS16 (because it's text-default)
+		content := "This is a test \U0001F4BB\uFE0E with emoji variation.\nAnd another line \u2699\uFE0F with VS16.\nAnd a plain \U0001F3D7 construction."
+		expected := "This is a test \U0001F4BB\uFE0F with emoji variation.\nAnd another line \u2699\uFE0F with VS16.\nAnd a plain \U0001F3D7\uFE0F construction."
 		testFile := "test_emoji.txt"
 		absPath := filepath.Join(tmpDir, testFile)
 		WriteTextFile(absPath, content)
@@ -2539,13 +2542,14 @@ func TestEmojiVariationAutofix(t *testing.T) {
 		violations := []Violation{
 			{Kind: ViolationCodeUnicodeEmojiVariation, Scope: testFile, Line: 1},
 			{Kind: ViolationCodeUnicodeEmojiVariation, Scope: testFile, Line: 2},
+			{Kind: ViolationCodeUnicodeEmojiVariation, Scope: testFile, Line: 3},
 		}
 		fixed, err := applyAutofixes(testFile, violations)
 		if err != nil {
 			t.Fatalf("applyAutofixes failed: %v", err)
 		}
-		if fixed != 2 {
-			t.Fatalf("expected 2 fixed, got %d", fixed)
+		if fixed != 3 {
+			t.Fatalf("expected 3 fixed, got %d", fixed)
 		}
 		got, _ := ReadTextFile(absPath)
 		if got != expected {
@@ -2856,8 +2860,8 @@ func TestPolicyTreeCommand(t *testing.T) {
 	if !strings.Contains(text, "code") {
 		t.Error("Expected policy tree output to contain 'code' policy")
 	}
-	if !strings.Contains(text, "code:header:missing-region") {
-		t.Error("Expected policy tree output to contain violation kind 'code:header:missing-region'")
+	if !strings.Contains(text, "Code#Header#Missing Region") {
+		t.Error("Expected policy tree output to contain violation kind 'Code#Header#Missing Region'")
 	}
 }
 
@@ -3769,8 +3773,8 @@ func TestGoalCreateAndCleanup(t *testing.T) {
 		if goal.Interactions[0].LLM != "opus-4-5" {
 			t.Errorf("expected LLM 'opus-4-5', got '%s'", goal.Interactions[0].LLM)
 		}
-		if goal.Interactions[0].System.Client != "claude-code" {
-			t.Errorf("expected Client 'claude-code', got '%s'", goal.Interactions[0].System.Client)
+		if goal.Interactions[0].Client != "claude-code" {
+			t.Errorf("expected Client 'claude-code', got '%s'", goal.Interactions[0].Client)
 		}
 	}
 
@@ -4115,6 +4119,23 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 	}
 	y, m, d, slug := parseTicketOpenResult(t, openOut)
 	defer os.RemoveAll(GetTicketPath(y, m, d, slug))
+	ticketPath := fmt.Sprintf("%04d/%02d/%02d/%s", y, m, d, slug)
+
+
+	_, reopenOpenErr, reopenOpenCmdErr := executeCommand(
+		"ticket", "reopen",
+		ticketPath,
+		"prompt",
+		"--cursor-chat",
+		"--sonnet-4-5",
+		"--no-github",
+	)
+	if reopenOpenCmdErr == nil {
+		t.Fatal("expected error when reopening an already-open ticket")
+	}
+	if !strings.Contains(reopenOpenErr, "ticket is already open") {
+		t.Errorf("expected 'ticket is already open' error, got: %s", reopenOpenErr)
+	}
 
 	closeOut, closeErr, err := executeCommand(
 		"ticket", "close",
@@ -4131,6 +4152,24 @@ func TestCliE2E_TicketLifecycle_Syntaxes_NoGithub(t *testing.T) {
 	}
 	if status := parseTicketCloseStatus(t, closeOut); status != "closed" {
 		t.Fatalf("expected closed status, got %s", status)
+	}
+
+
+	_, closeAgainErr, closeAgainCmdErr := executeCommand(
+		"ticket", "close",
+		"--no-github",
+		"--year", strconv.Itoa(y),
+		"--month", strconv.Itoa(m),
+		"--day", strconv.Itoa(d),
+		"--slug", slug,
+		"--summary", "E2E summary again",
+		"--files", fileRel,
+	)
+	if closeAgainCmdErr == nil {
+		t.Fatal("expected error when closing an already-closed ticket")
+	}
+	if !strings.Contains(closeAgainErr, "ticket is not open") {
+		t.Errorf("expected 'ticket is not open' error, got: %s", closeAgainErr)
 	}
 
 	reopenOut, reopenErr, err := executeCommand(
@@ -4174,9 +4213,27 @@ func TestCliE2E_GoalLifecycle_Syntaxes_NoGithub(t *testing.T) {
 	goalID := parseGoalCreateID(t, openOut)
 	defer os.RemoveAll(filepath.Join(GetRepoGoalsDir(), goalID))
 
+
+	_, reopenOpenErr, reopenOpenCmdErr := executeCommand("goal", "reopen", goalID, "prompt", "cursor-chat", "gpt-5-mini", "--no-github")
+	if reopenOpenCmdErr == nil {
+		t.Fatal("expected error when reopening an already-open goal")
+	}
+	if !strings.Contains(reopenOpenErr, "goal is already open") {
+		t.Errorf("expected 'goal is already open' error, got: %s", reopenOpenErr)
+	}
+
 	_, closeErr, err := executeCommand("goal", "close", goalID, "E2E Goal Summary", "--no-github")
 	if err != nil {
 		t.Fatalf("goal close failed: %v\nStderr: %s", err, closeErr)
+	}
+
+
+	_, closeAgainErr, closeAgainCmdErr := executeCommand("goal", "close", goalID, "E2E Goal Summary Again", "--no-github")
+	if closeAgainCmdErr == nil {
+		t.Fatal("expected error when closing an already-closed goal")
+	}
+	if !strings.Contains(closeAgainErr, "goal is already closed") {
+		t.Errorf("expected 'goal is already closed' error, got: %s", closeAgainErr)
 	}
 
 	_, reopenErr, err := executeCommand("goal", "reopen", goalID, "E2E Goal Reopen Prompt", "cursor-chat", "gpt-5-mini", "--no-github")
@@ -4368,6 +4425,24 @@ func TestCliWrongArgs_GoalReopen(t *testing.T) {
 	}
 }
 
+func TestCliWrongArgs_GoalChange(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"missing slug", []string{"goal", "change", "--no-github"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
 func TestCliWrongArgs_PolicyCheck(t *testing.T) {
 	tests := []struct {
 		name string
@@ -4437,6 +4512,9 @@ func TestCliWrongArgs_SectionOperations(t *testing.T) {
 		{"tree missing file", []string{"section", "tree"}},
 		{"create missing args", []string{"section", "create"}},
 		{"move missing args", []string{"section", "move"}},
+		{"delete missing args", []string{"section", "delete"}},
+		{"extract missing args", []string{"section", "extract"}},
+		{"integrate missing args", []string{"section", "integrate"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -4505,6 +4583,120 @@ func TestCliWrongArgs_GraphQL(t *testing.T) {
 	}
 }
 
+func TestCliWrongArgs_TodoOperations(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"create missing all", []string{"todo", "create"}},
+		{"create missing name", []string{"todo", "create", "some-parent"}},
+		{"change missing id", []string{"todo", "change"}},
+		{"delete missing id", []string{"todo", "delete"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			if stdout != "" {
+				t.Errorf("expected empty stdout on error, got: %s", stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_TopLevelOperations(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"move missing all args", []string{"move"}},
+		{"move missing target", []string{"move", "source"}},
+		{"extract missing all", []string{"extract"}},
+		{"integrate missing all", []string{"integrate"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			stdout, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s, got stdout: %s", tt.name, stdout)
+			}
+			if stdout != "" {
+				t.Errorf("expected empty stdout on error, got: %s", stdout)
+			}
+			_ = stderr
+		})
+	}
+}
+
+func TestCliWrongArgs_ErrorMessages(t *testing.T) {
+	tests := []struct {
+		name        string
+		args        []string
+		expectedErr string
+	}{
+
+		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing title"},
+		{"ticket open missing goal", []string{"ticket", "open", "--title", "T", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing goal"},
+		{"ticket close missing path", []string{"ticket", "close", "--no-github", "--summary", "s", "--files", "f"}, "missing ticket path"},
+		{"ticket close missing summary", []string{"ticket", "close", "--no-github", "--year", "2025", "--month", "1", "--day", "1", "--slug", "X", "--files", "f"}, "missing summary"},
+		{"ticket close missing files", []string{"ticket", "close", "--no-github", "--year", "2025", "--month", "1", "--day", "1", "--slug", "X", "--summary", "s"}, "missing files"},
+		{"ticket reopen missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing ticket path"},
+
+		{"goal open missing title", []string{"goal", "open", "--no-github"}, "missing title"},
+		{"goal close missing id", []string{"goal", "close", "--no-github"}, "missing goal id"},
+		{"goal close missing summary", []string{"goal", "close", "NONEXISTENT", "--no-github"}, "missing summary"},
+		{"goal reopen missing id", []string{"goal", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing goal id"},
+		{"goal reopen missing prompt", []string{"goal", "reopen", "NONEXISTENT", "--copilot-chat", "--opus-4-5", "--no-github"}, "missing prompt"},
+		{"goal reopen missing client", []string{"goal", "reopen", "NONEXISTENT", "prompt", "--opus-4-5", "--no-github"}, "missing client"},
+		{"goal reopen missing llm", []string{"goal", "reopen", "NONEXISTENT", "prompt", "--copilot-chat", "--no-github"}, "missing llm"},
+
+		{"todo create missing parent or name", []string{"todo", "create"}, "missing parent-id or name"},
+		{"todo create missing name only", []string{"todo", "create", "parent"}, "missing parent-id or name"},
+		{"todo change missing id", []string{"todo", "change"}, "missing id"},
+		{"todo delete missing id", []string{"todo", "delete"}, "missing id"},
+
+		{"folder create missing path", []string{"folder", "create"}, "missing path"},
+		{"folder move missing args", []string{"folder", "move"}, "missing"},
+		{"folder delete missing path", []string{"folder", "delete"}, "missing path"},
+
+		{"file create missing path", []string{"file", "create"}, "missing path"},
+		{"file move missing args", []string{"file", "move"}, "missing"},
+		{"file delete missing path", []string{"file", "delete"}, "missing path"},
+
+		{"section list missing file", []string{"section", "list"}, "missing file"},
+		{"section tree missing file", []string{"section", "tree"}, "missing file"},
+		{"section create missing args", []string{"section", "create"}, "missing"},
+		{"section move missing args", []string{"section", "move"}, "missing"},
+		{"section delete missing args", []string{"section", "delete"}, "missing file or name"},
+		{"section extract missing args", []string{"section", "extract"}, "missing source file, source section, or target file"},
+		{"section integrate missing args", []string{"section", "integrate"}, "missing source, target section, or target file"},
+
+		{"definition list missing file", []string{"definition", "list"}, "missing file"},
+
+		{"contributor add missing github", []string{"contributor", "add"}, "missing"},
+		{"contributor remove missing github", []string{"contributor", "remove"}, "missing"},
+
+		{"graphql missing query", []string{"graphql"}, "missing query"},
+
+		{"extract missing args", []string{"extract"}, "missing file, section, or target-file"},
+		{"integrate missing args", []string{"integrate"}, "missing file, target-file, or target-section"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			_, stderr, err := executeCommand(tt.args...)
+			if err == nil {
+				t.Fatalf("expected error for %s", tt.name)
+			}
+			if !strings.Contains(strings.ToLower(stderr), strings.ToLower(tt.expectedErr)) {
+				t.Errorf("expected stderr to contain %q, got: %s", tt.expectedErr, stderr)
+			}
+		})
+	}
+}
+
 func TestCliJsonPureData(t *testing.T) {
 	cmds := []struct {
 		name string
@@ -4561,9 +4753,27 @@ func TestCliJsonErrorsToStderr(t *testing.T) {
 		args []string
 	}{
 		{"ticket open missing title", []string{"ticket", "open", "--goal", "TEST", "--copilot-chat", "--opus-4-5", "--no-github"}},
+		{"ticket close missing path", []string{"ticket", "close", "--no-github", "--summary", "s", "--files", "f"}},
+		{"ticket reopen missing path", []string{"ticket", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}},
 		{"goal open missing title", []string{"goal", "open", "--no-github"}},
+		{"goal close missing id", []string{"goal", "close", "--no-github"}},
+		{"goal reopen missing id", []string{"goal", "reopen", "--copilot-chat", "--opus-4-5", "--no-github"}},
 		{"policy check missing id", []string{"policy", "check"}},
 		{"folder create missing path", []string{"folder", "create"}},
+		{"file create missing path", []string{"file", "create"}},
+		{"section list missing file", []string{"section", "list"}},
+		{"section delete missing args", []string{"section", "delete"}},
+		{"section extract missing args", []string{"section", "extract"}},
+		{"section integrate missing args", []string{"section", "integrate"}},
+		{"definition list missing file", []string{"definition", "list"}},
+		{"todo create missing args", []string{"todo", "create"}},
+		{"todo change missing id", []string{"todo", "change"}},
+		{"todo delete missing id", []string{"todo", "delete"}},
+		{"graphql missing query", []string{"graphql"}},
+		{"contributor add missing github", []string{"contributor", "add"}},
+		{"contributor remove missing github", []string{"contributor", "remove"}},
+		{"extract missing args", []string{"extract"}},
+		{"integrate missing args", []string{"integrate"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -4770,7 +4980,7 @@ func TestFormatResult_Additional(t *testing.T) {
 			"policy": map[string]interface{}{
 				"id":          "code",
 				"description": "Validates source file headers",
-				"kinds":       []interface{}{"code:header"},
+				"kinds":       []interface{}{"code/header"},
 			},
 		}
 		jsonBytes, _ := json.Marshal(payload)
@@ -5696,6 +5906,16 @@ func TestListCommands(t *testing.T) {
 			args:  []string{"project", "list"},
 			modes: []string{"", "json", "md", "text"},
 		},
+		{
+			name:  "violationKind list",
+			args:  []string{"violationKind", "list"},
+			modes: []string{"", "json", "md", "text"},
+		},
+		{
+			name:  "commit list",
+			args:  []string{"commit", "list", "--limit", "5"},
+			modes: []string{"", "json", "md", "text"},
+		},
 	}
 
 	for _, tt := range tests {
@@ -6328,8 +6548,8 @@ func TestArtifactIDAndURI(t *testing.T) {
 		{
 			name:    "violationKind",
 			kind:    "violationKind",
-			data:    map[string]interface{}{"id": "code:inline-comment"},
-			wantID:  fmt.Sprintf("%scode:inline-comment", emojiText(EmojiViolationKind)),
+			data:    map[string]interface{}{"id": "code/inline-comment"},
+			wantID:  fmt.Sprintf("%sCode#Inline Comment", emojiText(EmojiViolationKind)),
 			wantURI: "semiorepo://violationKind/CODE/INLINE-COMMENT",
 		},
 		{
@@ -6383,21 +6603,22 @@ func TestIdToUri(t *testing.T) {
 		want string
 	}{
 		{"repo", "🌍", "semiorepo://repo"},
-		{"projects", "🏗️", "semiorepo://projects"},
+		{"projects", "🏗", "semiorepo://projects"},
 		{"project user", "👤@semio", "semiorepo://project/@semio"},
 		{"project infra", "🧰@semio-repo", "semiorepo://project/@semio-repo"},
 		{"bundle", "📚semio/js", "semiorepo://bundle/semio/js"},
 		{"folder", "📁semio/js/src", "semiorepo://folder/semio/js/src"},
 		{"file", "📃test.txt", "semiorepo://file/test.txt"},
 		{"section", "🔖semio/js/src/Design.tsx#State Management#Design Store", "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE"},
-		{"definition", "🛠️semio/js/src/file.ts#Section§myFunc", "semiorepo://definition/semio/js/src/file.ts/SECTION/MYFUNC"},
+		{"definition", "🛠semio/js/src/file.ts#Section§myFunc", "semiorepo://definition/semio/js/src/file.ts/SECTION/MYFUNC"},
 		{"ticket", "🎫2025/02/04/test-ticket", "semiorepo://ticket/2025/02/04/test-ticket"},
 		{"ticket with status", "🎫2025/02/04/test-ticket?open", "semiorepo://ticket/2025/02/04/test-ticket"},
 		{"goal", "🎯R26-02/RUNNING-SKETCHPAD", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD"},
 		{"draft", "✍my-draft", "semiorepo://draft/MY-DRAFT"},
 		{"todo", "📝my-todo", "semiorepo://todo/my-todo"},
-		{"policy", "🛡️/code-hygiene", "semiorepo://policy/CODE-HYGIENE"},
-		{"violationKind", "🚫code:inline-comment", "semiorepo://violationKind/CODE/INLINE-COMMENT"},
+		{"policy", "🛡/code-hygiene", "semiorepo://policy/CODE-HYGIENE"},
+		{"violationKind two segments", "🚫Code#Inline Comment", "semiorepo://violationKind/CODE/INLINE-COMMENT"},
+		{"violationKind three segments", "🚫Code#Header#Missing Region", "semiorepo://violationKind/CODE/HEADER/MISSING-REGION"},
 		{"contributor", "👤usalu", "semiorepo://contributor/USALU"},
 		{"commit", "🔀abc123", "semiorepo://commit/ABC123"},
 		{"tickets collection", "🎫", "semiorepo://tickets"},
@@ -6421,7 +6642,7 @@ func TestUriToId(t *testing.T) {
 		want string
 	}{
 		{"repo", "semiorepo://repo", "🌍"},
-		{"projects", "semiorepo://projects", emojiText("🏗️")},
+		{"projects", "semiorepo://projects", emojiText("🏗")},
 		{"project", "semiorepo://project/@semio", "👤@semio"},
 		{"bundles", "semiorepo://bundles", "📦"},
 		{"bundle", "semiorepo://bundle/semio/js", "📚semio/js"},
@@ -6430,8 +6651,8 @@ func TestUriToId(t *testing.T) {
 		{"files", "semiorepo://files", "📄"},
 		{"file", "semiorepo://file/test.txt", "📄test.txt"},
 		{"section", "semiorepo://section/semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "🔖semio/js/src/Design.tsx#STATE-MANAGEMENT#DESIGN-STORE"},
-		{"definition single", "semiorepo://definition/semio/js/src/file.ts/MY-FUNC", "🛠️semio/js/src/file.ts§MY-FUNC"},
-		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/SECTION/MY-FUNC", "🛠️semio/js/src/file.ts#SECTION§MY-FUNC"},
+		{"definition single", "semiorepo://definition/semio/js/src/file.ts/MY-FUNC", emojiText("🛠") + "semio/js/src/file.ts§MY-FUNC"},
+		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/SECTION/MY-FUNC", emojiText("🛠") + "semio/js/src/file.ts#SECTION§MY-FUNC"},
 		{"tickets", "semiorepo://tickets", "🎫"},
 		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", "🎫2025/02/04/test-ticket"},
 		{"goals", "semiorepo://goals", "🎯"},
@@ -6440,10 +6661,11 @@ func TestUriToId(t *testing.T) {
 		{"draft", "semiorepo://draft/MY-DRAFT", "✍MY-DRAFT"},
 		{"todos", "semiorepo://todos", "📝"},
 		{"todo", "semiorepo://todo/my-todo", "📝my-todo"},
-		{"policies", "semiorepo://policies", "🛡️"},
-		{"policy", "semiorepo://policy/CODE-HYGIENE", "🛡️/code-hygiene"},
+		{"policies", "semiorepo://policies", emojiText("🛡")},
+		{"policy", "semiorepo://policy/CODE-HYGIENE", emojiText("🛡") + "/code-hygiene"},
 		{"violationKinds", "semiorepo://violationKinds", "🚫"},
-		{"violationKind", "semiorepo://violationKind/CODE/INLINE-COMMENT", "🚫code:inline-comment"},
+		{"violationKind two segments", "semiorepo://violationKind/CODE/INLINE-COMMENT", "🚫Code#Inline Comment"},
+		{"violationKind three segments", "semiorepo://violationKind/CODE/HEADER/MISSING-REGION", "🚫Code#Header#Missing Region"},
 		{"contributors", "semiorepo://contributors", "👤"},
 		{"contributor", "semiorepo://contributor/USALU", "👤usalu"},
 		{"commits", "semiorepo://commits", "🔀"},
@@ -6538,8 +6760,8 @@ func TestViolationKindIdToUriPath(t *testing.T) {
 		want string
 	}{
 		{"single segment", "code", "CODE"},
-		{"two segments", "code:inline-comment", "CODE/INLINE-COMMENT"},
-		{"three segments", "code:header:missing-region", "CODE/HEADER/MISSING-REGION"},
+		{"two segments", "code/inline-comment", "CODE/INLINE-COMMENT"},
+		{"three segments", "code/header/missing-region", "CODE/HEADER/MISSING-REGION"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -6558,14 +6780,100 @@ func TestViolationKindUriPathToId(t *testing.T) {
 		want    string
 	}{
 		{"single segment", "CODE", "code"},
-		{"two segments", "CODE/INLINE-COMMENT", "code:inline-comment"},
-		{"three segments", "CODE/HEADER/MISSING-REGION", "code:header:missing-region"},
+		{"two segments", "CODE/INLINE-COMMENT", "code/inline-comment"},
+		{"three segments", "CODE/HEADER/MISSING-REGION", "code/header/missing-region"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := ViolationKindUriPathToId(tt.uriPath)
 			if got != tt.want {
 				t.Errorf("ViolationKindUriPathToId(%q) = %q, want %q", tt.uriPath, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTitleizeSlug(t *testing.T) {
+	tests := []struct {
+		name string
+		slug string
+		want string
+	}{
+		{"single word", "code", "Code"},
+		{"two words", "inline-comment", "Inline Comment"},
+		{"three words", "missing-region-marker", "Missing Region Marker"},
+		{"already titleized", "Code", "Code"},
+		{"uppercase input", "CODE", "Code"},
+		{"empty", "", ""},
+		{"single char", "a", "A"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := TitleizeSlug(tt.slug)
+			if got != tt.want {
+				t.Errorf("TitleizeSlug(%q) = %q, want %q", tt.slug, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestViolationKindPathToIdValue(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+		want string
+	}{
+		{"single segment", "code", "Code"},
+		{"two segments", "code/inline-comment", "Code#Inline Comment"},
+		{"three segments", "code/header/missing-region", "Code#Header#Missing Region"},
+		{"four segments", "code/header/region/nested", "Code#Header#Region#Nested"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ViolationKindPathToIdValue(tt.path)
+			if got != tt.want {
+				t.Errorf("ViolationKindPathToIdValue(%q) = %q, want %q", tt.path, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestViolationKindIdValueToPath(t *testing.T) {
+	tests := []struct {
+		name  string
+		value string
+		want  string
+	}{
+		{"single segment", "Code", "code"},
+		{"two segments", "Code#Inline Comment", "code/inline-comment"},
+		{"three segments", "Code#Header#Missing Region", "code/header/missing-region"},
+		{"four segments", "Code#Header#Region#Nested", "code/header/region/nested"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := ViolationKindIdValueToPath(tt.value)
+			if got != tt.want {
+				t.Errorf("ViolationKindIdValueToPath(%q) = %q, want %q", tt.value, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestViolationKindPathIdValueRoundTrip(t *testing.T) {
+	tests := []struct {
+		name string
+		path string
+	}{
+		{"single segment", "code"},
+		{"two segments", "code/inline-comment"},
+		{"three segments", "code/header/missing-region"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			idValue := ViolationKindPathToIdValue(tt.path)
+			gotPath := ViolationKindIdValueToPath(idValue)
+			if gotPath != tt.path {
+				t.Errorf("round trip failed: path %q -> idValue %q -> path %q", tt.path, idValue, gotPath)
 			}
 		})
 	}
@@ -6578,7 +6886,7 @@ func TestIdUriRoundTrip(t *testing.T) {
 		uri  string
 	}{
 		{"policy", fmt.Sprintf("%s/code", emojiText(EmojiPolicy)), "semiorepo://policy/CODE"},
-		{"violationKind", fmt.Sprintf("%scode:header:missing-region", emojiText(EmojiViolationKind)), "semiorepo://violationKind/CODE/HEADER/MISSING-REGION"},
+		{"violationKind", fmt.Sprintf("%sCode#Header#Missing Region", emojiText(EmojiViolationKind)), "semiorepo://violationKind/CODE/HEADER/MISSING-REGION"},
 		{"contributor", fmt.Sprintf("%susalu", emojiText(EmojiContributor)), "semiorepo://contributor/USALU"},
 		{"commit", fmt.Sprintf("%sabc123", emojiText(EmojiCommit)), "semiorepo://commit/ABC123"},
 		{"draft", fmt.Sprintf("%sMY-DRAFT", emojiText(EmojiDraft)), "semiorepo://draft/MY-DRAFT"},
@@ -6654,7 +6962,389 @@ func TestMcpToolsSchemas(t *testing.T) {
 
 // #endregion 🔖Tree Tests
 
-// #region 🔖MCP Tool Tests
+// #region 🔖Query Tests
+
+func TestQueryFlag(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	tests := []struct {
+		name          string
+		args          []string
+		query         string
+		expectMatch   string
+		expectMissing string
+	}{
+		{
+			name:        "tree --query filters monorepo tree",
+			args:        []string{"tree", "--query", "engine", "--text"},
+			query:       "",
+			expectMatch: "engine",
+		},
+		{
+			name:          "tree --query excludes unrelated",
+			args:          []string{"tree", "--query", "zzz_nonexistent_xyz", "--text"},
+			query:         "",
+			expectMissing: "semio/go",
+		},
+		{
+			name:        "project list --query matches",
+			args:        []string{"project", "list", "--query", "semio", "--json"},
+			query:       "",
+			expectMatch: "semio",
+		},
+		{
+			name:        "project tree --query matches",
+			args:        []string{"project", "tree", "--query", "semio", "--json"},
+			query:       "",
+			expectMatch: "semio",
+		},
+		{
+			name:        "bundle list --query matches",
+			args:        []string{"bundle", "list", "--query", "engine", "--json"},
+			query:       "",
+			expectMatch: "engine",
+		},
+		{
+			name:          "bundle list --query excludes unrelated",
+			args:          []string{"bundle", "list", "--query", "zzz_nonexistent_xyz", "--json"},
+			query:         "",
+			expectMissing: "engine",
+		},
+		{
+			name:        "bundle tree --query matches",
+			args:        []string{"bundle", "tree", "--query", "engine", "--text"},
+			query:       "",
+			expectMatch: "engine",
+		},
+		{
+			name:        "folder list --query matches",
+			args:        []string{"folder", "list", "semio/go", "--query", "go", "--json"},
+			query:       "",
+			expectMatch: "go",
+		},
+		{
+			name:        "folder tree --query matches",
+			args:        []string{"folder", "tree", "semio/go", "--query", "go", "--text"},
+			query:       "",
+			expectMatch: "go",
+		},
+		{
+			name:        "file list --query matches",
+			args:        []string{"file", "list", "semio/go", "--query", "semio", "--json"},
+			query:       "",
+			expectMatch: "semio",
+		},
+		{
+			name:        "file tree --query matches",
+			args:        []string{"file", "tree", "semio/go", "--query", "semio", "--text"},
+			query:       "",
+			expectMatch: "semio",
+		},
+		{
+			name:        "section list --query matches",
+			args:        []string{"section", "list", "semio/go/semio.go", "--query", "Models", "--json"},
+			query:       "",
+			expectMatch: "Model",
+		},
+		{
+			name:        "section tree --query matches",
+			args:        []string{"section", "tree", "semio/go/semio.go", "--query", "Models", "--text"},
+			query:       "",
+			expectMatch: "Model",
+		},
+		{
+			name:        "definition list --query matches",
+			args:        []string{"definition", "list", "--file", "semio/go/semio.go", "--query", "Kit", "--json"},
+			query:       "",
+			expectMatch: "Kit",
+		},
+		{
+			name:        "ticket list --query matches",
+			args:        []string{"ticket", "list", "--query", "ticket", "--json"},
+			query:       "",
+			expectMatch: "ticket",
+		},
+		{
+			name:        "ticket tree --query matches",
+			args:        []string{"ticket", "tree", "--query", "ticket", "--text"},
+			query:       "",
+			expectMatch: "ticket",
+		},
+		{
+			name:        "goal list --query matches",
+			args:        []string{"goal", "list", "--query", "repo", "--json"},
+			query:       "",
+			expectMatch: "repo",
+		},
+		{
+			name:        "goal tree --query matches",
+			args:        []string{"goal", "tree", "--query", "sketchpad", "--text"},
+			query:       "",
+			expectMatch: "Sketchpad",
+		},
+		{
+			name:          "goal tree --query excludes unrelated",
+			args:          []string{"goal", "tree", "--query", "zzz_nonexistent_xyz", "--text"},
+			query:         "",
+			expectMissing: "Sketchpad",
+		},
+		{
+			name:        "policy list --query matches",
+			args:        []string{"policy", "list", "--query", "header", "--json"},
+			query:       "",
+			expectMatch: "header",
+		},
+		{
+			name:        "policy tree --query matches",
+			args:        []string{"policy", "tree", "--query", "header", "--text"},
+			query:       "",
+			expectMatch: "header",
+		},
+		{
+			name:        "violationKind list --query matches",
+			args:        []string{"violationKind", "list", "--query", "header", "--json"},
+			query:       "",
+			expectMatch: "header",
+		},
+		{
+			name:          "violationKind list --query excludes unrelated",
+			args:          []string{"violationKind", "list", "--query", "zzz_nonexistent_xyz", "--json"},
+			query:         "",
+			expectMissing: "header",
+		},
+		{
+			name:        "violationKind tree --query matches",
+			args:        []string{"violationKind", "tree", "--query", "header", "--text"},
+			query:       "",
+			expectMatch: "header",
+		},
+		{
+			name:        "contributor list --query matches",
+			args:        []string{"contributor", "list", "--query", "usalu", "--json"},
+			query:       "",
+			expectMatch: "usalu",
+		},
+		{
+			name:          "contributor list --query excludes unrelated",
+			args:          []string{"contributor", "list", "--query", "zzz_nonexistent_xyz", "--json"},
+			query:         "",
+			expectMissing: "usalu",
+		},
+		{
+			name:        "commit list --query matches",
+			args:        []string{"commit", "list", "--query", "merge", "--json", "--limit", "200"},
+			query:       "",
+			expectMatch: "merge",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := executeTreeCommand(tt.args...)
+			if err != nil {
+				t.Fatalf("command %v failed: %v\nOutput: %s", tt.args, err, output)
+			}
+			lower := strings.ToLower(output)
+			if tt.expectMatch != "" {
+				if !strings.Contains(lower, strings.ToLower(tt.expectMatch)) {
+					t.Errorf("expected output to contain %q, got:\n%s", tt.expectMatch, output)
+				}
+			}
+			if tt.expectMissing != "" {
+				if strings.Contains(lower, strings.ToLower(tt.expectMissing)) {
+					t.Errorf("expected output NOT to contain %q, got:\n%s", tt.expectMissing, output)
+				}
+			}
+		})
+	}
+}
+
+func TestQueryFuzzyMatch(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	t.Run("policy list fuzzy match with misspelling", func(t *testing.T) {
+		output, err := executeTreeCommand("policy", "list", "--query", "headr", "--json")
+		if err != nil {
+			t.Fatalf("command failed: %v\nOutput: %s", err, output)
+		}
+		if !strings.Contains(strings.ToLower(output), "header") {
+			t.Errorf("expected fuzzy match for 'headr' to include header-related results, got:\n%s", output)
+		}
+	})
+
+	t.Run("violationKind list fuzzy match with misspelling", func(t *testing.T) {
+		output, err := executeTreeCommand("violationKind", "list", "--query", "licenss", "--json")
+		if err != nil {
+			t.Fatalf("command failed: %v\nOutput: %s", err, output)
+		}
+		if !strings.Contains(strings.ToLower(output), "license") {
+			t.Errorf("expected fuzzy match for 'licenss' to include license-related results, got:\n%s", output)
+		}
+	})
+
+	t.Run("bundle list fuzzy match with misspelling", func(t *testing.T) {
+		output, err := executeTreeCommand("bundle", "list", "--query", "engin", "--json")
+		if err != nil {
+			t.Fatalf("command failed: %v\nOutput: %s", err, output)
+		}
+		if !strings.Contains(strings.ToLower(output), "engine") {
+			t.Errorf("expected fuzzy match for 'engin' to include engine, got:\n%s", output)
+		}
+	})
+
+	t.Run("goal list fuzzy match with misspelling", func(t *testing.T) {
+		output, err := executeTreeCommand("goal", "list", "--query", "sketchpd", "--json")
+		if err != nil {
+			t.Fatalf("command failed: %v\nOutput: %s", err, output)
+		}
+		if !strings.Contains(strings.ToLower(output), "sketchpad") {
+			t.Errorf("expected fuzzy match for 'sketchpd' to include sketchpad, got:\n%s", output)
+		}
+	})
+}
+
+func TestQueryEmptyReturnsAll(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{"policy list no query", []string{"policy", "list", "--json"}},
+		{"violationKind list no query", []string{"violationKind", "list", "--json"}},
+		{"contributor list no query", []string{"contributor", "list", "--json"}},
+		{"bundle list no query", []string{"bundle", "list", "--json"}},
+		{"goal list no query", []string{"goal", "list", "--json"}},
+		{"commit list no query", []string{"commit", "list", "--json", "--limit", "5"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			output, err := executeTreeCommand(tt.args...)
+			if err != nil {
+				t.Fatalf("command %v failed: %v", tt.args, err)
+			}
+			if strings.TrimSpace(output) == "" {
+				t.Errorf("expected non-empty output for %v without query", tt.args)
+			}
+		})
+	}
+}
+
+func TestViolationKindCommands(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	t.Run("violationKind list returns results", func(t *testing.T) {
+		output, err := executeTreeCommand("violationKind", "list", "--json")
+		if err != nil {
+			t.Fatalf("violationKind list failed: %v", err)
+		}
+		if !strings.Contains(output, "violationKind") {
+			t.Errorf("expected violationKind JSON key in output")
+		}
+		lines := strings.Split(strings.TrimSpace(output), "\n")
+		if len(lines) < 5 {
+			t.Errorf("expected multiple violation kinds, got %d lines", len(lines))
+		}
+	})
+
+	t.Run("violationKind tree returns results", func(t *testing.T) {
+		output, err := executeTreeCommand("violationKind", "tree", "--text")
+		if err != nil {
+			t.Fatalf("violationKind tree failed: %v", err)
+		}
+		if !strings.Contains(output, "header") {
+			t.Errorf("expected violation kind tree categories in output")
+		}
+	})
+
+	t.Run("violationKind list markdown", func(t *testing.T) {
+		output, err := executeTreeCommand("violationKind", "list", "--md")
+		if err != nil {
+			t.Fatalf("violationKind list md failed: %v", err)
+		}
+		if output == "" {
+			t.Error("expected non-empty markdown output")
+		}
+	})
+
+	t.Run("violationKind tree markdown", func(t *testing.T) {
+		output, err := executeTreeCommand("violationKind", "tree", "--md")
+		if err != nil {
+			t.Fatalf("violationKind tree md failed: %v", err)
+		}
+		if output == "" {
+			t.Error("expected non-empty markdown output")
+		}
+	})
+}
+
+func TestCommitCommands(t *testing.T) {
+	cwd, _ := os.Getwd()
+	repoRoot := findTestRepoRoot(cwd)
+	SetRootDir(repoRoot)
+
+	t.Run("commit list returns results", func(t *testing.T) {
+		output, err := executeTreeCommand("commit", "list", "--json", "--limit", "5")
+		if err != nil {
+			t.Fatalf("commit list failed: %v", err)
+		}
+		if !strings.Contains(output, "commit") {
+			t.Errorf("expected commit JSON key in output")
+		}
+		lines := strings.Split(strings.TrimSpace(output), "\n")
+		if len(lines) == 0 {
+			t.Error("expected at least one commit")
+		}
+	})
+
+	t.Run("commit list --query filters", func(t *testing.T) {
+		allOutput, err := executeTreeCommand("commit", "list", "--json", "--limit", "200")
+		if err != nil {
+			t.Fatalf("commit list failed: %v", err)
+		}
+		allLines := strings.Split(strings.TrimSpace(allOutput), "\n")
+
+		filteredOutput, err := executeTreeCommand("commit", "list", "--json", "--limit", "200", "--query", "merge")
+		if err != nil {
+			t.Fatalf("commit list --query failed: %v", err)
+		}
+		filteredLines := strings.Split(strings.TrimSpace(filteredOutput), "\n")
+		if len(filteredLines) >= len(allLines) && len(allLines) > 1 {
+			t.Errorf("expected --query to reduce results: all=%d filtered=%d", len(allLines), len(filteredLines))
+		}
+	})
+
+	t.Run("commit list markdown", func(t *testing.T) {
+		output, err := executeTreeCommand("commit", "list", "--md", "--limit", "5")
+		if err != nil {
+			t.Fatalf("commit list md failed: %v", err)
+		}
+		if output == "" {
+			t.Error("expected non-empty markdown output")
+		}
+	})
+
+	t.Run("commit list text", func(t *testing.T) {
+		output, err := executeTreeCommand("commit", "list", "--text", "--limit", "5")
+		if err != nil {
+			t.Fatalf("commit list text failed: %v", err)
+		}
+		if output == "" {
+			t.Error("expected non-empty text output")
+		}
+	})
+}
+
+// #endregion 🔖Query Tests
 
 func setupToolTest(t *testing.T) {
 	t.Helper()
@@ -7713,13 +8403,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("renders basic tree", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗Projects", URI: "semiorepo://projects", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTree(tree)
-		if !strings.Contains(output, "🏗️Projects") {
+		if !strings.Contains(output, "🏗Projects") {
 			t.Error("output should contain Projects label")
 		}
 		if !strings.Contains(output, "semio") {
@@ -7765,13 +8455,13 @@ func TestRenderMonorepoTree(t *testing.T) {
 	t.Run("markdown renderer uses list bullets", func(t *testing.T) {
 		tree := &TreeNode{
 			Kind: TreeNodeCategory, Label: ".", Children: []*TreeNode{
-				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗️Projects", URI: "semiorepo://projects", Children: []*TreeNode{
+				{Kind: TreeNodeCategory, ID: "projects", Label: "🏗Projects", URI: "semiorepo://projects", Children: []*TreeNode{
 					{Kind: TreeNodeProject, ID: "p1", Label: "semio"},
 				}},
 			},
 		}
 		output := RenderMonorepoTreeMarkdown(tree)
-		if !strings.Contains(output, "- [🏗️Projects](semiorepo://projects)") {
+		if !strings.Contains(output, "- [🏗Projects](semiorepo://projects)") {
 			t.Errorf("markdown tree should contain markdown link list item, got: %s", output)
 		}
 		if !strings.Contains(output, "  - semio") {
@@ -9098,3 +9788,69 @@ func TestMigrateAuthorFieldsToString(t *testing.T) {
 	}
 	t.Logf("migrated %d goals", goalCount)
 }
+
+func TestFixHeaderWithShebang(t *testing.T) {
+	tmpDir := t.TempDir()
+	originalRootDir := GetRootDir()
+	SetRootDir(tmpDir)
+	defer SetRootDir(originalRootDir)
+
+	filePath := "script.py"
+	absPath := filepath.Join(tmpDir, filePath)
+	content := "#!/usr/bin/env python3\n" +
+		"#region 🔖Header\n\n" +
+		"# wrong/path.py\n\n" +
+		"# 2025 Test <t@t.com>\n\n" +
+		"# #region 🔖License\n" +
+		"# AGPL\n" +
+		"# #endregion 🔖License\n\n" +
+		"# #region 🔖Specs\n" +
+		"# Specs\n" +
+		"# #endregion 🔖Specs\n\n" +
+		"#endregion 🔖Header\n\n" +
+		"print(\"hello\")\n"
+	os.WriteFile(absPath, []byte(content), 0644)
+
+
+	bundles := LoadBundles()
+	violations, err := CheckPolicies(ParseScope(filePath), bundles, nil)
+	if err != nil {
+		t.Fatalf("CheckPolicies failed: %v", err)
+	}
+	for _, v := range violations {
+		if v.Autofixable() {
+			t.Errorf("Detected Autofixable Violation: %s at line %d", v.Kind, v.Line)
+		} else {
+			t.Logf("Detected Non-Autofixable Violation: %s at line %d", v.Kind, v.Line)
+		}
+	}
+
+
+	ctx := NewRepoContext(tmpDir)
+	scope := filePath
+	res, err := ctx.Fix(&scope)
+	if err != nil {
+		t.Fatalf("Fix failed: %v", err)
+	}
+
+	t.Logf("Fixed: %d", res.Fixed)
+	for _, v := range res.Violations {
+		t.Logf("Remaining Violation: %s at line %d", v.Kind, v.Line)
+	}
+
+	if res.Fixed == 0 {
+		t.Log("No fixes applied (unexpected).")
+	}
+
+
+	newContentBytes, _ := os.ReadFile(absPath)
+	newContent := string(newContentBytes)
+	if !strings.Contains(newContent, "#!/usr/bin/env python3") {
+		t.Errorf("Shebang missing in fixed content:\n%s", newContent)
+	}
+	expectedId := "💻script.py"
+	if !strings.Contains(newContent, expectedId) {
+		t.Logf("Expected ID %q might be missing or different format.", expectedId)
+	}
+}
+

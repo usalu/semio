@@ -1,6 +1,6 @@
 {
   "title": "Fix Design App Crash",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "design app is crashing",
       "llm": "gemini-3-pro",

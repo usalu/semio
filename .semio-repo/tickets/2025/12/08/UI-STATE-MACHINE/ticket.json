@@ -10,9 +10,8 @@
         "started": "2025-12-16T17:06:07.891Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "\"Finish the UI state machine with proper states, guards, menus, and context\"",
       "llm": "sonnet-4-5"

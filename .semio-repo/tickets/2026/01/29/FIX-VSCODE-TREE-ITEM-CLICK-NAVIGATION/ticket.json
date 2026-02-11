@@ -16,9 +16,8 @@
         "finished": "2026-01-29T10:00:30.700814525Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "When clicking on a section tree item or definition tree item in the VS Code extension, it should jump to the right line where it starts. Both don't currently work.",
       "llm": "opus-4-5",

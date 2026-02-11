@@ -16,9 +16,8 @@
         "finished": "2026-01-29T10:20:29.550439192Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Extend all list and tree commands to receive --show-ignored and --show-generated flags",
       "llm": "gemini-3-pro",

@@ -15,10 +15,8 @@
         "finished": "2026-02-04 20:28:37"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
       "prompt": "Emojis and @ symbols overlap in terminal output for folder list command",
       "llm": "opus-4-5",
@@ -1539,10 +1537,8 @@
         "finished": "2026-02-04 20:40:41"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "codex"
-      },
+      "system": "linux",
+      "client": "codex",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
       "prompt": "Continue with ticket to use U+FE0E for emoji rendering issue.",
       "llm": "gpt-5-2-codex",

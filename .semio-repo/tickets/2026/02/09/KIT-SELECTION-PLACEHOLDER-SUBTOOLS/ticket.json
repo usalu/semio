@@ -1,6 +1,6 @@
 {
   "title": "Kit Selection Placeholder Subtools",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "create 5 different place holder selection sub-tool within the drop down toggle select in the toolbar (kit app)",
       "llm": "gpt-5-2-codex",

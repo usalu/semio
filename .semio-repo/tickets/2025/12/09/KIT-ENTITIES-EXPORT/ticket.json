@@ -10,9 +10,8 @@
         "started": "2025-12-16T17:06:07.897Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Expose kit entities individually from assets index",
       "llm": "sonnet-4-5"

@@ -1,6 +1,6 @@
 {
   "title": "Fix Missing getToolbarGroupIcon",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Restore missing getToolbarGroupIcon and related functions in Sketchpad.tsx which caused ReferenceError",
       "llm": "gemini-3-pro",

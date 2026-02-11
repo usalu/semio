@@ -16,10 +16,8 @@
         "finished": "2026-02-09 16:49:56"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "Fix inconsistencies in the semio-repo ID and URI system. Ensure all IDs and URIs from tree commands resolve correctly. Fix file header artifact IDs (no space after emoji). Fix model GetID methods for contributors, commits. Fix tree node ID assignments for policies, violation kinds, drafts. Extend tests to cover round-trip ID→URI→ID resolution. Make sure all tests pass.",
       "llm": "opus-4-6",

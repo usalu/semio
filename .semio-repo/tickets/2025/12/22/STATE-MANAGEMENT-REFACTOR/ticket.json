@@ -10,9 +10,8 @@
         "started": "2025-12-22T17:54:18.735Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "3ffb517e8f38727f82f28fe79563bf3d4c7c50d3",
       "prompt": "\"Implement state management refactor plan: fix hasInitialized patterns, remove duplicate handlers, replace useKit() overfetch with narrow hooks, fix effect dependencies, remove window module cache patterns\"",
       "llm": "opus-4-5"

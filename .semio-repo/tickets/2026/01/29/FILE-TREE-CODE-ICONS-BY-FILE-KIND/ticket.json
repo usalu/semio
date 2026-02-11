@@ -16,9 +16,8 @@
         "finished": "2026-01-29T11:15:20.056578963Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "prompt": "The file tree items should have different codeicons according the file kind (code, script, config, test, docs, resource, license).",
       "llm": "sonnet-4-5",

@@ -16,9 +16,8 @@
         "finished": "2026-01-30T01:17:46.995883944Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "Remove DefinitionKind and rename DefinitionCategory to DefinitionKind.",
       "llm": "opus-4-5",

@@ -1,6 +1,6 @@
 {
   "title": "Fix Design App Selection",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "fix the selection in the design app",
       "llm": "gpt-5-2-codex",

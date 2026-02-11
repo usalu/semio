@@ -10,9 +10,8 @@
         "started": "2026-01-05T14:05:02Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "612efdddc47caf10aac48cf7c57eab357e6695cd",
       "prompt": "Derive contributions from tickets and file headers instead of hardcoding. Sort by ticket count. Add commits/tickets/files to VS Code extension tree.",
       "llm": "sonnet-4-5"

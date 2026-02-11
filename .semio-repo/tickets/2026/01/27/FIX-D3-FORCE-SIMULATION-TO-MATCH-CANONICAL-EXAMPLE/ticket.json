@@ -1,13 +1,23 @@
 {
   "title": "Fix D3 Force Simulation To Match Canonical Example",
-  "iterations": [
+  "status": "closed",
+  "prompt": "",
+  "summary": "Implemented D3 force simulation drag behavior matching the canonical example at https://d3js.org/d3-force. Added isDragReheatActiveRef to track drag-initiated reheats, updated drag handlers to check simulation alpha before reheating (equivalent to event.active check), and only cool down if we initiated the reheat. The simulation now properly responds to drag with connected and nearby nodes moving in real-time through force calculations.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/225"
+  },
+  "started": "0001-01-01T00:00:00Z",
+  "interactions": [
     {
+      "dates": {
+        "started": ""
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "7f7fc35393b8fc23d8f7772e0ec32b56f4fc85c7",
       "prompt": "Implement the D3 force simulation exactly as shown in https://d3js.org/d3-force example, ensuring proper drag behavior with event.active checks and alphaTarget management",
       "llm": "sonnet-4-5",
-      "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-01-27T17:52:17.723815998Z",
-      "commit": "7f7fc35393b8fc23d8f7772e0ec32b56f4fc85c7",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -305,13 +315,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-27T17:53:47.831174024Z"
-  },
-  "summary": "Implemented D3 force simulation drag behavior matching the canonical example at https://d3js.org/d3-force. Added isDragReheatActiveRef to track drag-initiated reheats, updated drag handlers to check simulation alpha before reheating (equivalent to event.active check), and only cool down if we initiated the reheat. The simulation now properly responds to drag with connected and nearby nodes moving in real-time through force calculations.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/225"
-  }
+  ]
 }

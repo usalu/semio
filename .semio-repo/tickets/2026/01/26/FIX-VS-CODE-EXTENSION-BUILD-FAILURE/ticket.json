@@ -1,15 +1,19 @@
 {
   "title": "Fix VS Code Extension Build Failure",
-  "iterations": [
-    {
-      "prompt": "The vsce binary was not found during post-attach setup due to incomplete npm installation.",
-      "llm": "gemini-3-flash",
-      "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-01-26T13:13:25.52608491Z",
-      "commit": "eeb8272d91c5437d9c455971d216c6c538261f87"
-    }
-  ],
   "status": "open",
-  "dates": {}
+  "prompt": "",
+  "started": "0001-01-01T00:00:00Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": ""
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "eeb8272d91c5437d9c455971d216c6c538261f87",
+      "prompt": "The vsce binary was not found during post-attach setup due to incomplete npm installation.",
+      "llm": "gemini-3-flash"
+    }
+  ]
 }

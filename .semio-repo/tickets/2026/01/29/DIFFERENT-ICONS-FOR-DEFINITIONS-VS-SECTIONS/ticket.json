@@ -16,9 +16,8 @@
         "finished": "2026-01-29T11:16:19.392915079Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "prompt": "The definitions tree item icon should be different compared to the section tree item icon.",
       "llm": "sonnet-4-5",

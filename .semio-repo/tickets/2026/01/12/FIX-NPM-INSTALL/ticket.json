@@ -12,9 +12,8 @@
         "finished": "2026-01-12T13:21:50Z"
       },
       "author": "kinansarak",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "f4899e1b56c66902ea910f895010f6490189705e",
       "prompt": "Fix npm Invalid Version error on npm install",
       "llm": "gemini-3-flash-preview"

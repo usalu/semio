@@ -372,7 +372,7 @@
       {
         "command": "semio.copyId",
         "title": "semio-repo: Copy ID",
-        "icon": "$(tag)"
+        "icon": "🆔"
       },
       {
         "command": "semio.copyCommitSha",

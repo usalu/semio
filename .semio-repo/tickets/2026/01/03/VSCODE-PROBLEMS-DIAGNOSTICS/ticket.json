@@ -12,9 +12,8 @@
         "finished": "2026-01-03T00:26:51Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb",
       "prompt": "The analyze violation diagnostics are not shown in vscode under problems",
       "llm": "opus-4-5-20251101"

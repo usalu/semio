@@ -16,9 +16,8 @@
         "finished": "2026-02-03T08:49:59.580474675Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "The section tree items are not showing the child definitions. Make sure the children are both sections and definitions, both in the same order as in the source code.",
       "llm": "gemini-3-pro"

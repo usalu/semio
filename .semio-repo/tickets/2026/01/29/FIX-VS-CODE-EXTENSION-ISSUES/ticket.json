@@ -16,9 +16,8 @@
         "finished": "2026-02-03T08:49:58.614557251Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "Fix codebase tree sections, explorer section view, and ticket list visibility in VS Code extension.",
       "llm": "gemini-3-pro"

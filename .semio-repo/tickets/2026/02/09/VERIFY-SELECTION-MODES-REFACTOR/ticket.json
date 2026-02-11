@@ -1,6 +1,6 @@
 {
   "title": "Verify Selection Modes Refactor",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Verify that the selection modes (additive, subtractive, intersect) are correctly implemented as settings in the toolbar and work as expected.",
       "llm": "gemini-3-pro",

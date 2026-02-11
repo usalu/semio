@@ -16,10 +16,8 @@
         "finished": "2026-02-09 10:37:43"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "The section tree in the explorer sidebar for the current file isn't showing any sections, unlike the tree items in the monorepo tree view. Investigate and fix.",
       "llm": "opus-4-6",

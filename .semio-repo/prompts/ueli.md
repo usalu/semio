@@ -22,8 +22,132 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 elements:
 - Update tree to not have sections but every section should have a tree. A tab should have multiple sections. A side panel has multiple tabs.
+- Id system should be slugged to make sure no illegal characters are used.
 
 ## History
+
+All script files (script files 📜 are programming files with a shebang header. programming files that are part of a bundle and are not exectuable are code files 💻) have a header to run them e.g. `#!/usr/bin/env python`, `#!/usr/bin/env tsx` or `#!/usr/bin/env sh`. They are not correctly identified for all languages and remove when running `./semio-repo/cli/cli fix`.
+
+
+When running `./semio-repo/cli/cli fix` the emojis are replaced with text rendering. It should do the opposite and remove all variation selector (such as VS15 / text presentation) and instead show the colorful emoji.
+
+semio-repo:
+Interactions should instead of this:
+```json
+"system": {
+  "version": "linux",
+  "client": "copilot-chat"
+},
+```
+be flattened to this:
+```json
+"system": "linux",
+"client": "copilot-chat"
+```
+Migrate all existing `goals.json` and `tickets.json` to the new format. Dont keep any legacy api or backwards compatiblity.
+
+Add a new `System` policiy that 
+
+semio repo cli:
+The error messages are not consistent or accurate. Make sure every commmand is called with wrong arguments and with wrong lifecycle (e.g. goal close when goal is not open).
+```bash
+./semio-repo/cli/cli tree
+./semio-repo/cli/cli analyze
+./semio-repo/cli/cli benchmark
+./semio-repo/cli/cli preflight
+./semio-repo/cli/cli fix
+./semio-repo/cli/cli export
+./semio-repo/cli/cli extract
+./semio-repo/cli/cli integrate
+./semio-repo/cli/cli move
+./semio-repo/cli/cli sync
+./semio-repo/cli/cli sync github
+./semio-repo/cli/cli update
+./semio-repo/cli/cli graphql
+./semio-repo/cli/cli mcp
+./semio-repo/cli/cli completion
+./semio-repo/cli/cli help
+./semio-repo/cli/cli project list
+./semio-repo/cli/cli project tree
+./semio-repo/cli/cli bundle list
+./semio-repo/cli/cli bundle tree
+./semio-repo/cli/cli folder list
+./semio-repo/cli/cli folder tree
+./semio-repo/cli/cli folder create
+./semio-repo/cli/cli folder delete
+./semio-repo/cli/cli folder move
+./semio-repo/cli/cli file list
+./semio-repo/cli/cli file tree
+./semio-repo/cli/cli file create
+./semio-repo/cli/cli file delete
+./semio-repo/cli/cli file move
+./semio-repo/cli/cli section list
+./semio-repo/cli/cli section tree
+./semio-repo/cli/cli section create
+./semio-repo/cli/cli section delete
+./semio-repo/cli/cli section move
+./semio-repo/cli/cli section extract
+./semio-repo/cli/cli section integrate
+./semio-repo/cli/cli definition list
+./semio-repo/cli/cli ticket list
+./semio-repo/cli/cli ticket tree
+./semio-repo/cli/cli ticket open
+./semio-repo/cli/cli ticket close
+./semio-repo/cli/cli ticket reopen
+./semio-repo/cli/cli ticket change
+./semio-repo/cli/cli goal list
+./semio-repo/cli/cli goal tree
+./semio-repo/cli/cli goal open
+./semio-repo/cli/cli goal close
+./semio-repo/cli/cli goal reopen
+./semio-repo/cli/cli goal change
+./semio-repo/cli/cli policy list
+./semio-repo/cli/cli policy tree
+./semio-repo/cli/cli policy check
+./semio-repo/cli/cli violationKind list
+./semio-repo/cli/cli violationKind tree
+./semio-repo/cli/cli contributor list
+./semio-repo/cli/cli contributor add
+./semio-repo/cli/cli contributor remove
+./semio-repo/cli/cli commit list
+./semio-repo/cli/cli todo list
+./semio-repo/cli/cli todo tree
+./semio-repo/cli/cli todo create
+./semio-repo/cli/cli todo change
+./semio-repo/cli/cli todo delete
+./semio-repo/cli/cli todo search
+```
+e.g. When running ticket close on a ticket that is not open, the wrong error message appears that at least one file is required. Extend the exising tests with all 
+semio-repo/cli/cli ticket close 2026/02/10/RUST-TESTS-NOT-SHOWING-IN-VSCODE-TEST-EXPLORER "Fixed two issues" --files .devcontainer/devcontainer.json
+
+The cli should index everything (projects, bundles, folders, files, sections, definitions, tickets, goals, policies, violationKinds, contributors, commits) and cache them in `.semio-repo/`. Add a `--query` paramater to every single `list` and `tree` command that uses bleve for prefiltering. The query should either be keywords or a complete text. The match should also support slightly misspelled words. Make sure that `--query` is tests for every single command.
+
+Here some commands:
+```bash
+./semio-repo/cli/cli tree
+./semio-repo/cli/cli project list
+./semio-repo/cli/cli project tree
+./semio-repo/cli/cli bundle list
+./semio-repo/cli/cli bundle tree
+./semio-repo/cli/cli folder list
+./semio-repo/cli/cli folder tree
+./semio-repo/cli/cli file list
+./semio-repo/cli/cli file tree
+./semio-repo/cli/cli section list
+./semio-repo/cli/cli section tree 
+./semio-repo/cli/cli definition list
+./semio-repo/cli/cli definition tree
+./semio-repo/cli/cli ticket list
+./semio-repo/cli/cli ticket tree
+./semio-repo/cli/cli goal list
+./semio-repo/cli/cli goal tree
+./semio-repo/cli/cli policy list
+./semio-repo/cli/cli policy tree
+./semio-repo/cli/cli violationKind list
+./semio-repo/cli/cli violationKind tree
+./semio-repo/cli/cli contributor list
+./semio-repo/cli/cli commit list
+```
 
 All uris should resolve to the correct entity. E.g. clicking on a uri in the vscode extension should navigate to the correct resource. Same as when using `semio-repo: Navigate to` command with an id or uri.
 e.g. I get:
@@ -132,12 +256,56 @@ E.g. the file emojis of the ids dont match the one kind and it either shows the 
 The search should not be on client side but use the tree with search from the cli.
 The copied ids are all wrong e.g. `semio/js/sketchpad/Design.tsx§useDesignAppInitialize` should be `🛠️semio/js/sketchpad/Design.tsx#State Managment#Design App Plugin Registration§useDesignAppInitialize` or `📚📚semio/rb` should be `📚semio/rb`
 
-Make sure the violation kind id/uri work correctly.
+Make sure the violation kind id/uri work correctly and the ids are interpreted as trees and not flat list of ids.
 Currently we have `:` separated paths e.g. "code:header:missing-region"
 but the violation kind the violation kind with path `header:missing region` should have 
 path: `header/missing-region`
-id: "🚫Code# Header#Missing Region"
+id: "🚫Code#Header#Missing Region"
 uri: `semiorepo://violationKind/CODE/HEADER/MISSING-REGION`
+
+Here you can see the wrong ids and uris and wrong flat list structure instead of tree:
+```bash
+$ ./semio-repo/cli/cli policy tree
+- [🛡/code](semiorepo://policy/CODE) - `Validates source file headers, sections, and comments`
+  - [🚫code:header:missing-region](semiorepo://violationKind/CODE/HEADER/MISSING-REGION) - `Header region with license, filename, and contributors is required`
+  - [🚫code:header:wrong-file-id](semiorepo://violationKind/CODE/HEADER/WRONG-FILE-ID) - `File header must contain the correct artifact ID`
+  - [🚫code:header:missing-contributors](semiorepo://violationKind/CODE/HEADER/MISSING-CONTRIBUTORS) - `Contributors must be documented in header`
+  - [🚫code:header:missing-license](semiorepo://violationKind/CODE/HEADER/MISSING-LICENSE) - `AGPL license text is required in header`
+  - [🚫code:header:wrong-license](semiorepo://violationKind/CODE/HEADER/WRONG-LICENSE) - `License must be AGPL-3.0-or-later`
+  - [🚫code:section:empty](semiorepo://violationKind/CODE/SECTION/EMPTY) - `Empty sections should be removed`
+  - [🚫code:section:orphan-definition](semiorepo://violationKind/CODE/SECTION/ORPHAN-DEFINITION) - `All code must be inside named sections`
+  - [🚫code:section:missing-start-name](semiorepo://violationKind/CODE/SECTION/MISSING-START-NAME) - `Section start marker must have a name`
+  - [🚫code:section:missing-end-name](semiorepo://violationKind/CODE/SECTION/MISSING-END-NAME) - `Section end marker should have matching name`
+  - [🚫code:section:name-mismatch](semiorepo://violationKind/CODE/SECTION/NAME-MISMATCH) - `Section start and end names must match`
+  - [🚫code:comment:inline](semiorepo://violationKind/CODE/COMMENT/INLINE) - `Inline comments are forbidden`
+  - [🚫code:comment:block](semiorepo://violationKind/CODE/COMMENT/BLOCK) - `Block comments are forbidden`
+  - [🚫code:comment:jsdoc](semiorepo://violationKind/CODE/COMMENT/JSDOC) - `JSDoc comments are forbidden`
+  - [🚫code:specs:implementation-syntax](semiorepo://violationKind/CODE/SPECS/IMPLEMENTATION-SYNTAX) - `Specs must be implementation-agnostic and must not contain code syntax`
+  - [🚫code:unicode:emoji-variation](semiorepo://violationKind/CODE/UNICODE/EMOJI-VARIATION) - `Emoji variation selectors (VS15/VS16) are forbidden`
+  - [🚫code:docs:missing-readme](semiorepo://violationKind/CODE/DOCS/MISSING-README) - `Bundle or folder is missing a README.md with summary and specs`
+- [🛡/dev-docs](semiorepo://policy/DEV-DOCS) - `Validates README.md and AGENTS.md documentation structure`
+  - [🚫dev-docs:missing-file](semiorepo://violationKind/DEV-DOCS/MISSING-FILE) - `File exists but has no section in AGENTS.md Codebase`
+  - [🚫dev-docs:missing-folder](semiorepo://violationKind/DEV-DOCS/MISSING-FOLDER) - `Folder exists but has no section in AGENTS.md Codebase`
+  - [🚫dev-docs:wrong-file-path](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-PATH) - `File section path does not match actual file path`
+  - [🚫dev-docs:wrong-folder-path](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-PATH) - `Folder section path does not match actual folder path`
+  - [🚫dev-docs:wrong-file-name](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-NAME) - `File section name format is incorrect (should be ## 📄PATH)`
+  - [🚫dev-docs:wrong-folder-name](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-NAME) - `Folder section name format is incorrect (should be ## 📁PATH/)`
+  - [🚫dev-docs:wrong-file-order](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-ORDER) - `File sections are not in alphabetical order`
+  - [🚫dev-docs:wrong-folder-order](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-ORDER) - `Folder sections are not in alphabetical order`
+  - [🚫dev-docs:missing-component](semiorepo://violationKind/DEV-DOCS/MISSING-COMPONENT) - `Package.json workspace has no corresponding component in README.md`
+  - [🚫dev-docs:wrong-component-name](semiorepo://violationKind/DEV-DOCS/WRONG-COMPONENT-NAME) - `Component section name does not match workspace name`
+  - [🚫dev-docs:wrong-component-order](semiorepo://violationKind/DEV-DOCS/WRONG-COMPONENT-ORDER) - `Component sections are not in package.json workspaces order`
+- [🛡/repo](semiorepo://policy/REPO) - `Validates strict repo command implementation parity and ticket tracking`
+  - [🚫repo:missing-command](semiorepo://violationKind/REPO/MISSING-COMMAND) - `Command is missing from parity implementation (CLI, MCP, VS Code)`
+  - [🚫repo:missing-ticket-tracking](semiorepo://violationKind/REPO/MISSING-TICKET-TRACKING) - `Ticket tracking code is missing or incomplete`
+- [🛡/sketchpad](semiorepo://policy/SKETCHPAD) - `Validates sketchpad imports, state management, and hook patterns`
+  - [🚫sketchpad:import:third-party-outside-elements](semiorepo://violationKind/SKETCHPAD/IMPORT/THIRD-PARTY-OUTSIDE-ELEMENTS) - `Third party imports must only be in elements.tsx`
+  - [🚫sketchpad:state:multiple-machines](semiorepo://violationKind/SKETCHPAD/STATE/MULTIPLE-MACHINES) - `Only one state machine is allowed (createMachine can only be used once)`
+  - [🚫sketchpad:state:create-actor-usage](semiorepo://violationKind/SKETCHPAD/STATE/CREATE-ACTOR-USAGE) - `createActor is forbidden in sketchpad`
+  - [🚫sketchpad:state:yjs-app-state](semiorepo://violationKind/SKETCHPAD/STATE/YJS-APP-STATE) - `Yjs should only be used for kit data synchronization, not app state`
+  - [🚫sketchpad:state:forbidden-store](semiorepo://violationKind/SKETCHPAD/STATE/FORBIDDEN-STORE) - `Stores outside of State Management sections are forbidden`
+  - [🚫sketchpad:hooks:non-triadic](semiorepo://violationKind/SKETCHPAD/HOOKS/NON-TRIADIC) - `Client elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()`
+```
 
 The violation kind id follows the pattern `🚫<policy-id>#<path*>` and 
 The violation kind uri follows the pattern `semiorepo://violationKind/<POLICY-ID>/{<PATH*>}`
@@ -230,6 +398,8 @@ All source code headers should be extended/changed/refactored to look like this:
 ```
 Only stop once all languages are supported and 100% of all source code files have the new header with summary and requirements. Some requirements are in `AGENTS.md` and `README.md` and should be moved to the source code headers.
 
+semio repo:
+The violation kind ids should be changed to a path with tree notation. e.g. "code:header:missing-region" should be "code/header/missing-region".
 All trees of policies are currently flat but it should be in the same tree as the id of the violation kind. Both in semio repo cli and semio repo vscode extension.
 
 semio repo:

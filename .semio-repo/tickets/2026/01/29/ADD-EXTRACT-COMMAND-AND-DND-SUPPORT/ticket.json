@@ -16,9 +16,8 @@
         "finished": "2026-02-03T08:49:55.286971498Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Add a new command: extract \u003csource-file\u003e \u003c-source-section-id\u003e \u003ctarget-file\u003e. Implement drag and drop of file tree items and section tree items in the codebase section in the side view of the vscode extension.",
       "llm": "gemini-3-pro"

@@ -10,9 +10,8 @@
         "started": "2026-01-05T15:54:12Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "6e9b79f94f6dfd840100fa1a245e71b8d3c192f2",
       "prompt": "Add hierarchical scope mechanism, ignore flag, bundles structure for contribution tracking",
       "llm": "sonnet-4-5"

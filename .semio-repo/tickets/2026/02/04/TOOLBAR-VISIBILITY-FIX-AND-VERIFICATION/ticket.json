@@ -1,6 +1,6 @@
 {
   "title": "Toolbar Visibility Fix And Verification",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Toolbar is invisible. Fix with playwright",
       "llm": "gemini-3-pro",

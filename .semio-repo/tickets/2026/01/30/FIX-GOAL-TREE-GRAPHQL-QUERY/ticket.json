@@ -16,9 +16,8 @@
         "finished": "2026-01-30T01:17:46.338167445Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "Fix the goal tree command which fails with: Cannot query field \"data\" on type \"Ticket\". Ensure all repo commands are tested in main_test.go.",
       "llm": "opus-4-5",

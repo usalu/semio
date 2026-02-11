@@ -16,9 +16,8 @@
         "finished": "2026-01-29T11:05:21.283204189Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "For every --no-\u003ckind\u003e flag, there should be a --only-\u003ckind\u003e flag to show only the kind. Add to every list and tree command --filter \u003cfilter-string\u003e, --regex, --match-case, --match-whole-word. The filter flags for file kinds (--no-\u003ckind\u003e, --only-\u003ckind\u003e) should work for every single list and tree command. Remove the filter toggles from the codebase section in the side view of the vscode extension to the search section. Rename the search section to filter section. Add a toggle for every file kind to show only the kind. Further add a toggle to show all, show none, show default (code, test) that automatically toggles the other toggles.",
       "diff": {

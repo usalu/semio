@@ -460,10 +460,14 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
   if (node.Status === "open") statusIcon = "🔵";
   else if (node.Status === "closed") statusIcon = "🟢";
   const fallbackEmojis: Record<string, string> = {
-    contributor: "👤", commit: "🔀", policy: "🛡️", violationKind: "⚠",
+    contributor: "👤", commit: "🔀", policy: "🛡", violationKind: "⚠",
   };
   const prefix = emoji || fallbackEmojis[node.Kind] || "";
-  return `${prefix}${statusIcon}${node.Label}`;
+  let label = node.Label;
+  if (prefix && label.startsWith(prefix)) {
+    label = label.substring(prefix.length);
+  }
+  return `${prefix}${statusIcon}${label}`;
 }
 
 export function treeNodeContextValue(node: TreeNodeData): string {
@@ -1291,7 +1295,7 @@ export class MonorepoTreeItem extends vscode.TreeItem {
   }
 }
 
-function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
+export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
   const label = treeNodeDisplayLabel(node);
   const hasChildren = (node.Children && node.Children.length > 0);
   const collapsible = hasChildren ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None;

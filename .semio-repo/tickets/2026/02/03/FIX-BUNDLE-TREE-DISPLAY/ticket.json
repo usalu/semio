@@ -15,9 +15,8 @@
         "finished": "2026-02-03T19:13:34.392795273Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
       "prompt": "The bundle tree command is not showing properly as a tree of project-\u003eebundle relationships. Currently showing a flat list instead of a hierarchical tree structure.",
       "llm": "opus-4-5",

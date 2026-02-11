@@ -1,6 +1,6 @@
 {
   "title": "Fix Browser Launch and Attach",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "unable launch browser, unable to attch browser",
       "llm": "gpt-5-2-codex",

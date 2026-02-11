@@ -343,6 +343,8 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(goalCommand(factory, &config))
 	root.AddCommand(projectCommand(factory, &config))
 	root.AddCommand(contributorCommand(factory, &config))
+	root.AddCommand(violationKindCommand(factory, &config))
+	root.AddCommand(commitCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
 	root.AddCommand(folderCommand(factory, &config))
 	root.AddCommand(fileCommand(factory, &config))
@@ -407,6 +409,8 @@ func syncGithubCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 }
+
+
 
 func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var dryRun bool
@@ -559,6 +563,9 @@ func treeCommand(factory EngineFactory, config *Config) *cobra.Command {
 			if len(args) > 0 {
 				filter.Query = args[0]
 			}
+			if queryFlag, _ := cmd.Flags().GetString("query"); queryFlag != "" && filter.Query == "" {
+				filter.Query = queryFlag
+			}
 
 			buildOpts := TreeBuildOptions{
 				IncludeSections: filter.OnlyKinds[TreeNodeSection] ||
@@ -672,6 +679,7 @@ func bindTreeFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("no-contributor-name", nil, "Exclude specific contributors")
 	cmd.Flags().StringSlice("only-policy-name", nil, "Only show specific policies")
 	cmd.Flags().StringSlice("no-policy-name", nil, "Exclude specific policies")
+	cmd.Flags().String("query", "", "Bleve full-text search query")
 }
 
 func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
@@ -768,6 +776,7 @@ func buildTreeFilterFromFlags(cmd *cobra.Command) TreeFilter {
 	filter.ExcludeContributors, _ = cmd.Flags().GetStringSlice("no-contributor-name")
 	filter.OnlyPolicies, _ = cmd.Flags().GetStringSlice("only-policy-name")
 	filter.ExcludePolicies, _ = cmd.Flags().GetStringSlice("no-policy-name")
+	filter.Query, _ = cmd.Flags().GetString("query")
 
 	return filter
 }
@@ -906,11 +915,24 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 					for _, p := range pols {
 						pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}
 						sb.WriteString(renderEntityMarkdown("policy", pData) + "\n")
-						for _, k := range p.Kinds {
-							meta := k.Info()
-							vkData := map[string]interface{}{"id": string(k), "description": meta.Reason}
-							sb.WriteString("  " + renderEntityMarkdown("violationKind", vkData) + "\n")
+						vkTree := buildViolationKindTree(p.Kinds)
+						policyChildren := vkTree
+						if len(vkTree) == 1 && vkTree[0].Kind == TreeNodeCategory {
+							policyChildren = vkTree[0].Children
 						}
+						var renderVkTree func(nodes []*TreeNode, indent string)
+						renderVkTree = func(nodes []*TreeNode, indent string) {
+							for _, n := range nodes {
+								if n.Data != nil {
+									vkData := map[string]interface{}{"id": n.Data["id"], "description": n.Data["reason"]}
+									sb.WriteString(indent + renderEntityMarkdown("violationKind", vkData) + "\n")
+								} else {
+									sb.WriteString(indent + "- " + n.Label + "\n")
+								}
+								renderVkTree(n.Children, indent+"  ")
+							}
+						}
+						renderVkTree(policyChildren, "  ")
 					}
 					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
 					stream <- Event{Kind: KindResult, Command: "policy tree", Data: data}
@@ -923,14 +945,29 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 							pChildPrefix = "    "
 						}
 						stream <- Event{Kind: KindLog, Level: "info", Command: "policy tree", Message: pConn + p.Name + " - " + p.Description}
-						for j, k := range p.Kinds {
-							meta := k.Info()
-							vkConn := pChildPrefix + "├── "
-							if j == len(p.Kinds)-1 {
-								vkConn = pChildPrefix + "└── "
-							}
-							stream <- Event{Kind: KindLog, Level: "info", Command: "policy tree", Message: vkConn + string(k) + " - " + meta.Reason}
+						vkTree := buildViolationKindTree(p.Kinds)
+						policyChildren := vkTree
+						if len(vkTree) == 1 && vkTree[0].Kind == TreeNodeCategory {
+							policyChildren = vkTree[0].Children
 						}
+						var renderVkText func(nodes []*TreeNode, prefix string)
+						renderVkText = func(nodes []*TreeNode, prefix string) {
+							for j, n := range nodes {
+								conn := prefix + "├── "
+								childPrefix := prefix + "│   "
+								if j == len(nodes)-1 {
+									conn = prefix + "└── "
+									childPrefix = prefix + "    "
+								}
+								label := n.Label
+								if n.Description != "" {
+									label += " - " + n.Description
+								}
+								stream <- Event{Kind: KindLog, Level: "info", Command: "policy tree", Message: conn + label}
+								renderVkText(n.Children, childPrefix)
+							}
+						}
+						renderVkText(policyChildren, pChildPrefix)
 					}
 				}
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
@@ -2173,83 +2210,132 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 		Use:   "tree",
 		Short: "Show goal tree",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			showTickets, _ := cmd.Flags().GetBool("show-tickets")
+			opts := getStreamOptions(cmd)
 			statusFilter := getStatusFilter(cmd)
-			var statusVar string
-			if statusFilter != nil {
-				if *statusFilter == "open" {
-					statusVar = "OPEN"
-				} else if *statusFilter == "closed" {
-					statusVar = "CLOSED"
-				}
-			}
+			showTickets, _ := cmd.Flags().GetBool("show-tickets")
 
-			variables := map[string]interface{}{}
-			var query string
-			if showTickets {
-				if statusVar != "" {
-					variables["status"] = statusVar
-					query = `query GoalTree($status: TicketStatus) {
-						repo {
-							goals {
-								id
-								title
-								status
-								dueDate
-								createdAt
-								description
-								parent
-							}
-							tickets(status: $status) {
-								id
-								slug
-								status
-								goal
-								parent
-							}
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "goal tree"}
+
+				goalChan := make(chan *Goal)
+				go func() {
+					StreamGoals(context.Background(), goalChan, opts)
+				}()
+				var goals []*Goal
+				for g := range goalChan {
+					if statusFilter != nil {
+						if *statusFilter == "open" && g.Status != "open" {
+							continue
 						}
-					}`
-				} else {
-					query = `query GoalTree {
-						repo {
-							goals {
-								id
-								title
-								status
-								dueDate
-								createdAt
-								description
-								parent
-							}
-							tickets {
-								id
-								slug
-								status
-								goal
-								parent
-							}
-						}
-					}`
-				}
-			} else {
-				query = `query GoalTree {
-					repo {
-						goals {
-							id
-							title
-							status
-							dueDate
-							createdAt
-							description
-							parent
+						if *statusFilter == "closed" && g.Status != "closed" {
+							continue
 						}
 					}
-				}`
-			}
-			return runGraphQL(cmd, factory, config, query, variables)
+					goals = append(goals, g)
+				}
+				sort.Slice(goals, func(i, j int) bool { return goals[i].ID < goals[j].ID })
+
+				var tickets []Ticket
+				if showTickets {
+					allTickets, err := ListTickets(nil, nil, nil)
+					if err == nil {
+						for _, t := range allTickets {
+							if statusFilter != nil {
+								if *statusFilter == "open" && t.Status != TicketStatusOpen {
+									continue
+								}
+								if *statusFilter == "closed" && t.Status != TicketStatusClosed {
+									continue
+								}
+							}
+							if opts.Query != "" {
+								if !matchesQuery(t.GetID()+" "+t.Slug+" "+t.Title+" "+string(t.Status), opts) {
+									continue
+								}
+							}
+							tickets = append(tickets, t)
+						}
+					}
+				}
+
+				goalMap := make(map[string]*Goal)
+				for _, g := range goals {
+					goalMap[g.ID] = g
+				}
+
+				if config.IsMarkdown() {
+					var sb strings.Builder
+					for _, g := range goals {
+						gData := map[string]interface{}{"id": g.ID, "title": g.Title, "status": g.Status, "description": g.Description}
+						sb.WriteString(renderEntityMarkdown("goal", gData) + "\n")
+					}
+					if showTickets {
+						for _, t := range tickets {
+							tData := map[string]interface{}{"id": t.GetID(), "slug": t.Slug, "status": string(t.Status)}
+							sb.WriteString(renderEntityMarkdown("ticket", tData) + "\n")
+						}
+					}
+					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
+					stream <- Event{Kind: KindResult, Command: "goal tree", Data: data}
+				} else {
+					type treeItem struct {
+						id       string
+						label    string
+						parent   string
+						isGoal   bool
+						children []*treeItem
+					}
+					itemMap := make(map[string]*treeItem)
+					var roots []*treeItem
+					for _, g := range goals {
+						item := &treeItem{id: g.ID, label: g.GetID() + " - " + g.Title + " - " + g.Status, parent: g.Parent, isGoal: true}
+						itemMap[g.ID] = item
+					}
+					if showTickets {
+						for _, t := range tickets {
+							item := &treeItem{id: t.GetID(), label: t.GetID() + " - " + t.Slug + " - " + string(t.Status), parent: t.Parent, isGoal: false}
+							goalID := t.Goal
+							if goalID != "" {
+								item.parent = goalID
+							}
+							itemMap[t.GetID()] = item
+						}
+					}
+					for _, item := range itemMap {
+						if item.parent != "" {
+							if p, ok := itemMap[item.parent]; ok {
+								p.children = append(p.children, item)
+								continue
+							}
+						}
+						roots = append(roots, item)
+					}
+					sort.Slice(roots, func(i, j int) bool { return roots[i].id < roots[j].id })
+					var renderTree func(items []*treeItem, prefix string)
+					renderTree = func(items []*treeItem, prefix string) {
+						for i, item := range items {
+							connector := prefix + "├── "
+							childPrefix := prefix + "│   "
+							if i == len(items)-1 {
+								connector = prefix + "└── "
+								childPrefix = prefix + "    "
+							}
+							stream <- Event{Kind: KindLog, Level: "info", Command: "goal tree", Message: connector + item.label}
+							sort.Slice(item.children, func(a, b int) bool { return item.children[a].id < item.children[b].id })
+							renderTree(item.children, childPrefix)
+						}
+					}
+					renderTree(roots, "")
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
 		},
 	}
 	treeCmd.Flags().Bool("show-tickets", false, "Show tickets in the goal tree")
+	bindStreamFlags(treeCmd)
 	bindStatusFlags(treeCmd)
 
 	root.AddCommand(listCmd)
@@ -2258,6 +2344,147 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	root.AddCommand(closeCmd)
 	root.AddCommand(reopenCmd)
 	root.AddCommand(treeCmd)
+	return root
+}
+
+func violationKindCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "violationKind", Short: "Violation kind management commands"}
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List violation kinds",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts := getStreamOptions(cmd)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "violationKind list"}
+				vkChan := make(chan ViolationKindMeta)
+				go func() {
+					StreamViolationKinds(context.Background(), vkChan, opts)
+				}()
+				for vk := range vkChan {
+					data, err := json.Marshal(map[string]interface{}{"violationKind": vk})
+					if err != nil {
+						continue
+					}
+					stream <- Event{Kind: KindResult, Command: "violationKind list", Data: data}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
+		},
+	}
+	bindStreamFlags(listCmd)
+	treeCmd := &cobra.Command{
+		Use:   "tree",
+		Short: "Show violation kind tree",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts := getStreamOptions(cmd)
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "violationKind tree"}
+				vkChan := make(chan ViolationKindMeta)
+				go func() {
+					StreamViolationKinds(context.Background(), vkChan, opts)
+				}()
+				var vks []ViolationKindMeta
+				for vk := range vkChan {
+					vks = append(vks, vk)
+				}
+				sort.Slice(vks, func(i, j int) bool { return string(vks[i].Kind) < string(vks[j].Kind) })
+				if config.IsMarkdown() {
+					var sb strings.Builder
+					var kinds []ViolationKind
+					for _, vk := range vks {
+						kinds = append(kinds, vk.Kind)
+					}
+					vkTree := buildViolationKindTree(kinds)
+					var renderVkTree func(nodes []*TreeNode, indent string)
+					renderVkTree = func(nodes []*TreeNode, indent string) {
+						for _, n := range nodes {
+							if n.Data != nil {
+								vkData := map[string]interface{}{"id": n.Data["id"], "description": n.Data["reason"]}
+								sb.WriteString(indent + renderEntityMarkdown("violationKind", vkData) + "\n")
+							} else {
+								sb.WriteString(indent + "- " + n.Label + "\n")
+							}
+							renderVkTree(n.Children, indent+"  ")
+						}
+					}
+					renderVkTree(vkTree, "")
+					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
+					stream <- Event{Kind: KindResult, Command: "violationKind tree", Data: data}
+				} else {
+					var kinds []ViolationKind
+					for _, vk := range vks {
+						kinds = append(kinds, vk.Kind)
+					}
+					vkTree := buildViolationKindTree(kinds)
+					var renderVkText func(nodes []*TreeNode, prefix string)
+					renderVkText = func(nodes []*TreeNode, prefix string) {
+						for j, n := range nodes {
+							conn := prefix + "├── "
+							childPrefix := prefix + "│   "
+							if j == len(nodes)-1 {
+								conn = prefix + "└── "
+								childPrefix = prefix + "    "
+							}
+							label := n.Label
+							if n.Description != "" {
+								label += " - " + n.Description
+							}
+							stream <- Event{Kind: KindLog, Level: "info", Command: "violationKind tree", Message: conn + label}
+							renderVkText(n.Children, childPrefix)
+						}
+					}
+					renderVkText(vkTree, "")
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
+		},
+	}
+	bindStreamFlags(treeCmd)
+	root.AddCommand(listCmd)
+	root.AddCommand(treeCmd)
+	return root
+}
+
+func commitCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "commit", Short: "Commit management commands"}
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List commits",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			opts := getStreamOptions(cmd)
+			limit := 100
+			if l, _ := cmd.Flags().GetInt("limit"); l > 0 {
+				limit = l
+			}
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "commit list"}
+				commitChan := make(chan Commit)
+				go func() {
+					StreamCommits(context.Background(), &limit, commitChan, opts)
+				}()
+				for c := range commitChan {
+					data, err := json.Marshal(map[string]interface{}{"commit": c})
+					if err != nil {
+						continue
+					}
+					stream <- Event{Kind: KindResult, Command: "commit list", Data: data}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
+		},
+	}
+	listCmd.Flags().Int("limit", 100, "Maximum number of commits to show")
+	bindStreamFlags(listCmd)
+	root.AddCommand(listCmd)
 	return root
 }
 
@@ -4760,7 +4987,7 @@ func buildViolationKindTree(kinds []ViolationKind) []*TreeNode {
 	orderedRootKeys := []string{}
 
 	for _, k := range kinds {
-		parts := strings.Split(string(k), ":")
+		parts := strings.Split(string(k), "/")
 		current := rootEntries
 		currentOrdered := &orderedRootKeys
 		for i, part := range parts {
@@ -4770,7 +4997,7 @@ func buildViolationKindTree(kinds []ViolationKind) []*TreeNode {
 					Kind:  TreeNodeViolationKindNode,
 					ID:    string(k),
 					Label: part,
-					URI:   "semiorepo://violationKind/" + strings.ToUpper(Slugify(string(k))),
+					URI:   "semiorepo://violationKind/" + ViolationKindIdToUriPath(string(k)),
 				}
 				if isLeaf {
 					meta := k.Info()
@@ -4793,9 +5020,9 @@ func buildViolationKindTree(kinds []ViolationKind) []*TreeNode {
 						"solution":    meta.Solution,
 					}
 				} else {
-					prefix := strings.Join(parts[:i+1], ":")
+					prefix := strings.Join(parts[:i+1], "/")
 					n.ID = "violationCategory:" + prefix
-					n.URI = "semiorepo://violationKind/" + strings.ToUpper(Slugify(prefix))
+					n.URI = "semiorepo://violationKind/" + ViolationKindIdToUriPath(prefix)
 					n.Kind = TreeNodeCategory
 				}
 				current[part] = &treeEntry{node: n, children: make(map[string]*treeEntry)}
@@ -6431,8 +6658,7 @@ func IsGenerated(path string) bool {
 		return true
 	}
 
-	if strings.Contains(path, "generated") { // risky
-		// return true
+	if strings.Contains(path, "generated") {
 	}
 	return false
 }
@@ -6766,7 +6992,7 @@ func (t *Ticket) GetLLM() string {
 
 func (t *Ticket) GetClient() string {
 	if len(t.Interactions) > 0 {
-		return t.Interactions[len(t.Interactions)-1].System.Client
+		return t.Interactions[len(t.Interactions)-1].Client
 	}
 	return ""
 }
@@ -6878,7 +7104,7 @@ type ViolationKindMeta struct {
 
 func (v *ViolationKindMeta) IsNode() {}
 func (v *ViolationKindMeta) GetID() string {
-	return fmt.Sprintf("%s%s", emojiText(EmojiViolationKind), string(v.Kind))
+	return fmt.Sprintf("%s%s", emojiText(EmojiViolationKind), ViolationKindPathToIdValue(string(v.Kind)))
 }
 
 func (v *ViolationKindMeta) GetURI() string {
@@ -8134,7 +8360,16 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 	inlineCommentActive := false
 	allDirectives := l.SkipDirectives()
 	for i, line := range lines {
+		if i == 0 {
+			panic(fmt.Sprintf("BaseLanguage.ScanComments running for file %s", file))
+		}
 		lineNum := i + 1
+
+		if i == 0 && strings.HasPrefix(strings.TrimSpace(line), "#!") {
+			charIndex += len(line) + 1
+			continue
+		}
+
 		if headerSection != nil && lineNum >= headerSection.StartLine && lineNum <= headerSection.EndLine {
 			charIndex += len(line) + 1
 			continue
@@ -8352,6 +8587,12 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 					break
 				}
 				trimmed := strings.TrimSpace(line)
+
+				if lineNum == 1 && strings.HasPrefix(trimmed, "#!") {
+					fmt.Printf("[DEBUG] Ignoring shebang at line 1: %s\n", trimmed)
+					break
+				}
+
 				shouldSkip := false
 				for _, directive := range allDirectives {
 					if strings.HasPrefix(trimmed, prefix+" "+directive) {
@@ -8460,6 +8701,10 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 	scanState := CommentScanState{}
 	inlineCommentActive := false
 	for i, line := range lines {
+		if i == 0 && strings.HasPrefix(strings.TrimSpace(line), "#!") {
+			charIndex += len(line) + 1
+			continue
+		}
 		lineNum := i + 1
 
 		if headerSection != nil && lineNum >= headerSection.StartLine && lineNum <= headerSection.EndLine {
@@ -8748,7 +8993,7 @@ func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 				inImportBlock = false
 			} else if trimmed != "" {
 
-				imports = append(imports, strings.Trim(trimmed, ",")) // handle comma if present (Go doesn't use commas usually in imports)
+				imports = append(imports, strings.Trim(trimmed, ","))
 			}
 			continue
 		}
@@ -9432,11 +9677,6 @@ func GetSystem() string {
 	}
 }
 
-type System struct {
-	Version string `json:"version,omitempty" yaml:"version,omitempty"`
-	Client  string `json:"client" yaml:"client"`
-}
-
 type InteractionDates struct {
 	Started  string  `json:"started" yaml:"started"`
 	Finished *string `json:"finished,omitempty" yaml:"finished,omitempty"`
@@ -9445,53 +9685,15 @@ type InteractionDates struct {
 type Interaction struct {
 	Dates  InteractionDates `json:"dates" yaml:"dates"`
 	Author string           `json:"author" yaml:"author"`
-	System System           `json:"system" yaml:"system"`
+	System string           `json:"system" yaml:"system"`
+	Client string           `json:"client" yaml:"client"`
 	Commit string           `json:"commit" yaml:"commit"`
 	Prompt string           `json:"prompt,omitempty" yaml:"prompt,omitempty"`
 	LLM    string           `json:"llm,omitempty" yaml:"llm,omitempty"`
 	Diff   *TicketDiffs     `json:"diff,omitempty" yaml:"diff,omitempty"`
 }
 
-func (i *Interaction) UnmarshalJSON(data []byte) error {
-	type interactionAlias struct {
-		Dates    InteractionDates `json:"dates"`
-		Author   json.RawMessage  `json:"author"`
-		System   System           `json:"system"`
-		Commit   string           `json:"commit"`
-		Prompt   string           `json:"prompt,omitempty"`
-		LLM      string           `json:"llm,omitempty"`
-		Diff     *TicketDiffs     `json:"diff,omitempty"`
-		Started  string           `json:"started,omitempty"`
-		Finished *string          `json:"finished,omitempty"`
-	}
 
-	var aux interactionAlias
-	if err := json.Unmarshal(data, &aux); err != nil {
-		return err
-	}
-
-	author, err := parseInteractionAuthor(aux.Author)
-	if err != nil {
-		return err
-	}
-
-	i.Dates = aux.Dates
-
-	if i.Dates.Started == "" && aux.Started != "" {
-		i.Dates.Started = aux.Started
-	}
-	if i.Dates.Finished == nil && aux.Finished != nil {
-		i.Dates.Finished = aux.Finished
-	}
-	i.Author = author
-	i.System = aux.System
-	i.Commit = aux.Commit
-	i.Prompt = aux.Prompt
-	i.LLM = aux.LLM
-	i.Diff = aux.Diff
-
-	return nil
-}
 
 func resolveAuthorToGithub(name, email string) string {
 	contributors, err := ListContributors()
@@ -9528,29 +9730,7 @@ func resolveAuthorToGithub(name, email string) string {
 	return ""
 }
 
-func parseInteractionAuthor(raw json.RawMessage) (string, error) {
-	if len(raw) == 0 || string(raw) == "null" {
-		return "", nil
-	}
 
-	var asString string
-	if err := json.Unmarshal(raw, &asString); err == nil {
-		return asString, nil
-	}
-
-	var asAuthor GitAuthor
-	if err := json.Unmarshal(raw, &asAuthor); err == nil {
-		if asAuthor.GitHub != "" {
-			return asAuthor.GitHub, nil
-		}
-		resolved := resolveAuthorToGithub(asAuthor.Name, asAuthor.Email)
-		if resolved != "" {
-			return resolved, nil
-		}
-	}
-
-	return "", fmt.Errorf("invalid interaction author payload")
-}
 
 type TicketSection struct {
 	Name        string       `json:"name"`
@@ -9639,44 +9819,44 @@ type TicketDates struct {
 type ViolationKind string
 
 const (
-	ViolationCodeHeaderMissingRegion        ViolationKind = "code:header:missing-region"
-	ViolationCodeHeaderWrongFileId          ViolationKind = "code:header:wrong-file-id"
-	ViolationCodeHeaderMissingContributors  ViolationKind = "code:header:missing-contributors"
-	ViolationCodeHeaderMissingSummary       ViolationKind = "code:header:missing-summary"
-	ViolationCodeHeaderMissingLicense       ViolationKind = "code:header:missing-license"
-	ViolationCodeHeaderMissingLicenseRegion ViolationKind = "code:header:missing-license-region"
-	ViolationCodeHeaderWrongLicense         ViolationKind = "code:header:wrong-license"
-	ViolationCodeHeaderMissingSpecsRegion   ViolationKind = "code:header:missing-specs-region"
-	ViolationCodeSectionEmpty               ViolationKind = "code:section:empty"
-	ViolationCodeSectionOrphanDefinition    ViolationKind = "code:section:orphan-definition"
-	ViolationCodeSectionMissingStartName    ViolationKind = "code:section:missing-start-name"
-	ViolationCodeSectionMissingEndName      ViolationKind = "code:section:missing-end-name"
-	ViolationCodeSectionNameMismatch        ViolationKind = "code:section:name-mismatch"
-	ViolationCodeCommentInline              ViolationKind = "code:comment:inline"
-	ViolationCodeCommentBlock               ViolationKind = "code:comment:block"
-	ViolationCodeCommentJSDoc               ViolationKind = "code:comment:jsdoc"
-	ViolationCodeSpecsSyntax                ViolationKind = "code:specs:implementation-syntax"
-	ViolationCodeDocsMissingReadme          ViolationKind = "code:docs:missing-readme"
-	ViolationDevDocsMissingFile             ViolationKind = "dev-docs:missing-file"
-	ViolationDevDocsMissingFolder           ViolationKind = "dev-docs:missing-folder"
-	ViolationDevDocsWrongFilePath           ViolationKind = "dev-docs:wrong-file-path"
-	ViolationDevDocsWrongFolderPath         ViolationKind = "dev-docs:wrong-folder-path"
-	ViolationDevDocsWrongFileName           ViolationKind = "dev-docs:wrong-file-name"
-	ViolationDevDocsWrongFolderName         ViolationKind = "dev-docs:wrong-folder-name"
-	ViolationDevDocsWrongFileOrder          ViolationKind = "dev-docs:wrong-file-order"
-	ViolationDevDocsWrongFolderOrder        ViolationKind = "dev-docs:wrong-folder-order"
-	ViolationDevDocsMissingComponent        ViolationKind = "dev-docs:missing-component"
-	ViolationDevDocsWrongComponentName      ViolationKind = "dev-docs:wrong-component-name"
-	ViolationDevDocsWrongComponentOrder     ViolationKind = "dev-docs:wrong-component-order"
-	ViolationSketchpadImportThirdParty      ViolationKind = "sketchpad:import:third-party-outside-elements"
-	ViolationSketchpadStateMultipleMachines ViolationKind = "sketchpad:state:multiple-machines"
-	ViolationSketchpadStateCreateActor      ViolationKind = "sketchpad:state:create-actor-usage"
-	ViolationSketchpadStateYjsAppState      ViolationKind = "sketchpad:state:yjs-app-state"
-	ViolationSketchpadStateForbiddenStore   ViolationKind = "sketchpad:state:forbidden-store"
-	ViolationSketchpadHooksNonTriadic       ViolationKind = "sketchpad:hooks:non-triadic"
-	ViolationCodeUnicodeEmojiVariation      ViolationKind = "code:unicode:emoji-variation"
-	ViolationRepoMissingCommand             ViolationKind = "repo:missing-command"
-	ViolationRepoMissingTicketTracking      ViolationKind = "repo:missing-ticket-tracking"
+	ViolationCodeHeaderMissingRegion        ViolationKind = "code/header/missing-region"
+	ViolationCodeHeaderWrongFileId          ViolationKind = "code/header/wrong-file-id"
+	ViolationCodeHeaderMissingContributors  ViolationKind = "code/header/missing-contributors"
+	ViolationCodeHeaderMissingSummary       ViolationKind = "code/header/missing-summary"
+	ViolationCodeHeaderMissingLicense       ViolationKind = "code/header/missing-license"
+	ViolationCodeHeaderMissingLicenseRegion ViolationKind = "code/header/missing-license-region"
+	ViolationCodeHeaderWrongLicense         ViolationKind = "code/header/wrong-license"
+	ViolationCodeHeaderMissingSpecsRegion   ViolationKind = "code/header/missing-specs-region"
+	ViolationCodeSectionEmpty               ViolationKind = "code/section/empty"
+	ViolationCodeSectionOrphanDefinition    ViolationKind = "code/section/orphan-definition"
+	ViolationCodeSectionMissingStartName    ViolationKind = "code/section/missing-start-name"
+	ViolationCodeSectionMissingEndName      ViolationKind = "code/section/missing-end-name"
+	ViolationCodeSectionNameMismatch        ViolationKind = "code/section/name-mismatch"
+	ViolationCodeCommentInline              ViolationKind = "code/comment/inline"
+	ViolationCodeCommentBlock               ViolationKind = "code/comment/block"
+	ViolationCodeCommentJSDoc               ViolationKind = "code/comment/jsdoc"
+	ViolationCodeSpecsSyntax                ViolationKind = "code/specs/implementation-syntax"
+	ViolationCodeDocsMissingReadme          ViolationKind = "code/docs/missing-readme"
+	ViolationDevDocsMissingFile             ViolationKind = "dev-docs/missing-file"
+	ViolationDevDocsMissingFolder           ViolationKind = "dev-docs/missing-folder"
+	ViolationDevDocsWrongFilePath           ViolationKind = "dev-docs/wrong-file-path"
+	ViolationDevDocsWrongFolderPath         ViolationKind = "dev-docs/wrong-folder-path"
+	ViolationDevDocsWrongFileName           ViolationKind = "dev-docs/wrong-file-name"
+	ViolationDevDocsWrongFolderName         ViolationKind = "dev-docs/wrong-folder-name"
+	ViolationDevDocsWrongFileOrder          ViolationKind = "dev-docs/wrong-file-order"
+	ViolationDevDocsWrongFolderOrder        ViolationKind = "dev-docs/wrong-folder-order"
+	ViolationDevDocsMissingComponent        ViolationKind = "dev-docs/missing-component"
+	ViolationDevDocsWrongComponentName      ViolationKind = "dev-docs/wrong-component-name"
+	ViolationDevDocsWrongComponentOrder     ViolationKind = "dev-docs/wrong-component-order"
+	ViolationSketchpadImportThirdParty      ViolationKind = "sketchpad/import/third-party-outside-elements"
+	ViolationSketchpadStateMultipleMachines ViolationKind = "sketchpad/state/multiple-machines"
+	ViolationSketchpadStateCreateActor      ViolationKind = "sketchpad/state/create-actor-usage"
+	ViolationSketchpadStateYjsAppState      ViolationKind = "sketchpad/state/yjs-app-state"
+	ViolationSketchpadStateForbiddenStore   ViolationKind = "sketchpad/state/forbidden-store"
+	ViolationSketchpadHooksNonTriadic       ViolationKind = "sketchpad/hooks/non-triadic"
+	ViolationCodeUnicodeEmojiVariation      ViolationKind = "code/unicode/emoji-variation"
+	ViolationRepoMissingCommand             ViolationKind = "repo/missing-command"
+	ViolationRepoMissingTicketTracking      ViolationKind = "repo/missing-ticket-tracking"
 )
 
 var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
@@ -10691,6 +10871,32 @@ func Slugify(text string) string {
 	re := regexp.MustCompile(`[^A-Z0-9]+`)
 	slug := re.ReplaceAllString(strings.ToUpper(text), "-")
 	return strings.Trim(slug, "-")
+}
+
+func TitleizeSlug(slug string) string {
+	words := strings.Split(slug, "-")
+	for i, w := range words {
+		if len(w) > 0 {
+			words[i] = strings.ToUpper(w[:1]) + strings.ToLower(w[1:])
+		}
+	}
+	return strings.Join(words, " ")
+}
+
+func ViolationKindPathToIdValue(path string) string {
+	parts := strings.Split(path, "/")
+	for i, p := range parts {
+		parts[i] = TitleizeSlug(p)
+	}
+	return strings.Join(parts, "#")
+}
+
+func ViolationKindIdValueToPath(idValue string) string {
+	parts := strings.Split(idValue, "#")
+	for i, p := range parts {
+		parts[i] = strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p), " ", "-"))
+	}
+	return strings.Join(parts, "/")
 }
 
 func ExecCommand(command string, args []string, cwd string) (stdout, stderr string, exitCode int) {
@@ -12375,6 +12581,7 @@ func commentPolicy(ctx *PolicyContext) []Violation {
 		if language == nil || !language.SupportsComments() {
 			continue
 		}
+
 		lines := strings.Split(content, "\n")
 		langViolations := language.ScanComments(ctx, file, content, lines)
 		violations = append(violations, langViolations...)
@@ -12489,14 +12696,47 @@ func emojiPolicy(ctx *PolicyContext) []Violation {
 	if err != nil {
 		return violations
 	}
+	// Emojis that default to text presentation and MUST have VS16 to be colorful
+	textDefaultEmojis := []string{
+		"\U0001F3D7", // 🏗
+		"\u2328",     // ⌨
+		"\U0001F5B1", // 🖱
+		"\U0001F5C3", // 🗃
+		"\u2699",     // ⚙
+		"\u2696",     // ⚖
+		"\U0001F3F7", // 🏷
+		"\U0001F6E0", // 🛠
+		"\u2702",     // ✂
+		"\U0001F6E1", // 🛡
+	}
 	for _, file := range files {
 		content := ctx.ReadText(file)
-		if strings.Contains(content, "\uFE0E") || strings.Contains(content, "\uFE0F") {
+		hasVS15 := strings.Contains(content, "\uFE0E")
+		hasMissingVS16 := false
+		for _, emoji := range textDefaultEmojis {
+			temp := strings.ReplaceAll(content, emoji+"\uFE0F", "")
+			if strings.Contains(temp, emoji) {
+				hasMissingVS16 = true
+				break
+			}
+		}
+
+		if hasVS15 || hasMissingVS16 {
 			lines := strings.Split(content, "\n")
 			for i, line := range lines {
-				if strings.Contains(line, "\uFE0E") || strings.Contains(line, "\uFE0F") {
+				lineHasVS15 := strings.Contains(line, "\uFE0E")
+				lineHasMissingVS16 := false
+				for _, emoji := range textDefaultEmojis {
+					temp := strings.ReplaceAll(line, emoji+"\uFE0F", "")
+					if strings.Contains(temp, emoji) {
+						lineHasMissingVS16 = true
+						break
+					}
+				}
+
+				if lineHasVS15 || lineHasMissingVS16 {
 					violations = append(violations, ctx.CreateViolation(
-						"Emoji variation selectors (VS15/VS16) are forbidden",
+						"Emoji must use colorful variation (VS16) and avoid text variation (VS15)",
 						ViolationCodeUnicodeEmojiVariation,
 						file, i+1, 0, strings.TrimSpace(line)))
 				}
@@ -13387,7 +13627,7 @@ func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 	violationsByPolicy := make(map[string][]Violation)
 
 	for _, v := range ctx.Violations {
-		parts := strings.Split(string(v.Kind), ":")
+		parts := strings.Split(string(v.Kind), "/")
 		if len(parts) > 0 {
 			policyID := parts[0]
 			violationsByPolicy[policyID] = append(violationsByPolicy[policyID], v)
@@ -14063,10 +14303,8 @@ func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal s
 			Prompt: prompt,
 			LLM:    llmSlug,
 			Author: gitAuthor,
-			System: System{
-				Client:  uiSlug,
-				Version: GetSystem(),
-			},
+			System: GetSystem(),
+			Client: uiSlug,
 			Dates: InteractionDates{
 				Started: now.Format("2006-01-02 15:04:05"),
 			},
@@ -15438,7 +15676,9 @@ func matchesQuery(text string, opts StreamOptions) bool {
 	defer index.Close()
 	doc := map[string]interface{}{"text": text}
 	index.Index("item", doc)
-	searchRequest := bleve.NewSearchRequest(bleve.NewMatchQuery(opts.Query))
+	mq := bleve.NewMatchQuery(opts.Query)
+	mq.SetFuzziness(2)
+	searchRequest := bleve.NewSearchRequest(mq)
 	searchRequest.Size = 1
 	results, err := index.Search(searchRequest)
 	if err != nil {
@@ -15473,7 +15713,9 @@ func bleveFilterItems(items []queryableItem, query string) map[int]bool {
 		doc := map[string]interface{}{"text": item.text}
 		index.Index(fmt.Sprintf("%d", item.idx), doc)
 	}
-	searchRequest := bleve.NewSearchRequest(bleve.NewMatchQuery(query))
+	mq := bleve.NewMatchQuery(query)
+	mq.SetFuzziness(2)
+	searchRequest := bleve.NewSearchRequest(mq)
 	searchRequest.Size = len(items)
 	results, err := index.Search(searchRequest)
 	if err != nil {
@@ -16224,6 +16466,9 @@ func ProgressTicket(ticket *Ticket, summary string) (string, error) {
 }
 
 func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool, bulk bool) error {
+	if ticket.Status != TicketStatusOpen {
+		return fmt.Errorf("ticket is not open")
+	}
 	if !bulk {
 		if summary == "" {
 			return fmt.Errorf("summary is required to finish a ticket")
@@ -16363,10 +16608,8 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 		Prompt: prompt,
 		LLM:    llmSlug,
 		Author: gitAuthor,
-		System: System{
-			Client:  uiSlug,
-			Version: GetSystem(),
-		},
+		System: GetSystem(),
+		Client: uiSlug,
 		Dates: InteractionDates{
 			Started: time.Now().Format("2006-01-02 15:04:05"),
 		},
@@ -18448,10 +18691,8 @@ func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 			Prompt: input.Prompt,
 			LLM:    llmSlug,
 			Author: gitAuthor,
-			System: System{
-				Client:  uiSlug,
-				Version: GetSystem(),
-			},
+			System: GetSystem(),
+			Client: uiSlug,
 			Dates: InteractionDates{
 				Started: time.Now().Format("2006-01-02 15:04:05"),
 			},
@@ -18654,6 +18895,10 @@ func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 	}
 	goal.ID = input.ID
 
+	if goal.Status == "closed" {
+		return nil, fmt.Errorf("goal is already closed")
+	}
+
 	goal.Status = "closed"
 	goal.Summary = input.Summary
 	now := time.Now()
@@ -18693,6 +18938,10 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	}
 	goal.ID = input.ID
 
+	if goal.Status == "open" {
+		return nil, fmt.Errorf("goal is already open")
+	}
+
 	goal.Status = "open"
 
 	if input.Title != nil {
@@ -18716,10 +18965,8 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 		Prompt: input.Prompt,
 		LLM:    input.LLM,
 		Author: gitAuthor,
-		System: System{
-			Client:  input.Client,
-			Version: GetSystem(),
-		},
+		System: GetSystem(),
+		Client: input.Client,
 		Commit: gitCommit,
 		Dates: InteractionDates{
 			Started: time.Now().Format("2006-01-02 15:04:05"),
@@ -18791,7 +19038,7 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 			if err != nil {
 				return nil, err
 			}
-			ticket.Interactions[len(ticket.Interactions)-1].System.Client = uiSlug
+			ticket.Interactions[len(ticket.Interactions)-1].Client = uiSlug
 			changed = true
 		}
 	}
@@ -19172,8 +19419,26 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 		case ViolationCodeUnicodeEmojiVariation:
 			if v.Line > 0 && v.Line <= len(lines) {
 				line := lines[v.Line-1]
-				line = strings.ReplaceAll(line, "\uFE0E", "")
-				line = strings.ReplaceAll(line, "\uFE0F", "")
+				// Replace VS15 with VS16
+				line = strings.ReplaceAll(line, "\uFE0E", "\uFE0F")
+				// Ensure text-default emojis have VS16
+				textDefaultEmojis := []string{
+					"\U0001F3D7", // 🏗
+					"\u2328",     // ⌨
+					"\U0001F5B1", // 🖱
+					"\U0001F5C3", // 🗃
+					"\u2699",     // ⚙
+					"\u2696",     // ⚖
+					"\U0001F3F7", // 🏷
+					"\U0001F6E0", // 🛠
+					"\u2702",     // ✂
+					"\U0001F6E1", // 🛡
+				}
+				for _, emoji := range textDefaultEmojis {
+					// Normalize by stripping VS16 then adding it back
+					line = strings.ReplaceAll(line, emoji+"\uFE0F", emoji)
+					line = strings.ReplaceAll(line, emoji, emoji+"\uFE0F")
+				}
 				lines[v.Line-1] = line
 				fixed++
 			}
@@ -27279,6 +27544,53 @@ func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) e
 	return nil
 }
 
+func StreamViolationKinds(ctx context.Context, out chan<- ViolationKindMeta, opts ...StreamOptions) error {
+	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+	for _, meta := range violationKindInfoTable {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if !matchesFilter(string(meta.Kind), options) && !matchesFilter(meta.Reason, options) {
+				continue
+			}
+			if !matchesQuery(string(meta.Kind)+" "+meta.Reason+" "+meta.Solution, options) {
+				continue
+			}
+			out <- meta
+		}
+	}
+	return nil
+}
+
+func StreamCommits(ctx context.Context, limit *int, out chan<- Commit, opts ...StreamOptions) error {
+	defer close(out)
+	var options StreamOptions
+	if len(opts) > 0 {
+		options = opts[0]
+	}
+	commits := LoadCommits(limit)
+	for _, c := range commits {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		default:
+			if !matchesFilter(c.SHA, options) && !matchesFilter(c.Title, options) {
+				continue
+			}
+			if !matchesQuery(c.SHA+" "+c.Title, options) {
+				continue
+			}
+			out <- c
+		}
+	}
+	return nil
+}
+
 func SaveGoal(goal Goal) error {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(goal.ID), "goal.json")
@@ -28249,7 +28561,7 @@ func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string
 }
 
 func ViolationKindIdToUriPath(id string) string {
-	parts := strings.Split(id, ":")
+	parts := strings.Split(id, "/")
 	for i, p := range parts {
 		parts[i] = Slugify(p)
 	}
@@ -28261,7 +28573,7 @@ func ViolationKindUriPathToId(uriPath string) string {
 	for i, p := range parts {
 		parts[i] = strings.ToLower(strings.ReplaceAll(p, "-", "-"))
 	}
-	return strings.Join(parts, ":")
+	return strings.Join(parts, "/")
 }
 
 func GetArtifactID(kind string, data map[string]interface{}) string {
@@ -28385,7 +28697,7 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		return emojiText(EmojiViolationKinds)
 	case "violationKind":
 		id, _ := data["id"].(string)
-		return fmt.Sprintf("%s%s", emojiText(EmojiViolationKind), id)
+		return fmt.Sprintf("%s%s", emojiText(EmojiViolationKind), ViolationKindPathToIdValue(id))
 	case "contributors":
 		return emojiText(EmojiContributors)
 	case "contributor":
@@ -28612,7 +28924,7 @@ func IdToUri(id string) string {
 		case "policy":
 			return "semiorepo://policy" + strings.ToUpper(value)
 		case "violationKind":
-			return "semiorepo://violationKind/" + ViolationKindIdToUriPath(value)
+			return "semiorepo://violationKind/" + ViolationKindIdToUriPath(ViolationKindIdValueToPath(value))
 		case "contributor":
 			return "semiorepo://contributor/" + strings.ToUpper(value)
 		case "commit":
@@ -28719,7 +29031,7 @@ func UriToId(uri string) string {
 		return emojiText("🚫")
 	case strings.HasPrefix(p, "violationKind/"):
 		v := strings.TrimPrefix(p, "violationKind/")
-		return fmt.Sprintf("%s%s", emojiText("🚫"), ViolationKindUriPathToId(v))
+		return fmt.Sprintf("%s%s", emojiText("🚫"), ViolationKindPathToIdValue(ViolationKindUriPathToId(v)))
 	case p == "contributors":
 		return emojiText("👤")
 	case strings.HasPrefix(p, "contributor/"):

@@ -10,9 +10,8 @@
         "started": "2025-12-16T17:06:07.854Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Complete Python engine tests to match TypeScript semio.test.ts functionality",
       "llm": "sonnet-4-5"

@@ -16,10 +16,8 @@
         "finished": "2026-02-09 23:28:22"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
       "prompt": "Migrate Code Hygiene, Repo Tooling Sync, Artifact Kind Derivation, Ticket Workflow Signals, Code Report, Monorepo Tree, Section Tree, Shell Language Support, Ticket System, MCP Tool Gateway, and Contributors sections from root README.md into semio-repo/cli/README.md Docs section.",
       "llm": "opus-4-6",

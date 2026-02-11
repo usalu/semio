@@ -13,9 +13,8 @@
         "finished": "2026-02-01T14:04:45.371944902Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "97980ebafb5e1bc5ed94fefd79d497af3bf9b43e",
       "prompt": "Adjust configs for Project/Bundle layout",
       "llm": "gemini-3-pro",

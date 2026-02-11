@@ -1,6 +1,6 @@
 {
   "title": "Design Parity Migration",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Restore Design app feature parity by migrating key behaviors from .old files into new build (Details panel logic, cluster/expand commands, connection mapping), with transactions and tests.",
       "llm": "gpt-5-2-codex",

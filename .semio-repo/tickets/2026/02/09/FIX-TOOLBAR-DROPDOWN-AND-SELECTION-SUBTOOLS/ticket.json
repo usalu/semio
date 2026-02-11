@@ -1,6 +1,6 @@
 {
   "title": "Fix Toolbar Dropdown and Selection Subtools",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix the toolbar dropdown visibility and reorganize Selection tool to have Selection and Hand subtools, with Additive/Subtractive in settings.",
       "llm": "gemini-3-pro",

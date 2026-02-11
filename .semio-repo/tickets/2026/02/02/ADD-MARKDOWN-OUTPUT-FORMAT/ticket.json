@@ -16,9 +16,8 @@
         "finished": "2026-02-02T18:42:29.434170976Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Introduce a global --md flag that outputs the result in markdown format. Markdown should be used by the mcp server. Make sure every command has three different output formats: human colored text with ids used by the cli, markdown with uris used by mcp and json mode that has all information.",
       "llm": "gemini-3-pro",

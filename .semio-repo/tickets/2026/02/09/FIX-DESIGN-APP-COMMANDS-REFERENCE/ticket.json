@@ -1,6 +1,6 @@
 {
   "title": "Fix Design App Commands Reference",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix sketchpad design app runtime error: Uncaught ReferenceError: appCommands is not defined in Design.tsx and verify toolbar behavior remains stable.",
       "llm": "gpt-5-2-codex",

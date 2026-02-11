@@ -10,9 +10,8 @@
         "started": "2025-12-17T18:39:17.532Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "",
       "prompt": "Improve and extend toolbar mechanism across all sketchpad apps",
       "llm": "sonnet-4"

@@ -10,9 +10,8 @@
         "started": "2025-11-29T00:00:00Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Migration from old format",
       "llm": "sonnet-4"

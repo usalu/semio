@@ -16,10 +16,8 @@
         "finished": "2026-02-09 07:44:09"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "system": "linux",
+      "client": "claude-code",
       "commit": "b75598f17efe304824cda5c67a7b6535dd1e3c92",
       "prompt": "Make sure the content of all properties of items are properly escaped into a single line string to be between property tags in CLI list output. Currently, multiline content like ticket summaries breaks the formatting.",
       "llm": "opus-4-6",

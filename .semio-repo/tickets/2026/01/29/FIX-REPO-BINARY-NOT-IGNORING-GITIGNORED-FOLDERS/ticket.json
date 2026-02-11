@@ -16,9 +16,8 @@
         "finished": "2026-01-29T09:35:48.329226376Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "The repo binary is not properly ignoring folders that are in .gitignore. For example, js/storybook-static is gitignored but still shows up as a folder in repo tool output. Investigate and fix the folder listing/tree logic to respect .gitignore rules.",
       "llm": "opus-4-5",

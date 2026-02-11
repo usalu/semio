@@ -12,7 +12,7 @@ Refactored semio-repo VS Code extension: consolidated logging, simplified utilit
 ### extension.ts
 
 - **Consolidated logging**: Extracted `writeLog(level, args)` helper shared by `log()` and `logError()` to eliminate duplicate file-writing logic.
-- **Simplified `getRepoBinaryPath`**: Replaced unnecessary array iteration with single candidate construction.
+- **Simplified `getRepoBinaryPath`**: Replaced unnecessary array interaction with single candidate construction.
 - **Simplified `getGitHubRepoBaseUrl`**: Removed repeated `cachedRepoBaseUrl = undefined; return cachedRepoBaseUrl;` pattern with inline assignment returns.
 - **Exported `parseRepoEvents` and `extractRepoResult`**: Made public so tests can import instead of duplicating.
 - **DRY GraphQL fetch functions**: Introduced `queryGraphQL<T>()` generic helper that handles client null-check, error logging, and data extraction. All 8 fetch functions now delegate to it.

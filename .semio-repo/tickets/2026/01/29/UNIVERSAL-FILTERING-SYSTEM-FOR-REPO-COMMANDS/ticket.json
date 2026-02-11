@@ -16,9 +16,8 @@
         "finished": "2026-01-29T12:24:22.627979859Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "prompt": "Add --only-\u003ckind\u003e flags for every --no-\u003ckind\u003e flag. Add --filter, --regex, --match-case, --match-whole-word to all list and tree commands. Make file kind filters work across all commands. Refactor VSCode extension filter UI to a dedicated filter section with all business logic in the binary.",
       "llm": "sonnet-4-5",

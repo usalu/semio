@@ -13,9 +13,8 @@
         "finished": "2026-02-03T17:20:33.244144966Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "The goal folder is messed up again. There must be an issue with the code. Make sure that the goals are cleanly nested in the folders and that the binary works. The tests are apparently not comprehensive. Extend the existing test file the missing parts that were not tested. Dont create any new test files. A single test should always cover one unit and do multiple tests for that unit. Tests should not interact with external systems. Make sure all tests pass.",
       "llm": "gemini-3-pro"

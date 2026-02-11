@@ -1,6 +1,6 @@
 {
   "title": "Fix Browser Attach Failure",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix UNABLE TO LAUNCH BROWER: Unable to attach browser in local VS Code/debug workflow",
       "llm": "gpt-5-2-codex",

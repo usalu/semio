@@ -16,10 +16,8 @@
         "finished": "2026-02-06 09:35:46"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "codex"
-      },
+      "system": "linux",
+      "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Always uninstall semio-repo extension before install to avoid stale versions",
       "llm": "gpt-5-2-codex",
@@ -319,10 +317,8 @@
         "finished": "2026-02-06 09:36:20"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "codex"
-      },
+      "system": "linux",
+      "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Record GitHub label warning from close",
       "llm": "gpt-5-2-codex",

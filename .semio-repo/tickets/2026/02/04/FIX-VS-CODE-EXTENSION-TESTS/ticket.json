@@ -12,10 +12,8 @@
         "finished": "2026-02-04 15:26:18"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
       "prompt": "Extend semio-repo/vscode extension.test.ts to cover Monorepo/Filter sideview behavior; fix vscode-test SIGSEGV; ensure build+tests pass; update README.md and AGENTS.md.",
       "llm": "sonnet-4-5",

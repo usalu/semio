@@ -12,9 +12,8 @@
         "finished": "2026-01-03T00:33:52Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb",
       "prompt": "\"vscode extension: Remove Open Ticket button from tickets. Instead add reopen and close icons and execute the command once pressed. Remove status emoji from ticket. Add commit tree item. Just show description on ticket tree item hover.\"",
       "llm": "sonnet-4-5"

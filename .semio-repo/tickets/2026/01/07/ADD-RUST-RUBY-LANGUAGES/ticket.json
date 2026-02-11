@@ -10,9 +10,8 @@
         "started": "0001-01-01T00:00:00Z"
       },
       "author": "Ueli Saluz \u003cuelisemio.tech\u003e",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "",
       "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
       "llm": "opus-4"

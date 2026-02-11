@@ -10,9 +10,8 @@
         "started": "2025-12-26T02:41:46.068Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "d20b7f8143fbee8696b534c8a6465753544ce37d",
       "prompt": "\u003e-",
       "llm": "sonnet-4-5"

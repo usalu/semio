@@ -16,9 +16,8 @@
         "finished": "2026-02-02T20:43:44.318156429Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Fix post-attach codegen failure: duplicate identifier 'filterProvider' in semio-repo/vscode/extension.ts during graphql-codegen.",
       "llm": "gpt-5-2-codex",

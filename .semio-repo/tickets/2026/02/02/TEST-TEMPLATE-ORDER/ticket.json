@@ -13,9 +13,8 @@
         "finished": "2026-02-02T21:35:43.482893941Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Testing the section order in ticket.md",
       "llm": "opus-4-5",

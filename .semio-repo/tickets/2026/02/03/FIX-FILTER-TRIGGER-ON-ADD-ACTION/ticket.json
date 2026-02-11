@@ -1,6 +1,6 @@
 {
   "title": "Fix Filter Trigger on Add Action",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "there is a bug happening when i press on the action add Kit or Add type, the coresponding Button for the filter gets triggered as well. Change/refactor/extend whatever is necessary to get it working.",
       "llm": "gemini-3-pro",

@@ -16,10 +16,8 @@
         "finished": "2026-02-09 23:46:42"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
       "prompt": "Rename .bundle.md/.folder.md to README.md, merge summaries and docs from AGENTS.md Codebase and README.md Bundles/Ecosystems into distributed README.md files. Introduce code:docs:missing-readme violation kind. Extend tests.",
       "llm": "opus-4-6",

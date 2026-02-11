@@ -1,6 +1,6 @@
 {
   "title": "Fix PanelKind ReferenceError in PanelToggles",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix Uncaught ReferenceError: PanelKind is not defined in PanelToggles in Sketchpad.tsx",
       "llm": "gemini-3-pro",

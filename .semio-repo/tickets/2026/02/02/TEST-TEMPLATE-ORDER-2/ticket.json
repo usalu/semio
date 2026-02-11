@@ -13,9 +13,8 @@
         "finished": "2026-02-02T21:36:02.722459606Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Testing section order",
       "llm": "opus-4-5",

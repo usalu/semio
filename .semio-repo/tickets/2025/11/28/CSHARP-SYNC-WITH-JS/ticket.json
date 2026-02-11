@@ -10,9 +10,8 @@
         "started": "2025-12-16T17:06:07.746Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Sync C# codebase with JS schema changes",
       "llm": "sonnet-4"

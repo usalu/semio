@@ -16,10 +16,8 @@
         "finished": "2026-02-09 22:12:26"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "Migrate software requirements specifications from AGENTS.md and README.md into source code at their proper locations. Introduce a new specs violation kind for the code policy that validates specs are implementation-agnostic and properly located. Bundle specs go to .bundle.md files, folder specs to .folder.md files, file specs to header Specs sections, section specs under section starts, and definition specs in language-native docstrings. Extend existing tests to cover the new violation kind.",
       "llm": "opus-4-6",

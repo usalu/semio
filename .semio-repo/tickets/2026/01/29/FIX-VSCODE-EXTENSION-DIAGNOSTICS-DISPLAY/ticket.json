@@ -16,9 +16,8 @@
         "finished": "2026-01-29T08:21:30.974174963Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "The violations don't show in the vscode extension as diagnostics. Make sure violations show up for files like semio.ts. Test and fix until violations are properly displayed as diagnostics everywhere.",
       "llm": "opus-4-5",

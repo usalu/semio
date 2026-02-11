@@ -16,10 +16,8 @@
         "finished": "2026-02-09 09:58:14"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "windsurf-chat"
-      },
+      "system": "linux",
+      "client": "windsurf-chat",
       "commit": "b75598f17efe304824cda5c67a7b6535dd1e3c92",
       "prompt": "Extend/change/refactor all source code headers to include: ID, Summary, Contributors, License section, and Specs section. Support all languages. Ensure 100% of source code files have the new header. Move file-wide requirements from AGENTS.md and README.md to source code headers. Extend existing tests. No legacy API or backwards compatibility.",
       "llm": "sonnet-4-5",

@@ -1,6 +1,6 @@
 {
   "title": "Port Color Strategy for Compatibility",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "create a color strategy for ports to enhance user experience, including compatible ports and different port types, and refactor as needed",
       "llm": "gpt-5-2-codex",

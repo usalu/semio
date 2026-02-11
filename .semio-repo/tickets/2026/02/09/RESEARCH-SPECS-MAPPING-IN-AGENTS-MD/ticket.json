@@ -16,10 +16,8 @@
         "finished": "2026-02-09 17:02:02"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "Research the Business Logic and UI/UX sections of AGENTS.md to produce a structured mapping of which specs belong to which files/bundles/folders/sections",
       "llm": "opus-4-6",

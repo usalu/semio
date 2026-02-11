@@ -1,6 +1,6 @@
 {
   "title": "Toolbar Cleanup And Alignment",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix toolbar: remove scrollbar, align subtools dropdown above trigger, and clean toolbar border.",
       "llm": "gpt-5-2-codex",

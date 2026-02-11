@@ -16,10 +16,8 @@
         "finished": "2026-02-09 08:34:04"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "windsurf-chat"
-      },
+      "system": "linux",
+      "client": "windsurf-chat",
       "commit": "b75598f17efe304824cda5c67a7b6535dd1e3c92",
       "prompt": "All trees of policies are currently flat but it should be in the same tree as the id of the violation kind. Both in semio repo cli and semio repo vscode extension. The policy list command shows flat policies without violation kinds. There is no policy tree command. Need to add policy tree command to CLI and ensure VS Code extension shows the same hierarchical structure.",
       "llm": "sonnet-4-5",

@@ -12,9 +12,8 @@
         "finished": "2025-12-23T13:28:53.505Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "b41e500849192cc526ed0ce105fff7e2a478e3f0",
       "prompt": "Refactor all the scripts to be able to use tsx directly.",
       "llm": "composer-1"

@@ -34,5 +34,5 @@ test = [
 
 [tool.pytest.ini_options]
 python_files = ["test_*.py", "*_test.py", "*.test.py"]
-testpaths = ["py/semio", "py/engine"]
+testpaths = ["semio/py", "semio/engine"]
 addopts = "--import-mode=importlib"

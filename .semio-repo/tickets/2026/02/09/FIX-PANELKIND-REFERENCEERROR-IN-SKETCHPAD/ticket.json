@@ -1,6 +1,6 @@
 {
   "title": "Fix PanelKind ReferenceError in Sketchpad",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Fix Uncaught ReferenceError: PanelKind is not defined in AppPanelToggles in Sketchpad.tsx",
       "llm": "gemini-3-pro",

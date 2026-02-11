@@ -20,7 +20,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 # endregion License
 
 # region Specs
@@ -30,7 +29,6 @@
 
 import json
 import xml.etree.ElementTree as ET
-
 
 def extract_param_props(param_element):
     props = {}
@@ -46,14 +44,12 @@ def extract_param_props(param_element):
     props["kind"] = props.get("name", "unknown")
     return props
 
-
 def is_numeric(s):
     try:
         float(s)
         return True
     except (TypeError, ValueError):
         return False
-
 
 def get_pivot_y(container_chunk):
     attributes_chunk = container_chunk.find("./chunks/chunk[@name='Attributes']")
@@ -67,7 +63,6 @@ def get_pivot_y(container_chunk):
                     except (TypeError, ValueError):
                         pass
     return float("inf")
-
 
 def parse_components_and_groups_xml(xml_file_path):
     tree = ET.parse(xml_file_path)
@@ -249,7 +244,6 @@ def parse_components_and_groups_xml(xml_file_path):
                     if group_name:
                         groups[group_name] = subgroups
     return groups
-
 
 definition = "components"
 xml_file = f"assets/grasshopper/{definition}.ghx"

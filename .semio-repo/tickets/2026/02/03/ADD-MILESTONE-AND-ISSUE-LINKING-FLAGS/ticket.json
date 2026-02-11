@@ -16,9 +16,8 @@
         "finished": "2026-02-03T09:40:06.049718601Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Add --milestone flag to goal creation to link existing milestone instead of creating new one. Add --issue flag to ticket creation to link existing issue instead of creating new one.",
       "llm": "opus-4-5",

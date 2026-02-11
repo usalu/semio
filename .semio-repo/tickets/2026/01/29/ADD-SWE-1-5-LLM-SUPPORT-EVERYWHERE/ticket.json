@@ -16,9 +16,8 @@
         "finished": "2026-01-29T11:13:56.253208688Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "prompt": "The swe-1-5 llm should be supported everywhere. Need to identify all places where LLM models are configured or referenced and ensure swe-1-5 is included in the available options.",
       "llm": "sonnet-4-5",

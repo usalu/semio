@@ -16,10 +16,8 @@
         "finished": "2026-02-09 11:09:36"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "Fix failing tests in semio-repo/cli due to schema mismatches and missing logic",
       "llm": "gemini-3-pro",

@@ -1,13 +1,23 @@
 {
   "title": "Kit Diagram Node Parity with Design App",
-  "iterations": [
+  "status": "open",
+  "prompt": "",
+  "summary": "Refactored Kit diagram nodes to use circular TableAvatar style, matching the Design app pieces. Updated intersection math and node dimensions to ICON_WIDTH (50px).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/217"
+  },
+  "started": "0001-01-01T00:00:00Z",
+  "interactions": [
     {
+      "dates": {
+        "started": ""
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "86d699419815d98b01c413b9a7f515a727af586b",
       "prompt": "Update Kit diagram nodes to use circular TableAvatar style instead of large rectangular frames, matching the Design app's piece nodes. Update intersection math for circular geometry.",
       "llm": "gemini-3-flash",
-      "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-01-26T16:58:55.778029648Z",
-      "commit": "86d699419815d98b01c413b9a7f515a727af586b",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -428,18 +438,15 @@
       }
     },
     {
-      "prompt": "Scale up kit diagram nodes to double size and align relationship edges to circle outline",
-      "llm": "gpt-5-2-codex",
-      "ui": "copilot-chat",
+      "dates": {
+        "started": ""
+      },
       "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-01-27T10:30:46.019731039Z",
-      "commit": "86d699419815d98b01c413b9a7f515a727af586b"
+      "system": "",
+      "client": "",
+      "commit": "86d699419815d98b01c413b9a7f515a727af586b",
+      "prompt": "Scale up kit diagram nodes to double size and align relationship edges to circle outline",
+      "llm": "gpt-5-2-codex"
     }
-  ],
-  "status": "open",
-  "dates": {},
-  "summary": "Refactored Kit diagram nodes to use circular TableAvatar style, matching the Design app pieces. Updated intersection math and node dimensions to ICON_WIDTH (50px).",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/217"
-  }
+  ]
 }

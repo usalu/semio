@@ -10,9 +10,8 @@
         "started": "2026-01-03T03:08:28Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",
       "prompt": "contributions should be derived from the tickets (frontmatter) and files (headers) instead of being hardcoded. Sort contributors by amount of tickets contributed. Extend the contributions list command. Adjust also the vscode extension tree.",
       "llm": "sonnet-4-5"

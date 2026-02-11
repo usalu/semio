@@ -13,10 +13,8 @@
         "finished": "2026-02-09 15:18:00"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "windsurf-chat"
-      },
+      "system": "linux",
+      "client": "windsurf-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "All items returned from the CLI (either tree or list) should always be on a single line. All properties should be separated by `-` and wrapped in backticks. Multi-line content (e.g., summaries, descriptions) must be collapsed to a single line. Backticks in content must be escaped to prevent breaking markdown wrapping. Extend existing tests to cover everything.",
       "llm": "sonnet-4-5",

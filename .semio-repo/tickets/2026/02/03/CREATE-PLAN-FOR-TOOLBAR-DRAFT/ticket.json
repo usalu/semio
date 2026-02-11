@@ -1,6 +1,6 @@
 {
   "title": "Create Plan for Toolbar Draft",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Create a plan for .semio-repo/drafts/Toolbar.md",
       "llm": "gpt-5-2-codex",

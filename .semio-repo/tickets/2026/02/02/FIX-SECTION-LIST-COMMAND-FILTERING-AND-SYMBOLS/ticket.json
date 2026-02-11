@@ -16,9 +16,8 @@
         "finished": "2026-02-02T20:37:17.117490473Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "The section list command shows sections from all files instead of just the specified file. It also uses § (definition symbol) instead of # (section symbol). Child sections should display as #SECTION#CHILDSECTION#...",
       "llm": "opus-4-5",

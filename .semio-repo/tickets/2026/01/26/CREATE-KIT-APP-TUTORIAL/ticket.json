@@ -1,13 +1,23 @@
 {
   "title": "Create Kit App Tutorial",
-  "iterations": [
+  "status": "closed",
+  "prompt": "",
+  "summary": "Created a comprehensive detailed tutorial for the Kit application architecture, explaining the separation of Y.js (collaborative notepad) and XState (interaction rulebook). Fixed missing documentation links in README.md and updated AGENTS.md with SRS and codebase details.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/211"
+  },
+  "started": "0001-01-01T00:00:00Z",
+  "interactions": [
     {
+      "dates": {
+        "started": ""
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "86d699419815d98b01c413b9a7f515a727af586b",
       "prompt": "Create a deep-dive tutorial for the Kit app in js/semio/sketchpad/Kit.tsx focusing on architecture, internals, and teaching comments as requested by the user.",
       "llm": "gemini-3-flash",
-      "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-01-26T15:30:55.681535173Z",
-      "commit": "86d699419815d98b01c413b9a7f515a727af586b",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -227,13 +237,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-26T15:38:24.766948709Z"
-  },
-  "summary": "Created a comprehensive detailed tutorial for the Kit application architecture, explaining the separation of Y.js (collaborative notepad) and XState (interaction rulebook). Fixed missing documentation links in README.md and updated AGENTS.md with SRS and codebase details.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/211"
-  }
+  ]
 }

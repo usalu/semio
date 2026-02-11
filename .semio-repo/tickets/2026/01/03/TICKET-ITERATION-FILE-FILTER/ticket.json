@@ -10,9 +10,8 @@
         "started": "2026-01-03T03:33:11Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "757a4d5aa0cf14f288561eed3253d5195a96e75e",
       "prompt": "Scope interaction and ticket line diffs to declared ticket files",
       "llm": "gpt-5"

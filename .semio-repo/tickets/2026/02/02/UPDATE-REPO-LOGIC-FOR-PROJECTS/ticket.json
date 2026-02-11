@@ -16,9 +16,8 @@
         "finished": "2026-02-02T18:16:00.901482944Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "Refactor semio-repo/cli to support Project entity, new ID system, and new URI scheme.",
       "llm": "gemini-3-pro",

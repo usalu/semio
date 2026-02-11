@@ -12,9 +12,8 @@
         "finished": "2025-12-18T16:22:19.556Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
       "prompt": "The panel base needs to have panel background color",
       "llm": "gpt-5.2-codex"

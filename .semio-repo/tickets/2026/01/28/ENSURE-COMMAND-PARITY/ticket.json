@@ -16,9 +16,8 @@
         "finished": "2026-01-28T14:51:25.915640668Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
       "prompt": "Ensure parity between repo cli commands, mcp tools and vscode extension commands",
       "llm": "gemini-3-pro",

@@ -15,9 +15,8 @@
         "finished": "2026-02-04 16:13:24"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "client": "copilot-chat"
-      },
+      "system": "",
+      "client": "copilot-chat",
       "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
       "prompt": "Make sure that all commands show either perfect human output, perfect markdown output or perfect json output. e.g. all tree commands with --md are currently just showing wrong lists. Use proper nested bullet lists for the markdown output on tree commands",
       "llm": "gemini-3-pro",

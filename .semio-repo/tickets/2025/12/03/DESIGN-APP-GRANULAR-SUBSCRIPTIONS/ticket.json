@@ -10,9 +10,8 @@
         "started": "2025-12-16T17:06:07.833Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Optimize state management with granular Y.js subscriptions",
       "llm": "sonnet-4-5"

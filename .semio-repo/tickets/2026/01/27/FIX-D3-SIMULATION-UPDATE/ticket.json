@@ -1,13 +1,23 @@
 {
   "title": "Fix D3 Simulation Update",
-  "iterations": [
+  "status": "closed",
+  "prompt": "",
+  "summary": "Added aggressive logging to D3 simulation events and fixed broken drag handler logic.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/226"
+  },
+  "started": "0001-01-01T00:00:00Z",
+  "interactions": [
     {
+      "dates": {
+        "started": ""
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "7f7fc35393b8fc23d8f7772e0ec32b56f4fc85c7",
       "prompt": "Add aggressive logging and fix simulation loop",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-01-27T18:15:13.267301251Z",
-      "commit": "7f7fc35393b8fc23d8f7772e0ec32b56f4fc85c7",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -312,13 +322,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-27T18:15:52.718740205Z"
-  },
-  "summary": "Added aggressive logging to D3 simulation events and fixed broken drag handler logic.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/226"
-  }
+  ]
 }

@@ -13,10 +13,8 @@
         "started": "2026-02-08 01:22:07"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "The emoji system is not consistent. Use plain emojis everywhere. Add a violation kind to code policy and autofix it by replacing the unicode string with actual plain emojis. Strip things like variation selector (e.g. VS15 / text presentation). Fix the codebase.",
       "llm": "gemini-3-pro"

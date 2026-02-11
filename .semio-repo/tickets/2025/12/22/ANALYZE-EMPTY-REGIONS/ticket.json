@@ -10,9 +10,8 @@
         "started": "2025-12-22T22:16:35.062Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "",
       "prompt": "Extend the analyze and fix code hook to check and remove empty regions.",
       "llm": "sonnet-4-5"

@@ -16,10 +16,8 @@
         "finished": "2026-02-09 23:31:35"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
       "prompt": "Migrate Command Tree, Sections Explorer, and semio/vscode subsections from root README.md into the semio-repo/vscode/README.md Docs section",
       "llm": "opus-4-6",

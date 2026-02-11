@@ -16,9 +16,8 @@
         "finished": "2026-01-29T09:26:06.846062658Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Add extract command to repo CLI/GraphQL and implement drag and drop in VS Code extension codebase view",
       "llm": "gemini-3-pro",

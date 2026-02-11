@@ -10,9 +10,8 @@
         "started": "2026-01-07T09:57:52Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a1c46c41e5c88ce33dad3bafcb07738a56e4e25d",
       "prompt": "Refactor ticket system from interactions to checkpoints. Checkpoints are created when todos complete, require files, compute git diffs, and track affected sections/definitions.",
       "llm": "opus-4"

@@ -16,10 +16,8 @@
         "finished": "2026-02-09 15:18:19"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "windsurf-chat"
-      },
+      "system": "linux",
+      "client": "windsurf-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "All items returned from the CLI (tree or list) should always be on a single line with properties separated by `-` and wrapped in backticks. Multi-line content like summaries must be collapsed to a single line. Extend existing tests to cover this. Make all tests pass.",
       "llm": "sonnet-4-5",

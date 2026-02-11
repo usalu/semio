@@ -1,6 +1,6 @@
 {
   "title": "Fix Toolbar Visibility",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The toolbar isnt visible anymore. dont stop until its fixed",
       "llm": "gemini-3-pro",

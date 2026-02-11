@@ -16,9 +16,8 @@
         "finished": "2026-02-03T10:03:04.930721236Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Fix parent goal/ticket functionality, restructure goal tree, and assign tickets.",
       "llm": "gemini-3-pro",

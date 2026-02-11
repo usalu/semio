@@ -16,9 +16,8 @@
         "finished": "2026-02-03T12:03:52.127201335Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Configure GitHub CLI to automatically link all ticket issues to project https://github.com/users/usalu/projects/2 and assign tickets to the creating account. Test with gh cli.",
       "llm": "opus-4-5",

@@ -16,10 +16,8 @@
         "finished": "2026-02-09 16:57:13"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "Research the existing policy/violation system in the Go repo CLI including ViolationCode constants, Policy structs, CheckPoliciesWithContext, test patterns, and applyAutofixes mechanism",
       "llm": "opus-4-6",

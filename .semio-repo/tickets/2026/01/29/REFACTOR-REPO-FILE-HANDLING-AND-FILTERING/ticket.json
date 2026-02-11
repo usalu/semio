@@ -16,9 +16,8 @@
         "finished": "2026-02-03T08:50:01.799858111Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Refactor file kinds, ignored/generated flags, and filtering in CLI and VS Code",
       "llm": "gemini-3-pro"

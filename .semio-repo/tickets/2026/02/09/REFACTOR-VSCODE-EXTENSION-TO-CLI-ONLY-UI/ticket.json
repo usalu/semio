@@ -16,10 +16,8 @@
         "finished": "2026-02-09 15:51:52"
       },
       "author": "usalu",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "32703bbc26e2dc6a2d53dd53e2921f883abf1bb5",
       "prompt": "Refactor the semio-repo VS Code extension to delegate all business logic to the CLI. Fix file emoji mapping to use correct kind-specific emojis from CLI output. Replace client-side search with CLI tree --search. Fix artifact ID generation to produce correct emoji-prefixed IDs with full section paths. Extend CLI where incomplete. Refactor existing test file to cover all changes. No legacy API or backwards compatibility.",
       "llm": "opus-4-6",

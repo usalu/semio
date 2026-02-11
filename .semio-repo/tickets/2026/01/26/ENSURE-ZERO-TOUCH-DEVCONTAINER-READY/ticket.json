@@ -1,13 +1,23 @@
 {
   "title": "Ensure Zero Touch Devcontainer Ready",
-  "iterations": [
+  "status": "closed",
+  "prompt": "",
+  "summary": "Ensure zero-touch devcontainer readiness by fixing volume permissions in post-create and post-start scripts, automating extension installation in post-attach, and migrating play/docs to ESM for correct Vite resolution.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/208"
+  },
+  "started": "0001-01-01T00:00:00Z",
+  "interactions": [
     {
+      "dates": {
+        "started": ""
+      },
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "eeb8272d91c5437d9c455971d216c6c538261f87",
       "prompt": "Ensure devcontainer reaches ready-to-go state without manual steps, fixing Nx module resolution and extension installation issues.",
       "llm": "gemini-3-flash",
-      "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-01-26T13:48:16.490025543Z",
-      "commit": "eeb8272d91c5437d9c455971d216c6c538261f87",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -230,13 +240,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "dates": {
-    "closed": "2026-01-26T14:22:18.688169959Z"
-  },
-  "summary": "Ensure zero-touch devcontainer readiness by fixing volume permissions in post-create and post-start scripts, automating extension installation in post-attach, and migrating play/docs to ESM for correct Vite resolution.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/208"
-  }
+  ]
 }

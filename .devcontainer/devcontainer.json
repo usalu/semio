@@ -199,16 +199,15 @@
             "previewLimit": 50
           }
         ],
-        "dotnet.defaultSolution": "net/Semio.sln",
+        "dotnet.defaultSolution": "Monorepo.sln",
         "chat.agent.maxRequests": 5000,
         "editor.minimap.enabled": true,
         "[svg]": {
           "editor.defaultFormatter": "jock.svg"
         },
         "rust-analyzer.linkedProjects": [
-          "rs/semio/Cargo.toml"
+          "semio/rs/Cargo.toml"
         ],
-        "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
         "terminal.integrated.defaultProfile.linux": "bash"
       }
     }

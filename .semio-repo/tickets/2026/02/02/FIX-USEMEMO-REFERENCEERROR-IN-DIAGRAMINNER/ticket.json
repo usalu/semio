@@ -1,6 +1,6 @@
 {
   "title": "Fix useMemo ReferenceError in DiagramInner",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "The DiagramInner component in elements.tsx throws a ReferenceError because useMemo is used without the React. prefix when using namespace imports.",
       "llm": "gemini-3-flash",

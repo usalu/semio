@@ -12,9 +12,8 @@
         "finished": "2025-12-20T13:38:37.874Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
       "prompt": "Introduce Field\u003cT\u003e type and useDesignAppField helper to reduce hook boilerplate",
       "llm": "opus-4-5"

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// ⚙️vitest.config.ts
+// ⚙vitest.config.ts
 
 // 225 Ueli Saluz <ueli@semio-tech.com>
 

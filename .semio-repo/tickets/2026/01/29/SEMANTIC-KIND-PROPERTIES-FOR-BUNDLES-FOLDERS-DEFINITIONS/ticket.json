@@ -16,9 +16,8 @@
         "finished": "2026-01-29T17:24:09.584333056Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "ad633f6c27d019ad29c21e97cd6bb8b59751ef87",
       "prompt": "Expand bundle, folder, definition to have semantic kind properties. Add filtering by kind, time, contributor, policy, and violation-kind dimensions. Update VS Code extension filter tree.",
       "llm": "opus-4-5",

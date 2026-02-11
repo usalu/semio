@@ -16,9 +16,8 @@
         "finished": "2026-01-29T11:01:25.821221004Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Extend the ticket mechanism to include an `important.md` file for compulsory actions. This file must be created on ticket open, and ticket close must fail if the file is not empty.",
       "llm": "sonnet-4-5",
@@ -9456,9 +9455,8 @@
         "finished": "2026-01-29T11:04:06.702277601Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Delete the important.md file when closing a ticket",
       "llm": "sonnet-4-5",

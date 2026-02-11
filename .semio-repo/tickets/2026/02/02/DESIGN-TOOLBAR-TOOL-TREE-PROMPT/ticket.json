@@ -1,6 +1,6 @@
 {
   "title": "Design Toolbar Tool Tree Prompt",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Generate a professional prompt to redesign the toolbar into a tool tree with clustered tools and expandable subtools such as filters.",
       "llm": "gpt-5-2-codex",

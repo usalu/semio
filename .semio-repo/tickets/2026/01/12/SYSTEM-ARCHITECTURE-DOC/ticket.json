@@ -10,9 +10,8 @@
         "started": "2026-01-29T19:44:03.418422Z"
       },
       "author": "Migration Script",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "",
       "prompt": "Migrated from legacy files"
     }

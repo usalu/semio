@@ -10,9 +10,8 @@
         "started": "2025-12-16T17:06:07.9Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Fix vite-browser-external dynamic import failure in production deployment",
       "llm": "sonnet-4-5"

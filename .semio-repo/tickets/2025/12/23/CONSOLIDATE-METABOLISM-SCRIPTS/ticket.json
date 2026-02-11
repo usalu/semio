@@ -12,9 +12,8 @@
         "finished": "2025-12-23T13:42:09.548Z"
       },
       "author": "uelisaluz",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "b41e500849192cc526ed0ce105fff7e2a478e3f0",
       "prompt": "\u003e-",
       "llm": "composer-1"

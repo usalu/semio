@@ -1,6 +1,6 @@
 {
   "title": "Move Selection Modes to Tool Settings",
-  "iterations": [
+  "interactions": [
     {
       "prompt": "Refactor additive, subtractive, intersect selection modes from subtools to tool settings in Sketchpad toolbar",
       "llm": "gemini-3-pro",

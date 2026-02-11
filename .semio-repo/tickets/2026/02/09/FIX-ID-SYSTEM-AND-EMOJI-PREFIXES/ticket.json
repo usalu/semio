@@ -13,10 +13,8 @@
         "started": "2026-02-09 07:21:28"
       },
       "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "system": "linux",
+      "client": "copilot-chat",
       "commit": "b75598f17efe304824cda5c67a7b6535dd1e3c92",
       "prompt": "The id system is not properly setup. e.g. when copying the id in the vscode extension it is missing the starting emoji which is part of the id. Find all mismatchtes, fix them and extend the tests, so this cant happen in the future.",
       "llm": "gemini-3-pro"

@@ -13,9 +13,8 @@
         "finished": "2026-02-03T08:49:57.475634581Z"
       },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "",
+      "client": "",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "Fix failures in codebase, ticket, and contributor loading in VS Code extension"
     }
