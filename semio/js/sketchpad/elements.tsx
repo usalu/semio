@@ -26,6 +26,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// External library and internal module imports used across all sections.
+// Consumers MUST NOT add non-tree-shakeable imports.
 
 import { closestCenter, DndContext, DragEndEvent, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
@@ -122,7 +124,10 @@ import { Camera, cn, Plane, Point, Vector } from "../semio";
 // #endregion 🔖Imports
 
 // #region 🔖Section Specificity
+// Enum defining priority levels for section content ownership.
+// Consumers MUST use these constants for section precedence.
 
+// Priority enum for section content ownership across apps.
 export enum SectionSpecificity {
   SKETCHPAD = 0,
   KIT = 10,
@@ -136,6 +141,8 @@ export enum SectionSpecificity {
 // #endregion 🔖Section Specificity
 
 // #region 🔖Interaction Context
+// React context for tracking active UI interactions.
+// Consumers MUST wrap interactive elements with InteractionProvider.
 
 interface InteractionCommands {
   setActiveInteraction: (elementId?: string, interactionId?: string) => void;
@@ -144,6 +151,7 @@ interface InteractionCommands {
 const InteractionContext = React.createContext<InteractionCommands | undefined>(undefined);
 const ActiveInteractionContext = React.createContext<string | undefined>(undefined);
 
+// Context provider for UI interaction commands and active state.
 export const InteractionProvider: React.FC<{
   commands?: InteractionCommands;
   activeInteraction?: string;
@@ -162,11 +170,15 @@ const useActiveInteraction = () => React.useContext(ActiveInteractionContext);
 // #endregion 🔖Interaction Context
 
 // #region 🔖Level Context
+// React context for UI depth level tracking.
+// Consumers MUST wrap components with LevelProvider.
 
+// Union type for UI depth levels.
 export type Level = "base" | "window" | "panel" | "overlay" | "temporary";
 
 const LevelContext = React.createContext<Level>("base");
 
+// Context provider that sets the current UI level.
 export const LevelProvider: React.FC<{
   level: Level;
   children: React.ReactNode;
@@ -174,12 +186,16 @@ export const LevelProvider: React.FC<{
   return <LevelContext.Provider value={level}>{children}</LevelContext.Provider>;
 };
 
+// Hook returning the current UI depth level.
 export const useLevel = () => React.useContext(LevelContext);
 
 // #endregion 🔖Level Context
 
 // #region 🔖Element
+// Core element types, transaction context, and level-based CSS class helpers.
+// Consumers MUST use level functions for consistent styling.
 
+// Interface for start/finalize/abort lifecycle of a UI transaction.
 export interface Transaction {
   start?: () => void;
   finalize?: () => void;
@@ -188,6 +204,7 @@ export interface Transaction {
 
 const TransactionContext = React.createContext<Transaction | undefined>(undefined);
 
+// Context provider that supplies a Transaction to descendants.
 export const TransactionProvider: React.FC<{
   transaction?: Transaction;
   children: React.ReactNode;
@@ -195,14 +212,18 @@ export const TransactionProvider: React.FC<{
   return <TransactionContext.Provider value={transaction}>{children}</TransactionContext.Provider>;
 };
 
+// Hook returning the current Transaction context.
 export const useTransaction = (): Transaction | undefined => React.useContext(TransactionContext);
 
+// Base props interface requiring an id string.
 export interface ElementBaseProps {
   id: string;
 }
 
+// Extended element props inheriting ElementBaseProps.
 export interface ElementProps extends ElementBaseProps { }
 
+// Returns the Tailwind background class for a given level.
 export const getLevelBgClass = (level: Level): string => {
   switch (level) {
     case "window":
@@ -218,6 +239,7 @@ export const getLevelBgClass = (level: Level): string => {
   }
 };
 
+// Returns the Tailwind hover background class for a given level.
 export const getLevelHoverClass = (level: Level): string => {
   switch (level) {
     case "window":
@@ -233,6 +255,7 @@ export const getLevelHoverClass = (level: Level): string => {
   }
 };
 
+// Returns the Tailwind active-state hover class for a given level.
 export const getLevelActiveHoverClass = (level: Level): string => {
   switch (level) {
     case "window":
@@ -248,6 +271,7 @@ export const getLevelActiveHoverClass = (level: Level): string => {
   }
 };
 
+// Returns the Tailwind z-index class for a given level.
 export const getLevelZClass = (level: Level): string => {
   switch (level) {
     case "window":
@@ -263,6 +287,7 @@ export const getLevelZClass = (level: Level): string => {
   }
 };
 
+// Returns the Tailwind border class for a given level.
 export const getLevelBorderElementClass = (level: Level): string => {
   switch (level) {
     case "window":
@@ -278,6 +303,7 @@ export const getLevelBorderElementClass = (level: Level): string => {
   }
 };
 
+// Returns the Tailwind divide class for a given level.
 export const getLevelDivideElementClass = (level: Level): string => {
   switch (level) {
     case "window":
@@ -296,6 +322,8 @@ export const getLevelDivideElementClass = (level: Level): string => {
 // #endregion 🔖Element
 
 // #region 🔖Command
+// Command palette UI built on cmdk primitives.
+// Consumers MUST use CommandInput for search functionality.
 
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
   return <CommandPrimitive data-slot="command" className={cn("bg-popover text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
@@ -380,12 +408,15 @@ function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) 
   return <span data-slot="command-shortcut" className={cn("text-muted-foreground ml-auto text-xs tracking-widest", className)} {...props} />;
 }
 
-// #endregion 🔖Command
 
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };
+// #endregion 🔖Command
 
 // #region 🔖Footer
+// Status bar component at the bottom of the layout.
+// Consumers MUST provide FooterItem entries for each action.
 
+// Configuration interface for a single footer action item.
 export interface FooterItem {
   id: string;
   icon?: React.ReactNode;
@@ -397,6 +428,7 @@ export interface FooterItem {
   disabled?: boolean;
 }
 
+// Props interface for the Footer component.
 export interface FooterProps {
   items?: FooterItem[];
   className?: string;
@@ -427,7 +459,10 @@ export { Footer };
 // #endregion 🔖Footer
 
 // #region 🔖Layout
+// Top-level layout orchestrating navbar, panels, canvas, and footer.
+// Consumers MUST provide a canvas element.
 
+// Props interface for the top-level Layout component.
 export interface LayoutProps {
   navbar?: React.ReactNode;
   footer?: React.ReactNode;
@@ -474,6 +509,8 @@ export { Layout };
 // #endregion 🔖Layout
 
 // #region 🔖Popover
+// Floating popover component built on Radix primitives.
+// Consumers MUST wrap content in PopoverContent.
 
 function Popover({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Root>) {
   return <PopoverPrimitive.Root data-slot="popover" {...props} />;
@@ -509,7 +546,10 @@ export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 // #endregion 🔖Popover
 
 // #region 🔖Tooltip
+// Tooltip components with expertise-level adaptive content.
+// Consumers MUST configure the expertise mode provider.
 
+// Configuration for enhanced tooltip with label, paths, and hotkey.
 export interface TooltipConfig {
   labelKey: string;
   manualPath?: string;
@@ -517,6 +557,7 @@ export interface TooltipConfig {
   hotkey?: string;
 }
 
+// Data interface for description-based tooltip content.
 export interface DescriptionTooltipData {
   label?: string;
   description?: string;
@@ -528,11 +569,13 @@ export interface DescriptionTooltipData {
 
 let getExpertiseFunction: (() => Expertise) | undefined;
 
+// Registers the expertise provider function for tooltips.
 export function setTooltipModeProvider(fn: () => Expertise) {
   getExpertiseFunction = fn;
   setExpertiseProvider(fn);
 }
 
+// Hook returning the current expertise level for tooltips.
 export function useTooltipMode(): Expertise {
   if (!getExpertiseFunction) return Expertise.BEGINNER;
   return getExpertiseFunction();
@@ -710,6 +753,8 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
 // #endregion 🔖Tooltip
 
 // #region 🔖Base Components
+// Foundational internal components like Label.
+// Consumers MUST use these as building blocks for inputs.
 
 interface LabelProps {
   id: string;
@@ -740,6 +785,8 @@ function Label({ id, children, className, labelElementId }: LabelProps) {
 // #endregion 🔖Base Components
 
 // #region 🔖Display Components
+// Read-only display wrappers for tooltips and callouts.
+// Consumers MUST pass valid config objects.
 
 interface SemioTooltipProps {
   children: React.ReactElement;
@@ -780,7 +827,10 @@ function IdSemioTooltip({ children, id }: IdSemioTooltipProps) {
 export { DescriptionTooltipContent, EnhancedTooltipContent, IdSemioTooltip, SemioTooltip, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger };
 
 // #region 🔖Aside
+// Callout boxes for notes, tips, cautions, and dangers.
+// Consumers MUST specify a valid kind prop.
 
+// Props interface for the Aside callout component.
 export interface AsideProps {
   kind?: "note" | "tip" | "caution" | "danger";
   title?: string;
@@ -801,6 +851,7 @@ const colorMap = {
   danger: "border-destructive-border bg-destructive-bg text-destructive-foreground",
 };
 
+// Callout component rendering note, tip, caution, or danger boxes.
 export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) => {
   const Icon = iconMap[kind];
   const colorClass = colorMap[kind];
@@ -821,6 +872,8 @@ export const Aside: React.FC<AsideProps> = ({ kind = "note", title, children }) 
 // #endregion 🔖Aside
 
 // #region 🔖Avatar
+// User avatar components with image, fallback, drag, and table variants.
+// Consumers MUST provide content for the fallback.
 
 const Avatar = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.Root>, React.ComponentPropsWithoutRef<typeof AvatarPrimitive.Root>>(({ className, style, ...props }, ref) => {
   const isSizeClass = className && (className.includes("size-") || className.includes("w-") || className.includes("h-"));
@@ -848,6 +901,7 @@ const AvatarFallback = React.forwardRef<React.ElementRef<typeof AvatarPrimitive.
 ));
 AvatarFallback.displayName = "AvatarFallback";
 
+// Props interface for the DraggableAvatar component.
 export interface DraggableAvatarProps {
   content: string;
   isSelected?: boolean;
@@ -864,6 +918,7 @@ export interface DraggableAvatarProps {
   className?: string;
 }
 
+// Avatar component with drag-and-drop support and selection styling.
 export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarProps>(
   ({ content, isSelected, isHovered, shouldFade, title, dragRef, dragListeners, dragAttributes, onClick, onDoubleClick, onPointerEnter, onPointerLeave, className }, ref) => {
     return (
@@ -882,6 +937,7 @@ export const DraggableAvatar = React.forwardRef<HTMLDivElement, DraggableAvatarP
 );
 DraggableAvatar.displayName = "DraggableAvatar";
 
+// Props interface for the TableAvatar component.
 export interface TableAvatarProps {
   id?: string;
   icon?: string | React.ReactNode;
@@ -893,6 +949,7 @@ export interface TableAvatarProps {
   fallbackStyle?: React.CSSProperties;
 }
 
+// Avatar component optimized for table row display.
 export const TableAvatar: React.FC<TableAvatarProps> = ({ id, icon, name, className, isSelected, isHovered, style, fallbackStyle }) => {
   const nameStr = typeof name === "string" ? name : String(name ?? "");
   const normalizedName = nameStr.trim();
@@ -923,7 +980,10 @@ export { Avatar, AvatarFallback, AvatarImage };
 // #endregion 🔖Avatar
 
 // #region 🔖Card
+// Card container and grid layout for content blocks.
+// Consumers MUST provide a title string.
 
+// Props interface for the Card component.
 export interface CardProps {
   title: string;
   icon?: string | LucideIcon;
@@ -931,6 +991,7 @@ export interface CardProps {
   className?: string;
 }
 
+// Content card with title, icon, and children.
 export const Card: React.FC<CardProps> = ({ title, icon, children, className = "" }) => {
   const IconComponent = typeof icon === "string" ? null : icon;
   return (
@@ -945,12 +1006,14 @@ export const Card: React.FC<CardProps> = ({ title, icon, children, className = "
   );
 };
 
+// Props interface for the CardGrid component.
 export interface CardGridProps {
   stagger?: boolean;
   children: React.ReactNode;
   className?: string;
 }
 
+// Responsive grid layout for Card components.
 export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, className = "" }) => {
   return <div className={`grid grid-cols-1 md:grid-cols-2 gap-medium my-medium ${className}`}>{children}</div>;
 };
@@ -958,12 +1021,16 @@ export const CardGrid: React.FC<CardGridProps> = ({ stagger = false, children, c
 // #endregion 🔖Card
 
 // #region 🔖Spinner
+// Animated loading spinner in small, medium, or large sizes.
+// Consumers MUST choose an appropriate size for the context.
 
+// Props interface for the Spinner component.
 export interface SpinnerProps {
   size?: "small" | "medium" | "large";
   className?: string;
 }
 
+// Animated SVG loading spinner.
 export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "" }) => {
   const sizeClass = size === "small" ? "size-small" : size === "large" ? "size-large" : "size-medium";
   return (
@@ -977,7 +1044,10 @@ export const Spinner: React.FC<SpinnerProps> = ({ size = "medium", className = "
 // #endregion 🔖Spinner
 
 // #region 🔖NotFound
+// 404-style placeholder with icon, title, and back navigation.
+// Consumers MUST provide a title for the error.
 
+// Props interface for the NotFound component.
 export interface NotFoundProps {
   title: string;
   description?: string;
@@ -986,6 +1056,7 @@ export interface NotFoundProps {
   icon?: React.ReactNode;
 }
 
+// Not-found placeholder page with navigation link.
 export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPath, parentLabel, icon }) => {
   const navigate = useNavigate();
   return (
@@ -1006,13 +1077,17 @@ export const NotFound: React.FC<NotFoundProps> = ({ title, description, parentPa
 // #endregion 🔖NotFound
 
 // #region 🔖LoadingRow
+// Skeleton loading row with pulsing icon and name.
+// Consumers MUST provide a name for the placeholder.
 
+// Props interface for the LoadingRow component.
 export interface LoadingRowProps {
   name: string;
   icon?: React.ReactNode;
   className?: string;
 }
 
+// Skeleton row showing pulsing icon and name placeholder.
 export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = "" }) => {
   return (
     <div className={`flex items-center gap-single p-single opacity-50 pointer-events-none ${className}`}>
@@ -1026,7 +1101,10 @@ export const LoadingRow: React.FC<LoadingRowProps> = ({ name, icon, className = 
 // #endregion 🔖LoadingRow
 
 // #region 🔖DiagramNode
+// Individual diagram node element with selection and hover states.
+// Consumers MUST provide content for the node.
 
+// Props interface for the DiagramNode component.
 export interface DiagramNodeProps {
   content: React.ReactNode;
   selected?: boolean;
@@ -1040,6 +1118,7 @@ export interface DiagramNodeProps {
   onClick?: () => void;
 }
 
+// Individual node element within a diagram graph.
 export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = false, hovered = false, isPlaceholder = false, showTopHandle = false, showBottomHandle = false, className = "", onMouseEnter, onMouseLeave, onClick }) => {
   return (
     <div
@@ -1067,6 +1146,7 @@ export const DiagramNode: React.FC<DiagramNodeProps> = ({ content, selected = fa
   );
 };
 
+// Empty placeholder node for adding new diagram entries.
 export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => void }> = ({ id = "diagram.placeholder", onClick }) => {
   return <DiagramNode content={useLabel(id)} isPlaceholder showTopHandle onClick={onClick} className="hover:border-[color:var(--hover-base)] hover:bg-[color:var(--hover-panel)]" />;
 };
@@ -1074,6 +1154,8 @@ export const PlaceholderDiagramNode: React.FC<{ id?: string; onClick?: () => voi
 // #endregion 🔖DiagramNode
 
 // #region 🔖HoverCard
+// Hover-triggered card built on Radix primitives.
+// Consumers MUST use HoverCardTrigger to activate.
 
 function HoverCard({ ...props }: React.ComponentProps<typeof HoverCardPrimitive.Root>) {
   return <HoverCardPrimitive.Root data-slot="hover-card" {...props} />;
@@ -1105,6 +1187,8 @@ export { HoverCard, HoverCardContent, HoverCardTrigger };
 // #endregion 🔖HoverCard
 
 // #region 🔖Icons
+// Cursor icon component for collaborative pointer display.
+// Consumers MUST provide position data for rendering.
 
 interface CursorProps {
   color: string;
@@ -1137,7 +1221,10 @@ export { Cursor };
 // #endregion 🔖Icons
 
 // #region 🔖Section
+// Collapsible section container with heading and specificity.
+// Consumers MUST provide a heading string.
 
+// Props interface for the Section component.
 export interface SectionProps {
   id?: string;
   title?: string;
@@ -1163,12 +1250,16 @@ export { Section };
 // #endregion 🔖Section
 
 // #region 🔖Steps
+// Ordered step list container for tutorial or wizard flows.
+// Consumers MUST provide step children in order.
 
+// Props interface for the Steps component.
 export interface StepsProps {
   children: React.ReactNode;
   className?: string;
 }
 
+// Ordered step list container rendering numbered children.
 export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
   return <div className={`steps-container space-y-medium my-medium ${className}`}>{children}</div>;
 };
@@ -1180,6 +1271,8 @@ export const Steps: React.FC<StepsProps> = ({ children, className = "" }) => {
 // #region 🔖Input Components
 
 // #region 🔖ActionGroup
+// Compact action button group with dropdown support.
+// Consumers MUST provide action items for the group.
 
 const actionGroupItemVariants = cva(
   "text-foreground inline-flex items-center justify-center shrink-0 transition-all cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive overflow-hidden aspect-square p-single",
@@ -1562,6 +1655,8 @@ export { Button, ButtonCycle, ButtonGroup, ButtonGroupItem, buttonGroupItemVaria
 export type { ButtonCycleProps, ButtonProps };
 
 // #region 🔖Combobox
+// Searchable dropdown with popover options list.
+// Consumers MUST provide options and onValueChange handler.
 
 interface ComboboxOption {
   value: string;
@@ -1580,6 +1675,7 @@ interface ComboboxProps extends ElementProps {
   showLabel?: boolean;
 }
 
+// Searchable combobox dropdown with autocomplete filtering.
 export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeholder = "Select option...", placeholderId, emptyMessage = "No options found.", onValueChange, className, allowClear = false, showLabel, id }) => {
   const transaction = useTransaction();
   const [open, setOpen] = React.useState(false);
@@ -1654,6 +1750,8 @@ export const Combobox: React.FC<ComboboxProps> = ({ options, value = "", placeho
 // #endregion 🔖Combobox
 
 // #region 🔖Input
+// Text input field with label, validation, and clear support.
+// Consumers MUST provide an id for accessibility.
 
 interface InputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;
@@ -1770,6 +1868,8 @@ export { Input };
 // #endregion 🔖Input
 
 // #region 🔖Select
+// Dropdown select built on Radix primitives.
+// Consumers MUST use SelectItem children for options.
 
 function Select({ id, showLabel, children, value, defaultValue, onOpenChange, ...props }: React.ComponentProps<typeof SelectPrimitive.Root> & ElementProps & { showLabel?: boolean }) {
   const transaction = useTransaction();
@@ -1942,6 +2042,8 @@ export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScro
 // #endregion 🔖Select
 
 // #region 🔖Slider
+// Range slider built on Radix primitives.
+// Consumers MUST provide min and max values.
 
 function Slider({
   className,
@@ -2160,6 +2262,8 @@ export { Slider };
 // #endregion 🔖Slider
 
 // #region 🔖Stepper
+// Numeric stepper with increment/decrement and drag adjustment.
+// Consumers MUST provide min and max bounds.
 
 interface StepperProps extends ElementProps {
   value?: number;
@@ -2174,6 +2278,7 @@ interface StepperProps extends ElementProps {
   interactionId?: string;
 }
 
+// Numeric stepper with increment, decrement, and drag-to-adjust.
 export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, max, step = 1, onChange, onPointerDown, onPointerUp, onPointerCancel, interactionId, id }) => {
   const transaction = useTransaction();
   const level = useLevel();
@@ -2390,6 +2495,8 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
 // #endregion 🔖Stepper
 
 // #region 🔖Textarea
+// Multi-line text input with label and validation.
+// Consumers MUST provide an id for the field.
 
 interface TextareaProps extends Omit<React.ComponentProps<"textarea">, "value" | "onChange" | "id">, ElementProps {
   lazy?: boolean;
@@ -2485,6 +2592,8 @@ export { Textarea };
 // #endregion 🔖Textarea
 
 // #region 🔖Toggle
+// Toggle button with pressed/unpressed states.
+// Consumers MUST handle onPressedChange events.
 
 const toggleVariants = cva(
   "text-foreground inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] outline-none transition-[color,box-shadow] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive whitespace-nowrap data-[state=on]:bg-active-base data-[state=on]:text-active-foreground data-[state=on]:hover:bg-active-base/90 data-[state=on]:hover:text-active-foreground h-medium aspect-square p-single leading-none overflow-hidden",
@@ -2504,6 +2613,7 @@ const toggleVariants = cva(
   },
 );
 
+// Configuration interface for a single toggle option with value and label.
 export interface ToggleItem<T extends string> {
   value: T;
   label: React.ReactNode;
@@ -2556,6 +2666,8 @@ export type { ToggleProps };
 // #endregion 🔖Toggle
 
 // #region 🔖ToggleGroup
+// Group of mutually exclusive or multi-select toggles.
+// Consumers MUST provide items with distinct values.
 
 const ToggleGroupContext = React.createContext<{ level: Level }>({
   level: "base",
@@ -2856,6 +2968,8 @@ export { Toggle, ToggleGroup, ToggleGroupItem, toggleVariants };
 // #region 🔖Aggregation Components
 
 // #region 🔖Accordion
+// Collapsible accordion built on Radix primitives.
+// Consumers MUST use AccordionItem children.
 
 function Accordion({ ...props }: React.ComponentProps<typeof AccordionPrimitive.Root>) {
   return <AccordionPrimitive.Root data-slot="accordion" {...props} />;
@@ -2896,6 +3010,8 @@ export { Accordion, AccordionContent, AccordionItem, AccordionTrigger };
 // #endregion 🔖Accordion
 
 // #region 🔖Collapsible
+// Collapsible section built on Radix primitives.
+// Consumers MUST use CollapsibleTrigger.
 
 function Collapsible({ ...props }: React.ComponentProps<typeof CollapsiblePrimitive.Root>) {
   return <CollapsiblePrimitive.Root data-slot="collapsible" {...props} />;
@@ -2914,6 +3030,8 @@ export { Collapsible, CollapsibleContent, CollapsibleTrigger };
 // #endregion 🔖Collapsible
 
 // #region 🔖Dialog
+// Modal dialog built on Radix primitives.
+// Consumers MUST use DialogTrigger to open.
 
 function Dialog({ ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
   return <DialogPrimitive.Root data-slot="dialog" {...props} />;
@@ -2996,6 +3114,8 @@ export { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, Di
 // #endregion 🔖Dialog
 
 // #region 🔖Resizable
+// Resizable panel layout built on react-resizable-panels.
+// Consumers MUST use ResizableHandle between panels.
 
 function ResizablePanelGroup({ className, ...props }: React.ComponentProps<typeof ResizablePrimitive.PanelGroup>) {
   return <ResizablePrimitive.PanelGroup data-slot="resizable-panel-group" className={cn("flex h-full w-full data-[panel-group-direction=vertical]:flex-col", className)} {...props} />;
@@ -3063,6 +3183,8 @@ export { ResizableHandle, ResizablePanel, ResizablePanelGroup };
 // #endregion 🔖Resizable
 
 // #region 🔖Scrollable
+// Custom scrollable area built on Radix ScrollArea.
+// Consumers MUST wrap content in Scrollable.
 
 const Scrollable = React.forwardRef<HTMLDivElement, React.ComponentProps<typeof ScrollAreaPrimitive.Root> & { orientation?: "vertical" | "horizontal" | "both" }>(({ className, children, orientation = "vertical", ...props }, ref) => {
   return (
@@ -3103,13 +3225,17 @@ export { Scrollable, ScrollBar };
 // #endregion 🔖Scrollable
 
 // #region 🔖Band
+// Horizontal band of navigation items with labels and icons.
+// Consumers MUST provide BandItem entries.
 
+// Configuration interface for a single band item.
 export interface BandItem {
   content: React.ReactNode;
   className?: string;
   key?: React.Key;
 }
 
+// Props interface for the Band component.
 export interface BandProps {
   id?: string;
   items: BandItem[];
@@ -3145,13 +3271,17 @@ export { Band as Band };
 // #endregion 🔖Band
 
 // #region 🔖Strip
+// Vertical strip of icon items for compact navigation.
+// Consumers MUST provide StripItem entries.
 
+// Configuration interface for a single strip item.
 export interface StripItem {
   content: React.ReactNode;
   className?: string;
   key?: React.Key;
 }
 
+// Props interface for the Strip component.
 export interface StripProps {
   id?: string;
   items: StripItem[];
@@ -3187,13 +3317,17 @@ export { Strip };
 // #endregion 🔖Strip
 
 // #region 🔖Navbar
+// Top navigation bar with icon items.
+// Consumers MUST provide NavbarItem entries.
 
+// Configuration interface for a single navbar item.
 export interface NavbarItem {
   content: React.ReactNode;
   className?: string;
   key?: React.Key;
 }
 
+// Props interface for the Navbar component.
 export interface NavbarProps {
   items: NavbarItem[];
   className?: string;
@@ -3220,6 +3354,8 @@ export { Navbar };
 // #endregion 🔖Navbar
 
 // #region 🔖Tabs
+// Tab container built on Radix primitives.
+// Consumers MUST use TabsTrigger and TabsContent.
 
 function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Root>) {
   return <TabsPrimitive.Root data-slot="tabs" className={cn("flex flex-col gap-single", className)} {...props} />;
@@ -3258,6 +3394,8 @@ export { Tabs, TabsContent, TabsList, TabsTrigger };
 // #endregion 🔖Tabs
 
 // #region 🔖Tree
+// Hierarchical tree view with sections, items, and file trees.
+// Consumers MUST wrap components in TreeStateProvider.
 
 interface TreeStateContextValue {
   openStates: Record<string, boolean>;
@@ -3267,6 +3405,7 @@ interface TreeStateContextValue {
 
 const TreeStateContext = React.createContext<TreeStateContextValue | null>(null);
 
+// Context provider managing tree expansion state.
 export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [openStates, setOpenStates] = React.useState<Record<string, boolean>>({});
 
@@ -3281,6 +3420,7 @@ export const TreeStateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   return <TreeStateContext.Provider value={{ openStates, setOpenState, getOpenState }}>{children}</TreeStateContext.Provider>;
 };
 
+// Hook returning tree expansion state and toggle functions.
 export const useTreeState = () => {
   const context = React.useContext(TreeStateContext);
   if (!context) throw new Error("useTreeState must be used within TreeStateProvider");
@@ -3317,6 +3457,7 @@ const IndentationLines: React.FC<{ level: number; isLastAtLevel: boolean[]; show
   );
 };
 
+// Wrapper rendering tree children with connecting lines.
 export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
   return (
@@ -3327,6 +3468,7 @@ export const TreeContent: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 };
 
+// Configuration interface for an action button on a tree section.
 export interface TreeSectionAction {
   icon: React.ReactNode;
   onClick: () => void;
@@ -3387,6 +3529,7 @@ interface SortableTreeItemsProps {
   children: (item: any, index: number) => React.ReactNode;
 }
 
+// Collapsible tree section header with optional action buttons.
 export const TreeSection: React.FC<TreeSectionProps> = ({ label, id, icon, children, defaultOpen = true, className = "", actions = [], onPointerEnter: onSectionPointerEnter, onPointerLeave: onSectionPointerLeave, onDoubleClick }) => {
   const { level, isLastAtLevel, showLines } = React.useContext(TreeContext);
   const treeState = useTreeState();
@@ -3675,6 +3818,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
   );
 };
 
+// Drag-and-drop sortable container for tree items.
 export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onReorder, children }) => {
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
@@ -3696,6 +3840,7 @@ export const SortableTreeItems: React.FC<SortableTreeItemsProps> = ({ items, onR
   );
 };
 
+// Single tree item row with icon, label, and interaction handlers.
 export const TreeItem: React.FC<TreeItemProps> = ({
   label,
   id,
@@ -3837,10 +3982,12 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   );
 };
 
+// Iterator rendering a list of tree item children.
 export const TreeItems: React.FC<{ children: React.ReactNode[]; renderItem: (child: React.ReactNode, index: number, isLast: boolean) => React.ReactNode }> = ({ children, renderItem }) => {
   return <>{children.map((child, index) => renderItem(child, index, index === children.length - 1))}</>;
 };
 
+// Data interface for a node in a file tree.
 export interface FileTreeNode {
   title: string;
   path: string;
@@ -3849,6 +3996,7 @@ export interface FileTreeNode {
   children?: FileTreeNode[];
 }
 
+// Hierarchical tree view component with optional file tree rendering.
 export const Tree: React.FC<{ children: React.ReactNode; className?: string; showLines?: boolean }> & {
   Files: React.FC<TreeFilesProps>;
   Section: React.FC<TreeFilesProps>;
@@ -3967,6 +4115,7 @@ Tree.Files = ({ title = "In this section", nodes, currentPath, onNavigate, as = 
 
 Tree.Section = Tree.Files;
 
+// Alias for Tree.Files rendering a file tree from FileTreeNode data.
 export const FileTree = Tree.Files;
 
 // #endregion 🔖Tree
@@ -3976,7 +4125,10 @@ export const FileTree = Tree.Files;
 // #region 🔖Navigation Components
 
 // #region 🔖Breadcrumb
+// Breadcrumb trail for hierarchical page navigation.
+// Consumers MUST provide BreadcrumbItemData entries.
 
+// Data interface for a single breadcrumb entry.
 export interface BreadcrumbItemData {
   id?: string;
   content: React.ReactNode;
@@ -4145,13 +4297,17 @@ export { Breadcrumb, BreadcrumbItem };
 // #endregion 🔖Breadcrumb
 
 // #region 🔖PageNavigation
+// Previous/next page navigation links.
+// Consumers MUST provide PageNavigationLink data.
 
+// Configuration interface for a previous/next page link.
 export interface PageNavigationLink {
   path: string;
   title: string;
   section?: string;
 }
 
+// Props interface for the PageNavigation component.
 export interface PageNavigationProps {
   prev?: PageNavigationLink;
   next?: PageNavigationLink;
@@ -4200,9 +4356,13 @@ export { PageNavigation };
 // #region 🔖Panel Components
 
 // #region 🔖Panel
+// Resizable dockable panel with sections and collapse support.
+// Consumers MUST set resizeSide for the handle.
 
+// Union type for panel resize handle positions.
 export type ResizeSide = "left" | "right" | "top" | "bottom";
 
+// Configuration interface for a collapsible section within a panel.
 export interface PanelSection {
   id: string;
   content: React.ReactNode | (() => React.ReactNode);
@@ -4219,6 +4379,7 @@ export interface PanelSection {
   onDoubleClick?: () => void;
 }
 
+// Props interface for the Panel component.
 export interface PanelProps {
   visible?: boolean;
   onSizeChange?: (size: number) => void;
@@ -4354,7 +4515,10 @@ export { Panel };
 // #endregion 🔖Panel
 
 // #region 🔖PanelGroup
+// Flex container grouping multiple panels together.
+// Consumers MUST provide panel children.
 
+// Props interface for the PanelGroup component.
 export interface PanelGroupProps {
   children: React.ReactNode;
   className?: string;
@@ -4372,7 +4536,10 @@ export { PanelGroup };
 // #endregion 🔖PanelGroup
 
 // #region 🔖LeftPanel
+// Left-docked panel variant with right resize handle.
+// Consumers MUST provide visible and children props.
 
+// Props type for LeftPanel omitting resizeSide.
 export type LeftPanelProps = Omit<PanelProps, "resizeSide">;
 
 const LeftPanel: React.FC<LeftPanelProps> = (props) => <Panel {...props} resizeSide="right" />;
@@ -4382,7 +4549,10 @@ export { LeftPanel };
 // #endregion 🔖LeftPanel
 
 // #region 🔖RightPanel
+// Right-docked panel variant with left resize handle.
+// Consumers MUST provide visible and children props.
 
+// Props type for RightPanel omitting resizeSide.
 export type RightPanelProps = Omit<PanelProps, "resizeSide">;
 
 const RightPanel: React.FC<RightPanelProps> = (props) => <Panel {...props} resizeSide="left" />;
@@ -4392,7 +4562,10 @@ export { RightPanel };
 // #endregion 🔖RightPanel
 
 // #region 🔖MiddlePanel
+// Center panel variant without resize handles.
+// Consumers MUST provide visible and children props.
 
+// Props type for MiddlePanel omitting resizeSide.
 export type MiddlePanelProps = Omit<PanelProps, "resizeSide"> & {
   resizeSide?: "left" | "right";
 };
@@ -4404,7 +4577,10 @@ export { MiddlePanel };
 // #endregion 🔖MiddlePanel
 
 // #region 🔖BottomPanel
+// Bottom-docked panel variant with top resize handle.
+// Consumers MUST provide visible and children props.
 
+// Props type for BottomPanel omitting resizeSide.
 export type BottomPanelProps = Omit<PanelProps, "resizeSide">;
 
 const BottomPanel: React.FC<BottomPanelProps> = (props) => <Panel {...props} resizeSide="top" />;
@@ -4414,7 +4590,10 @@ export { BottomPanel };
 // #endregion 🔖BottomPanel
 
 // #region 🔖SidePanel
+// Collapsible side panel with tabbed content.
+// Consumers MUST provide SidePanelTabConfig entries.
 
+// Configuration interface for a side panel tab.
 export interface SidePanelTabConfig {
   id: string;
   icon: React.ComponentType<{ size?: number }>;
@@ -4422,6 +4601,7 @@ export interface SidePanelTabConfig {
   content: React.ReactNode | (() => React.ReactNode);
 }
 
+// Props interface for the SidePanel component.
 export interface SidePanelProps {
   position: "left" | "right";
   visible?: boolean;
@@ -4527,7 +4707,10 @@ export { SidePanel };
 // #endregion 🔖SidePanel
 
 // #region 🔖HudPanel
+// Floating heads-up display panel with tabs.
+// Consumers MUST provide HudPanelTabConfig entries.
 
+// Configuration interface for a HUD panel tab.
 export interface HudPanelTabConfig {
   id: string;
   icon: React.ComponentType<{ size?: number }>;
@@ -4535,6 +4718,7 @@ export interface HudPanelTabConfig {
   content: React.ReactNode | (() => React.ReactNode);
 }
 
+// Props interface for the HudPanel component.
 export interface HudPanelProps {
   visible?: boolean;
   size?: number;
@@ -4639,7 +4823,10 @@ export { HudPanel };
 // #region 🔖Window Components
 
 // #region 🔖Window
+// Draggable, resizable floating window with dashed border.
+// Consumers MUST provide a WindowConfig object.
 
+// Configuration interface for a floating window instance.
 export interface WindowConfig {
   id: string;
   children: React.ReactNode;
@@ -4740,7 +4927,10 @@ export { Window };
 // #endregion 🔖Window
 
 // #region 🔖Page
+// Full-page content wrapper with frontmatter and footer.
+// Consumers MUST provide frontmatter and children.
 
+// Frontmatter metadata interface for a documentation page.
 export interface PageFrontmatter {
   title?: string;
   description?: string;
@@ -4750,6 +4940,7 @@ export interface PageFrontmatter {
   concepts?: string[];
 }
 
+// Props interface for the Page component.
 export interface PageProps {
   frontmatter?: PageFrontmatter;
   focusedItemId?: string;
@@ -4758,6 +4949,7 @@ export interface PageProps {
   children: React.ReactNode;
 }
 
+// Full-page wrapper with frontmatter header and footer.
 export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusComplete, footer, children }) => {
   const scrollAreaRef = React.useRef<HTMLDivElement>(null);
 
@@ -4787,6 +4979,8 @@ export const Page: React.FC<PageProps> = ({ frontmatter, focusedItemId, onFocusC
 // #endregion 🔖Page
 
 // #region 🔖Diagram
+// Interactive node-edge diagram built on ReactFlow and D3 force.
+// Consumers MUST provide nodes and edges arrays.
 
 export {
   applyNodeChanges,
@@ -4811,10 +5005,13 @@ export {
 };
 export type { Connection, ConnectionLineComponentProps, Edge, EdgeProps, EdgeTypes, MiniMapNodeProps, Node, NodeProps, NodeTypes, ReactFlowInstance, Simulation, SimulationLinkDatum, SimulationNodeDatum };
 
+// Base pixel unit for diagram node sizing.
 export const DIAGRAM_UNIT = 48;
 
+// Union type for diagram layout directions (TB/BT/LR/RL).
 export type DiagramLayoutDirection = "TB" | "BT" | "LR" | "RL";
 
+// Configuration interface for dagre-based diagram layout.
 export interface DiagramLayoutOptions {
   direction?: DiagramLayoutDirection;
   nodeWidth?: number;
@@ -4823,6 +5020,7 @@ export interface DiagramLayoutOptions {
   nodeSep?: number;
 }
 
+// Computes dagre layout positions for diagram nodes and edges.
 export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: DiagramLayoutOptions = {}): { nodes: Node[]; edges: Edge[] } {
   const { direction = "TB", nodeWidth = DIAGRAM_UNIT, nodeHeight = DIAGRAM_UNIT, rankSep = DIAGRAM_UNIT * 1.67, nodeSep = DIAGRAM_UNIT * 1.04 } = options;
 
@@ -4854,6 +5052,7 @@ export function calculateDiagramLayout(nodes: Node[], edges: Edge[], options: Di
   return { nodes: layoutedNodes, edges };
 }
 
+// Configuration interface for D3 force simulation parameters.
 export interface DiagramForceConfig {
   enabled: boolean;
   chargeStrength?: number;
@@ -4863,6 +5062,7 @@ export interface DiagramForceConfig {
   updateIntervalMs?: number;
 }
 
+// Default D3 force configuration values.
 export const defaultDiagramForceConfig: DiagramForceConfig = {
   enabled: false,
   chargeStrength: -DIAGRAM_UNIT * 1.67,
@@ -4881,6 +5081,7 @@ interface ForceLink extends SimulationLinkDatum<ForceNode> {
   id: string;
 }
 
+// Props interface for the Diagram component.
 export interface DiagramProps {
   nodeTypes: NodeTypes;
   edgeTypes?: EdgeTypes;
@@ -5327,6 +5528,7 @@ const Diagram: React.FC<DiagramProps> = (props) => {
 export { Diagram, SelectionMode };
 export type { ConnectionLineComponentProps, Edge, EdgeProps, Node, NodeProps, OnSelectionChangeParams };
 
+// Hook computing and memoizing diagram layout from nodes and edges.
 export function useDiagramLayout(initialNodes: Node[], initialEdges: Edge[], layoutOptions?: DiagramLayoutOptions): { nodes: Node[]; edges: Edge[] } {
   return React.useMemo(() => {
     if (initialNodes.length === 0) {
@@ -5342,6 +5544,7 @@ interface DiagramSkeletonProps {
   className?: string;
 }
 
+// Skeleton loading placeholder for a diagram.
 export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5, edgeCount = 4, className = "" }) => {
   const skeletonNodes: Node[] = React.useMemo(
     () =>
@@ -5387,11 +5590,14 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
 // #endregion 🔖Diagram
 
 // #region 🔖Scene
+// 3D scene viewer built on React Three Fiber.
+// Consumers MUST provide SceneGeometry data.
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 
 let selectableCursorUsageCount = 0;
 
+// Interface for a geometry entry in a 3D scene.
 export interface SceneGeometry {
   guid: string;
   plane?: Plane;
@@ -5403,20 +5609,25 @@ export interface SceneGeometry {
   onPointerLeave?: () => void;
 }
 
+// Extended SceneGeometry with transform delta support.
 export interface TransformableGeometry extends SceneGeometry {
   isTransformable?: boolean;
 }
 
+// Interface for an incremental plane transformation delta.
 export interface PlaneTransformDelta {
   translation?: { x: number; y: number; z: number };
   rotation?: { x: number; y: number; z: number; w: number };
   scale?: number;
 }
 
+// Callback type for a single plane update.
 export type OnPlaneUpdate = (geometryGuid: string, newPlane: Plane) => void;
 
+// Callback type for batch plane updates.
 export type OnMultiPlaneUpdate = (updates: Array<{ geometryGuid: string; newPlane: Plane }>) => void;
 
+// Constructs a Plane from a point and direction vector.
 export const planeFromPointAndDirection = (point: Point, direction: Vector): Plane => {
   const dir = new THREE.Vector3(direction.x, direction.y, direction.z).normalize();
 
@@ -5432,14 +5643,17 @@ export const planeFromPointAndDirection = (point: Point, direction: Vector): Pla
   };
 };
 
+// Extracts the THREE.Vector3 position from a Plane.
 export const getPlanePosition = (plane: Plane): THREE.Vector3 => {
   return new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
 };
 
+// Checks whether a geometry has a non-null plane.
 export const hasValidPlane = (geometry: SceneGeometry): boolean => {
   return geometry.plane !== undefined && geometry.plane !== null;
 };
 
+// Checks whether a geometry has a valid plane for camera focus.
 export const isGeometryFocusable = (geometry: SceneGeometry): boolean => {
   return hasValidPlane(geometry) && (geometry.isFocusable === undefined || geometry.isFocusable === true);
 };
@@ -5460,6 +5674,7 @@ interface GeometryProps {
   userData?: any;
 }
 
+// 3D geometry mesh component with selection, hover, and edge rendering.
 export const Geometry: React.FC<GeometryProps> = ({ children, selected = false, hovered = false, onClick, onDoubleClick, onPointerEnter, onPointerLeave, color, emissiveColor, emissiveIntensity = 0.45, showEdges = true, edgeColor, userData }) => {
   const foregroundColor = React.useMemo(() => getComputedColor("--foreground"), []);
   const activeBaseColor = React.useMemo(() => getComputedColor("--active-base"), []);
@@ -5855,6 +6070,7 @@ interface SceneProps {
   onProjectionChange?: (projection: "camera" | "orthographic") => void;
 }
 
+// 3D scene viewer with orbit controls, grid, and geometry rendering.
 export const Scene: React.FC<SceneProps> = ({
   children,
   showGrid = true,
@@ -5900,6 +6116,7 @@ export const Scene: React.FC<SceneProps> = ({
   );
 };
 
+// Skeleton loading placeholder for a 3D scene.
 export const SceneSkeleton: React.FC = () => (
   <div className="h-full w-full bg-background flex items-center justify-center">
     <div className="relative w-32 h-32 animate-pulse">
@@ -5913,9 +6130,13 @@ export const SceneSkeleton: React.FC = () => (
 // #endregion 🔖Scene
 
 // #region 🔖Table
+// Sortable, hierarchical data table with drag-drop support.
+// Consumers MUST provide columns and data arrays.
 
+// Union type for ascending or descending sort order.
 export type SortDirection = "asc" | "desc";
 
+// Configuration interface for a table column definition.
 export interface TableColumn<T = unknown> {
   id: string;
   header: React.ReactNode;
@@ -5927,6 +6148,7 @@ export interface TableColumn<T = unknown> {
   visible?: boolean | ((data: T[]) => boolean);
 }
 
+// Interface for hierarchical row data with parent/child relations.
 export interface HierarchicalRowData {
   id: string;
   level?: number;
@@ -5935,6 +6157,7 @@ export interface HierarchicalRowData {
   isExpanded?: boolean;
 }
 
+// Configuration interface for table drag-and-drop behavior.
 export interface DragDropConfig {
   enabled?: boolean;
   onDragStart?: (rowId: string) => void;
@@ -5944,6 +6167,7 @@ export interface DragDropConfig {
   renderDragOverlay?: (rowId: string) => React.ReactNode;
 }
 
+// Props interface for the Table component.
 export interface TableProps<T = unknown> {
   columns: TableColumn<T>[];
   data: T[];
@@ -6226,12 +6450,14 @@ const Table = <T,>({
 
 export { Table };
 
+// Props interface for the TableSkeleton component.
 export interface TableSkeletonProps {
   columns: TableColumn[];
   rowCount?: number;
   className?: string;
 }
 
+// Skeleton loading placeholder for a table.
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">

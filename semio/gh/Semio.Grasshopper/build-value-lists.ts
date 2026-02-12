@@ -26,15 +26,22 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Value List Generation
+// Value list generation script. MUST convert CSV data into Grasshopper value list text files.
+
 import { parse } from "csv-parse/sync";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
+// Build output directory for generated value list files.
+// MUST be created if it does not exist.
 const buildDir = join(__dirname, "build");
 if (!existsSync(buildDir)) {
   mkdirSync(buildDir);
 }
 
+// Converts a CSV file into a Grasshopper value list text format.
+// MUST read the CSV, extract key-value pairs, and write the output file.
 function convertCsvToValueList(csvPath: string, outputPath: string, keyColumn: string, valueColumn: string): void {
   const csvContent = readFileSync(csvPath, "utf-8");
   const records = parse(csvContent, { columns: true, skip_empty_lines: true });
@@ -51,3 +58,5 @@ convertCsvToValueList(join(__dirname, "..", "..", "meta", "mimes.csv"), join(bui
 convertCsvToValueList(join(__dirname, "..", "..", "meta", "licenses.csv"), join(buildDir, "licenses.txt"), "Name", "SPDX");
 
 console.log("✅ Value lists generated");
+
+// #endregion 🔖Value List Generation

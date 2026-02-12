@@ -27,6 +27,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// Imports for Kit app MUST include all shared sketchpad, React, DnD, and UI dependencies.
 
 import { DragEndEvent, DragOverEvent, DragStartEvent, useDroppable } from "@dnd-kit/core";
 import { useSelector } from "@xstate/react";
@@ -203,6 +204,7 @@ import {
 // #endregion 🔖Imports
 
 // #region 🔖Design Family Helpers
+// Design family helper functions MUST traverse the design hierarchy to collect related design GUIDs.
 
 const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
   const guids = new Set<string>();
@@ -230,6 +232,7 @@ const getDesignFamilyGuids = (kit: Kit, designGuid: string): Set<string> => {
 
 // #region 🔖Internal State Management
 // #region Constants
+// Constants MUST define artifact kinds and toolbar sub-tool configurations for the Kit app.
 
 const artifactKinds = ["designs", "types", "qualities", "ports", "tags", "concepts", "files", "folders", "authors"];
 
@@ -267,11 +270,13 @@ const kitToolbarSelectionSubTools = [
 // #endregion Constants
 
 // #region Internal State Management
+// Internal state management MUST define all Kit app types, interfaces, store, and Y.js synchronization.
 
 type YKitAppVal = string | number | boolean | YLeafMapString | YLeafMapNumber | YAttributes | YStringArray;
 type YKitApp = Y.Map<YKitAppVal>;
 type YKitApps = Y.Map<YKitApp>;
 
+// Tracks the current entity selection state across all artifact kinds for the Kit app.
 export interface KitAppSelection {
   types?: Guid[];
   designs?: Guid[];
@@ -284,42 +289,52 @@ export interface KitAppSelection {
   authors?: string[];
 }
 const EMPTY_KIT_SELECTION: KitAppSelection = {};
+// Diff for added/removed type GUIDs in a Kit app selection change.
 export interface KitAppSelectionTypesDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for added/removed design GUIDs in a Kit app selection change.
 export interface KitAppSelectionDesignsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for added/removed quality strings in a Kit app selection change.
 export interface KitAppSelectionQualitiesDiff {
   added?: string[];
   removed?: string[];
 }
+// Diff for added/removed port GUIDs in a Kit app selection change.
 export interface KitAppSelectionPortsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for added/removed tag GUIDs in a Kit app selection change.
 export interface KitAppSelectionTagsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for added/removed concept GUIDs in a Kit app selection change.
 export interface KitAppSelectionConceptsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for added/removed file strings in a Kit app selection change.
 export interface KitAppSelectionFilesDiff {
   added?: string[];
   removed?: string[];
 }
+// Diff for added/removed folder GUIDs in a Kit app selection change.
 export interface KitAppSelectionFoldersDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for added/removed author strings in a Kit app selection change.
 export interface KitAppSelectionAuthorsDiff {
   added?: string[];
   removed?: string[];
 }
+// Composite diff combining all artifact-kind selection changes for the Kit app.
 export interface KitAppSelectionDiff {
   types?: KitAppSelectionTypesDiff;
   designs?: KitAppSelectionDesignsDiff;
@@ -331,14 +346,17 @@ export interface KitAppSelectionDiff {
   folders?: KitAppSelectionFoldersDiff;
   authors?: KitAppSelectionAuthorsDiff;
 }
+// Enumeration of window kinds available in the Kit app.
 export enum KitAppWindowKind {
   Table = "table",
   Diagram = "diagram",
 }
+// Presence state for a Kit app user including cursor and camera.
 export interface KitAppPresence {
   cursor?: Coord;
   camera?: Camera;
 }
+// Hover state tracking which single entity is hovered per artifact kind.
 export interface KitAppHover {
   type?: Guid;
   design?: Guid;
@@ -350,12 +368,16 @@ export interface KitAppHover {
   folder?: Guid;
   author?: Guid;
 }
+// Extended presence for other Kit app collaborators including their display name.
 export interface KitAppPresenceOther extends KitAppPresence {
   name: string;
 }
+// Column identifier type for Kit app table sorting.
 export type KitAppSortColumn = "artifact" | "kind" | "authors" | "updatedAt" | "createdAt";
+// Sort direction type for Kit app table sorting.
 export type KitAppSortDirection = "asc" | "desc";
 
+// Configuration interface for Kit diagram force simulation parameters.
 export interface DiagramForceSettings {
   chargeStrength: number;
   linkDistance: number;
@@ -363,6 +385,7 @@ export interface DiagramForceSettings {
   centerStrength: number;
 }
 
+// Default force simulation settings for the Kit diagram layout.
 export const defaultDiagramForceSettings: DiagramForceSettings = {
   chargeStrength: -15000,
   linkDistance: 400,
@@ -370,6 +393,7 @@ export const defaultDiagramForceSettings: DiagramForceSettings = {
   centerStrength: 0.1,
 };
 
+// Complete diff describing all mutable Kit app state changes.
 export interface KitAppDiff {
   selection?: KitAppSelectionDiff;
   presence?: KitAppPresence;
@@ -384,7 +408,9 @@ export interface KitAppDiff {
   diagramForce?: Partial<DiagramForceSettings>;
   activeTool?: ToolKind;
 }
+// Edit record extending KitDiffAppEdit with Kit app selection diff.
 export interface KitAppEdit extends KitDiffAppEdit<KitAppSelectionDiff> { }
+// Complete runtime state for a Kit app instance.
 export interface KitAppState {
   fullscreenWindow: KitAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -401,14 +427,18 @@ export interface KitAppState {
   activeTool: ToolKind;
 }
 
+// Context passed to Kit app commands including the current app state.
 export interface KitAppCommandContext extends KitCommandContext {
   kitApp: KitAppState;
 }
+// Result returned by Kit app commands containing diffs to apply.
 export interface KitAppCommandResult {
   diff?: KitAppDiff;
   kitDiff?: KitDiff;
 }
 
+// MUST return a diff that reverses the given selection diff across all artifact kinds.
+// Computes the inverse of a Kit app selection diff for undo support.
 export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: KitAppSelectionDiff): KitAppSelectionDiff => {
   const inverseDiff: KitAppSelectionDiff = {};
 
@@ -474,7 +504,9 @@ export const inverseKitAppSelectionDiff = (selection: KitAppSelection, diff: Kit
 
   return inverseDiff;
 };
+// Checks whether two Kit app identifiers refer to the same kit.
 export const areSameKitApp = (kitApp: KitAppId, other: KitAppId): boolean => kitApp.kit === other.kit;
+// Checks whether a Kit app identifier matches any in a list.
 export const hasSameKitApp = (kitApp: KitAppId, others: KitAppId[]): boolean => others.some((other) => areSameKitApp(kitApp, other));
 
 class KitStore extends KitDiffStore<KitAppState, KitAppDiff, KitAppSelectionDiff, KitAppEdit, KitAppCommandContext, KitAppCommandResult> {
@@ -1048,6 +1080,7 @@ if (typeof window !== "undefined") {
 }
 
 // #region 🔖Kit App Plugin Registration
+// Kit app plugin registration MUST register the Kit app plugin with machine actions, guards, and default state.
 
 const kitAppPlugin: AppPlugin = {
   id: "kit",
@@ -1174,8 +1207,12 @@ if (typeof window !== "undefined") {
 
 // #endregion 🔖Kit App Plugin Registration
 
+// Overload: returns the KitStore instance when no selector is provided.
 export function useKitAppStore(selector?: undefined, id?: KitAppId): KitStore | null;
+// Overload: returns a derived value when a selector function is provided.
 export function useKitAppStore<T>(selector: (controller: KitStore) => T, id?: KitAppId): T | null;
+// MUST resolve the KitStore for the current kit scope and apply the optional selector.
+// Selects derived state or the raw KitStore from the sketchpad orchestrator.
 export function useKitAppStore<T>(selector?: (controller: KitStore) => T, id?: KitAppId): T | KitStore | null {
   const orchestrator = useSketchpadStore();
   const kitScope = useKitScope();
@@ -1195,6 +1232,8 @@ export function useKitAppStore<T>(selector?: (controller: KitStore) => T, id?: K
   }
 }
 
+// MUST use the sketchpad actor to reactively track the Kit app state slice.
+// Selects derived state from the Kit app XState snapshot.
 export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId): T | KitAppState {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? id?.kit;
@@ -1233,6 +1272,8 @@ export function useKitApp<T>(selector?: (state: KitAppState) => T, id?: KitAppId
   return state;
 }
 
+// MUST provide the current selection, a setter, and a canSet flag.
+// Returns a hook result for the current Kit app selection.
 export function useKitAppSelection(): HookResult<KitAppSelection> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1250,6 +1291,8 @@ export function useKitAppSelection(): HookResult<KitAppSelection> {
   return conditionalHookResult(canSet, selection, setSelection);
 }
 
+// MUST provide the current fullscreen window, a setter, and a canSet flag.
+// Returns a hook result for the Kit app fullscreen window state.
 export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -1267,6 +1310,8 @@ export function useKitAppFullscreen(): HookResult<KitAppFullscreenWindow> {
   return conditionalHookResult(canSet, fullscreen, setFullscreen);
 }
 
+// MUST return a read-only list of other users' presence data.
+// Returns other collaborators' presence state for the Kit app.
 export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1277,6 +1322,8 @@ export function useKitAppOthers(): HookNoSetResult<KitAppPresenceOther[]> {
   return [others, undefined, canRead];
 }
 
+// MUST provide the current window layout, a setter, and a canSet flag.
+// Returns a hook result for the Kit app window layout.
 export function useKitAppWindowLayout(): HookResult<any> {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -1294,6 +1341,8 @@ export function useKitAppWindowLayout(): HookResult<any> {
   return conditionalHookResult(canSet, windowLayout, setWindowLayout);
 }
 
+// MUST provide the current force settings, an updater, and a canSet flag.
+// Returns the Kit app diagram force settings with an updater.
 export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value: Partial<DiagramForceSettings>) => void) | undefined, boolean] {
   const kitScope = useKitScope();
   const kitGuid = kitScope?.guid ?? "";
@@ -1311,6 +1360,8 @@ export function useKitAppDiagramForce(): readonly [DiagramForceSettings, ((value
   return [resolvedForce, canSet ? setForce : undefined, canSet] as const;
 }
 
+// MUST provide the current active tool, a setter, and a canSet flag.
+// Returns a hook result for the Kit app active tool.
 export function useKitAppActiveTool(): HookResult<ToolKind> {
   const actor = useSketchpadActor();
   const kitGuid = useKitScope()?.guid;
@@ -1334,11 +1385,15 @@ export function useKitAppActiveTool(): HookResult<ToolKind> {
   return conditionalHookResult(canSet, activeTool, setActiveTool);
 }
 
+// MUST create a Field wrapping the active tool value and setter.
+// Returns a reactive field for the Kit app active tool.
 export function useKitAppActiveToolField(): Field<ToolKind> {
   const [value, setValue, canSet] = useKitAppActiveTool();
   return createField(value, setValue ?? (() => { }), canSet);
 }
 
+// MUST provide the current sort column from the XState snapshot.
+// Returns a read-only hook result for the Kit app sort column.
 export function useKitAppSortColumn(): HookNoSetResult<string> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1349,6 +1404,8 @@ export function useKitAppSortColumn(): HookNoSetResult<string> {
   return [sortColumn, undefined, canRead];
 }
 
+// MUST provide the current sort direction from the XState snapshot.
+// Returns a read-only hook result for the Kit app sort direction.
 export function useKitAppSortDirection(): HookNoSetResult<"asc" | "desc"> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1359,6 +1416,8 @@ export function useKitAppSortDirection(): HookNoSetResult<"asc" | "desc"> {
   return [sortDirection, undefined, canRead];
 }
 
+// MUST provide the current expanded row set from the XState snapshot.
+// Returns a read-only hook result for the Kit app expanded rows.
 export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -1369,6 +1428,8 @@ export function useKitAppExpandedRows(): HookNoSetResult<Set<string>> {
   return [expandedRows, undefined, canRead];
 }
 
+// MUST provide transaction actions dispatching to the XState actor.
+// Returns the Kit app transaction controller with start, finalize, and abort.
 export function useKitAppTransaction(): Transaction {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1384,6 +1445,8 @@ export function useKitAppTransaction(): Transaction {
   };
 }
 
+// MUST expose all Kit app commands through the store controller.
+// Returns the full Kit app commands API for programmatic access.
 export function useKitAppCommands(id?: KitAppId) {
   const controller = useKitAppStore(undefined, id) as KitStore | null;
   const getOrigin = useOrigin();
@@ -1530,9 +1593,13 @@ export function useKitAppCommands(id?: KitAppId) {
 }
 
 //#region 🔖Action Hooks
+// Action hooks MUST provide composable React hooks for Kit app selection, hover, sort, filter, and transaction actions.
 
+// Tuple type for action hook results pairing an action callback with a canAct flag.
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
+// MUST return a callback that selects the given type GUID.
+// Returns an action to select a single type in the Kit app.
 export function useKitAppSelectType(): ActionHookResult<[typeGuid: Guid]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1546,6 +1613,8 @@ export function useKitAppSelectType(): ActionHookResult<[typeGuid: Guid]> {
   return [action, canAct];
 }
 
+// MUST return a callback that deselects the given type GUID.
+// Returns an action to deselect a single type in the Kit app.
 export function useKitAppDeselectType(): ActionHookResult<[typeGuid: Guid]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1559,6 +1628,8 @@ export function useKitAppDeselectType(): ActionHookResult<[typeGuid: Guid]> {
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given design GUID.
+// Returns an action to select a single design in the Kit app.
 export function useKitAppSelectDesign(): ActionHookResult<[designGuid: Guid]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1572,6 +1643,8 @@ export function useKitAppSelectDesign(): ActionHookResult<[designGuid: Guid]> {
   return [action, canAct];
 }
 
+// MUST return a callback that deselects the given design GUID.
+// Returns an action to deselect a single design in the Kit app.
 export function useKitAppDeselectDesign(): ActionHookResult<[designGuid: Guid]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1585,6 +1658,8 @@ export function useKitAppDeselectDesign(): ActionHookResult<[designGuid: Guid]> 
   return [action, canAct];
 }
 
+// MUST return a callback that replaces the entire selection state.
+// Returns an action to set the full Kit app selection.
 export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSelection]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1598,6 +1673,8 @@ export function useKitAppSetSelection(): ActionHookResult<[selection: KitAppSele
   return [action, canAct];
 }
 
+// MUST return a callback that clears all selection state.
+// Returns an action to clear the full Kit app selection.
 export function useKitAppClearSelection(): ActionHookResult<[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1612,6 +1689,7 @@ export function useKitAppClearSelection(): ActionHookResult<[]> {
 }
 
 // #region Selection Helper Hooks
+// Selection helper hooks MUST provide entity-specific add, remove, toggle, select-single, select-all, and clear operations.
 
 function createDimensionSelectionHooks<K extends keyof KitAppSelection>(dimensionKey: K) {
   function useAdd(): ActionHookResult<[value: SelectionValue<K>]> {
@@ -1696,7 +1774,10 @@ function createDimensionSelectionHooks<K extends keyof KitAppSelection>(dimensio
 }
 
 // #region Types Selection Hooks
+// Types selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for type selection.
 
+// MUST return a callback that adds the given type GUID to selection.
+// Returns an action to add a type to the Kit app selection.
 export function useKitAppAddTypeToSelection(): ActionHookResult<[typeGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1710,6 +1791,8 @@ export function useKitAppAddTypeToSelection(): ActionHookResult<[typeGuid: Guid]
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given type GUID from selection.
+// Returns an action to remove a type from the Kit app selection.
 export function useKitAppRemoveTypeFromSelection(): ActionHookResult<[typeGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1723,6 +1806,8 @@ export function useKitAppRemoveTypeFromSelection(): ActionHookResult<[typeGuid: 
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given type GUID in selection.
+// Returns an action to toggle a type in the Kit app selection.
 export function useKitAppToggleTypeInSelection(): ActionHookResult<[typeGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1736,6 +1821,8 @@ export function useKitAppToggleTypeInSelection(): ActionHookResult<[typeGuid: Gu
   return [action, canAct];
 }
 
+// MUST return a callback that clears types and selects the given GUID.
+// Returns an action to select only a single type, clearing others.
 export function useKitAppSelectSingleType(): ActionHookResult<[typeGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1749,6 +1836,8 @@ export function useKitAppSelectSingleType(): ActionHookResult<[typeGuid: Guid]> 
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given type GUIDs.
+// Returns an action to select multiple types in the Kit app.
 export function useKitAppSelectTypes(): ActionHookResult<[typeGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1762,6 +1851,8 @@ export function useKitAppSelectTypes(): ActionHookResult<[typeGuids: Guid[]]> {
   return [action, canAct];
 }
 
+// MUST return a callback that clears all type GUIDs from selection.
+// Returns an action to clear all type selections.
 export function useKitAppClearTypes(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1778,7 +1869,10 @@ export function useKitAppClearTypes(): ActionHookResult<[]> {
 // #endregion Types Selection Hooks
 
 // #region Designs Selection Hooks
+// Designs selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for design selection.
 
+// MUST return a callback that adds the given design GUID to selection.
+// Returns an action to add a design to the Kit app selection.
 export function useKitAppAddDesignToSelection(): ActionHookResult<[designGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1792,6 +1886,8 @@ export function useKitAppAddDesignToSelection(): ActionHookResult<[designGuid: G
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given design GUID from selection.
+// Returns an action to remove a design from the Kit app selection.
 export function useKitAppRemoveDesignFromSelection(): ActionHookResult<[designGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1805,6 +1901,8 @@ export function useKitAppRemoveDesignFromSelection(): ActionHookResult<[designGu
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given design GUID in selection.
+// Returns an action to toggle a design in the Kit app selection.
 export function useKitAppToggleDesignInSelection(): ActionHookResult<[designGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1818,6 +1916,8 @@ export function useKitAppToggleDesignInSelection(): ActionHookResult<[designGuid
   return [action, canAct];
 }
 
+// MUST return a callback that clears designs and selects the given GUID.
+// Returns an action to select only a single design, clearing others.
 export function useKitAppSelectSingleDesign(): ActionHookResult<[designGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1831,6 +1931,8 @@ export function useKitAppSelectSingleDesign(): ActionHookResult<[designGuid: Gui
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given design GUIDs.
+// Returns an action to select multiple designs in the Kit app.
 export function useKitAppSelectDesigns(): ActionHookResult<[designsGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1844,6 +1946,8 @@ export function useKitAppSelectDesigns(): ActionHookResult<[designsGuids: Guid[]
   return [action, canAct];
 }
 
+// MUST return a callback that clears all design GUIDs from selection.
+// Returns an action to clear all design selections.
 export function useKitAppClearDesigns(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1860,7 +1964,10 @@ export function useKitAppClearDesigns(): ActionHookResult<[]> {
 // #endregion Designs Selection Hooks
 
 // #region Qualities Selection Hooks
+// Qualities selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for quality selection.
 
+// MUST return a callback that adds the given quality string to selection.
+// Returns an action to add a quality to the Kit app selection.
 export function useKitAppAddQualityToSelection(): ActionHookResult<[qualitie: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1874,6 +1981,8 @@ export function useKitAppAddQualityToSelection(): ActionHookResult<[qualitie: st
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given quality string from selection.
+// Returns an action to remove a quality from the Kit app selection.
 export function useKitAppRemoveQualityFromSelection(): ActionHookResult<[qualitie: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1887,6 +1996,8 @@ export function useKitAppRemoveQualityFromSelection(): ActionHookResult<[qualiti
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given quality string in selection.
+// Returns an action to toggle a quality in the Kit app selection.
 export function useKitAppToggleQualityInSelection(): ActionHookResult<[qualitie: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1900,6 +2011,8 @@ export function useKitAppToggleQualityInSelection(): ActionHookResult<[qualitie:
   return [action, canAct];
 }
 
+// MUST return a callback that clears qualities and selects the given string.
+// Returns an action to select only a single quality, clearing others.
 export function useKitAppSelectSingleQuality(): ActionHookResult<[qualitie: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1913,6 +2026,8 @@ export function useKitAppSelectSingleQuality(): ActionHookResult<[qualitie: stri
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given quality strings.
+// Returns an action to select multiple qualities in the Kit app.
 export function useKitAppSelectQualities(): ActionHookResult<[qualitiesNames: string[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1926,6 +2041,8 @@ export function useKitAppSelectQualities(): ActionHookResult<[qualitiesNames: st
   return [action, canAct];
 }
 
+// MUST return a callback that clears all quality strings from selection.
+// Returns an action to clear all quality selections.
 export function useKitAppClearQualities(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1942,7 +2059,10 @@ export function useKitAppClearQualities(): ActionHookResult<[]> {
 // #endregion Qualities Selection Hooks
 
 // #region Ports Selection Hooks
+// Ports selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for port selection.
 
+// MUST return a callback that adds the given port GUID to selection.
+// Returns an action to add a port to the Kit app selection.
 export function useKitAppAddPortToSelection(): ActionHookResult<[portGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1956,6 +2076,8 @@ export function useKitAppAddPortToSelection(): ActionHookResult<[portGuid: Guid]
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given port GUID from selection.
+// Returns an action to remove a port from the Kit app selection.
 export function useKitAppRemovePortFromSelection(): ActionHookResult<[portGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1969,6 +2091,8 @@ export function useKitAppRemovePortFromSelection(): ActionHookResult<[portGuid: 
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given port GUID in selection.
+// Returns an action to toggle a port in the Kit app selection.
 export function useKitAppTogglePortInSelection(): ActionHookResult<[portGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1982,6 +2106,8 @@ export function useKitAppTogglePortInSelection(): ActionHookResult<[portGuid: Gu
   return [action, canAct];
 }
 
+// MUST return a callback that clears ports and selects the given GUID.
+// Returns an action to select only a single port, clearing others.
 export function useKitAppSelectSinglePort(): ActionHookResult<[portGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -1995,6 +2121,8 @@ export function useKitAppSelectSinglePort(): ActionHookResult<[portGuid: Guid]> 
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given port GUIDs.
+// Returns an action to select multiple ports in the Kit app.
 export function useKitAppSelectPorts(): ActionHookResult<[portsGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2008,6 +2136,8 @@ export function useKitAppSelectPorts(): ActionHookResult<[portsGuids: Guid[]]> {
   return [action, canAct];
 }
 
+// MUST return a callback that clears all port GUIDs from selection.
+// Returns an action to clear all port selections.
 export function useKitAppClearPorts(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2024,7 +2154,10 @@ export function useKitAppClearPorts(): ActionHookResult<[]> {
 // #endregion Ports Selection Hooks
 
 // #region Tags Selection Hooks
+// Tags selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for tag selection.
 
+// MUST return a callback that adds the given tag GUID to selection.
+// Returns an action to add a tag to the Kit app selection.
 export function useKitAppAddTagToSelection(): ActionHookResult<[tagGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2038,6 +2171,8 @@ export function useKitAppAddTagToSelection(): ActionHookResult<[tagGuid: Guid]> 
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given tag GUID from selection.
+// Returns an action to remove a tag from the Kit app selection.
 export function useKitAppRemoveTagFromSelection(): ActionHookResult<[tagGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2051,6 +2186,8 @@ export function useKitAppRemoveTagFromSelection(): ActionHookResult<[tagGuid: Gu
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given tag GUID in selection.
+// Returns an action to toggle a tag in the Kit app selection.
 export function useKitAppToggleTagInSelection(): ActionHookResult<[tagGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2064,6 +2201,8 @@ export function useKitAppToggleTagInSelection(): ActionHookResult<[tagGuid: Guid
   return [action, canAct];
 }
 
+// MUST return a callback that clears tags and selects the given GUID.
+// Returns an action to select only a single tag, clearing others.
 export function useKitAppSelectSingleTag(): ActionHookResult<[tagGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2077,6 +2216,8 @@ export function useKitAppSelectSingleTag(): ActionHookResult<[tagGuid: Guid]> {
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given tag GUIDs.
+// Returns an action to select multiple tags in the Kit app.
 export function useKitAppSelectTags(): ActionHookResult<[tagsGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2090,6 +2231,8 @@ export function useKitAppSelectTags(): ActionHookResult<[tagsGuids: Guid[]]> {
   return [action, canAct];
 }
 
+// MUST return a callback that clears all tag GUIDs from selection.
+// Returns an action to clear all tag selections.
 export function useKitAppClearTags(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2106,7 +2249,10 @@ export function useKitAppClearTags(): ActionHookResult<[]> {
 // #endregion Tags Selection Hooks
 
 // #region Concepts Selection Hooks
+// Concepts selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for concept selection.
 
+// MUST return a callback that adds the given concept GUID to selection.
+// Returns an action to add a concept to the Kit app selection.
 export function useKitAppAddConceptToSelection(): ActionHookResult<[conceptGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2120,6 +2266,8 @@ export function useKitAppAddConceptToSelection(): ActionHookResult<[conceptGuid:
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given concept GUID from selection.
+// Returns an action to remove a concept from the Kit app selection.
 export function useKitAppRemoveConceptFromSelection(): ActionHookResult<[conceptGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2133,6 +2281,8 @@ export function useKitAppRemoveConceptFromSelection(): ActionHookResult<[concept
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given concept GUID in selection.
+// Returns an action to toggle a concept in the Kit app selection.
 export function useKitAppToggleConceptInSelection(): ActionHookResult<[conceptGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2146,6 +2296,8 @@ export function useKitAppToggleConceptInSelection(): ActionHookResult<[conceptGu
   return [action, canAct];
 }
 
+// MUST return a callback that clears concepts and selects the given GUID.
+// Returns an action to select only a single concept, clearing others.
 export function useKitAppSelectSingleConcept(): ActionHookResult<[conceptGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2159,6 +2311,8 @@ export function useKitAppSelectSingleConcept(): ActionHookResult<[conceptGuid: G
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given concept GUIDs.
+// Returns an action to select multiple concepts in the Kit app.
 export function useKitAppSelectConcepts(): ActionHookResult<[conceptsGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2172,6 +2326,8 @@ export function useKitAppSelectConcepts(): ActionHookResult<[conceptsGuids: Guid
   return [action, canAct];
 }
 
+// MUST return a callback that clears all concept GUIDs from selection.
+// Returns an action to clear all concept selections.
 export function useKitAppClearConcepts(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2188,7 +2344,10 @@ export function useKitAppClearConcepts(): ActionHookResult<[]> {
 // #endregion Concepts Selection Hooks
 
 // #region Files Selection Hooks
+// Files selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for file selection.
 
+// MUST return a callback that adds the given file string to selection.
+// Returns an action to add a file to the Kit app selection.
 export function useKitAppAddFileToSelection(): ActionHookResult<[file: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2202,6 +2361,8 @@ export function useKitAppAddFileToSelection(): ActionHookResult<[file: string]> 
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given file string from selection.
+// Returns an action to remove a file from the Kit app selection.
 export function useKitAppRemoveFileFromSelection(): ActionHookResult<[file: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2215,6 +2376,8 @@ export function useKitAppRemoveFileFromSelection(): ActionHookResult<[file: stri
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given file string in selection.
+// Returns an action to toggle a file in the Kit app selection.
 export function useKitAppToggleFileInSelection(): ActionHookResult<[file: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2228,6 +2391,8 @@ export function useKitAppToggleFileInSelection(): ActionHookResult<[file: string
   return [action, canAct];
 }
 
+// MUST return a callback that clears files and selects the given string.
+// Returns an action to select only a single file, clearing others.
 export function useKitAppSelectSingleFile(): ActionHookResult<[file: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2241,6 +2406,8 @@ export function useKitAppSelectSingleFile(): ActionHookResult<[file: string]> {
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given file strings.
+// Returns an action to select multiple files in the Kit app.
 export function useKitAppSelectFiles(): ActionHookResult<[filesNames: string[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2254,6 +2421,8 @@ export function useKitAppSelectFiles(): ActionHookResult<[filesNames: string[]]>
   return [action, canAct];
 }
 
+// MUST return a callback that clears all file strings from selection.
+// Returns an action to clear all file selections.
 export function useKitAppClearFiles(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2270,7 +2439,10 @@ export function useKitAppClearFiles(): ActionHookResult<[]> {
 // #endregion Files Selection Hooks
 
 // #region Folders Selection Hooks
+// Folders selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for folder selection.
 
+// MUST return a callback that adds the given folder GUID to selection.
+// Returns an action to add a folder to the Kit app selection.
 export function useKitAppAddFolderToSelection(): ActionHookResult<[folderGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2284,6 +2456,8 @@ export function useKitAppAddFolderToSelection(): ActionHookResult<[folderGuid: G
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given folder GUID from selection.
+// Returns an action to remove a folder from the Kit app selection.
 export function useKitAppRemoveFolderFromSelection(): ActionHookResult<[folderGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2297,6 +2471,8 @@ export function useKitAppRemoveFolderFromSelection(): ActionHookResult<[folderGu
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given folder GUID in selection.
+// Returns an action to toggle a folder in the Kit app selection.
 export function useKitAppToggleFolderInSelection(): ActionHookResult<[folderGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2310,6 +2486,8 @@ export function useKitAppToggleFolderInSelection(): ActionHookResult<[folderGuid
   return [action, canAct];
 }
 
+// MUST return a callback that clears folders and selects the given GUID.
+// Returns an action to select only a single folder, clearing others.
 export function useKitAppSelectSingleFolder(): ActionHookResult<[folderGuid: Guid]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2323,6 +2501,8 @@ export function useKitAppSelectSingleFolder(): ActionHookResult<[folderGuid: Gui
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given folder GUIDs.
+// Returns an action to select multiple folders in the Kit app.
 export function useKitAppSelectFolders(): ActionHookResult<[foldersGuids: Guid[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2336,6 +2516,8 @@ export function useKitAppSelectFolders(): ActionHookResult<[foldersGuids: Guid[]
   return [action, canAct];
 }
 
+// MUST return a callback that clears all folder GUIDs from selection.
+// Returns an action to clear all folder selections.
 export function useKitAppClearFolders(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2352,7 +2534,10 @@ export function useKitAppClearFolders(): ActionHookResult<[]> {
 // #endregion Folders Selection Hooks
 
 // #region Authors Selection Hooks
+// Authors selection hooks MUST provide add, remove, toggle, select-single, select-all, and clear for author selection.
 
+// MUST return a callback that adds the given author string to selection.
+// Returns an action to add an author to the Kit app selection.
 export function useKitAppAddAuthorToSelection(): ActionHookResult<[author: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2366,6 +2551,8 @@ export function useKitAppAddAuthorToSelection(): ActionHookResult<[author: strin
   return [action, canAct];
 }
 
+// MUST return a callback that removes the given author string from selection.
+// Returns an action to remove an author from the Kit app selection.
 export function useKitAppRemoveAuthorFromSelection(): ActionHookResult<[author: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2379,6 +2566,8 @@ export function useKitAppRemoveAuthorFromSelection(): ActionHookResult<[author: 
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given author string in selection.
+// Returns an action to toggle an author in the Kit app selection.
 export function useKitAppToggleAuthorInSelection(): ActionHookResult<[author: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2392,6 +2581,8 @@ export function useKitAppToggleAuthorInSelection(): ActionHookResult<[author: st
   return [action, canAct];
 }
 
+// MUST return a callback that clears authors and selects the given string.
+// Returns an action to select only a single author, clearing others.
 export function useKitAppSelectSingleAuthor(): ActionHookResult<[author: string]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2405,6 +2596,8 @@ export function useKitAppSelectSingleAuthor(): ActionHookResult<[author: string]
   return [action, canAct];
 }
 
+// MUST return a callback that selects the given author strings.
+// Returns an action to select multiple authors in the Kit app.
 export function useKitAppSelectAuthors(): ActionHookResult<[authorsNames: string[]]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2418,6 +2611,8 @@ export function useKitAppSelectAuthors(): ActionHookResult<[authorsNames: string
   return [action, canAct];
 }
 
+// MUST return a callback that clears all author strings from selection.
+// Returns an action to clear all author selections.
 export function useKitAppClearAuthors(): ActionHookResult<[]> {
   const [selection, setSelection] = useKitAppSelection();
   const canAct = setSelection !== undefined;
@@ -2434,7 +2629,10 @@ export function useKitAppClearAuthors(): ActionHookResult<[]> {
 // #endregion Authors Selection Hooks
 
 // #region Global Selection Hooks
+// Global selection hooks MUST provide select-all across all artifact kinds.
 
+// MUST return a callback that adds all artifact GUIDs to selection.
+// Returns an action to select all entities across all artifact kinds.
 export function useKitAppSelectAll(): ActionHookResult<[]> {
   const kit = useKit() as Kit | undefined;
   const [, setSelection] = useKitAppSelection();
@@ -2473,6 +2671,8 @@ export function useKitAppSelectAll(): ActionHookResult<[]> {
 
 // #endregion Selection Helper Hooks
 
+// MUST return a callback that sets the filter search string.
+// Returns an action to set the Kit app filter search query.
 export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2486,6 +2686,8 @@ export function useKitAppSetFilter(): ActionHookResult<[search: string]> {
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given row GUID in expanded rows.
+// Returns an action to toggle a row's expanded state in the Kit table.
 export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2499,6 +2701,8 @@ export function useKitAppToggleRow(): ActionHookResult<[rowId: string]> {
   return [action, canAct];
 }
 
+// MUST return a callback that sets the sort column identifier.
+// Returns an action to set the Kit table sort column.
 export function useKitAppSetSort(): ActionHookResult<[column: string, direction: "asc" | "desc"]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2512,6 +2716,8 @@ export function useKitAppSetSort(): ActionHookResult<[column: string, direction:
   return [action, canAct];
 }
 
+// MUST return a callback that toggles between ascending and descending.
+// Returns an action to toggle the Kit table sort direction.
 export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColumn]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2532,6 +2738,8 @@ export function useKitAppToggleSort(): ActionHookResult<[column: KitAppSortColum
   return [action, canAct];
 }
 
+// MUST provide the current hover, a setter, and a canSet flag.
+// Returns a hook result for the Kit app hover state.
 export function useKitAppHover(): HookNoSetResult<KitAppHover | undefined> {
   const kitScope = useKitScope();
   const actor = useSketchpadActor();
@@ -2542,6 +2750,8 @@ export function useKitAppHover(): HookNoSetResult<KitAppHover | undefined> {
   return [hover, undefined, canRead];
 }
 
+// MUST return a callback that sets hover to the given entity.
+// Returns an action to set the Kit app hover state.
 export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2555,6 +2765,8 @@ export function useKitAppSetHover(): ActionHookResult<[hover: KitAppHover]> {
   return [action, canAct];
 }
 
+// MUST return a callback that clears all hover state.
+// Returns an action to clear the Kit app hover state.
 export function useKitAppClearHover(): ActionHookResult<[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2568,6 +2780,8 @@ export function useKitAppClearHover(): ActionHookResult<[]> {
   return [action, canAct];
 }
 
+// MUST return a callback that toggles the given panel's visibility.
+// Returns an action to toggle a specific panel's visibility.
 export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisibility]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2586,7 +2800,10 @@ export function useKitAppTogglePanel(): ActionHookResult<[panel: keyof PanelVisi
 // #endregion 🔖Internal State Management
 
 // #region 🔖Types
+// Types MUST provide hover status and color hooks for type visual indication in the Kit app.
 
+// MUST check the hover state for the given type GUID.
+// Returns whether a type is currently hovered in the Kit app.
 export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid;
@@ -2595,12 +2812,16 @@ export function useKitAppIsTypeHovered(): HookNoSetResult<boolean> {
   return [isHovered ?? false, undefined, canRead];
 }
 
+// MUST derive status from selection and hover states for the given type GUID.
+// Returns the selection/hover status of a type for visual indication.
 export function useKitAppTypeStatus(): HookNoSetResult<DiffStatus> {
   const typeScope = useTypeScope();
   const canRead = typeScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
 
+// MUST derive the color from the type's hovered and selected state.
+// Returns the computed color for a type based on its status.
 export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
   const typeScope = useTypeScope();
   const [isHovered] = useKitAppIsTypeHovered();
@@ -2655,7 +2876,10 @@ export function useKitAppTypeColor(isSelected: boolean): HookNoSetResult<{ fill:
 // #endregion 🔖Types
 
 // #region 🔖Designs
+// Designs MUST provide hover status and color hooks for design visual indication in the Kit app.
 
+// MUST check the hover state for the given design GUID.
+// Returns whether a design is currently hovered in the Kit app.
 export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
   const designScope = useDesignScope();
   const designGuid = designScope?.guid;
@@ -2664,12 +2888,16 @@ export function useKitAppIsDesignHovered(): HookNoSetResult<boolean> {
   return [isHovered ?? false, undefined, canRead];
 }
 
+// MUST derive status from selection and hover states for the given design GUID.
+// Returns the selection/hover status of a design for visual indication.
 export function useKitAppDesignStatus(): HookNoSetResult<DiffStatus> {
   const designScope = useDesignScope();
   const canRead = designScope !== null;
   return [DiffStatus.Unchanged, undefined, canRead];
 }
 
+// MUST derive the color from the design's hovered and selected state.
+// Returns the computed color for a design based on its status.
 export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fill: string; stroke: string; opacity: number }> {
   const designScope = useDesignScope();
   const [isHovered] = useKitAppIsDesignHovered();
@@ -2724,7 +2952,9 @@ export function useKitAppDesignColor(isSelected: boolean): HookNoSetResult<{ fil
 // #endregion 🔖Designs
 
 // #region 🔖Commands
+// Commands MUST define all executable Kit app actions for artifact CRUD, import, and export.
 
+// Registry of all named Kit app commands mapped to their handler functions.
 export const commands = {
   "semio.kitApp.setTheme": (context: KitAppCommandContext, theme: Theme): KitAppCommandResult => {
     return { diff: {} };
@@ -3471,6 +3701,7 @@ export const commands = {
 // #region 🔖Windows
 
 // #region 🔖Table
+// Table MUST render the interactive data table with sortable columns, expandable rows, and drag-drop reordering.
 
 type ArtifactKind = "designs" | "types" | "qualities" | "ports" | "tags" | "concepts" | "files" | "folders" | "authors";
 
@@ -6115,6 +6346,7 @@ const App: FC = () => {
 // #endregion 🔖Table
 
 // #region 🔖Diagram
+// Diagram MUST render the interactive force-directed Kit diagram with type and design nodes.
 
 interface KitDiagramNode extends Record<string, unknown> {
   guid: string;
@@ -7307,7 +7539,10 @@ export default MultiWindowApp;
 // #endregion 🔖Diagram
 
 // #region Tools
+// Tools MUST define Kit app toolbar filter and selection tool components.
 
+// MUST provide the current filter string and a setter.
+// Returns a hook for the Kit app filter search input state.
 export function useKitAppFilterSearch(): HookResult<string> {
   const store = useKitAppStore();
   const filterSearch = useSyncDeep(store, (s: KitAppState | null) => s?.filterSearch ?? "") || "";
@@ -7320,6 +7555,8 @@ export function useKitAppFilterSearch(): HookResult<string> {
   return [filterSearch, setFilterSearch, !!store];
 }
 
+// MUST render a filter input connected to the Kit app filter search state.
+// Filter toolbar component rendering the search input for Kit artifacts.
 export const KitFilters: FC = () => {
   return (
     <div className="flex shrink-0 items-center gap-single">
@@ -7328,6 +7565,8 @@ export const KitFilters: FC = () => {
   );
 };
 
+// MUST render selection mode toggle buttons.
+// Toolbar selection tool component for the Kit app.
 export const KitToolbarSelection: FC = () => {
   const [activeTool, setActiveTool] = useKitAppActiveTool();
   const labelPointer = useLabel("semio.sketchpad.app.kit.tool.pointer");
@@ -7346,6 +7585,8 @@ export const KitToolbarSelection: FC = () => {
   );
 };
 
+// MUST activate hand mode on mount.
+// Toolbar hand tool component for the Kit app.
 export const KitToolbarHand: FC = () => {
   const [activeTool, setActiveTool] = useKitAppActiveTool();
   const labelHand = useLabel("semio.sketchpad.app.kit.tool.hand");
@@ -7372,7 +7613,10 @@ export const KitToolbarHand: FC = () => {
 // #region 🔖Right
 
 // #region 🔖Details
+// Details MUST render the Kit app detail panels for kit, type, port, tag, concept, design, file, folder, and multi-artifact sections.
 
+// MUST render the kit metadata form fields within a detail panel section.
+// Detail section component for the currently open kit.
 export const KitSection: FC = () => {
   const isInKitScope = useIsInKitScope();
   if (!isInKitScope) return null;
@@ -7485,6 +7729,8 @@ const KitSectionForm: FC = () => {
   }
 };
 
+// MUST render the type form fields within a detail panel section.
+// Detail section component for the selected type.
 export const TypeSection: FC = () => {
   const [selection] = useKitAppSelection();
   const selectedTypes = selection?.types || [];
@@ -7562,6 +7808,8 @@ const MultipleTypesSection: FC<{ typeGuids: string[] }> = ({ typeGuids }) => {
   );
 };
 
+// MUST render the port form fields within a detail panel section.
+// Detail section component for the selected port.
 export const PortSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
@@ -7625,6 +7873,8 @@ const MultiplePortsSection: FC<{ portGuids: string[] }> = ({ portGuids }) => {
   );
 };
 
+// MUST render the tag form fields within a detail panel section.
+// Detail section component for the selected tag.
 export const TagSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
@@ -7677,6 +7927,8 @@ const MultipleTagsSection: FC<{ tagGuids: string[] }> = ({ tagGuids }) => {
   );
 };
 
+// MUST render the concept form fields within a detail panel section.
+// Detail section component for the selected concept.
 export const ConceptSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
@@ -7729,6 +7981,8 @@ const MultipleConceptsSection: FC<{ conceptGuids: string[] }> = ({ conceptGuids 
   );
 };
 
+// MUST render the design form fields within a detail panel section.
+// Detail section component for the selected design.
 export const DesignSection: FC = () => {
   const [selection] = useKitAppSelection();
   const selectedDesigns = selection?.designs || [];
@@ -7852,6 +8106,8 @@ const MultipleDesignsSection: FC<{ designGuids: string[] }> = ({ designGuids }) 
   );
 };
 
+// MUST render the file metadata within a detail panel section.
+// Detail section component for the selected file.
 export const FileSection: FC = () => {
   const { t } = useTranslation();
   const kit = useKit() as Kit;
@@ -7914,6 +8170,8 @@ export const FileSection: FC = () => {
   );
 };
 
+// MUST render the folder metadata within a detail panel section.
+// Detail section component for the selected folder.
 export const FolderSection: FC = () => {
   const { t } = useTranslation();
   const kit = useKit() as Kit;
@@ -7998,6 +8256,8 @@ export const FolderSection: FC = () => {
   );
 };
 
+// MUST render a summary of all selected artifacts across kinds.
+// Detail section component for multiple selected artifacts.
 export const MultipleArtifactsSection: FC = () => {
   const { t } = useTranslation();
   const [selection] = useKitAppSelection();
@@ -8031,6 +8291,7 @@ export const MultipleArtifactsSection: FC = () => {
 // #endregion 🔖Details
 
 // #region 🔖Settings
+// Settings MUST render the Kit app settings panel with theme, language, device, expertise, mode, and diagram force controls.
 
 const KitEditorSettingsContent: FC = () => {
   const [diagramForce, setDiagramForce, canSetDiagramForce] = useKitAppDiagramForce();
@@ -8199,7 +8460,10 @@ const SketchpadSettingsContent: FC = () => {
 // #endregion 🔖Canvas
 
 // #region 🔖Footer
+// Footer MUST render the Kit app footer with selection count status.
 
+// MUST register and unregister footer items based on current selection state.
+// Footer component that renders the Kit app selection count status.
 export const KitAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -8219,7 +8483,9 @@ export const KitAppFooter: FC = () => {
 // #endregion 🔖Footer
 
 // #region 🔖Config
+// Config MUST export the Kit app configuration with route segments, panel definitions, and path matching.
 
+// Exported Kit app configuration including routes, panels, and path matching.
 export const config: AppConfig = {
   id: "kit",
   component: MultiWindowApp,

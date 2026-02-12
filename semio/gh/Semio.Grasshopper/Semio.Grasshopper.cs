@@ -17,7 +17,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 #endregion 🔖License
 
 #region 🔖Specs
@@ -25,26 +24,8 @@
 
 #endregion 🔖Header
 
-#region 🔖TODOs
-
-// TODO: Think of modeling components that are resilient to future schema changes.
-// TODO: Refactor EngineComponent with GetInput and GetPersitanceInput etc. Very confusing. Probably no abstracting is better.
-// TODO: GetProps and SetProps (includes children) is not consistent with the prop naming in python (does not include children).
-// TODO: Add toplevel scanning for kits wherever a directory is given
-
-
-
-
-
-// TODO: IsInvalid is used to check null state which is not clean.
-
-
-// TODO: Figure out why cast from Piece to Text is not triggering the casts. ToString has somehow has precedence.
-// TODO: NameM.ToLower() doesn't work for composite names. E.g. "Coord" -> "coord".
-// TODO: Implement a status check and wait for the engine to be ready
-
-#endregion 🔖TODOs
-
+#region 🔖Imports
+// Callers MUST import all required namespaces listed here.
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
@@ -62,9 +43,15 @@ using Rhino.Geometry;
 using Semio;
 using System.Text.RegularExpressions;
 
+#endregion 🔖Imports
+
+#region 🔖Namespace
+// Implementations MUST reside in this namespace.
 namespace Semio.Grasshopper;
+#endregion 🔖Namespace
 
 #region 🔖Constants
+// Consumers MUST use these shared constants for configuration.
 
 public static class Constants
 {
@@ -97,6 +84,7 @@ public class SemioCategoryIcon : GH_AssemblyPriority
 #endregion 🔖Constants
 
 #region 🔖Utility
+// Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
 {
@@ -219,6 +207,7 @@ public static class Utility
 #endregion 🔖Utility
 
 #region 🔖Converters
+// Implementations MUST convert between semio and Grasshopper data types.
 
 public static class RhinoConverter
 {
@@ -245,7 +234,10 @@ public static class RhinoConverter
 #endregion 🔖Converters
 
 #region 🔖Bases
+// Implementations MUST extend these abstract base classes for Goo, Param, and Component.
 
+// Generic Grasshopper data wrapper for semio entity types.
+// Implementations MUST override CastFrom and CastTo for type conversion.
 public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEntity>, new()
 {
     public Goo() { Value = new TEntity(); }
@@ -294,6 +286,8 @@ public abstract class Goo<TEntity> : GH_Goo<TEntity> where TEntity : Entity<TEnt
     }
 }
 
+// Generic Grasshopper parameter for semio entity types.
+// Implementations MUST provide component exposure and icon metadata.
 public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo : Goo<TModel> where TModel : Entity<TModel>, new()
 {
     protected abstract string ModelName { get; }
@@ -310,6 +304,8 @@ public abstract class Param<TGoo, TModel> : GH_PersistentParam<TGoo> where TGoo 
     protected override GH_GetterResult Prompt_Plural(ref List<TGoo> values) => throw new NotImplementedException();
 }
 
+// Generic Grasshopper data wrapper for enum values.
+// Implementations MUST convert between string names and enum values.
 public abstract class EnumGoo<TEnum> : GH_Goo<TEnum> where TEnum : struct, Enum
 {
     public EnumGoo() { }
@@ -335,6 +331,8 @@ public abstract class EnumGoo<TEnum> : GH_Goo<TEnum> where TEnum : struct, Enum
     public override string TypeDescription => typeof(TEnum).Name;
 }
 
+// Generic Grasshopper parameter for enum values.
+// Implementations MUST restrict input to valid enum members.
 public abstract class EnumParam<TEnumGoo, TEnum> : GH_Param<TEnumGoo>
     where TEnumGoo : EnumGoo<TEnum>, new()
     where TEnum : struct, Enum
@@ -352,6 +350,8 @@ public abstract class Component : GH_Component
     { }
 }
 
+// Abstract Grasshopper component that passes input through transformation.
+// Implementations MUST transform input data and output the result.
 public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
     where TParam : Param<TGoo, TModel>, new() where TGoo : Goo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -422,12 +422,16 @@ public abstract class PassthroughComponent<TParam, TGoo, TModel> : Component
     protected virtual TModel ProcessModel(TModel model) => model;
 }
 
+// Generic Grasshopper data wrapper for entity ID types.
+// Implementations MUST wrap entity ID types for Grasshopper data flow.
 public abstract class IdGoo<TModel> : Goo<TModel> where TModel : Entity<TModel>, new()
 {
     public IdGoo() : base() { }
     public IdGoo(TModel value) : base(value) { }
 }
 
+// Generic Grasshopper parameter for entity ID types.
+// Implementations MUST provide type-safe parameter access for IDs.
 public abstract class IdParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : IdGoo<TModel> where TModel : Entity<TModel>, new()
 {
     protected IdParam() : base() { }
@@ -436,6 +440,8 @@ public abstract class IdParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : I
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
+// Abstract Grasshopper component for constructing entity IDs.
+// Implementations MUST register input parameters matching ID fields.
 public abstract class IdComponent<TParam, TGoo, TModel> : PassthroughComponent<TParam, TGoo, TModel>
     where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -443,24 +449,32 @@ public abstract class IdComponent<TParam, TGoo, TModel> : PassthroughComponent<T
     public override GH_Exposure Exposure => GH_Exposure.secondary;
 }
 
+// Generic Grasshopper data wrapper for entity diff types.
+// Implementations MUST wrap entity diff types for Grasshopper data flow.
 public abstract class DiffGoo<TModel> : Goo<TModel> where TModel : Entity<TModel>, new()
 {
     public DiffGoo() : base() { }
     public DiffGoo(TModel value) : base(value) { }
 }
 
+// Generic Grasshopper parameter for entity diff types.
+// Implementations MUST provide type-safe parameter access for diffs.
 public abstract class DiffParam<TGoo, TModel> : Param<TGoo, TModel> where TGoo : DiffGoo<TModel> where TModel : Entity<TModel>, new()
 {
     protected DiffParam() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
 
+// Abstract Grasshopper component for constructing entity diffs.
+// Implementations MUST register input parameters matching diff fields.
 public abstract class DiffComponent<TParam, TGoo, TModel> : PassthroughComponent<TParam, TGoo, TModel>
     where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
     protected DiffComponent() : base() { }
     public override GH_Exposure Exposure => GH_Exposure.tertiary;
 }
+// Abstract Grasshopper component for serializing entities to JSON.
+// Implementations MUST convert entities to valid JSON strings.
 public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : Param<TGoo, TModel>, new() where TGoo : Goo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -498,6 +512,8 @@ public abstract class SerializeComponent<TParam, TGoo, TModel> : ScriptingCompon
     }
 }
 
+// Abstract Grasshopper component for deserializing entities from JSON.
+// Implementations MUST parse JSON strings into entity instances.
 public abstract class DeserializeComponent<TParam, TGoo, TModel> : ScriptingComponent
     where TParam : Param<TGoo, TModel>, new() where TGoo : Goo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -533,6 +549,8 @@ public abstract class DeserializeComponent<TParam, TGoo, TModel> : ScriptingComp
     }
 }
 
+// Abstract Grasshopper component for serializing diffs to JSON.
+// Implementations MUST convert diffs to valid JSON strings.
 public abstract class SerializeDiffComponent<TParam, TGoo, TModel> : SerializeComponent<TParam, TGoo, TModel>
     where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -548,6 +566,8 @@ public abstract class SerializeDiffComponent<TParam, TGoo, TModel> : SerializeCo
     }
 }
 
+// Abstract Grasshopper component for deserializing diffs from JSON.
+// Implementations MUST parse JSON strings into diff instances.
 public abstract class DeserializeDiffComponent<TParam, TGoo, TModel> : DeserializeComponent<TParam, TGoo, TModel>
     where TParam : DiffParam<TGoo, TModel>, new() where TGoo : DiffGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -563,6 +583,8 @@ public abstract class DeserializeDiffComponent<TParam, TGoo, TModel> : Deseriali
     }
 }
 
+// Abstract Grasshopper component for serializing entity IDs to JSON.
+// Implementations MUST convert entity IDs to valid JSON strings.
 public abstract class SerializeIdComponent<TParam, TGoo, TModel> : SerializeComponent<TParam, TGoo, TModel>
     where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -577,6 +599,8 @@ public abstract class SerializeIdComponent<TParam, TGoo, TModel> : SerializeComp
     }
 }
 
+// Abstract Grasshopper component for deserializing entity IDs from JSON.
+// Implementations MUST parse JSON strings into entity ID instances.
 public abstract class DeserializeIdComponent<TParam, TGoo, TModel> : DeserializeComponent<TParam, TGoo, TModel>
     where TParam : IdParam<TGoo, TModel>, new() where TGoo : IdGoo<TModel>, new() where TModel : Entity<TModel>, new()
 {
@@ -591,6 +615,8 @@ public abstract class DeserializeIdComponent<TParam, TGoo, TModel> : Deserialize
     }
 }
 
+// Generic Grasshopper data wrapper with built-in entity validation.
+// Implementations MUST validate entities before exposing them downstream.
 public abstract class EntityGoo<TEntity, TEntityDiff, TEntityId> : Goo<TEntity>
     where TEntity : Entity<TEntity>, new()
     where TEntityDiff : Entity<TEntityDiff>, new()
@@ -600,6 +626,8 @@ public abstract class EntityGoo<TEntity, TEntityDiff, TEntityId> : Goo<TEntity>
     public EntityGoo(TEntity value) : base(value) { }
 }
 
+// Generic Grasshopper parameter with entity validation support.
+// Implementations MUST enforce entity validation on parameter access.
 public abstract class EntityParam<TGoo, TEntity, TEntityDiff, TEntityId> : Param<TGoo, TEntity>
     where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>
     where TEntity : Entity<TEntity>, new()
@@ -609,6 +637,8 @@ public abstract class EntityParam<TGoo, TEntity, TEntityDiff, TEntityId> : Param
     protected EntityParam() : base() { }
 }
 
+// Abstract Grasshopper component for constructing validated entities.
+// Implementations MUST validate constructed entities before output.
 public abstract class EntityComponent<TParam, TGoo, TEntity, TEntityDiff, TEntityId> : PassthroughComponent<TParam, TGoo, TEntity>
     where TParam : EntityParam<TGoo, TEntity, TEntityDiff, TEntityId>, new()
     where TGoo : EntityGoo<TEntity, TEntityDiff, TEntityId>, new()
@@ -619,6 +649,8 @@ public abstract class EntityComponent<TParam, TGoo, TEntity, TEntityDiff, TEntit
     protected EntityComponent() : base() { }
 }
 
+// Generic Grasshopper data wrapper for validated entity ID types.
+// Implementations MUST validate entity IDs before exposing them downstream.
 public abstract class EntityIdGoo<TEntity, TEntityDiff, TEntityId> : IdGoo<TEntityId>
     where TEntity : Entity<TEntity>, new()
     where TEntityDiff : Entity<TEntityDiff>, new()
@@ -628,6 +660,8 @@ public abstract class EntityIdGoo<TEntity, TEntityDiff, TEntityId> : IdGoo<TEnti
     public EntityIdGoo(TEntityId value) : base(value) { }
 }
 
+// Generic Grasshopper parameter for validated entity ID types.
+// Implementations MUST enforce entity ID validation on parameter access.
 public abstract class EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId> : IdParam<TIdGoo, TEntityId>
     where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>
     where TEntity : Entity<TEntity>, new()
@@ -637,6 +671,8 @@ public abstract class EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId> : I
     protected EntityIdParam() : base() { }
 }
 
+// Abstract Grasshopper component for constructing validated entity IDs.
+// Implementations MUST validate constructed entity IDs before output.
 public abstract class EntityIdComponent<TIdParam, TIdGoo, TEntity, TEntityDiff, TEntityId> : IdComponent<TIdParam, TIdGoo, TEntityId>
     where TIdParam : EntityIdParam<TIdGoo, TEntity, TEntityDiff, TEntityId>, new()
     where TIdGoo : EntityIdGoo<TEntity, TEntityDiff, TEntityId>, new()
@@ -647,6 +683,8 @@ public abstract class EntityIdComponent<TIdParam, TIdGoo, TEntity, TEntityDiff, 
     protected EntityIdComponent() : base() { }
 }
 
+// Generic Grasshopper data wrapper for validated entity diff types.
+// Implementations MUST validate entity diffs before exposing them downstream.
 public abstract class EntityDiffGoo<TEntity, TEntityDiff, TEntityId> : DiffGoo<TEntityDiff>
     where TEntity : Entity<TEntity>, new()
     where TEntityDiff : Entity<TEntityDiff>, new()
@@ -656,6 +694,8 @@ public abstract class EntityDiffGoo<TEntity, TEntityDiff, TEntityId> : DiffGoo<T
     public EntityDiffGoo(TEntityDiff value) : base(value) { }
 }
 
+// Generic Grasshopper parameter for validated entity diff types.
+// Implementations MUST enforce entity diff validation on parameter access.
 public abstract class EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffParam<TDiffGoo, TEntityDiff>
     where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>
     where TEntity : Entity<TEntity>, new()
@@ -665,6 +705,8 @@ public abstract class EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>
     protected EntityDiffParam() : base() { }
 }
 
+// Abstract Grasshopper component for constructing validated entity diffs.
+// Implementations MUST validate constructed entity diffs before output.
 public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntityDiff, TEntityId> : DiffComponent<TDiffParam, TDiffGoo, TEntityDiff>
     where TDiffParam : EntityDiffParam<TDiffGoo, TEntity, TEntityDiff, TEntityId>, new()
     where TDiffGoo : EntityDiffGoo<TEntity, TEntityDiff, TEntityId>, new()
@@ -678,6 +720,7 @@ public abstract class EntityDiffComponent<TDiffParam, TDiffGoo, TEntity, TEntity
 #endregion 🔖Bases
 
 #region 🔖Attribute
+// Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeGoo : Goo<Attribute>
 {
@@ -968,6 +1011,7 @@ public class DeserializeAttributeDiffComponent : DeserializeComponent<AttributeD
 #endregion 🔖Attribute
 
 #region 🔖Coord
+// Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
 public class CoordGoo : Goo<Coord>
 {
@@ -1055,6 +1099,7 @@ public class DeserializeCoordComponent : DeserializeComponent<CoordParam, CoordG
 #endregion 🔖Coord
 
 #region 🔖Location
+// Implementations MUST combine a plane with rotation and elevation for placement.
 
 public class LocationGoo : Goo<Location>
 {
@@ -1145,6 +1190,7 @@ public class DeserializeLocationComponent : DeserializeComponent<LocationParam, 
 #endregion 🔖Location
 
 #region 🔖Author
+// Implementations MUST provide author identity with name and contact.
 
 public class AuthorGoo : Goo<Author>
 {
@@ -1275,6 +1321,7 @@ public class AuthorIdParam : IdParam<AuthorIdGoo, AuthorId>
 #endregion 🔖Author
 
 #region 🔖File
+// Implementations MUST reference a file with URI, MIME type, and optional content.
 
 public class FileGoo : Goo<File>
 {
@@ -1533,6 +1580,7 @@ public class DeserializeFilesDiffComponent : DeserializeComponent<FilesDiffParam
 #endregion 🔖File
 
 #region 🔖Folder
+// Implementations MUST reference a folder with name and optional parent.
 
 public class FolderGoo : Goo<Folder>
 {
@@ -1816,6 +1864,7 @@ public class DeserializeFoldersDiffComponent : DeserializeComponent<FoldersDiffP
 #endregion 🔖Folder
 
 #region 🔖Benchmark
+// Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkGoo : Goo<Benchmark>
 {
@@ -1877,6 +1926,7 @@ public class DeserializeBenchmarkComponent : DeserializeComponent<BenchmarkParam
 #endregion 🔖Benchmark
 
 #region 🔖QualityKind
+// Implementations MUST categorize quality metrics by kind.
 
 public class QualityKindGoo : EnumGoo<QualityKind>
 {
@@ -1892,6 +1942,7 @@ public class QualityKindParam : EnumParam<QualityKindGoo, QualityKind>
 #endregion 🔖QualityKind
 
 #region 🔖Quality
+// Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityGoo : Goo<Quality>
 {
@@ -2148,6 +2199,7 @@ public class DeserializeQualityDiffComponent : DeserializeComponent<QualityDiffP
 #endregion 🔖Quality
 
 #region 🔖Tag
+// Implementations MUST provide lightweight labels for categorizing entities.
 
 public class TagGoo : Goo<Tag>
 {
@@ -2295,6 +2347,7 @@ public class TagIdParam : IdParam<TagIdGoo, TagId>
 #endregion 🔖Tag
 
 #region 🔖Prop
+// Implementations MUST bind a property name to an expression value.
 
 public class PropGoo : Goo<Prop>
 {
@@ -2362,6 +2415,7 @@ public class DeserializePropComponent : DeserializeComponent<PropParam, PropGoo,
 #endregion 🔖Prop
 
 #region 🔖Model
+// Implementations MUST reference a 3D model with URI, MIME type, and local plane.
 
 public class ModelGoo : Goo<Model>
 {
@@ -2654,6 +2708,7 @@ public class DeserializeModelsDiffComponent : DeserializeComponent<ModelsDiffPar
 #endregion 🔖Model
 
 #region 🔖Connector
+// Implementations MUST define located interface points on a type.
 
 public class ConnectorGoo : Goo<Connector>
 {
@@ -3009,6 +3064,7 @@ public class DeserializePortsDiffComponent : DeserializeComponent<ConnectorsDiff
 #endregion 🔖Connector
 
 #region 🔖Concept
+// Implementations MUST link a semantic concept name to description and icon.
 
 public class ConceptGoo : Goo<Concept>
 {
@@ -3156,6 +3212,7 @@ public class ConceptIdParam : IdParam<ConceptIdGoo, ConceptId>
 #endregion 🔖Concept
 
 #region 🔖Port
+// Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortGoo : Goo<Port>
 {
@@ -3308,6 +3365,7 @@ public class PortIdParam : IdParam<PortIdGoo, PortId>
 #endregion 🔖Port
 
 #region 🔖Type
+// Implementations MUST compose ports, connectors, and models into a parametric type.
 
 public class TypeGoo : Goo<Type>
 {
@@ -3691,6 +3749,7 @@ public class DeserializeTypesDiffComponent : DeserializeComponent<TypesDiffParam
 #endregion 🔖Type
 
 #region 🔖Layer
+// Implementations MUST organize pieces into named layers within a design.
 
 public class LayerGoo : Goo<Layer>
 {
@@ -3806,6 +3865,7 @@ public class DeserializeLayerComponent : DeserializeComponent<LayerParam, LayerG
 #endregion 🔖Layer
 
 #region 🔖Group
+// Implementations MUST group pieces by name within a design.
 
 public class GroupGoo : Goo<Group>
 {
@@ -3914,6 +3974,7 @@ public class DeserializeGroupComponent : DeserializeComponent<GroupParam, GroupG
 #endregion 🔖Group
 
 #region 🔖Piece
+// Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceGoo : Goo<Piece>
 {
@@ -4264,6 +4325,7 @@ public class DeserializePiecesDiffComponent : DeserializeComponent<PiecesDiffPar
 #endregion 🔖Piece
 
 #region 🔖Side
+// Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideGoo : Goo<Side>
 {
@@ -4421,6 +4483,7 @@ public class DeserializeSideDiffComponent : DeserializeComponent<SideDiffParam, 
 #endregion 🔖Side
 
 #region 🔖Connection
+// Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionGoo : Goo<Connection>
 {
@@ -4794,6 +4857,7 @@ public class DeserializeConnectionsDiffComponent : DeserializeComponent<Connecti
 #endregion 🔖Connection
 
 #region 🔖Stat
+// Implementations MUST associate statistical metrics with a design.
 
 public class StatGoo : Goo<Stat>
 {
@@ -4907,6 +4971,7 @@ public class DeserializeStatComponent : DeserializeComponent<StatParam, StatGoo,
 #endregion 🔖Stat
 
 #region 🔖Design
+// Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignGoo : Goo<Design>
 {
@@ -5264,6 +5329,7 @@ public class DeserializeDesignsDiffComponent : DeserializeComponent<DesignsDiffP
 #endregion 🔖Design
 
 #region 🔖Kit
+// Implementations MUST collect types and designs into a reusable library.
 
 public class KitGoo : Goo<Kit>
 {
@@ -5601,6 +5667,7 @@ public class DeserializeKitsDiffComponent : DeserializeComponent<KitsDiffParam, 
 #endregion 🔖Kit
 
 #region 🔖Scripting
+// Callers MUST use these helpers for C# script component integration.
 
 public abstract class ScriptingComponent : Component
 {
@@ -5782,6 +5849,7 @@ public class TruncateTextComponent : ScriptingComponent
 #endregion 🔖Scripting
 
 #region 🔖Engine
+// Implementations MUST communicate with the engine for kit and design operations.
 
 public abstract class EngineComponent : Component
 {
@@ -5869,6 +5937,7 @@ public abstract class EngineComponent : Component
 }
 
 #region 🔖Persistence
+// Implementations MUST persist Grasshopper documents for saving and loading kits.
 
 public abstract class PersistenceComponent : EngineComponent
 {

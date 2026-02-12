@@ -1,3 +1,34 @@
+// #region 🔖Header
+
+// 💻semio/go/semio.go
+
+// 2026 Ueli Saluz <ueli@semio-tech.de>
+
+// #region 🔖License
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
+
+// #endregion 🔖Header
+
+
+// #region 🔖Imports
+// Imports MUST include all required packages for the semio domain library.
 
 package semio
 
@@ -13,7 +44,10 @@ import (
 	"gonum.org/v1/gonum/mat"
 )
 
+// #endregion 🔖Imports
+
 // #region 🔖Constants
+// Constants MUST define shared constant values for the semio domain.
 
 const (
 	IconWidth = 24
@@ -23,17 +57,24 @@ const (
 // #endregion 🔖Constants
 
 // #region 🔖Utils
+// Utils MUST provide general-purpose utility functions for the semio domain.
 
+// Guid MUST return a cryptographically random 128-bit hex string.
+// Guid generates a new random 128-bit hex-encoded unique identifier.
 func Guid() string {
 	bytes := make([]byte, 16)
 	rand.Read(bytes)
 	return hex.EncodeToString(bytes)
 }
 
+// Normalize MUST trim whitespace and convert to lowercase.
+// Normalize converts a string to lowercase trimmed form.
 func Normalize(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
+// Round MUST return the value rounded to exactly the given decimal places.
+// Round rounds a float64 to the specified number of decimal places.
 func Round(value float64, decimals int) float64 {
 	shift := 1.0
 	for i := 0; i < decimals; i++ {
@@ -42,6 +83,8 @@ func Round(value float64, decimals int) float64 {
 	return float64(int64(value*shift+0.5)) / shift
 }
 
+// DeepEqual MUST return true only when both values produce identical JSON.
+// DeepEqual compares two values for deep equality via JSON serialization.
 func DeepEqual(a, b interface{}) bool {
 	aJSON, _ := json.Marshal(a)
 	bJSON, _ := json.Marshal(b)
@@ -51,93 +94,116 @@ func DeepEqual(a, b interface{}) bool {
 // #endregion 🔖Utils
 
 // #region 🔖Entity IDs
+// Entity IDs MUST define identifier types for all semio domain entities.
 
+// AttributeId identifies an attribute entity by GUID.
 type AttributeId struct {
 	Guid string `json:"guid"`
 }
 
+// LocationId identifies a location entity by GUID.
 type LocationId struct {
 	Guid string `json:"guid"`
 }
 
+// AuthorId identifies an author entity by GUID.
 type AuthorId struct {
 	Guid string `json:"guid"`
 }
 
+// FileId identifies a file entity by GUID.
 type FileId struct {
 	Guid string `json:"guid"`
 }
 
+// FolderId identifies a folder entity by GUID.
 type FolderId struct {
 	Guid string `json:"guid"`
 }
 
+// BenchmarkId identifies a benchmark entity by GUID.
 type BenchmarkId struct {
 	Guid string `json:"guid"`
 }
 
+// QualityId identifies a quality entity by GUID.
 type QualityId struct {
 	Guid string `json:"guid"`
 }
 
+// PortId identifies a port entity by GUID.
 type PortId struct {
 	Guid string `json:"guid"`
 }
 
+// PropId identifies a prop entity by GUID.
 type PropId struct {
 	Guid string `json:"guid"`
 }
 
+// TagId identifies a tag entity by GUID.
 type TagId struct {
 	Guid string `json:"guid"`
 }
 
+// ConceptId identifies a concept entity by GUID.
 type ConceptId struct {
 	Guid string `json:"guid"`
 }
 
+// ModelId identifies a model entity by GUID.
 type ModelId struct {
 	Guid string `json:"guid"`
 }
 
+// ConnectorId identifies a connector entity by GUID.
 type ConnectorId struct {
 	Guid string `json:"guid"`
 }
 
+// TypeId identifies a type entity by GUID.
 type TypeId struct {
 	Guid string `json:"guid"`
 }
 
+// LayerId identifies a layer entity by GUID.
 type LayerId struct {
 	Guid string `json:"guid"`
 }
 
+// PieceId identifies a piece entity by GUID.
 type PieceId struct {
 	Guid string `json:"guid"`
 }
 
+// GroupId identifies a group entity by GUID.
 type GroupId struct {
 	Guid string `json:"guid"`
 }
 
+// SideId identifies a connection side by piece, design piece and connector references.
 type SideId struct {
 	Piece          PieceId      `json:"piece"`
 	DesignPiece    *PieceId     `json:"designPiece,omitempty"`
 	Connector      *ConnectorId `json:"connector,omitempty"`
 }
 
+// ConnectionId identifies a connection entity by GUID.
 type ConnectionId struct {
 	Guid string `json:"guid"`
 }
 
+// StatId identifies a stat entity by GUID.
 type StatId struct {
 	Guid string `json:"guid"`
 }
 
+// DesignId identifies a design entity by GUID.
 type DesignId struct {
 	Guid string `json:"guid"`
 }
 
+// KitId identifies a kit entity by GUID.
 type KitId struct {
 	Guid string `json:"guid"`
 }
@@ -145,35 +211,42 @@ type KitId struct {
 // #endregion 🔖Entity IDs
 
 // #region 🔖Weak Entities
+// Weak Entities MUST define value types that exist only as part of parent entities.
 
+// Coord represents a 2D coordinate with U and V components.
 type Coord struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
 
+// Vec represents a 2D vector with U and V components.
 type Vec struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
 
+// Point represents a 3D point with X, Y and Z components.
 type Point struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
 }
 
+// Vector represents a 3D vector with X, Y and Z components.
 type Vector struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
 	Z float64 `json:"z"`
 }
 
+// Plane represents a 3D plane defined by origin, X-axis and Y-axis.
 type Plane struct {
 	Origin Point  `json:"origin"`
 	XAxis  Vector `json:"xAxis"`
 	YAxis  Vector `json:"yAxis"`
 }
 
+// Camera represents a 3D camera with position, forward and up vectors.
 type Camera struct {
 	Position Point  `json:"position"`
 	Forward  Vector `json:"forward"`
@@ -183,7 +256,9 @@ type Camera struct {
 // #endregion 🔖Weak Entities
 
 // #region 🔖Attribute
+// Attribute MUST define the key-value metadata entity and its diff types.
 
+// Attribute represents a key-value metadata entry with optional definition.
 type Attribute struct {
 	Guid       string  `json:"guid"`
 	Key        string  `json:"key"`
@@ -191,12 +266,14 @@ type Attribute struct {
 	Definition *string `json:"definition,omitempty"`
 }
 
+// AttributeDiff represents changes to an attribute entity.
 type AttributeDiff struct {
 	Key        *string `json:"key,omitempty"`
 	Value      *string `json:"value,omitempty"`
 	Definition *string `json:"definition,omitempty"`
 }
 
+// AttributesDiff represents a collection of attribute additions, removals and updates.
 type AttributesDiff struct {
 	Removed []AttributeId `json:"removed,omitempty"`
 	Updated []struct {
@@ -209,7 +286,9 @@ type AttributesDiff struct {
 // #endregion 🔖Attribute
 
 // #region 🔖Location
+// Location MUST define geographic location entities and their diff types.
 
+// Location represents a geographic location with longitude, latitude and optional altitude.
 type Location struct {
 	Guid       string      `json:"guid"`
 	Longitude  float64     `json:"longitude"`
@@ -218,6 +297,7 @@ type Location struct {
 	Attributes []Attribute `json:"attributes,omitempty"`
 }
 
+// LocationDiff represents changes to a location entity.
 type LocationDiff struct {
 	Longitude  *float64        `json:"longitude,omitempty"`
 	Latitude   *float64        `json:"latitude,omitempty"`
@@ -228,7 +308,9 @@ type LocationDiff struct {
 // #endregion 🔖Location
 
 // #region 🔖Author
+// Author MUST define authorship entities and their diff types.
 
+// Author represents a named authorship entity with optional email.
 type Author struct {
 	Guid       string      `json:"guid"`
 	Name       string      `json:"name"`
@@ -238,12 +320,14 @@ type Author struct {
 	UpdatedAt  string      `json:"updatedAt,omitempty"`
 }
 
+// AuthorDiff represents changes to an author entity.
 type AuthorDiff struct {
 	Name       *string         `json:"name,omitempty"`
 	Email      *string         `json:"email,omitempty"`
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// AuthorsDiff represents a collection of author additions, removals and updates.
 type AuthorsDiff struct {
 	Removed []AuthorId `json:"removed,omitempty"`
 	Updated []struct {
@@ -256,7 +340,9 @@ type AuthorsDiff struct {
 // #endregion 🔖Author
 
 // #region 🔖File
+// File MUST define file reference entities and their diff types.
 
+// File represents a file reference entity with name, remote URL and metadata.
 type File struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -270,6 +356,7 @@ type File struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
+// FileDiff represents changes to a file entity.
 type FileDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Remote      *string         `json:"remote,omitempty"`
@@ -280,6 +367,7 @@ type FileDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// FilesDiff represents a collection of file additions, removals and updates.
 type FilesDiff struct {
 	Removed []FileId `json:"removed,omitempty"`
 	Updated []struct {
@@ -292,7 +380,9 @@ type FilesDiff struct {
 // #endregion 🔖File
 
 // #region 🔖Folder
+// Folder MUST define folder hierarchy entities and their diff types.
 
+// Folder represents a folder hierarchy entity with name and parent reference.
 type Folder struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -303,6 +393,7 @@ type Folder struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
+// FolderDiff represents changes to a folder entity.
 type FolderDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *FolderId       `json:"parent,omitempty"`
@@ -310,6 +401,7 @@ type FolderDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// FoldersDiff represents a collection of folder additions, removals and updates.
 type FoldersDiff struct {
 	Removed []FolderId `json:"removed,omitempty"`
 	Updated []struct {
@@ -322,7 +414,9 @@ type FoldersDiff struct {
 // #endregion 🔖Folder
 
 // #region 🔖Benchmark
+// Benchmark MUST define benchmark threshold entities and their diff types.
 
+// Benchmark represents a named metric threshold with min and max bounds.
 type Benchmark struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -335,6 +429,7 @@ type Benchmark struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
+// BenchmarkDiff represents changes to a benchmark entity.
 type BenchmarkDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Icon        *string         `json:"icon,omitempty"`
@@ -346,6 +441,7 @@ type BenchmarkDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// BenchmarksDiff represents a collection of benchmark additions, removals and updates.
 type BenchmarksDiff struct {
 	Removed []BenchmarkId `json:"removed,omitempty"`
 	Updated []struct {
@@ -358,7 +454,9 @@ type BenchmarksDiff struct {
 // #endregion 🔖Benchmark
 
 // #region 🔖Quality
+// Quality MUST define measurable quality entities and their diff types.
 
+// QualityKind is a bitfield enum for quality scope classification.
 type QualityKind int
 
 const (
@@ -370,6 +468,7 @@ const (
 	QualityKindConnector
 )
 
+// Quality represents a measurable property with formula, units and benchmarks.
 type Quality struct {
 	Guid                string      `json:"guid"`
 	Key                 string      `json:"key"`
@@ -391,6 +490,7 @@ type Quality struct {
 	UpdatedAt           string      `json:"updatedAt,omitempty"`
 }
 
+// QualityDiff represents changes to a quality entity.
 type QualityDiff struct {
 	Key                 *string         `json:"key,omitempty"`
 	Name                *string         `json:"name,omitempty"`
@@ -409,6 +509,7 @@ type QualityDiff struct {
 	Attributes          *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// QualitiesDiff represents a collection of quality additions, removals and updates.
 type QualitiesDiff struct {
 	Removed []QualityId `json:"removed,omitempty"`
 	Updated []struct {
@@ -421,7 +522,9 @@ type QualitiesDiff struct {
 // #endregion 🔖Quality
 
 // #region 🔖Port
+// Port MUST define connector port entities and their diff types.
 
+// Port represents a named connector port with compatible port references.
 type Port struct {
 	Guid                 string        `json:"guid"`
 	Name                 string        `json:"name"`
@@ -433,6 +536,7 @@ type Port struct {
 	UpdatedAt            string        `json:"updatedAt,omitempty"`
 }
 
+// PortDiff represents changes to a port entity.
 type PortDiff struct {
 	Name                 *string         `json:"name,omitempty"`
 	Description          *string         `json:"description,omitempty"`
@@ -442,6 +546,8 @@ type PortDiff struct {
 	setFields            map[string]bool `json:"-"`
 }
 
+// UnmarshalJSON MUST populate the setFields map for all present JSON keys.
+// UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
 func (d *PortDiff) UnmarshalJSON(data []byte) error {
 	type Alias PortDiff
 	aux := &struct {
@@ -460,6 +566,8 @@ func (d *PortDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
+// HasField MUST return false when setFields is nil.
+// HasField returns whether a JSON field was present in the unmarshaled data.
 func (d *PortDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -467,6 +575,7 @@ func (d *PortDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
+// PortsDiff represents a collection of port additions, removals and updates.
 type PortsDiff struct {
 	Removed []PortId `json:"removed,omitempty"`
 	Updated []struct {
@@ -479,7 +588,9 @@ type PortsDiff struct {
 // #endregion 🔖Port
 
 // #region 🔖Prop
+// Prop MUST define property value entities and their diff types.
 
+// Prop represents a quality property value with optional unit.
 type Prop struct {
 	Guid       string      `json:"guid"`
 	Quality    QualityId   `json:"quality"`
@@ -488,6 +599,7 @@ type Prop struct {
 	Attributes []Attribute `json:"attributes,omitempty"`
 }
 
+// PropDiff represents changes to a prop entity.
 type PropDiff struct {
 	Quality    *QualityId      `json:"quality,omitempty"`
 	Value      *string         `json:"value,omitempty"`
@@ -495,6 +607,7 @@ type PropDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// PropsDiff represents a collection of prop additions, removals and updates.
 type PropsDiff struct {
 	Removed []PropId `json:"removed,omitempty"`
 	Updated []struct {
@@ -507,7 +620,9 @@ type PropsDiff struct {
 // #endregion 🔖Prop
 
 // #region 🔖Tag
+// Tag MUST define tag classification entities and their diff types.
 
+// Tag represents a named classification tag with optional description and icon.
 type Tag struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -518,6 +633,7 @@ type Tag struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
+// TagDiff represents changes to a tag entity.
 type TagDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -526,6 +642,8 @@ type TagDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
+// UnmarshalJSON MUST populate the setFields map for all present JSON keys.
+// UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
 func (d *TagDiff) UnmarshalJSON(data []byte) error {
 	type Alias TagDiff
 	aux := &struct {
@@ -544,6 +662,8 @@ func (d *TagDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
+// HasField MUST return false when setFields is nil.
+// HasField returns whether a JSON field was present in the unmarshaled data.
 func (d *TagDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -551,6 +671,7 @@ func (d *TagDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
+// TagsDiff represents a collection of tag additions, removals and updates.
 type TagsDiff struct {
 	Removed []TagId `json:"removed,omitempty"`
 	Updated []struct {
@@ -563,7 +684,9 @@ type TagsDiff struct {
 // #endregion 🔖Tag
 
 // #region 🔖Concept
+// Concept MUST define concept categorization entities and their diff types.
 
+// Concept represents a named categorization concept with optional description.
 type Concept struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -574,6 +697,7 @@ type Concept struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
+// ConceptDiff represents changes to a concept entity.
 type ConceptDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -582,6 +706,8 @@ type ConceptDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
+// UnmarshalJSON MUST populate the setFields map for all present JSON keys.
+// UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
 func (d *ConceptDiff) UnmarshalJSON(data []byte) error {
 	type Alias ConceptDiff
 	aux := &struct {
@@ -600,6 +726,8 @@ func (d *ConceptDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
+// HasField MUST return false when setFields is nil.
+// HasField returns whether a JSON field was present in the unmarshaled data.
 func (d *ConceptDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -607,6 +735,7 @@ func (d *ConceptDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
+// ConceptsDiff represents a collection of concept additions, removals and updates.
 type ConceptsDiff struct {
 	Removed []ConceptId `json:"removed,omitempty"`
 	Updated []struct {
@@ -619,7 +748,9 @@ type ConceptsDiff struct {
 // #endregion 🔖Concept
 
 // #region 🔖Model
+// Model MUST define 3D model reference entities and their diff types.
 
+// Model represents a 3D model reference associated with a file and tags.
 type Model struct {
 	Guid        string      `json:"guid"`
 	File        FileId      `json:"file"`
@@ -629,6 +760,7 @@ type Model struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
+// ModelDiff represents changes to a model entity.
 type ModelDiff struct {
 	File        *FileId         `json:"file,omitempty"`
 	Name        *string         `json:"name,omitempty"`
@@ -637,6 +769,7 @@ type ModelDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// ModelsDiff represents a collection of model additions, removals and updates.
 type ModelsDiff struct {
 	Removed []ModelId `json:"removed,omitempty"`
 	Updated []struct {
@@ -649,7 +782,9 @@ type ModelsDiff struct {
 // #endregion 🔖Model
 
 // #region 🔖Connector
+// Connector MUST define spatial connector entities and their diff types.
 
+// Connector represents a spatial connection point on a type with position and direction.
 type Connector struct {
 	Guid        string       `json:"guid"`
 	Name        *string      `json:"name,omitempty"`
@@ -663,18 +798,21 @@ type Connector struct {
 	Attributes  []Attribute  `json:"attributes,omitempty"`
 }
 
+// PointDiff represents changes to a 3D point.
 type PointDiff struct {
 	X *float64 `json:"x,omitempty"`
 	Y *float64 `json:"y,omitempty"`
 	Z *float64 `json:"z,omitempty"`
 }
 
+// VectorDiff represents changes to a 3D vector.
 type VectorDiff struct {
 	X *float64 `json:"x,omitempty"`
 	Y *float64 `json:"y,omitempty"`
 	Z *float64 `json:"z,omitempty"`
 }
 
+// ConnectorDiff represents changes to a connector entity.
 type ConnectorDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Point       *PointDiff      `json:"point,omitempty"`
@@ -687,6 +825,7 @@ type ConnectorDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// ConnectorsDiff represents a collection of connector additions, removals and updates.
 type ConnectorsDiff struct {
 	Removed []ConnectorId `json:"removed,omitempty"`
 	Updated []struct {
@@ -699,7 +838,9 @@ type ConnectorsDiff struct {
 // #endregion 🔖Connector
 
 // #region 🔖Type
+// Type MUST define component type entities and their diff types.
 
+// Type represents a component type with models, connectors and hierarchical inheritance.
 type Type struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -723,6 +864,7 @@ type Type struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
+// TypeDiff represents changes to a type entity.
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *TypeId         `json:"parent,omitempty"`
@@ -744,6 +886,8 @@ type TypeDiff struct {
 	setFields   map[string]bool `json:"-"`
 }
 
+// UnmarshalJSON MUST populate the setFields map for all present JSON keys.
+// UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
 func (d *TypeDiff) UnmarshalJSON(data []byte) error {
 	type Alias TypeDiff
 	aux := &struct {
@@ -762,6 +906,8 @@ func (d *TypeDiff) UnmarshalJSON(data []byte) error {
 	return json.Unmarshal(data, aux)
 }
 
+// HasField MUST return false when setFields is nil.
+// HasField returns whether a JSON field was present in the unmarshaled data.
 func (d *TypeDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -769,6 +915,7 @@ func (d *TypeDiff) HasField(field string) bool {
 	return d.setFields[field]
 }
 
+// TypesDiff represents a collection of type additions, removals and updates.
 type TypesDiff struct {
 	Removed []TypeId `json:"removed,omitempty"`
 	Updated []struct {
@@ -781,7 +928,9 @@ type TypesDiff struct {
 // #endregion 🔖Type
 
 // #region 🔖Layer
+// Layer MUST define layer hierarchy entities and their diff types.
 
+// Layer represents a named layer with visibility, lock and color properties.
 type Layer struct {
 	Guid        string      `json:"guid"`
 	Path        string      `json:"path"`
@@ -792,6 +941,7 @@ type Layer struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
+// LayerDiff represents changes to a layer entity.
 type LayerDiff struct {
 	Path        *string         `json:"path,omitempty"`
 	IsHidden    *bool           `json:"isHidden,omitempty"`
@@ -801,6 +951,7 @@ type LayerDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// LayersDiff represents a collection of layer additions, removals and updates.
 type LayersDiff struct {
 	Removed []LayerId `json:"removed,omitempty"`
 	Updated []struct {
@@ -813,7 +964,9 @@ type LayersDiff struct {
 // #endregion 🔖Layer
 
 // #region 🔖Piece
+// Piece MUST define placed piece entities and their diff types.
 
+// Piece represents a placed component instance within a design.
 type Piece struct {
 	Guid        string      `json:"guid"`
 	Name        *string     `json:"name,omitempty"`
@@ -831,17 +984,20 @@ type Piece struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
+// CoordDiff represents changes to a 2D coordinate.
 type CoordDiff struct {
 	U *float64 `json:"u,omitempty"`
 	V *float64 `json:"v,omitempty"`
 }
 
+// PlaneDiff represents changes to a 3D plane.
 type PlaneDiff struct {
 	Origin *PointDiff  `json:"origin,omitempty"`
 	XAxis  *VectorDiff `json:"xAxis,omitempty"`
 	YAxis  *VectorDiff `json:"yAxis,omitempty"`
 }
 
+// PieceDiff represents changes to a piece entity.
 type PieceDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Type        *TypeId         `json:"type,omitempty"`
@@ -858,6 +1014,7 @@ type PieceDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// PiecesDiff represents a collection of piece additions, removals and updates.
 type PiecesDiff struct {
 	Removed []PieceId `json:"removed,omitempty"`
 	Updated []struct {
@@ -870,7 +1027,9 @@ type PiecesDiff struct {
 // #endregion 🔖Piece
 
 // #region 🔖Group
+// Group MUST define piece grouping entities and their diff types.
 
+// Group represents a named collection of pieces within a design.
 type Group struct {
 	Guid        string      `json:"guid"`
 	Pieces      []PieceId   `json:"pieces,omitempty"`
@@ -880,6 +1039,7 @@ type Group struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
+// GroupDiff represents changes to a group entity.
 type GroupDiff struct {
 	Pieces      []PieceId       `json:"pieces,omitempty"`
 	Name        *string         `json:"name,omitempty"`
@@ -888,6 +1048,7 @@ type GroupDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// GroupsDiff represents a collection of group additions, removals and updates.
 type GroupsDiff struct {
 	Removed []GroupId `json:"removed,omitempty"`
 	Updated []struct {
@@ -900,13 +1061,16 @@ type GroupsDiff struct {
 // #endregion 🔖Group
 
 // #region 🔖Side
+// Side MUST define connection side reference entities and their diff types.
 
+// Side represents one end of a connection referencing a piece and optional connector.
 type Side struct {
 	Piece       PieceId      `json:"piece"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
 	Connector   *ConnectorId `json:"connector,omitempty"`
 }
 
+// SideDiff represents changes to a connection side.
 type SideDiff struct {
 	Piece       *PieceId     `json:"piece,omitempty"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
@@ -916,7 +1080,9 @@ type SideDiff struct {
 // #endregion 🔖Side
 
 // #region 🔖Connection
+// Connection MUST define spatial connection entities and their diff types.
 
+// Connection represents a spatial relationship between two pieces with transform parameters.
 type Connection struct {
 	Guid        string      `json:"guid"`
 	Connected   Side        `json:"connected"`
@@ -933,6 +1099,7 @@ type Connection struct {
 	Attributes  []Attribute `json:"attributes,omitempty"`
 }
 
+// ConnectionDiff represents changes to a connection entity.
 type ConnectionDiff struct {
 	Connected   *SideDiff       `json:"connected,omitempty"`
 	Connecting  *SideDiff       `json:"connecting,omitempty"`
@@ -948,6 +1115,7 @@ type ConnectionDiff struct {
 	Attributes  *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// ConnectionsDiff represents a collection of connection additions, removals and updates.
 type ConnectionsDiff struct {
 	Removed []ConnectionId `json:"removed,omitempty"`
 	Updated []struct {
@@ -960,7 +1128,9 @@ type ConnectionsDiff struct {
 // #endregion 🔖Connection
 
 // #region 🔖Stat
+// Stat MUST define statistical measure entities and their diff types.
 
+// Stat represents a statistical quality measurement with min and max bounds.
 type Stat struct {
 	Guid       string      `json:"guid"`
 	Quality    QualityId   `json:"quality"`
@@ -970,6 +1140,7 @@ type Stat struct {
 	Attributes []Attribute `json:"attributes,omitempty"`
 }
 
+// StatDiff represents changes to a stat entity.
 type StatDiff struct {
 	Quality    *QualityId      `json:"quality,omitempty"`
 	Min        *float64        `json:"min,omitempty"`
@@ -978,6 +1149,7 @@ type StatDiff struct {
 	Attributes *AttributesDiff `json:"attributes,omitempty"`
 }
 
+// StatsDiff represents a collection of stat additions, removals and updates.
 type StatsDiff struct {
 	Removed []StatId `json:"removed,omitempty"`
 	Updated []struct {
@@ -990,7 +1162,9 @@ type StatsDiff struct {
 // #endregion 🔖Stat
 
 // #region 🔖Design
+// Design MUST define assembly design entities and their diff types.
 
+// Design represents an assembly of pieces, connections, layers and groups.
 type Design struct {
 	Guid        string       `json:"guid"`
 	Name        string       `json:"name"`
@@ -1019,12 +1193,14 @@ type Design struct {
 	UpdatedAt   string       `json:"updatedAt,omitempty"`
 }
 
+// CameraDiff represents changes to a camera view.
 type CameraDiff struct {
 	Position *PointDiff  `json:"position,omitempty"`
 	Forward  *VectorDiff `json:"forward,omitempty"`
 	Up       *VectorDiff `json:"up,omitempty"`
 }
 
+// DesignDiff represents changes to a design entity.
 type DesignDiff struct {
 	Name        *string          `json:"name,omitempty"`
 	Parent      *DesignId        `json:"parent,omitempty"`
@@ -1050,6 +1226,7 @@ type DesignDiff struct {
 	Attributes  *AttributesDiff  `json:"attributes,omitempty"`
 }
 
+// DesignsDiff represents a collection of design additions, removals and updates.
 type DesignsDiff struct {
 	Removed []DesignId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1062,7 +1239,9 @@ type DesignsDiff struct {
 // #endregion 🔖Design
 
 // #region 🔖Kit
+// Kit MUST define the root kit container entity and its diff types.
 
+// Kit represents the root container for all domain entities.
 type Kit struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1088,6 +1267,7 @@ type Kit struct {
 	UpdatedAt   string      `json:"updatedAt,omitempty"`
 }
 
+// KitDiff represents changes to a kit entity.
 type KitDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Version     *string         `json:"version,omitempty"`
@@ -1111,6 +1291,7 @@ type KitDiff struct {
 	UpdatedAt   *string         `json:"updatedAt,omitempty"`
 }
 
+// KitsDiff represents a collection of kit additions, removals and updates.
 type KitsDiff struct {
 	Removed []KitId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1123,21 +1304,30 @@ type KitsDiff struct {
 // #endregion 🔖Kit
 
 // #region 🔖Serialization
+// Serialization MUST provide JSON marshaling and unmarshaling for kit data.
 
+// SerializeKit MUST return valid JSON with two-space indentation.
+// SerializeKit marshals a kit to indented JSON bytes.
 func SerializeKit(kit Kit) ([]byte, error) {
 	return json.MarshalIndent(kit, "", "  ")
 }
 
+// DeserializeKit MUST return an error if the data is not valid kit JSON.
+// DeserializeKit unmarshals JSON bytes into a kit.
 func DeserializeKit(data []byte) (Kit, error) {
 	var kit Kit
 	err := json.Unmarshal(data, &kit)
 	return kit, err
 }
 
+// SerializeKitDiff MUST return valid JSON with two-space indentation.
+// SerializeKitDiff marshals a kit diff to indented JSON bytes.
 func SerializeKitDiff(diff KitDiff) ([]byte, error) {
 	return json.MarshalIndent(diff, "", "  ")
 }
 
+// DeserializeKitDiff MUST return an error if the data is not valid kit diff JSON.
+// DeserializeKitDiff unmarshals JSON bytes into a kit diff.
 func DeserializeKitDiff(data []byte) (KitDiff, error) {
 	var diff KitDiff
 	err := json.Unmarshal(data, &diff)
@@ -1147,7 +1337,10 @@ func DeserializeKitDiff(data []byte) (KitDiff, error) {
 // #endregion 🔖Serialization
 
 // #region 🔖Helpers
+// Helpers MUST provide lookup functions for finding entities within kits.
 
+// FindTypeInKit MUST return nil when no type matches the GUID.
+// FindTypeInKit returns a pointer to the type with the given GUID or nil.
 func FindTypeInKit(kit *Kit, typeGuid string) *Type {
 	for i := range kit.Types {
 		if kit.Types[i].Guid == typeGuid {
@@ -1157,6 +1350,8 @@ func FindTypeInKit(kit *Kit, typeGuid string) *Type {
 	return nil
 }
 
+// FindDesignInKit MUST return nil when no design matches the GUID.
+// FindDesignInKit returns a pointer to the design with the given GUID or nil.
 func FindDesignInKit(kit *Kit, designGuid string) *Design {
 	for i := range kit.Designs {
 		if kit.Designs[i].Guid == designGuid {
@@ -1166,6 +1361,8 @@ func FindDesignInKit(kit *Kit, designGuid string) *Design {
 	return nil
 }
 
+// FindPieceInDesign MUST return nil when no piece matches the GUID.
+// FindPieceInDesign returns a pointer to the piece with the given GUID or nil.
 func FindPieceInDesign(design *Design, pieceGuid string) *Piece {
 	for i := range design.Pieces {
 		if design.Pieces[i].Guid == pieceGuid {
@@ -1175,6 +1372,8 @@ func FindPieceInDesign(design *Design, pieceGuid string) *Piece {
 	return nil
 }
 
+// FindConnectionInDesign MUST return nil when no connection matches the GUID.
+// FindConnectionInDesign returns a pointer to the connection with the given GUID or nil.
 func FindConnectionInDesign(design *Design, connectionGuid string) *Connection {
 	for i := range design.Connections {
 		if design.Connections[i].Guid == connectionGuid {
@@ -1184,6 +1383,8 @@ func FindConnectionInDesign(design *Design, connectionGuid string) *Connection {
 	return nil
 }
 
+// FindConnectorInType MUST return nil when no connector matches the GUID.
+// FindConnectorInType returns a pointer to the connector with the given GUID or nil.
 func FindConnectorInType(typ *Type, connectorGuid string) *Connector {
 	for i := range typ.Connectors {
 		if typ.Connectors[i].Guid == connectorGuid {
@@ -1193,6 +1394,8 @@ func FindConnectorInType(typ *Type, connectorGuid string) *Connector {
 	return nil
 }
 
+// FindFileInKit MUST return nil when no file matches the GUID.
+// FindFileInKit returns a pointer to the file with the given GUID or nil.
 func FindFileInKit(kit *Kit, fileGuid string) *File {
 	for i := range kit.Files {
 		if kit.Files[i].Guid == fileGuid {
@@ -1202,6 +1405,8 @@ func FindFileInKit(kit *Kit, fileGuid string) *File {
 	return nil
 }
 
+// FindFolderInKit MUST return nil when no folder matches the GUID.
+// FindFolderInKit returns a pointer to the folder with the given GUID or nil.
 func FindFolderInKit(kit *Kit, folderGuid string) *Folder {
 	for i := range kit.Folders {
 		if kit.Folders[i].Guid == folderGuid {
@@ -1211,6 +1416,8 @@ func FindFolderInKit(kit *Kit, folderGuid string) *Folder {
 	return nil
 }
 
+// FindQualityInKit MUST return nil when no quality matches the GUID.
+// FindQualityInKit returns a pointer to the quality with the given GUID or nil.
 func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
 	for i := range kit.Qualities {
 		if kit.Qualities[i].Guid == qualityGuid {
@@ -1220,6 +1427,8 @@ func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
 	return nil
 }
 
+// FindPortInKit MUST return nil when no port matches the GUID.
+// FindPortInKit returns a pointer to the port with the given GUID or nil.
 func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
 	for i := range kit.Ports {
 		if kit.Ports[i].Guid == interfaceGuid {
@@ -1229,6 +1438,8 @@ func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
 	return nil
 }
 
+// FindTagInKit MUST return nil when no tag matches the GUID.
+// FindTagInKit returns a pointer to the tag with the given GUID or nil.
 func FindTagInKit(kit *Kit, tagGuid string) *Tag {
 	for i := range kit.Tags {
 		if kit.Tags[i].Guid == tagGuid {
@@ -1238,6 +1449,8 @@ func FindTagInKit(kit *Kit, tagGuid string) *Tag {
 	return nil
 }
 
+// FindConceptInKit MUST return nil when no concept matches the GUID.
+// FindConceptInKit returns a pointer to the concept with the given GUID or nil.
 func FindConceptInKit(kit *Kit, conceptGuid string) *Concept {
 	for i := range kit.Concepts {
 		if kit.Concepts[i].Guid == conceptGuid {
@@ -1247,6 +1460,8 @@ func FindConceptInKit(kit *Kit, conceptGuid string) *Concept {
 	return nil
 }
 
+// FindAuthorInKit MUST return nil when no author matches the GUID.
+// FindAuthorInKit returns a pointer to the author with the given GUID or nil.
 func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
 	for i := range kit.Authors {
 		if kit.Authors[i].Guid == authorGuid {
@@ -1259,7 +1474,10 @@ func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
 // #endregion 🔖Helpers
 
 // #region 🔖Factories
+// Factories MUST provide constructor functions for creating new domain entities.
 
+// NewKit MUST generate a unique GUID and set version to 0.0.1.
+// NewKit creates a new kit with the given name and a generated GUID.
 func NewKit(name string) Kit {
 	now := ""
 	return Kit{
@@ -1271,6 +1489,8 @@ func NewKit(name string) Kit {
 	}
 }
 
+// NewType MUST generate a unique GUID for the new type.
+// NewType creates a new type with the given name and a generated GUID.
 func NewType(name string) Type {
 	now := ""
 	return Type{
@@ -1281,6 +1501,8 @@ func NewType(name string) Type {
 	}
 }
 
+// NewDesign MUST generate a unique GUID for the new design.
+// NewDesign creates a new design with the given name and a generated GUID.
 func NewDesign(name string) Design {
 	now := ""
 	return Design{
@@ -1291,12 +1513,16 @@ func NewDesign(name string) Design {
 	}
 }
 
+// NewPiece MUST generate a unique GUID for the new piece.
+// NewPiece creates a new piece with a generated GUID.
 func NewPiece() Piece {
 	return Piece{
 		Guid: Guid(),
 	}
 }
 
+// NewConnection MUST generate a unique GUID and set both connected and connecting sides.
+// NewConnection creates a new connection between two pieces by their GUIDs.
 func NewConnection(connectedPieceGuid, connectingPieceGuid string) Connection {
 	return Connection{
 		Guid:       Guid(),
@@ -1305,6 +1531,8 @@ func NewConnection(connectedPieceGuid, connectingPieceGuid string) Connection {
 	}
 }
 
+// NewConnector MUST generate a unique GUID for the new connector.
+// NewConnector creates a new connector with position, direction and parameter t.
 func NewConnector(point Point, direction Vector, t float64) Connector {
 	return Connector{
 		Guid:      Guid(),
@@ -1314,6 +1542,8 @@ func NewConnector(point Point, direction Vector, t float64) Connector {
 	}
 }
 
+// NewFile MUST generate a unique GUID for the new file.
+// NewFile creates a new file with the given name and a generated GUID.
 func NewFile(name string) File {
 	now := ""
 	return File{
@@ -1324,6 +1554,8 @@ func NewFile(name string) File {
 	}
 }
 
+// NewFolder MUST generate a unique GUID for the new folder.
+// NewFolder creates a new folder with the given name and a generated GUID.
 func NewFolder(name string) Folder {
 	now := ""
 	return Folder{
@@ -1334,6 +1566,8 @@ func NewFolder(name string) Folder {
 	}
 }
 
+// NewQuality MUST generate a unique GUID for the new quality.
+// NewQuality creates a new quality with the given key, name and a generated GUID.
 func NewQuality(key, name string) Quality {
 	now := ""
 	return Quality{
@@ -1345,6 +1579,8 @@ func NewQuality(key, name string) Quality {
 	}
 }
 
+// NewPort MUST generate a unique GUID for the new port.
+// NewPort creates a new port with the given name and a generated GUID.
 func NewPort(name string) Port {
 	now := ""
 	return Port{
@@ -1355,6 +1591,8 @@ func NewPort(name string) Port {
 	}
 }
 
+// NewTag MUST generate a unique GUID for the new tag.
+// NewTag creates a new tag with the given name and a generated GUID.
 func NewTag(name string) Tag {
 	now := ""
 	return Tag{
@@ -1365,6 +1603,8 @@ func NewTag(name string) Tag {
 	}
 }
 
+// NewConcept MUST generate a unique GUID for the new concept.
+// NewConcept creates a new concept with the given name and a generated GUID.
 func NewConcept(name string) Concept {
 	now := ""
 	return Concept{
@@ -1375,6 +1615,8 @@ func NewConcept(name string) Concept {
 	}
 }
 
+// NewAuthor MUST generate a unique GUID for the new author.
+// NewAuthor creates a new author with the given name and a generated GUID.
 func NewAuthor(name string) Author {
 	now := ""
 	return Author{
@@ -1388,7 +1630,10 @@ func NewAuthor(name string) Author {
 // #endregion 🔖Factories
 
 // #region 🔖Kit Operations
+// Kit Operations MUST provide comparison, diffing, and application of kit changes.
 
+// AreKitsEqual MUST compare all entities by GUID and structural fields.
+// AreKitsEqual compares two kits for structural equality.
 func AreKitsEqual(a, b Kit) bool {
 	if a.Guid != b.Guid || a.Name != b.Name || a.Version != b.Version {
 		return false
@@ -1561,6 +1806,8 @@ func AreKitsEqual(a, b Kit) bool {
 	return true
 }
 
+// AreKitDiffsEqual MUST compare all diff fields including nested entity diffs.
+// AreKitDiffsEqual compares two kit diffs for structural equality.
 func AreKitDiffsEqual(a, b KitDiff) bool {
 	if (a.Name == nil) != (b.Name == nil) {
 		return false
@@ -1879,6 +2126,8 @@ func areAuthorsDiffsEqual(a, b *AuthorsDiff) bool {
 	return true
 }
 
+// GetKitDiff MUST return a diff that when applied to before produces after.
+// GetKitDiff computes the diff between a before and after kit state.
 func GetKitDiff(before, after Kit) KitDiff {
 	diff := KitDiff{}
 	if before.Name != after.Name {
@@ -2308,6 +2557,8 @@ func isAuthorDiffEmpty(diff AuthorDiff) bool {
 	return diff.Name == nil && diff.Email == nil
 }
 
+// InverseKitDiff MUST return a diff that when applied restores the original state.
+// InverseKitDiff computes the reverse diff that undoes an applied diff.
 func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {
 	inverse := KitDiff{}
 	if appliedDiff.Name != nil {
@@ -2898,6 +3149,8 @@ func areAuthorsEqual(a, b Author) bool {
 	return true
 }
 
+// ApplyKitDiff MUST apply all additions, removals and updates from the diff.
+// ApplyKitDiff applies a diff to a base kit producing the updated kit.
 func ApplyKitDiff(base Kit, diff KitDiff) Kit {
 	result := base
 	if diff.Name != nil {
@@ -3475,6 +3728,8 @@ func applyAuthorDiff(base Author, diff AuthorDiff) Author {
 	return result
 }
 
+// FilterDesignsWithoutParent MUST exclude all designs that have a non-nil parent.
+// FilterDesignsWithoutParent returns only root-level designs with no parent.
 func FilterDesignsWithoutParent(designs []Design) []Design {
 	result := make([]Design, 0)
 	for _, d := range designs {
@@ -3488,7 +3743,10 @@ func FilterDesignsWithoutParent(designs []Design) []Design {
 // #endregion 🔖Kit Operations
 
 // #region 🔖Kit Diff Helpers
+// Kit Diff Helpers MUST provide convenience functions for single-entity kit diffs.
 
+// AddTypeToKit MUST return a diff with exactly one added type.
+// AddTypeToKit creates a diff that adds a single type to a kit.
 func AddTypeToKit(typ Type) KitDiff {
 	return KitDiff{
 		Types: &TypesDiff{
@@ -3497,6 +3755,8 @@ func AddTypeToKit(typ Type) KitDiff {
 	}
 }
 
+// RemoveTypeFromKit MUST return a diff with exactly one removed type ID.
+// RemoveTypeFromKit creates a diff that removes a type by GUID.
 func RemoveTypeFromKit(typeGuid string) KitDiff {
 	return KitDiff{
 		Types: &TypesDiff{
@@ -3505,6 +3765,8 @@ func RemoveTypeFromKit(typeGuid string) KitDiff {
 	}
 }
 
+// AddDesignToKit MUST return a diff with exactly one added design.
+// AddDesignToKit creates a diff that adds a single design to a kit.
 func AddDesignToKit(design Design) KitDiff {
 	return KitDiff{
 		Designs: &DesignsDiff{
@@ -3513,6 +3775,8 @@ func AddDesignToKit(design Design) KitDiff {
 	}
 }
 
+// RemoveDesignFromKit MUST return a diff with exactly one removed design ID.
+// RemoveDesignFromKit creates a diff that removes a design by GUID.
 func RemoveDesignFromKit(designGuid string) KitDiff {
 	return KitDiff{
 		Designs: &DesignsDiff{
@@ -3521,6 +3785,8 @@ func RemoveDesignFromKit(designGuid string) KitDiff {
 	}
 }
 
+// AddFileToKit MUST return a diff with exactly one added file.
+// AddFileToKit creates a diff that adds a single file to a kit.
 func AddFileToKit(file File) KitDiff {
 	return KitDiff{
 		Files: &FilesDiff{
@@ -3529,6 +3795,8 @@ func AddFileToKit(file File) KitDiff {
 	}
 }
 
+// RemoveFileFromKit MUST return a diff with exactly one removed file ID.
+// RemoveFileFromKit creates a diff that removes a file by GUID.
 func RemoveFileFromKit(fileGuid string) KitDiff {
 	return KitDiff{
 		Files: &FilesDiff{
@@ -3537,6 +3805,8 @@ func RemoveFileFromKit(fileGuid string) KitDiff {
 	}
 }
 
+// AddPortToKit MUST return a diff with exactly one added port.
+// AddPortToKit creates a diff that adds a single port to a kit.
 func AddPortToKit(iface Port) KitDiff {
 	return KitDiff{
 		Ports: &PortsDiff{
@@ -3545,6 +3815,8 @@ func AddPortToKit(iface Port) KitDiff {
 	}
 }
 
+// RemovePortFromKit MUST return a diff with exactly one removed port ID.
+// RemovePortFromKit creates a diff that removes a port by GUID.
 func RemovePortFromKit(interfaceGuid string) KitDiff {
 	return KitDiff{
 		Ports: &PortsDiff{
@@ -3553,6 +3825,8 @@ func RemovePortFromKit(interfaceGuid string) KitDiff {
 	}
 }
 
+// AddTagToKit MUST return a diff with exactly one added tag.
+// AddTagToKit creates a diff that adds a single tag to a kit.
 func AddTagToKit(tag Tag) KitDiff {
 	return KitDiff{
 		Tags: &TagsDiff{
@@ -3561,6 +3835,8 @@ func AddTagToKit(tag Tag) KitDiff {
 	}
 }
 
+// RemoveTagFromKit MUST return a diff with exactly one removed tag ID.
+// RemoveTagFromKit creates a diff that removes a tag by GUID.
 func RemoveTagFromKit(tagGuid string) KitDiff {
 	return KitDiff{
 		Tags: &TagsDiff{
@@ -3569,6 +3845,8 @@ func RemoveTagFromKit(tagGuid string) KitDiff {
 	}
 }
 
+// AddConceptToKit MUST return a diff with exactly one added concept.
+// AddConceptToKit creates a diff that adds a single concept to a kit.
 func AddConceptToKit(concept Concept) KitDiff {
 	return KitDiff{
 		Concepts: &ConceptsDiff{
@@ -3577,6 +3855,8 @@ func AddConceptToKit(concept Concept) KitDiff {
 	}
 }
 
+// RemoveConceptFromKit MUST return a diff with exactly one removed concept ID.
+// RemoveConceptFromKit creates a diff that removes a concept by GUID.
 func RemoveConceptFromKit(conceptGuid string) KitDiff {
 	return KitDiff{
 		Concepts: &ConceptsDiff{
@@ -3588,7 +3868,9 @@ func RemoveConceptFromKit(conceptGuid string) KitDiff {
 // #endregion 🔖Kit Diff Helpers
 
 // #region 🔖Validation
+// Validation MUST provide constraint-based validation of kit data integrity.
 
+// SemioEntityKind enumerates the kinds of semio domain entities.
 type SemioEntityKind string
 
 const (
@@ -3613,6 +3895,7 @@ const (
 	EntityKindAuthor     SemioEntityKind = "Author"
 )
 
+// Severity enumerates validation problem severity levels.
 type Severity string
 
 const (
@@ -3620,17 +3903,20 @@ const (
 	SeverityWarning Severity = "warning"
 )
 
+// DomainLocation identifies the entity and field where a validation problem occurs.
 type DomainLocation struct {
 	EntityKind SemioEntityKind `json:"entityKind"`
 	EntityGuid string          `json:"entityGuid,omitempty"`
 	Field      string          `json:"field,omitempty"`
 }
 
+// Fix represents a suggested correction for a validation problem.
 type Fix struct {
 	Title string  `json:"title"`
 	Diff  KitDiff `json:"diff"`
 }
 
+// Problem represents a single validation constraint violation.
 type Problem struct {
 	ConstraintId string         `json:"constraintId"`
 	Severity     Severity       `json:"severity,omitempty"`
@@ -3640,10 +3926,12 @@ type Problem struct {
 	Fixes        []Fix          `json:"fixes"`
 }
 
+// ValidationResult contains all problems found during kit validation.
 type ValidationResult struct {
 	Problems []Problem `json:"problems"`
 }
 
+// ValidationContext provides indexed access to kit entities for constraint evaluation.
 type ValidationContext struct {
 	Kit                Kit
 	TypesByGuid        map[string]*Type
@@ -3656,6 +3944,7 @@ type ValidationContext struct {
 	ModelsByTypeGuid     map[string][]Model
 }
 
+// Constraint is a function that evaluates a validation rule against a kit context.
 type Constraint func(ctx *ValidationContext) []Problem
 
 func buildValidationContext(kit Kit) *ValidationContext {
@@ -3709,6 +3998,8 @@ func makeFix(ctx *ValidationContext, title string, mutate func(clone *Kit)) Fix 
 	return Fix{Title: title, Diff: diff}
 }
 
+// GuidUniquenessConstraint MUST report each duplicate GUID as a separate problem.
+// GuidUniquenessConstraint checks that all entity GUIDs are unique within a kit.
 func GuidUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	seen := make(map[string]SemioEntityKind)
@@ -3855,6 +4146,8 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 	}
 }
 
+// TypeNameUniquenessConstraint MUST report duplicate names among types with the same parent.
+// TypeNameUniquenessConstraint checks that sibling type names are unique.
 func TypeNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Type)
@@ -3909,6 +4202,8 @@ func TypeNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// DesignNameUniquenessConstraint MUST report duplicate names among designs with the same parent.
+// DesignNameUniquenessConstraint checks that sibling design names are unique.
 func DesignNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Design)
@@ -3963,6 +4258,8 @@ func DesignNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// PieceNameUniquenessConstraint MUST report duplicate piece names within each design.
+// PieceNameUniquenessConstraint checks that piece names are unique within each design.
 func PieceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	for _, design := range ctx.Kit.Designs {
@@ -4024,6 +4321,8 @@ func PieceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// QualityNameUniquenessConstraint MUST report each duplicate quality name.
+// QualityNameUniquenessConstraint checks that quality names are unique within a kit.
 func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	names := make(map[string][]Quality)
@@ -4068,6 +4367,8 @@ func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// PortNameUniquenessConstraint MUST report each duplicate port name.
+// PortNameUniquenessConstraint checks that port names are unique within a kit.
 func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	names := make(map[string][]Port)
@@ -4112,6 +4413,8 @@ func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// FileNameUniquenessConstraint MUST report each duplicate file name.
+// FileNameUniquenessConstraint checks that file names are unique within a kit.
 func FileNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	names := make(map[string][]File)
@@ -4156,6 +4459,8 @@ func FileNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// FolderNameUniquenessConstraint MUST report duplicate names among folders with the same parent.
+// FolderNameUniquenessConstraint checks that sibling folder names are unique.
 func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Folder)
@@ -4210,6 +4515,8 @@ func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// ConnectorNameUniquenessConstraint MUST report duplicate connector names within each type.
+// ConnectorNameUniquenessConstraint checks that connector names are unique within each type.
 func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	for typeGuid, connectors := range ctx.ConnectorsByTypeGuid {
@@ -4276,6 +4583,8 @@ func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// ModelNameUniquenessConstraint MUST report duplicate model names within each type.
+// ModelNameUniquenessConstraint checks that model names are unique within each type.
 func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	for typeGuid, models := range ctx.ModelsByTypeGuid {
@@ -4342,6 +4651,8 @@ func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// LayerPathUniquenessConstraint MUST report duplicate layer paths within each design.
+// LayerPathUniquenessConstraint checks that layer paths are unique within each design.
 func LayerPathUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	for _, design := range ctx.Kit.Designs {
@@ -4392,6 +4703,7 @@ func LayerPathUniquenessConstraint(ctx *ValidationContext) []Problem {
 	return problems
 }
 
+// DefaultConstraints lists all built-in validation constraints.
 var DefaultConstraints = []Constraint{
 	GuidUniquenessConstraint,
 	TypeNameUniquenessConstraint,
@@ -4406,10 +4718,14 @@ var DefaultConstraints = []Constraint{
 	LayerPathUniquenessConstraint,
 }
 
+// ValidateKit MUST apply all default constraints and return all found problems.
+// ValidateKit validates a kit using the default set of constraints.
 func ValidateKit(kit Kit) ValidationResult {
 	return ValidateKitWithConstraints(kit, DefaultConstraints)
 }
 
+// ValidateKitWithConstraints MUST apply each constraint and aggregate all problems.
+// ValidateKitWithConstraints validates a kit using the provided constraints.
 func ValidateKitWithConstraints(kit Kit, constraints []Constraint) ValidationResult {
 	ctx := buildValidationContext(kit)
 	var problems []Problem
@@ -4419,6 +4735,8 @@ func ValidateKitWithConstraints(kit Kit, constraints []Constraint) ValidationRes
 	return ValidationResult{Problems: problems}
 }
 
+// HasErrors MUST return true when any problem has error severity or empty severity.
+// HasErrors returns true if the validation result contains any error-severity problems.
 func HasErrors(result ValidationResult) bool {
 	for _, p := range result.Problems {
 		if p.Severity == SeverityError || p.Severity == "" {
@@ -4429,7 +4747,9 @@ func HasErrors(result ValidationResult) bool {
 }
 
 // #region 🔖Validation Serialization
+// Validation Serialization MUST provide serializable representations of validation results.
 
+// ProblemSerialized is the JSON-serializable representation of a validation problem.
 type ProblemSerialized struct {
 	ConstraintId string `json:"constraintId"`
 	Severity     string `json:"severity,omitempty"`
@@ -4439,10 +4759,13 @@ type ProblemSerialized struct {
 	Fixes        []Fix  `json:"fixes"`
 }
 
+// ValidationResultSerialized is the JSON-serializable representation of a validation result.
 type ValidationResultSerialized struct {
 	Problems []ProblemSerialized `json:"problems"`
 }
 
+// ToValidationResult MUST default empty severity to error.
+// ToValidationResult converts a validation result to its serializable form.
 func ToValidationResult(result ValidationResult) ValidationResultSerialized {
 	problems := make([]ProblemSerialized, len(result.Problems))
 	for i, p := range result.Problems {
@@ -4462,6 +4785,8 @@ func ToValidationResult(result ValidationResult) ValidationResultSerialized {
 	return ValidationResultSerialized{Problems: problems}
 }
 
+// AreValidationResultsEqual MUST compare problems regardless of their order.
+// AreValidationResultsEqual compares two serialized validation results for equality.
 func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 	if len(a.Problems) != len(b.Problems) {
 		return false
@@ -4496,6 +4821,7 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 // #endregion 🔖Validation
 
 // #region 🔖Flatten Design
+// Flatten Design MUST compute absolute piece planes from relative connections.
 
 func planeToMatrix(p Plane) *mat.Dense {
 	xAxis := []float64{p.XAxis.X, p.XAxis.Y, p.XAxis.Z}
@@ -4746,6 +5072,8 @@ func getConnector(typesDict map[string]*Type, typ *Type, connectorGuid *string) 
 	return nil
 }
 
+// FlattenDesign MUST traverse the connection graph via BFS to compute piece transforms.
+// FlattenDesign computes absolute planes and centers for all pieces in a design.
 func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 	design := FindDesignInKit(kit, designGuid)
 	if design == nil || len(design.Pieces) == 0 {
@@ -4950,6 +5278,8 @@ func planesEqualApprox(a, b Plane) bool {
 		math.Abs(a.YAxis.Z-b.YAxis.Z) < tol
 }
 
+// ApplyDesignDiff MUST apply all piece, connection and property changes from the diff.
+// ApplyDesignDiff applies a design diff to a base design.
 func ApplyDesignDiff(base Design, diff DesignDiff) Design {
 	return applyDesignDiff(base, diff)
 }

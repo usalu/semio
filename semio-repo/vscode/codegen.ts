@@ -25,8 +25,14 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Configuration
+// GraphQL code generation configuration for the VS Code extension.
+// Configuration MUST generate typed client code from the GraphQL schema.
+
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
+// GraphQL codegen configuration targeting the schema and query documents.
+// Config MUST reference the GraphQL schema and generate client preset output.
 const config: CodegenConfig = {
   schema: "../graphql/schema.graphql",
   documents: ["queries.ts"],
@@ -43,3 +49,4 @@ const config: CodegenConfig = {
 };
 
 export default config;
+// #endregion 🔖Configuration

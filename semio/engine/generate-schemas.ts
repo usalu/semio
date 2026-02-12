@@ -26,6 +26,9 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Schema Generation
+// Schema generation script. MUST invoke the Python engine schema generator.
+
 import { execSync } from "child_process";
 
 execSync('uv run python -c "from engine import generateSchemas; generateSchemas()"', {
@@ -34,3 +37,5 @@ execSync('uv run python -c "from engine import generateSchemas; generateSchemas(
 });
 
 console.log("✅ Schemas generated");
+
+// #endregion 🔖Schema Generation

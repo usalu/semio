@@ -1,9 +1,44 @@
+// #region 🔖Header
+
+// 💻semio/js/sketchpad/portColor.ts
+
+// 2026 Ueli Saluz <ueli@semio-tech.de>
+
+// #region 🔖License
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
+
+// #endregion 🔖Header
+
+// #region 🔖Port Color
+// Assigns deterministic HSL color tones to ports based on compatibility groups.
+// MUST use a union-find structure to group compatible ports under a single color.
 
 import type { Connector, Port } from "../semio";
 import { arePortsCompatible } from "../semio";
 
+// Compatibility state of a port relative to the selected port.
+// MUST be one of none, selected, compatible, or incompatible.
 export type PortCompatibilityState = "none" | "selected" | "compatible" | "incompatible";
 
+// HSL color tones for rendering a port in the UI.
+// MUST contain base, surface, surfaceStrong, border and text values.
 export type PortTone = {
   base: string;
   surface: string;
@@ -12,14 +47,20 @@ export type PortTone = {
   text: string;
 };
 
+// Sentinel GUID for ports without an assigned identity.
+// MUST be used as the fallback key for tone generation.
 const DEFAULT_PORT_GUID = "__default__";
 
+// Trims and normalizes a GUID string, returning undefined for empty values.
+// MUST return undefined for null, undefined, or whitespace-only input.
 const normalizeGuid = (value: string | undefined | null): string | undefined => {
   if (!value) return undefined;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : undefined;
 };
 
+// Extracts a GUID from a string or object with a guid property.
+// MUST handle both direct string GUIDs and port reference objects.
 const normalizePortRef = (value: unknown): string | undefined => {
   if (typeof value === "string") return normalizeGuid(value);
   if (value && typeof value === "object" && "guid" in (value as Record<string, unknown>)) {
@@ -29,6 +70,8 @@ const normalizePortRef = (value: unknown): string | undefined => {
   return undefined;
 };
 
+// Produces a deterministic non-negative integer hash from a string.
+// MUST return the absolute value of a 32-bit hash.
 const hashString = (input: string): number => {
   let hash = 0;
   for (let index = 0; index < input.length; index += 1) {
@@ -38,6 +81,8 @@ const hashString = (input: string): number => {
   return Math.abs(hash);
 };
 
+// Generates an HSL color tone from a port group key.
+// MUST return a neutral grey tone for the default port GUID.
 const getToneForKey = (key: string): PortTone => {
   if (key === DEFAULT_PORT_GUID) {
     return {
@@ -62,6 +107,8 @@ const getToneForKey = (key: string): PortTone => {
   };
 };
 
+// Builds a union-find map grouping compatible ports by root GUID.
+// MUST union ports linked via compatiblePorts relationships.
 const createPortGroupMap = (ports: Port[]): Map<string, string> => {
   const parent = new Map<string, string>();
 
@@ -108,10 +155,16 @@ const createPortGroupMap = (ports: Port[]): Map<string, string> => {
   return groups;
 };
 
+// Extracts a normalized port GUID from a string or port reference object.
+// MUST delegate to normalizePortRef for consistent handling.
 export const getPortGuid = (value: unknown): string | undefined => normalizePortRef(value);
 
+// Extracts the port GUID from a connector's port reference.
+// MUST return undefined when the connector or its port is missing.
 export const getConnectorPortGuid = (connector: Pick<Connector, "port"> | undefined | null): string | undefined => normalizePortRef(connector?.port);
 
+// Resolves the color tone for a port based on its compatibility group.
+// MUST return the default tone when the port GUID is missing.
 export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTone => {
   const normalizedGuid = normalizeGuid(portGuid);
   if (!normalizedGuid) return getToneForKey(DEFAULT_PORT_GUID);
@@ -120,6 +173,8 @@ export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTo
   return getToneForKey(groupKey);
 };
 
+// Determines the compatibility state of a candidate port relative to a selected port.
+// MUST return none when no port is selected.
 export const getPortCompatibilityState = (candidatePortGuid: string | undefined, selectedPortGuid: string | undefined, ports: Port[]): PortCompatibilityState => {
   const normalizedCandidate = normalizeGuid(candidatePortGuid);
   const normalizedSelected = normalizeGuid(selectedPortGuid);
@@ -131,3 +186,5 @@ export const getPortCompatibilityState = (candidatePortGuid: string | undefined,
   if (!candidatePort || !selectedPort) return "incompatible";
   return arePortsCompatible(candidatePort, selectedPort, ports) ? "compatible" : "incompatible";
 };
+
+// #endregion 🔖Port Color

@@ -25,6 +25,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Renderer
+// Electron renderer process that mounts the Sketchpad React app with window controls.
+// MUST resolve the user identity before rendering the sketchpad.
+
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 
@@ -45,6 +49,8 @@ declare global {
   }
 }
 
+// Invokes a window control action via the preload bridge.
+// MUST fall back gracefully when window controls are unavailable.
 const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
   if (window.windowControls) {
     return window.windowControls[action]();
@@ -53,16 +59,22 @@ const invokeWindowControl = (action: "minimize" | "maximize" | "close") => {
   return Promise.resolve();
 };
 
+// Window event handlers for minimize, maximize and close actions.
+// MUST delegate to invokeWindowControl for each action.
 const windowEvents = {
   minimize: () => invokeWindowControl("minimize"),
   maximize: () => invokeWindowControl("maximize"),
   close: () => invokeWindowControl("close"),
 };
 
+// OS bridge for retrieving the current user identity.
+// MUST use the preload-exposed getUserId API.
 const os = {
   getUserId: async () => await window.os.getUserId(),
 };
 
+// Root React component that loads the user identity and renders the sketchpad.
+// MUST show a loading state until the user ID is resolved.
 function App() {
   const [userId, setUserId] = useState<string>("");
 
@@ -90,3 +102,5 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </React.StrictMode>,
 );
+
+// #endregion 🔖Renderer

@@ -26,14 +26,29 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Post Build
+// Post-build script. MUST relocate the PyInstaller output to the Grasshopper bin folder.
+
 import { existsSync, renameSync, rmSync } from "fs";
 import { join } from "path";
 
+// Post-build working directory.
+// MUST resolve to the engine folder.
 const cwd = __dirname;
+// Path to the PyInstaller-produced engine executable.
+// MUST match the PyInstaller output name.
 const exePath = join(cwd, "dist", "semio-engine", "semio-engine.exe");
+// Path to the PyInstaller internal dependencies folder.
+// MUST be co-located with the executable.
 const internalPath = join(cwd, "dist", "semio-engine", "_internal");
+// Grasshopper plugin binary output directory.
+// MUST match the .NET build output path.
 const grasshopperBinPath = join(cwd, "..", "..", "net", "Semio.Grasshopper", "bin", "Debug", "net48");
+// Target path for the engine executable in the Grasshopper bin folder.
+// MUST use the same executable name as the PyInstaller output.
 const grasshopperExePath = join(grasshopperBinPath, "semio-engine.exe");
+// Target path for the internal dependencies in the Grasshopper bin folder.
+// MUST mirror the PyInstaller _internal directory structure.
 const grasshopperInternalPath = join(grasshopperBinPath, "_internal");
 
 if (existsSync(grasshopperExePath)) {
@@ -47,3 +62,5 @@ renameSync(exePath, grasshopperExePath);
 renameSync(internalPath, grasshopperInternalPath);
 
 console.log("✅ Post-build complete");
+
+// #endregion 🔖Post Build

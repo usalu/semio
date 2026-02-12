@@ -26,6 +26,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// Imports for Design app MUST include all shared sketchpad, React, and UI dependencies.
 
 import { useSelector } from "@xstate/react";
 import { ConnectionDiff, ConnectionId, Guid, KitDiff, PieceDiff, PieceId } from "../semio";
@@ -224,48 +225,58 @@ import {
 // #endregion 🔖Imports
 
 // #region 🔖State Management
+// State management types and interfaces MUST define the Design app selection, presence, hover, diff, and state shape.
 
 let designAppCommands: Record<string, (context: any, ...args: any[]) => Promise<any> | any>;
 
+// Tracks the current piece, connection, and connector selection state for the Design app.
 export interface DesignAppSelection {
   pieces?: Guid[];
   connections?: Guid[];
   connectors?: Array<{ piece: Guid; connector: Guid }>;
   connector?: { piece: Guid; designPiece?: Guid; connector: Guid };
 }
+// Diff for added/removed piece GUIDs in a selection change.
 export interface DesignAppSelectionPiecesDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for added/removed connection GUIDs in a selection change.
 export interface DesignAppSelectionConnectionsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for a selected port change identifying the piece and connector.
 export interface DesignAppSelectionPortDiff {
   piece?: Guid;
   designPiece?: Guid;
   connector?: Guid;
 }
+// Composite diff combining pieces, connections, and connector selection changes.
 export interface DesignAppSelectionDiff {
   pieces?: DesignAppSelectionPiecesDiff;
   connections?: DesignAppSelectionConnectionsDiff;
   connector?: DesignAppSelectionPortDiff;
 }
+// Enumeration of fullscreen window modes for the Design app.
 export enum DesignAppFullscreenWindow {
   None = "none",
   Diagram = "diagram",
   Accessl = "accessl",
 }
+// Enumeration of window kinds available in the Design app.
 export enum DesignAppWindowKind {
   Diagram = "diagram",
   Scene = "scene",
 }
+// Presence state for a Design app user including cursor, camera, and diagram viewport.
 export interface DesignAppPresence {
   cursor?: Coord;
   camera?: Camera;
   diagramCenter?: Coord;
   diagramScale?: number;
 }
+// Hover state tracking which pieces, connections, connectors, types, and designs are hovered.
 export interface DesignAppHover {
   pieces?: Guid[];
   connections?: Guid[];
@@ -273,9 +284,11 @@ export interface DesignAppHover {
   types?: Guid[];
   designs?: Guid[];
 }
+// Extended presence for other collaborators including their display name.
 export interface DesignAppPresenceOther extends DesignAppPresence {
   name: string;
 }
+// Complete diff describing all mutable Design app state changes.
 export interface DesignAppDiff {
   selection?: DesignAppSelectionDiff;
   presence?: DesignAppPresence;
@@ -290,7 +303,9 @@ export interface DesignAppDiff {
   selectedModelTags?: Record<Guid, string[]>;
   windowLayout?: any;
 }
+// Edit record extending KitDiffAppEdit with Design app selection diff.
 export interface DesignAppEdit extends KitDiffAppEdit<DesignAppSelectionDiff> { }
+// Complete runtime state for a Design app instance.
 export interface DesignAppState {
   fullscreenWindow: DesignAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -308,11 +323,13 @@ export interface DesignAppState {
   windowLayout?: any;
 }
 
+// Context passed to Design app commands including app state, GUID, and design data.
 export interface DesignAppCommandContext extends KitCommandContext {
   designApp: DesignAppState;
   Guid: Guid;
   design: Design;
 }
+// Result returned by Design app commands containing diffs to apply.
 export interface DesignAppCommandResult {
   diff?: DesignAppDiff;
   kitDiff?: KitDiff;
@@ -321,7 +338,9 @@ export interface DesignAppCommandResult {
 // #endregion 🔖State Management
 
 // #region Commands
+// Commands MUST define all executable Design app actions dispatched by keyboard shortcuts and UI interactions.
 
+// Registry of all named Design app commands mapped to their handler functions.
 export const commands: Record<string, (context: DesignAppCommandContext, ...args: any[]) => DesignAppCommandResult> = {
   "semio.designApp.selectAll": (context: DesignAppCommandContext): DesignAppCommandResult => {
     const allPieceGuids = context.design.pieces?.map((p: Piece) => p.guid) || [];
@@ -1031,7 +1050,10 @@ designAppCommands = commands;
 // #endregion Commands
 
 // #region Store
+// Store MUST implement DesignStore extending PlainKitDiffAppStore with undo/redo, selection diff inversion, and state persistence.
 
+// MUST return a diff that reverses the given selection diff.
+// Computes the inverse of a Design app selection diff for undo support.
 export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, diff: DesignAppSelectionDiff): DesignAppSelectionDiff => {
   const inverseDiff: DesignAppSelectionDiff = {};
 
@@ -1065,9 +1087,13 @@ export const inverseDesignAppSelectionDiff = (selection: DesignAppSelection, dif
 
   return inverseDiff;
 };
+// Checks whether two Design app identifiers refer to the same design.
 export const areSameDesignApp = (designApp: DesignAppId, other: DesignAppId): boolean => designApp.kit === other.kit && designApp.design === other.design;
+// Checks whether a Design app identifier matches any in a list.
 export const hasSameDesignApp = (designApp: DesignAppId, others: DesignAppId[]): boolean => others.some((other) => areSameDesignApp(designApp, other));
 
+// MUST extend PlainKitDiffAppStore and synchronize state with the Y.js shared document.
+// DesignStore manages Design app state persistence, undo/redo stacks, and Y.js synchronization.
 export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppDiff, DesignAppSelectionDiff, DesignAppEdit, DesignAppCommandContext, DesignAppCommandResult> {
   private readonly kitGuid: Guid;
   private readonly designGuid: Guid;
@@ -1255,6 +1281,8 @@ export class DesignStore extends PlainKitDiffAppStore<DesignAppState, DesignAppD
 }
 
 let designStoreInitialized = false;
+// MUST register the DesignStore factory exactly once via registerDesignAppStoreFactory.
+// Initializes the Design app store factory registration.
 export function initializeDesignStore() {
   if (designStoreInitialized) return;
   designStoreInitialized = true;
@@ -1262,6 +1290,7 @@ export function initializeDesignStore() {
 }
 
 // #region 🔖Design App Plugin Registration
+// Design app plugin registration MUST register the Design app plugin with machine actions, guards, and default state.
 
 const designAppPlugin: AppPlugin = {
   id: "design",
@@ -1421,6 +1450,7 @@ const DesignAppSyncComponent = ({ children }: { children: React.ReactNode }) => 
 };
 
 // #region 🔖Hooks
+// Hooks MUST provide the Design app initialization lifecycle within the React component tree.
 
 function useDesignAppInitialize() {
   const actor = useSketchpadActor();
@@ -1462,7 +1492,10 @@ function useDesignAppInitialize() {
 // #endregion 🔖Hooks
 
 // #region Components
+// Components MUST provide Design app scope, actor context, and synchronization wrapper components.
 
+// MUST wrap children with DesignAppScopeContext and DesignAppActorContext providers.
+// Provider component that establishes Design app scope and actor context.
 export const DesignAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = { id: props.id };
   return React.createElement(DesignAppScopeContext.Provider, { value }, React.createElement(DesignAppActorContext.Provider, { value: null }, React.createElement(DesignAppSyncComponent, null, props.children)));
@@ -1470,10 +1503,14 @@ export const DesignAppScopeProvider = (props: { id: string; children: React.Reac
 
 const useDesignAppScope = () => useContext(DesignAppScopeContext);
 
+// MUST return the actor from DesignAppActorContext.
+// Returns the current Design app XState actor from context.
 export function useDesignAppActor(): any {
   return useContext(DesignAppActorContext);
 }
 
+// MUST resolve the DesignStore from the orchestrator and apply the selector.
+// Selects derived state from the Design app store.
 export function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: DesignAppId): T | DesignStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -1489,6 +1526,8 @@ export function useDesignStore<T>(selector?: (store: DesignStore) => T, id?: Des
 
 export { useDesignStore as useDesignAppStore };
 
+// MUST use useSelector to reactively track the Design app state slice.
+// Selects derived state from the Design app XState snapshot.
 export function useDesignApp<T>(selector?: (state: DesignAppState) => T, id?: DesignAppId): T | DesignAppState | null {
   const kitScope = useKitScope();
   const designScope = useDesignScope();
@@ -1545,6 +1584,8 @@ function useDesignAppField<T, TEvent extends { type: string }>(options: UseDesig
   return useMemo(() => createFieldValue(value, setter, canSet), [value, setter, canSet]);
 }
 
+// MUST create a Field wrapping the selection value and setter.
+// Returns a reactive field for a Design app selection property.
 export function useDesignAppSelectionField(): Field<DesignAppSelection> {
   return useDesignAppField<DesignAppSelection, { type: "DESIGN.SET_SELECTION"; kitGuid: Guid; designGuid: Guid; selection: DesignAppSelection }>({
     createGranularSelector: createDesignSelectionSelector,
@@ -1554,10 +1595,14 @@ export function useDesignAppSelectionField(): Field<DesignAppSelection> {
   });
 }
 
+// MUST provide the current selection, a setter, and a canSet flag.
+// Returns a hook result for the current Design app selection.
 export function useDesignAppSelection(): HookResult<DesignAppSelection> {
   return fieldToHookResult(useDesignAppSelectionField());
 }
 
+// MUST create a Field wrapping the fullscreen value and setter.
+// Returns a reactive field for the Design app fullscreen window.
 export function useDesignAppFullscreenField(): Field<DesignAppFullscreenWindow> {
   return useDesignAppField<DesignAppFullscreenWindow, { type: "DESIGN.SET_FULLSCREEN"; kitGuid: Guid; designGuid: Guid; window: DesignAppFullscreenWindow }>({
     createGranularSelector: createDesignFullscreenWindowSelector,
@@ -1567,10 +1612,14 @@ export function useDesignAppFullscreenField(): Field<DesignAppFullscreenWindow> 
   });
 }
 
+// MUST provide the current fullscreen window, a setter, and a canSet flag.
+// Returns a hook result for the Design app fullscreen window state.
 export function useDesignAppFullscreen(): HookResult<DesignAppFullscreenWindow> {
   return fieldToHookResult(useDesignAppFullscreenField());
 }
 
+// MUST create a Field wrapping the active tool value and setter.
+// Returns a reactive field for the Design app active tool.
 export function useDesignAppActiveToolField(): Field<ToolKind> {
   return useDesignAppField<ToolKind, { type: "DESIGN.SET_ACTIVE_TOOL"; kitGuid: Guid; designGuid: Guid; tool: ToolKind }>({
     createGranularSelector: createDesignActiveToolSelector,
@@ -1581,14 +1630,20 @@ export function useDesignAppActiveToolField(): Field<ToolKind> {
   });
 }
 
+// MUST provide the current active tool, a setter, and a canSet flag.
+// Returns a hook result for the Design app active tool.
 export function useDesignAppActiveTool(): HookResult<ToolKind> {
   return fieldToHookResult(useDesignAppActiveToolField());
 }
 
+// MUST provide the current diff, a setter, and a canSet flag.
+// Returns a hook result for the Design app diff state.
 export function useDesignAppDiff(): HookResult<KitDiff | undefined> {
   return readonlyHookResult<KitDiff | undefined>(undefined);
 }
 
+// MUST return a read-only list of other users' presence data.
+// Returns other collaborators' presence state for the Design app.
 export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1600,6 +1655,8 @@ export function useDesignAppOthers(): HookResult<DesignAppPresenceOther[]> {
   return readonlyHookResult(value);
 }
 
+// MUST create a Field wrapping the camera value and setter.
+// Returns a reactive field for the Design app camera.
 export function useDesignAppCameraField(): Field<Camera | undefined> {
   return useDesignAppField<Camera | undefined, { type: "DESIGN.SET_CAMERA"; kitGuid: Guid; designGuid: Guid; camera: Camera | undefined }>({
     createGranularSelector: createDesignCameraSelector,
@@ -1609,10 +1666,14 @@ export function useDesignAppCameraField(): Field<Camera | undefined> {
   });
 }
 
+// MUST provide the current camera, a setter, and a canSet flag.
+// Returns a hook result for the Design app camera state.
 export function useDesignAppCamera(): HookResult<Camera | undefined> {
   return fieldToHookResult(useDesignAppCameraField());
 }
 
+// MUST provide the current diagram center, a setter, and a canSet flag.
+// Returns a hook result for the Design app diagram center coordinate.
 export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1635,6 +1696,8 @@ export function useDesignAppDiagramCenter(): HookResult<Coord | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// MUST provide the current diagram scale, a setter, and a canSet flag.
+// Returns a hook result for the Design app diagram scale.
 export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1656,6 +1719,8 @@ export function useDesignAppDiagramScale(): HookResult<number | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// MUST create a Field wrapping the focused piece GUID value and setter.
+// Returns a reactive field for the focused piece GUID.
 export function useDesignAppFocusedPieceGuidField(): Field<Guid | undefined> {
   return useDesignAppField<Guid | undefined, { type: "DESIGN.FOCUS_PIECE"; kitGuid: Guid; designGuid: Guid; pieceGuid: Guid | undefined }>({
     createGranularSelector: createDesignFocusedPieceSelector,
@@ -1665,10 +1730,14 @@ export function useDesignAppFocusedPieceGuidField(): Field<Guid | undefined> {
   });
 }
 
+// MUST provide the current focused piece GUID, a setter, and a canSet flag.
+// Returns a hook result for the focused piece GUID.
 export function useDesignAppFocusedPieceGuid(): HookResult<Guid | undefined> {
   return fieldToHookResult(useDesignAppFocusedPieceGuidField());
 }
 
+// MUST provide the current selected model tags, a setter, and a canSet flag.
+// Returns a hook result for the Design app selected model tags.
 export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[]>> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1688,6 +1757,8 @@ export function useDesignAppSelectedModelTags(): HookResult<Record<Guid, string[
   return conditionalHookResult(canSet, value, setter);
 }
 
+// MUST provide the current hover, a setter, and a canSet flag.
+// Returns a hook result for the Design app hover state.
 export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -1711,6 +1782,8 @@ export function useDesignAppHover(): HookResult<DesignAppHover | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// MUST create a Field wrapping the panel visibility value and setter.
+// Returns a reactive field for Design app panel visibility.
 export function useDesignAppPanelVisibilityField(): Field<PanelVisibility> {
   return useDesignAppField<PanelVisibility, { type: "DESIGN.SET_PANEL_VISIBILITY"; kitGuid: Guid; designGuid: Guid; panelVisibility: PanelVisibility }>({
     createGranularSelector: createDesignPanelVisibilitySelector,
@@ -1720,14 +1793,20 @@ export function useDesignAppPanelVisibilityField(): Field<PanelVisibility> {
   });
 }
 
+// MUST provide the current panel visibility, a setter, and a canSet flag.
+// Returns a hook result for Design app panel visibility.
 export function useDesignAppPanelVisibility(): HookResult<PanelVisibility> {
   return fieldToHookResult(useDesignAppPanelVisibilityField());
 }
 
 //#region 🔖Action Hooks
+// Action hooks MUST provide composable React hooks for Design app selection, hover, focus, panel, and transaction actions.
 
+// Tuple type for action hook results pairing an action callback with a canAct flag.
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
+// MUST return a callback that sets hover to the given piece GUID.
+// Returns an action to set hover state to a single piece.
 export function useDesignAppHoverPiece(): ActionHookResult<[pieceGuid: string]> {
   const [, setHover, canSetHover] = useDesignAppHover();
   const action = useMemo(() => {
@@ -1737,6 +1816,8 @@ export function useDesignAppHoverPiece(): ActionHookResult<[pieceGuid: string]> 
   return [action, canSetHover];
 }
 
+// MUST return a callback that sets hover to the given piece GUIDs.
+// Returns an action to set hover state to multiple pieces.
 export function useDesignAppHoverPieces(): ActionHookResult<[pieceGuids: string[]]> {
   const [, setHover, canSetHover] = useDesignAppHover();
   const action = useMemo(() => {
@@ -1746,6 +1827,8 @@ export function useDesignAppHoverPieces(): ActionHookResult<[pieceGuids: string[
   return [action, canSetHover];
 }
 
+// MUST return a callback that sets hover to the given connection GUID.
+// Returns an action to set hover state to a single connection.
 export function useDesignAppHoverConnection(): ActionHookResult<[connectionGuid: string]> {
   const [, setHover, canSetHover] = useDesignAppHover();
   const action = useMemo(() => {
@@ -1755,6 +1838,8 @@ export function useDesignAppHoverConnection(): ActionHookResult<[connectionGuid:
   return [action, canSetHover];
 }
 
+// MUST return a callback that sets hover to the given port identifiers.
+// Returns an action to set hover state to a single port.
 export function useDesignAppHoverPort(): ActionHookResult<[pieceGuid: string, connectorGuid: string]> {
   const [, setHover, canSetHover] = useDesignAppHover();
   const action = useMemo(() => {
@@ -1764,6 +1849,8 @@ export function useDesignAppHoverPort(): ActionHookResult<[pieceGuid: string, co
   return [action, canSetHover];
 }
 
+// MUST return a callback that sets hover to the given type GUIDs.
+// Returns an action to set hover state to types.
 export function useDesignAppHoverTypes(): ActionHookResult<[typeGuids: string[]]> {
   const [, setHover, canSetHover] = useDesignAppHover();
   const action = useMemo(() => {
@@ -1773,6 +1860,8 @@ export function useDesignAppHoverTypes(): ActionHookResult<[typeGuids: string[]]
   return [action, canSetHover];
 }
 
+// MUST return a callback that sets hover to the given design GUIDs.
+// Returns an action to set hover state to designs.
 export function useDesignAppHoverDesigns(): ActionHookResult<[designGuids: string[]]> {
   const [, setHover, canSetHover] = useDesignAppHover();
   const action = useMemo(() => {
@@ -1782,6 +1871,8 @@ export function useDesignAppHoverDesigns(): ActionHookResult<[designGuids: strin
   return [action, canSetHover];
 }
 
+// MUST return a callback that clears all hover state.
+// Returns an action to clear the Design app hover state.
 export function useDesignAppClearHover(): ActionHookResult<[]> {
   const [, setHover, canSetHover] = useDesignAppHover();
   const action = useMemo(() => {
@@ -1791,6 +1882,8 @@ export function useDesignAppClearHover(): ActionHookResult<[]> {
   return [action, canSetHover];
 }
 
+// MUST return a callback that selects the given piece GUID.
+// Returns an action to select a single piece.
 export function useDesignAppSelectPiece(): ActionHookResult<[pieceGuid: string]> {
   const [, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1800,6 +1893,8 @@ export function useDesignAppSelectPiece(): ActionHookResult<[pieceGuid: string]>
   return [action, canSetSelection];
 }
 
+// MUST return a callback that selects the given piece GUIDs.
+// Returns an action to select multiple pieces.
 export function useDesignAppSelectPieces(): ActionHookResult<[pieceGuids: string[]]> {
   const [, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1809,6 +1904,8 @@ export function useDesignAppSelectPieces(): ActionHookResult<[pieceGuids: string
   return [action, canSetSelection];
 }
 
+// MUST return a callback that adds the given piece GUID to selection.
+// Returns an action to add a piece to the current selection.
 export function useDesignAppAddPieceToSelection(): ActionHookResult<[pieceGuid: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1823,6 +1920,8 @@ export function useDesignAppAddPieceToSelection(): ActionHookResult<[pieceGuid: 
   return [action, canSetSelection];
 }
 
+// MUST return a callback that removes the given piece GUID from selection.
+// Returns an action to remove a piece from the current selection.
 export function useDesignAppRemovePieceFromSelection(): ActionHookResult<[pieceGuid: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1835,6 +1934,8 @@ export function useDesignAppRemovePieceFromSelection(): ActionHookResult<[pieceG
   return [action, canSetSelection];
 }
 
+// MUST return a callback that selects the given connection GUID.
+// Returns an action to select a single connection.
 export function useDesignAppSelectConnection(): ActionHookResult<[connectionGuid: string]> {
   const [, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1844,6 +1945,8 @@ export function useDesignAppSelectConnection(): ActionHookResult<[connectionGuid
   return [action, canSetSelection];
 }
 
+// MUST return a callback that adds the given connection GUID to selection.
+// Returns an action to add a connection to the current selection.
 export function useDesignAppAddConnectionToSelection(): ActionHookResult<[connectionGuid: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1858,6 +1961,8 @@ export function useDesignAppAddConnectionToSelection(): ActionHookResult<[connec
   return [action, canSetSelection];
 }
 
+// MUST return a callback that removes the given connection GUID from selection.
+// Returns an action to remove a connection from the current selection.
 export function useDesignAppRemoveConnectionFromSelection(): ActionHookResult<[connectionGuid: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1870,6 +1975,8 @@ export function useDesignAppRemoveConnectionFromSelection(): ActionHookResult<[c
   return [action, canSetSelection];
 }
 
+// MUST return a callback that selects the given piece-connector port.
+// Returns an action to select a piece port.
 export function useDesignAppSelectPiecePort(): ActionHookResult<[pieceGuid: string, connectorGuid: string, designPieceGuid?: string]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1881,6 +1988,8 @@ export function useDesignAppSelectPiecePort(): ActionHookResult<[pieceGuid: stri
   return [action, canSetSelection];
 }
 
+// MUST return a callback that deselects the given piece-connector port.
+// Returns an action to deselect a piece port.
 export function useDesignAppDeselectPiecePort(): ActionHookResult<[]> {
   const [selection, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1893,6 +2002,8 @@ export function useDesignAppDeselectPiecePort(): ActionHookResult<[]> {
   return [action, canSetSelection];
 }
 
+// MUST return a callback that clears all selection state.
+// Returns an action to deselect all items in the Design app.
 export function useDesignAppDeselectAll(): ActionHookResult<[]> {
   const [, setSelection, canSetSelection] = useDesignAppSelection();
   const action = useMemo(() => {
@@ -1902,6 +2013,8 @@ export function useDesignAppDeselectAll(): ActionHookResult<[]> {
   return [action, canSetSelection];
 }
 
+// MUST return a callback that adds all piece and connection GUIDs to selection.
+// Returns an action to select all pieces and connections.
 export function useDesignAppSelectAll(): ActionHookResult<[]> {
   const design = useDesign() as Design | null;
   const [, setSelection, canSetSelection] = useDesignAppSelection();
@@ -1916,6 +2029,8 @@ export function useDesignAppSelectAll(): ActionHookResult<[]> {
   return [action, canSetSelection];
 }
 
+// MUST return a callback that sets the focused piece GUID.
+// Returns an action to focus on a specific piece.
 export function useDesignAppFocusPiece(): ActionHookResult<[pieceGuid: string]> {
   const [, setFocusedPieceGuid, canSetFocus] = useDesignAppFocusedPieceGuid();
   const action = useMemo(() => {
@@ -1925,6 +2040,8 @@ export function useDesignAppFocusPiece(): ActionHookResult<[pieceGuid: string]> 
   return [action, canSetFocus];
 }
 
+// MUST return a callback that clears the focused piece GUID.
+// Returns an action to clear the focused piece.
 export function useDesignAppClearFocus(): ActionHookResult<[]> {
   const [, setFocusedPieceGuid, canSetFocus] = useDesignAppFocusedPieceGuid();
   const action = useMemo(() => {
@@ -1934,6 +2051,8 @@ export function useDesignAppClearFocus(): ActionHookResult<[]> {
   return [action, canSetFocus];
 }
 
+// MUST return a callback that toggles the diagram fullscreen window state.
+// Returns an action to toggle diagram fullscreen mode.
 export function useDesignAppToggleDiagramFullscreen(): ActionHookResult<[]> {
   const [fullscreen, setFullscreen, canSetFullscreen] = useDesignAppFullscreen();
   const action = useMemo(() => {
@@ -1943,6 +2062,8 @@ export function useDesignAppToggleDiagramFullscreen(): ActionHookResult<[]> {
   return [action, canSetFullscreen];
 }
 
+// MUST return a callback that toggles the accessl fullscreen window state.
+// Returns an action to toggle accessl fullscreen mode.
 export function useDesignAppToggleAccesslFullscreen(): ActionHookResult<[]> {
   const [fullscreen, setFullscreen, canSetFullscreen] = useDesignAppFullscreen();
   const action = useMemo(() => {
@@ -1952,6 +2073,8 @@ export function useDesignAppToggleAccesslFullscreen(): ActionHookResult<[]> {
   return [action, canSetFullscreen];
 }
 
+// MUST return a callback that toggles the given panel's visibility.
+// Returns an action to toggle a specific panel's visibility.
 export function useDesignAppTogglePanel(): ActionHookResult<[panelKey: keyof PanelVisibility]> {
   const [panelVisibility, setPanelVisibility, canSetPanelVisibility] = useDesignAppPanelVisibility();
   const action = useMemo(() => {
@@ -1963,6 +2086,8 @@ export function useDesignAppTogglePanel(): ActionHookResult<[panelKey: keyof Pan
   return [action, canSetPanelVisibility];
 }
 
+// MUST return a callback that adds the given tag to all type entries.
+// Returns an action to add a model tag for all types.
 export function useDesignAppAddModelTagForAllTypes(): ActionHookResult<[tagGuid: string, typeGuids: string[]]> {
   const [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags] = useDesignAppSelectedModelTags();
   const action = useMemo(() => {
@@ -1979,6 +2104,8 @@ export function useDesignAppAddModelTagForAllTypes(): ActionHookResult<[tagGuid:
   return [action, canSetSelectedModelTags];
 }
 
+// MUST return a callback that removes the given tag from all type entries.
+// Returns an action to remove a model tag from all types.
 export function useDesignAppRemoveModelTagFromAllTypes(): ActionHookResult<[tagGuid: string, typeGuids: string[]]> {
   const [selectedModelTags, setSelectedModelTags, canSetSelectedModelTags] = useDesignAppSelectedModelTags();
   const action = useMemo(() => {
@@ -1995,12 +2122,15 @@ export function useDesignAppRemoveModelTagFromAllTypes(): ActionHookResult<[tagG
   return [action, canSetSelectedModelTags];
 }
 
+// Interface for transaction action callbacks including start, finalize, and abort.
 export interface TransactionActions {
   start: () => void;
   finalize: () => void;
   abort: () => void;
 }
 
+// MUST provide start, finalize, and abort transaction actions.
+// Returns the Design app transaction controller.
 export function useDesignAppTransaction(): [TransactionActions | undefined, boolean] {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2016,11 +2146,15 @@ export function useDesignAppTransaction(): [TransactionActions | undefined, bool
   return [actions, canTransact];
 }
 
+// MUST wrap children with the Design app transaction provider.
+// Provider component that establishes Design app transaction context.
 export const DesignAppTransactionProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [transaction] = useDesignAppTransaction();
   return <TransactionProvider transaction={transaction}>{children}</TransactionProvider>;
 };
 
+// MUST return a callback that undoes the most recent transaction.
+// Returns an action to undo the last Design app transaction.
 export function useDesignAppUndo(): ActionHookResult<[]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2031,6 +2165,8 @@ export function useDesignAppUndo(): ActionHookResult<[]> {
   return [action, !!store];
 }
 
+// MUST return a callback that redoes the most recently undone transaction.
+// Returns an action to redo the last undone Design app transaction.
 export function useDesignAppRedo(): ActionHookResult<[]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2041,6 +2177,8 @@ export function useDesignAppRedo(): ActionHookResult<[]> {
   return [action, !!store];
 }
 
+// MUST return a callback that removes all selected pieces and connections.
+// Returns an action to delete all currently selected items.
 export function useDesignAppDeleteSelected(): ActionHookResult<[]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2051,6 +2189,8 @@ export function useDesignAppDeleteSelected(): ActionHookResult<[]> {
   return [action, !!store];
 }
 
+// MUST return a callback that adds a piece with the given type GUID.
+// Returns an action to add a piece to the design.
 export function useDesignAppAddPiece(): ActionHookResult<[piece: Piece]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2061,6 +2201,8 @@ export function useDesignAppAddPiece(): ActionHookResult<[piece: Piece]> {
   return [action, !!store];
 }
 
+// MUST return a callback that adds pieces with the given type GUIDs.
+// Returns an action to add multiple pieces to the design.
 export function useDesignAppAddPieces(): ActionHookResult<[pieces: Piece[]]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2071,6 +2213,8 @@ export function useDesignAppAddPieces(): ActionHookResult<[pieces: Piece[]]> {
   return [action, !!store];
 }
 
+// MUST return a callback that removes the piece with the given GUID.
+// Returns an action to remove a piece from the design.
 export function useDesignAppRemovePiece(): ActionHookResult<[pieceGuid: Guid]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2081,6 +2225,8 @@ export function useDesignAppRemovePiece(): ActionHookResult<[pieceGuid: Guid]> {
   return [action, !!store];
 }
 
+// MUST return a callback that removes the pieces with the given GUIDs.
+// Returns an action to remove multiple pieces from the design.
 export function useDesignAppRemovePieces(): ActionHookResult<[pieceGuids: Guid[]]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2091,6 +2237,8 @@ export function useDesignAppRemovePieces(): ActionHookResult<[pieceGuids: Guid[]
   return [action, !!store];
 }
 
+// MUST return a callback that updates the piece with the given GUID and partial data.
+// Returns an action to update a piece in the design.
 export function useDesignAppUpdatePiece(): ActionHookResult<[pieceGuid: Guid, diff: PieceDiff]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2101,6 +2249,8 @@ export function useDesignAppUpdatePiece(): ActionHookResult<[pieceGuid: Guid, di
   return [action, !!store];
 }
 
+// MUST return a callback that updates the pieces with the given GUID-data pairs.
+// Returns an action to update multiple pieces in the design.
 export function useDesignAppUpdatePieces(): ActionHookResult<[updates: { id: Guid; diff: PieceDiff }[]]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2116,6 +2266,8 @@ export function useDesignAppUpdatePieces(): ActionHookResult<[updates: { id: Gui
   return [action, !!store];
 }
 
+// MUST return a callback that adds a connection with the given data.
+// Returns an action to add a connection to the design.
 export function useDesignAppAddConnection(): ActionHookResult<[connection: Connection]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2126,6 +2278,8 @@ export function useDesignAppAddConnection(): ActionHookResult<[connection: Conne
   return [action, !!store];
 }
 
+// MUST return a callback that adds connections with the given data array.
+// Returns an action to add multiple connections to the design.
 export function useDesignAppAddConnections(): ActionHookResult<[connections: Connection[]]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2136,6 +2290,8 @@ export function useDesignAppAddConnections(): ActionHookResult<[connections: Con
   return [action, !!store];
 }
 
+// MUST return a callback that removes the connection with the given GUID.
+// Returns an action to remove a connection from the design.
 export function useDesignAppRemoveConnection(): ActionHookResult<[connectionGuid: Guid]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2146,6 +2302,8 @@ export function useDesignAppRemoveConnection(): ActionHookResult<[connectionGuid
   return [action, !!store];
 }
 
+// MUST return a callback that removes the connections with the given GUIDs.
+// Returns an action to remove multiple connections from the design.
 export function useDesignAppRemoveConnections(): ActionHookResult<[connectionGuids: Guid[]]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2156,6 +2314,8 @@ export function useDesignAppRemoveConnections(): ActionHookResult<[connectionGui
   return [action, !!store];
 }
 
+// MUST return a callback that updates the connection with the given GUID and partial data.
+// Returns an action to update a connection in the design.
 export function useDesignAppUpdateConnection(): ActionHookResult<[connectionGuid: Guid, diff: ConnectionDiff]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2166,6 +2326,8 @@ export function useDesignAppUpdateConnection(): ActionHookResult<[connectionGuid
   return [action, !!store];
 }
 
+// MUST return a callback that updates the connections with the given GUID-data pairs.
+// Returns an action to update multiple connections in the design.
 export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id: Guid; diff: ConnectionDiff }[]]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2181,6 +2343,8 @@ export function useDesignAppUpdateConnections(): ActionHookResult<[updates: { id
   return [action, !!store];
 }
 
+// MUST return a callback that clusters the given piece GUIDs.
+// Returns an action to cluster selected pieces into a new design.
 export function useDesignAppClusterPieces(): ActionHookResult<[pieceGuids: Guid[]]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2191,6 +2355,8 @@ export function useDesignAppClusterPieces(): ActionHookResult<[pieceGuids: Guid[
   return [action, !!store];
 }
 
+// MUST return a callback that expands the design with the given piece GUID.
+// Returns an action to expand a nested design into inline pieces.
 export function useDesignAppExpandDesign(): ActionHookResult<[designGuid: Guid]> {
   const store = useDesignStore() as DesignStore | null;
   const getOrigin = useOrigin();
@@ -2258,6 +2424,8 @@ const EMPTY_COMMANDS = {
   removeModelTagFromAllTypes: () => { },
 } as any;
 
+// MUST expose all Design app commands through the store controller.
+// Returns the full Design app commands API for programmatic access.
 export function useDesignAppCommands(id?: DesignAppId) {
   const store = useDesignStore(undefined, id) as DesignStore | null;
   const actor = useSketchpadActorSafe();
@@ -2358,6 +2526,8 @@ export function useDesignAppCommands(id?: DesignAppId) {
   }, [store, actor, kitGuid, designGuid]);
 }
 
+// MUST observe Y.js map changes and dispatch corresponding XState events.
+// Synchronizes Y.js document changes to XState Design app state.
 export function useDesignAppYjsToXStateSync(id?: DesignAppId) {
   const actor = useSketchpadActorSafe();
   const kitScope = useKitScope();
@@ -2470,6 +2640,8 @@ function TransactionPiecesProviderInner({ store, children }: { store: DesignStor
   return <TransactionPiecesContext.Provider value={transactionData}>{children}</TransactionPiecesContext.Provider>;
 }
 
+// MUST compute and provide the set of piece GUIDs changed in the current transaction.
+// Provider that makes transaction-changed piece GUIDs available to children.
 export function TransactionPiecesProvider({ children }: { children: ReactNode }) {
   const store = useDesignStore(identitySelector) as DesignStore | null;
 
@@ -2480,11 +2652,15 @@ export function TransactionPiecesProvider({ children }: { children: ReactNode })
   return <TransactionPiecesProviderInner store={store}>{children}</TransactionPiecesProviderInner>;
 }
 
+// MUST check the transaction pieces context for the given GUID.
+// Returns whether a piece is changed in the current transaction.
 export function useIsDesignPieceChangedInTransaction(id: DesignAppId | undefined, pieceId: string): boolean {
   const { changedPieces } = useContext(TransactionPiecesContext);
   return changedPieces.has(pieceId);
 }
 
+// MUST check the hover state for the given piece GUID.
+// Returns whether a piece is currently hovered in the Design app.
 export function useDesignAppIsPieceHovered(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2563,6 +2739,8 @@ function HoverPiecesProviderInner({ store, children }: { store: DesignStore; chi
   return <HoverPiecesContext.Provider value={hoverData}>{children}</HoverPiecesContext.Provider>;
 }
 
+// MUST compute and provide the set of piece GUIDs that are transitively hovered.
+// Provider that makes transitively hovered piece GUIDs available to children.
 export function HoverPiecesProvider({ children }: { children: ReactNode }) {
   const store = useDesignStore(identitySelector) as DesignStore | null;
 
@@ -2573,22 +2751,30 @@ export function HoverPiecesProvider({ children }: { children: ReactNode }) {
   return <HoverPiecesProviderInner store={store}>{children}</HoverPiecesProviderInner>;
 }
 
+// MUST check the transitive hover pieces for the given GUID.
+// Returns whether a piece is transitively hovered via type or design hierarchy.
 export function useDesignAppIsPieceTransitiveHovered(id?: DesignAppId, pieceId?: string): boolean {
   const { transitivelyHoveredPieces } = useContext(HoverPiecesContext);
   if (!pieceId) return false;
   return transitivelyHoveredPieces.has(pieceId);
 }
 
+// MUST check the hover state for the given type GUID.
+// Returns whether a type is transitively hovered in the Design app.
 export function useDesignAppIsTypeTransitiveHovered(id: DesignAppId | undefined, typeId: string): boolean {
   const { transitivelyHoveredTypes } = useContext(HoverPiecesContext);
   return transitivelyHoveredTypes.has(typeId);
 }
 
+// MUST return DiffStatus from the design diff for the given piece GUID.
+// Returns the diff status of a piece for visual indication.
 export function useDesignAppPieceStatus(id: DesignAppId | undefined, pieceId: string): DiffStatus {
   const { statusMap } = useContext(TransactionPiecesContext);
   return statusMap.get(pieceId) ?? DiffStatus.Unchanged;
 }
 
+// MUST check the selection state for the given piece GUID.
+// Returns whether a piece is currently selected in the Design app.
 export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2601,6 +2787,8 @@ export function useDesignAppIsPieceSelected(id?: DesignAppId, pieceId?: string):
   return selection?.pieces?.includes(pieceId) ?? false;
 }
 
+// MUST derive the color from selection, hover, diff status, and type mapping.
+// Returns the computed color for a piece based on its status.
 export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: string): { fill: string; stroke: string; opacity: number } {
   const isSelected = useDesignAppIsPieceSelected(id, pieceId);
   const isHovered = useDesignAppIsPieceTransitiveHovered(id, pieceId);
@@ -2658,6 +2846,8 @@ export function useDesignAppPieceColor(id: DesignAppId | undefined, pieceId: str
   return { fill, stroke, opacity };
 }
 
+// MUST check the hover state for the given connection GUID.
+// Returns whether a connection is currently hovered in the Design app.
 export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2670,6 +2860,8 @@ export function useDesignAppIsConnectionHovered(id?: DesignAppId, connectionId?:
   return hover?.connections?.includes(connectionId) ?? false;
 }
 
+// MUST check the selection state for the given connection GUID.
+// Returns whether a connection is currently selected in the Design app.
 export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2682,6 +2874,8 @@ export function useDesignAppIsConnectionSelected(id?: DesignAppId, connectionId?
   return selection?.connections?.includes(connectionId) ?? false;
 }
 
+// MUST check the hover state for the given piece-connector port.
+// Returns whether a port is currently hovered in the Design app.
 export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: string, connectorId: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2696,6 +2890,8 @@ export function useDesignAppIsPortHovered(id: DesignAppId | undefined, pieceId: 
 type SelectedConnector = { piece: Guid; connector: Guid } | undefined;
 const EMPTY_CONNECTOR: SelectedConnector = undefined;
 
+// MUST return the currently selected connector from the selection state.
+// Returns the selected connector for the Design app.
 export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnector {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2709,6 +2905,8 @@ export function useDesignAppSelectedConnector(id?: DesignAppId): SelectedConnect
   return { piece: connector.piece, connector: connector.connector };
 }
 
+// MUST check the selection connector state for the given piece-connector pair.
+// Returns whether a specific piece port is currently selected.
 export function useDesignAppIsPiecePortSelected(pieceId: string, connectorId?: string): boolean {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -2750,11 +2948,15 @@ function getConnectionStatusFromTransactionStack(store: DesignStore | null, conn
   return DiffStatus.Unchanged;
 }
 
+// MUST return DiffStatus from the design diff for the given connection GUID.
+// Returns the diff status of a connection for visual indication.
 export function useDesignAppConnectionStatus(id: DesignAppId | undefined, connectionId: string): DiffStatus {
   const store = useDesignStore(identitySelector, id) as DesignStore | null;
   return useMemo(() => getConnectionStatusFromTransactionStack(store, connectionId), [store, connectionId]);
 }
 
+// MUST derive the color from selection, hover, and diff status.
+// Returns the computed color for a connection based on its status.
 export function useDesignAppConnectionColor(id: DesignAppId | undefined, connectionId: string): { fill: string; stroke: string; opacity: number } {
   const isSelected = useDesignAppIsConnectionSelected(id, connectionId);
   const isHovered = useDesignAppIsConnectionHovered(id, connectionId);
@@ -2802,6 +3004,8 @@ export function useDesignAppConnectionColor(id: DesignAppId | undefined, connect
   return { fill, stroke, opacity };
 }
 
+// MUST look up the piece metadata for the given GUID and return its center.
+// Returns the center position of a piece on the canvas.
 export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Guid): Coord | undefined {
   const scope = useDesignAppScope();
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
@@ -2811,6 +3015,8 @@ export function useDesignAppPieceCenter(id?: DesignAppId, pieceId?: Guid): Coord
   return finalPieceId ? metadata.get(finalPieceId)?.center : undefined;
 }
 
+// MUST look up the piece metadata for the given GUID and return its plane.
+// Returns the plane orientation of a piece.
 export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane | undefined {
   const scope = useDesignAppScope();
   const appId = id ?? (scope ? JSON.parse(scope.id) : undefined);
@@ -2823,7 +3029,10 @@ export function useDesignAppPiecePlane(id?: DesignAppId, pieceId?: Guid): Plane 
 // #endregion 🔖Store
 
 // #region 🔖Footer
+// Footer MUST render dynamic Design app footer items showing selection and transaction state.
 
+// MUST register and unregister footer items based on selection and transaction state.
+// Footer component that renders dynamic Design app footer status items.
 export const DesignAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -2939,45 +3148,55 @@ export const DesignAppFooter: FC = () => {
 // #endregion 🔖Footer
 
 // #region 🔖Tools
+// Tools MUST define all Design app tool configurations for selection, lasso, and hand modes.
 
+// Tool configuration for normal selection mode.
 export const SelectionNormalTool: Tool<DesignAppState> = {
   id: ToolKind.SELECTION_NORMAL,
   icon: <SelectToolIcon className="size-tiny" />,
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
+// Tool configuration for additive selection mode.
 export const SelectionAdditiveTool: Tool<DesignAppState> = {
   id: ToolKind.SELECTION_ADDITIVE,
   icon: <AddIcon className="size-tiny" />,
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
+// Tool configuration for subtractive selection mode.
 export const SelectionSubtractiveTool: Tool<DesignAppState> = {
   id: ToolKind.SELECTION_SUBTRACTIVE,
   icon: <RemoveIcon className="size-tiny" />,
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
+// Tool configuration for rectangular lasso selection mode.
 export const LassoRectangularTool: Tool<DesignAppState> = {
   id: ToolKind.LASSO_RECTANGULAR,
   icon: <DiagramIcon className="size-tiny" />,
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
+// Tool configuration for freeform lasso selection mode.
 export const LassoFreeformTool: Tool<DesignAppState> = {
   id: ToolKind.LASSO_FREEFORM,
   icon: <SceneIcon className="size-tiny" />,
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
+// Tool configuration for hand/pan mode.
 export const HandTool: Tool<DesignAppState> = {
   id: ToolKind.HAND,
   icon: <HandIcon className="size-tiny" />,
   render: (context: ToolRenderContext<DesignAppState>) => ({}),
 };
 
+// Array of all Design app tool configurations.
 export const DesignAppTools: Tool<DesignAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, LassoRectangularTool, LassoFreeformTool, HandTool];
 
+// MUST render toggle buttons for each selection sub-mode.
+// Settings component for the selection tool group with additive, subtractive, and intersect toggles.
 export const DesignSelectSettings: FC = () => {
   const [activeTool, setActiveTool] = useDesignAppActiveTool();
   const additiveLabel = useLabel("semio.sketchpad.app.design.tools.select.additive");
@@ -3017,6 +3236,8 @@ export const DesignSelectSettings: FC = () => {
   );
 };
 
+// MUST activate the hand tool on mount.
+// Settings component for the hand tool that activates hand mode.
 export const DesignHandSettings: FC = () => {
   const [activeTool, setActiveTool] = useDesignAppActiveTool();
 
@@ -3029,6 +3250,8 @@ export const DesignHandSettings: FC = () => {
   return null;
 };
 
+// MUST render toggle group for lasso sub-modes.
+// Settings component for the lasso tool with rectangular and freeform toggles.
 export const DesignLassoSettings: FC = () => {
   const [activeTool, setActiveTool] = useDesignAppActiveTool();
   const rectangularLabel = useLabel("semio.sketchpad.app.design.tools.lasso.rectangular");
@@ -3054,6 +3277,7 @@ export const DesignLassoSettings: FC = () => {
 // #region 🔖Panels
 
 // #region 🔖WindowLibrary
+// WindowLibrary MUST provide draggable window templates for adding scene, diagram, and table windows.
 
 interface WindowTemplate {
   id: string;
@@ -3157,6 +3381,8 @@ const DraggableWindowItem: FC<DraggableWindowItemProps> = ({ template }) => {
   );
 };
 
+// MUST render categorized window templates for scene, diagram, and table types.
+// Panel component that renders the draggable window template library.
 export const WindowLibrary: FC = () => {
   const sceneTemplates = windowTemplates.filter((t) => t.windowTypeId === "scene");
   const diagramTemplates = windowTemplates.filter((t) => t.windowTypeId === "diagram");
@@ -3186,7 +3412,10 @@ export const WindowLibrary: FC = () => {
 // #endregion 🔖WindowLibrary
 
 // #region 🔖Details
+// Details MUST render the Design app detail panels for design, pieces, connections, and connector sections.
 
+// MUST render the design form fields within a detail panel section.
+// Detail section component for the currently open design.
 export const DesignSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();
   if (!isInDesignScope) return null;
@@ -3598,6 +3827,8 @@ const DesignSectionForm: FC = () => {
   );
 };
 
+// MUST render each piece with its type, name, and selection interactions.
+// Detail section component for the design pieces list.
 export const PiecesSection: FC = () => {
   const isInDesignScope = useIsInDesignScope();
   if (!isInDesignScope) return null;
@@ -4288,6 +4519,8 @@ const PiecesSectionForm: FC = () => {
   );
 };
 
+// MUST render each connection with its connected pieces and ports.
+// Detail section component for the design connections list.
 export const ConnectionsSection: FC<{
   connections: any[];
   isSingle: boolean;
@@ -4430,6 +4663,8 @@ const ConnectionsSectionForm: FC<{
   );
 };
 
+// MUST render the connector detail form for the selected port.
+// Detail section component for the currently selected connector.
 export const ConnectorSection: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pieceGuid, connectorGuid }) => {
   const isInDesignScope = useIsInDesignScope();
   if (!isInDesignScope) return null;
@@ -4527,6 +4762,7 @@ const ConnectorSectionForm: FC<{ pieceGuid: Guid; connectorGuid: Guid }> = ({ pi
 // #region 🔖Canvas
 
 // #region 🔖Hover Intent Context
+// Hover Intent Context MUST manage debounced hover state to prevent flickering during rapid mouse movement.
 
 interface HoverIntentContextValue {
   hoverClearTimeoutRef: React.MutableRefObject<NodeJS.Timeout | null>;
@@ -4592,6 +4828,7 @@ function usePieceRenderData(pieceGuid: string): PieceRenderData {
 }
 
 // #region 🔖Diagram
+// Diagram MUST render the interactive React Flow design diagram with nodes, edges, minimap, and controls.
 
 type ClusterMenuProps = {
   nodes: DiagramNode[];
@@ -5491,6 +5728,8 @@ const ConnectionConnectionLine: React.FC<ConnectionLineComponentProps> = (props:
   return <BaseEdge path={path} style={{ stroke: "gray" }} className="opacity-70" />;
 };
 
+// MUST render a circle at the given position with accent color when selected.
+// Custom minimap node component rendering a colored circle.
 export const MiniMapNode: React.FC<MiniMapNodeProps> = ({ x, y, selected }: MiniMapNodeProps) => {
   return <circle className={`${selected ? "fill-accent" : "fill-foreground"} transition-colors duration-200`} cx={x} cy={y} r="10" />;
 };
@@ -7183,6 +7422,7 @@ const DesignDiagram: FC<DesignDiagramProps> = ({ reactFlowInstanceRef }) => {
 // #endregion 🔖Diagram
 
 // #region 🔖Scene
+// Scene MUST render the Three.js 3D scene view of design pieces with selection and hover highlighting.
 
 const getComputedColor = (variable: string): string => getComputedStyle(document.documentElement).getPropertyValue(variable).trim();
 const applyHighlightToLoadedScene = (scene: THREE.Object3D, highlightThreeColor: THREE.Color | null, plasterColor: THREE.Color, plasterEdgeColor: THREE.Color): void => {
@@ -7836,6 +8076,9 @@ const DesignAppScene: FC = () => {
 
 // #endregion 🔖Canvas
 
+// #region 🔖Windows
+// Window components MUST wrap diagram and scene views with hover and transaction providers.
+// Props interface for the Design app root component.
 export interface AppProps { }
 
 const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => {
@@ -7864,9 +8107,12 @@ const SceneWindow = memo(() => {
 });
 SceneWindow.displayName = "SceneWindow";
 
+// #endregion 🔖Windows
+
 // #endregion Components
 
 // #region App
+// App MUST compose all Design app panels, canvas, toolbar, and footer into the main Design app layout.
 
 const renderCountRef = { current: 0 };
 
@@ -8568,6 +8814,7 @@ const App: FC<AppProps> = () => {
 };
 
 // #region 🔖Settings
+// Settings MUST render the Design app settings panel with theme, language, device, expertise, and mode toggles.
 
 const DesignSettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
@@ -8724,7 +8971,9 @@ const DesignApp: FC = () => {
 };
 
 // #region 🔖Config
+// Config MUST export the Design app configuration with route segments, panel definitions, and path matching.
 
+// Exported Design app configuration including routes, panels, and path matching.
 export const config: AppConfig = {
   id: "design",
   component: DesignApp,

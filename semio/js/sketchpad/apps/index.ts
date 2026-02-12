@@ -25,5 +25,11 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Exports
+// Re-exports of app plugin utilities and types from the shared module.
+// Exports MUST expose only the public API surface of the shared module.
+
 export { composePluginContributions, getAppPlugin, getAppPlugins, hasAppPlugin, registerAppPlugin } from "../shared";
 export type { AppMachineContribution, AppPlugin } from "../shared";
+
+// #endregion 🔖Exports

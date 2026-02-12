@@ -2,7 +2,7 @@
 
 // ⚙️semio/js/vite.config.ts
 
-// 2025 Ueli Saluz
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // #region 🔖License
 
@@ -25,6 +25,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Configuration
+// Vite build and test configuration for the js library.
+// Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
+
 import mdx from "@mdx-js/rollup";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
@@ -40,9 +44,15 @@ import topLevelAwait from "vite-plugin-top-level-await";
 import wasm from "vite-plugin-wasm";
 import { defineConfig } from "vitest/config";
 
+// Absolute file path of the current module.
+// Path MUST be derived from import.meta.url.
 const __filename = fileURLToPath(import.meta.url);
+// Absolute directory path of the current module.
+// Path MUST be derived from __filename.
 const __dirname = path.dirname(__filename);
 
+// Vite configuration with plugins, resolve aliases, and test settings.
+// Export MUST call defineConfig with the complete build configuration.
 export default defineConfig({
   publicDir: "public",
   plugins: [
@@ -115,3 +125,4 @@ export default defineConfig({
     },
   },
 });
+// #endregion 🔖Configuration

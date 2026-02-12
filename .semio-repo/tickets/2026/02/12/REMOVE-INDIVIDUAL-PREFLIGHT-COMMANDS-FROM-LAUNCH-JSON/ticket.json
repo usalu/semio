@@ -1,0 +1,149 @@
+{
+  "title": "Remove Individual Preflight Commands From Launch Json",
+  "status": "closed",
+  "prompt": "Remove all individual preflight launch configurations, keep only the general preflight",
+  "summary": "Removed all 16 individual preflight launch configurations, kept only the general preflight. Also removed the semio/assets section which only had a preflight entry.",
+  "goal": "AI-OPTIMIZED-REPO",
+  "started": "2026-02-12T23:35:00.766908305Z",
+  "finished": "2026-02-12T23:36:00.43220895Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-12 23:35:00",
+        "finished": "2026-02-12 23:36:00"
+      },
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Remove all individual preflight launch configurations, keep only the general preflight",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio/js/dev.ts",
+              "lines": {
+                "added": 69,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/dev.ts#Dev",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/js/dev.ts#Dev",
+              "lines": {
+                "added": 41,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "💻semio/js/dev.ts§npmCmd",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts§isWindows",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            }
+          ],
+          "renamed": [
+            {
+              "from": "💻semio/js/dev.ts§storybook",
+              "to": "💻semio/js/dev.ts#Dev§npmCmd",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "from": "💻semio/js/dev.ts§vite",
+              "to": "💻semio/js/dev.ts#Dev§storybook",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "💻semio/js/dev.ts#Dev§isWindows",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§npmCmd",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio/js/dev.ts#Dev§vite",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/dev.ts#Dev§isWindows",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -26,11 +26,20 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Test Push
+// Yak test push script. MUST push the package to the test Yak server.
+
 import { execSync } from "child_process";
 
+// Yak CLI executable path for Rhino 8.
+// MUST point to the installed Yak binary.
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
+// Yak package filename from CLI argument or default.
+// MUST resolve to a valid .yak package file.
 const packageFile = process.argv[2] || "semio-2.1.0-any-win.yak";
 
 execSync(`"${yak}" push --source https://test.yak.rhino3d.com ${packageFile}`, { stdio: "inherit" });
 
 console.log(`✅ Pushed ${packageFile} to test server`);
+
+// #endregion 🔖Test Push

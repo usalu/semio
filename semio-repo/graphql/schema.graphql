@@ -19,7 +19,6 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 # #endregion 🔖License
 
 # #region 🔖Specs
@@ -551,7 +550,16 @@ type Policy implements Node {
   name: String!
   description: String
   scopes: [String!]!
+  groups: [ViolationKindGroup!]!
   violationKinds: [ViolationKind!]!
+}
+
+type ViolationKindGroup {
+  name: String!
+  description: String!
+  scopes: [String!]!
+  groups: [ViolationKindGroup!]!
+  kinds: [ViolationKind!]!
 }
 
 type ViolationKind implements Node {

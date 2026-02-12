@@ -26,10 +26,17 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Schema Export
+// SQLite schema export script. MUST dump the database schema to a SQL file.
+
 import { execSync } from "child_process";
 import { join } from "path";
 
+// Path to the debug SQLite database.
+// MUST point to the engine debug build output.
 const dbPath = join(__dirname, "debug", "semio.db");
+// Path to the exported SQL schema file.
+// MUST resolve to the monorepo sqlite schema location.
 const outputPath = join(__dirname, "..", "..", "sqlite", "schema.sql");
 
 execSync(`sqlite3 ${dbPath} .schema > ${outputPath}`, {
@@ -38,3 +45,5 @@ execSync(`sqlite3 ${dbPath} .schema > ${outputPath}`, {
 });
 
 console.log("✅ SQLite schema exported");
+
+// #endregion 🔖Schema Export

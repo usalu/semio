@@ -27,9 +27,14 @@
 
 # endregion Header
 
+# region 🔖Build
+# Grasshopper XML parsing and JSON export MUST extract components and groups.
+
 import json
 import xml.etree.ElementTree as ET
 
+# Extracts parameter properties from an XML element
+# Callers MUST provide a valid XML element with child items
 def extract_param_props(param_element):
     props = {}
     for item in param_element.findall("./items/item"):
@@ -44,6 +49,8 @@ def extract_param_props(param_element):
     props["kind"] = props.get("name", "unknown")
     return props
 
+# Checks whether a string value is numeric
+# Callers MUST provide a string or None value
 def is_numeric(s):
     try:
         float(s)
@@ -51,6 +58,8 @@ def is_numeric(s):
     except (TypeError, ValueError):
         return False
 
+# Retrieves the Y coordinate of the pivot point from a container chunk
+# Callers MUST provide a valid container XML chunk
 def get_pivot_y(container_chunk):
     attributes_chunk = container_chunk.find("./chunks/chunk[@name='Attributes']")
     if attributes_chunk is not None:
@@ -64,6 +73,8 @@ def get_pivot_y(container_chunk):
                         pass
     return float("inf")
 
+# Parses a Grasshopper XML file to extract components and groups
+# Callers MUST provide a valid path to a .ghx XML file
 def parse_components_and_groups_xml(xml_file_path):
     tree = ET.parse(xml_file_path)
     root = tree.getroot()
@@ -252,3 +263,5 @@ extracted_data = parse_components_and_groups_xml(xml_file)
 json_output = json.dumps(extracted_data, indent=4)
 with open(f"assets/grasshopper/{definition}.json", "w") as f:
     json.dump(extracted_data, f, indent=4)
+
+# endregion 🔖Build

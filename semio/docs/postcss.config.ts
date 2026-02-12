@@ -2,7 +2,7 @@
 
 // ⚙️semio/docs/postcss.config.ts
 
-// 2025 Ueli Saluz
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // #region 🔖License
 
@@ -24,12 +24,22 @@
 // #endregion 🔖Specs
 
 // #endregion 🔖Header
+
+// #region 🔖Configuration
+// PostCSS plugin configuration for the docs application.
+// Configuration MUST use the @tailwindcss/postcss plugin.
+
 import { Config } from "postcss-load-config";
 
+// PostCSS configuration with the Tailwind CSS PostCSS plugin.
+// Config MUST include the @tailwindcss/postcss plugin.
 const config: Config = {
   plugins: {
     "@tailwindcss/postcss": {},
   },
 };
 
+// Default export of the PostCSS configuration.
+// Export MUST be the config object.
 export default config;
+// #endregion 🔖Configuration

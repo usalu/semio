@@ -25,16 +25,29 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Dev
+// Spawns parallel sketchpad and storybook dev servers.
+// MUST kill both child processes on SIGINT and SIGTERM.
+
 import { spawn } from "child_process";
 
+// Whether the current platform is Windows.
+// MUST be checked before spawning npm commands.
 const isWindows = process.platform === "win32";
+
+// Platform-specific npm command name.
+// MUST use .cmd extension on Windows.
 const npmCmd = isWindows ? "npm.cmd" : "npm";
 
+// Spawned sketchpad dev server process.
+// MUST inherit stdio for live output.
 const vite = spawn(npmCmd, ["run", "dev:sketchpad"], {
   stdio: "inherit",
   shell: true,
 });
 
+// Spawned storybook dev server process.
+// MUST inherit stdio for live output.
 const storybook = spawn(npmCmd, ["run", "dev:storybook"], {
   stdio: "inherit",
   shell: true,
@@ -51,3 +64,5 @@ process.on("SIGTERM", () => {
   storybook.kill();
   process.exit();
 });
+
+// #endregion 🔖Dev

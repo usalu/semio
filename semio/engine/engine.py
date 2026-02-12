@@ -26,23 +26,9 @@
 
 # endregion Header
 
-from __future__ import annotations
-
-# region TODOs
-# TODO: Make loguru work on extra uvicorn engine process.
-# TODO: Replace prototype healing with one that makes more for every single property.
-# TODO: Try closest embedding instead of smallest Levenshtein distance.
-# TODO: Automatic derive from Id model.
-# TODO: Automatic emptying.
-# TODO: Automatic updating based on props.
-# TODO: Check how to automate docstring duplication, table=True and PLURAL and __tablename__.
-# TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-# TODO: Proper mechanism of nullable fields.
-# TODO: Generalize to non-zip kits.
-# TODO: Think of using memory sqlite for caching.
-# TODO: Get rid of id_ because of bug https://github.com/graphql-python/graphene-sqlalchemy/issues/412
-# endregion TODOs
 # region Imports
+# Imports MUST include all dependencies for store, assistant, GraphQL, REST, MCP, and engine modules.
+from __future__ import annotations
 import abc
 import argparse
 import contextlib
@@ -170,6 +156,7 @@ from semio import (
 # endregion Imports
 
 # region Store
+# Store MUST provide the data access layer for kit operations via code-based routing.
 
 codeGrammar = (
     """
@@ -183,6 +170,8 @@ codeGrammar = (
 
 codeParser = lark.Lark(codeGrammar, start="code")
 
+# Lark transformer that builds operation dicts from parsed code grammar trees.
+# Callers MUST pass a valid parse tree from codeParser.
 class OperationBuilder(lark.Transformer):
     def code(self, children):
         if len(children) == 0:
@@ -213,6 +202,8 @@ class OperationBuilder(lark.Transformer):
             "typeVariant": (decode(children[1].value) if len(children) == 2 else ""),
         }
 
+# Enumeration of supported store backend kinds.
+# Callers MUST use one of the defined store kinds when selecting a backend.
 class StoreKind(enum.Enum):
     """🏪The kind of the store."""
 
@@ -220,6 +211,8 @@ class StoreKind(enum.Enum):
     REST = "rest"
     GRAPHQL = "graphql"
 
+# Enumeration of CRUD command kinds for store operations.
+# Callers MUST use a valid CommandKind when calling Store.execute.
 class CommandKind(enum.Enum):
     """🔧 The kind of the command."""
 
@@ -228,6 +221,8 @@ class CommandKind(enum.Enum):
     UPDATE = "update"
     DELETE = "delete"
 
+# Abstract base class for all store backends.
+# Subclasses MUST implement initialize, get, put, update, and delete methods.
 class Store(abc.ABC):
     uri: str
 
@@ -276,6 +271,8 @@ class Store(abc.ABC):
         """🗑 Delete an entity from the store."""
         pass
 
+# Abstract database-backed store using SQLAlchemy engine and session.
+# Subclasses MUST implement the fromUri classmethod to construct from a URI.
 class DatabaseStore(Store, abc.ABC):
     engine: sqlalchemy.engine.Engine
 
@@ -552,6 +549,8 @@ class DatabaseStore(Store, abc.ABC):
             case _:
                 raise FeatureNotYetSupported()
 
+# Enumeration of SSL modes for database connections.
+# Callers MUST select the appropriate SSL mode for the target database security policy.
 class SSLMode(enum.Enum):
     """🔒 The security level of the session"""
 
@@ -562,11 +561,15 @@ class SSLMode(enum.Enum):
     VERIFY_CA = "verify-ca"
     VERIFY_FULL = "verify-full"
 
+# Returns the local cache directory path for a remote kit URI.
+# Callers MUST provide a valid remote URI string.
 def cacheDir(remoteUri: str) -> str:
     cacheDir = os.path.expanduser("~/.semio/cache")
     encodedUri = encode(remoteUri)
     return os.path.join(cacheDir, encodedUri)
 
+# Downloads and extracts a remote kit zip into the local cache directory.
+# Callers MUST provide a URI starting with http and ending with .zip.
 def cache(remoteUri: str) -> str:
     """📦Cache a remote kit and delete the existing cache if it was already cached."""
     if not (remoteUri.startswith("http") and remoteUri.endswith(".zip")):
@@ -602,6 +605,8 @@ def cache(remoteUri: str) -> str:
 
     return path
 
+# SQLite-backed store that persists kit data to a local .semio database file.
+# Callers MUST use fromUri to construct instances with a valid local path.
 class SqliteStore(DatabaseStore):
     path: pathlib.Path
 
@@ -649,6 +654,8 @@ class SqliteStore(DatabaseStore):
     def postDeleteKit(self: "SqliteStore") -> None:
         os.kill(os.getpid(), signal.SIGTERM)
 
+# PostgreSQL-backed store for remote database connections.
+# Callers MUST NOT use this class until PostgreSQL support is implemented.
 class PostgresStore(DatabaseStore):
     @classmethod
     def fromUri(cls, uri: str):
@@ -660,6 +667,8 @@ class PostgresStore(DatabaseStore):
         sqlmodel.SQLModel.metadata.create_all(self.engine)
 
 @functools.lru_cache
+# Resolves a URI to the appropriate cached store instance.
+# Callers MUST provide either an absolute local path or an http URL.
 def StoreFactory(uri: str) -> Store:
     """🏭 Get a store from the uri. This store doesn't need to exist yet as long as it can be created."""
     if os.path.isabs(uri):
@@ -673,22 +682,30 @@ def StoreFactory(uri: str) -> Store:
         raise RemoteKitsNotYetSupported(uri)
     raise LocalKitUriIsNotAbsolute(uri)
 
+# Parses a code string into a store instance and operation dict.
+# Callers MUST provide a valid code string matching the code grammar.
 def storeAndOperationFromCode(code: str) -> tuple[Store, dict]:
     codeTree = codeParser.parse(code)
     operation = OperationBuilder().transform(codeTree)
     store = StoreFactory(operation["kitUri"])
     return store, operation
 
+# Retrieves an entity from the store identified by the code string.
+# Callers MUST provide a valid code string with an encoded kit URI.
 def get(code: str, cache=False) -> typing.Any:
     """🔍 Get an entity from the store."""
     store, operation = storeAndOperationFromCode(code)
     return store.get(operation)
 
+# Creates or replaces an entity in the store identified by the code string.
+# Callers MUST provide a valid code string and matching input data.
 def put(code: str, input: str) -> typing.Any:
     """📥 Put an entity in the store."""
     store, operation = storeAndOperationFromCode(code)
     return store.put(operation, input)
 
+# Removes an entity from the store identified by the code string.
+# Callers MUST provide a valid code string referencing an existing entity.
 def delete(code: str) -> typing.Any:
     """🗑 Delete an entity from the store."""
     store, operation = storeAndOperationFromCode(code)
@@ -697,15 +714,22 @@ def delete(code: str) -> typing.Any:
 # endregion Store
 
 # region Assistant
+# Assistant MUST provide AI-powered design prediction using OpenAI structured outputs.
 
+# Sanitizes a context string for use in AI prompts by replacing delimiters.
+# Callers MUST pass a string that will be embedded in a prompt template.
 def encodeForPrompt(context: str):
     return context.replace(";", ",").replace("\n", " ")
 
+# Substitutes an empty context string with the provided default value.
+# Callers MUST provide a non-None default string.
 def replaceDefault(context: str, default: str):
     if context == "":
         return context.replace("", default)
     return context
 
+# Encodes a TypeContext for prompt rendering by replacing empty values with defaults.
+# Callers MUST provide a valid TypeContext with populated connectors.
 def encodeType(type: TypeContext):
     typeClone = type.model_copy(deep=True)
     typeClone.variant = replaceDefault(typeClone.variant, "DEFAULT")
@@ -719,6 +743,8 @@ def encodeType(type: TypeContext):
 
     return typeClone
 
+# Decodes a raw AI response dict into a DesignPrediction model.
+# Callers MUST provide a dict with pieces and connections arrays.
 def decodeDesign(design: dict):
     decodedDesign = {
         "pieces": [
@@ -782,6 +808,7 @@ def decodeDesign(design: dict):
     return DesignPrediction.parse(decodedDesign)
 
 # TODO: Replace prototype healing with one that makes more for every single property.
+# Callers MUST provide a design with pieces referencing types available in the types list.
 def healDesign(design: DesignPrediction, types: list[TypeContext]):
     """🩺 Heal a design by replacing missing type variants with the first variant."""
     designClone = design.model_copy(deep=True)
@@ -1039,6 +1066,8 @@ designResponseFormat = json.loads(
 }"""
 )
 
+# Generates a design prediction by calling the OpenAI API with kit-of-parts context.
+# Callers MUST ensure the openaiClient is initialized before calling.
 def predictDesign(
     description: str, types: list[TypeContext], design: DesignInput | None = None
 ) -> DesignPrediction:
@@ -1144,6 +1173,7 @@ def predictDesign(
 # endregion Assistant
 
 # region Graphql
+# Graphql MUST map semio domain types to Graphene schema nodes for query and mutation.
 
 GRAPHQLTYPES = {
     "str": graphene.NonNull(graphene.String),
@@ -1252,6 +1282,8 @@ GRAPHQLTYPES = {
     "Kit": graphene.NonNull(lambda: KitNode),
 }
 
+# GraphQL root query type exposing kit retrieval by URI.
+# Callers MUST provide a valid URI when resolving kit queries.
 class Query(graphene.ObjectType):
     node = RelayNode.Field()
     kit = graphene.Field(KitNode, uri=graphene.String(required=True))
@@ -1259,6 +1291,8 @@ class Query(graphene.ObjectType):
     def resolve_kit(self, info, uri):
         return get(encode(uri))
 
+# GraphQL root mutation type exposing kit creation.
+# Callers MUST provide a valid KitInput when creating kits.
 class Mutation(graphene.ObjectType):
     createKit = graphene.Field(KitNode, kit=KitInputNode(required=True))
 
@@ -1270,10 +1304,13 @@ graphqlSchema = graphene.Schema(
 # endregion Graphql
 
 # region Rest
+# Rest MUST expose kit, type, design, and assistant endpoints via FastAPI.
 
 rest = fastapi.FastAPI(max_request_body_size=MAX_REQUEST_BODY_SIZE)
 
 @rest.get("/kits/{encodedKitUri}")
+# Retrieves a kit by its encoded URI path.
+# Callers MUST provide a valid encoded kit URI in the URL path.
 async def kit(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
@@ -1289,6 +1326,8 @@ async def kit(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 @rest.put("/kits/{encodedKitUri}")
+# Creates a new kit at the specified encoded URI.
+# Callers MUST provide a valid KitInput body and encoded URI.
 async def create_kit(
     request: fastapi.Request,
     input: KitInput,
@@ -1306,6 +1345,8 @@ async def create_kit(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 @rest.delete("/kits/{encodedKitUri}")
+# Deletes an existing kit at the specified encoded URI.
+# Callers MUST provide a valid encoded URI for an existing kit.
 async def delete_kit(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
@@ -1322,6 +1363,8 @@ async def delete_kit(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 @rest.put("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
+# Creates or replaces a type in a kit by encoded URI and type identifier.
+# Callers MUST provide a valid TypeInput body with matching name and variant.
 async def put_type(
     request: fastapi.Request,
     input: TypeInput,
@@ -1340,6 +1383,8 @@ async def put_type(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 @rest.delete("/kits/{encodedKitUri}/types/{encodedTypeNameAndVariant}")
+# Deletes a type from a kit by encoded URI and type identifier.
+# Callers MUST provide a valid encoded URI and type name with variant.
 async def delete_type(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
@@ -1357,6 +1402,8 @@ async def delete_type(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 @rest.put("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")
+# Creates or replaces a design in a kit by encoded URI and design identifier.
+# Callers MUST provide a valid DesignInput body with matching name, variant, and view.
 async def put_design(
     request: fastapi.Request,
     input: DesignInput,
@@ -1375,6 +1422,8 @@ async def put_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 @rest.delete("/kits/{encodedKitUri}/designs/{encodedDesignNameAndVariantAndView}")
+# Deletes a design from a kit by encoded URI and design identifier.
+# Callers MUST provide a valid encoded URI and design name with variant and view.
 async def delete_design(
     request: fastapi.Request,
     encodedKitUri: ENCODED_PATH,
@@ -1392,6 +1441,8 @@ async def delete_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 @rest.get("/assistant/predictDesign")
+# Predicts a design via the assistant based on a description and available types.
+# Callers MUST provide a description and at least one TypeContext in the request body.
 async def predict_design(
     request: fastapi.Request,
     description: str = fastapi.Body(...),
@@ -1409,6 +1460,8 @@ async def predict_design(
     return fastapi.Response(content=str(error), status_code=statusCode)
 
 @rest.post("/prepare/kit")
+# Validates and returns a KitContext from the provided KitInput body.
+# Callers MUST provide a valid KitInput in the request body.
 async def prepare_kit(
     request: fastapi.Request, kit: KitInput = fastapi.Body(...)
 ) -> KitContext:
@@ -1422,6 +1475,8 @@ async def prepare_kit(
         error = e
     return fastapi.Response(content=str(error), status_code=statusCode)
 
+# JSON schema generator that strips Context suffixes from type references.
+# Callers MUST use this generator when exporting context model schemas.
 class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
@@ -1430,6 +1485,8 @@ class ContextGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeKeys(json_schema, lambda x: x.removesuffix("Context"))
         return json_schema
 
+# JSON schema generator that strips Output suffixes from type references.
+# Callers MUST use this generator when exporting output model schemas.
 class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
@@ -1438,6 +1495,8 @@ class OutputGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeKeys(json_schema, lambda x: x.removesuffix("Output"))
         return json_schema
 
+# JSON schema generator that strips Prediction suffixes from type references.
+# Callers MUST use this generator when exporting prediction model schemas.
 class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
     def generate(self, schema, mode="validation"):
         json_schema = super().generate(schema, mode=mode)
@@ -1446,6 +1505,8 @@ class PredictionGenerateJsonSchema(pydantic.json_schema.GenerateJsonSchema):
         changeKeys(json_schema, lambda x: x.removesuffix("Prediction"))
         return json_schema
 
+# Generates a custom OpenAPI schema with /api path prefix and cleaned type names.
+# Callers MUST NOT call this directly; it is assigned to rest.openapi.
 def custom_openapi():
     if rest.openapi_schema:
         return rest.openapi_schema
@@ -1472,10 +1533,13 @@ rest.openapi = custom_openapi
 # endregion Rest
 
 # region Mcp
+# Mcp MUST expose kit, type, design, validation, and diff tools via Model Context Protocol.
 
 mcp = FastMCP("semio", stateless_http=True, json_response=True)
 
 @mcp.tool()
+# Retrieves a kit from the store by URI via MCP.
+# Callers MUST provide a valid file path or URL as the URI.
 def get_kit(uri: str) -> dict:
     """Get a kit from a URI. The URI can be a file path or a URL."""
     try:
@@ -1485,6 +1549,8 @@ def get_kit(uri: str) -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Creates or updates a kit at the given URI via MCP.
+# Callers MUST provide a valid URI and a dict matching KitInput schema.
 def put_kit(uri: str, kit: dict) -> dict:
     """Put a kit at a URI. Creates or updates the kit."""
     try:
@@ -1495,6 +1561,8 @@ def put_kit(uri: str, kit: dict) -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Deletes an existing kit at the given URI via MCP.
+# Callers MUST provide a URI referencing an existing kit.
 def mcp_delete_kit(uri: str) -> dict:
     """Delete a kit at a URI."""
     try:
@@ -1504,6 +1572,8 @@ def mcp_delete_kit(uri: str) -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Retrieves a type from a kit by name and optional variant via MCP.
+# Callers MUST provide a valid kit URI and type name.
 def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
     """Get a type from a kit by name and variant."""
     try:
@@ -1516,6 +1586,8 @@ def get_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Creates or replaces a type in a kit via MCP.
+# Callers MUST provide a valid URI, name, variant, and TypeInput-compatible dict.
 def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
     """Put a type in a kit."""
     try:
@@ -1529,6 +1601,8 @@ def put_type_in_kit(uri: str, name: str, variant: str, type_data: dict) -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Deletes a type from a kit by name and optional variant via MCP.
+# Callers MUST provide a valid kit URI and existing type name.
 def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
     """Delete a type from a kit."""
     try:
@@ -1541,6 +1615,8 @@ def delete_type_from_kit(uri: str, name: str, variant: str = "") -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Retrieves a design from a kit by name, variant, and view via MCP.
+# Callers MUST provide a valid kit URI and design name.
 def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") -> dict:
     """Get a design from a kit by name, variant, and view."""
     try:
@@ -1556,6 +1632,8 @@ def get_design_from_kit(uri: str, name: str, variant: str = "", view: str = "") 
         return {"error": str(e)}
 
 @mcp.tool()
+# Creates or replaces a design in a kit via MCP.
+# Callers MUST provide a valid URI, name, variant, view, and DesignInput-compatible dict.
 def put_design_in_kit(
     uri: str, name: str, variant: str, view: str, design_data: dict
 ) -> dict:
@@ -1574,6 +1652,8 @@ def put_design_in_kit(
         return {"error": str(e)}
 
 @mcp.tool()
+# Deletes a design from a kit by name, variant, and view via MCP.
+# Callers MUST provide a valid kit URI and existing design name.
 def delete_design_from_kit(
     uri: str, name: str, variant: str = "", view: str = ""
 ) -> dict:
@@ -1591,6 +1671,8 @@ def delete_design_from_kit(
         return {"error": str(e)}
 
 @mcp.tool()
+# Validates a kit dict and returns any structural or semantic problems via MCP.
+# Callers MUST provide a dict matching the Kit schema.
 def validate_kit(kit: dict) -> dict:
     """Validate a kit and return any validation problems."""
     try:
@@ -1602,6 +1684,8 @@ def validate_kit(kit: dict) -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Flattens a design by computing absolute planes for all pieces via MCP.
+# Callers MUST provide a valid kit dict and an existing design GUID.
 def flatten_design(kit: dict, design_guid: str) -> dict:
     """Flatten a design by computing absolute planes for all pieces."""
     try:
@@ -1610,6 +1694,8 @@ def flatten_design(kit: dict, design_guid: str) -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Computes the diff between two kit states via MCP.
+# Callers MUST provide two valid kit dicts for comparison.
 def get_kit_diff(before: dict, after: dict) -> dict:
     """Get the diff between two kit states."""
     try:
@@ -1618,6 +1704,8 @@ def get_kit_diff(before: dict, after: dict) -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Applies a previously computed diff to a base kit via MCP.
+# Callers MUST provide a valid base kit dict and a compatible diff dict.
 def apply_kit_diff(base: dict, diff: dict) -> dict:
     """Apply a diff to a kit."""
     try:
@@ -1626,6 +1714,8 @@ def apply_kit_diff(base: dict, diff: dict) -> dict:
         return {"error": str(e)}
 
 @mcp.tool()
+# Computes the inverse of a diff for undo operations via MCP.
+# Callers MUST provide the original kit dict and the applied diff dict.
 def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
     """Get the inverse of a diff (for undo operations)."""
     try:
@@ -1636,8 +1726,11 @@ def inverse_kit_diff(original: dict, applied_diff: dict) -> dict:
 # endregion Mcp
 
 # region Engine
+# Engine MUST mount REST, GraphQL, and MCP sub-applications and manage the server lifecycle.
 
 @contextlib.asynccontextmanager
+# Manages the MCP session lifecycle during engine startup and shutdown.
+# Callers MUST use this as the lifespan parameter for the Starlette application.
 async def engineLifespan(app):
     async with mcp.session_manager.run():
         yield
@@ -1653,6 +1746,8 @@ engine.mount(
 )
 engine.mount("/mcp", mcp.streamable_http_app())
 
+# Exports OpenAPI, JSON Schema, SQLite schema, and GraphQL schema files to disk.
+# Callers MUST run this from the engine directory with write access to output paths.
 def generateSchemas():
     if os.path.exists("temp"):
         for root, dirs, files in os.walk("temp", topdown=False):
@@ -1727,6 +1822,8 @@ def generateSchemas():
     with open("../../graphql/schema.graphql", "w", encoding="utf-8") as f:
         f.write(str(graphqlSchema))
 
+# Starts the uvicorn server hosting the engine application.
+# Callers MUST invoke this in a separate process to avoid blocking the UI.
 def start_engine():
     # TODO: Make loguru work on extra uvicorn engine process.
     logging.basicConfig(level=logging.INFO)
@@ -1739,6 +1836,8 @@ def start_engine():
         log_config=None,
     )
 
+# Terminates the running engine process and starts a new one.
+# Callers MUST ensure a PySide6 QApplication instance is running.
 def restart_engine():
     import PySide6.QtWidgets
 
@@ -1749,6 +1848,8 @@ def restart_engine():
     ui_instance.engine_process = multiprocessing.Process(target=start_engine)
     ui_instance.engine_process.start()
 
+# Main entry point that starts the engine with optional dev mode and system tray UI.
+# Callers MUST invoke this from the __main__ block or dev function.
 def run(dev_mode: bool | None = None):
     logger.debug("Starting engine")
     multiprocessing.freeze_support()
@@ -1814,9 +1915,13 @@ def run(dev_mode: bool | None = None):
 
     sys.exit(ui.exec())
 
+# Hook that runs before the dev server starts for custom pre-initialization.
+# Callers MUST NOT add blocking operations in this hook.
 def preDev():
     """Runs before dev()"""
 
+# Starts the engine in development mode with debugging enabled.
+# Callers MUST have debugpy available when using this entry point.
 def dev():
     run(dev_mode=True)
 

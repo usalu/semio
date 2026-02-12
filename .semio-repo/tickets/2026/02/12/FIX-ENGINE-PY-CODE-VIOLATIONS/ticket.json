@@ -1,0 +1,139 @@
+{
+  "title": "Fix Engine Py Code Violations",
+  "status": "closed",
+  "prompt": "Fix ALL 120 code violations in semio/engine/engine.py by adding section summaries and definition summaries with specs",
+  "summary": "Fixed all 121 code violations in semio/engine/engine.py to 0. Moved orphan from-future import inside Imports region. Added RFC2119-keyword summary comments for 7 sections (Imports, Store, Assistant, Graphql, Rest, Mcp, Engine). Added summary+spec comments for 57 definitions: 6 enums/abstract classes in Store, 7 functions in Store, 6 functions in Assistant, 2 classes in Graphql, 9 REST endpoint functions, 4 JSON schema generators plus custom_openapi, 14 MCP tool functions, 7 Engine lifecycle functions. All definition comments placed between decorators and def lines where applicable.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/530"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "started": "2026-02-12T00:17:51.800135855Z",
+  "finished": "2026-02-12T00:25:05.273525886Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-12 00:17:51",
+        "finished": "2026-02-12 00:25:05"
+      },
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix ALL 120 code violations in semio/engine/engine.py by adding section summaries and definition summaries with specs",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/engine",
+              "lines": {
+                "added": 105,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/engine/engine.py",
+              "lines": {
+                "added": 121,
+                "removed": 16
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": [
+            {
+              "path": "semio/engine/engine.py#TODOs",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/engine/engine.py#Mcp",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/engine.py#Engine",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/engine.py#Imports",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/engine.py#Store",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/engine.py#Assistant",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/engine.py#Graphql",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/engine.py#Rest",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/engine.py#TODOs",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

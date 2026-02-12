@@ -1,3 +1,29 @@
+// #region 🔖Header
+
+// 💻semio-repo/vscode/codegen/fragment-masking.ts
+
+// 2026 Ueli Saluz <ueli@semio-tech.de>
+
+// #region 🔖License
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
+
+// #endregion 🔖Header
 
 import { ResultOf, DocumentTypeDecoration, TypedDocumentNode } from '@graphql-typed-document-node/core';
 import { FragmentDefinitionNode } from 'graphql';
@@ -11,10 +37,8 @@ export type FragmentType<TDocumentType extends DocumentTypeDecoration<any, any>>
     ? TKey extends string
       ? { ' $fragmentRefs'?: { [key in TKey]: TType } }
       : never
-    : never
   : never;
 
-// return non-nullabFragment<TType>(
   _documentNode: DocumentTypeDecoration<TType, any>,
   fragmentType: FragmentType<DocumentTypeDecoration<TType, any>>
 ): TType;
@@ -39,7 +63,6 @@ export function useFragment<TType>(
   _documentNode: DocumentTypeDecoration<TType, any>,
   fragmentType: Array<FragmentType<DocumentTypeDecoration<TType, any>>> | null | undefined
 ): Array<TType> | null | undefined;
-// return readonly array function useFragment<TType>(
   _documentNode: DocumentTypeDecoration<TType, any>,
   fragmentType: ReadonlyArray<FragmentType<DocumentTypeDecoration<TType, any>>>
 ): ReadonlyArray<TType>;

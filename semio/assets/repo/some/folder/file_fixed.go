@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 💻semio/assets/repo/some/folder/file_fixed.go
+// [💻semio/assets/repo/some/folder/file_fixed.go](semiorepo://file/semio/assets/repo/some/folder/file_fixed.go)
 
 // 2025 Test User <test@test.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,10 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// A fixed Go module for testing.
 
 // #endregion 🔖Header
 
@@ -39,7 +34,7 @@ package fixed
 // FixedValue returns a constant integer.
 // FixedValue MUST return 2.
 func FixedValue() int {
-	return 2
+return 2
 }
 
 // #endregion 🔖Functions

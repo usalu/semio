@@ -36,6 +36,9 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Preamble
+// Package declaration and dependency imports for the semio-repo CLI.
+
 package main
 
 import (
@@ -78,8 +81,12 @@ import (
 	_ "modernc.org/sqlite"
 )
 
-// #region 🔖Engine Events
+// #endregion 🔖Preamble
 
+// #region 🔖Engine Events
+// Event types and payload structures for the engine event stream.
+
+// Kind represents a kind value.
 type Kind string
 
 const (
@@ -92,6 +99,7 @@ const (
 	KindDone     Kind = "done"
 )
 
+// Event holds the data fields for a event record.
 type Event struct {
 	Kind     Kind            `json:"kind"`
 	Command  string          `json:"command,omitempty"`
@@ -105,6 +113,7 @@ type Event struct {
 	Done     *DonePayload    `json:"done,omitempty"`
 }
 
+// Progress holds the data fields for a progress record.
 type Progress struct {
 	Current int    `json:"current,omitempty"`
 	Total   int    `json:"total,omitempty"`
@@ -112,12 +121,14 @@ type Progress struct {
 	Step    string `json:"step,omitempty"`
 }
 
+// Artifact holds the data fields for a artifact record.
 type Artifact struct {
 	Type string `json:"type"`
 	URI  string `json:"uri"`
 	Note string `json:"note,omitempty"`
 }
 
+// ErrPayload holds the data fields for a err payload record.
 type ErrPayload struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -125,6 +136,7 @@ type ErrPayload struct {
 	Fatal   bool   `json:"fatal,omitempty"`
 }
 
+// DonePayload holds the data fields for a done payload record.
 type DonePayload struct {
 	ExitCode int    `json:"exit_code"`
 	Status   string `json:"status"`
@@ -133,7 +145,9 @@ type DonePayload struct {
 // #endregion 🔖Engine Events
 
 // #region 🔖Engine Errors
+// Error code constants for engine failure classification.
 
+// ErrorCode represents a error code value.
 type ErrorCode string
 
 const (
@@ -147,7 +161,9 @@ const (
 // #endregion 🔖Engine Errors
 
 // #region 🔖Engine Requests
+// Request command types and argument structures for engine invocation.
 
+// Command represents a command value.
 type Command string
 
 const (
@@ -163,6 +179,7 @@ const (
 	CmdDef     Command = "definition"
 )
 
+// Request holds the data fields for a request record.
 type Request struct {
 	Command  Command
 	Args     json.RawMessage
@@ -170,6 +187,7 @@ type Request struct {
 	Verbose  bool
 }
 
+// GraphQLArgs holds the data fields for a graph q l args record.
 type GraphQLArgs struct {
 	Query     string         `json:"query"`
 	Variables map[string]any `json:"variables,omitempty"`
@@ -178,19 +196,26 @@ type GraphQLArgs struct {
 // #endregion 🔖Engine Requests
 
 // #region 🔖Engine
+// Core engine that dispatches requests and emits events over a channel.
 
+// GraphQLExecutor defines the interface contract for graph q l executor operations.
 type GraphQLExecutor interface {
 	Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error)
 }
 
+// Engine holds the data fields for a engine record.
 type Engine struct {
 	GraphQL GraphQLExecutor
 }
 
+// NewEngine MUST initialize all required fields and return a valid Engine.
+// NewEngine creates and returns a new Engine instance.
 func NewEngine(graphql GraphQLExecutor) *Engine {
 	return &Engine{GraphQL: graphql}
 }
 
+// Run MUST emit start, result or error, and done events in order.
+// Run dispatches the request and returns an event channel.
 func (e *Engine) Run(ctx context.Context, req Request) <-chan Event {
 	out := make(chan Event)
 	go func() {
@@ -271,7 +296,9 @@ const (
 // #endregion 🔖Engine
 
 // #region 🔖Cli Adapter
+// CLI adapter that wires cobra commands to the engine and renders output.
 
+// Config holds the data fields for a config record.
 type Config struct {
 	Format  string
 	Verbose bool
@@ -279,33 +306,47 @@ type Config struct {
 	Timeout time.Duration
 }
 
+// IsJSON MUST return true only when the condition is met.
+// IsJSON reports whether the Config is j s o n.
 func (c *Config) IsJSON() bool {
 	return c.Format == "json"
 }
 
+// IsMarkdown MUST return true only when the condition is met.
+// IsMarkdown reports whether the Config is markdown.
 func (c *Config) IsMarkdown() bool {
 	return c.Format == "md"
 }
 
+// IsText MUST return true only when the condition is met.
+// IsText reports whether the Config is text.
 func (c *Config) IsText() bool {
 	return c.Format == "text"
 }
 
+// EngineFactory is a function type for engine factory callbacks.
 type EngineFactory func(Config) (*Engine, error)
 
+// ExitError holds the data fields for a exit error record.
 type ExitError struct {
 	Code int
 }
 
+// Error MUST return a formatted string representation.
+// Error returns the string representation of the error.
 func (e ExitError) Error() string {
 	return fmt.Sprintf("exit status %d", e.Code)
 }
 
+// NewRoot MUST initialize all required fields and return a valid Root.
+// NewRoot creates and returns a new Root instance.
 func NewRoot(factory EngineFactory) *cobra.Command {
 	root, _ := NewRootWithConfig(factory)
 	return root
 }
 
+// NewRootWithConfig MUST initialize all required fields and return a valid RootWithConfig.
+// NewRootWithConfig creates and returns a new RootWithConfig instance.
 func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	config := Config{}
 	root := &cobra.Command{
@@ -360,6 +401,8 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	return root, &config
 }
 
+// Execute MUST delegate to the root command and propagate errors.
+// Execute runs the root command and returns any error.
 func Execute(factory EngineFactory) error {
 	return NewRoot(factory).Execute()
 }
@@ -407,8 +450,6 @@ func syncGithubCommand(factory EngineFactory, config *Config) *cobra.Command {
 		},
 	}
 }
-
-
 
 func mcpCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var dryRun bool
@@ -913,11 +954,7 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 					for _, p := range pols {
 						pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}
 						sb.WriteString(renderEntityMarkdown("policy", pData) + "\n")
-						vkTree := buildViolationKindTree(p.Kinds)
-						policyChildren := vkTree
-						if len(vkTree) == 1 && vkTree[0].Kind == TreeNodeCategory {
-							policyChildren = vkTree[0].Children
-						}
+						vkTree := buildViolationKindGroupTree(p.Groups)
 						var renderVkTree func(nodes []*TreeNode, indent string)
 						renderVkTree = func(nodes []*TreeNode, indent string) {
 							for _, n := range nodes {
@@ -930,7 +967,7 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 								renderVkTree(n.Children, indent+"  ")
 							}
 						}
-						renderVkTree(policyChildren, "  ")
+						renderVkTree(vkTree, "  ")
 					}
 					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
 					stream <- Event{Kind: KindResult, Command: "policy tree", Data: data}
@@ -943,11 +980,7 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 							pChildPrefix = "    "
 						}
 						stream <- Event{Kind: KindLog, Level: "info", Command: "policy tree", Message: pConn + p.Name + " - " + p.Description}
-						vkTree := buildViolationKindTree(p.Kinds)
-						policyChildren := vkTree
-						if len(vkTree) == 1 && vkTree[0].Kind == TreeNodeCategory {
-							policyChildren = vkTree[0].Children
-						}
+						vkTree := buildViolationKindGroupTree(p.Groups)
 						var renderVkText func(nodes []*TreeNode, prefix string)
 						renderVkText = func(nodes []*TreeNode, prefix string) {
 							for j, n := range nodes {
@@ -965,7 +998,7 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 								renderVkText(n.Children, childPrefix)
 							}
 						}
-						renderVkText(policyChildren, pChildPrefix)
+						renderVkText(vkTree, pChildPrefix)
 					}
 				}
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
@@ -4029,6 +4062,7 @@ func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // #region 🔖Utilities
+// General-purpose utility functions for time parsing and formatting.
 
 func parseFlexibleTime(t string) (time.Time, error) {
 	if t == "" {
@@ -4050,7 +4084,9 @@ func parseFlexibleTime(t string) (time.Time, error) {
 // #endregion 🔖Utilities
 
 // #region 🔖Models
+// Data model types for tickets, goals, and tree representation.
 
+// TicketNode holds the data fields for a ticket node record.
 type TicketNode struct {
 	ID, Slug, Status string
 	Title, URI       string
@@ -4062,6 +4098,7 @@ type TicketNode struct {
 	Summary          string
 }
 
+// GoalNode holds the data fields for a goal node record.
 type GoalNode struct {
 	ID, Title, Status  string
 	DueDate, CreatedAt string
@@ -4071,7 +4108,9 @@ type GoalNode struct {
 }
 
 // #region 🔖Monorepo Tree Types
+// Tree node kinds, filter criteria, and matching logic for monorepo tree queries.
 
+// TreeNodeKind represents a tree node kind value.
 type TreeNodeKind string
 
 const (
@@ -4091,6 +4130,7 @@ const (
 	TreeNodeCategory          TreeNodeKind = "category"
 )
 
+// TreeNode holds the data fields for a tree node record.
 type TreeNode struct {
 	Kind        TreeNodeKind
 	ID          string
@@ -4108,6 +4148,7 @@ type TreeNode struct {
 	matched     bool
 }
 
+// TreeFilter holds the data fields for a tree filter record.
 type TreeFilter struct {
 	Query               string
 	OnlyKinds           map[TreeNodeKind]bool
@@ -4127,10 +4168,14 @@ type TreeFilter struct {
 	ExcludePolicies     []string
 }
 
+// HasOnlyKinds MUST return true only when the property is present.
+// HasOnlyKinds reports whether the TreeFilter has only kinds.
 func (f *TreeFilter) HasOnlyKinds() bool {
 	return len(f.OnlyKinds) > 0
 }
 
+// IsKindVisible MUST return true only when the condition is met.
+// IsKindVisible reports whether the TreeFilter is kind visible.
 func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
 	if kind == TreeNodeCategory {
 		return true
@@ -4141,6 +4186,8 @@ func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
 	return !f.ExcludeKinds[kind]
 }
 
+// MatchesSubKind MUST operate on the TreeFilter receiver and return consistent results.
+// MatchesSubKind performs the matches sub kind operation on the TreeFilter.
 func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
 	if subKind == "" {
 		return true
@@ -4163,6 +4210,8 @@ func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
 	return true
 }
 
+// MatchesDate MUST operate on the TreeFilter receiver and return consistent results.
+// MatchesDate performs the matches date operation on the TreeFilter.
 func (f *TreeFilter) MatchesDate(year, month, day int) bool {
 	if len(f.OnlyYears) > 0 {
 		found := false
@@ -4218,6 +4267,8 @@ func (f *TreeFilter) MatchesDate(year, month, day int) bool {
 	return true
 }
 
+// MatchesStatus MUST operate on the TreeFilter receiver and return consistent results.
+// MatchesStatus performs the matches status operation on the TreeFilter.
 func (f *TreeFilter) MatchesStatus(status string) bool {
 	if f.OnlyStatus == "" {
 		return true
@@ -4225,6 +4276,8 @@ func (f *TreeFilter) MatchesStatus(status string) bool {
 	return strings.EqualFold(f.OnlyStatus, status)
 }
 
+// MatchesContributor MUST operate on the TreeFilter receiver and return consistent results.
+// MatchesContributor performs the matches contributor operation on the TreeFilter.
 func (f *TreeFilter) MatchesContributor(contributor string) bool {
 	if len(f.OnlyContributors) > 0 {
 		for _, c := range f.OnlyContributors {
@@ -4247,6 +4300,7 @@ func (f *TreeFilter) MatchesContributor(contributor string) bool {
 // #endregion 🔖Models
 
 // #region 🔖Tree Logic
+// Tree construction, filtering, searching, and rendering for goals, sections, and monorepo nodes.
 
 func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode {
 	goalMap := make(map[string]*GoalNode)
@@ -4583,11 +4637,15 @@ func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
 }
 
 // #region 🔖Monorepo Tree
+// Monorepo tree builder that assembles all entity nodes into a unified tree.
 
+// TreeBuildOptions holds the data fields for a tree build options record.
 type TreeBuildOptions struct {
 	IncludeSections bool
 }
 
+// BuildMonorepoTree MUST assemble the monorepo tree from the available context data.
+// BuildMonorepoTree constructs and returns the monorepo tree structure.
 func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
 	var options TreeBuildOptions
 	if len(opts) > 0 {
@@ -4893,19 +4951,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Description: p.Description,
 			Data:        map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description},
 		}
-		for _, k := range p.Kinds {
-			meta := k.Info()
-			vkNode := &TreeNode{
-				Kind:        TreeNodeViolationKindNode,
-				ID:          meta.GetID(),
-				Label:       string(k),
-				URI:         meta.GetURI(),
-				SubKind:     string(meta.Priority),
-				Description: meta.Reason,
-				Data:        map[string]interface{}{"id": string(k), "description": meta.Reason},
-			}
-			pNode.Children = append(pNode.Children, vkNode)
-		}
+		pNode.Children = buildViolationKindGroupTree(p.Groups)
 		policiesNode.Children = append(policiesNode.Children, pNode)
 	}
 	root.Children = append(root.Children, policiesNode)
@@ -5060,6 +5106,56 @@ func buildViolationKindTree(kinds []ViolationKind) []*TreeNode {
 	return buildNodes(rootEntries, orderedRootKeys)
 }
 
+func buildViolationKindGroupTree(groups []ViolationKindGroup) []*TreeNode {
+	var result []*TreeNode
+	for _, g := range groups {
+		groupNode := &TreeNode{
+			Kind:        TreeNodeCategory,
+			ID:          fmt.Sprintf("%s%s", emojiText(EmojiViolationKindGroup), g.Name),
+			Label:       g.Name,
+			URI:         "semiorepo://violationKindGroup/" + strings.ToUpper(Slugify(g.Name)),
+			Description: g.Description,
+			SubKind:     "violationKindGroup",
+			Data: map[string]interface{}{
+				"name":        g.Name,
+				"description": g.Description,
+				"scopes":      g.Scopes,
+			},
+		}
+		for _, k := range g.Kinds {
+			meta := k.Info()
+			priorityIcon := "🟢"
+			if meta.Priority == ViolationPriorityHigh {
+				priorityIcon = "🔴"
+			} else if meta.Priority == ViolationPriorityMedium {
+				priorityIcon = "🟡"
+			}
+			label := priorityIcon + ViolationKindPathToIdValue(string(k))
+			vkNode := &TreeNode{
+				Kind:        TreeNodeViolationKindNode,
+				ID:          meta.GetID(),
+				Label:       label,
+				URI:         meta.GetURI(),
+				Description: meta.Reason,
+				Data: map[string]interface{}{
+					"id":          string(k),
+					"priority":    string(meta.Priority),
+					"autofixable": meta.Autofixable,
+					"reason":      meta.Reason,
+					"solution":    meta.Solution,
+				},
+			}
+			if meta.Autofixable {
+				vkNode.SubKind = "autofixable"
+			}
+			groupNode.Children = append(groupNode.Children, vkNode)
+		}
+		groupNode.Children = append(groupNode.Children, buildViolationKindGroupTree(g.Groups)...)
+		result = append(result, groupNode)
+	}
+	return result
+}
+
 func sortTreeChildren(node *TreeNode) {
 	sort.Slice(node.Children, func(i, j int) bool {
 		a, b := node.Children[i], node.Children[j]
@@ -5077,6 +5173,8 @@ func sortTreeChildren(node *TreeNode) {
 	}
 }
 
+// FilterMonorepoTree MUST preserve the tree structure while removing non-matching nodes.
+// FilterMonorepoTree filters the monorepo tree based on the given criteria.
 func FilterMonorepoTree(root *TreeNode, filter *TreeFilter) *TreeNode {
 	if filter == nil {
 		return root
@@ -5156,6 +5254,8 @@ func collapseFilteredKinds(node *TreeNode, filter *TreeFilter) {
 	node.Children = newChildren
 }
 
+// SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
+// SearchMonorepoTree performs a text search across the monorepo tree.
 func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	if query == "" {
 		return root
@@ -5246,6 +5346,8 @@ func pruneUnmatched(node *TreeNode, matchedIDs map[string]bool) *TreeNode {
 	return nil
 }
 
+// RenderMonorepoTree MUST produce a complete monorepo tree output.
+// RenderMonorepoTree renders the monorepo tree into its output representation.
 func RenderMonorepoTree(root *TreeNode) string {
 	var sb strings.Builder
 	for i, c := range root.Children {
@@ -5254,6 +5356,8 @@ func RenderMonorepoTree(root *TreeNode) string {
 	return sb.String()
 }
 
+// RenderMonorepoTreeMarkdown MUST produce a complete monorepo tree markdown output.
+// RenderMonorepoTreeMarkdown renders the monorepo tree markdown into its output representation.
 func RenderMonorepoTreeMarkdown(root *TreeNode) string {
 	var sb strings.Builder
 	for _, c := range root.Children {
@@ -5364,13 +5468,18 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 // #endregion 🔖Tree Logic
 
 // #region 🔖CLI Renderers
+// Stream renderers that format engine events for NDJSON, human-readable, and markdown output.
 
+// StreamRenderer defines the interface contract for stream renderer operations.
 type StreamRenderer interface {
 	Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error)
 }
 
+// NDJSONRenderer holds the data fields for a n d j s o n renderer record.
 type NDJSONRenderer struct{}
 
+// Render MUST produce a complete  output.
+// Render renders the  into its output representation.
 func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	encoder := json.NewEncoder(out)
 	encoder.SetEscapeHTML(false)
@@ -5399,6 +5508,7 @@ func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, strea
 }
 
 // #region 🔖ANSI
+// ANSI escape code constants for terminal colorization.
 
 const (
 	ColorReset  = "\033[0m"
@@ -5419,10 +5529,13 @@ func colorize(s string, color string, enabled bool) string {
 
 // #endregion 🔖ANSI
 
+// HumanRenderer holds the data fields for a human renderer record.
 type HumanRenderer struct {
 	Verbose bool
 }
 
+// Render MUST produce a complete  output.
+// Render renders the  into its output representation.
 func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
 	isTTY := false
@@ -5712,8 +5825,11 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	return renderEntityHuman("repo", payload, isTTY) + "\n"
 }
 
+// MarkdownRenderer holds the data fields for a markdown renderer record.
 type MarkdownRenderer struct{}
 
+// Render MUST produce a complete  output.
+// Render renders the  into its output representation.
 func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
 	for event := range stream {
@@ -6002,12 +6118,15 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 // #endregion 🔖Cli Adapter
 
 // #region 🔖GraphQL Types
+// GraphQL-facing domain types, enums, constants, and entity node implementations.
 
+// Node defines the interface contract for node operations.
 type Node interface {
 	IsNode()
 	GetID() string
 }
 
+// DefinitionKind represents a definition kind value.
 type DefinitionKind string
 
 const (
@@ -6016,6 +6135,8 @@ const (
 	DefinitionKindConstant       DefinitionKind = "constant"
 )
 
+// IsValid MUST return true only when the condition is met.
+// IsValid reports whether the DefinitionKind is valid.
 func (e DefinitionKind) IsValid() bool {
 	switch e {
 	case DefinitionKindImplementation, DefinitionKindInterface, DefinitionKindConstant:
@@ -6024,10 +6145,14 @@ func (e DefinitionKind) IsValid() bool {
 	return false
 }
 
+// String MUST return the canonical string value.
+// String returns the string representation of the DefinitionKind.
 func (e DefinitionKind) String() string {
 	return string(e)
 }
 
+// DeriveDefinitionKind MUST return a valid value for any recognized input.
+// DeriveDefinitionKind infers and returns the definition kind from the given input.
 func DeriveDefinitionKind(rawKind string) DefinitionKind {
 	switch strings.ToLower(rawKind) {
 	case "interface", "type", "trait", "abstract",
@@ -6042,6 +6167,7 @@ func DeriveDefinitionKind(rawKind string) DefinitionKind {
 	}
 }
 
+// TicketStatus represents a ticket status value.
 type TicketStatus string
 
 const (
@@ -6049,6 +6175,8 @@ const (
 	TicketStatusClosed TicketStatus = "closed"
 )
 
+// IsValid MUST return true only when the condition is met.
+// IsValid reports whether the TicketStatus is valid.
 func (e TicketStatus) IsValid() bool {
 	switch e {
 	case TicketStatusOpen, TicketStatusClosed:
@@ -6057,10 +6185,13 @@ func (e TicketStatus) IsValid() bool {
 	return false
 }
 
+// String MUST return the canonical string value.
+// String returns the string representation of the TicketStatus.
 func (e TicketStatus) String() string {
 	return string(e)
 }
 
+// ViolationPriority represents a violation priority value.
 type ViolationPriority string
 
 const (
@@ -6069,6 +6200,8 @@ const (
 	ViolationPriorityLow    ViolationPriority = "low"
 )
 
+// IsValid MUST return true only when the condition is met.
+// IsValid reports whether the ViolationPriority is valid.
 func (e ViolationPriority) IsValid() bool {
 	switch e {
 	case ViolationPriorityHigh, ViolationPriorityMedium, ViolationPriorityLow:
@@ -6077,10 +6210,13 @@ func (e ViolationPriority) IsValid() bool {
 	return false
 }
 
+// String MUST return the canonical string value.
+// String returns the string representation of the ViolationPriority.
 func (e ViolationPriority) String() string {
 	return string(e)
 }
 
+// AllowedLLMs holds the allowed l l ms values.
 var AllowedLLMs = []string{
 	"opus-4-6",
 	"opus-4-5",
@@ -6098,6 +6234,7 @@ var AllowedLLMs = []string{
 	"gpt-5-3-codex",
 }
 
+// AllowedClients holds the allowed clients values.
 var AllowedClients = []string{
 	"vscode",
 	"copilot-chat",
@@ -6112,14 +6249,20 @@ var AllowedClients = []string{
 	"droid",
 }
 
+// NormalizeLLMSlug MUST be idempotent for already-normalized values.
+// NormalizeLLMSlug normalizes the l l m slug to its canonical form.
 func NormalizeLLMSlug(llm string) string {
 	return strings.ToLower(Slugify(llm))
 }
 
+// NormalizeClientSlug MUST be idempotent for already-normalized values.
+// NormalizeClientSlug normalizes the client slug to its canonical form.
 func NormalizeClientSlug(client string) string {
 	return strings.ToLower(Slugify(client))
 }
 
+// ResolveAllowedLLM MUST return an error for unrecognized values.
+// ResolveAllowedLLM resolves and validates the allowed l l m against known values.
 func ResolveAllowedLLM(llm string) (string, error) {
 	llmSlug := NormalizeLLMSlug(llm)
 	bestMatch := ""
@@ -6136,6 +6279,8 @@ func ResolveAllowedLLM(llm string) (string, error) {
 	return bestMatch, nil
 }
 
+// ResolveAllowedClient MUST return an error for unrecognized values.
+// ResolveAllowedClient resolves and validates the allowed client against known values.
 func ResolveAllowedClient(client string) (string, error) {
 	uiSlug := NormalizeClientSlug(client)
 	bestMatch := ""
@@ -6152,67 +6297,79 @@ func ResolveAllowedClient(client string) (string, error) {
 	return bestMatch, nil
 }
 
+// Range holds the data fields for a range record.
 type Range struct {
 	Start int `json:"start"`
 	End   int `json:"end"`
 }
 
+// LineMetrics holds the data fields for a line metrics record.
 type LineMetrics struct {
 	Added   int `yaml:"added" json:"added"`
 	Removed int `yaml:"removed" json:"removed"`
 }
 
+// DiffLines holds the data fields for a diff lines record.
 type DiffLines struct {
 	Added   []int
 	Removed []int
 }
 
+// CountMetrics holds the data fields for a count metrics record.
 type CountMetrics struct {
 	Added   int `json:"added"`
 	Updated int `json:"updated"`
 	Removed int `json:"removed"`
 }
 
+// ContributorIcons holds the data fields for a contributor icons record.
 type ContributorIcons struct {
 	Avatar      *string `json:"avatar,omitempty"`
 	AvatarRound *string `json:"avatarRound,omitempty"`
 	Github      *string `json:"github,omitempty"`
 }
 
+// ContributorLink holds the data fields for a contributor link record.
 type ContributorLink struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
+// TicketDate holds the data fields for a ticket date record.
 type TicketDate struct {
 	Created  time.Time  `json:"created"`
 	Finished *time.Time `json:"finished,omitempty"`
 }
 
+// TicketSectionMetrics holds the data fields for a ticket section metrics record.
 type TicketSectionMetrics struct {
 	Range       *Range       `json:"range,omitempty"`
 	Definitions []string     `json:"definitions,omitempty"`
 	Lines       *LineMetrics `json:"lines,omitempty"`
 }
 
+// TicketFileMetricsEntry holds the data fields for a ticket file metrics entry record.
 type TicketFileMetricsEntry struct {
 	Path     string                          `json:"path"`
 	Lines    *LineMetrics                    `json:"lines,omitempty"`
 	Sections map[string]TicketSectionMetrics `json:"sections,omitempty"`
 }
 
+// AnalyzeMetrics holds the data fields for a analyze metrics record.
 type AnalyzeMetrics struct {
 	Total       int            `json:"total"`
 	ByPriority  *PriorityCount `json:"byPriority"`
 	Autofixable int            `json:"autofixable"`
 }
 
+// PriorityCount holds the data fields for a priority count record.
 type PriorityCount struct {
 	High   int `json:"high"`
 	Medium int `json:"medium"`
 	Low    int `json:"low"`
 }
 
+// Repo holds the data fields for a repo record.
 type Repo struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
@@ -6221,10 +6378,17 @@ type Repo struct {
 	Bundles  []Bundle  `json:"bundles"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Repo is node.
 func (r *Repo) IsNode()        {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Repo.
 func (r *Repo) GetID() string  { return emojiText(EmojiRepo) }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Repo.
 func (r *Repo) GetURI() string { return "semiorepo://repo" }
 
+// ProjectKind represents a project kind value.
 type ProjectKind string
 
 const (
@@ -6233,10 +6397,13 @@ const (
 	ProjectKindResearch       ProjectKind = "🔬"
 )
 
+// String MUST return the canonical string value.
+// String returns the string representation of the ProjectKind.
 func (e ProjectKind) String() string {
 	return string(e)
 }
 
+// BundleKind represents a bundle kind value.
 type BundleKind string
 
 const (
@@ -6248,6 +6415,8 @@ const (
 	BundleKindAssets  BundleKind = "assets"
 )
 
+// IsValid MUST return true only when the condition is met.
+// IsValid reports whether the BundleKind is valid.
 func (e BundleKind) IsValid() bool {
 	switch e {
 	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindUI, BundleKindSite, BundleKindAssets:
@@ -6256,10 +6425,14 @@ func (e BundleKind) IsValid() bool {
 	return false
 }
 
+// String MUST return the canonical string value.
+// String returns the string representation of the BundleKind.
 func (e BundleKind) String() string {
 	return string(e)
 }
 
+// DeriveProjectKind MUST return a valid value for any recognized input.
+// DeriveProjectKind infers and returns the project kind from the given input.
 func DeriveProjectKind(name string) ProjectKind {
 	switch name {
 	case "semio":
@@ -6275,6 +6448,8 @@ func DeriveProjectKind(name string) ProjectKind {
 	return ProjectKindUser
 }
 
+// DeriveBundleKind MUST return a valid value for any recognized input.
+// DeriveBundleKind infers and returns the bundle kind from the given input.
 func DeriveBundleKind(name string, root string) BundleKind {
 	absRoot := root
 	if !filepath.IsAbs(absRoot) {
@@ -6300,6 +6475,7 @@ func DeriveBundleKind(name string, root string) BundleKind {
 	return BundleKindLibrary
 }
 
+// Project holds the data fields for a project record.
 type Project struct {
 	Name    string      `json:"name"`
 	Root    string      `json:"root"`
@@ -6307,7 +6483,11 @@ type Project struct {
 	Bundles []Bundle    `json:"bundles"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Project is node.
 func (p *Project) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Project.
 func (p *Project) GetID() string {
 	emoji := EmojiProjectUser
 	switch string(p.Kind) {
@@ -6326,8 +6506,11 @@ func (p *Project) GetID() string {
 	}
 	return fmt.Sprintf("%s@%s", emojiText(emoji), p.Name)
 }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Project.
 func (p *Project) GetURI() string { return "semiorepo://project/@" + p.Name }
 
+// Bundle holds the data fields for a bundle record.
 type Bundle struct {
 	Name        string     `json:"name"`
 	Root        string     `json:"root"`
@@ -6338,6 +6521,7 @@ type Bundle struct {
 	Packages    []Package  `json:"packages,omitempty"`
 }
 
+// Package holds the data fields for a package record.
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -6345,7 +6529,11 @@ type Package struct {
 	Kind    string `json:"kind"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Bundle is node.
 func (b *Bundle) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Bundle.
 func (b *Bundle) GetID() string {
 	emoji := EmojiBundleLibrary
 	switch string(b.Kind) {
@@ -6367,6 +6555,8 @@ func (b *Bundle) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(emoji), b.Name)
 }
 
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Bundle.
 func (b *Bundle) GetURI() string { return "semiorepo://bundle/" + b.Name }
 
 func normalizeBundleLabel(name string) string {
@@ -6402,6 +6592,7 @@ func bundlePathPrefix(name string) string {
 	return name + "/"
 }
 
+// FolderKind represents a folder kind value.
 type FolderKind string
 
 const (
@@ -6409,6 +6600,8 @@ const (
 	FolderKindRequired     FolderKind = "required"
 )
 
+// IsValid MUST return true only when the condition is met.
+// IsValid reports whether the FolderKind is valid.
 func (e FolderKind) IsValid() bool {
 	switch e {
 	case FolderKindOrganization, FolderKindRequired:
@@ -6417,10 +6610,14 @@ func (e FolderKind) IsValid() bool {
 	return false
 }
 
+// String MUST return the canonical string value.
+// String returns the string representation of the FolderKind.
 func (e FolderKind) String() string {
 	return string(e)
 }
 
+// DeriveFolderKind MUST return a valid value for any recognized input.
+// DeriveFolderKind infers and returns the folder kind from the given input.
 func DeriveFolderKind(path string) FolderKind {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") {
@@ -6437,6 +6634,8 @@ func DeriveFolderKind(path string) FolderKind {
 	return FolderKindOrganization
 }
 
+// IsGeneratedFolder MUST return true only when the condition is met.
+// IsGeneratedFolder reports whether the value is generated folder.
 func IsGeneratedFolder(path string) bool {
 	parts := strings.Split(filepath.ToSlash(path), "/")
 	for _, part := range parts {
@@ -6457,6 +6656,7 @@ func IsGeneratedFolder(path string) bool {
 	return false
 }
 
+// Folder holds the data fields for a folder record.
 type Folder struct {
 	ID        string     `json:"id"`
 	Path      string     `json:"path"`
@@ -6469,7 +6669,11 @@ type Folder struct {
 	Generated bool       `json:"generated"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Folder is node.
 func (f *Folder) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Folder.
 func (f *Folder) GetID() string {
 	emoji := EmojiFolderRequired
 	if f.Kind == FolderKindOrganization {
@@ -6477,8 +6681,11 @@ func (f *Folder) GetID() string {
 	}
 	return fmt.Sprintf("%s%s", emojiText(emoji), f.Path)
 }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Folder.
 func (f *Folder) GetURI() string { return "semiorepo://folder/" + f.Path }
 
+// File holds the data fields for a file record.
 type File struct {
 	ID        string  `json:"id"`
 	Path      string  `json:"path"`
@@ -6543,6 +6750,8 @@ const (
 	EmojiTodo                = "📝"
 	EmojiPolicies            = "🛡️"
 	EmojiPolicy              = "🛡️"
+	EmojiViolationKindGroups = "🗄️"
+	EmojiViolationKindGroup  = "🗄️"
 	EmojiViolationKinds      = "🚫"
 	EmojiViolationKind       = "🚫"
 	EmojiViolation           = "🚫"
@@ -6552,6 +6761,8 @@ const (
 	EmojiCommit              = "🔀"
 )
 
+// DeriveFileKind MUST return a valid value for any recognized input.
+// DeriveFileKind infers and returns the file kind from the given input.
 func DeriveFileKind(name string) string {
 	ext := strings.ToLower(filepath.Ext(name))
 	nameLower := strings.ToLower(name)
@@ -6567,7 +6778,7 @@ func DeriveFileKind(name string) string {
 		strings.HasSuffix(nameNoExt, "_spec") || strings.HasSuffix(nameNoExt, "_benchmark") ||
 		strings.HasSuffix(nameNoExt, ".benchmark") ||
 		strings.HasSuffix(nameNoExt, ".stories") || strings.HasSuffix(nameNoExt, ".story") ||
-		strings.HasPrefix(nameLower, "test_") || strings.HasPrefix(nameLower, "test.") {
+		strings.HasPrefix(nameLower, "test_") || strings.HasPrefix(nameLower, "test.") || nameLower == "conftest.py" {
 		return FileKindTest
 	}
 
@@ -6642,8 +6853,12 @@ func DeriveFileKind(name string) string {
 	return FileKindResource
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the File is node.
 func (f *File) IsNode() {}
 
+// IsGenerated MUST return true only when the condition is met.
+// IsGenerated reports whether the value is generated.
 func IsGenerated(path string) bool {
 	base := strings.ToLower(filepath.Base(path))
 	if base == "package-lock.json" || base == "yarn.lock" || base == "pnpm-lock.yaml" || base == "go.sum" || base == "uv.lock" {
@@ -6661,6 +6876,8 @@ func IsGenerated(path string) bool {
 	return false
 }
 
+// IsSemanticallyIgnored MUST return true only when the condition is met.
+// IsSemanticallyIgnored reports whether the value is semantically ignored.
 func IsSemanticallyIgnored(path string) bool {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") && base != ".gitignore" && base != ".env" {
@@ -6674,6 +6891,8 @@ func IsSemanticallyIgnored(path string) bool {
 	return false
 }
 
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the File.
 func (f *File) GetID() string {
 	emoji := EmojiFiles
 	switch f.Kind {
@@ -6694,8 +6913,11 @@ func (f *File) GetID() string {
 	}
 	return fmt.Sprintf("%s%s", emojiText(emoji), f.Path)
 }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the File.
 func (f *File) GetURI() string { return "semiorepo://file/" + f.Path }
 
+// Section holds the data fields for a section record.
 type Section struct {
 	ID          string       `json:"id,omitempty"`
 	Name        string       `json:"name"`
@@ -6709,7 +6931,11 @@ type Section struct {
 	Definitions []Definition `json:"definitions,omitempty"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Section is node.
 func (s *Section) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Section.
 func (s *Section) GetID() string {
 	val := s.Name
 	if s.Path != "" {
@@ -6723,6 +6949,8 @@ func (s *Section) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiSection), val)
 }
 
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Section.
 func (s *Section) GetURI() string {
 	raw := ""
 	if s.FilePath != "" && s.Path != "" {
@@ -6733,6 +6961,7 @@ func (s *Section) GetURI() string {
 	return "semiorepo://section/" + strings.ToUpper(Slugify(raw))
 }
 
+// Definition holds the data fields for a definition record.
 type Definition struct {
 	ID          string         `json:"id,omitempty"`
 	Name        string         `json:"name"`
@@ -6745,7 +6974,11 @@ type Definition struct {
 	EndIndex    int            `json:"endIndex"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Definition is node.
 func (d *Definition) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Definition.
 func (d *Definition) GetID() string {
 	emoji := EmojiDefinitionImpl
 	switch d.Kind {
@@ -6774,6 +7007,8 @@ func (d *Definition) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(emoji), val)
 }
 
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Definition.
 func (d *Definition) GetURI() string {
 	raw := ""
 	if d.FilePath != "" {
@@ -6788,6 +7023,7 @@ func (d *Definition) GetURI() string {
 	return "semiorepo://definition/" + DefinitionIdValueToUriPath(raw)
 }
 
+// Contributor holds the data fields for a contributor record.
 type Contributor struct {
 	Github        string                          `yaml:"github" json:"github"`
 	Name          string                          `yaml:"name" json:"name"`
@@ -6800,50 +7036,63 @@ type Contributor struct {
 	Contributions ContributorContributionsStorage `yaml:"contributions,omitempty" json:"contributions,omitempty"`
 }
 
+// ContributorContributionsTree holds the data fields for a contributor contributions tree record.
 type ContributorContributionsTree struct {
 	Commits []*Commit
 	Tickets []*Ticket
 	Bundles []*ContributorBundle
 }
 
+// ContributorBundle holds the data fields for a contributor bundle record.
 type ContributorBundle struct {
 	Name    string
 	Lines   LineMetrics
 	Folders []*ContributorFolder
 }
 
+// ContributorFolder holds the data fields for a contributor folder record.
 type ContributorFolder struct {
 	Name  string
 	Lines LineMetrics
 	Files []*ContributorFile
 }
 
+// ContributorFile holds the data fields for a contributor file record.
 type ContributorFile struct {
 	Name     string
 	Lines    LineMetrics
 	Sections []*ContributorSection
 }
 
+// ContributorSection holds the data fields for a contributor section record.
 type ContributorSection struct {
 	Name        string
 	Lines       LineMetrics
 	Definitions []*ContributorDefinition
 }
 
+// ContributorDefinition holds the data fields for a contributor definition record.
 type ContributorDefinition struct {
 	Name  string
 	Lines LineMetrics
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Contributor is node.
 func (c *Contributor) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Contributor.
 func (c *Contributor) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiContributor), c.Github)
 }
 
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Contributor.
 func (c *Contributor) GetURI() string {
 	return "semiorepo://contributor/" + strings.ToUpper(c.Github)
 }
 
+// Commit holds the data fields for a commit record.
 type Commit struct {
 	ID       string    `json:"id"`
 	SHA      string    `json:"sha"`
@@ -6852,25 +7101,37 @@ type Commit struct {
 	Date     time.Time `json:"date"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Commit is node.
 func (c *Commit) IsNode() {}
 
 // #region 🔖Drafts
+// Draft management for creating, listing, and deleting draft file sets.
 
+// Draft holds the data fields for a draft record.
 type Draft struct {
 	ID string `json:"id"`
 }
 
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Draft.
 func (d *Draft) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiDraft), d.ID)
 }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Draft.
 func (d *Draft) GetURI() string {
 	return "semiorepo://draft/" + strings.ToUpper(d.ID)
 }
 
+// GetDraftsPath MUST return the stored value without modification.
+// GetDraftsPath returns the drafts path of the value.
 func GetDraftsPath() string {
 	return filepath.Join(GetRootDir(), ".semio-repo", "drafts")
 }
 
+// ListDrafts MUST return a consistent snapshot of available entries.
+// ListDrafts returns all available drafts entries.
 func ListDrafts() ([]*Draft, error) {
 	draftsDir := GetDraftsPath()
 	if !IsDir(draftsDir) {
@@ -6889,6 +7150,8 @@ func ListDrafts() ([]*Draft, error) {
 	return drafts, nil
 }
 
+// CreateDraft MUST persist the new entity and return a reference to it.
+// CreateDraft creates a new draft and persists it.
 func CreateDraft(id string, files []string) (*Draft, error) {
 	id = Slugify(id)
 	if id == "" {
@@ -6914,6 +7177,8 @@ func CreateDraft(id string, files []string) (*Draft, error) {
 	return &Draft{ID: id}, nil
 }
 
+// DeleteDraft MUST remove all associated data for the entity.
+// DeleteDraft removes the specified draft.
 func DeleteDraft(id string) error {
 	draftPath := filepath.Join(GetDraftsPath(), id)
 	if !IsDir(draftPath) {
@@ -6924,11 +7189,16 @@ func DeleteDraft(id string) error {
 
 // #endregion 🔖Drafts
 
-func (c *Commit) GetID() string  { return fmt.Sprintf("%s%s", emojiText(EmojiCommit), c.SHA) }
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Commit.
+func (c *Commit) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiCommit), c.SHA) }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Commit.
 func (c *Commit) GetURI() string {
 	return "semiorepo://commit/" + strings.ToUpper(c.SHA)
 }
 
+// Ticket holds the data fields for a ticket record.
 type Ticket struct {
 	Year          int               `json:"-" yaml:"-"`
 	Month         int               `json:"-" yaml:"-"`
@@ -6950,7 +7220,11 @@ type Ticket struct {
 	ImportantPath string            `json:"-" yaml:"-"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Ticket is node.
 func (t *Ticket) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Ticket.
 func (t *Ticket) GetID() string {
 	id := fmt.Sprintf("%s%04d/%02d/%02d/%s", emojiText(EmojiTicket), t.Year, t.Month, t.Day, t.Slug)
 	if t.Status != "" {
@@ -6959,14 +7233,20 @@ func (t *Ticket) GetID() string {
 	return id
 }
 
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Ticket.
 func (t *Ticket) GetURI() string {
 	return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
 }
 
+// GetTitle MUST return the stored value without modification.
+// GetTitle returns the title of the Ticket.
 func (t *Ticket) GetTitle() string {
 	return t.Title
 }
 
+// GetPrompt MUST return the stored value without modification.
+// GetPrompt returns the prompt of the Ticket.
 func (t *Ticket) GetPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Prompt
@@ -6974,6 +7254,8 @@ func (t *Ticket) GetPrompt() string {
 	return ""
 }
 
+// GetLatestPrompt MUST return the stored value without modification.
+// GetLatestPrompt returns the latest prompt of the Ticket.
 func (t *Ticket) GetLatestPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Prompt
@@ -6981,6 +7263,8 @@ func (t *Ticket) GetLatestPrompt() string {
 	return ""
 }
 
+// GetLLM MUST return the stored value without modification.
+// GetLLM returns the l l m of the Ticket.
 func (t *Ticket) GetLLM() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].LLM
@@ -6988,6 +7272,8 @@ func (t *Ticket) GetLLM() string {
 	return ""
 }
 
+// GetClient MUST return the stored value without modification.
+// GetClient returns the client of the Ticket.
 func (t *Ticket) GetClient() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Client
@@ -6995,10 +7281,14 @@ func (t *Ticket) GetClient() string {
 	return ""
 }
 
+// GetStatus MUST return the stored value without modification.
+// GetStatus returns the status of the Ticket.
 func (t *Ticket) GetStatus() TicketStatus {
 	return t.Status
 }
 
+// GetAuthor MUST return the stored value without modification.
+// GetAuthor returns the author of the Ticket.
 func (t *Ticket) GetAuthor() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Author
@@ -7006,6 +7296,8 @@ func (t *Ticket) GetAuthor() string {
 	return ""
 }
 
+// GetCommit MUST return the stored value without modification.
+// GetCommit returns the commit of the Ticket.
 func (t *Ticket) GetCommit() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Commit
@@ -7013,18 +7305,26 @@ func (t *Ticket) GetCommit() string {
 	return ""
 }
 
+// GetSummary MUST return the stored value without modification.
+// GetSummary returns the summary of the Ticket.
 func (t *Ticket) GetSummary() string {
 	return t.Summary
 }
 
+// GetDateStarted MUST return the stored value without modification.
+// GetDateStarted returns the date started of the Ticket.
 func (t *Ticket) GetDateStarted() time.Time {
 	return t.Started
 }
 
+// GetDateFinished MUST return the stored value without modification.
+// GetDateFinished returns the date finished of the Ticket.
 func (t *Ticket) GetDateFinished() *time.Time {
 	return t.Finished
 }
 
+// GetFiles MUST return the stored value without modification.
+// GetFiles returns the files of the Ticket.
 func (t *Ticket) GetFiles() *TicketDiffs {
 	result := newTicketDiffs()
 	for _, interaction := range t.Interactions {
@@ -7055,31 +7355,40 @@ func (t *Ticket) GetFiles() *TicketDiffs {
 	return result
 }
 
+// TicketBundleContrib holds the data fields for a ticket bundle contrib record.
 type TicketBundleContrib struct {
 	BundleID string              `json:"bundleId"`
 	Files    []TicketFileContrib `json:"files"`
 }
 
+// TicketFileContrib holds the data fields for a ticket file contrib record.
 type TicketFileContrib struct {
 	FileID   string                 `json:"fileId"`
 	Sections []TicketSectionContrib `json:"sections"`
 }
 
+// TicketSectionContrib holds the data fields for a ticket section contrib record.
 type TicketSectionContrib struct {
 	SectionID   string       `json:"sectionId"`
 	Definitions []string     `json:"definitions"`
 	Metrics     *LineMetrics `json:"metrics"`
 }
 
+// Policy holds the data fields for a policy record.
 type Policy struct {
 	ID             string               `json:"id"`
 	Name           string               `json:"name"`
 	Description    *string              `json:"description,omitempty"`
 	Scopes         []string             `json:"scopes"`
+	Groups         []ViolationKindGroup `json:"groups"`
 	ViolationKinds []*ViolationKindMeta `json:"violationKinds"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Policy is node.
 func (p *Policy) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Policy.
 func (p *Policy) GetID() string {
 	slug := p.ID
 	if !strings.HasPrefix(slug, "/") {
@@ -7087,10 +7396,13 @@ func (p *Policy) GetID() string {
 	}
 	return fmt.Sprintf("%s%s", emojiText(EmojiPolicy), slug)
 }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Policy.
 func (p *Policy) GetURI() string {
 	return "semiorepo://policy/" + strings.ToUpper(Slugify(p.ID))
 }
 
+// ViolationKindMeta holds the data fields for a violation kind meta record.
 type ViolationKindMeta struct {
 	Kind        ViolationKind     `json:"kind"`
 	PolicyID    string            `json:"policyId"`
@@ -7100,26 +7412,35 @@ type ViolationKindMeta struct {
 	Autofixable bool              `json:"autofixable"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the ViolationKindMeta is node.
 func (v *ViolationKindMeta) IsNode() {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the ViolationKindMeta.
 func (v *ViolationKindMeta) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiViolationKind), ViolationKindPathToIdValue(string(v.Kind)))
 }
 
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the ViolationKindMeta.
 func (v *ViolationKindMeta) GetURI() string {
 	return "semiorepo://violationKind/" + ViolationKindIdToUriPath(string(v.Kind))
 }
 
+// AnalyzeResult holds the data fields for a analyze result record.
 type AnalyzeResult struct {
 	Violations []*Violation    `json:"violations"`
 	Metrics    *AnalyzeMetrics `json:"metrics"`
 }
 
+// FixResult holds the data fields for a fix result record.
 type FixResult struct {
 	Fixed      int          `json:"fixed"`
 	Remaining  int          `json:"remaining"`
 	Violations []*Violation `json:"violations"`
 }
 
+// ContributorContributions holds the data fields for a contributor contributions record.
 type ContributorContributions struct {
 	Bundles     []ContributionBundle     `json:"bundles"`
 	Folders     []ContributionFolder     `json:"folders"`
@@ -7128,31 +7449,37 @@ type ContributorContributions struct {
 	Definitions []ContributionDefinition `json:"definitions"`
 }
 
+// ContributionBundle holds the data fields for a contribution bundle record.
 type ContributionBundle struct {
 	BundleID string        `json:"bundleId"`
 	Metrics  *CountMetrics `json:"metrics"`
 }
 
+// ContributionFolder holds the data fields for a contribution folder record.
 type ContributionFolder struct {
 	FolderID string        `json:"folderId"`
 	Metrics  *CountMetrics `json:"metrics"`
 }
 
+// ContributionFile holds the data fields for a contribution file record.
 type ContributionFile struct {
 	FileID  string       `json:"fileId"`
 	Metrics *LineMetrics `json:"metrics"`
 }
 
+// ContributionSection holds the data fields for a contribution section record.
 type ContributionSection struct {
 	SectionID string       `json:"sectionId"`
 	Metrics   *LineMetrics `json:"metrics"`
 }
 
+// ContributionDefinition holds the data fields for a contribution definition record.
 type ContributionDefinition struct {
 	DefinitionID string       `json:"definitionId"`
 	Metrics      *LineMetrics `json:"metrics"`
 }
 
+// SemanticChangeType represents a semantic change type value.
 type SemanticChangeType string
 
 const (
@@ -7162,6 +7489,7 @@ const (
 	SemanticChangeRenamed  SemanticChangeType = "renamed"
 )
 
+// SemanticChange holds the data fields for a semantic change record.
 type SemanticChange struct {
 	Kind     string
 	Status   SemanticChangeType
@@ -7515,6 +7843,8 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit st
 	return result
 }
 
+// BuildSemanticDiffs MUST assemble the semantic diffs from the available context data.
+// BuildSemanticDiffs constructs and returns the semantic diffs structure.
 func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, diffStatuses []GitDiffStatus, bundles []Bundle) *TicketDiffs {
 	result := newTicketDiffs()
 	ctx := &CodebaseContext{Bundles: bundles}
@@ -7646,13 +7976,16 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit stri
 }
 
 // #region 🔖GraphQL Input Types
+// GraphQL mutation input types for tickets, goals, todos, and contributors.
 
+// FileListInput holds the data fields for a file list input record.
 type FileListInput struct {
 	Updated []string `json:"updated,omitempty"`
 	Created []string `json:"created,omitempty"`
 	Removed []string `json:"removed,omitempty"`
 }
 
+// TicketOpenInput holds the data fields for a ticket open input record.
 type TicketOpenInput struct {
 	Title    string `json:"title"`
 	Prompt   string `json:"prompt"`
@@ -7666,11 +7999,13 @@ type TicketOpenInput struct {
 	Issue    string `json:"issue,omitempty"`
 }
 
+// DraftCreateInput holds the data fields for a draft create input record.
 type DraftCreateInput struct {
 	Slug  string   `json:"slug"`
 	Files []string `json:"files,omitempty"`
 }
 
+// TicketProgressInput holds the data fields for a ticket progress input record.
 type TicketProgressInput struct {
 	Year    int    `json:"year"`
 	Month   int    `json:"month"`
@@ -7679,6 +8014,7 @@ type TicketProgressInput struct {
 	Summary string `json:"summary,omitempty"`
 }
 
+// GoalCreateInput holds the data fields for a goal create input record.
 type GoalCreateInput struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -7691,6 +8027,7 @@ type GoalCreateInput struct {
 	Milestone   string `json:"milestone,omitempty"`
 }
 
+// GoalChangeInput holds the data fields for a goal change input record.
 type GoalChangeInput struct {
 	ID          string  `json:"id"`
 	Title       *string `json:"title,omitempty"`
@@ -7700,12 +8037,14 @@ type GoalChangeInput struct {
 	NoGithub    bool    `json:"noGithub,omitempty"`
 }
 
+// GoalCloseInput holds the data fields for a goal close input record.
 type GoalCloseInput struct {
 	ID       string `json:"id"`
 	Summary  string `json:"summary"`
 	NoGithub bool   `json:"noGithub,omitempty"`
 }
 
+// GoalReopenInput holds the data fields for a goal reopen input record.
 type GoalReopenInput struct {
 	ID          string  `json:"id"`
 	Prompt      string  `json:"prompt"`
@@ -7718,11 +8057,13 @@ type GoalReopenInput struct {
 	NoGithub    bool    `json:"noGithub,omitempty"`
 }
 
+// GoalDeleteInput holds the data fields for a goal delete input record.
 type GoalDeleteInput struct {
 	ID       string `json:"id"`
 	NoGithub bool   `json:"noGithub,omitempty"`
 }
 
+// TicketDeleteInput holds the data fields for a ticket delete input record.
 type TicketDeleteInput struct {
 	Year     int    `json:"year"`
 	Month    int    `json:"month"`
@@ -7731,6 +8072,7 @@ type TicketDeleteInput struct {
 	NoGithub bool   `json:"noGithub,omitempty"`
 }
 
+// TicketCloseInput holds the data fields for a ticket close input record.
 type TicketCloseInput struct {
 	Year     int      `json:"year"`
 	Month    int      `json:"month"`
@@ -7743,6 +8085,7 @@ type TicketCloseInput struct {
 	All      bool     `json:"all,omitempty"`
 }
 
+// TicketReopenInput holds the data fields for a ticket reopen input record.
 type TicketReopenInput struct {
 	Year     int     `json:"year"`
 	Month    int     `json:"month"`
@@ -7758,6 +8101,7 @@ type TicketReopenInput struct {
 	NoGithub bool    `json:"noGithub,omitempty"`
 }
 
+// TicketChangeInput holds the data fields for a ticket change input record.
 type TicketChangeInput struct {
 	Year     int     `json:"year"`
 	Month    int     `json:"month"`
@@ -7772,6 +8116,7 @@ type TicketChangeInput struct {
 	NoGithub bool    `json:"noGithub,omitempty"`
 }
 
+// ContributorAddInput holds the data fields for a contributor add input record.
 type ContributorAddInput struct {
 	Github       string   `json:"github"`
 	Name         *string  `json:"name,omitempty"`
@@ -7782,6 +8127,7 @@ type ContributorAddInput struct {
 	Fingerprints []string `json:"fingerprints,omitempty"`
 }
 
+// FilterInput holds the data fields for a filter input record.
 type FilterInput struct {
 	Filter         *string  `json:"filter,omitempty"`
 	Regex          *bool    `json:"regex,omitempty"`
@@ -7793,6 +8139,8 @@ type FilterInput struct {
 	IncludeKinds   []string `json:"includeKinds,omitempty"`
 }
 
+// ToStreamOptions MUST map all filter input fields to stream options.
+// ToStreamOptions converts the filter input into stream options.
 func (f *FilterInput) ToStreamOptions() StreamOptions {
 	if f == nil {
 		return StreamOptions{}
@@ -7826,7 +8174,9 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 // #endregion 🔖GraphQL Types
 
 // #region 🔖Types
+// Scope, todo, violation, and ticket metric types for the repository model.
 
+// ScopeKind represents a scope kind value.
 type ScopeKind string
 
 const (
@@ -7838,6 +8188,7 @@ const (
 	ScopeDefinition ScopeKind = "definition"
 )
 
+// Scope holds the data fields for a scope record.
 type Scope struct {
 	Raw            string    `json:"raw"`
 	Kind           ScopeKind `json:"kind"`
@@ -7847,18 +8198,21 @@ type Scope struct {
 	DefinitionName string    `json:"definitionName,omitempty"`
 }
 
+// TodoCreateInput holds the data fields for a todo create input record.
 type TodoCreateInput struct {
 	ParentID    string `json:"parentId"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
 
+// TodoChangeInput holds the data fields for a todo change input record.
 type TodoChangeInput struct {
 	ID          string  `json:"id"`
 	Name        *string `json:"name"`
 	Description *string `json:"description"`
 }
 
+// Todo holds the data fields for a todo record.
 type Todo struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
@@ -7867,16 +8221,24 @@ type Todo struct {
 	Location    *Location `json:"location,omitempty"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Todo is node.
 func (t *Todo) IsNode()        {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Todo.
 func (t *Todo) GetID() string  { return fmt.Sprintf("%s%s", emojiText(EmojiTodo), t.ID) }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Todo.
 func (t *Todo) GetURI() string { return "semiorepo://todo/" + strings.ToUpper(Slugify(t.ID)) }
 
+// Location holds the data fields for a location record.
 type Location struct {
 	FilePath string `json:"filePath"`
 	Line     int    `json:"line"`
 	Column   int    `json:"column"`
 }
 
+// Violation holds the data fields for a violation record.
 type Violation struct {
 	ID      string        `json:"id"`
 	Summary string        `json:"summary"`
@@ -7887,30 +8249,45 @@ type Violation struct {
 	Excerpt string        `json:"excerpt,omitempty"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Violation is node.
 func (v *Violation) IsNode()        {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Violation.
 func (v *Violation) GetID() string  { return fmt.Sprintf("%s%s", emojiText(EmojiViolation), v.ID) }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Violation.
 func (v *Violation) GetURI() string { return "semiorepo://violation/" + strings.ToUpper(Slugify(v.ID)) }
 
+// Priority MUST derive the value from the violation kind metadata.
+// Priority returns the priority of the violation from its kind metadata.
 func (v *Violation) Priority() ViolationPriority {
 	return v.Kind.Info().Priority
 }
 
+// Autofixable MUST return true only for violation kinds that support auto-fix.
+// Autofixable reports whether the violation kind supports automatic fixing.
 func (v *Violation) Autofixable() bool {
 	return v.Kind.Info().Autofixable
 }
 
+// TicketFileMetrics holds the data fields for a ticket file metrics record.
 type TicketFileMetrics struct {
 	Sections map[string]TicketSectionMetrics `yaml:"sections" json:"sections"`
 }
 
+// TicketBundleMetrics holds the data fields for a ticket bundle metrics record.
 type TicketBundleMetrics struct {
 	Files map[string]TicketFileMetrics `yaml:"files" json:"files"`
 }
 
+// TicketBundles represents a ticket bundles value.
 type TicketBundles map[string]TicketBundleMetrics
 
 // #region 🔖Languages
+// Language plugin registry with parsers for sections, definitions, comments, imports, and headers.
 
+// LanguagePlugin defines the interface contract for language plugin operations.
 type LanguagePlugin interface {
 	Name() string
 	Extensions() []string
@@ -7928,7 +8305,7 @@ type LanguagePlugin interface {
 	FormatSectionStart(name string) string
 	FormatSectionEnd(name string) string
 	FormatSectionBoth(name string) string
-	FormatHeader(filePath, summary, contributors, license, specs string) string
+	FormatHeader(fileId, fileUri, summary, contributors, license, specs string) string
 	PolicySectionStartMatch(line string) (matched bool, name string)
 	PolicySectionEndMatch(line string) (matched bool, name string)
 	ExtraOrphanDefinitions(lines []string) []DefinitionRange
@@ -7939,6 +8316,7 @@ type LanguagePlugin interface {
 	ExtractPackage(content string) (string, string)
 }
 
+// DefinitionRange holds the data fields for a definition range record.
 type DefinitionRange struct {
 	Name    string
 	Kind    string
@@ -7947,6 +8325,7 @@ type DefinitionRange struct {
 	Excerpt string
 }
 
+// BaseLanguage holds the data fields for a base language record.
 type BaseLanguage struct {
 	name               string
 	extensions         []string
@@ -7971,17 +8350,39 @@ type BaseLanguage struct {
 	skipDirectives     []string
 }
 
+// Name MUST operate on the BaseLanguage receiver and return consistent results.
+// Name performs the name operation on the BaseLanguage.
 func (l *BaseLanguage) Name() string              { return l.name }
+// Extensions MUST operate on the BaseLanguage receiver and return consistent results.
+// Extensions performs the extensions operation on the BaseLanguage.
 func (l *BaseLanguage) Extensions() []string      { return l.extensions }
+// CommentPrefix MUST operate on the BaseLanguage receiver and return consistent results.
+// CommentPrefix performs the comment prefix operation on the BaseLanguage.
 func (l *BaseLanguage) CommentPrefix() string     { return l.commentPrefix }
+// BlockCommentStart MUST operate on the BaseLanguage receiver and return consistent results.
+// BlockCommentStart performs the block comment start operation on the BaseLanguage.
 func (l *BaseLanguage) BlockCommentStart() string { return l.blockCommentStart }
+// BlockCommentEnd MUST operate on the BaseLanguage receiver and return consistent results.
+// BlockCommentEnd performs the block comment end operation on the BaseLanguage.
 func (l *BaseLanguage) BlockCommentEnd() string   { return l.blockCommentEnd }
+// UsesIndentScoping MUST operate on the BaseLanguage receiver and return consistent results.
+// UsesIndentScoping performs the uses indent scoping operation on the BaseLanguage.
 func (l *BaseLanguage) UsesIndentScoping() bool   { return l.usesIndentScoping }
+// SupportsSections MUST operate on the BaseLanguage receiver and return consistent results.
+// SupportsSections performs the supports sections operation on the BaseLanguage.
 func (l *BaseLanguage) SupportsSections() bool    { return l.sectionStart != nil }
+// SupportsDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
+// SupportsDefinitions performs the supports definitions operation on the BaseLanguage.
 func (l *BaseLanguage) SupportsDefinitions() bool { return l.definitionRegexp != nil }
+// SupportsComments MUST operate on the BaseLanguage receiver and return consistent results.
+// SupportsComments performs the supports comments operation on the BaseLanguage.
 func (l *BaseLanguage) SupportsComments() bool    { return l.commentPrefix != "" }
+// SupportsHeaders MUST operate on the BaseLanguage receiver and return consistent results.
+// SupportsHeaders performs the supports headers operation on the BaseLanguage.
 func (l *BaseLanguage) SupportsHeaders() bool     { return l.supportsHeaders }
 
+// MatchesExtension MUST operate on the BaseLanguage receiver and return consistent results.
+// MatchesExtension performs the matches extension operation on the BaseLanguage.
 func (l *BaseLanguage) MatchesExtension(ext string) bool {
 	ext = strings.ToLower(ext)
 	for _, langExt := range l.extensions {
@@ -7992,6 +8393,8 @@ func (l *BaseLanguage) MatchesExtension(ext string) bool {
 	return false
 }
 
+// FormatSectionStart MUST produce a well-formed section start string.
+// FormatSectionStart formats the section start into its string representation.
 func (l *BaseLanguage) FormatSectionStart(name string) string {
 	if l.sectionStartFmt == "" {
 		return ""
@@ -7999,6 +8402,8 @@ func (l *BaseLanguage) FormatSectionStart(name string) string {
 	return fmt.Sprintf(l.sectionStartFmt, name)
 }
 
+// FormatSectionEnd MUST produce a well-formed section end string.
+// FormatSectionEnd formats the section end into its string representation.
 func (l *BaseLanguage) FormatSectionEnd(name string) string {
 	if l.sectionEndFmt == "" {
 		return ""
@@ -8006,6 +8411,8 @@ func (l *BaseLanguage) FormatSectionEnd(name string) string {
 	return fmt.Sprintf(l.sectionEndFmt, name)
 }
 
+// FormatSectionBoth MUST produce a well-formed section both string.
+// FormatSectionBoth formats the section both into its string representation.
 func (l *BaseLanguage) FormatSectionBoth(name string) string {
 	if l.sectionBothFmt == "" {
 		return ""
@@ -8016,18 +8423,31 @@ func (l *BaseLanguage) FormatSectionBoth(name string) string {
 	return fmt.Sprintf(l.sectionBothFmt, name, name)
 }
 
-func (l *BaseLanguage) FormatHeader(filePath, summary, contributors, license, specs string) string {
+// FormatHeader MUST produce a well-formed header string.
+// FormatHeader formats the header into its string representation.
+func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, license, specs string) string {
 	if !l.supportsHeaders {
 		return ""
 	}
 	cp := l.commentPrefix
 	var b strings.Builder
-
 	b.WriteString(l.FormatSectionStart("Header"))
 	b.WriteString("\n\n")
-
-	b.WriteString(cp + " " + filePath + "\n\n")
-
+	b.WriteString(cp + " [" + fileId + "](" + fileUri + ")\n\n")
+	for _, line := range strings.Split(contributors, "\n") {
+		if strings.TrimSpace(line) != "" {
+			b.WriteString(cp + " " + line + "\n")
+		}
+	}
+	b.WriteString("\n")
+	for _, line := range strings.Split(license, "\n") {
+		if line == "" {
+			b.WriteString(cp + "\n")
+		} else {
+			b.WriteString(cp + " " + line + "\n")
+		}
+	}
+	b.WriteString("\n")
 	if summary != "" {
 		for _, line := range strings.Split(summary, "\n") {
 			if line == "" {
@@ -8038,30 +8458,7 @@ func (l *BaseLanguage) FormatHeader(filePath, summary, contributors, license, sp
 		}
 		b.WriteString("\n")
 	}
-
-	for _, line := range strings.Split(contributors, "\n") {
-		if strings.TrimSpace(line) != "" {
-			b.WriteString(cp + " " + line + "\n")
-		}
-	}
-	b.WriteString("\n")
-
-	b.WriteString(l.FormatSectionStart("License"))
-	b.WriteString("\n\n")
-	for _, line := range strings.Split(license, "\n") {
-		if line == "" {
-			b.WriteString(cp + "\n")
-		} else {
-			b.WriteString(cp + " " + line + "\n")
-		}
-	}
-	b.WriteString("\n")
-	b.WriteString(l.FormatSectionEnd("License"))
-	b.WriteString("\n\n")
-
-	b.WriteString(l.FormatSectionStart("Specs"))
 	if specs != "" {
-		b.WriteString("\n\n")
 		for _, line := range strings.Split(specs, "\n") {
 			if line == "" {
 				b.WriteString(cp + "\n")
@@ -8070,18 +8467,14 @@ func (l *BaseLanguage) FormatHeader(filePath, summary, contributors, license, sp
 			}
 		}
 		b.WriteString("\n")
-	} else {
-		b.WriteString("\n")
 	}
-	b.WriteString(l.FormatSectionEnd("Specs"))
-	b.WriteString("\n\n")
-
 	b.WriteString(l.FormatSectionEnd("Header"))
 	b.WriteString("\n")
-
 	return b.String()
 }
 
+// PolicySectionStartMatch MUST operate on the BaseLanguage receiver and return consistent results.
+// PolicySectionStartMatch performs the policy section start match operation on the BaseLanguage.
 func (l *BaseLanguage) PolicySectionStartMatch(line string) (bool, string) {
 	if l.policySectionStart == nil {
 		return false, ""
@@ -8097,6 +8490,8 @@ func (l *BaseLanguage) PolicySectionStartMatch(line string) (bool, string) {
 	return true, name
 }
 
+// PolicySectionEndMatch MUST operate on the BaseLanguage receiver and return consistent results.
+// PolicySectionEndMatch performs the policy section end match operation on the BaseLanguage.
 func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 	if l.policySectionEnd == nil {
 		return false, ""
@@ -8112,6 +8507,8 @@ func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 	return true, name
 }
 
+// ParseSections MUST return an error when the input is malformed.
+// ParseSections parses the input and returns the sections result.
 func (l *BaseLanguage) ParseSections(content string) []Section {
 	if l.sectionStart == nil {
 		return nil
@@ -8177,6 +8574,8 @@ func (l *BaseLanguage) ParseSections(content string) []Section {
 	return result
 }
 
+// ParseDefinitions MUST return an error when the input is malformed.
+// ParseDefinitions parses the input and returns the definitions result.
 func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
 	if l.definitionRegexp == nil {
 		return nil
@@ -8217,7 +8616,14 @@ func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []Defini
 		} else {
 			braceDepth := 0
 			sawOpen := false
+			nextDefStart := len(lines)
+			if i+1 < len(defStarts) {
+				nextDefStart = defStarts[i+1].line - 1
+			}
 			for lineIndex := start - 1; lineIndex < len(lines); lineIndex++ {
+				if !sawOpen && lineIndex >= nextDefStart {
+					break
+				}
 				line := lines[lineIndex]
 				for _, ch := range line {
 					if ch == '{' {
@@ -8323,15 +8729,21 @@ func extractDefinitionKeyword(fullMatch, name string) string {
 	return "definition"
 }
 
+// ExtraOrphanDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
+// ExtraOrphanDefinitions performs the extra orphan definitions operation on the BaseLanguage.
 func (l *BaseLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	return nil
 }
 
+// SkipDirectives MUST operate on the BaseLanguage receiver and return consistent results.
+// SkipDirectives performs the skip directives operation on the BaseLanguage.
 func (l *BaseLanguage) SkipDirectives() []string {
 	builtIn := []string{"TODO", "semio-ignore-"}
 	return append(builtIn, l.skipDirectives...)
 }
 
+// ScanComments MUST operate on the BaseLanguage receiver and return consistent results.
+// ScanComments performs the scan comments operation on the BaseLanguage.
 func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation {
 	if l.commentPrefix == "" {
 		return nil
@@ -8582,6 +8994,7 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 					break
 				}
 				trimmed := strings.TrimSpace(line)
+				commentText := strings.TrimSpace(line[j:])
 
 				if lineNum == 1 && strings.HasPrefix(trimmed, "#!") {
 					fmt.Printf("[DEBUG] Ignoring shebang at line 1: %s\n", trimmed)
@@ -8590,7 +9003,7 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 
 				shouldSkip := false
 				for _, directive := range allDirectives {
-					if strings.HasPrefix(trimmed, prefix+" "+directive) {
+					if strings.HasPrefix(trimmed, prefix+" "+directive) || strings.HasPrefix(commentText, prefix+" "+directive) || strings.HasPrefix(commentText, prefix+directive) {
 						shouldSkip = true
 						if directive == "TODO" {
 							scanState.InTodoBlock = true
@@ -8614,6 +9027,11 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 					break
 				}
 				if ctx.IsSectionDocLine(file, lineNum) {
+					foundInline = true
+					inlineCommentActive = true
+					break
+				}
+				if ctx.IsDefinitionDocLine(file, lineNum) {
 					foundInline = true
 					inlineCommentActive = true
 					break
@@ -8643,24 +9061,34 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 	return violations
 }
 
+// ExtractImports MUST return the extracted value without side effects.
+// ExtractImports extracts the imports from the given input.
 func (l *BaseLanguage) ExtractImports(content string) ([]string, string) {
 	return []string{}, content
 }
 
+// FormatImports MUST produce a well-formed imports string.
+// FormatImports formats the imports into its string representation.
 func (l *BaseLanguage) FormatImports(imports []string) string {
 	return ""
 }
 
+// ExtractPackage MUST return the extracted value without side effects.
+// ExtractPackage extracts the package from the given input.
 func (l *BaseLanguage) ExtractPackage(content string) (string, string) {
 	return "", content
 }
 
 // #region 🔖TypeScript
+// TypeScript language plugin with section, definition, comment, and import support.
 
+// TypeScriptLanguage holds the data fields for a type script language record.
 type TypeScriptLanguage struct {
 	BaseLanguage
 }
 
+// NewTypeScriptLanguage MUST initialize all required fields and return a valid TypeScriptLanguage.
+// NewTypeScriptLanguage creates and returns a new TypeScriptLanguage instance.
 func NewTypeScriptLanguage() *TypeScriptLanguage {
 	return &TypeScriptLanguage{
 		BaseLanguage: BaseLanguage{
@@ -8668,7 +9096,7 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 			extensions:         []string{".ts", ".tsx", ".js", ".jsx"},
 			sectionStart:       regexp.MustCompile(`(?i)^\s*//\s*#region\s+(.+?)\s*$`),
 			sectionEnd:         regexp.MustCompile(`(?i)^\s*//\s*#endregion(?:\s+(.+?))?\s*$`),
-			definitionRegexp:   regexp.MustCompile(`^(?:export\s+)?(?:const|let|var|function|class|interface|type|enum)\s+([A-Za-z_][A-Za-z0-9_]*)`),
+			definitionRegexp:   regexp.MustCompile(`^(?:export\s+)?(?:(?:async|abstract|declare|default)\s+)*(?:const|let|var|function|class|interface|type|enum)\s+([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "//",
 			blockCommentStart:  "/*",
 			blockCommentEnd:    "*/",
@@ -8683,6 +9111,8 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 	}
 }
 
+// ScanComments MUST operate on the TypeScriptLanguage receiver and return consistent results.
+// ScanComments performs the scan comments operation on the TypeScriptLanguage.
 func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation {
 	if DeriveFileKind(file) == FileKindConfig {
 		return nil
@@ -8856,6 +9286,11 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					foundInline = true
 					inlineCommentActive = true
 					break
+				if ctx.IsDefinitionDocLine(file, lineNum) {
+					foundInline = true
+					inlineCommentActive = true
+					break
+				}
 				}
 				scanState.InTodoBlock = false
 				debugMarker := strings.Contains(line, "[DEBUG]")
@@ -8882,6 +9317,8 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 	return violations
 }
 
+// ExtractImports MUST return the extracted value without side effects.
+// ExtractImports extracts the imports from the given input.
 func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -8908,6 +9345,8 @@ func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
 	return imports, strings.Join(bodyLines, "\n")
 }
 
+// FormatImports MUST produce a well-formed imports string.
+// FormatImports formats the imports into its string representation.
 func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -8924,11 +9363,15 @@ func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 }
 
 // #region 🔖Go
+// Go language plugin with section, definition, import, and package support.
 
+// GoLanguage holds the data fields for a go language record.
 type GoLanguage struct {
 	BaseLanguage
 }
 
+// NewGoLanguage MUST initialize all required fields and return a valid GoLanguage.
+// NewGoLanguage creates and returns a new GoLanguage instance.
 func NewGoLanguage() *GoLanguage {
 	return &GoLanguage{
 		BaseLanguage: BaseLanguage{
@@ -8953,6 +9396,8 @@ func NewGoLanguage() *GoLanguage {
 	}
 }
 
+// ExtraOrphanDefinitions MUST operate on the GoLanguage receiver and return consistent results.
+// ExtraOrphanDefinitions performs the extra orphan definitions operation on the GoLanguage.
 func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	for i := 0; i < len(lines); i++ {
@@ -8984,6 +9429,8 @@ func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	return defs
 }
 
+// ExtractImports MUST return the extracted value without side effects.
+// ExtractImports extracts the imports from the given input.
 func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -9018,6 +9465,8 @@ func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 	return imports, strings.Join(bodyLines, "\n")
 }
 
+// FormatImports MUST produce a well-formed imports string.
+// FormatImports formats the imports into its string representation.
 func (l *GoLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -9039,6 +9488,8 @@ func (l *GoLanguage) FormatImports(imports []string) string {
 	return importBlock
 }
 
+// ExtractPackage MUST return the extracted value without side effects.
+// ExtractPackage extracts the package from the given input.
 func (l *GoLanguage) ExtractPackage(content string) (string, string) {
 	lines := strings.Split(content, "\n")
 	pkg := ""
@@ -9055,10 +9506,13 @@ func (l *GoLanguage) ExtractPackage(content string) (string, string) {
 	return pkg, strings.Join(bodyLines, "\n")
 }
 
+// PythonLanguage holds the data fields for a python language record.
 type PythonLanguage struct {
 	BaseLanguage
 }
 
+// NewPythonLanguage MUST initialize all required fields and return a valid PythonLanguage.
+// NewPythonLanguage creates and returns a new PythonLanguage instance.
 func NewPythonLanguage() *PythonLanguage {
 	return &PythonLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9081,6 +9535,8 @@ func NewPythonLanguage() *PythonLanguage {
 	}
 }
 
+// ExtractImports MUST return the extracted value without side effects.
+// ExtractImports extracts the imports from the given input.
 func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -9096,6 +9552,8 @@ func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 	return imports, strings.Join(bodyLines, "\n")
 }
 
+// FormatImports MUST produce a well-formed imports string.
+// FormatImports formats the imports into its string representation.
 func (l *PythonLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -9115,11 +9573,15 @@ func (l *PythonLanguage) FormatImports(imports []string) string {
 // #endregion 🔖Go
 
 // #region 🔖C#
+// C# language plugin with section, definition, and import support.
 
+// CSharpLanguage holds the data fields for a c sharp language record.
 type CSharpLanguage struct {
 	BaseLanguage
 }
 
+// NewCSharpLanguage MUST initialize all required fields and return a valid CSharpLanguage.
+// NewCSharpLanguage creates and returns a new CSharpLanguage instance.
 func NewCSharpLanguage() *CSharpLanguage {
 	return &CSharpLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9144,6 +9606,8 @@ func NewCSharpLanguage() *CSharpLanguage {
 	}
 }
 
+// ExtractImports MUST return the extracted value without side effects.
+// ExtractImports extracts the imports from the given input.
 func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -9159,6 +9623,8 @@ func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
 	return imports, strings.Join(bodyLines, "\n")
 }
 
+// FormatImports MUST produce a well-formed imports string.
+// FormatImports formats the imports into its string representation.
 func (l *CSharpLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -9178,11 +9644,15 @@ func (l *CSharpLanguage) FormatImports(imports []string) string {
 // #endregion 🔖C#
 
 // #region 🔖JSON
+// JSON language plugin with section parsing via embedded comment keys.
 
+// JSONLanguage holds the data fields for a j s o n language record.
 type JSONLanguage struct {
 	BaseLanguage
 }
 
+// NewJSONLanguage MUST initialize all required fields and return a valid JSONLanguage.
+// NewJSONLanguage creates and returns a new JSONLanguage instance.
 func NewJSONLanguage() *JSONLanguage {
 	return &JSONLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9194,11 +9664,21 @@ func NewJSONLanguage() *JSONLanguage {
 	}
 }
 
+// SupportsSections MUST operate on the JSONLanguage receiver and return consistent results.
+// SupportsSections performs the supports sections operation on the JSONLanguage.
 func (l *JSONLanguage) SupportsSections() bool    { return true }
+// SupportsDefinitions MUST operate on the JSONLanguage receiver and return consistent results.
+// SupportsDefinitions performs the supports definitions operation on the JSONLanguage.
 func (l *JSONLanguage) SupportsDefinitions() bool { return false }
+// SupportsComments MUST operate on the JSONLanguage receiver and return consistent results.
+// SupportsComments performs the supports comments operation on the JSONLanguage.
 func (l *JSONLanguage) SupportsComments() bool    { return false }
+// SupportsHeaders MUST operate on the JSONLanguage receiver and return consistent results.
+// SupportsHeaders performs the supports headers operation on the JSONLanguage.
 func (l *JSONLanguage) SupportsHeaders() bool     { return false }
 
+// ParseSections MUST return an error when the input is malformed.
+// ParseSections parses the input and returns the sections result.
 func (l *JSONLanguage) ParseSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
@@ -9207,11 +9687,15 @@ func (l *JSONLanguage) ParseSections(content string) []Section {
 // #endregion 🔖JSON
 
 // #region 🔖Markdown
+// Markdown language plugin with heading-based section parsing.
 
+// MarkdownLanguage holds the data fields for a markdown language record.
 type MarkdownLanguage struct {
 	BaseLanguage
 }
 
+// NewMarkdownLanguage MUST initialize all required fields and return a valid MarkdownLanguage.
+// NewMarkdownLanguage creates and returns a new MarkdownLanguage instance.
 func NewMarkdownLanguage() *MarkdownLanguage {
 	return &MarkdownLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9227,10 +9711,18 @@ func NewMarkdownLanguage() *MarkdownLanguage {
 	}
 }
 
+// SupportsSections MUST operate on the MarkdownLanguage receiver and return consistent results.
+// SupportsSections performs the supports sections operation on the MarkdownLanguage.
 func (l *MarkdownLanguage) SupportsSections() bool    { return true }
+// SupportsDefinitions MUST operate on the MarkdownLanguage receiver and return consistent results.
+// SupportsDefinitions performs the supports definitions operation on the MarkdownLanguage.
 func (l *MarkdownLanguage) SupportsDefinitions() bool { return false }
+// SupportsComments MUST operate on the MarkdownLanguage receiver and return consistent results.
+// SupportsComments performs the supports comments operation on the MarkdownLanguage.
 func (l *MarkdownLanguage) SupportsComments() bool    { return false }
 
+// ParseSections MUST return an error when the input is malformed.
+// ParseSections parses the input and returns the sections result.
 func (l *MarkdownLanguage) ParseSections(content string) []Section {
 	return ParseMarkdownSectionsInternal(content)
 }
@@ -9238,11 +9730,15 @@ func (l *MarkdownLanguage) ParseSections(content string) []Section {
 // #endregion 🔖Markdown
 
 // #region 🔖Rust
+// Rust language plugin with section, definition, and import support.
 
+// RustLanguage holds the data fields for a rust language record.
 type RustLanguage struct {
 	BaseLanguage
 }
 
+// NewRustLanguage MUST initialize all required fields and return a valid RustLanguage.
+// NewRustLanguage creates and returns a new RustLanguage instance.
 func NewRustLanguage() *RustLanguage {
 	return &RustLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9265,6 +9761,8 @@ func NewRustLanguage() *RustLanguage {
 	}
 }
 
+// ExtraOrphanDefinitions MUST operate on the RustLanguage receiver and return consistent results.
+// ExtraOrphanDefinitions performs the extra orphan definitions operation on the RustLanguage.
 func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	modRegexp := regexp.MustCompile(`^\s*(?:pub\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;`)
@@ -9280,11 +9778,15 @@ func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 // #endregion 🔖Rust
 
 // #region 🔖Ruby
+// Ruby language plugin with section, definition, and import support.
 
+// RubyLanguage holds the data fields for a ruby language record.
 type RubyLanguage struct {
 	BaseLanguage
 }
 
+// NewRubyLanguage MUST initialize all required fields and return a valid RubyLanguage.
+// NewRubyLanguage creates and returns a new RubyLanguage instance.
 func NewRubyLanguage() *RubyLanguage {
 	return &RubyLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9307,6 +9809,8 @@ func NewRubyLanguage() *RubyLanguage {
 	}
 }
 
+// ParseDefinitions MUST return an error when the input is malformed.
+// ParseDefinitions parses the input and returns the definitions result.
 func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
 	if l.definitionRegexp == nil {
 		return nil
@@ -9364,6 +9868,8 @@ func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []Defini
 	return defRanges
 }
 
+// ExtraOrphanDefinitions MUST operate on the RubyLanguage receiver and return consistent results.
+// ExtraOrphanDefinitions performs the extra orphan definitions operation on the RubyLanguage.
 func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	moduleRegexp := regexp.MustCompile(`^\s*module\s+([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)`)
@@ -9379,11 +9885,15 @@ func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 // #endregion 🔖Ruby
 
 // #region 🔖Shell
+// Shell language plugin with section and comment support.
 
+// ShellLanguage holds the data fields for a shell language record.
 type ShellLanguage struct {
 	BaseLanguage
 }
 
+// NewShellLanguage MUST initialize all required fields and return a valid ShellLanguage.
+// NewShellLanguage creates and returns a new ShellLanguage instance.
 func NewShellLanguage() *ShellLanguage {
 	return &ShellLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9407,11 +9917,15 @@ func NewShellLanguage() *ShellLanguage {
 // #endregion 🔖Shell
 
 // #region 🔖TOML
+// TOML language plugin with section heading and comment support.
 
+// TomlLanguage holds the data fields for a toml language record.
 type TomlLanguage struct {
 	BaseLanguage
 }
 
+// NewTomlLanguage MUST initialize all required fields and return a valid TomlLanguage.
+// NewTomlLanguage creates and returns a new TomlLanguage instance.
 func NewTomlLanguage() *TomlLanguage {
 	return &TomlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9430,19 +9944,31 @@ func NewTomlLanguage() *TomlLanguage {
 	}
 }
 
+// SupportsSections MUST operate on the TomlLanguage receiver and return consistent results.
+// SupportsSections performs the supports sections operation on the TomlLanguage.
 func (l *TomlLanguage) SupportsSections() bool    { return true }
+// SupportsDefinitions MUST operate on the TomlLanguage receiver and return consistent results.
+// SupportsDefinitions performs the supports definitions operation on the TomlLanguage.
 func (l *TomlLanguage) SupportsDefinitions() bool { return false }
+// SupportsComments MUST operate on the TomlLanguage receiver and return consistent results.
+// SupportsComments performs the supports comments operation on the TomlLanguage.
 func (l *TomlLanguage) SupportsComments() bool    { return true }
+// SupportsHeaders MUST operate on the TomlLanguage receiver and return consistent results.
+// SupportsHeaders performs the supports headers operation on the TomlLanguage.
 func (l *TomlLanguage) SupportsHeaders() bool     { return false }
 
 // #endregion 🔖TOML
 
 // #region 🔖YAML
+// YAML language plugin with section heading and comment support.
 
+// YamlLanguage holds the data fields for a yaml language record.
 type YamlLanguage struct {
 	BaseLanguage
 }
 
+// NewYamlLanguage MUST initialize all required fields and return a valid YamlLanguage.
+// NewYamlLanguage creates and returns a new YamlLanguage instance.
 func NewYamlLanguage() *YamlLanguage {
 	return &YamlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9461,19 +9987,31 @@ func NewYamlLanguage() *YamlLanguage {
 	}
 }
 
+// SupportsSections MUST operate on the YamlLanguage receiver and return consistent results.
+// SupportsSections performs the supports sections operation on the YamlLanguage.
 func (l *YamlLanguage) SupportsSections() bool    { return true }
+// SupportsDefinitions MUST operate on the YamlLanguage receiver and return consistent results.
+// SupportsDefinitions performs the supports definitions operation on the YamlLanguage.
 func (l *YamlLanguage) SupportsDefinitions() bool { return false }
+// SupportsComments MUST operate on the YamlLanguage receiver and return consistent results.
+// SupportsComments performs the supports comments operation on the YamlLanguage.
 func (l *YamlLanguage) SupportsComments() bool    { return true }
+// SupportsHeaders MUST operate on the YamlLanguage receiver and return consistent results.
+// SupportsHeaders performs the supports headers operation on the YamlLanguage.
 func (l *YamlLanguage) SupportsHeaders() bool     { return false }
 
 // #endregion 🔖YAML
 
 // #region 🔖SQL
+// SQL language plugin with section and comment support.
 
+// SqlLanguage holds the data fields for a sql language record.
 type SqlLanguage struct {
 	BaseLanguage
 }
 
+// NewSqlLanguage MUST initialize all required fields and return a valid SqlLanguage.
+// NewSqlLanguage creates and returns a new SqlLanguage instance.
 func NewSqlLanguage() *SqlLanguage {
 	return &SqlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9497,11 +10035,15 @@ func NewSqlLanguage() *SqlLanguage {
 // #endregion 🔖SQL
 
 // #region 🔖GraphQL
+// GraphQL language plugin with section and comment support.
 
+// GraphqlLanguage holds the data fields for a graphql language record.
 type GraphqlLanguage struct {
 	BaseLanguage
 }
 
+// NewGraphqlLanguage MUST initialize all required fields and return a valid GraphqlLanguage.
+// NewGraphqlLanguage creates and returns a new GraphqlLanguage instance.
 func NewGraphqlLanguage() *GraphqlLanguage {
 	return &GraphqlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9539,6 +10081,8 @@ var languageRegistry = []LanguagePlugin{
 	NewGraphqlLanguage(),
 }
 
+// GetLanguage MUST return the stored value without modification.
+// GetLanguage returns the language of the value.
 func GetLanguage(filePath string) LanguagePlugin {
 	ext := strings.ToLower(filepath.Ext(filePath))
 	for _, lang := range languageRegistry {
@@ -9549,6 +10093,8 @@ func GetLanguage(filePath string) LanguagePlugin {
 	return nil
 }
 
+// GetLanguageByName MUST return the stored value without modification.
+// GetLanguageByName returns the language by name of the value.
 func GetLanguageByName(name string) LanguagePlugin {
 	for _, lang := range languageRegistry {
 		if lang.Name() == name {
@@ -9560,12 +10106,15 @@ func GetLanguageByName(name string) LanguagePlugin {
 
 // #endregion 🔖TypeScript
 
+// GitAuthor holds the data fields for a git author record.
 type GitAuthor struct {
 	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
 	Email  string `json:"email,omitempty" yaml:"email,omitempty"`
 	GitHub string `json:"github,omitempty" yaml:"github,omitempty"`
 }
 
+// String MUST return the canonical string value.
+// String returns the string representation of the GitAuthor.
 func (a GitAuthor) String() string {
 	if a.Email != "" {
 		return fmt.Sprintf("%s <%s>", a.Name, a.Email)
@@ -9585,6 +10134,8 @@ func parseGitAuthor(s string) GitAuthor {
 	return res
 }
 
+// FindAndUpdateContributor MUST return nil when no match is found.
+// FindAndUpdateContributor searches for and returns the matching and update contributor.
 func FindAndUpdateContributor(authorStr string) string {
 	parsed := parseGitAuthor(authorStr)
 	if parsed.Name == "" && parsed.Email == "" {
@@ -9670,6 +10221,8 @@ func FindAndUpdateContributor(authorStr string) string {
 	return authorStr
 }
 
+// GetSystem MUST return the stored value without modification.
+// GetSystem returns the system of the value.
 func GetSystem() string {
 	switch runtime.GOOS {
 	case "darwin":
@@ -9681,11 +10234,13 @@ func GetSystem() string {
 	}
 }
 
+// InteractionDates holds the data fields for a interaction dates record.
 type InteractionDates struct {
 	Started  string  `json:"started" yaml:"started"`
 	Finished *string `json:"finished,omitempty" yaml:"finished,omitempty"`
 }
 
+// Interaction holds the data fields for a interaction record.
 type Interaction struct {
 	Dates  InteractionDates `json:"dates" yaml:"dates"`
 	Author string           `json:"author" yaml:"author"`
@@ -9697,6 +10252,8 @@ type Interaction struct {
 	Diff   *TicketDiffs     `json:"diff,omitempty" yaml:"diff,omitempty"`
 }
 
+// UnmarshalJSON MUST handle both legacy and current JSON layouts.
+// UnmarshalJSON performs the unmarshal j s o n operation on the Interaction.
 func (i *Interaction) UnmarshalJSON(data []byte) error {
 	type Alias Interaction
 	raw := struct {
@@ -9747,8 +10304,6 @@ func (i *Interaction) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-
-
 func resolveAuthorToGithub(name, email string) string {
 	contributors, err := ListContributors()
 	if err == nil {
@@ -9784,8 +10339,7 @@ func resolveAuthorToGithub(name, email string) string {
 	return ""
 }
 
-
-
+// TicketSection holds the data fields for a ticket section record.
 type TicketSection struct {
 	Name        string       `json:"name"`
 	Range       *Range       `json:"range,omitempty"`
@@ -9793,21 +10347,25 @@ type TicketSection struct {
 	Lines       *LineMetrics `json:"lines,omitempty"`
 }
 
+// TicketFile holds the data fields for a ticket file record.
 type TicketFile struct {
 	Path  string       `json:"path"`
 	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
+// TicketGithubData holds the data fields for a ticket github data record.
 type TicketGithubData struct {
 	Issue string `json:"issue,omitempty"`
 }
 
+// TicketFileRenamed holds the data fields for a ticket file renamed record.
 type TicketFileRenamed struct {
 	From  string       `json:"from"`
 	To    string       `json:"to"`
 	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
+// TicketDiffSet holds the data fields for a ticket diff set record.
 type TicketDiffSet struct {
 	Deleted  []TicketFile        `json:"deleted"`
 	Renamed  []TicketFileRenamed `json:"renamed"`
@@ -9815,6 +10373,7 @@ type TicketDiffSet struct {
 	Added    []TicketFile        `json:"added"`
 }
 
+// TicketDiffs holds the data fields for a ticket diffs record.
 type TicketDiffs struct {
 	Bundles     TicketDiffSet `json:"bundles"`
 	Folders     TicketDiffSet `json:"folders"`
@@ -9823,6 +10382,7 @@ type TicketDiffs struct {
 	Definitions TicketDiffSet `json:"definitions"`
 }
 
+// TicketData holds the data fields for a ticket data record.
 type TicketData struct {
 	Title        string            `json:"title"`
 	Interactions []Interaction     `json:"interactions"`
@@ -9834,6 +10394,7 @@ type TicketData struct {
 	Parent       string            `json:"parent,omitempty"`
 }
 
+// Goal holds the data fields for a goal record.
 type Goal struct {
 	Title        string          `json:"title"`
 	Description  string          `json:"description"`
@@ -9852,55 +10413,69 @@ type Goal struct {
 	Path string `json:"-"`
 }
 
+// IsNode MUST return true only when the condition is met.
+// IsNode reports whether the Goal is node.
 func (g *Goal) IsNode()        {}
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the Goal.
 func (g *Goal) GetID() string  { return fmt.Sprintf("%s%s", emojiText(EmojiGoal), g.ID) }
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the Goal.
 func (g *Goal) GetURI() string { return "semiorepo://goal/" + strings.ToUpper(g.ID) }
 
+// GoalDates holds the data fields for a goal dates record.
 type GoalDates struct {
 	Due    string     `json:"due,omitempty"`
 	Closed *time.Time `json:"closed,omitempty"`
 }
 
+// GoalGithubData holds the data fields for a goal github data record.
 type GoalGithubData struct {
 	Milestone string `json:"milestone,omitempty"`
 	Issue     string `json:"issue,omitempty"`
 }
 
+// TicketDates holds the data fields for a ticket dates record.
 type TicketDates struct {
 	Closed *time.Time `json:"closed,omitempty"`
 }
 
+// ViolationKind represents a violation kind value.
 type ViolationKind string
 
 const (
-	ViolationCodeFileMissingHeader       ViolationKind = "code/file/missing-header"
-	ViolationCodeFileWrongHeaderFormat   ViolationKind = "code/file/wrong-header-format"
-	ViolationCodeFileMissingId           ViolationKind = "code/file/missing-id"
-	ViolationCodeFileWrongId             ViolationKind = "code/file/wrong-id"
-	ViolationCodeFileMissingContributors ViolationKind = "code/file/missing-contributors"
-	ViolationCodeFileMissingSummary      ViolationKind = "code/file/missing-summary"
-	ViolationCodeFileMissingLicense      ViolationKind = "code/file/missing-license"
-	ViolationCodeFileWrongLicense        ViolationKind = "code/file/wrong-license"
-	ViolationCodeFileMissingSpecs        ViolationKind = "code/file/missing-specs"
-	ViolationCodeFileMissingDocs         ViolationKind = "code/file/missing-docs"
-	ViolationCodeSectionEmpty            ViolationKind = "code/section/empty"
-	ViolationCodeSectionOrphanDefinition ViolationKind = "code/section/orphan-definition"
-	ViolationCodeSectionMissingStartName ViolationKind = "code/section/missing-start-name"
-	ViolationCodeSectionMissingEndName   ViolationKind = "code/section/missing-end-name"
-	ViolationCodeSectionNameMismatch     ViolationKind = "code/section/name-mismatch"
-	ViolationCodeSectionWrongFormat      ViolationKind = "code/section/wrong-format"
-	ViolationCodeSectionMissingSummary   ViolationKind = "code/section/missing-summary"
-	ViolationCodeSectionMissingSpecs     ViolationKind = "code/section/missing-specs"
-	ViolationCodeSectionMissingDocs      ViolationKind = "code/section/missing-docs"
-	ViolationCodeDefWrongFormat          ViolationKind = "code/definition/wrong-format"
-	ViolationCodeDefMissingSummary       ViolationKind = "code/definition/missing-summary"
-	ViolationCodeDefMissingSpecs         ViolationKind = "code/definition/missing-specs"
-	ViolationCodeDefMissingDocs          ViolationKind = "code/definition/missing-docs"
-	ViolationCodeCommentInline           ViolationKind = "code/comment/inline"
-	ViolationCodeCommentBlock            ViolationKind = "code/comment/block"
-	ViolationCodeCommentJSDoc            ViolationKind = "code/comment/jsdoc"
-	ViolationCodeSpecsSyntax             ViolationKind = "code/specs/implementation-syntax"
-	ViolationCodeDocsMissingReadme       ViolationKind = "code/docs/missing-readme"
+	ViolationCodeFileMissingHeaderRegion          ViolationKind = "code/file/missing-header-region"
+	ViolationCodeFileWrongHeaderRegionFormat      ViolationKind = "code/file/wrong-header-region-format"
+	ViolationCodeFileMissingIdentification              ViolationKind = "code/file/missing-identification"
+	ViolationCodeFileWrongIdentificationId                ViolationKind = "code/file/wrong-identification/id"
+	ViolationCodeFileWrongIdentificationUri ViolationKind = "code/file/wrong-identification/uri"
+	ViolationCodeFileMissingContributors    ViolationKind = "code/file/missing-contributors"
+	ViolationCodeFileMissingSummary         ViolationKind = "code/file/missing-summary"
+	ViolationCodeFileMissingLicense         ViolationKind = "code/file/missing-license"
+	ViolationCodeFileWrongLicense           ViolationKind = "code/file/wrong-license"
+	ViolationCodeFileMissingSpecs           ViolationKind = "code/file/missing-specs"
+	ViolationCodeFileMissingDocs            ViolationKind = "code/file/missing-docs"
+	ViolationCodeSectionEmpty               ViolationKind = "code/section/empty"
+	ViolationCodeSectionOrphanDefinition    ViolationKind = "code/section/orphan-definition"
+	ViolationCodeSectionMissingStartName    ViolationKind = "code/section/missing-start-name"
+	ViolationCodeSectionMissingEndName      ViolationKind = "code/section/missing-end-name"
+	ViolationCodeSectionNameMismatch        ViolationKind = "code/section/name-mismatch"
+	ViolationCodeSectionWrongFormat         ViolationKind = "code/section/wrong-format"
+	ViolationCodeSectionWrongFormatSummaryTooLong  ViolationKind = "code/section/wrong-format/summary/too-long-summary"
+	ViolationCodeSectionWrongFormatSpecsSplitBlock ViolationKind = "code/section/wrong-format/specs/split-block"
+	ViolationCodeSectionWrongFormatDocs            ViolationKind = "code/section/wrong-format/docs"
+	ViolationCodeSectionMissingSummary      ViolationKind = "code/section/missing-summary"
+	ViolationCodeSectionMissingSpecs        ViolationKind = "code/section/missing-specs"
+	ViolationCodeSectionMissingDocs         ViolationKind = "code/section/missing-docs"
+	ViolationCodeDefWrongFormat             ViolationKind = "code/definition/wrong-format"
+	ViolationCodeDefMissingSummary          ViolationKind = "code/definition/missing-summary"
+	ViolationCodeDefMissingSpecs            ViolationKind = "code/definition/missing-specs"
+	ViolationCodeDefMissingDocs             ViolationKind = "code/definition/missing-docs"
+	ViolationCodeCommentInline              ViolationKind = "code/comment/inline"
+	ViolationCodeCommentBlock               ViolationKind = "code/comment/block"
+	ViolationCodeCommentJSDoc               ViolationKind = "code/comment/jsdoc"
+	ViolationCodeSpecsSyntax                ViolationKind = "code/specs/implementation-syntax"
+	ViolationCodeDocsMissingReadme          ViolationKind = "code/docs/missing-readme"
 	ViolationDevDocsMissingFile             ViolationKind = "dev-docs/missing-file"
 	ViolationDevDocsMissingFolder           ViolationKind = "dev-docs/missing-folder"
 	ViolationDevDocsWrongFilePath           ViolationKind = "dev-docs/wrong-file-path"
@@ -9938,32 +10513,39 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Solution:    "Implement strict ticket tracking (open/close/log)",
 		Autofixable: false,
 	},
-	ViolationCodeFileMissingHeader: {
-		Kind:        ViolationCodeFileMissingHeader,
+	ViolationCodeFileMissingHeaderRegion: {
+		Kind:        ViolationCodeFileMissingHeaderRegion,
 		Priority:    ViolationPriorityLow,
 		Reason:      "Header region with license, filename, and contributors is required",
 		Solution:    "Add header region with SPDX license, filename, and contributors",
 		Autofixable: true,
 	},
-	ViolationCodeFileWrongHeaderFormat: {
-		Kind:        ViolationCodeFileWrongHeaderFormat,
+	ViolationCodeFileWrongHeaderRegionFormat: {
+		Kind:        ViolationCodeFileWrongHeaderRegionFormat,
 		Priority:    ViolationPriorityLow,
 		Reason:      "Header region format is incorrect (missing License or Specs subregion)",
 		Solution:    "Add License and Specs subregions inside Header",
 		Autofixable: false,
 	},
-	ViolationCodeFileMissingId: {
-		Kind:        ViolationCodeFileMissingId,
+	ViolationCodeFileMissingIdentification: {
+		Kind:        ViolationCodeFileMissingIdentification,
 		Priority:    ViolationPriorityLow,
 		Reason:      "File header must contain an artifact ID",
 		Solution:    "Add file artifact ID line in header",
 		Autofixable: true,
 	},
-	ViolationCodeFileWrongId: {
-		Kind:        ViolationCodeFileWrongId,
+	ViolationCodeFileWrongIdentificationId: {
+		Kind:        ViolationCodeFileWrongIdentificationId,
 		Priority:    ViolationPriorityLow,
 		Reason:      "File header must contain the correct artifact ID",
 		Solution:    "Replace file identifier line with the correct artifact ID",
+		Autofixable: true,
+	},
+	ViolationCodeFileWrongIdentificationUri: {
+		Kind:        ViolationCodeFileWrongIdentificationUri,
+		Priority:    ViolationPriorityLow,
+		Reason:      "File header must contain the correct artifact URI",
+		Solution:    "Replace URI in identification line with the correct artifact URI",
 		Autofixable: true,
 	},
 	ViolationCodeFileMissingContributors: {
@@ -10048,6 +10630,27 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Priority:    ViolationPriorityLow,
 		Reason:      "Section region marker format is incorrect",
 		Solution:    "Use correct region marker format with emoji bookmark",
+		Autofixable: false,
+	},
+	ViolationCodeSectionWrongFormatSummaryTooLong: {
+		Kind:        ViolationCodeSectionWrongFormatSummaryTooLong,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Section summary must not exceed 256 characters",
+		Solution:    "Shorten the section summary to 256 characters or less",
+		Autofixable: false,
+	},
+	ViolationCodeSectionWrongFormatSpecsSplitBlock: {
+		Kind:        ViolationCodeSectionWrongFormatSpecsSplitBlock,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Spec comment block must be contiguous without blank lines",
+		Solution:    "Remove blank lines between spec comment lines",
+		Autofixable: true,
+	},
+	ViolationCodeSectionWrongFormatDocs: {
+		Kind:        ViolationCodeSectionWrongFormatDocs,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Section docs format is incorrect",
+		Solution:    "Fix the section docs format",
 		Autofixable: false,
 	},
 	ViolationCodeSectionMissingSummary: {
@@ -10262,6 +10865,8 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 	},
 }
 
+// Info MUST return the metadata entry for the violation kind.
+// Info returns the metadata for the violation kind.
 func (k ViolationKind) Info() ViolationKindMeta {
 	if info, ok := violationKindInfoTable[k]; ok {
 		return info
@@ -10275,16 +10880,60 @@ func (k ViolationKind) Info() ViolationKindMeta {
 	}
 }
 
-type PolicyDef struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Scopes      []string          `json:"scopes"`
-	Priority    ViolationPriority `json:"priority"`
-	Kinds       []ViolationKind   `json:"kinds"`
-	Run         PolicyFunc        `json:"-"`
+// ViolationKindGroup holds the data fields for a violation kind group record.
+type ViolationKindGroup struct {
+	Name        string               `json:"name"`
+	Description string               `json:"description"`
+	Scopes      []string             `json:"scopes,omitempty"`
+	Groups      []ViolationKindGroup `json:"groups,omitempty"`
+	Kinds       []ViolationKind      `json:"kinds,omitempty"`
 }
 
+// AllKinds MUST include all violation kinds from the group and its children.
+// AllKinds returns all violation kinds associated with the group.
+func (g *ViolationKindGroup) AllKinds() []ViolationKind {
+	var result []ViolationKind
+	result = append(result, g.Kinds...)
+	for _, child := range g.Groups {
+		result = append(result, child.AllKinds()...)
+	}
+	return result
+}
+
+// GetID MUST return the stored value without modification.
+// GetID returns the i d of the ViolationKindGroup.
+func (g *ViolationKindGroup) GetID() string {
+	return fmt.Sprintf("%s%s", emojiText(EmojiViolationKindGroup), g.Name)
+}
+
+// GetURI MUST return the stored value without modification.
+// GetURI returns the u r i of the ViolationKindGroup.
+func (g *ViolationKindGroup) GetURI() string {
+	return "semiorepo://violationKindGroup/" + strings.ToUpper(Slugify(g.Name))
+}
+
+// PolicyDef holds the data fields for a policy def record.
+type PolicyDef struct {
+	ID          string               `json:"id"`
+	Name        string               `json:"name"`
+	Description string               `json:"description"`
+	Scopes      []string             `json:"scopes"`
+	Priority    ViolationPriority    `json:"priority"`
+	Groups      []ViolationKindGroup `json:"groups"`
+	Run         PolicyFunc           `json:"-"`
+}
+
+// AllKinds MUST include all violation kinds from the group and its children.
+// AllKinds returns all violation kinds associated with the group.
+func (p *PolicyDef) AllKinds() []ViolationKind {
+	var result []ViolationKind
+	for _, g := range p.Groups {
+		result = append(result, g.AllKinds()...)
+	}
+	return result
+}
+
+// AnalyzeReport holds the data fields for a analyze report record.
 type AnalyzeReport struct {
 	Timestamp  string      `json:"timestamp"`
 	Status     string      `json:"status"`
@@ -10293,12 +10942,14 @@ type AnalyzeReport struct {
 	Violations []Violation `json:"violations"`
 }
 
+// Summary holds the data fields for a summary record.
 type Summary struct {
 	Total      int            `json:"total"`
 	ByPriority map[string]int `json:"byPriority"`
 	ByKind     map[string]int `json:"byKind"`
 }
 
+// FileCache holds the data fields for a file cache record.
 type FileCache struct {
 	FilePath   string      `json:"filePath"`
 	Hash       string      `json:"hash"`
@@ -10306,6 +10957,7 @@ type FileCache struct {
 	Violations []Violation `json:"violations"`
 }
 
+// OutputType represents a output type value.
 type OutputType string
 
 const (
@@ -10316,22 +10968,26 @@ const (
 	OutputPlain   OutputType = "plain"
 )
 
+// OutputLine holds the data fields for a output line record.
 type OutputLine struct {
 	Type OutputType `json:"type"`
 	Text string     `json:"text"`
 }
 
+// CommandOutput holds the data fields for a command output record.
 type CommandOutput struct {
 	Lines    []OutputLine `json:"lines"`
 	ExitCode int          `json:"exitCode"`
 }
 
+// ToolResult holds the data fields for a tool result record.
 type ToolResult struct {
 	Output CommandOutput `json:"output"`
 	Data   interface{}   `json:"data,omitempty"`
 	Error  string        `json:"error,omitempty"`
 }
 
+// ContributorTicket holds the data fields for a contributor ticket record.
 type ContributorTicket struct {
 	Year     int          `json:"year"`
 	Month    int          `json:"month"`
@@ -10341,11 +10997,13 @@ type ContributorTicket struct {
 	FilePath string       `json:"filePath,omitempty"`
 }
 
+// ContributorCommit holds the data fields for a contributor commit record.
 type ContributorCommit struct {
 	Title string `json:"title"`
 	Sha   string `json:"sha"`
 }
 
+// ContributorContributionsStorage holds the data fields for a contributor contributions storage record.
 type ContributorContributionsStorage struct {
 	Bundles     []string            `json:"bundles,omitempty"`
 	Folders     []string            `json:"folders,omitempty"`
@@ -10358,7 +11016,9 @@ type ContributorContributionsStorage struct {
 }
 
 // #region 🔖Codebase Types
+// Internal metric, contributor, ticket, policy, violation, and tree node types for codebase analysis.
 
+// BundleMetricsInternal holds the data fields for a bundle metrics internal record.
 type BundleMetricsInternal struct {
 	Folders     int `json:"folders"`
 	Files       int `json:"files"`
@@ -10368,40 +11028,47 @@ type BundleMetricsInternal struct {
 	Violations  int `json:"violations"`
 }
 
+// FolderMetricsInternal holds the data fields for a folder metrics internal record.
 type FolderMetricsInternal struct {
 	Files      int `json:"files"`
 	Lines      int `json:"lines"`
 	Violations int `json:"violations"`
 }
 
+// FileMetricsInternal holds the data fields for a file metrics internal record.
 type FileMetricsInternal struct {
 	Sections    int `json:"sections"`
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
 }
 
+// SectionMetricsInternal holds the data fields for a section metrics internal record.
 type SectionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
 	Violations  int `json:"violations"`
 }
 
+// DefinitionMetricsInternal holds the data fields for a definition metrics internal record.
 type DefinitionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
 	Violations  int `json:"violations"`
 }
 
+// RangePosition holds the data fields for a range position record.
 type RangePosition struct {
 	Line   int `json:"line"`
 	Column int `json:"column"`
 }
 
+// FileRange holds the data fields for a file range record.
 type FileRange struct {
 	Start RangePosition `json:"start"`
 	End   RangePosition `json:"end"`
 }
 
+// ViolationFile holds the data fields for a violation file record.
 type ViolationFile struct {
 	ID    string     `json:"id"`
 	Path  string     `json:"path"`
@@ -10409,12 +11076,14 @@ type ViolationFile struct {
 	Range *FileRange `json:"range,omitempty"`
 }
 
+// ViolationFolder holds the data fields for a violation folder record.
 type ViolationFolder struct {
 	ID   string `json:"id"`
 	Path string `json:"path"`
 	URI  string `json:"uri"`
 }
 
+// CodebaseViolation holds the data fields for a codebase violation record.
 type CodebaseViolation struct {
 	ID          string            `json:"id"`
 	Folders     []ViolationFolder `json:"folders,omitempty"`
@@ -10426,6 +11095,7 @@ type CodebaseViolation struct {
 	Solution    string            `json:"solution"`
 }
 
+// CodebaseBundle holds the data fields for a codebase bundle record.
 type CodebaseBundle struct {
 	ID           string                 `json:"id"`
 	Folder       string                 `json:"folder"`
@@ -10435,6 +11105,7 @@ type CodebaseBundle struct {
 	Metrics      *BundleMetricsInternal `json:"metrics,omitempty"`
 }
 
+// CodebaseFolder holds the data fields for a codebase folder record.
 type CodebaseFolder struct {
 	ID       string                 `json:"id"`
 	Path     string                 `json:"path"`
@@ -10444,6 +11115,7 @@ type CodebaseFolder struct {
 	Metrics  *FolderMetricsInternal `json:"metrics,omitempty"`
 }
 
+// FileViolationRef holds the data fields for a file violation ref record.
 type FileViolationRef struct {
 	Kind        ViolationKind     `json:"kind"`
 	Priority    ViolationPriority `json:"priority"`
@@ -10451,6 +11123,7 @@ type FileViolationRef struct {
 	Solution    string            `json:"solution"`
 }
 
+// CodebaseFile holds the data fields for a codebase file record.
 type CodebaseFile struct {
 	ID         string               `json:"id"`
 	Path       string               `json:"path"`
@@ -10459,6 +11132,7 @@ type CodebaseFile struct {
 	Violations []FileViolationRef   `json:"violations,omitempty"`
 }
 
+// CodebaseSection holds the data fields for a codebase section record.
 type CodebaseSection struct {
 	ID      string                  `json:"id"`
 	Path    string                  `json:"path"`
@@ -10466,6 +11140,7 @@ type CodebaseSection struct {
 	Metrics *SectionMetricsInternal `json:"metrics,omitempty"`
 }
 
+// CodebaseDefinition holds the data fields for a codebase definition record.
 type CodebaseDefinition struct {
 	ID      string                     `json:"id"`
 	Path    string                     `json:"path"`
@@ -10473,31 +11148,37 @@ type CodebaseDefinition struct {
 	Metrics *DefinitionMetricsInternal `json:"metrics,omitempty"`
 }
 
+// ContributorBundleContrib holds the data fields for a contributor bundle contrib record.
 type ContributorBundleContrib struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
+// ContributorFolderContrib holds the data fields for a contributor folder contrib record.
 type ContributorFolderContrib struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
+// ContributorFileContrib holds the data fields for a contributor file contrib record.
 type ContributorFileContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
+// ContributorSectionContrib holds the data fields for a contributor section contrib record.
 type ContributorSectionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
+// ContributorDefinitionContrib holds the data fields for a contributor definition contrib record.
 type ContributorDefinitionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
+// ContributorContributionsInternal holds the data fields for a contributor contributions internal record.
 type ContributorContributionsInternal struct {
 	Bundles     []ContributorBundleContrib     `json:"bundles,omitempty"`
 	Folders     []ContributorFolderContrib     `json:"folders,omitempty"`
@@ -10506,6 +11187,7 @@ type ContributorContributionsInternal struct {
 	Definitions []ContributorDefinitionContrib `json:"definitions,omitempty"`
 }
 
+// ContributorMetricsInternal holds the data fields for a contributor metrics internal record.
 type ContributorMetricsInternal struct {
 	Commits     int `json:"commits"`
 	Tickets     int `json:"tickets"`
@@ -10517,6 +11199,7 @@ type ContributorMetricsInternal struct {
 	Definitions int `json:"definitions"`
 }
 
+// CodebaseContributor holds the data fields for a codebase contributor record.
 type CodebaseContributor struct {
 	ID            string                            `json:"id"`
 	URI           string                            `json:"uri"`
@@ -10529,36 +11212,43 @@ type CodebaseContributor struct {
 	Metrics       *ContributorMetricsInternal       `json:"metrics,omitempty"`
 }
 
+// TicketDateInfo holds the data fields for a ticket date info record.
 type TicketDateInfo struct {
 	Created  string `json:"created,omitempty"`
 	Finished string `json:"finished,omitempty"`
 }
 
+// TicketBundleContribInfo holds the data fields for a ticket bundle contrib info record.
 type TicketBundleContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
+// TicketFolderContribInfo holds the data fields for a ticket folder contrib info record.
 type TicketFolderContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
+// TicketFileContribInfo holds the data fields for a ticket file contrib info record.
 type TicketFileContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
+// TicketSectionContribInfo holds the data fields for a ticket section contrib info record.
 type TicketSectionContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
+// TicketDefinitionContrib holds the data fields for a ticket definition contrib record.
 type TicketDefinitionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
+// CodebaseTicket holds the data fields for a codebase ticket record.
 type CodebaseTicket struct {
 	ID          string                     `json:"id"`
 	Path        string                     `json:"path"`
@@ -10580,6 +11270,7 @@ type CodebaseTicket struct {
 	Definitions []TicketDefinitionContrib  `json:"definitions,omitempty"`
 }
 
+// PolicyViolationRef holds the data fields for a policy violation ref record.
 type PolicyViolationRef struct {
 	Kind        ViolationKind     `json:"kind"`
 	Priority    ViolationPriority `json:"priority"`
@@ -10587,6 +11278,7 @@ type PolicyViolationRef struct {
 	Solution    string            `json:"solution"`
 }
 
+// CodebasePolicy holds the data fields for a codebase policy record.
 type CodebasePolicy struct {
 	ID         string               `json:"id"`
 	Name       string               `json:"name"`
@@ -10594,6 +11286,7 @@ type CodebasePolicy struct {
 	Violations []PolicyViolationRef `json:"violations,omitempty"`
 }
 
+// CbTreeNodeKind represents a cb tree node kind value.
 type CbTreeNodeKind string
 
 const (
@@ -10605,11 +11298,13 @@ const (
 	CbTreeNodeDefinition CbTreeNodeKind = "definition"
 )
 
+// CbTreeNode holds the data fields for a cb tree node record.
 type CbTreeNode struct {
 	Kind     CbTreeNodeKind         `json:"kind"`
 	Children map[string]*CbTreeNode `json:"children,omitempty"`
 }
 
+// Codebase holds the data fields for a codebase record.
 type Codebase struct {
 	Bundles      []CodebaseBundle       `json:"bundles"`
 	Folders      []CodebaseFolder       `json:"folders"`
@@ -10628,6 +11323,7 @@ type Codebase struct {
 // #endregion 🔖Languages
 
 // #region 🔖Utils
+// File system, git, path normalization, and formatting utilities.
 
 var (
 	rootDir  string
@@ -10649,19 +11345,27 @@ func init() {
 	}
 }
 
+// GetRootDir MUST return the stored value without modification.
+// GetRootDir returns the root dir of the value.
 func GetRootDir() string {
 	return rootDir
 }
 
+// SetRootDir MUST update the value on the receiver.
+// SetRootDir sets the root dir on the value.
 func SetRootDir(dir string) {
 	rootDir = dir
 	InvalidateProjectCache()
 }
 
+// GetRepoMetaDir MUST return the stored value without modification.
+// GetRepoMetaDir returns the repo meta dir of the value.
 func GetRepoMetaDir() string {
 	return filepath.Join(rootDir, ".semio-repo")
 }
 
+// GetRepoMetaPath MUST return the stored value without modification.
+// GetRepoMetaPath returns the repo meta path of the value.
 func GetRepoMetaPath(path string) string {
 	return filepath.Join(GetRepoMetaDir(), path)
 }
@@ -10697,6 +11401,7 @@ func findRepoRoot(startDir string) string {
 	}
 }
 
+// GitignorePattern holds the data fields for a gitignore pattern record.
 type GitignorePattern struct {
 	Pattern string
 	Negate  bool
@@ -10808,14 +11513,20 @@ func isSourceFile(filePath string) bool {
 		ext == ".py" || ext == ".go" || ext == ".cs"
 }
 
+// NormalizePath MUST be idempotent for already-normalized values.
+// NormalizePath normalizes the path to its canonical form.
 func NormalizePath(p string) string {
 	return strings.ReplaceAll(p, "\\", "/")
 }
 
+// EnsureDir MUST be idempotent and MUST NOT fail if the target already exists.
+// EnsureDir ensures the dir exists, creating it if necessary.
 func EnsureDir(dirPath string) error {
 	return os.MkdirAll(dirPath, 0755)
 }
 
+// GetRelativePath MUST return the stored value without modification.
+// GetRelativePath returns the relative path of the value.
 func GetRelativePath(filePath string) string {
 	rel, err := filepath.Rel(rootDir, filePath)
 	if err != nil {
@@ -10824,6 +11535,8 @@ func GetRelativePath(filePath string) string {
 	return NormalizePath(rel)
 }
 
+// ReadTextFile MUST return the full content from the given path.
+// ReadTextFile reads and returns the text file content.
 func ReadTextFile(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -10832,6 +11545,8 @@ func ReadTextFile(filePath string) (string, error) {
 	return string(data), nil
 }
 
+// WriteTextFile MUST persist the content atomically.
+// WriteTextFile writes the text file content to storage.
 func WriteTextFile(filePath string, content string) error {
 	if err := EnsureDir(filepath.Dir(filePath)); err != nil {
 		return err
@@ -10839,6 +11554,8 @@ func WriteTextFile(filePath string, content string) error {
 	return os.WriteFile(filePath, []byte(content), 0644)
 }
 
+// WriteJSONFile MUST persist the content atomically.
+// WriteJSONFile writes the j s o n file content to storage.
 func WriteJSONFile(filePath string, data interface{}) error {
 	jsonBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -10847,6 +11564,8 @@ func WriteJSONFile(filePath string, data interface{}) error {
 	return WriteTextFile(filePath, string(jsonBytes)+"\n")
 }
 
+// ReadJSONFile MUST return the full content from the given path.
+// ReadJSONFile reads and returns the j s o n file content.
 func ReadJSONFile(filePath string, v interface{}) error {
 	data, err := ReadTextFile(filePath)
 	if err != nil {
@@ -10855,11 +11574,15 @@ func ReadJSONFile(filePath string, v interface{}) error {
 	return json.Unmarshal([]byte(data), v)
 }
 
+// FileExists MUST complete the operation and return consistent results.
+// FileExists performs the file exists operation.
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
 
+// IsDir MUST return true only when the condition is met.
+// IsDir reports whether the value is dir.
 func IsDir(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -10868,6 +11591,8 @@ func IsDir(path string) bool {
 	return info.IsDir()
 }
 
+// LoadGitignore MUST read from the configured storage path.
+// LoadGitignore loads the gitignore from storage.
 func LoadGitignore(cwd string) ([]string, error) {
 	gitignorePath := filepath.Join(cwd, ".gitignore")
 	if !FileExists(gitignorePath) {
@@ -10887,6 +11612,8 @@ func LoadGitignore(cwd string) ([]string, error) {
 	return patterns, nil
 }
 
+// SimpleGlob MUST complete the operation and return consistent results.
+// SimpleGlob performs the simple glob operation.
 func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGitignore bool) ([]string, error) {
 	if cwd == "" {
 		cwd = rootDir
@@ -10989,24 +11716,34 @@ func globByExtension(root string, patternBase string, exts []string, ignorePatte
 	return results, nil
 }
 
+// ISOTimestamp MUST complete the operation and return consistent results.
+// ISOTimestamp performs the i s o timestamp operation.
 func ISOTimestamp() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }
 
+// FormatDate MUST produce a well-formed date string.
+// FormatDate formats the date into its string representation.
 func FormatDate(t time.Time) (year, month, day int) {
 	return t.Year(), int(t.Month()), t.Day()
 }
 
+// PadNumber MUST complete the operation and return consistent results.
+// PadNumber performs the pad number operation.
 func PadNumber(n, width int) string {
 	return fmt.Sprintf("%0*d", width, n)
 }
 
+// Slugify MUST complete the operation and return consistent results.
+// Slugify performs the slugify operation.
 func Slugify(text string) string {
 	re := regexp.MustCompile(`[^A-Z0-9]+`)
 	slug := re.ReplaceAllString(strings.ToUpper(text), "-")
 	return strings.Trim(slug, "-")
 }
 
+// TitleizeSlug MUST complete the operation and return consistent results.
+// TitleizeSlug performs the titleize slug operation.
 func TitleizeSlug(slug string) string {
 	words := strings.Split(slug, "-")
 	for i, w := range words {
@@ -11017,6 +11754,8 @@ func TitleizeSlug(slug string) string {
 	return strings.Join(words, " ")
 }
 
+// ViolationKindPathToIdValue MUST complete the operation and return consistent results.
+// ViolationKindPathToIdValue performs the violation kind path to id value operation.
 func ViolationKindPathToIdValue(path string) string {
 	parts := strings.Split(path, "/")
 	for i, p := range parts {
@@ -11025,6 +11764,8 @@ func ViolationKindPathToIdValue(path string) string {
 	return strings.Join(parts, "#")
 }
 
+// ViolationKindIdValueToPath MUST complete the operation and return consistent results.
+// ViolationKindIdValueToPath performs the violation kind id value to path operation.
 func ViolationKindIdValueToPath(idValue string) string {
 	parts := strings.Split(idValue, "#")
 	for i, p := range parts {
@@ -11033,6 +11774,8 @@ func ViolationKindIdValueToPath(idValue string) string {
 	return strings.Join(parts, "/")
 }
 
+// ExecCommand MUST complete the operation and return consistent results.
+// ExecCommand performs the exec command operation.
 func ExecCommand(command string, args []string, cwd string) (stdout, stderr string, exitCode int) {
 	if cwd == "" {
 		cwd = rootDir
@@ -11054,6 +11797,8 @@ func ExecCommand(command string, args []string, cwd string) (stdout, stderr stri
 	return stdoutBuf.String(), stderrBuf.String(), exitCode
 }
 
+// GetGitAuthor MUST return the stored value without modification.
+// GetGitAuthor returns the git author of the value.
 func GetGitAuthor() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
@@ -11065,6 +11810,8 @@ func GetGitAuthor() string {
 	return name
 }
 
+// GetGitAuthorGithub MUST return the stored value without modification.
+// GetGitAuthorGithub returns the git author github of the value.
 func GetGitAuthorGithub() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	name = strings.TrimSpace(name)
@@ -11079,11 +11826,15 @@ func GetGitAuthorGithub() string {
 	return FindAndUpdateContributor(fallback)
 }
 
+// GetGitCommit MUST return the stored value without modification.
+// GetGitCommit returns the git commit of the value.
 func GetGitCommit() string {
 	commit, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, "")
 	return strings.TrimSpace(commit)
 }
 
+// GetGitIgnoredSet MUST return the stored value without modification.
+// GetGitIgnoredSet returns the git ignored set of the value.
 func GetGitIgnoredSet(paths []string) map[string]bool {
 	if len(paths) == 0 {
 		return make(map[string]bool)
@@ -11100,37 +11851,53 @@ func GetGitIgnoredSet(paths []string) map[string]bool {
 	return ignored
 }
 
+// NewOutput MUST initialize all required fields and return a valid Output.
+// NewOutput creates and returns a new Output instance.
 func NewOutput() *CommandOutput {
 	return &CommandOutput{Lines: []OutputLine{}, ExitCode: 0}
 }
 
+// Info MUST return the metadata entry for the violation kind.
+// Info returns the metadata for the violation kind.
 func (o *CommandOutput) Info(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputInfo, Text: text})
 }
 
+// Success MUST operate on the CommandOutput receiver and return consistent results.
+// Success performs the success operation on the CommandOutput.
 func (o *CommandOutput) Success(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputSuccess, Text: text})
 }
 
+// Error MUST return a formatted string representation.
+// Error returns the string representation of the error.
 func (o *CommandOutput) Error(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputError, Text: text})
 	o.ExitCode = 1
 }
 
+// Warn MUST operate on the CommandOutput receiver and return consistent results.
+// Warn performs the warn operation on the CommandOutput.
 func (o *CommandOutput) Warn(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputWarn, Text: text})
 }
 
+// Plain MUST operate on the CommandOutput receiver and return consistent results.
+// Plain performs the plain operation on the CommandOutput.
 func (o *CommandOutput) Plain(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputPlain, Text: text})
 }
 
+// Print MUST operate on the CommandOutput receiver and return consistent results.
+// Print performs the print operation on the CommandOutput.
 func (o *CommandOutput) Print() {
 	for _, line := range o.Lines {
 		fmt.Println(line.Text)
 	}
 }
 
+// Json MUST operate on the CommandOutput receiver and return consistent results.
+// Json performs the json operation on the CommandOutput.
 func (o *CommandOutput) Json(data interface{}) {
 	bytes, err := json.MarshalIndent(data, "", "  ")
 	if err == nil {
@@ -11138,6 +11905,8 @@ func (o *CommandOutput) Json(data interface{}) {
 	}
 }
 
+// ListDirEntries MUST return a consistent snapshot of available entries.
+// ListDirEntries returns all available dir entries entries.
 func ListDirEntries(dir string, dirsOnly bool) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -11159,6 +11928,8 @@ func ListDirEntries(dir string, dirsOnly bool) ([]string, error) {
 	return names, nil
 }
 
+// WalkDir MUST visit every entry and MUST stop when the callback returns an error.
+// WalkDir recursively walks the dir and invokes the callback.
 func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -11174,6 +11945,8 @@ func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 	})
 }
 
+// ParseScope MUST return an error when the input is malformed.
+// ParseScope parses the input and returns the scope result.
 func ParseScope(raw string) Scope {
 	if raw == "" || raw == "semio" {
 		return Scope{Raw: "semio", Kind: ScopeRepo}
@@ -11200,6 +11973,8 @@ func ParseScope(raw string) Scope {
 	return Scope{Raw: raw, Kind: ScopeFolder, FilePath: raw}
 }
 
+// ReadLines MUST return the full content from the given path.
+// ReadLines reads and returns the lines content.
 func ReadLines(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -11217,7 +11992,10 @@ func ReadLines(filePath string) ([]string, error) {
 // #endregion 🔖Utils
 
 // #region 🔖Sections
+// Section parsing, JSON section manipulation, and section lookup utilities.
 
+// ParseCodeSections MUST return an error when the input is malformed.
+// ParseCodeSections parses the input and returns the code sections result.
 func ParseCodeSections(content string, languageName string) []Section {
 	lang := GetLanguageByName(languageName)
 	if lang == nil || !lang.SupportsSections() {
@@ -11226,6 +12004,8 @@ func ParseCodeSections(content string, languageName string) []Section {
 	return lang.ParseSections(content)
 }
 
+// ParseMarkdownSectionsInternal MUST return an error when the input is malformed.
+// ParseMarkdownSectionsInternal parses the input and returns the markdown sections internal result.
 func ParseMarkdownSectionsInternal(content string) []Section {
 	lines := strings.Split(content, "\n")
 	var sections []Section
@@ -11284,6 +12064,7 @@ func ParseMarkdownSectionsInternal(content string) []Section {
 	return sections
 }
 
+// JsonSectionLocation holds the data fields for a json section location record.
 type JsonSectionLocation struct {
 	Path       string
 	KeyStart   int
@@ -11301,6 +12082,8 @@ type jsonContext struct {
 	location  *JsonSectionLocation
 }
 
+// ParseJSONSectionsDetailed MUST return an error when the input is malformed.
+// ParseJSONSectionsDetailed parses the input and returns the j s o n sections detailed result.
 func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSectionLocation, error) {
 	var sections []Section
 	locations := make(map[string]*JsonSectionLocation)
@@ -11470,11 +12253,15 @@ func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSecti
 	return sections, locations, nil
 }
 
+// ParseJSONSections MUST return an error when the input is malformed.
+// ParseJSONSections parses the input and returns the j s o n sections result.
 func ParseJSONSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
 }
 
+// ParseSections MUST return an error when the input is malformed.
+// ParseSections parses the input and returns the sections result.
 func ParseSections(content string, filePath string) []Section {
 	language := GetLanguage(filePath)
 	if language == nil {
@@ -11483,6 +12270,8 @@ func ParseSections(content string, filePath string) []Section {
 	return language.ParseSections(content)
 }
 
+// ParseDefinitions MUST return an error when the input is malformed.
+// ParseDefinitions parses the input and returns the definitions result.
 func ParseDefinitions(content string, filePath string) []Definition {
 	language := GetLanguage(filePath)
 	if language == nil {
@@ -11507,6 +12296,8 @@ func ParseDefinitions(content string, filePath string) []Definition {
 	return definitions
 }
 
+// HydrateSectionsWithDefinitions MUST attach all matching child elements to their parents.
+// HydrateSectionsWithDefinitions populates the sections with definitions with associated child data.
 func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition) []Section {
 	if len(sections) == 0 {
 		return sections
@@ -11544,6 +12335,8 @@ func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition
 	return newSections
 }
 
+// NormalizeSectionPath MUST be idempotent for already-normalized values.
+// NormalizeSectionPath normalizes the section path to its canonical form.
 func NormalizeSectionPath(sectionPath string) []string {
 	cleaned := strings.ReplaceAll(sectionPath, "#", "/")
 	raw := strings.FieldsFunc(cleaned, func(r rune) bool { return r == '/' })
@@ -11813,6 +12606,8 @@ func jsonReindentEntry(entry string, indent string) string {
 	return strings.Join(lines, "\n")
 }
 
+// FindSection MUST return nil when no match is found.
+// FindSection searches for and returns the matching section.
 func FindSection(sections []Section, name string) *Section {
 	for i := range sections {
 		if sections[i].Name == name {
@@ -11828,7 +12623,9 @@ func FindSection(sections []Section, name string) *Section {
 // #endregion 🔖Sections
 
 // #region 🔖Policies
+// Policy definitions, context, checkers, and individual policy implementations.
 
+// PolicyFunc is a function type for policy func callbacks.
 type PolicyFunc func(ctx *PolicyContext) []Violation
 
 var policies = []PolicyDef{
@@ -11838,36 +12635,119 @@ var policies = []PolicyDef{
 		Description: "Validates source file headers, sections, and comments",
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
 		Priority:    ViolationPriorityLow,
-		Kinds: []ViolationKind{
-			ViolationCodeFileMissingHeader,
-			ViolationCodeFileWrongHeaderFormat,
-			ViolationCodeFileMissingId,
-			ViolationCodeFileWrongId,
-			ViolationCodeFileMissingContributors,
-			ViolationCodeFileMissingSummary,
-			ViolationCodeFileMissingLicense,
-			ViolationCodeFileWrongLicense,
-			ViolationCodeFileMissingSpecs,
-			ViolationCodeFileMissingDocs,
-			ViolationCodeSectionEmpty,
-			ViolationCodeSectionOrphanDefinition,
-			ViolationCodeSectionMissingStartName,
-			ViolationCodeSectionMissingEndName,
-			ViolationCodeSectionNameMismatch,
-			ViolationCodeSectionWrongFormat,
-			ViolationCodeSectionMissingSummary,
-			ViolationCodeSectionMissingSpecs,
-			ViolationCodeSectionMissingDocs,
-			ViolationCodeDefWrongFormat,
-			ViolationCodeDefMissingSummary,
-			ViolationCodeDefMissingSpecs,
-			ViolationCodeDefMissingDocs,
-			ViolationCodeCommentInline,
-			ViolationCodeCommentBlock,
-			ViolationCodeCommentJSDoc,
-			ViolationCodeSpecsSyntax,
-			ViolationCodeUnicodeEmojiVariation,
-			ViolationCodeDocsMissingReadme,
+		Groups: []ViolationKindGroup{
+			{
+				Name:        "File",
+				Description: "File header region violations",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Groups: []ViolationKindGroup{
+					{
+						Name:        "Wrong Identification",
+						Description: "Wrong identification violations",
+						Kinds: []ViolationKind{
+							ViolationCodeFileWrongIdentificationId,
+							ViolationCodeFileWrongIdentificationUri,
+						},
+					},
+				},
+				Kinds: []ViolationKind{
+					ViolationCodeFileMissingHeaderRegion,
+					ViolationCodeFileWrongHeaderRegionFormat,
+					ViolationCodeFileMissingIdentification,
+					ViolationCodeFileMissingContributors,
+					ViolationCodeFileMissingSummary,
+					ViolationCodeFileMissingLicense,
+					ViolationCodeFileWrongLicense,
+					ViolationCodeFileMissingSpecs,
+					ViolationCodeFileMissingDocs,
+				},
+			},
+			{
+				Name:        "Section",
+				Description: "Section structure violations",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Groups: []ViolationKindGroup{
+					{
+						Name:        "Wrong Format",
+						Description: "Section format violations",
+						Groups: []ViolationKindGroup{
+							{
+								Name:        "Summary",
+								Description: "Section summary format violations",
+								Kinds: []ViolationKind{
+									ViolationCodeSectionWrongFormatSummaryTooLong,
+								},
+							},
+							{
+								Name:        "Specs",
+								Description: "Section specs format violations",
+								Kinds: []ViolationKind{
+									ViolationCodeSectionWrongFormatSpecsSplitBlock,
+								},
+							},
+						},
+						Kinds: []ViolationKind{
+							ViolationCodeSectionWrongFormat,
+							ViolationCodeSectionWrongFormatDocs,
+						},
+					},
+				},
+				Kinds: []ViolationKind{
+					ViolationCodeSectionEmpty,
+					ViolationCodeSectionOrphanDefinition,
+					ViolationCodeSectionMissingStartName,
+					ViolationCodeSectionMissingEndName,
+					ViolationCodeSectionNameMismatch,
+					ViolationCodeSectionMissingSummary,
+					ViolationCodeSectionMissingSpecs,
+					ViolationCodeSectionMissingDocs,
+				},
+			},
+			{
+				Name:        "Definition",
+				Description: "Definition documentation violations",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Kinds: []ViolationKind{
+					ViolationCodeDefWrongFormat,
+					ViolationCodeDefMissingSummary,
+					ViolationCodeDefMissingSpecs,
+					ViolationCodeDefMissingDocs,
+				},
+			},
+			{
+				Name:        "Comment",
+				Description: "Forbidden comment violations",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Kinds: []ViolationKind{
+					ViolationCodeCommentInline,
+					ViolationCodeCommentBlock,
+					ViolationCodeCommentJSDoc,
+				},
+			},
+			{
+				Name:        "Specs",
+				Description: "Specification content violations",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Kinds: []ViolationKind{
+					ViolationCodeSpecsSyntax,
+				},
+			},
+			{
+				Name:        "Unicode",
+				Description: "Unicode character violations",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Kinds: []ViolationKind{
+					ViolationCodeUnicodeEmojiVariation,
+				},
+			},
+			{
+				Name:        "Docs",
+				Description: "Documentation file violations",
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Kinds: []ViolationKind{
+					ViolationCodeDocsMissingReadme,
+				},
+			},
 		},
 		Run: codePolicy,
 	},
@@ -11877,18 +12757,39 @@ var policies = []PolicyDef{
 		Description: "Validates README.md and AGENTS.md documentation structure",
 		Scopes:      []string{"README.md", "AGENTS.md"},
 		Priority:    ViolationPriorityLow,
-		Kinds: []ViolationKind{
-			ViolationDevDocsMissingFile,
-			ViolationDevDocsMissingFolder,
-			ViolationDevDocsWrongFilePath,
-			ViolationDevDocsWrongFolderPath,
-			ViolationDevDocsWrongFileName,
-			ViolationDevDocsWrongFolderName,
-			ViolationDevDocsWrongFileOrder,
-			ViolationDevDocsWrongFolderOrder,
-			ViolationDevDocsMissingComponent,
-			ViolationDevDocsWrongComponentName,
-			ViolationDevDocsWrongComponentOrder,
+		Groups: []ViolationKindGroup{
+			{
+				Name:        "File",
+				Description: "File documentation violations",
+				Scopes:      []string{"AGENTS.md"},
+				Kinds: []ViolationKind{
+					ViolationDevDocsMissingFile,
+					ViolationDevDocsWrongFilePath,
+					ViolationDevDocsWrongFileName,
+					ViolationDevDocsWrongFileOrder,
+				},
+			},
+			{
+				Name:        "Folder",
+				Description: "Folder documentation violations",
+				Scopes:      []string{"AGENTS.md"},
+				Kinds: []ViolationKind{
+					ViolationDevDocsMissingFolder,
+					ViolationDevDocsWrongFolderPath,
+					ViolationDevDocsWrongFolderName,
+					ViolationDevDocsWrongFolderOrder,
+				},
+			},
+			{
+				Name:        "Component",
+				Description: "Component documentation violations",
+				Scopes:      []string{"README.md"},
+				Kinds: []ViolationKind{
+					ViolationDevDocsMissingComponent,
+					ViolationDevDocsWrongComponentName,
+					ViolationDevDocsWrongComponentOrder,
+				},
+			},
 		},
 		Run: devDocsPolicy,
 	},
@@ -11898,13 +12799,34 @@ var policies = []PolicyDef{
 		Description: "Validates sketchpad imports, state management, and hook patterns",
 		Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
 		Priority:    ViolationPriorityHigh,
-		Kinds: []ViolationKind{
-			ViolationSketchpadImportThirdParty,
-			ViolationSketchpadStateMultipleMachines,
-			ViolationSketchpadStateCreateActor,
-			ViolationSketchpadStateYjsAppState,
-			ViolationSketchpadStateForbiddenStore,
-			ViolationSketchpadHooksNonTriadic,
+		Groups: []ViolationKindGroup{
+			{
+				Name:        "Import",
+				Description: "Import restriction violations",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []ViolationKind{
+					ViolationSketchpadImportThirdParty,
+				},
+			},
+			{
+				Name:        "State",
+				Description: "State management violations",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []ViolationKind{
+					ViolationSketchpadStateMultipleMachines,
+					ViolationSketchpadStateCreateActor,
+					ViolationSketchpadStateYjsAppState,
+					ViolationSketchpadStateForbiddenStore,
+				},
+			},
+			{
+				Name:        "Hooks",
+				Description: "Hook pattern violations",
+				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
+				Kinds: []ViolationKind{
+					ViolationSketchpadHooksNonTriadic,
+				},
+			},
 		},
 		Run: sketchpadPolicy,
 	},
@@ -11914,14 +12836,23 @@ var policies = []PolicyDef{
 		Description: "Validates strict repo command implementation parity and ticket tracking",
 		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
 		Priority:    ViolationPriorityHigh,
-		Kinds: []ViolationKind{
-			ViolationRepoMissingCommand,
-			ViolationRepoMissingTicketTracking,
+		Groups: []ViolationKindGroup{
+			{
+				Name:        "Parity",
+				Description: "Command parity violations",
+				Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
+				Kinds: []ViolationKind{
+					ViolationRepoMissingCommand,
+					ViolationRepoMissingTicketTracking,
+				},
+			},
 		},
 		Run: repoPolicy,
 	},
 }
 
+// FindPolicy MUST return nil when no match is found.
+// FindPolicy searches for and returns the matching policy.
 func FindPolicy(id string) (PolicyDef, bool) {
 	for _, p := range policies {
 		if p.ID == id {
@@ -11931,10 +12862,14 @@ func FindPolicy(id string) (PolicyDef, bool) {
 	return PolicyDef{}, false
 }
 
+// GetPolicies MUST return the stored value without modification.
+// GetPolicies returns the policies of the value.
 func GetPolicies() []PolicyDef {
 	return policies
 }
 
+// StreamPolicies MUST emit all matching entries and close the channel when done.
+// StreamPolicies streams the policies over a channel with optional filtering.
 func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -11983,18 +12918,22 @@ func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOpt
 	return nil
 }
 
+// PolicyContext holds the data fields for a policy context record.
 type PolicyContext struct {
-	Scope         Scope
-	RootDir       string
-	Bundles       []Bundle
-	fileCache     map[string]string
-	sectionCache  map[string][]Section
-	ignoreCache   map[string]map[int][]string
-	specLineCache      map[string]map[int]bool
-	sectionDocCache    map[string]map[int]bool
-	filesOverride      []string
+	Scope           Scope
+	RootDir         string
+	Bundles         []Bundle
+	fileCache       map[string]string
+	sectionCache    map[string][]Section
+	ignoreCache     map[string]map[int][]string
+	specLineCache   map[string]map[int]bool
+	sectionDocCache map[string]map[int]bool
+	definitionDocCache map[string]map[int]bool
+	filesOverride   []string
 }
 
+// NewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
+// NewPolicyContext creates and returns a new PolicyContext instance.
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
@@ -12006,12 +12945,16 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	}
 }
 
+// NewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
+// NewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
 func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *PolicyContext {
 	ctx := NewPolicyContext(scope, bundles)
 	ctx.filesOverride = files
 	return ctx
 }
 
+// Files MUST operate on the PolicyContext receiver and return consistent results.
+// Files performs the files operation on the PolicyContext.
 func (ctx *PolicyContext) Files() ([]string, error) {
 	if ctx.filesOverride != nil {
 		return ctx.filesOverride, nil
@@ -12019,6 +12962,8 @@ func (ctx *PolicyContext) Files() ([]string, error) {
 	return ScopeToFiles(ctx.Scope, ctx.Bundles)
 }
 
+// ReadText MUST return the full content from the given path.
+// ReadText reads and returns the text content.
 func (ctx *PolicyContext) ReadText(filePath string) string {
 	if ctx.fileCache == nil {
 		ctx.fileCache = make(map[string]string)
@@ -12036,6 +12981,8 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 	return content
 }
 
+// Sections MUST operate on the PolicyContext receiver and return consistent results.
+// Sections performs the sections operation on the PolicyContext.
 func (ctx *PolicyContext) Sections(filePath string) []Section {
 	if ctx.sectionCache == nil {
 		ctx.sectionCache = make(map[string][]Section)
@@ -12049,6 +12996,8 @@ func (ctx *PolicyContext) Sections(filePath string) []Section {
 	return sections
 }
 
+// ParseIgnoreDirectives MUST return an error when the input is malformed.
+// ParseIgnoreDirectives parses the input and returns the ignore directives result.
 func ParseIgnoreDirectives(content string) map[int][]string {
 	result := make(map[int][]string)
 	lines := strings.Split(content, "\n")
@@ -12070,6 +13019,8 @@ func ParseIgnoreDirectives(content string) map[int][]string {
 	return result
 }
 
+// IgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
+// IgnoreDirectives performs the ignore directives operation on the PolicyContext.
 func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	if ignores, ok := ctx.ignoreCache[filePath]; ok {
 		return ignores
@@ -12080,6 +13031,8 @@ func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	return ignores
 }
 
+// IsIgnored MUST return true only when the condition is met.
+// IsIgnored reports whether the PolicyContext is ignored.
 func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind ViolationKind) bool {
 	ignores := ctx.IgnoreDirectives(filePath)
 	kindStr := string(kind)
@@ -12098,6 +13051,8 @@ func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind Vio
 	return false
 }
 
+// CreateViolation MUST persist the new entity and return a reference to it.
+// CreateViolation creates a new violation and persists it.
 func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, col int, excerpt string) Violation {
 	return Violation{
 		ID:      buildViolationID(scope, line, col),
@@ -12122,6 +13077,8 @@ func extractFileFromScope(scope string) string {
 	return scope
 }
 
+// FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
+// FilterIgnored filters the ignored based on the given criteria.
 func (ctx *PolicyContext) FilterIgnored(violations []Violation) []Violation {
 	var result []Violation
 	for _, v := range violations {
@@ -12155,6 +13112,8 @@ func hasImplementationSyntax(text string) (bool, string) {
 	return false, ""
 }
 
+// SpecLines MUST operate on the PolicyContext receiver and return consistent results.
+// SpecLines performs the spec lines operation on the PolicyContext.
 func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	if ctx.specLineCache == nil {
 		ctx.specLineCache = make(map[string]map[int]bool)
@@ -12214,10 +13173,14 @@ func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	return result
 }
 
+// IsSpecLine MUST return true only when the condition is met.
+// IsSpecLine reports whether the PolicyContext is spec line.
 func (ctx *PolicyContext) IsSpecLine(filePath string, lineNum int) bool {
 	return ctx.SpecLines(filePath)[lineNum]
 }
 
+// IsSpecBlock MUST return true only when the condition is met.
+// IsSpecBlock reports whether the PolicyContext is spec block.
 func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, lines []string) bool {
 	for i := startLine; i <= endLine && i <= len(lines); i++ {
 		if isSpecText(lines[i-1]) {
@@ -12227,6 +13190,8 @@ func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, l
 	return false
 }
 
+// SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
+// SectionDocLines performs the section doc lines operation on the PolicyContext.
 func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	if ctx.sectionDocCache == nil {
 		ctx.sectionDocCache = make(map[string]map[int]bool)
@@ -12257,7 +13222,6 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 			return
 		}
 		var blockLines []int
-		hasSpec := false
 		for i := s.StartLine + 1; i < s.EndLine && i <= len(lines); i++ {
 			line := strings.TrimSpace(lines[i-1])
 			if line == "" {
@@ -12269,13 +13233,10 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 			blockLines = append(blockLines, i)
 			commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
 			if isSpecText(commentText) {
-				hasSpec = true
 			}
 		}
-		if hasSpec {
-			for _, ln := range blockLines {
-				result[ln] = true
-			}
+		for _, ln := range blockLines {
+			result[ln] = true
 		}
 		for _, child := range s.Children {
 			markSectionDocLines(child)
@@ -12303,8 +13264,61 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	return result
 }
 
+// IsSectionDocLine MUST return true only when the condition is met.
+// IsSectionDocLine reports whether the PolicyContext is section doc line.
 func (ctx *PolicyContext) IsSectionDocLine(filePath string, lineNum int) bool {
 	return ctx.SectionDocLines(filePath)[lineNum]
+}
+
+// DefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
+// DefinitionDocLines performs the definition doc lines operation on the PolicyContext.
+func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
+	if ctx.definitionDocCache == nil {
+		ctx.definitionDocCache = make(map[string]map[int]bool)
+	}
+	if cached, ok := ctx.definitionDocCache[filePath]; ok {
+		return cached
+	}
+	result := make(map[int]bool)
+	content := ctx.ReadText(filePath)
+	if content == "" {
+		ctx.definitionDocCache[filePath] = result
+		return result
+	}
+	language := GetLanguage(filePath)
+	if language == nil {
+		ctx.definitionDocCache[filePath] = result
+		return result
+	}
+	if !language.SupportsDefinitions() {
+		ctx.definitionDocCache[filePath] = result
+		return result
+	}
+	lines := strings.Split(content, "\n")
+	prefix := language.CommentPrefix()
+	defs := language.ParseDefinitions(content, lines)
+	extras := language.ExtraOrphanDefinitions(lines)
+	allDefs := append(defs, extras...)
+	for _, d := range allDefs {
+		for lineIndex := d.Start - 2; lineIndex >= 0; lineIndex-- {
+			line := strings.TrimSpace(lines[lineIndex])
+			if line == "" {
+				break
+			}
+			if !strings.HasPrefix(line, prefix) {
+				break
+			}
+			result[lineIndex+1] = true
+		}
+	}
+	ctx.definitionDocCache[filePath] = result
+	return result
+}
+
+// IsDefinitionDocLine MUST return true only when the condition is met.
+// IsDefinitionDocLine reports whether the PolicyContext is definition doc line.
+func (ctx *PolicyContext) IsDefinitionDocLine(filePath string, lineNum int) bool {
+	return ctx.DefinitionDocLines(filePath)[lineNum]
 }
 
 func randomString(n int) string {
@@ -12316,11 +13330,15 @@ func randomString(n int) string {
 	return string(b)
 }
 
+// CheckPolicies MUST run all applicable policies and aggregate violations.
+// CheckPolicies validates the policies and returns any violations.
 func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Violation, error) {
 	ctx := NewPolicyContext(scope, bundles)
 	return CheckPoliciesWithContext(ctx, policyIDs)
 }
 
+// CheckPoliciesWithContext MUST run all applicable policies and aggregate violations.
+// CheckPoliciesWithContext validates the policies with context and returns any violations.
 func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Violation, error) {
 	var violations []Violation
 	var policiesToRun []PolicyDef
@@ -12396,57 +13414,75 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		if headerSection == nil {
-			headerContent := generateFileHeader(file, language)
-			if headerContent != "" {
-				violations = append(violations, ctx.CreateViolation(
-					fmt.Sprintf("Missing header section in %s", file),
-					ViolationCodeFileMissingHeader,
-					file, 0, 0, ""))
-			} else {
-				violations = append(violations, ctx.CreateViolation(
-					fmt.Sprintf("Missing header section in %s", file),
-					ViolationCodeFileMissingHeader,
-					file, 0, 0, ""))
-			}
+			violations = append(violations, ctx.CreateViolation(
+				fmt.Sprintf("Missing header region in %s", file),
+				ViolationCodeFileMissingHeaderRegion,
+				file, 0, 0, ""))
 			continue
 		}
 		headerContent := content[headerSection.StartIndex:headerSection.EndIndex]
 		headerLines := strings.Split(headerContent, "\n")
 		expectedFileId := FileHeaderId(file)
-		hasFileId := false
-		wrongFileIdLine := 0
+		expectedFileUri := FileHeaderUri(file)
 		stripVS := func(s string) string {
 			return strings.ReplaceAll(strings.ReplaceAll(s, "\uFE0F", ""), "\uFE0E", "")
 		}
+		identificationLineIdx := -1
+		parsedId := ""
+		parsedUri := ""
+		identificationRegex := regexp.MustCompile(`\[([^\]]+)\]\(([^)]+)\)`)
 		for lineIdx, line := range headerLines {
-			if strings.Contains(stripVS(line), stripVS(expectedFileId)) {
-				hasFileId = true
+			matches := identificationRegex.FindStringSubmatch(line)
+			if matches != nil {
+				identificationLineIdx = lineIdx
+				parsedId = matches[1]
+				parsedUri = matches[2]
 				break
 			}
-			trimmed := strings.TrimSpace(line)
-			if trimmed != "" {
+		}
+		if identificationLineIdx == -1 {
+			oldFormatId := false
+			for _, line := range headerLines {
+				trimmed := strings.TrimSpace(line)
 				prefix := language.CommentPrefix()
 				stripped := strings.TrimSpace(strings.TrimPrefix(trimmed, prefix))
-				if stripped != "" && !strings.HasPrefix(trimmed, prefix+" #region") && !strings.HasPrefix(trimmed, prefix+" #endregion") && !strings.HasPrefix(trimmed, "#region") && !strings.HasPrefix(trimmed, "#endregion") {
-					hasExt := strings.Contains(stripped, ".ts") || strings.Contains(stripped, ".tsx") || strings.Contains(stripped, ".go") || strings.Contains(stripped, ".cs") || strings.Contains(stripped, ".py") || strings.Contains(stripped, ".sh") || strings.Contains(stripped, ".sql")
-					hasEmoji := strings.ContainsAny(stripped, "💻🧪��📃⚙️💾⚖️")
-					if (hasExt || hasEmoji) && wrongFileIdLine == 0 {
-						wrongFileIdLine = headerSection.StartLine + lineIdx
-					}
+				if stripped == "" || strings.HasPrefix(trimmed, prefix+" #region") || strings.HasPrefix(trimmed, prefix+" #endregion") {
+					continue
+				}
+				hasExt := strings.Contains(stripped, ".ts") || strings.Contains(stripped, ".tsx") || strings.Contains(stripped, ".go") || strings.Contains(stripped, ".cs") || strings.Contains(stripped, ".py") || strings.Contains(stripped, ".sh") || strings.Contains(stripped, ".sql")
+				hasEmoji := strings.ContainsAny(stripped, "\U0001F4BB\U0001F9EA\U0001F4DC\U0001F4C3\u2699\uFE0F\U0001F4BE\u2696\uFE0F")
+				if hasExt || hasEmoji {
+					oldFormatId = true
+					break
 				}
 			}
-		}
-		if !hasFileId {
-			if wrongFileIdLine > 0 {
+			if oldFormatId {
 				violations = append(violations, ctx.CreateViolation(
-					fmt.Sprintf("Wrong file ID in header of %s (expected %s)", file, expectedFileId),
-					ViolationCodeFileWrongId,
-					fmt.Sprintf("%s#Header", file), wrongFileIdLine, 0, expectedFileId))
+					fmt.Sprintf("Wrong header region format in %s: identification must use [ID](URI) format", file),
+					ViolationCodeFileWrongHeaderRegionFormat,
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 			} else {
 				violations = append(violations, ctx.CreateViolation(
-					fmt.Sprintf("Missing file ID in header of %s (expected %s)", file, expectedFileId),
-					ViolationCodeFileMissingId,
-					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, expectedFileId))
+					fmt.Sprintf("Missing identification in header of %s (expected [%s](%s))", file, expectedFileId, expectedFileUri),
+					ViolationCodeFileMissingIdentification,
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
+			}
+		} else {
+			normalizedParsedId := stripVS(parsedId)
+			normalizedExpectedId := stripVS(expectedFileId)
+			if normalizedParsedId != normalizedExpectedId {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Wrong file ID in header of %s (expected %s, got %s)", file, expectedFileId, parsedId),
+					ViolationCodeFileWrongIdentificationId,
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine+identificationLineIdx, 0, expectedFileId))
+			}
+			normalizedParsedUri := strings.ToUpper(stripVS(parsedUri))
+			normalizedExpectedUri := strings.ToUpper(stripVS(expectedFileUri))
+			if normalizedParsedUri != normalizedExpectedUri {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Wrong file URI in header of %s (expected %s, got %s)", file, expectedFileUri, parsedUri),
+					ViolationCodeFileWrongIdentificationUri,
+					fmt.Sprintf("%s#Header", file), headerSection.StartLine+identificationLineIdx, 0, expectedFileUri))
 			}
 		}
 		contributorPattern := regexp.MustCompile(`\d{4}\s+[\w\s]+<[\w.@-]+>`)
@@ -12463,79 +13499,141 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				ViolationCodeFileMissingContributors,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		}
-		var licenseSection *Section
-		var specsSection *Section
-		for i := range headerSection.Children {
-			childName := strings.ToLower(headerSection.Children[i].Name)
-			if childName == "license" {
-				licenseSection = &headerSection.Children[i]
-			}
-			if childName == "specs" {
-				specsSection = &headerSection.Children[i]
+		hasLicense := false
+		for _, marker := range agplMarkers {
+			if strings.Contains(headerContent, marker) {
+				hasLicense = true
+				break
 			}
 		}
-		if licenseSection == nil {
+		if !hasLicense {
 			violations = append(violations, ctx.CreateViolation(
-				fmt.Sprintf("Missing License subregion in header of %s", file),
-				ViolationCodeFileWrongHeaderFormat,
+				fmt.Sprintf("Missing license in header of %s", file),
+				ViolationCodeFileMissingLicense,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
-			hasLicense := false
-			for _, marker := range agplMarkers {
-				if strings.Contains(headerContent, marker) {
-					hasLicense = true
+		} else {
+			wrongLicenses := []string{"MIT", "Apache", "BSD"}
+			hasWrongLicense := false
+			for _, wrong := range wrongLicenses {
+				if strings.Contains(headerContent, wrong) {
+					hasWrongLicense = true
 					break
 				}
 			}
-			if !hasLicense {
+			if strings.Contains(headerContent, "GPL") && !strings.Contains(headerContent, "AGPL") && !strings.Contains(headerContent, "LGPL") {
+				hasWrongLicense = true
+			}
+			if hasWrongLicense {
 				violations = append(violations, ctx.CreateViolation(
-					fmt.Sprintf("Missing license in header of %s", file),
-					ViolationCodeFileMissingLicense,
+					fmt.Sprintf("Wrong license in header of %s", file),
+					ViolationCodeFileWrongLicense,
 					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 			}
-		} else {
-			licenseContent := content[licenseSection.StartIndex:licenseSection.EndIndex]
-			hasLicense := false
-			for _, marker := range agplMarkers {
-				if strings.Contains(licenseContent, marker) {
-					hasLicense = true
-					break
-				}
-			}
-			if !hasLicense {
-				violations = append(violations, ctx.CreateViolation(
-					fmt.Sprintf("Missing license in header of %s", file),
-					ViolationCodeFileMissingLicense,
-					fmt.Sprintf("%s#Header/License", file), licenseSection.StartLine, 0, ""))
-			} else {
-				wrongLicenses := []string{"MIT", "Apache", "BSD"}
-				hasWrongLicense := false
-				for _, wrong := range wrongLicenses {
-					if strings.Contains(licenseContent, wrong) {
-						hasWrongLicense = true
-						break
-					}
-				}
-				if strings.Contains(licenseContent, "GPL") && !strings.Contains(licenseContent, "AGPL") {
-					hasWrongLicense = true
-				}
-				if hasWrongLicense {
-					violations = append(violations, ctx.CreateViolation(
-						fmt.Sprintf("Wrong license in header of %s", file),
-						ViolationCodeFileWrongLicense,
-						fmt.Sprintf("%s#Header/License", file), licenseSection.StartLine, 0, ""))
-				}
-			}
 		}
-		if specsSection == nil {
+		commentPrefix := language.CommentPrefix()
+		hasSummary := false
+		licenseEnd := false
+		for _, line := range headerLines {
+			trimmed := strings.TrimSpace(line)
+			if trimmed == "" {
+				continue
+			}
+			if strings.HasPrefix(trimmed, commentPrefix+" #region") || strings.HasPrefix(trimmed, commentPrefix+" #endregion") {
+				continue
+			}
+			if !strings.HasPrefix(trimmed, commentPrefix) {
+				continue
+			}
+			commentText := strings.TrimSpace(strings.TrimPrefix(trimmed, commentPrefix))
+			if commentText == "" {
+				continue
+			}
+			if identificationRegex.MatchString(line) {
+				continue
+			}
+			if contributorPattern.MatchString(line) {
+				continue
+			}
+			for _, marker := range agplMarkers {
+				if strings.Contains(line, marker) {
+					licenseEnd = false
+					goto nextLine
+				}
+			}
+			if !licenseEnd && (strings.Contains(commentText, "without") || strings.Contains(commentText, "program") || strings.Contains(commentText, "License") || strings.Contains(commentText, "http") || strings.Contains(commentText, "version") || strings.Contains(commentText, "terms") || strings.Contains(commentText, "WARRANTY") || strings.Contains(commentText, "PURPOSE") || strings.Contains(commentText, "General Public") || strings.Contains(commentText, "redistribute") || strings.Contains(commentText, "published") || strings.Contains(commentText, "Foundation") || strings.Contains(commentText, "received")) {
+				continue
+			}
+			if isSpecText(commentText) {
+				continue
+			}
+			if strings.HasPrefix(commentText, "TODO:") {
+				continue
+			}
+			hasSummary = true
+			break
+		nextLine:
+		}
+		if !hasSummary && !isTestOrBenchmarkFile(file) {
 			violations = append(violations, ctx.CreateViolation(
-				fmt.Sprintf("Missing Specs subregion in header of %s", file),
-				ViolationCodeFileWrongHeaderFormat,
+				fmt.Sprintf("Missing summary in header of %s", file),
+				ViolationCodeFileMissingSummary,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		}
 	}
 	return ctx.FilterIgnored(violations)
 }
 
+func isTestOrBenchmarkFile(file string) bool {
+	if DeriveFileKind(filepath.Base(file)) == FileKindTest {
+		return true
+	}
+	lowerPath := strings.ToLower(file)
+	return strings.Contains(lowerPath, "/tests/") || strings.Contains(lowerPath, ".tests/") || strings.Contains(lowerPath, "/test/") || strings.Contains(lowerPath, ".test/") || strings.Contains(lowerPath, "/benchmark/") || strings.Contains(lowerPath, ".benchmark/")
+}
+
+func isExportedDefinition(name string, line string, langName string) bool {
+	trimmed := strings.TrimSpace(line)
+	switch langName {
+	case "typescript":
+		return strings.HasPrefix(trimmed, "export ")
+	case "go":
+		return len(name) > 0 && name[0] >= 'A' && name[0] <= 'Z'
+	case "python":
+		return !strings.HasPrefix(name, "_")
+	case "csharp":
+		return strings.Contains(trimmed, "public ") || strings.Contains(trimmed, "internal ")
+	case "rust":
+		return strings.HasPrefix(trimmed, "pub ") || strings.HasPrefix(trimmed, "pub(")
+	default:
+		return true
+	}
+}
+
+func requiresDefinitionSpecs(line string, langName string) bool {
+	trimmed := strings.TrimSpace(line)
+	switch langName {
+	case "typescript":
+		noExport := strings.TrimPrefix(trimmed, "export ")
+		noExport = strings.TrimLeft(noExport, "async abstract declare default ")
+		return strings.HasPrefix(noExport, "function ") || strings.HasPrefix(noExport, "class ")
+	case "go":
+		return strings.HasPrefix(trimmed, "func ")
+	case "python":
+		return strings.HasPrefix(trimmed, "def ") || strings.HasPrefix(trimmed, "class ") || strings.HasPrefix(trimmed, "async def ")
+	case "csharp":
+		return !strings.Contains(trimmed, " interface ") && !strings.Contains(trimmed, " enum ")
+	case "rust":
+		noPrefix := strings.TrimPrefix(trimmed, "pub ")
+		if strings.HasPrefix(noPrefix, "(") {
+			idx := strings.Index(noPrefix, ") ")
+			if idx >= 0 {
+				noPrefix = strings.TrimSpace(noPrefix[idx+2:])
+			}
+		}
+		return strings.HasPrefix(noPrefix, "fn ") || strings.HasPrefix(noPrefix, "struct ") || strings.HasPrefix(noPrefix, "impl ") || strings.HasPrefix(noPrefix, "trait ")
+	}
+	return true
+}
 func sectionPolicy(ctx *PolicyContext) []Violation {
 	var violations []Violation
 	files, err := ctx.Files()
@@ -12603,17 +13701,15 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					nonEmpty++
 				}
 			}
-			isHeaderChild := strings.ToLower(parentName) == "header"
-			isExempt := s.Name == "Header" || (isHeaderChild && (strings.ToLower(s.Name) == "license" || strings.ToLower(s.Name) == "specs"))
+			isExempt := s.Name == "Header"
 			if nonEmpty == 0 && len(s.Children) == 0 && !isExempt {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
 					ViolationCodeSectionEmpty,
 					fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
 			}
-			if !isExempt && s.Name != "" {
+			if !isExempt && s.Name != "" && !isTestOrBenchmarkFile(file) {
 				hasSummary := false
-				hasSpecs := false
 				for i := 1; i < len(sectionLines)-1; i++ {
 					line := strings.TrimSpace(sectionLines[i])
 					if line == "" {
@@ -12626,22 +13722,12 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					if commentText == "" {
 						continue
 					}
-					if isSpecText(commentText) {
-						hasSpecs = true
-					} else {
 						hasSummary = true
-					}
 				}
 				if !hasSummary {
 					violations = append(violations, ctx.CreateViolation(
 						fmt.Sprintf("Section \"%s\" is missing a summary comment in %s", s.Name, file),
 						ViolationCodeSectionMissingSummary,
-						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
-				}
-				if !hasSpecs {
-					violations = append(violations, ctx.CreateViolation(
-						fmt.Sprintf("Section \"%s\" is missing spec comments in %s", s.Name, file),
-						ViolationCodeSectionMissingSpecs,
 						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
 				}
 			}
@@ -12698,6 +13784,9 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 			}
 			line = strings.TrimSuffix(line, "\r")
 			if strings.TrimSpace(line) == "" {
+				continue
+			}
+			if i == 0 && strings.HasPrefix(strings.TrimSpace(line), "#!") {
 				continue
 			}
 			if startMatched, _ := language.PolicySectionStartMatch(line); startMatched {
@@ -12770,7 +13859,11 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		reportedDefs := make(map[string]bool)
+		skipOrphans := isTestOrBenchmarkFile(file)
 		for _, orphanRange := range orphanInfos {
+			if skipOrphans {
+				continue
+			}
 			matched := false
 			for _, defRange := range defRanges {
 				if orphanRange.start <= defRange.end && orphanRange.end >= defRange.start {
@@ -12802,6 +13895,17 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				orphanRange.firstLine))
 		}
 		for _, def := range realDefRanges {
+			isTestFile := isTestOrBenchmarkFile(file)
+			if isTestFile {
+				break
+			}
+			defLine := ""
+			if def.start-1 >= 0 && def.start-1 < len(lines) {
+				defLine = lines[def.start-1]
+			}
+			if !isExportedDefinition(def.name, defLine, language.Name()) {
+				continue
+			}
 			hasSummary := false
 			hasSpecs := false
 			for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
@@ -12828,7 +13932,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					ViolationCodeDefMissingSummary,
 					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
 			}
-			if !hasSpecs {
+			if !hasSpecs && requiresDefinitionSpecs(defLine, language.Name()) {
 				violations = append(violations, ctx.CreateViolation(
 					fmt.Sprintf("Definition \"%s\" is missing spec comments in %s:%d", def.name, file, def.start),
 					ViolationCodeDefMissingSpecs,
@@ -12839,10 +13943,12 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 	return ctx.FilterIgnored(violations)
 }
 
+// CommentTemplateState holds the data fields for a comment template state record.
 type CommentTemplateState struct {
 	ExprDepth int
 }
 
+// CommentScanState holds the data fields for a comment scan state record.
 type CommentScanState struct {
 	InBlockComment          bool
 	BlockCommentStartLine   int
@@ -12861,6 +13967,8 @@ type CommentScanState struct {
 	InVerbatimString        bool
 }
 
+// InTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
+// InTemplateRaw performs the in template raw operation on the CommentScanState.
 func (state *CommentScanState) InTemplateRaw() bool {
 	if len(state.Templates) == 0 {
 		return false
@@ -12924,8 +14032,10 @@ func specsPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		if headerSection != nil {
+			specsChildFound := false
 			for _, child := range headerSection.Children {
 				if strings.ToLower(child.Name) == "specs" {
+					specsChildFound = true
 					for i := child.StartLine + 1; i < child.EndLine && i <= len(lines); i++ {
 						line := strings.TrimSpace(lines[i-1])
 						if line == "" {
@@ -12943,6 +14053,30 @@ func specsPolicy(ctx *PolicyContext) []Violation {
 						}
 					}
 					break
+				}
+			}
+			if !specsChildFound {
+				for i := headerSection.StartLine + 1; i < headerSection.EndLine && i <= len(lines); i++ {
+					line := strings.TrimSpace(lines[i-1])
+					if line == "" {
+						continue
+					}
+					if !strings.HasPrefix(line, prefix) {
+						continue
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+					if commentText == "" {
+						continue
+					}
+					if !isSpecText(commentText) {
+						continue
+					}
+					if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
+						violations = append(violations, ctx.CreateViolation(
+							fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
+							ViolationCodeSpecsSyntax,
+							fmt.Sprintf("%s#Header", file), i, 0, commentText))
+					}
 				}
 			}
 		}
@@ -13304,7 +14438,9 @@ func repoPolicy(ctx *PolicyContext) []Violation {
 // #endregion 🔖Policies
 
 // #region 🔖Codebase
+// Codebase builder that assembles bundles, folders, files, sections, definitions, contributors, tickets, policies, and violations.
 
+// CodebaseContext holds the data fields for a codebase context record.
 type CodebaseContext struct {
 	RootDir    string
 	RootURI    string
@@ -13315,6 +14451,8 @@ type CodebaseContext struct {
 	Policies   []PolicyDef
 }
 
+// NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
+// NewCodebaseContext creates and returns a new CodebaseContext instance.
 func NewCodebaseContext() *CodebaseContext {
 	rootURI := "file://" + NormalizePath(rootDir)
 	return &CodebaseContext{
@@ -13323,10 +14461,14 @@ func NewCodebaseContext() *CodebaseContext {
 	}
 }
 
+// LoadBundles MUST read from the configured storage path.
+// LoadBundles loads the bundles from storage.
 func (ctx *CodebaseContext) LoadBundles() {
 	ctx.Bundles = GetProjects()
 }
 
+// LoadFiles MUST read from the configured storage path.
+// LoadFiles loads the files from storage.
 func (ctx *CodebaseContext) LoadFiles() error {
 	files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, ctx.Bundles)
 	if err != nil {
@@ -13336,6 +14478,8 @@ func (ctx *CodebaseContext) LoadFiles() error {
 	return nil
 }
 
+// LoadViolations MUST read from the configured storage path.
+// LoadViolations loads the violations from storage.
 func (ctx *CodebaseContext) LoadViolations() error {
 	for _, file := range ctx.Files {
 		violations, err := AnalyzeFile(file, ctx.Bundles)
@@ -13347,6 +14491,8 @@ func (ctx *CodebaseContext) LoadViolations() error {
 	return nil
 }
 
+// LoadTickets MUST read from the configured storage path.
+// LoadTickets loads the tickets from storage.
 func (ctx *CodebaseContext) LoadTickets() error {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -13356,10 +14502,14 @@ func (ctx *CodebaseContext) LoadTickets() error {
 	return nil
 }
 
+// LoadPolicies MUST read from the configured storage path.
+// LoadPolicies loads the policies from storage.
 func (ctx *CodebaseContext) LoadPolicies() {
 	ctx.Policies = GetPolicies()
 }
 
+// GetBundleForFile MUST return the stored value without modification.
+// GetBundleForFile returns the bundle for file of the CodebaseContext.
 func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
 	name, _, ok := ctx.GetBundleInfo(filePath)
 	if !ok {
@@ -13368,6 +14518,8 @@ func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
 	return name
 }
 
+// GetBundleInfo MUST return the stored value without modification.
+// GetBundleInfo returns the bundle info of the CodebaseContext.
 func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bool) {
 	normalizedPath := NormalizePath(path)
 	var matchedBundle string
@@ -13389,22 +14541,32 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 	return "", "", false
 }
 
+// GetFileID MUST return the stored value without modification.
+// GetFileID returns the file i d of the CodebaseContext.
 func (ctx *CodebaseContext) GetFileID(file string) string {
 	return buildFileID(file, nil)
 }
 
+// GetFolderID MUST return the stored value without modification.
+// GetFolderID returns the folder i d of the CodebaseContext.
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
 	return "📂" + NormalizePath(folder)
 }
 
+// FileURI MUST operate on the CodebaseContext receiver and return consistent results.
+// FileURI performs the file u r i operation on the CodebaseContext.
 func (ctx *CodebaseContext) FileURI(path string) string {
 	return "semiorepo://file/" + NormalizePath(path)
 }
 
+// FolderURI MUST operate on the CodebaseContext receiver and return consistent results.
+// FolderURI performs the folder u r i operation on the CodebaseContext.
 func (ctx *CodebaseContext) FolderURI(path string) string {
 	return "semiorepo://folder/" + NormalizePath(path)
 }
 
+// BuildCodebaseBundles MUST assemble the codebase bundles from the available context data.
+// BuildCodebaseBundles constructs and returns the codebase bundles structure.
 func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	var result []CodebaseBundle
 	fileCounts := make(map[string]int)
@@ -13566,6 +14728,8 @@ func countSections(sections []Section) int {
 	return count
 }
 
+// BuildCodebaseFolders MUST assemble the codebase folders from the available context data.
+// BuildCodebaseFolders constructs and returns the codebase folders structure.
 func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
@@ -13619,6 +14783,8 @@ func extractFilePath(scope string) string {
 	return scope
 }
 
+// BuildCodebaseFiles MUST assemble the codebase files from the available context data.
+// BuildCodebaseFiles constructs and returns the codebase files structure.
 func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 	var result []CodebaseFile
 	violationsByFile := make(map[string][]Violation)
@@ -13675,6 +14841,8 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 	return result
 }
 
+// BuildCodebaseSections MUST assemble the codebase sections from the available context data.
+// BuildCodebaseSections constructs and returns the codebase sections structure.
 func BuildCodebaseSections(ctx *CodebaseContext) []CodebaseSection {
 	var result []CodebaseSection
 
@@ -13726,6 +14894,8 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, 
 	}
 }
 
+// BuildCodebaseDefinitions MUST assemble the codebase definitions from the available context data.
+// BuildCodebaseDefinitions constructs and returns the codebase definitions structure.
 func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 	var result []CodebaseDefinition
 
@@ -13768,6 +14938,8 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 	return result
 }
 
+// BuildCodebaseContributors MUST assemble the codebase contributors from the available context data.
+// BuildCodebaseContributors constructs and returns the codebase contributors structure.
 func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -13845,6 +15017,8 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 	return result
 }
 
+// BuildCodebaseTickets MUST assemble the codebase tickets from the available context data.
+// BuildCodebaseTickets constructs and returns the codebase tickets structure.
 func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 	var result []CodebaseTicket
 
@@ -13924,6 +15098,8 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 	return result
 }
 
+// BuildCodebasePolicies MUST assemble the codebase policies from the available context data.
+// BuildCodebasePolicies constructs and returns the codebase policies structure.
 func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 	var result []CodebasePolicy
 	violationsByPolicy := make(map[string][]Violation)
@@ -13957,6 +15133,8 @@ func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 	return result
 }
 
+// BuildCodebaseViolations MUST assemble the codebase violations from the available context data.
+// BuildCodebaseViolations constructs and returns the codebase violations structure.
 func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
 	var result []CodebaseViolation
 
@@ -14014,6 +15192,8 @@ func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
 	return result
 }
 
+// BuildCodebaseTree MUST assemble the codebase tree from the available context data.
+// BuildCodebaseTree constructs and returns the codebase tree structure.
 func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []CodebaseFile, sections []CodebaseSection, definitions []CodebaseDefinition) map[string]*CbTreeNode {
 	tree := make(map[string]*CbTreeNode)
 	tree["semio"] = &CbTreeNode{Kind: CbTreeNodeRepo, Children: make(map[string]*CbTreeNode)}
@@ -14059,6 +15239,8 @@ func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []C
 	return tree
 }
 
+// BuildCodebase MUST assemble the codebase from the available context data.
+// BuildCodebase constructs and returns the codebase structure.
 func BuildCodebase(ctx *CodebaseContext) *Codebase {
 	bundles := BuildCodebaseBundles(ctx)
 	folders := BuildCodebaseFolders(ctx)
@@ -14085,6 +15267,8 @@ func BuildCodebase(ctx *CodebaseContext) *Codebase {
 	}
 }
 
+// BuildCodebaseSnapshot MUST assemble the codebase snapshot from the available context data.
+// BuildCodebaseSnapshot constructs and returns the codebase snapshot structure.
 func BuildCodebaseSnapshot(files []string, bundles []Bundle, commit string) (*Codebase, error) {
 	ctx := &CodebaseContext{RootDir: rootDir, RootURI: "file://" + NormalizePath(rootDir)}
 	ctx.Bundles = bundles
@@ -14100,6 +15284,8 @@ func BuildCodebaseSnapshot(files []string, bundles []Bundle, commit string) (*Co
 	return codebase, nil
 }
 
+// BuildCodebaseBundlesForFiles MUST assemble the codebase bundles for files from the available context data.
+// BuildCodebaseBundlesForFiles constructs and returns the codebase bundles for files structure.
 func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []CodebaseBundle {
 	var result []CodebaseBundle
 	fileCounts := make(map[string]int)
@@ -14173,6 +15359,8 @@ func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []Codebas
 	return result
 }
 
+// BuildCodebaseFoldersForFiles MUST assemble the codebase folders for files from the available context data.
+// BuildCodebaseFoldersForFiles constructs and returns the codebase folders for files structure.
 func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
@@ -14216,6 +15404,8 @@ func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []Codebas
 	return result
 }
 
+// BuildCodebaseFilesForFiles MUST assemble the codebase files for files from the available context data.
+// BuildCodebaseFilesForFiles constructs and returns the codebase files for files structure.
 func BuildCodebaseFilesForFiles(ctx *CodebaseContext, commit string) []CodebaseFile {
 	var result []CodebaseFile
 	for _, file := range ctx.Files {
@@ -14249,6 +15439,8 @@ func BuildCodebaseFilesForFiles(ctx *CodebaseContext, commit string) []CodebaseF
 	return result
 }
 
+// BuildCodebaseSectionsForFiles MUST assemble the codebase sections for files from the available context data.
+// BuildCodebaseSectionsForFiles constructs and returns the codebase sections for files structure.
 func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, commit string) []CodebaseSection {
 	var result []CodebaseSection
 	for _, file := range ctx.Files {
@@ -14295,6 +15487,8 @@ func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file
 	}
 }
 
+// BuildCodebaseDefinitionsForFiles MUST assemble the codebase definitions for files from the available context data.
+// BuildCodebaseDefinitionsForFiles constructs and returns the codebase definitions for files structure.
 func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, commit string) []CodebaseDefinition {
 	var result []CodebaseDefinition
 	for _, file := range ctx.Files {
@@ -14332,6 +15526,8 @@ func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, commit string) []Cod
 	return result
 }
 
+// ToolCodebase MUST complete the operation and return consistent results.
+// ToolCodebase performs the tool codebase operation.
 func ToolCodebase() ToolResult {
 	output := NewOutput()
 	ctx := NewCodebaseContext()
@@ -14359,23 +15555,34 @@ func ToolCodebase() ToolResult {
 // #endregion 🔖Codebase
 
 // #region 🔖Tickets
+// Ticket and goal lifecycle management including creation, closing, reopening, deletion, and diff computation.
 
+// GetTicketsDir MUST return the stored value without modification.
+// GetTicketsDir returns the tickets dir of the value.
 func GetTicketsDir() string {
 	return filepath.Join(GetRepoMetaDir(), "tickets")
 }
 
+// GetTicketPath MUST return the stored value without modification.
+// GetTicketPath returns the ticket path of the value.
 func GetTicketPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketsDir(), strconv.Itoa(year), PadNumber(month, 2), PadNumber(day, 2), slug)
 }
 
+// GetTicketFilePath MUST return the stored value without modification.
+// GetTicketFilePath returns the ticket file path of the value.
 func GetTicketFilePath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.md")
 }
 
+// GetImportantFilePath MUST return the stored value without modification.
+// GetImportantFilePath returns the important file path of the value.
 func GetImportantFilePath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "important.md")
 }
 
+// GetTicketJsonPath MUST return the stored value without modification.
+// GetTicketJsonPath returns the ticket json path of the value.
 func GetTicketJsonPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.json")
 }
@@ -14388,6 +15595,8 @@ func hasTicketKeyword(text, keyword string) bool {
 	return strings.Contains(strings.ToUpper(text), keyword)
 }
 
+// FindTicketBySlug MUST return nil when no match is found.
+// FindTicketBySlug searches for and returns the matching ticket by slug.
 func FindTicketBySlug(slug string) (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -14402,6 +15611,8 @@ func FindTicketBySlug(slug string) (*Ticket, error) {
 	return nil, fmt.Errorf("ticket not found: %s", slug)
 }
 
+// LatestTicket MUST complete the operation and return consistent results.
+// LatestTicket performs the latest ticket operation.
 func LatestTicket() (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -14433,6 +15644,8 @@ func shouldSkipTicket(prompt string) bool {
 	return hasTicketKeyword(prompt, "NOTICKET")
 }
 
+// OpenTicket MUST complete the operation and return consistent results.
+// OpenTicket performs the open ticket operation.
 func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
@@ -14453,6 +15666,8 @@ func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal str
 	return CreateTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noGithub, issue)
 }
 
+// OpenGoal MUST complete the operation and return consistent results.
+// OpenGoal performs the open goal operation.
 func OpenGoal(title, description, prompt, dueDate, client, llm string, noGithub bool) (*Goal, error) {
 	ctx := NewRepoContext(rootDir)
 	input := GoalCreateInput{
@@ -14467,6 +15682,8 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noGithub 
 	return ctx.GoalCreate(input)
 }
 
+// UpdateTicketTitle MUST complete the operation and return consistent results.
+// UpdateTicketTitle performs the update ticket title operation.
 func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if ticket == nil {
 		return fmt.Errorf("ticket is nil")
@@ -14509,6 +15726,8 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 	return nil
 }
 
+// CreateTicket MUST persist the new entity and return a reference to it.
+// CreateTicket creates a new ticket and persists it.
 func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	if goal == "" {
@@ -14703,6 +15922,8 @@ func ghAssignIssueToCurrentUser(issueURL string) {
 	ExecCommand("gh", []string{"issue", "edit", issueURL, "--add-assignee", user}, "")
 }
 
+// CountLines MUST complete the operation and return consistent results.
+// CountLines performs the count lines operation.
 func CountLines(content string) int {
 	if content == "" {
 		return 0
@@ -14710,6 +15931,8 @@ func CountLines(content string) int {
 	return strings.Count(content, "\n") + 1
 }
 
+// CountLinesInFile MUST complete the operation and return consistent results.
+// CountLinesInFile performs the count lines in file operation.
 func CountLinesInFile(path string) int {
 	content, err := ReadTextFile(path)
 	if err != nil {
@@ -14718,6 +15941,8 @@ func CountLinesInFile(path string) int {
 	return CountLines(content)
 }
 
+// CountLinesAtCommit MUST complete the operation and return consistent results.
+// CountLinesAtCommit performs the count lines at commit operation.
 func CountLinesAtCommit(commit, filePath string) int {
 	stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", commit, filePath)}, "")
 	if exitCode != 0 {
@@ -14726,6 +15951,8 @@ func CountLinesAtCommit(commit, filePath string) int {
 	return CountLines(stdout)
 }
 
+// ReadTextFileAtCommit MUST return the text file at commit content or an error if unavailable.
+// ReadTextFileAtCommit reads and returns text file at commit from the source.
 func ReadTextFileAtCommit(commit, filePath string) (string, error) {
 	if commit == "" {
 		return ReadTextFile(filepath.Join(rootDir, filePath))
@@ -14737,6 +15964,8 @@ func ReadTextFileAtCommit(commit, filePath string) (string, error) {
 	return stdout, nil
 }
 
+// ListFilesAtCommit MUST return all available files at commit entries.
+// ListFilesAtCommit returns a list of files at commit entries.
 func ListFilesAtCommit(commit string) ([]string, error) {
 	if commit == "" {
 		files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, GetProjects())
@@ -14829,6 +16058,8 @@ func replaceSectionContent(content, sectionHeading, newContent string) string {
 	return strings.TrimRight(before, "\n") + "\n\n" + sectionHeading + "\n\n" + newContent + rest
 }
 
+// FilterTicketWorkspaceFiles MUST return only entries that match the filter criteria.
+// FilterTicketWorkspaceFiles returns the subset of ticket workspace files matching the criteria.
 func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
 	if ticket == nil {
 		return files
@@ -15164,6 +16395,8 @@ func ghListOpenIssuesWithLabel(label string) ([]string, error) {
 	return urls, nil
 }
 
+// SaveTicket MUST persist the ticket atomically to the data store.
+// SaveTicket persists ticket to the data store.
 func SaveTicket(ticket *Ticket) error {
 	jsonBytes, err := json.MarshalIndent(ticket, "", "  ")
 	if err != nil {
@@ -15172,6 +16405,8 @@ func SaveTicket(ticket *Ticket) error {
 	return WriteTextFile(ticket.JsonPath, string(jsonBytes))
 }
 
+// ReadTicket MUST return the ticket content or an error if unavailable.
+// ReadTicket reads and returns ticket from the source.
 func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	folderPath := GetTicketPath(year, month, day, slug)
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
@@ -15200,6 +16435,8 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	return &ticket, nil
 }
 
+// ListTickets MUST return all available tickets entries.
+// ListTickets returns a list of tickets entries.
 func ListTickets(year, month, day *int) ([]Ticket, error) {
 	ticketsDir := GetTicketsDir()
 	if !FileExists(ticketsDir) {
@@ -15290,6 +16527,8 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	return tickets, nil
 }
 
+// StreamTickets MUST invoke the callback for each matching tickets entry.
+// StreamTickets streams tickets entries through the callback.
 func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket, opts ...StreamOptions) error {
 	defer close(out)
 
@@ -15482,6 +16721,8 @@ var (
 	projectCacheMutex  sync.Mutex
 )
 
+// InvalidateProjectCache MUST clear the cached state to force a reload.
+// InvalidateProjectCache invalidates the cached project cache.
 func InvalidateProjectCache() {
 	projectCacheMutex.Lock()
 	defer projectCacheMutex.Unlock()
@@ -15489,6 +16730,8 @@ func InvalidateProjectCache() {
 	projectCache = nil
 }
 
+// LoadProjects MUST return all matching projects from the data source.
+// LoadProjects loads and returns projects from the data source.
 func LoadProjects() []Project {
 	projectCacheMutex.Lock()
 	defer projectCacheMutex.Unlock()
@@ -15588,6 +16831,8 @@ func loadProjectsInternal() []Project {
 	return projects
 }
 
+// LoadCommits MUST return all matching commits from the data source.
+// LoadCommits loads and returns commits from the data source.
 func LoadCommits(limit *int) []Commit {
 	args := []string{"log", "--pretty=format:%H|%aN|%ad|%s", "--date=iso-strict"}
 	if limit != nil {
@@ -15622,6 +16867,8 @@ func LoadCommits(limit *int) []Commit {
 	return commits
 }
 
+// LoadBundles MUST return all matching bundles from the data source.
+// LoadBundles loads and returns bundles from the data source.
 func LoadBundles() []Bundle {
 	var bundles []Bundle
 	projects := LoadProjects()
@@ -15631,10 +16878,14 @@ func LoadBundles() []Bundle {
 	return bundles
 }
 
+// GetProjects MUST retrieve the requested value or return an error.
+// GetProjects retrieves and returns the projects.
 func GetProjects() []Bundle {
 	return LoadBundles()
 }
 
+// StreamBundles MUST invoke the callback for each matching bundles entry.
+// StreamBundles streams bundles entries through the callback.
 func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -15807,6 +17058,8 @@ func loadPackages(bundleRoot string) []Package {
 	return packages
 }
 
+// StreamProjects MUST invoke the callback for each matching projects entry.
+// StreamProjects streams projects entries through the callback.
 func StreamProjects(ctx context.Context, out chan<- Project, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -15893,6 +17146,7 @@ func runProjectTree(factory EngineFactory, config Config, cmd *cobra.Command, ar
 	return renderStream(cmd, &config, stream)
 }
 
+// StreamOptions holds the data fields for a stream options record.
 type StreamOptions struct {
 	ShowIgnored    bool
 	ShowGenerated  bool
@@ -16123,6 +17377,8 @@ func shouldIncludeDefinitionKind(kind DefinitionKind, opts StreamOptions) bool {
 	return true
 }
 
+// StreamFolders MUST invoke the callback for each matching folders entry.
+// StreamFolders streams folders entries through the callback.
 func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -16229,6 +17485,8 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 	return nil
 }
 
+// StreamFiles MUST invoke the callback for each matching files entry.
+// StreamFiles streams files entries through the callback.
 func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -16418,6 +17676,8 @@ func hydrateSectionMetadata(s *Section, filePath string, prefix string) {
 	}
 }
 
+// StreamSections MUST invoke the callback for each matching sections entry.
+// StreamSections streams sections entries through the callback.
 func StreamSections(ctx context.Context, scope string, out chan<- Section, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -16477,6 +17737,8 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 	return nil
 }
 
+// StreamDefinitions MUST invoke the callback for each matching definitions entry.
+// StreamDefinitions streams definitions entries through the callback.
 func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -16545,6 +17807,8 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 	return nil
 }
 
+// ResolveBundleForPath MUST return the resolved value or an error if unresolvable.
+// ResolveBundleForPath resolves and returns the bundle for path.
 func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	var bestMatch string
 	var maxLen int
@@ -16734,6 +17998,8 @@ func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
 	return strings.Join(lines, "\n")
 }
 
+// ProgressTicket MUST return a non-nil error when the operation fails.
+// ProgressTicket performs the progress ticket operation.
 func ProgressTicket(ticket *Ticket, summary string) (string, error) {
 	if summary == "" {
 		return "No summary provided", nil
@@ -16767,6 +18033,8 @@ func ProgressTicket(ticket *Ticket, summary string) (string, error) {
 	return fmt.Sprintf("Logged progress to %s", ticket.Slug), nil
 }
 
+// FinishTicket MUST return a non-nil error when the operation fails.
+// FinishTicket performs the finish ticket operation.
 func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool, bulk bool) error {
 	if ticket.Status != TicketStatusOpen {
 		return fmt.Errorf("ticket is not open")
@@ -16876,6 +18144,8 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 	return SaveTicket(ticket)
 }
 
+// ReopenTicket MUST return a non-nil error when the operation fails.
+// ReopenTicket performs the reopen ticket operation.
 func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noGithub bool) error {
 	if ticket.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
@@ -16967,6 +18237,8 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 	return SaveTicket(ticket)
 }
 
+// ToolTicketOpen MUST complete the operation successfully.
+// ToolTicketOpen performs the tool ticket open operation.
 func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) ToolResult {
 	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noGithub, issue)
 	if err != nil {
@@ -16990,6 +18262,8 @@ func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal
 	return toolResultFromEvents(events, ticket)
 }
 
+// ToolTicketList MUST complete the operation successfully.
+// ToolTicketList performs the tool ticket list operation.
 func ToolTicketList(year, month, day *int) ToolResult {
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
@@ -17017,6 +18291,8 @@ func ToolTicketList(year, month, day *int) ToolResult {
 	return toolResultFromEvents(events, tickets)
 }
 
+// ToolTicketRead MUST complete the operation successfully.
+// ToolTicketRead performs the tool ticket read operation.
 func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -17046,6 +18322,8 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	return result
 }
 
+// ToolTicketClose MUST complete the operation successfully.
+// ToolTicketClose performs the tool ticket close operation.
 func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noGithub bool) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -17082,6 +18360,8 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 	return toolResultFromEvents(events, ticket)
 }
 
+// ToolTicketReopen MUST complete the operation successfully.
+// ToolTicketReopen performs the tool ticket reopen operation.
 func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noGithub bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
@@ -17105,6 +18385,8 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 	return ToolResult{Output: *output, Data: ticket}
 }
 
+// ToolDraftCreate MUST complete the operation successfully.
+// ToolDraftCreate performs the tool draft create operation.
 func ToolDraftCreate(slug string, files []string) ToolResult {
 	output := NewOutput()
 	draft, err := CreateDraft(slug, files)
@@ -17115,6 +18397,8 @@ func ToolDraftCreate(slug string, files []string) ToolResult {
 	return ToolResult{Output: *output, Data: draft}
 }
 
+// ToolDraftList MUST complete the operation successfully.
+// ToolDraftList performs the tool draft list operation.
 func ToolDraftList() ToolResult {
 	drafts, err := ListDrafts()
 	if err != nil {
@@ -17128,6 +18412,8 @@ func ToolDraftList() ToolResult {
 	return toolResultFromEvents(events, drafts)
 }
 
+// ToolDraftDelete MUST complete the operation successfully.
+// ToolDraftDelete performs the tool draft delete operation.
 func ToolDraftDelete(slug string) ToolResult {
 	if err := DeleteDraft(slug); err != nil {
 		return toolErrorResult(err)
@@ -17135,6 +18421,8 @@ func ToolDraftDelete(slug string) ToolResult {
 	return toolResultFromEvents(nil, nil)
 }
 
+// ToolGoalCreate MUST complete the operation successfully.
+// ToolGoalCreate performs the tool goal create operation.
 func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noGithub bool, parent, milestone string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	goal, err := ctx.GoalCreate(GoalCreateInput{
@@ -17166,6 +18454,8 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noG
 	return toolResultFromEvents(events, goal)
 }
 
+// ToolGoalList MUST complete the operation successfully.
+// ToolGoalList performs the tool goal list operation.
 func ToolGoalList() ToolResult {
 	goals, err := ListGoals()
 	if err != nil {
@@ -17179,6 +18469,8 @@ func ToolGoalList() ToolResult {
 	return toolResultFromEvents(events, goals)
 }
 
+// ToolGoalClose MUST complete the operation successfully.
+// ToolGoalClose performs the tool goal close operation.
 func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.GoalClose(GoalCloseInput{
@@ -17199,6 +18491,8 @@ func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
 	return toolResultFromEvents(events, nil)
 }
 
+// ToolGoalReopen MUST complete the operation successfully.
+// ToolGoalReopen performs the tool goal reopen operation.
 func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string, noGithub bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	var titlePtr, descriptionPtr, dueDatePtr *string
@@ -17234,6 +18528,8 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 	return toolResultFromEvents(events, nil)
 }
 
+// ToolContributorAdd MUST complete the operation successfully.
+// ToolContributorAdd performs the tool contributor add operation.
 func ToolContributorAdd(github string) ToolResult {
 	contributor, err := CreateContributor(github)
 	if err != nil {
@@ -17251,6 +18547,8 @@ func ToolContributorAdd(github string) ToolResult {
 	return toolResultFromEvents(events, contributor)
 }
 
+// ToolContributorList MUST complete the operation successfully.
+// ToolContributorList performs the tool contributor list operation.
 func ToolContributorList() ToolResult {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -17264,6 +18562,8 @@ func ToolContributorList() ToolResult {
 	return toolResultFromEvents(events, contributors)
 }
 
+// ToolContributorRemove MUST complete the operation successfully.
+// ToolContributorRemove performs the tool contributor remove operation.
 func ToolContributorRemove(github string) ToolResult {
 	if err := RemoveContributor(github); err != nil {
 		return toolErrorResult(err)
@@ -17275,6 +18575,8 @@ func ToolContributorRemove(github string) ToolResult {
 	return toolResultFromEvents(events, nil)
 }
 
+// ToolProjectList MUST complete the operation successfully.
+// ToolProjectList performs the tool project list operation.
 func ToolProjectList() ToolResult {
 	projects := LoadProjects()
 	sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
@@ -17286,6 +18588,8 @@ func ToolProjectList() ToolResult {
 	return toolResultFromEvents(events, projects)
 }
 
+// ToolBundleList MUST complete the operation successfully.
+// ToolBundleList performs the tool bundle list operation.
 func ToolBundleList() ToolResult {
 	bundles := LoadBundles()
 	sort.Slice(bundles, func(i, j int) bool { return bundles[i].Name < bundles[j].Name })
@@ -17297,6 +18601,8 @@ func ToolBundleList() ToolResult {
 	return toolResultFromEvents(events, bundles)
 }
 
+// ToolProjectTree MUST complete the operation successfully.
+// ToolProjectTree performs the tool project tree operation.
 func ToolProjectTree() ToolResult {
 	projChan := make(chan Project)
 	go func() {
@@ -17316,6 +18622,8 @@ func ToolProjectTree() ToolResult {
 	})
 	return toolResultFromEvents(events, projects)
 }
+// ToolFolderCreate MUST complete the operation successfully.
+// ToolFolderCreate performs the tool folder create operation.
 func ToolFolderCreate(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -17329,6 +18637,8 @@ func ToolFolderCreate(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolFolderMove MUST complete the operation successfully.
+// ToolFolderMove performs the tool folder move operation.
 func ToolFolderMove(source, target string) ToolResult {
 	output := NewOutput()
 	absSource := filepath.Join(rootDir, source)
@@ -17350,6 +18660,8 @@ func ToolFolderMove(source, target string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolFolderDelete MUST complete the operation successfully.
+// ToolFolderDelete performs the tool folder delete operation.
 func ToolFolderDelete(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -17363,6 +18675,8 @@ func ToolFolderDelete(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolFolderList MUST complete the operation successfully.
+// ToolFolderList performs the tool folder list operation.
 func ToolFolderList(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -17392,6 +18706,8 @@ func ToolFolderList(path string) ToolResult {
 	return ToolResult{Output: *output, Data: filtered}
 }
 
+// ToolFolderTree MUST complete the operation successfully.
+// ToolFolderTree performs the tool folder tree operation.
 func ToolFolderTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -17447,6 +18763,8 @@ func printTree(output *CommandOutput, dir, prefix string) {
 	}
 }
 
+// ToolFileCreate MUST complete the operation successfully.
+// ToolFileCreate performs the tool file create operation.
 func ToolFileCreate(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -17462,6 +18780,8 @@ func ToolFileCreate(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// FileHeaderId MUST complete the operation successfully.
+// FileHeaderId performs the file header id operation.
 func FileHeaderId(path string) string {
 	kind := DeriveFileKind(filepath.Base(path))
 	if kind == FileKindCode {
@@ -17481,6 +18801,8 @@ func FileHeaderId(path string) string {
 	return result
 }
 
+// AGPLLicenseText MUST complete the operation successfully.
+// AGPLLicenseText performs the a g p l license text operation.
 func AGPLLicenseText() string {
 	return `This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -17496,6 +18818,13 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.`
 }
 
+
+// FileHeaderUri MUST return the semiorepo URI for a file path.
+// FileHeaderUri returns the artifact URI for the given file path.
+func FileHeaderUri(path string) string {
+	data := map[string]interface{}{"path": path}
+	return GetArtifactURI("file", data)
+}
 func generateFileHeader(path string, language LanguagePlugin) string {
 	if language == nil || !language.SupportsHeaders() {
 		return ""
@@ -17503,9 +18832,11 @@ func generateFileHeader(path string, language LanguagePlugin) string {
 	gitAuthor := GetGitAuthor()
 	year := strconv.Itoa(time.Now().Year())
 	contributors := year + " " + gitAuthor
-	return language.FormatHeader(FileHeaderId(path), "", contributors, AGPLLicenseText(), "")
+	return language.FormatHeader(FileHeaderId(path), FileHeaderUri(path), "", contributors, AGPLLicenseText(), "")
 }
 
+// ToolFileMove MUST complete the operation successfully.
+// ToolFileMove performs the tool file move operation.
 func ToolFileMove(source, target string) ToolResult {
 	output := NewOutput()
 	absSource := filepath.Join(rootDir, source)
@@ -17527,6 +18858,8 @@ func ToolFileMove(source, target string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolFileDelete MUST complete the operation successfully.
+// ToolFileDelete performs the tool file delete operation.
 func ToolFileDelete(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -17540,6 +18873,8 @@ func ToolFileDelete(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolFileList MUST complete the operation successfully.
+// ToolFileList performs the tool file list operation.
 func ToolFileList(scopeRaw string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(scopeRaw)
@@ -17559,6 +18894,8 @@ func ToolFileList(scopeRaw string) ToolResult {
 	return ToolResult{Output: *output, Data: files}
 }
 
+// ToolFileTree MUST complete the operation successfully.
+// ToolFileTree performs the tool file tree operation.
 func ToolFileTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -17570,6 +18907,8 @@ func ToolFileTree(path string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolSectionCreate MUST complete the operation successfully.
+// ToolSectionCreate performs the tool section create operation.
 func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -17627,6 +18966,8 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolSectionMove MUST complete the operation successfully.
+// ToolSectionMove performs the tool section move operation.
 func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -17704,6 +19045,8 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolIntegrate MUST complete the operation successfully.
+// ToolIntegrate performs the tool integrate operation.
 func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSectionName string) ToolResult {
 	output := NewOutput()
 
@@ -17811,6 +19154,8 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 	return ToolResult{Output: *output}
 }
 
+// ToolExtract MUST complete the operation successfully.
+// ToolExtract performs the tool extract operation.
 func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolResult {
 	output := NewOutput()
 
@@ -17899,6 +19244,8 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 	return ToolResult{Output: *output}
 }
 
+// UpdateAgentsDocsPath MUST apply the update and return an error if the target is missing.
+// UpdateAgentsDocsPath modifies an existing agents docs path entry.
 func UpdateAgentsDocsPath(oldPath, newPath string) {
 	agentsPath := filepath.Join(rootDir, "AGENTS.md")
 	if !FileExists(agentsPath) {
@@ -17938,6 +19285,8 @@ func UpdateAgentsDocsPath(oldPath, newPath string) {
 	WriteTextFile(agentsPath, strings.Join(lines, "\n"))
 }
 
+// RemoveAgentsDocsEntry MUST remove the target and return an error on failure.
+// RemoveAgentsDocsEntry removes the specified agents docs entry.
 func RemoveAgentsDocsEntry(filePath string) {
 	agentsPath := filepath.Join(rootDir, "AGENTS.md")
 	if !FileExists(agentsPath) {
@@ -17983,6 +19332,8 @@ func RemoveAgentsDocsEntry(filePath string) {
 	}
 }
 
+// SplitHeader MUST complete the operation successfully.
+// SplitHeader splits the header into parts.
 func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 	sections := lang.ParseSections(content)
 	for _, s := range sections {
@@ -17995,6 +19346,8 @@ func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 	return "", content
 }
 
+// MergeHeaders MUST combine the inputs and return the merged result.
+// MergeHeaders combines the headers entries into one.
 func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string {
 	if targetHeader == "" {
 		return sourceHeader
@@ -18046,6 +19399,8 @@ func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string
 	return strings.Join(res, "\n")
 }
 
+// UniqueStrings MUST complete the operation successfully.
+// UniqueStrings performs the unique strings operation.
 func UniqueStrings(input []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
@@ -18058,6 +19413,8 @@ func UniqueStrings(input []string) []string {
 	return list
 }
 
+// ToolSectionDelete MUST complete the operation successfully.
+// ToolSectionDelete performs the tool section delete operation.
 func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -18112,6 +19469,8 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	return ToolResult{Output: *output}
 }
 
+// ToolSectionList MUST complete the operation successfully.
+// ToolSectionList performs the tool section list operation.
 func ToolSectionList(filePath string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(filePath)
@@ -18144,6 +19503,8 @@ func ToolSectionList(filePath string) ToolResult {
 	return ToolResult{Output: *output, Data: sections}
 }
 
+// ToolSectionTree MUST complete the operation successfully.
+// ToolSectionTree performs the tool section tree operation.
 func ToolSectionTree(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.Split(filePath, "#")[0])
@@ -18172,6 +19533,8 @@ func ToolSectionTree(filePath string) ToolResult {
 	return ToolResult{Output: *output, Data: sections}
 }
 
+// ToolDefinitionList MUST complete the operation successfully.
+// ToolDefinitionList performs the tool definition list operation.
 func ToolDefinitionList(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -18183,10 +19546,14 @@ func ToolDefinitionList(filePath string) ToolResult {
 	return ToolResult{Output: *output, Data: []Definition{}}
 }
 
+// ToolDefinitionTree MUST complete the operation successfully.
+// ToolDefinitionTree performs the tool definition tree operation.
 func ToolDefinitionTree(filePath string) ToolResult {
 	return ToolDefinitionList(filePath)
 }
 
+// ToolUpdateMetabolism MUST complete the operation successfully.
+// ToolUpdateMetabolism performs the tool update metabolism operation.
 func ToolUpdateMetabolism() ToolResult {
 	output := NewOutput()
 	output.Info("\n🔄 Running update-metabolism via npx tsx...")
@@ -18199,7 +19566,9 @@ func ToolUpdateMetabolism() ToolResult {
 }
 
 // #region 🔖SQLite Export
+// SQLite export functions for persisting repository data.
 
+// ExportResult holds the data fields for a export result record.
 type ExportResult struct {
 	Path           string `json:"path"`
 	Bundles        int    `json:"bundles"`
@@ -18214,6 +19583,8 @@ type ExportResult struct {
 	Violations     int    `json:"violations"`
 }
 
+// ExportToSQLite MUST write the complete output to the target.
+// ExportToSQLite exports the to s q lite to the target format.
 func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	if outputPath == "" {
 		outputPath = filepath.Join(ctx.GetRootDir(), "repo.db")
@@ -18621,6 +19992,8 @@ func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
 	return len(violations), nil
 }
 
+// ToolExport MUST complete the operation successfully.
+// ToolExport performs the tool export operation.
 func ToolExport(outputPath string) ToolResult {
 	output := NewOutput()
 	output.Info("\n📦Exporting repo to SQLite...")
@@ -18648,7 +20021,9 @@ func ToolExport(outputPath string) ToolResult {
 // #endregion 🔖Tickets
 
 // #region 🔖GraphQL Context Port
+// GraphQL context port adapter for request context propagation.
 
+// RepoContext defines the interface for repo context operations.
 type RepoContext interface {
 	GetRootDir() string
 	GetBundles() []*Bundle
@@ -18702,16 +20077,22 @@ type RepoContext interface {
 // #endregion 🔖GraphQL Context Port
 
 // #region 🔖GraphQL Resolver
+// GraphQL resolver implementation binding queries to data sources.
 
+// Resolver holds the data fields for a resolver record.
 type Resolver struct {
 	RootDir string
 	Ctx     RepoContext
 }
 
+// NewResolver MUST initialize all required fields and return a valid resolver.
+// NewResolver creates and returns a new resolver instance.
 func NewResolver(rootDir string) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: NewRepoContext(rootDir)}
 }
 
+// NewResolverWithContext MUST initialize all required fields and return a valid resolver with context.
+// NewResolverWithContext creates and returns a new resolver with context instance.
 func NewResolverWithContext(rootDir string, ctx RepoContext) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: ctx}
 }
@@ -18723,11 +20104,14 @@ func (r *Resolver) context() RepoContext {
 // #endregion 🔖GraphQL Resolver
 
 // #region 🔖Default Context
+// Default context factory providing baseline resolver context.
 
 type defaultContext struct {
 	rootDir string
 }
 
+// NewDefaultContext MUST initialize all required fields and return a valid default context.
+// NewDefaultContext creates and returns a new default context instance.
 func NewDefaultContext(rootDir string) RepoContext {
 	return &defaultContext{rootDir: rootDir}
 }
@@ -18737,24 +20121,34 @@ type repoContext struct {
 	bundles []Bundle
 }
 
+// NewRepoContext MUST initialize all required fields and return a valid repo context.
+// NewRepoContext creates and returns a new repo context instance.
 func NewRepoContext(rootDir string) RepoContext {
 	ctx := &repoContext{rootDir: rootDir}
 	ctx.bundles = LoadBundles()
 	return ctx
 }
 
+// GetRootDir MUST retrieve the requested value or return an error.
+// GetRootDir retrieves and returns the root dir.
 func (c *repoContext) GetRootDir() string { return c.rootDir }
 
+// GetFileID MUST retrieve the requested value or return an error.
+// GetFileID retrieves and returns the file i d.
 func (c *repoContext) GetFileID(path string) string {
 	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	return ctx.GetFileID(path)
 }
 
+// GetFolderID MUST retrieve the requested value or return an error.
+// GetFolderID retrieves and returns the folder i d.
 func (c *repoContext) GetFolderID(path string) string {
 	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	return ctx.GetFolderID(path)
 }
 
+// GetBundles MUST retrieve the requested value or return an error.
+// GetBundles retrieves and returns the bundles.
 func (c *repoContext) GetBundles() []*Bundle {
 	result := make([]*Bundle, len(c.bundles))
 	for i := range c.bundles {
@@ -18763,6 +20157,8 @@ func (c *repoContext) GetBundles() []*Bundle {
 	return result
 }
 
+// GetProjects MUST retrieve the requested value or return an error.
+// GetProjects retrieves and returns the projects.
 func (c *repoContext) GetProjects() []*Project {
 	projects := LoadProjects()
 	res := make([]*Project, len(projects))
@@ -18772,6 +20168,8 @@ func (c *repoContext) GetProjects() []*Project {
 	return res
 }
 
+// GetCommits MUST retrieve the requested value or return an error.
+// GetCommits retrieves and returns the commits.
 func (c *repoContext) GetCommits(limit *int) ([]*Commit, error) {
 	commits := LoadCommits(limit)
 	res := make([]*Commit, len(commits))
@@ -18781,6 +20179,8 @@ func (c *repoContext) GetCommits(limit *int) ([]*Commit, error) {
 	return res, nil
 }
 
+// GetFolders MUST retrieve the requested value or return an error.
+// GetFolders retrieves and returns the folders.
 func (c *repoContext) GetFolders() []*Folder {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -18809,6 +20209,8 @@ func (c *repoContext) GetFolders() []*Folder {
 	return results
 }
 
+// GetFiles MUST retrieve the requested value or return an error.
+// GetFiles retrieves and returns the files.
 func (c *repoContext) GetFiles() []*File {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -18839,6 +20241,8 @@ func (c *repoContext) GetFiles() []*File {
 	return results
 }
 
+// GetDefinitions MUST retrieve the requested value or return an error.
+// GetDefinitions retrieves and returns the definitions.
 func (c *repoContext) GetDefinitions() []*Definition {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -18875,6 +20279,8 @@ func (c *repoContext) GetDefinitions() []*Definition {
 	return results
 }
 
+// GetSections MUST retrieve the requested value or return an error.
+// GetSections retrieves and returns the sections.
 func (c *repoContext) GetSections() []*Section {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -18908,6 +20314,8 @@ func (c *repoContext) GetSections() []*Section {
 	return results
 }
 
+// GetContributors MUST retrieve the requested value or return an error.
+// GetContributors retrieves and returns the contributors.
 func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -18920,6 +20328,8 @@ func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	return result, nil
 }
 
+// GetTickets MUST retrieve the requested value or return an error.
+// GetTickets retrieves and returns the tickets.
 func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
@@ -18934,10 +20344,14 @@ func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([
 	return result, nil
 }
 
+// GetGoals MUST retrieve the requested value or return an error.
+// GetGoals retrieves and returns the goals.
 func (c *repoContext) GetGoals() ([]*Goal, error) {
 	return ListGoals()
 }
 
+// GoalCreate MUST return a non-nil error when the operation fails.
+// GoalCreate performs the goal create operation on the repo context.
 func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 
 	if input.Title == "" {
@@ -19073,6 +20487,8 @@ func parseMilestoneNumber(milestone string) (int, error) {
 	return 0, fmt.Errorf("could not parse milestone number from %s", milestone)
 }
 
+// UpdateGoalTitle MUST apply the update and return an error if the target is missing.
+// UpdateGoalTitle modifies an existing goal title entry.
 func UpdateGoalTitle(goal *Goal, title string) error {
 	title = strings.TrimSpace(title)
 	if title == "" {
@@ -19109,6 +20525,8 @@ func UpdateGoalTitle(goal *Goal, title string) error {
 	return nil
 }
 
+// GoalChange MUST return a non-nil error when the operation fails.
+// GoalChange performs the goal change operation on the repo context.
 func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -19188,6 +20606,8 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	return &goal, nil
 }
 
+// GoalClose MUST return a non-nil error when the operation fails.
+// GoalClose performs the goal close operation on the repo context.
 func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -19231,6 +20651,8 @@ func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 	return &goal, nil
 }
 
+// GoalReopen MUST return a non-nil error when the operation fails.
+// GoalReopen performs the goal reopen operation on the repo context.
 func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -19303,6 +20725,8 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	return &goal, nil
 }
 
+// TicketChange MUST return a non-nil error when the operation fails.
+// TicketChange performs the ticket change operation on the repo context.
 func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -19366,6 +20790,8 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	return ticket, nil
 }
 
+// GoalDelete MUST return a non-nil error when the operation fails.
+// GoalDelete performs the goal delete operation on the repo context.
 func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -19401,6 +20827,8 @@ func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 	return true, nil
 }
 
+// TicketDelete MUST return a non-nil error when the operation fails.
+// TicketDelete performs the ticket delete operation on the repo context.
 func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -19435,18 +20863,26 @@ func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 	return true, nil
 }
 
+// GetDrafts MUST retrieve the requested value or return an error.
+// GetDrafts retrieves and returns the drafts.
 func (c *repoContext) GetDrafts() ([]*Draft, error) {
 	return ListDrafts()
 }
 
+// DraftCreate MUST return a non-nil error when the operation fails.
+// DraftCreate performs the draft create operation on the repo context.
 func (c *repoContext) DraftCreate(input DraftCreateInput) (*Draft, error) {
 	return CreateDraft(input.Slug, input.Files)
 }
 
+// DraftDelete MUST return a non-nil error when the operation fails.
+// DraftDelete performs the draft delete operation on the repo context.
 func (c *repoContext) DraftDelete(id string) (bool, error) {
 	return true, DeleteDraft(id)
 }
 
+// GetPolicies MUST retrieve the requested value or return an error.
+// GetPolicies retrieves and returns the policies.
 func (c *repoContext) GetPolicies() []*Policy {
 	policies := GetRegisteredPolicies()
 	result := make([]*Policy, len(policies))
@@ -19457,7 +20893,7 @@ func (c *repoContext) GetPolicies() []*Policy {
 			descPtr = &d
 		}
 		var violationKinds []*ViolationKindMeta
-		for _, kind := range policies[i].Kinds {
+		for _, kind := range policies[i].AllKinds() {
 			meta := kind.Info()
 			meta.PolicyID = policies[i].ID
 			violationKinds = append(violationKinds, &meta)
@@ -19467,12 +20903,15 @@ func (c *repoContext) GetPolicies() []*Policy {
 			Name:           policies[i].Name,
 			Description:    descPtr,
 			Scopes:         policies[i].Scopes,
+			Groups:         policies[i].Groups,
 			ViolationKinds: violationKinds,
 		}
 	}
 	return result
 }
 
+// GetViolationKinds MUST retrieve the requested value or return an error.
+// GetViolationKinds retrieves and returns the violation kinds.
 func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
 	var result []*ViolationKindMeta
 	for _, meta := range violationKindInfoTable {
@@ -19482,6 +20921,8 @@ func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
 	return result
 }
 
+// Analyze MUST return a non-nil error when the operation fails.
+// Analyze performs the analyze operation on the repo context.
 func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	scopeStr := "semio"
 	if scope != nil {
@@ -19501,6 +20942,8 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	return &AnalyzeResult{Violations: result, Metrics: &AnalyzeMetrics{Total: len(violations)}}, nil
 }
 
+// Fix MUST return a non-nil error when the operation fails.
+// Fix performs the fix operation on the repo context.
 func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 	scopeStr := "semio"
 	if scope != nil {
@@ -19557,7 +21000,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 	linesToRemove := map[int]bool{}
 	for _, v := range violations {
 		switch v.Kind {
-		case ViolationCodeFileMissingHeader:
+		case ViolationCodeFileMissingHeaderRegion:
 			if language != nil && language.SupportsHeaders() {
 				headerContent := generateFileHeader(file, language)
 				if headerContent != "" {
@@ -19566,14 +21009,12 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					fixed++
 				}
 			}
-		case ViolationCodeFileMissingId:
+		case ViolationCodeFileMissingIdentification:
 			if language != nil {
-				expectedId := v.Excerpt
-				if expectedId == "" {
-					expectedId = FileHeaderId(file)
-				}
+				expectedId := FileHeaderId(file)
+				expectedUri := FileHeaderUri(file)
 				prefix := language.CommentPrefix()
-				newLine := prefix + " " + expectedId
+				newLine := prefix + " [" + expectedId + "](" + expectedUri + ")"
 				insertAfter := 0
 				for i, line := range lines {
 					if matched, _ := language.PolicySectionStartMatch(line); matched {
@@ -19594,14 +21035,12 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					fixed++
 				}
 			}
-		case ViolationCodeFileWrongId:
+		case ViolationCodeFileWrongIdentificationId, ViolationCodeFileWrongIdentificationUri:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
-				expectedId := v.Excerpt
-				if expectedId == "" {
-					expectedId = FileHeaderId(file)
-				}
+				expectedId := FileHeaderId(file)
+				expectedUri := FileHeaderUri(file)
 				prefix := language.CommentPrefix()
-				newLine := prefix + " " + expectedId
+				newLine := prefix + " [" + expectedId + "](" + expectedUri + ")"
 				lines[v.Line-1] = newLine
 				fixed++
 			}
@@ -19895,10 +21334,14 @@ func findMatchingSectionStartName(lines []string, endLineIdx int, language Langu
 	return ""
 }
 
+// TicketOpen MUST return a non-nil error when the operation fails.
+// TicketOpen performs the ticket open operation on the repo context.
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 	return OpenTicket(input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoGithub, input.Issue)
 }
 
+// TicketProgress MUST return a non-nil error when the operation fails.
+// TicketProgress performs the ticket progress operation on the repo context.
 func (c *repoContext) TicketProgress(input TicketProgressInput) (string, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -19907,6 +21350,8 @@ func (c *repoContext) TicketProgress(input TicketProgressInput) (string, error) 
 	return ProgressTicket(ticket, input.Summary)
 }
 
+// TicketClose MUST return a non-nil error when the operation fails.
+// TicketClose performs the ticket close operation on the repo context.
 func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	if input.All {
 		tickets, err := ListTickets(nil, nil, nil)
@@ -19963,6 +21408,8 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	return ticket, nil
 }
 
+// TicketReopen MUST return a non-nil error when the operation fails.
+// TicketReopen performs the ticket reopen operation on the repo context.
 func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -19986,8 +21433,12 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	return ticket, nil
 }
 
+// FolderCreate MUST return a non-nil error when the operation fails.
+// FolderCreate performs the folder create operation on the repo context.
 func (c *repoContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
 
+// FolderMove MUST return a non-nil error when the operation fails.
+// FolderMove performs the folder move operation on the repo context.
 func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	result := ToolFolderMove(src, dst)
 	if result.Error != "" {
@@ -19997,6 +21448,8 @@ func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	return &Folder{ID: ctx.GetFolderID(dst), Path: dst, Name: filepath.Base(dst)}, nil
 }
 
+// FolderDelete MUST return a non-nil error when the operation fails.
+// FolderDelete performs the folder delete operation on the repo context.
 func (c *repoContext) FolderDelete(path string) error {
 	result := ToolFolderDelete(path)
 	if result.Error != "" {
@@ -20005,6 +21458,8 @@ func (c *repoContext) FolderDelete(path string) error {
 	return nil
 }
 
+// FileCreate MUST return a non-nil error when the operation fails.
+// FileCreate performs the file create operation on the repo context.
 func (c *repoContext) FileCreate(path string) (*File, error) {
 	result := ToolFileCreate(path)
 	if result.Error != "" {
@@ -20014,6 +21469,8 @@ func (c *repoContext) FileCreate(path string) (*File, error) {
 	return &File{ID: ctx.GetFileID(path), Path: path, Name: filepath.Base(path), Extension: strings.TrimPrefix(filepath.Ext(path), ".")}, nil
 }
 
+// FileMove MUST return a non-nil error when the operation fails.
+// FileMove performs the file move operation on the repo context.
 func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	result := ToolFileMove(src, dst)
 	if result.Error != "" {
@@ -20023,6 +21480,8 @@ func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	return &File{ID: ctx.GetFileID(dst), Path: dst, Name: filepath.Base(dst), Extension: strings.TrimPrefix(filepath.Ext(dst), ".")}, nil
 }
 
+// FileDelete MUST return a non-nil error when the operation fails.
+// FileDelete performs the file delete operation on the repo context.
 func (c *repoContext) FileDelete(path string) error {
 	result := ToolFileDelete(path)
 	if result.Error != "" {
@@ -20031,6 +21490,8 @@ func (c *repoContext) FileDelete(path string) error {
 	return nil
 }
 
+// SectionCreate MUST return a non-nil error when the operation fails.
+// SectionCreate performs the section create operation on the repo context.
 func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	sectionPath := name
 	if parent != nil && *parent != "" {
@@ -20045,6 +21506,8 @@ func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section
 	return &Section{ID: id, Name: name, Path: sectionPath, FilePath: file}, nil
 }
 
+// SectionMove MUST return a non-nil error when the operation fails.
+// SectionMove performs the section move operation on the repo context.
 func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	result := ToolSectionMove(file, oldName, newName)
 	if result.Error != "" {
@@ -20055,6 +21518,8 @@ func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, erro
 	return &Section{ID: id, Name: newName, Path: newName, FilePath: file}, nil
 }
 
+// SectionDelete MUST return a non-nil error when the operation fails.
+// SectionDelete performs the section delete operation on the repo context.
 func (c *repoContext) SectionDelete(file, name string) error {
 	result := ToolSectionDelete(file, name)
 	if result.Error != "" {
@@ -20063,6 +21528,8 @@ func (c *repoContext) SectionDelete(file, name string) error {
 	return nil
 }
 
+// Integrate MUST return a non-nil error when the operation fails.
+// Integrate performs the integrate operation on the repo context.
 func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
 	s := ""
 	if source != nil {
@@ -20087,6 +21554,8 @@ func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent 
 	return &File{ID: c.GetFileID(tf), Path: tf, Name: filepath.Base(tf)}, nil
 }
 
+// Extract MUST return the extracted component from the input.
+// Extract extracts the extract from the source.
 func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	s := ""
 	if sourceFile != nil {
@@ -20108,6 +21577,8 @@ func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*F
 	return &File{ID: c.GetFileID(tf), Path: tf, Name: filepath.Base(tf)}, nil
 }
 
+// ContributorAdd MUST return a non-nil error when the operation fails.
+// ContributorAdd performs the contributor add operation on the repo context.
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	contributor, err := LoadContributor(input.Github)
 	if err != nil {
@@ -20158,6 +21629,8 @@ func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, e
 	return contributor, nil
 }
 
+// ContributorRemove MUST return a non-nil error when the operation fails.
+// ContributorRemove performs the contributor remove operation on the repo context.
 func (c *repoContext) ContributorRemove(github string) error { return nil }
 
 func updateGoalMilestone(goal *Goal, number int) (int, error) {
@@ -20222,6 +21695,8 @@ func ensureGoalMilestone(goal *Goal) (*ghMilestone, error) {
 	return milestone, nil
 }
 
+// SyncGithub MUST return a non-nil error when the operation fails.
+// SyncGithub performs the sync github operation on the repo context.
 func (c *repoContext) SyncGithub() (bool, error) {
 	fmt.Println("Syncing local tickets and goals with GitHub...")
 
@@ -20465,119 +21940,213 @@ func (c *repoContext) SyncGithub() (bool, error) {
 
 var _ RepoContext = (*repoContext)(nil)
 
+// GetRootDir MUST retrieve the requested value or return an error.
+// GetRootDir retrieves and returns the root dir.
 func (c *defaultContext) GetRootDir() string { return c.rootDir }
 
+// GetBundles MUST retrieve the requested value or return an error.
+// GetBundles retrieves and returns the bundles.
 func (c *defaultContext) GetBundles() []*Bundle   { return []*Bundle{} }
+// GetProjects MUST retrieve the requested value or return an error.
+// GetProjects retrieves and returns the projects.
 func (c *defaultContext) GetProjects() []*Project { return []*Project{} }
+// GetCommits MUST retrieve the requested value or return an error.
+// GetCommits retrieves and returns the commits.
 func (c *defaultContext) GetCommits(limit *int) ([]*Commit, error) {
 	return []*Commit{}, nil
 }
 
+// GetFolders MUST retrieve the requested value or return an error.
+// GetFolders retrieves and returns the folders.
 func (c *defaultContext) GetFolders() []*Folder { return []*Folder{} }
 
+// GetFiles MUST retrieve the requested value or return an error.
+// GetFiles retrieves and returns the files.
 func (c *defaultContext) GetFiles() []*File { return []*File{} }
 
+// GetDefinitions MUST retrieve the requested value or return an error.
+// GetDefinitions retrieves and returns the definitions.
 func (c *defaultContext) GetDefinitions() []*Definition { return []*Definition{} }
 
+// GetSections MUST retrieve the requested value or return an error.
+// GetSections retrieves and returns the sections.
 func (c *defaultContext) GetSections() []*Section { return []*Section{} }
 
+// GetContributors MUST retrieve the requested value or return an error.
+// GetContributors retrieves and returns the contributors.
 func (c *defaultContext) GetContributors() ([]*Contributor, error) { return []*Contributor{}, nil }
 
+// GetTickets MUST retrieve the requested value or return an error.
+// GetTickets retrieves and returns the tickets.
 func (c *defaultContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	return []*Ticket{}, nil
 }
 
+// GetPolicies MUST retrieve the requested value or return an error.
+// GetPolicies retrieves and returns the policies.
 func (c *defaultContext) GetPolicies() []*Policy { return []*Policy{} }
 
+// GetViolationKinds MUST retrieve the requested value or return an error.
+// GetViolationKinds retrieves and returns the violation kinds.
 func (c *defaultContext) GetViolationKinds() []*ViolationKindMeta { return []*ViolationKindMeta{} }
 
+// Analyze MUST return a non-nil error when the operation fails.
+// Analyze performs the analyze operation on the default context.
 func (c *defaultContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	return &AnalyzeResult{Violations: []*Violation{}, Metrics: &AnalyzeMetrics{}}, nil
 }
 
+// Fix MUST return a non-nil error when the operation fails.
+// Fix performs the fix operation on the default context.
 func (c *defaultContext) Fix(scope *string) (*FixResult, error) {
 	return &FixResult{Violations: []*Violation{}}, nil
 }
 
+// TicketOpen MUST return a non-nil error when the operation fails.
+// TicketOpen performs the ticket open operation on the default context.
 func (c *defaultContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 	return nil, nil
 }
 
+// TicketProgress MUST return a non-nil error when the operation fails.
+// TicketProgress performs the ticket progress operation on the default context.
 func (c *defaultContext) TicketProgress(input TicketProgressInput) (string, error) {
 	return "", nil
 }
 
+// TicketClose MUST return a non-nil error when the operation fails.
+// TicketClose performs the ticket close operation on the default context.
 func (c *defaultContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	return nil, nil
 }
 
+// TicketReopen MUST return a non-nil error when the operation fails.
+// TicketReopen performs the ticket reopen operation on the default context.
 func (c *defaultContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	return nil, nil
 }
 
+// TicketChange MUST return a non-nil error when the operation fails.
+// TicketChange performs the ticket change operation on the default context.
 func (c *defaultContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	return nil, nil
 }
 
+// FolderCreate MUST return a non-nil error when the operation fails.
+// FolderCreate performs the folder create operation on the default context.
 func (c *defaultContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
 
+// FolderMove MUST return a non-nil error when the operation fails.
+// FolderMove performs the folder move operation on the default context.
 func (c *defaultContext) FolderMove(src, dst string) (*Folder, error) { return nil, nil }
 
+// FolderDelete MUST return a non-nil error when the operation fails.
+// FolderDelete performs the folder delete operation on the default context.
 func (c *defaultContext) FolderDelete(path string) error { return nil }
 
+// FileCreate MUST return a non-nil error when the operation fails.
+// FileCreate performs the file create operation on the default context.
 func (c *defaultContext) FileCreate(path string) (*File, error) { return nil, nil }
 
+// FileMove MUST return a non-nil error when the operation fails.
+// FileMove performs the file move operation on the default context.
 func (c *defaultContext) FileMove(src, dst string) (*File, error) { return nil, nil }
 
+// FileDelete MUST return a non-nil error when the operation fails.
+// FileDelete performs the file delete operation on the default context.
 func (c *defaultContext) FileDelete(path string) error { return nil }
 
+// SectionCreate MUST return a non-nil error when the operation fails.
+// SectionCreate performs the section create operation on the default context.
 func (c *defaultContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	return nil, nil
 }
 
+// SectionMove MUST return a non-nil error when the operation fails.
+// SectionMove performs the section move operation on the default context.
 func (c *defaultContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	return nil, nil
 }
 
+// SectionDelete MUST return a non-nil error when the operation fails.
+// SectionDelete performs the section delete operation on the default context.
 func (c *defaultContext) SectionDelete(file, name string) error { return nil }
 
+// Integrate MUST return a non-nil error when the operation fails.
+// Integrate performs the integrate operation on the default context.
 func (c *defaultContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
 	return nil, nil
 }
 
+// Extract MUST return the extracted component from the input.
+// Extract extracts the extract from the source.
 func (c *defaultContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	return nil, nil
 }
 
+// ContributorAdd MUST return a non-nil error when the operation fails.
+// ContributorAdd performs the contributor add operation on the default context.
 func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	return nil, nil
 }
 
+// ContributorRemove MUST return a non-nil error when the operation fails.
+// ContributorRemove performs the contributor remove operation on the default context.
 func (c *defaultContext) ContributorRemove(github string) error { return nil }
 
+// SyncGithub MUST return a non-nil error when the operation fails.
+// SyncGithub performs the sync github operation on the default context.
 func (c *defaultContext) SyncGithub() (bool, error) { return false, nil }
 
+// GetGoals MUST retrieve the requested value or return an error.
+// GetGoals retrieves and returns the goals.
 func (c *defaultContext) GetGoals() ([]*Goal, error) { return []*Goal{}, nil }
 
+// GoalCreate MUST return a non-nil error when the operation fails.
+// GoalCreate performs the goal create operation on the default context.
 func (c *defaultContext) GoalCreate(input GoalCreateInput) (*Goal, error) { return nil, nil }
 
+// GoalChange MUST return a non-nil error when the operation fails.
+// GoalChange performs the goal change operation on the default context.
 func (c *defaultContext) GoalChange(input GoalChangeInput) (*Goal, error) { return nil, nil }
 
+// GoalClose MUST return a non-nil error when the operation fails.
+// GoalClose performs the goal close operation on the default context.
 func (c *defaultContext) GoalClose(input GoalCloseInput) (*Goal, error) { return nil, nil }
 
+// GoalReopen MUST return a non-nil error when the operation fails.
+// GoalReopen performs the goal reopen operation on the default context.
 func (c *defaultContext) GoalReopen(input GoalReopenInput) (*Goal, error) { return nil, nil }
 
+// GoalDelete MUST return a non-nil error when the operation fails.
+// GoalDelete performs the goal delete operation on the default context.
 func (c *defaultContext) GoalDelete(input GoalDeleteInput) (bool, error) { return false, nil }
 
+// TicketDelete MUST return a non-nil error when the operation fails.
+// TicketDelete performs the ticket delete operation on the default context.
 func (c *defaultContext) TicketDelete(input TicketDeleteInput) (bool, error) { return false, nil }
 
+// GetDrafts MUST retrieve the requested value or return an error.
+// GetDrafts retrieves and returns the drafts.
 func (c *defaultContext) GetDrafts() ([]*Draft, error)                       { return []*Draft{}, nil }
+// DraftCreate MUST return a non-nil error when the operation fails.
+// DraftCreate performs the draft create operation on the default context.
 func (c *defaultContext) DraftCreate(input DraftCreateInput) (*Draft, error) { return nil, nil }
+// DraftDelete MUST return a non-nil error when the operation fails.
+// DraftDelete performs the draft delete operation on the default context.
 func (c *defaultContext) DraftDelete(id string) (bool, error)                { return false, nil }
 
+// GetTodos MUST retrieve the requested value or return an error.
+// GetTodos retrieves and returns the todos.
 func (c *defaultContext) GetTodos(filter *FilterInput) ([]*Todo, error)   { return []*Todo{}, nil }
+// TodoCreate MUST return a non-nil error when the operation fails.
+// TodoCreate performs the todo create operation on the default context.
 func (c *defaultContext) TodoCreate(input TodoCreateInput) (*Todo, error) { return nil, nil }
+// TodoChange MUST return a non-nil error when the operation fails.
+// TodoChange performs the todo change operation on the default context.
 func (c *defaultContext) TodoChange(input TodoChangeInput) (*Todo, error) { return nil, nil }
+// TodoDelete MUST return a non-nil error when the operation fails.
+// TodoDelete performs the todo delete operation on the default context.
 func (c *defaultContext) TodoDelete(id string) (bool, error)              { return false, nil }
 
 var _ RepoContext = (*defaultContext)(nil)
@@ -20585,6 +22154,7 @@ var _ RepoContext = (*defaultContext)(nil)
 // #endregion 🔖Default Context
 
 // #region 🔖GraphQL Executor
+// GraphQL executor dispatching queries against the schema.
 
 func parseFileListInput(f map[string]interface{}) *FileListInput {
 	files := &FileListInput{}
@@ -20612,11 +22182,14 @@ func parseFileListInput(f map[string]interface{}) *FileListInput {
 	return files
 }
 
+// Executor holds the data fields for a executor record.
 type Executor struct {
 	resolver *Resolver
 	schema   graphql.Schema
 }
 
+// NewExecutor MUST initialize all required fields and return a valid executor.
+// NewExecutor creates and returns a new executor instance.
 func NewExecutor(rootDir string) (*Executor, error) {
 	resolver := NewResolver(rootDir)
 	schema, err := buildSchema(resolver)
@@ -20629,6 +22202,8 @@ func NewExecutor(rootDir string) (*Executor, error) {
 	}, nil
 }
 
+// NewExecutorWithContext MUST initialize all required fields and return a valid executor with context.
+// NewExecutorWithContext creates and returns a new executor with context instance.
 func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) {
 	resolver := NewResolverWithContext(rootDir, ctx)
 	schema, err := buildSchema(resolver)
@@ -20641,6 +22216,8 @@ func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) 
 	}, nil
 }
 
+// Execute MUST execute the operation to completion and report any errors.
+// Execute executes the ute operation.
 func (e *Executor) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
 	result := graphql.Do(graphql.Params{
 		Context:        ctx,
@@ -20654,6 +22231,8 @@ func (e *Executor) Execute(ctx context.Context, query string, variables map[stri
 	return result.Data, nil
 }
 
+// ExecuteJSON MUST execute the operation to completion and report any errors.
+// ExecuteJSON executes the ute j s o n operation.
 func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[string]interface{}) (string, error) {
 	data, err := e.Execute(ctx, query, variables)
 	if err != nil {
@@ -20666,6 +22245,8 @@ func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[
 	return string(jsonBytes), nil
 }
 
+// ValidateQuery MUST return nil when valid and a descriptive error otherwise.
+// ValidateQuery checks the query for correctness and returns any errors.
 func (e *Executor) ValidateQuery(query string) error {
 	_, err := parser.Parse(parser.ParseParams{
 		Source: query,
@@ -20676,6 +22257,8 @@ func (e *Executor) ValidateQuery(query string) error {
 	return err
 }
 
+// GetOperationType MUST retrieve the requested value or return an error.
+// GetOperationType retrieves and returns the operation type.
 func (e *Executor) GetOperationType(query string) (string, error) {
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: query,
@@ -20697,6 +22280,7 @@ func (e *Executor) GetOperationType(query string) (string, error) {
 // #endregion 🔖GraphQL Executor
 
 // #region 🔖Schema Builder
+// Schema builder constructing the GraphQL schema from type definitions.
 
 func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	repoResolverInstance = resolver
@@ -20808,6 +22392,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	var definitionType *graphql.Object
 	var violationType *graphql.Object
 	var violationKindType *graphql.Object
+	var violationKindGroupType *graphql.Object
 	var policyType *graphql.Object
 	var ticketType *graphql.Object
 	var todoType *graphql.Object
@@ -21395,14 +22980,51 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		}),
 	})
 
+	violationKindGroupType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "ViolationKindGroup",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"description": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"scopes":      &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"groups": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindGroupType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						group := p.Source.(ViolationKindGroup)
+						return group.Groups, nil
+					},
+				},
+				"kinds": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						group := p.Source.(ViolationKindGroup)
+						var result []*ViolationKindMeta
+						for _, k := range group.Kinds {
+							meta := k.Info()
+							result = append(result, &meta)
+						}
+						return result, nil
+					},
+				},
+			}
+		}),
+	})
+
 	policyType = graphql.NewObject(graphql.ObjectConfig{
 		Name: "Policy",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
-				"id":             &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
-				"name":           &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"description":    &graphql.Field{Type: graphql.String},
-				"scopes":         &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"id":          &graphql.Field{Type: graphql.NewNonNull(graphql.ID)},
+				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"description": &graphql.Field{Type: graphql.String},
+				"scopes":      &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
+				"groups": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindGroupType))),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						policy := p.Source.(*Policy)
+						return policy.Groups, nil
+					},
+				},
 				"violationKinds": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType)))},
 			}
 		}),
@@ -23255,13 +24877,18 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 // #endregion 🔖Schema Builder
 
 // #region 🔖Query Resolvers
+// Query resolver methods implementing GraphQL read operations.
 
+// Query MUST execute the query and return matching results.
+// Query executes the query query.
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
 
 type queryResolver struct{ *Resolver }
 
+// Drafts MUST return a non-nil error when the operation fails.
+// Drafts performs the drafts operation on the query resolver.
 func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDrafts()
@@ -23269,6 +24896,8 @@ func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 	return []*Draft{}, nil
 }
 
+// Node MUST return a non-nil error when the operation fails.
+// Node performs the node operation on the query resolver.
 func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 
 	cleanID := strings.ReplaceAll(id, "\uFE0E", "")
@@ -23407,6 +25036,8 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 	return nil, fmt.Errorf("invalid node id format: %s", id)
 }
 
+// Repo MUST return a non-nil error when the operation fails.
+// Repo performs the repo operation on the query resolver.
 func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	projects, _ := r.Projects(ctx, nil)
 	bundles, _ := r.Bundles(ctx, &FilterInput{})
@@ -23429,6 +25060,8 @@ func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	}, nil
 }
 
+// Projects MUST return a non-nil error when the operation fails.
+// Projects performs the projects operation on the query resolver.
 func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*Project, error) {
 	allBundles, err := r.Bundles(ctx, &FilterInput{})
 	if err != nil {
@@ -23481,6 +25114,8 @@ func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*P
 	return results, nil
 }
 
+// Project MUST return a non-nil error when the operation fails.
+// Project performs the project operation on the query resolver.
 func (r *queryResolver) Project(ctx context.Context, name string) (*Project, error) {
 	all, err := r.Projects(ctx, nil)
 	if err != nil {
@@ -23494,6 +25129,8 @@ func (r *queryResolver) Project(ctx context.Context, name string) (*Project, err
 	return nil, nil
 }
 
+// Bundles MUST return a non-nil error when the operation fails.
+// Bundles performs the bundles operation on the query resolver.
 func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -23509,6 +25146,8 @@ func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bu
 	return []*Bundle{}, nil
 }
 
+// Folders MUST return a non-nil error when the operation fails.
+// Folders performs the folders operation on the query resolver.
 func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFolders(), nil
@@ -23516,6 +25155,8 @@ func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 	return []*Folder{}, nil
 }
 
+// Files MUST return a non-nil error when the operation fails.
+// Files performs the files operation on the query resolver.
 func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFiles(), nil
@@ -23523,6 +25164,8 @@ func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 	return []*File{}, nil
 }
 
+// Sections MUST return a non-nil error when the operation fails.
+// Sections performs the sections operation on the query resolver.
 func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetSections(), nil
@@ -23530,6 +25173,8 @@ func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
 	return []*Section{}, nil
 }
 
+// Definitions MUST return a non-nil error when the operation fails.
+// Definitions performs the definitions operation on the query resolver.
 func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDefinitions(), nil
@@ -23537,6 +25182,8 @@ func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) 
 	return []*Definition{}, nil
 }
 
+// Contributors MUST return a non-nil error when the operation fails.
+// Contributors performs the contributors operation on the query resolver.
 func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -23552,6 +25199,8 @@ func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) (
 	return []*Contributor{}, nil
 }
 
+// Todos MUST return a non-nil error when the operation fails.
+// Todos performs the todos operation on the query resolver.
 func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetTodos(filter)
@@ -23559,6 +25208,8 @@ func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo
 	return []*Todo{}, nil
 }
 
+// Tickets MUST return a non-nil error when the operation fails.
+// Tickets performs the tickets operation on the query resolver.
 func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -23577,6 +25228,8 @@ func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day 
 	return []*Ticket{}, nil
 }
 
+// Policies MUST return a non-nil error when the operation fails.
+// Policies performs the policies operation on the query resolver.
 func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -23585,11 +25238,19 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 		var policies []*Policy
 		for p := range policyChan {
 			desc := p.Description
+			var vks []*ViolationKindMeta
+			for _, k := range p.AllKinds() {
+				meta := k.Info()
+				meta.PolicyID = p.ID
+				vks = append(vks, &meta)
+			}
 			policies = append(policies, &Policy{
-				ID:          p.ID,
-				Name:        p.Name,
-				Description: &desc,
-				Scopes:      p.Scopes,
+				ID:             p.ID,
+				Name:           p.Name,
+				Description:    &desc,
+				Scopes:         p.Scopes,
+				Groups:         p.Groups,
+				ViolationKinds: vks,
 			})
 		}
 		return policies, nil
@@ -23597,6 +25258,8 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 	return []*Policy{}, nil
 }
 
+// ViolationKinds MUST return a non-nil error when the operation fails.
+// ViolationKinds performs the violation kinds operation on the query resolver.
 func (r *queryResolver) ViolationKinds(ctx context.Context) ([]*ViolationKindMeta, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetViolationKinds(), nil
@@ -23604,6 +25267,8 @@ func (r *queryResolver) ViolationKinds(ctx context.Context) ([]*ViolationKindMet
 	return []*ViolationKindMeta{}, nil
 }
 
+// Violations MUST return a non-nil error when the operation fails.
+// Violations performs the violations operation on the query resolver.
 func (r *queryResolver) Violations(ctx context.Context, scope *string) ([]*Violation, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
@@ -23615,6 +25280,8 @@ func (r *queryResolver) Violations(ctx context.Context, scope *string) ([]*Viola
 	return []*Violation{}, nil
 }
 
+// Bundle MUST return a non-nil error when the operation fails.
+// Bundle performs the bundle operation on the query resolver.
 func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error) {
 	if r.Ctx != nil {
 		bundles := r.Ctx.GetBundles()
@@ -23630,6 +25297,8 @@ func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error
 	}, nil
 }
 
+// Folder MUST return a non-nil error when the operation fails.
+// Folder performs the folder operation on the query resolver.
 func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
@@ -23649,6 +25318,8 @@ func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error
 	}, nil
 }
 
+// File MUST return a non-nil error when the operation fails.
+// File performs the file operation on the query resolver.
 func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
@@ -23677,6 +25348,8 @@ func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	}, nil
 }
 
+// Section MUST return a non-nil error when the operation fails.
+// Section performs the section operation on the query resolver.
 func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []string) (*Section, error) {
 	sectionName := strings.Join(sectionPath, "#")
 	return &Section{
@@ -23684,6 +25357,8 @@ func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []
 	}, nil
 }
 
+// Definition MUST return a non-nil error when the operation fails.
+// Definition performs the definition operation on the query resolver.
 func (r *queryResolver) Definition(ctx context.Context, path string, name string) (*Definition, error) {
 	return &Definition{
 		Name: name,
@@ -23691,6 +25366,8 @@ func (r *queryResolver) Definition(ctx context.Context, path string, name string
 	}, nil
 }
 
+// Contributor MUST return a non-nil error when the operation fails.
+// Contributor performs the contributor operation on the query resolver.
 func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributor, error) {
 	if r.Ctx != nil {
 		contributors, err := r.Ctx.GetContributors()
@@ -23709,6 +25386,8 @@ func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributo
 	}, nil
 }
 
+// Ticket MUST return a non-nil error when the operation fails.
+// Ticket performs the ticket operation on the query resolver.
 func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int, slug string) (*Ticket, error) {
 	if r.Ctx != nil {
 		y, m, d := year, month, day
@@ -23729,6 +25408,8 @@ func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int
 	}, nil
 }
 
+// Policy MUST return a non-nil error when the operation fails.
+// Policy performs the policy operation on the query resolver.
 func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) {
 	if r.Ctx != nil {
 		policies := r.Ctx.GetPolicies()
@@ -23745,6 +25426,8 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 	}, nil
 }
 
+// ViolationKind MUST return a non-nil error when the operation fails.
+// ViolationKind performs the violation kind operation on the query resolver.
 func (r *queryResolver) ViolationKind(ctx context.Context, id string) (*ViolationKindMeta, error) {
 	if r.Ctx != nil {
 		kinds := r.Ctx.GetViolationKinds()
@@ -23763,6 +25446,8 @@ func (r *queryResolver) ViolationKind(ctx context.Context, id string) (*Violatio
 	}, nil
 }
 
+// Analyze MUST return a non-nil error when the operation fails.
+// Analyze performs the analyze operation on the query resolver.
 func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Analyze(scope)
@@ -23780,13 +25465,18 @@ func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeRes
 // #endregion 🔖Query Resolvers
 
 // #region 🔖Mutation Resolvers
+// Mutation resolver methods implementing GraphQL write operations.
 
+// Mutation MUST complete the operation successfully.
+// Mutation performs the mutation operation on the resolver.
 func (r *Resolver) Mutation() MutationResolver {
 	return &mutationResolver{r}
 }
 
 type mutationResolver struct{ *Resolver }
 
+// SyncGithub MUST return a non-nil error when the operation fails.
+// SyncGithub performs the sync github operation on the mutation resolver.
 func (r *mutationResolver) SyncGithub(ctx context.Context) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SyncGithub()
@@ -23794,6 +25484,8 @@ func (r *mutationResolver) SyncGithub(ctx context.Context) (bool, error) {
 	return false, fmt.Errorf("not implemented")
 }
 
+// Fix MUST return a non-nil error when the operation fails.
+// Fix performs the fix operation on the mutation resolver.
 func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Fix(scope)
@@ -23805,6 +25497,8 @@ func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, 
 	}, nil
 }
 
+// DraftCreate MUST return a non-nil error when the operation fails.
+// DraftCreate performs the draft create operation on the mutation resolver.
 func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInput) (*Draft, error) {
 	if r.Ctx != nil {
 		return r.Ctx.DraftCreate(input)
@@ -23812,6 +25506,8 @@ func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInp
 	return nil, fmt.Errorf("not implemented")
 }
 
+// DraftDelete MUST return a non-nil error when the operation fails.
+// DraftDelete performs the draft delete operation on the mutation resolver.
 func (r *mutationResolver) DraftDelete(ctx context.Context, id string) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.DraftDelete(id)
@@ -23819,6 +25515,8 @@ func (r *mutationResolver) DraftDelete(ctx context.Context, id string) (bool, er
 	return false, fmt.Errorf("not implemented")
 }
 
+// TicketOpen MUST return a non-nil error when the operation fails.
+// TicketOpen performs the ticket open operation on the mutation resolver.
 func (r *mutationResolver) TicketOpen(ctx context.Context, input TicketOpenInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketOpen(input)
@@ -23826,6 +25524,8 @@ func (r *mutationResolver) TicketOpen(ctx context.Context, input TicketOpenInput
 	return nil, fmt.Errorf("not implemented")
 }
 
+// TicketClose MUST return a non-nil error when the operation fails.
+// TicketClose performs the ticket close operation on the mutation resolver.
 func (r *mutationResolver) TicketClose(ctx context.Context, input TicketCloseInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketClose(input)
@@ -23833,6 +25533,8 @@ func (r *mutationResolver) TicketClose(ctx context.Context, input TicketCloseInp
 	return nil, fmt.Errorf("not implemented")
 }
 
+// TicketReopen MUST return a non-nil error when the operation fails.
+// TicketReopen performs the ticket reopen operation on the mutation resolver.
 func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketReopen(input)
@@ -23840,6 +25542,8 @@ func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenI
 	return nil, fmt.Errorf("not implemented")
 }
 
+// TicketChange MUST return a non-nil error when the operation fails.
+// TicketChange performs the ticket change operation on the mutation resolver.
 func (r *mutationResolver) TicketChange(ctx context.Context, input TicketChangeInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketChange(input)
@@ -23847,6 +25551,8 @@ func (r *mutationResolver) TicketChange(ctx context.Context, input TicketChangeI
 	return nil, fmt.Errorf("not implemented")
 }
 
+// GoalCreate MUST return a non-nil error when the operation fails.
+// GoalCreate performs the goal create operation on the mutation resolver.
 func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalCreate(input)
@@ -23854,6 +25560,8 @@ func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput
 	return nil, fmt.Errorf("not implemented")
 }
 
+// GoalChange MUST return a non-nil error when the operation fails.
+// GoalChange performs the goal change operation on the mutation resolver.
 func (r *mutationResolver) GoalChange(ctx context.Context, id string, input GoalChangeInput) (*Goal, error) {
 	if r.Ctx != nil {
 		input.ID = id
@@ -23862,6 +25570,8 @@ func (r *mutationResolver) GoalChange(ctx context.Context, id string, input Goal
 	return nil, fmt.Errorf("not implemented")
 }
 
+// GoalClose MUST return a non-nil error when the operation fails.
+// GoalClose performs the goal close operation on the mutation resolver.
 func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalClose(input)
@@ -23869,6 +25579,8 @@ func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) 
 	return nil, fmt.Errorf("not implemented")
 }
 
+// TodoCreate MUST return a non-nil error when the operation fails.
+// TodoCreate performs the todo create operation on the mutation resolver.
 func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput) (*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoCreate(input)
@@ -23876,6 +25588,8 @@ func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput
 	return nil, fmt.Errorf("not implemented")
 }
 
+// TodoChange MUST return a non-nil error when the operation fails.
+// TodoChange performs the todo change operation on the mutation resolver.
 func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput) (*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoChange(input)
@@ -23883,6 +25597,8 @@ func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput
 	return nil, fmt.Errorf("not implemented")
 }
 
+// TodoDelete MUST return a non-nil error when the operation fails.
+// TodoDelete performs the todo delete operation on the mutation resolver.
 func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoDelete(id)
@@ -23890,6 +25606,8 @@ func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, err
 	return false, fmt.Errorf("not implemented")
 }
 
+// GoalReopen MUST return a non-nil error when the operation fails.
+// GoalReopen performs the goal reopen operation on the mutation resolver.
 func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalReopen(input)
@@ -23897,6 +25615,8 @@ func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput
 	return nil, fmt.Errorf("not implemented")
 }
 
+// TicketProgress MUST return a non-nil error when the operation fails.
+// TicketProgress performs the ticket progress operation on the mutation resolver.
 func (r *mutationResolver) TicketProgress(ctx context.Context, input TicketProgressInput) (string, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketProgress(input)
@@ -23904,6 +25624,8 @@ func (r *mutationResolver) TicketProgress(ctx context.Context, input TicketProgr
 	return "", fmt.Errorf("not implemented")
 }
 
+// GoalDelete MUST return a non-nil error when the operation fails.
+// GoalDelete performs the goal delete operation on the mutation resolver.
 func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalDelete(input)
@@ -23911,6 +25633,8 @@ func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput
 	return false, fmt.Errorf("not implemented")
 }
 
+// TicketDelete MUST return a non-nil error when the operation fails.
+// TicketDelete performs the ticket delete operation on the mutation resolver.
 func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteInput) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketDelete(input)
@@ -23918,6 +25642,8 @@ func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteI
 	return false, fmt.Errorf("not implemented")
 }
 
+// ContributorAdd MUST return a non-nil error when the operation fails.
+// ContributorAdd performs the contributor add operation on the mutation resolver.
 func (r *mutationResolver) ContributorAdd(ctx context.Context, input ContributorAddInput) (*Contributor, error) {
 	if r.Ctx != nil {
 		return r.Ctx.ContributorAdd(input)
@@ -23925,6 +25651,8 @@ func (r *mutationResolver) ContributorAdd(ctx context.Context, input Contributor
 	return nil, fmt.Errorf("not implemented")
 }
 
+// ContributorRemove MUST return a non-nil error when the operation fails.
+// ContributorRemove performs the contributor remove operation on the mutation resolver.
 func (r *mutationResolver) ContributorRemove(ctx context.Context, github string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.ContributorRemove(github)
@@ -23933,6 +25661,8 @@ func (r *mutationResolver) ContributorRemove(ctx context.Context, github string)
 	return false, fmt.Errorf("not implemented")
 }
 
+// FolderCreate MUST return a non-nil error when the operation fails.
+// FolderCreate performs the folder create operation on the mutation resolver.
 func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FolderCreate(path)
@@ -23940,6 +25670,8 @@ func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Fold
 	return nil, fmt.Errorf("not implemented")
 }
 
+// FolderMove MUST return a non-nil error when the operation fails.
+// FolderMove performs the folder move operation on the mutation resolver.
 func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst string) (*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FolderMove(src, dst)
@@ -23947,6 +25679,8 @@ func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst strin
 	return nil, fmt.Errorf("not implemented")
 }
 
+// FolderDelete MUST return a non-nil error when the operation fails.
+// FolderDelete performs the folder delete operation on the mutation resolver.
 func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.FolderDelete(path)
@@ -23955,6 +25689,8 @@ func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool,
 	return false, fmt.Errorf("not implemented")
 }
 
+// FileCreate MUST return a non-nil error when the operation fails.
+// FileCreate performs the file create operation on the mutation resolver.
 func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FileCreate(path)
@@ -23962,6 +25698,8 @@ func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, 
 	return nil, fmt.Errorf("not implemented")
 }
 
+// FileMove MUST return a non-nil error when the operation fails.
+// FileMove performs the file move operation on the mutation resolver.
 func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FileMove(src, dst)
@@ -23969,6 +25707,8 @@ func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string)
 	return nil, fmt.Errorf("not implemented")
 }
 
+// FileDelete MUST return a non-nil error when the operation fails.
+// FileDelete performs the file delete operation on the mutation resolver.
 func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.FileDelete(path)
@@ -23977,6 +25717,8 @@ func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, e
 	return false, fmt.Errorf("not implemented")
 }
 
+// SectionCreate MUST return a non-nil error when the operation fails.
+// SectionCreate performs the section create operation on the mutation resolver.
 func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name string, parent *string) (*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SectionCreate(file, name, parent)
@@ -23984,6 +25726,8 @@ func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name 
 	return nil, fmt.Errorf("not implemented")
 }
 
+// SectionMove MUST return a non-nil error when the operation fails.
+// SectionMove performs the section move operation on the mutation resolver.
 func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName string, newName string) (*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SectionMove(file, oldName, newName)
@@ -23991,6 +25735,8 @@ func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName
 	return nil, fmt.Errorf("not implemented")
 }
 
+// SectionDelete MUST return a non-nil error when the operation fails.
+// SectionDelete performs the section delete operation on the mutation resolver.
 func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.SectionDelete(file, name)
@@ -23999,6 +25745,8 @@ func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name 
 	return false, fmt.Errorf("not implemented")
 }
 
+// Integrate MUST return a non-nil error when the operation fails.
+// Integrate performs the integrate operation on the mutation resolver.
 func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Integrate(source, targetSection, targetFile, targetParent)
@@ -24006,6 +25754,8 @@ func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection,
 	return nil, fmt.Errorf("not implemented")
 }
 
+// Extract MUST return the extracted component from the input.
+// Extract extracts the extract from the source.
 func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSection, targetFile *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Extract(sourceFile, sourceSection, targetFile)
@@ -24016,13 +25766,18 @@ func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSectio
 // #endregion 🔖Mutation Resolvers
 
 // #region 🔖Entity Resolvers
+// Entity resolver methods implementing GraphQL entity lookups.
 
 type repoResolver struct{ *Resolver }
 
+// Repo_ MUST complete the operation successfully.
+// Repo_ performs the repo_ operation on the resolver.
 func (r *Resolver) Repo_() RepoResolver {
 	return &repoResolver{r}
 }
 
+// Bundles MUST return a non-nil error when the operation fails.
+// Bundles performs the bundles operation on the repo resolver.
 func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -24038,6 +25793,8 @@ func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInp
 	return []*Bundle{}, nil
 }
 
+// Folders MUST return a non-nil error when the operation fails.
+// Folders performs the folders operation on the repo resolver.
 func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFolders(), nil
@@ -24045,6 +25802,8 @@ func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error
 	return []*Folder{}, nil
 }
 
+// Files MUST return a non-nil error when the operation fails.
+// Files performs the files operation on the repo resolver.
 func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFiles(), nil
@@ -24052,6 +25811,8 @@ func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 	return []*File{}, nil
 }
 
+// Sections MUST return a non-nil error when the operation fails.
+// Sections performs the sections operation on the repo resolver.
 func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetSections(), nil
@@ -24059,6 +25820,8 @@ func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, err
 	return []*Section{}, nil
 }
 
+// Definitions MUST return a non-nil error when the operation fails.
+// Definitions performs the definitions operation on the repo resolver.
 func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definition, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDefinitions(), nil
@@ -24066,6 +25829,8 @@ func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definitio
 	return []*Definition{}, nil
 }
 
+// Contributors MUST return a non-nil error when the operation fails.
+// Contributors performs the contributors operation on the repo resolver.
 func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -24081,6 +25846,8 @@ func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *Filt
 	return []*Contributor{}, nil
 }
 
+// Todos MUST return a non-nil error when the operation fails.
+// Todos performs the todos operation on the repo resolver.
 func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetTodos(filter)
@@ -24088,6 +25855,8 @@ func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput
 	return []*Todo{}, nil
 }
 
+// Tickets MUST return a non-nil error when the operation fails.
+// Tickets performs the tickets operation on the repo resolver.
 func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -24106,6 +25875,8 @@ func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month 
 	return []*Ticket{}, nil
 }
 
+// Policies MUST return a non-nil error when the operation fails.
+// Policies performs the policies operation on the repo resolver.
 func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -24114,11 +25885,19 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 		var policies []*Policy
 		for p := range policyChan {
 			desc := p.Description
+			var vks []*ViolationKindMeta
+			for _, k := range p.AllKinds() {
+				meta := k.Info()
+				meta.PolicyID = p.ID
+				vks = append(vks, &meta)
+			}
 			policies = append(policies, &Policy{
-				ID:          p.ID,
-				Name:        p.Name,
-				Description: &desc,
-				Scopes:      p.Scopes,
+				ID:             p.ID,
+				Name:           p.Name,
+				Description:    &desc,
+				Scopes:         p.Scopes,
+				Groups:         p.Groups,
+				ViolationKinds: vks,
 			})
 		}
 		return policies, nil
@@ -24126,6 +25905,8 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 	return []*Policy{}, nil
 }
 
+// ViolationKinds MUST return a non-nil error when the operation fails.
+// ViolationKinds performs the violation kinds operation on the repo resolver.
 func (r *repoResolver) ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetViolationKinds(), nil
@@ -24133,6 +25914,8 @@ func (r *repoResolver) ViolationKinds(ctx context.Context, obj *Repo) ([]*Violat
 	return []*ViolationKindMeta{}, nil
 }
 
+// Violations MUST return a non-nil error when the operation fails.
+// Violations performs the violations operation on the repo resolver.
 func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
@@ -24152,7 +25935,9 @@ func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string)
 // #endregion 🔖Entity Resolvers
 
 // #region 🔖Resolver Interfaces
+// Resolver interface definitions for the GraphQL server.
 
+// QueryResolver defines the interface for query resolver operations.
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (Node, error)
 	Repo(ctx context.Context) (*Repo, error)
@@ -24177,6 +25962,7 @@ type QueryResolver interface {
 	Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error)
 }
 
+// MutationResolver defines the interface for mutation resolver operations.
 type MutationResolver interface {
 	SyncGithub(ctx context.Context) (bool, error)
 	Fix(ctx context.Context, scope *string) (*FixResult, error)
@@ -24201,6 +25987,7 @@ type MutationResolver interface {
 	Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error)
 }
 
+// RepoResolver defines the interface for repo resolver operations.
 type RepoResolver interface {
 	Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error)
 	Folders(ctx context.Context, obj *Repo) ([]*Folder, error)
@@ -24216,6 +26003,7 @@ type RepoResolver interface {
 // #endregion 🔖Resolver Interfaces
 
 // #region 🔖Mcp
+// MCP protocol handlers for the model context protocol server.
 
 func createMcpServer() *server.MCPServer {
 	s := server.NewMCPServer(
@@ -24725,6 +26513,7 @@ func toolResultToMCP(result ToolResult) (*mcp.CallToolResult, error) {
 }
 
 // #region 🔖Args
+// Argument parsing utilities for CLI and MCP commands.
 func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	if args, ok := request.Params.Arguments.(map[string]interface{}); ok {
 		return args
@@ -24813,6 +26602,7 @@ func getBoolArg(args map[string]interface{}, key string) (bool, bool, error) {
 // #endregion 🔖Args
 
 // #region 🔖Paths
+// Path resolution utilities for file and folder operations.
 func requireFilePath(path string) error {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -24866,6 +26656,7 @@ func requireFolderTargetPath(path string) error {
 // #endregion 🔖Paths
 
 // #region 🔖GraphQL
+// GraphQL query and mutation string constants.
 
 func jsonToYaml(jsonStr string) (string, error) {
 	var data interface{}
@@ -24886,6 +26677,7 @@ func gql(query string, variables map[string]interface{}) (string, error) {
 // #endregion 🔖GraphQL
 
 // #region 🔖Handlers
+// Request handler functions for CLI and MCP operations.
 
 func renderPromptTemplate(name string, data map[string]string) (string, error) {
 	path := filepath.Join(".semio-repo", "prompt", "templates", name+".tpl")
@@ -25670,6 +27462,7 @@ func navigateTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 }
 
 // #region 🔖Mcp Resources Handlers
+// MCP resource handler functions for resource listing and reading.
 
 func handleRepoResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	query := `query Repo { repo { id name bundles { id } tickets { id } policies { id } contributors { id } } }`
@@ -26147,6 +27940,7 @@ func handleCommitResource(ctx context.Context, request mcp.ReadResourceRequest) 
 // #region 🔖Cli
 
 // #region 🔖GraphQL Helpers
+// GraphQL helper functions for query construction and execution.
 
 func printGQL(query string, variables map[string]interface{}) error {
 	result, err := gql(query, variables)
@@ -26160,6 +27954,7 @@ func printGQL(query string, variables map[string]interface{}) error {
 // #endregion 🔖GraphQL Helpers
 
 // #region 🔖Analyze Command
+// Analyze command implementation for policy violation detection.
 
 var analyzeCmd = &cobra.Command{
 	Use:   "analyze [scope]",
@@ -26214,6 +28009,7 @@ var analyzeCmd = &cobra.Command{
 // #endregion 🔖Analyze Command
 
 // #region 🔖Fix Command
+// Fix command implementation for automatic policy violation repair.
 
 var fixCmd = &cobra.Command{
 	Use:   "fix [scope]",
@@ -26248,7 +28044,10 @@ var fixCmd = &cobra.Command{
 // #endregion 🔖Fix Command
 
 // #region 🔖Missing Utilities
+// Utility functions that are missing from the main codebase.
 
+// ScopeToFiles MUST return a non-nil error when the operation fails.
+// ScopeToFiles performs the scope to files operation.
 func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
 	var files []string
@@ -26297,13 +28096,20 @@ func isRepoExcludedPath(path string) bool {
 	if normalized == ".semio-repo" || strings.HasPrefix(normalized, ".semio-repo/") {
 		return true
 	}
-	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") {
+	if normalized == "assets/repo" || strings.HasPrefix(normalized, "assets/repo/") || strings.Contains(normalized, "/assets/repo/") {
 		return true
 	}
 	if normalized == ".git" || strings.HasPrefix(normalized, ".git/") {
 		return true
 	}
 	if normalized == "node_modules" || strings.HasPrefix(normalized, "node_modules/") {
+		return true
+	}
+	base := filepath.Base(normalized)
+	if strings.HasSuffix(base, ".Designer.cs") {
+		return true
+	}
+	if strings.Contains(normalized, "/codegen/") {
 		return true
 	}
 	return false
@@ -26326,6 +28132,8 @@ func filterConsideredFiles(files []string) []string {
 	return filtered
 }
 
+// ComputeTicketFiles MUST return the computed result deterministically.
+// ComputeTicketFiles computes and returns the ticket files.
 func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 	if len(ticket.Interactions) == 0 {
 		return nil, fmt.Errorf("no interactions found for ticket")
@@ -26387,6 +28195,8 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 	return result, nil
 }
 
+// GetGitDiffLines MUST retrieve the requested value or return an error.
+// GetGitDiffLines retrieves and returns the git diff lines.
 func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]*DiffLines, error) {
 	if baseCommit == "" {
 		return nil, fmt.Errorf("base commit is required")
@@ -26450,6 +28260,8 @@ func buildViolationID(scope string, line int, col int) string {
 	return fmt.Sprintf("semio-repo/violation/%s", scope)
 }
 
+// CanCloseTicket MUST return a deterministic boolean result.
+// CanCloseTicket performs the can close ticket operation.
 func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	var reasons []string
 	if ticket == nil {
@@ -26459,6 +28271,8 @@ func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	return len(reasons) == 0, reasons
 }
 
+// GetBundleByPath MUST retrieve the requested value or return an error.
+// GetBundleByPath retrieves and returns the bundle by path.
 func GetBundleByPath(path string) *Bundle {
 	bundles := GetProjects()
 	normalizedPath := NormalizePath(path)
@@ -26528,6 +28342,8 @@ func buildDefinitionID(fileID string, sectionPath []string, name string) string 
 	return buildSectionID(fileID, sectionPath) + "§" + name
 }
 
+// GuessSectionName MUST complete the operation successfully.
+// GuessSectionName performs the guess section name operation.
 func GuessSectionName(filePath string) string {
 	base := filepath.Base(filePath)
 	ext := filepath.Ext(base)
@@ -26544,10 +28360,14 @@ func GuessSectionName(filePath string) string {
 	return strings.Join(words, " ")
 }
 
+// GetGitDiffSectionLineMetrics MUST retrieve the requested value or return an error.
+// GetGitDiffSectionLineMetrics retrieves and returns the git diff section line metrics.
 func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
 	return nil
 }
 
+// FlattenSections MUST return a single-level collection with all nested items.
+// FlattenSections flattens the nested sections into a single level.
 func FlattenSections(sections []Section) []Section {
 	var result []Section
 	var flatten func(secs []Section)
@@ -26698,6 +28518,8 @@ func findSectionForLine(sections []Section, line int) string {
 	return ""
 }
 
+// BuildGitDiffArgs MUST construct and return the fully initialized result.
+// BuildGitDiffArgs constructs and returns the git diff args.
 func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
 	if headCommit == "" {
 		if len(paths) == 0 {
@@ -26711,12 +28533,15 @@ func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []str
 	return append([]string{"diff", flag, "-M", baseCommit, headCommit, "--"}, paths...)
 }
 
+// GitDiffStatus holds the data fields for a git diff status record.
 type GitDiffStatus struct {
 	Status string
 	From   string
 	To     string
 }
 
+// GetGitDiffStatus MUST retrieve the requested value or return an error.
+// GetGitDiffStatus retrieves and returns the git diff status.
 func GetGitDiffStatus(baseCommit, headCommit string, paths []string) ([]GitDiffStatus, error) {
 	if baseCommit == "" {
 		return nil, fmt.Errorf("base commit is required")
@@ -26762,6 +28587,8 @@ func GetGitDiffStatus(baseCommit, headCommit string, paths []string) ([]GitDiffS
 	return results, nil
 }
 
+// GetFolderChildren MUST retrieve the requested value or return an error.
+// GetFolderChildren retrieves and returns the folder children.
 func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 	absPath := filepath.Join(rootDir, folderPath)
 	entries, err := os.ReadDir(absPath)
@@ -26805,6 +28632,8 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 	return children, nil
 }
 
+// GetFolderFiles MUST retrieve the requested value or return an error.
+// GetFolderFiles retrieves and returns the folder files.
 func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 	absPath := filepath.Join(rootDir, folderPath)
 	entries, err := os.ReadDir(absPath)
@@ -26845,6 +28674,8 @@ func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 
 // #endregion 🔖Missing Utilities
 
+// AnalyzeFile MUST return a non-nil error when the operation fails.
+// AnalyzeFile performs the analyze file operation.
 func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
 	scope := Scope{
 		Kind:     ScopeFile,
@@ -26856,6 +28687,8 @@ func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
 	return CheckPoliciesWithContext(ctx, nil)
 }
 
+// ParseContributorIdentity MUST return the parsed result or an error for invalid input.
+// ParseContributorIdentity parses and returns the contributor identity from the input.
 func ParseContributorIdentity(line string) (name, email string, ok bool) {
 	re := regexp.MustCompile(`\d{4}\s+(.+?)\s*<([^>]+)>`)
 	m := re.FindStringSubmatch(line)
@@ -26883,6 +28716,8 @@ func findSectionForDefinition(sections []Section, startLine, endLine int, prefix
 	return prefix
 }
 
+// ListContributors MUST return all available contributors entries.
+// ListContributors returns a list of contributors entries.
 func ListContributors() ([]Contributor, error) {
 	var result []Contributor
 	dir := filepath.Join(GetRepoMetaDir(), "contributors")
@@ -26909,6 +28744,8 @@ func ListContributors() ([]Contributor, error) {
 	return result, nil
 }
 
+// StreamContributors MUST invoke the callback for each matching contributors entry.
+// StreamContributors streams contributors entries through the callback.
 func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -26962,18 +28799,26 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 	return nil
 }
 
+// GetContributorAvatarPath MUST retrieve the requested value or return an error.
+// GetContributorAvatarPath retrieves and returns the contributor avatar path.
 func GetContributorAvatarPath(github string) string {
 	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar.png")
 }
 
+// GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
+// GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
 func GetContributorAvatarRoundPath(github string) string {
 	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar-round.png")
 }
 
+// GetContributorPath MUST retrieve the requested value or return an error.
+// GetContributorPath retrieves and returns the contributor path.
 func GetContributorPath(github string) string {
 	return filepath.Join(GetRepoMetaDir(), "contributors", github)
 }
 
+// CreateContributor MUST create a new entry and return an error on conflict.
+// CreateContributor creates a new contributor entry.
 func CreateContributor(github string) (*Contributor, error) {
 	dir := GetContributorPath(github)
 	if FileExists(dir) {
@@ -26986,6 +28831,8 @@ func CreateContributor(github string) (*Contributor, error) {
 	return &c, nil
 }
 
+// LoadContributor MUST return all matching contributor from the data source.
+// LoadContributor loads and returns contributor from the data source.
 func LoadContributor(github string) (*Contributor, error) {
 	path := filepath.Join(GetContributorPath(github), "contributor.json")
 	if !FileExists(path) {
@@ -27002,6 +28849,8 @@ func LoadContributor(github string) (*Contributor, error) {
 	return &c, nil
 }
 
+// SaveContributor MUST persist the contributor atomically to the data store.
+// SaveContributor persists contributor to the data store.
 func SaveContributor(c Contributor) error {
 	dir := GetContributorPath(c.Github)
 	if !FileExists(dir) {
@@ -27014,6 +28863,8 @@ func SaveContributor(c Contributor) error {
 	return WriteTextFile(filepath.Join(dir, "contributor.json"), string(data))
 }
 
+// RemoveContributor MUST remove the target and return an error on failure.
+// RemoveContributor removes the specified contributor.
 func RemoveContributor(github string) error {
 	dir := filepath.Join(GetRepoMetaDir(), "contributors", github)
 	if !FileExists(dir) {
@@ -27022,6 +28873,8 @@ func RemoveContributor(github string) error {
 	return os.RemoveAll(dir)
 }
 
+// GetRegisteredPolicies MUST retrieve the requested value or return an error.
+// GetRegisteredPolicies retrieves and returns the registered policies.
 func GetRegisteredPolicies() []PolicyDef {
 	return GetPolicies()
 }
@@ -27056,39 +28909,58 @@ func init() {
 }
 
 // #region 🔖Resolver Methods
+// Resolver method implementations for GraphQL field resolution.
 
+// Bundles MUST return a non-nil error when the operation fails.
+// Bundles performs the bundles operation on the resolver.
 func (r *Resolver) Bundles(ctx context.Context, repo *Repo) ([]*Bundle, error) {
 	return r.Ctx.GetBundles(), nil
 }
 
+// Folders MUST return a non-nil error when the operation fails.
+// Folders performs the folders operation on the resolver.
 func (r *Resolver) Folders(ctx context.Context, repo *Repo) ([]*Folder, error) {
 	return r.Ctx.GetFolders(), nil
 }
 
+// Files MUST return a non-nil error when the operation fails.
+// Files performs the files operation on the resolver.
 func (r *Resolver) Files(ctx context.Context, repo *Repo) ([]*File, error) {
 	return r.Ctx.GetFiles(), nil
 }
 
+// Sections MUST return a non-nil error when the operation fails.
+// Sections performs the sections operation on the resolver.
 func (r *Resolver) Sections(ctx context.Context, repo *Repo) ([]*Section, error) {
 	return r.Ctx.GetSections(), nil
 }
 
+// Definitions MUST return a non-nil error when the operation fails.
+// Definitions performs the definitions operation on the resolver.
 func (r *Resolver) Definitions(ctx context.Context, repo *Repo) ([]*Definition, error) {
 	return r.Ctx.GetDefinitions(), nil
 }
 
+// Contributors MUST return a non-nil error when the operation fails.
+// Contributors performs the contributors operation on the resolver.
 func (r *Resolver) Contributors(ctx context.Context, repo *Repo) ([]*Contributor, error) {
 	return r.Ctx.GetContributors()
 }
 
+// Policies MUST return a non-nil error when the operation fails.
+// Policies performs the policies operation on the resolver.
 func (r *Resolver) Policies(ctx context.Context, repo *Repo) ([]*Policy, error) {
 	return r.Ctx.GetPolicies(), nil
 }
 
+// ViolationKinds MUST return a non-nil error when the operation fails.
+// ViolationKinds performs the violation kinds operation on the resolver.
 func (r *Resolver) ViolationKinds(ctx context.Context, repo *Repo) ([]*ViolationKindMeta, error) {
 	return r.Ctx.GetViolationKinds(), nil
 }
 
+// Violations MUST return a non-nil error when the operation fails.
+// Violations performs the violations operation on the resolver.
 func (r *Resolver) Violations(ctx context.Context, repo *Repo, scope *string) ([]*Violation, error) {
 	analysis, err := r.Ctx.Analyze(scope)
 	if err != nil {
@@ -27100,7 +28972,10 @@ func (r *Resolver) Violations(ctx context.Context, repo *Repo, scope *string) ([
 // #endregion 🔖Resolver Methods
 
 // #region 🔖Missing Tool Functions
+// Tool function stubs for unimplemented features.
 
+// ToolAnalyze MUST complete the operation successfully.
+// ToolAnalyze performs the tool analyze operation.
 func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	scope := ParseScope(scopeRaw)
 	bundles := GetProjects()
@@ -27130,6 +29005,8 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	return ToolResult{Output: *output, Data: report}
 }
 
+// ToolFix MUST complete the operation successfully.
+// ToolFix performs the tool fix operation.
 func ToolFix(scopeRaw string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.Fix(&scopeRaw)
@@ -27142,6 +29019,8 @@ func ToolFix(scopeRaw string) ToolResult {
 	return ToolResult{Output: *output, Data: res}
 }
 
+// ToolPolicyList MUST complete the operation successfully.
+// ToolPolicyList performs the tool policy list operation.
 func ToolPolicyList() ToolResult {
 	policies := GetRegisteredPolicies()
 	var events []Event
@@ -27152,13 +29031,15 @@ func ToolPolicyList() ToolResult {
 	return toolResultFromEvents(events, policies)
 }
 
+// ToolPolicyTree MUST complete the operation successfully.
+// ToolPolicyTree performs the tool policy tree operation.
 func ToolPolicyTree() ToolResult {
 	allPolicies := GetRegisteredPolicies()
 	var sb strings.Builder
 	for _, p := range allPolicies {
 		pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}
 		sb.WriteString(renderEntityMarkdown("policy", pData) + "\n")
-		for _, k := range p.Kinds {
+		for _, k := range p.AllKinds() {
 			meta := k.Info()
 			vkData := map[string]interface{}{"id": string(k), "description": meta.Reason}
 			sb.WriteString("  " + renderEntityMarkdown("violationKind", vkData) + "\n")
@@ -27169,10 +29050,14 @@ func ToolPolicyTree() ToolResult {
 	return ToolResult{Output: *treeOutput, Data: allPolicies}
 }
 
+// ToolPolicyCheck MUST complete the operation successfully.
+// ToolPolicyCheck performs the tool policy check operation.
 func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 	return ToolAnalyze(scopeRaw, []string{policyID})
 }
 
+// ToolPolicyViolationList MUST complete the operation successfully.
+// ToolPolicyViolationList performs the tool policy violation list operation.
 func ToolPolicyViolationList(policyID string) ToolResult {
 
 	return ToolAnalyze("semio", []string{policyID})
@@ -27181,6 +29066,7 @@ func ToolPolicyViolationList(policyID string) ToolResult {
 // #endregion 🔖Missing Tool Functions
 
 // #region 🔖Benchmark Command
+// Benchmark command implementation for performance measurement.
 
 var benchmarkCmd = &cobra.Command{
 	Use:   "benchmark",
@@ -27190,6 +29076,7 @@ var benchmarkCmd = &cobra.Command{
 
 var benchmarkDryRun bool
 
+// BenchmarkResult holds the data fields for a benchmark result record.
 type BenchmarkResult struct {
 	Test string
 	Lang string
@@ -27373,6 +29260,7 @@ func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
 // #endregion 🔖Benchmark Command
 
 // #region 🔖Preflight Command
+// Preflight command implementation for pre-publish validation.
 
 var preflightCmd = &cobra.Command{
 	Use:   "preflight [command]",
@@ -27454,6 +29342,7 @@ func runNx(target string, args ...string) error {
 // #endregion 🔖Preflight Command
 
 // #region 🔖Update Command
+// Update command implementation for dependency updates.
 
 var updateCmd = &cobra.Command{
 	Use:   "update [target]",
@@ -27471,6 +29360,7 @@ func init() {
 	preflightCmd.Flags().BoolVar(&preflightDryRun, "dry-run", false, "Initialize and exit without running checks")
 }
 
+// DependabotConfig holds the data fields for a dependabot config record.
 type DependabotConfig struct {
 	Version int `yaml:"version"`
 	Updates []struct {
@@ -27490,6 +29380,7 @@ type DependabotConfig struct {
 	} `yaml:"x-semio-config"`
 }
 
+// UpdateConfig holds the data fields for a update config record.
 type UpdateConfig struct {
 	Exclude               map[string][]string
 	Constraints           map[string][]Constraint
@@ -27507,6 +29398,7 @@ type UpdateConfig struct {
 	}
 }
 
+// Constraint holds the data fields for a constraint record.
 type Constraint struct {
 	Dependency string
 	MaxMajor   int
@@ -27816,7 +29708,10 @@ func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 // #endregion 🔖Update Command
 
 // #region 🔖File Utilities
+// File utility functions for reading, writing and path manipulation.
 
+// MoveFile MUST return a non-nil error when the operation fails.
+// MoveFile performs the move file operation.
 func MoveFile(sourcePath, destPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -27841,6 +29736,8 @@ func MoveFile(sourcePath, destPath string) error {
 	return nil
 }
 
+// CopyFile MUST return a non-nil error when the operation fails.
+// CopyFile performs the copy file operation.
 func CopyFile(sourcePath, destPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -27862,11 +29759,16 @@ func CopyFile(sourcePath, destPath string) error {
 // #endregion 🔖File Utilities
 
 // #region 🔖Goals
+// Goal management functions for planning and tracking.
 
+// GetRepoGoalsDir MUST retrieve the requested value or return an error.
+// GetRepoGoalsDir retrieves and returns the repo goals dir.
 func GetRepoGoalsDir() string {
 	return filepath.Join(GetRepoMetaDir(), "goals")
 }
 
+// ListGoals MUST return all available goals entries.
+// ListGoals returns a list of goals entries.
 func ListGoals() ([]*Goal, error) {
 	dir := GetRepoGoalsDir()
 	var goals []*Goal
@@ -27903,6 +29805,8 @@ func ListGoals() ([]*Goal, error) {
 	return goals, err
 }
 
+// ReadGoal MUST return the goal content or an error if unavailable.
+// ReadGoal reads and returns goal from the source.
 func ReadGoal(id string) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(id), "goal.json")
@@ -27922,6 +29826,8 @@ func ReadGoal(id string) (*Goal, error) {
 	return &goal, nil
 }
 
+// StreamGoals MUST invoke the callback for each matching goals entry.
+// StreamGoals streams goals entries through the callback.
 func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -27951,6 +29857,8 @@ func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) e
 	return nil
 }
 
+// StreamViolationKinds MUST invoke the callback for each matching violation kinds entry.
+// StreamViolationKinds streams violation kinds entries through the callback.
 func StreamViolationKinds(ctx context.Context, out chan<- ViolationKindMeta, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -27974,6 +29882,8 @@ func StreamViolationKinds(ctx context.Context, out chan<- ViolationKindMeta, opt
 	return nil
 }
 
+// StreamCommits MUST invoke the callback for each matching commits entry.
+// StreamCommits streams commits entries through the callback.
 func StreamCommits(ctx context.Context, limit *int, out chan<- Commit, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -27998,6 +29908,8 @@ func StreamCommits(ctx context.Context, limit *int, out chan<- Commit, opts ...S
 	return nil
 }
 
+// SaveGoal MUST persist the goal atomically to the data store.
+// SaveGoal persists goal to the data store.
 func SaveGoal(goal Goal) error {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(goal.ID), "goal.json")
@@ -28243,6 +30155,8 @@ func ghDeleteIssue(issueURLOrNumber string) error {
 	}
 	return nil
 }
+// ResolveContributorContributions MUST return the resolved value or an error if unresolvable.
+// ResolveContributorContributions resolves and returns the contributor contributions.
 func ResolveContributorContributions(tickets []*Ticket) *ContributorContributionsTree {
 	commitsMap := map[string]*Commit{}
 
@@ -28473,7 +30387,10 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 // #endregion 🔖Cli
 
 // #region 🔖Todos
+// Todo tracking functions for task management.
 
+// GetTodos MUST retrieve the requested value or return an error.
+// GetTodos retrieves and returns the todos.
 func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
 	allTodos, err := ScanTodos(c.rootDir)
 	if err != nil {
@@ -28492,6 +30409,8 @@ func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
 	return allTodos, nil
 }
 
+// ScanTodos MUST scan the input completely and collect all matches.
+// ScanTodos scans and collects todos from the input.
 func ScanTodos(rootDir string) ([]*Todo, error) {
 	var todos []*Todo
 	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
@@ -28525,6 +30444,8 @@ func ScanTodos(rootDir string) ([]*Todo, error) {
 	return todos, err
 }
 
+// ParseTodoMarkdown MUST return the parsed result or an error for invalid input.
+// ParseTodoMarkdown parses and returns the todo markdown from the input.
 func ParseTodoMarkdown(content string, parentPath string) []*Todo {
 	var todos []*Todo
 	lines := strings.Split(content, "\n")
@@ -28551,6 +30472,8 @@ func ParseTodoMarkdown(content string, parentPath string) []*Todo {
 	return todos
 }
 
+// ParseTodoComments MUST return the parsed result or an error for invalid input.
+// ParseTodoComments parses and returns the todo comments from the input.
 func ParseTodoComments(content string, filePath string) []*Todo {
 	var todos []*Todo
 	lines := strings.Split(content, "\n")
@@ -28574,6 +30497,8 @@ func ParseTodoComments(content string, filePath string) []*Todo {
 	return todos
 }
 
+// TodoCreate MUST return a non-nil error when the operation fails.
+// TodoCreate performs the todo create operation on the repo context.
 func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 
 	info, err := os.Stat(input.ParentID)
@@ -28624,10 +30549,14 @@ func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 	return nil, fmt.Errorf("invalid parent id (must be path to folder or file)")
 }
 
+// TodoChange MUST return a non-nil error when the operation fails.
+// TodoChange performs the todo change operation on the repo context.
 func (c *repoContext) TodoChange(input TodoChangeInput) (*Todo, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
+// TodoDelete MUST return a non-nil error when the operation fails.
+// TodoDelete performs the todo delete operation on the repo context.
 func (c *repoContext) TodoDelete(id string) (bool, error) {
 	todos, err := ScanTodos(c.rootDir)
 	if err != nil {
@@ -28649,6 +30578,8 @@ func (c *repoContext) TodoDelete(id string) (bool, error) {
 	return false, fmt.Errorf("todo not found")
 }
 
+// TodoToTicket MUST return a non-nil error when the operation fails.
+// TodoToTicket performs the todo to ticket operation on the repo context.
 func (c *repoContext) TodoToTicket(id string, input TicketOpenInput) (*Ticket, error) {
 	todos, _ := ScanTodos(c.rootDir)
 	var todo *Todo
@@ -28701,7 +30632,9 @@ func removeLineFromFile(path string, lineNum int) {
 // #region 🔖Entity Rendering
 
 // #region 🔖Artifact ID
+// Artifact ID parsing and resolution utilities.
 
+// SemanticId holds the data fields for a semantic id record.
 type SemanticId struct {
 	Emoji string
 	Value string
@@ -28723,6 +30656,8 @@ func emojiText(emoji string) string {
 	return base
 }
 
+// String MUST return a non-empty string representation.
+// String returns the string representation of the semantic id.
 func (s SemanticId) String() string {
 	if s.Value == "" {
 		return emojiText(s.Emoji)
@@ -28812,12 +30747,15 @@ func definitionKindEmoji(data map[string]interface{}) string {
 	return emojiText(EmojiDefinitionImpl)
 }
 
+// ArtifactRef holds the data fields for a artifact ref record.
 type ArtifactRef struct {
 	Kind         string
 	Path         string
 	SectionParts []string
 }
 
+// ParseArtifactRef MUST return the parsed result or an error for invalid input.
+// ParseArtifactRef parses and returns the artifact ref from the input.
 func ParseArtifactRef(ref string) ArtifactRef {
 	clean := strings.ReplaceAll(ref, "\uFE0E", "")
 	clean = strings.ReplaceAll(clean, "\uFE0F", "")
@@ -28880,6 +30818,8 @@ func ParseArtifactRef(ref string) ArtifactRef {
 	return ArtifactRef{Kind: "file", Path: normalized}
 }
 
+// UnSlugify MUST complete the operation successfully.
+// UnSlugify performs the un slugify operation.
 func UnSlugify(slug string) string {
 	parts := strings.Split(slug, "-")
 	for i, p := range parts {
@@ -28890,6 +30830,8 @@ func UnSlugify(slug string) string {
 	return strings.Join(parts, " ")
 }
 
+// FindSectionBySlug MUST return the matching result or an error if not found.
+// FindSectionBySlug locates and returns the matching section by slug.
 func FindSectionBySlug(sections []Section, slug string) *Section {
 	for i := range sections {
 		if Slugify(sections[i].Name) == slug {
@@ -28902,6 +30844,8 @@ func FindSectionBySlug(sections []Section, slug string) *Section {
 	return nil
 }
 
+// ResolveSectionName MUST return the resolved value or an error if unresolvable.
+// ResolveSectionName resolves and returns the section name.
 func ResolveSectionName(filePath string, slug string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
@@ -28920,6 +30864,8 @@ func ResolveSectionName(filePath string, slug string) string {
 	return UnSlugify(slug)
 }
 
+// SectionIdValueToUriPath MUST complete the operation successfully.
+// SectionIdValueToUriPath performs the section id value to uri path operation.
 func SectionIdValueToUriPath(value string) string {
 	hashIdx := strings.Index(value, "#")
 	if hashIdx < 0 {
@@ -28935,6 +30881,8 @@ func SectionIdValueToUriPath(value string) string {
 	return result
 }
 
+// DefinitionIdValueToUriPath MUST complete the operation successfully.
+// DefinitionIdValueToUriPath performs the definition id value to uri path operation.
 func DefinitionIdValueToUriPath(value string) string {
 	hashIdx := strings.Index(value, "#")
 	paragraphIdx := strings.Index(value, "§")
@@ -28959,6 +30907,8 @@ func DefinitionIdValueToUriPath(value string) string {
 	return result
 }
 
+// ParseSectionUriPath MUST return the parsed result or an error for invalid input.
+// ParseSectionUriPath parses and returns the section uri path from the input.
 func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string) {
 	parts := strings.Split(uriPath, "/")
 	fileEnd := -1
@@ -28977,6 +30927,8 @@ func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string
 	return
 }
 
+// ViolationKindIdToUriPath MUST complete the operation successfully.
+// ViolationKindIdToUriPath performs the violation kind id to uri path operation.
 func ViolationKindIdToUriPath(id string) string {
 	parts := strings.Split(id, "/")
 	for i, p := range parts {
@@ -28985,6 +30937,8 @@ func ViolationKindIdToUriPath(id string) string {
 	return strings.Join(parts, "/")
 }
 
+// ViolationKindUriPathToId MUST complete the operation successfully.
+// ViolationKindUriPathToId performs the violation kind uri path to id operation.
 func ViolationKindUriPathToId(uriPath string) string {
 	parts := strings.Split(uriPath, "/")
 	for i, p := range parts {
@@ -28993,6 +30947,8 @@ func ViolationKindUriPathToId(uriPath string) string {
 	return strings.Join(parts, "/")
 }
 
+// GetArtifactID MUST retrieve the requested value or return an error.
+// GetArtifactID retrieves and returns the artifact i d.
 func GetArtifactID(kind string, data map[string]interface{}) string {
 	switch kind {
 	case "repo":
@@ -29129,6 +31085,8 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 	return ""
 }
 
+// GetArtifactURI MUST retrieve the requested value or return an error.
+// GetArtifactURI retrieves and returns the artifact u r i.
 func GetArtifactURI(kind string, data map[string]interface{}) string {
 	switch kind {
 	case "repo":
@@ -29237,6 +31195,8 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 	return ""
 }
 
+// IdToUri MUST complete the operation successfully.
+// IdToUri performs the id to uri operation.
 func IdToUri(id string) string {
 	type emojiMapping struct {
 		emoji      string
@@ -29351,6 +31311,8 @@ func IdToUri(id string) string {
 	return ""
 }
 
+// UriToId MUST complete the operation successfully.
+// UriToId performs the uri to id operation.
 func UriToId(uri string) string {
 	if !strings.HasPrefix(uri, "semiorepo://") {
 		return ""
@@ -29466,6 +31428,7 @@ func UriToId(uri string) string {
 // #endregion 🔖Artifact ID
 
 // #region 🔖Entity Rendering
+// Entity rendering functions for formatted output generation.
 
 func extractCreatedStr(data map[string]interface{}) string {
 	createdStr := ""

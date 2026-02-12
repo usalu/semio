@@ -26,11 +26,20 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Yank
+// Yak yank script. MUST remove a package version from the Yak server.
+
 import { execSync } from "child_process";
 
+// Yak CLI executable path for Rhino 7.
+// MUST point to the installed Yak binary.
 const yak = "C:\\Program Files\\Rhino 7\\System\\Yak.exe";
+// Semio package version from CLI argument or default.
+// MUST be a valid semver version string.
 const version = process.argv[2] || "5.1.0-beta";
 
 execSync(`"${yak}" yank semio ${version}`, { stdio: "inherit" });
 
 console.log(`✅ Yanked semio ${version}`);
+
+// #endregion 🔖Yank

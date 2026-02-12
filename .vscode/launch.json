@@ -17,19 +17,6 @@
       ]
     },
     {
-      "name": "semio-repo/cli test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio-repo/cli"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "semio-repo/cli build",
       "type": "node",
       "request": "launch",
@@ -37,19 +24,6 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio-repo/cli"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio-repo/cli preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
         "semio-repo/cli"
       ],
       "cwd": "${workspaceFolder}",
@@ -67,19 +41,6 @@
       "cwd": "${workspaceFolder}"
     },
     {
-      "name": "semio-repo/server test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio-repo/server"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "semio-repo/server build",
       "type": "node",
       "request": "launch",
@@ -87,19 +48,6 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio-repo/server"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio-repo/server preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
         "semio-repo/server"
       ],
       "cwd": "${workspaceFolder}",
@@ -119,19 +67,6 @@
         "${workspaceFolder}/semio-repo/vscode/out/**/*.js"
       ],
       "preLaunchTask": "semio-repo/vscode dev"
-    },
-    {
-      "name": "semio-repo/vscode test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio-repo/vscode"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
     },
     {
       "name": "semio-repo/vscode build",
@@ -159,35 +94,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio-repo/vscode preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio-repo/vscode"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // semio/go
     // ========================================
-    {
-      "name": "semio/go test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio/go"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     {
       "name": "semio/go build",
       "type": "node",
@@ -201,35 +110,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio/go preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/go"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // semio/rs
     // ========================================
-    {
-      "name": "semio/rs test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio/rs"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     {
       "name": "semio/rs build",
       "type": "node",
@@ -243,35 +126,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio/rs preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/rs"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // semio/py
     // ========================================
-    {
-      "name": "semio/py test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio/py"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     {
       "name": "semio/py build",
       "type": "node",
@@ -280,19 +137,6 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/py"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/py preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
         "semio/py"
       ],
       "cwd": "${workspaceFolder}",
@@ -318,19 +162,6 @@
       ]
     },
     {
-      "name": "semio/engine test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio/engine"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "semio/engine build",
       "type": "node",
       "request": "launch",
@@ -338,19 +169,6 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/engine"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/engine preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
         "semio/engine"
       ],
       "cwd": "${workspaceFolder}",
@@ -417,58 +235,6 @@
       }
     },
     {
-      "name": "semio/js test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio/js"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/js test:unit",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test:unit",
-        "semio/js"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/js test:e2e",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test:e2e",
-        "semio/js"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/js test:coverage",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test:coverage",
-        "semio/js"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
       "name": "semio/js build",
       "type": "node",
       "request": "launch",
@@ -476,19 +242,6 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/js"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/js preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
         "semio/js"
       ],
       "cwd": "${workspaceFolder}",
@@ -542,19 +295,6 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio/docs preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/docs"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // semio/play
     // ========================================
@@ -603,19 +343,6 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio/play preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/play"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // semio/desktop
     // ========================================
@@ -658,35 +385,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio/desktop preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/desktop"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // semio/net
     // ========================================
-    {
-      "name": "semio/net test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio/net"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     {
       "name": "semio/net build",
       "type": "node",
@@ -700,35 +401,9 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio/net preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/net"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // semio/grasshopper
     // ========================================
-    {
-      "name": "semio/grasshopper test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "test",
-        "semio/grasshopper"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     {
       "name": "semio/grasshopper build",
       "type": "node",
@@ -738,35 +413,6 @@
         "nx",
         "build",
         "semio/grasshopper"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/grasshopper preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/grasshopper"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    // ========================================
-    // semio/assets
-    // ========================================
-    {
-      "name": "semio/assets preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/assets"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
@@ -800,19 +446,6 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio/logo preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/logo"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // semio/icons
     // ========================================
@@ -824,19 +457,6 @@
       "runtimeArgs": [
         "nx",
         "build",
-        "semio/icons"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "semio/icons preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
         "semio/icons"
       ],
       "cwd": "${workspaceFolder}",
@@ -871,19 +491,6 @@
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"
     },
-    {
-      "name": "semio/yak preflight",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "nx",
-        "preflight",
-        "semio/yak"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
     // ========================================
     // Root Commands (Lifecycle Order)
     // ========================================
@@ -897,18 +504,6 @@
         "run-many",
         "-t",
         "dev"
-      ],
-      "cwd": "${workspaceFolder}",
-      "console": "integratedTerminal"
-    },
-    {
-      "name": "test",
-      "type": "node",
-      "request": "launch",
-      "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "test"
       ],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal"

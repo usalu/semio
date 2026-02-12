@@ -26,14 +26,27 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Schema Export
+// JSON Schema export script. MUST unescape and write the kit schema file.
+
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 
+// Input JSON Schema file path.
+// MUST point to the kit.json schema file.
 const inputFilePath = join(__dirname, "kit.json");
+// Output file path for the unescaped JSON Schema.
+// MUST be written next to the input file.
 const outputFilePath = join(__dirname, "kit_unescaped.json");
 
+// Raw JSON content read from the input schema file.
+// MUST be read as UTF-8.
 const jsonContent = readFileSync(inputFilePath, "utf-8");
+// Unescaped JSON content with backslash sequences resolved.
+// MUST replace all escaped characters.
 const unescapedContent = jsonContent.replace(/\\(.)/g, "$1");
 writeFileSync(outputFilePath, unescapedContent, "utf-8");
 
 console.log(`✅ Unescaped ${inputFilePath} to ${outputFilePath}`);
+
+// #endregion 🔖Schema Export

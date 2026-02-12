@@ -26,6 +26,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// External and internal module imports.
 
 import { closestCenter, DndContext, DragOverlay, PointerSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
 import { useSelector } from "@xstate/react";
@@ -259,6 +260,8 @@ import { Tutorial, TutorialProvider, TutorialStore, useAvailableTutorials } from
 
 // #endregion 🔖Imports
 
+// #region 🔖Utilities
+// Utility functions used across sketchpad components.
 function getToolbarGroupIcon(groupId: string): ReactNode {
   if (groupId === "selection") return <FocusIcon size={16} />;
   if (groupId === "filter") return <SearchIcon size={16} />;
@@ -267,15 +270,19 @@ function getToolbarGroupIcon(groupId: string): ReactNode {
   if (groupId === "actions") return <FeedbackIcon size={16} />;
   return <FocusIcon size={16} />;
 }
+// #endregion 🔖Utilities
 
 // #region Store
 
 // #region 🔖Store
+// Reactive stores backed by Yjs for collaborative state management.
 
+// Identity selector that returns the value unchanged.
 export function identitySelector<T>(value: T): T {
   return value;
 }
 
+// Abstract base class for Yjs-backed reactive stores with caching and field subscriptions.
 export abstract class Store<TState> {
   public readonly guid: Guid;
   public readonly parent: SketchpadStore;
@@ -466,6 +473,7 @@ export abstract class Store<TState> {
   // #endregion 🔖Store
 }
 
+// Abstract application store extending Store with undo/redo transaction support and command execution.
 export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends AppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends AppCommandResult<TDiff>> extends Store<TState> {
   protected readonly commandRegistry: Map<string, (context: TCommandContext, ...rest: any[]) => TCommandResult> = new Map();
   private lastDeletedTransactionEdit?: TEdit;
@@ -697,6 +705,7 @@ export abstract class AppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TS
   abstract executeCommand<T>(command: string, ...rest: any[]): Promise<T>;
 }
 
+// Abstract app store that integrates kit diff operations for collaborative kit editing.
 export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDiff>, TSelectionDiff, TEdit extends KitDiffAppEdit<TSelectionDiff>, TCommandContext, TCommandResult extends KitDiffAppCommandResult<TDiff>> extends AppStore<
   TState,
   TDiff,
@@ -840,7 +849,9 @@ export abstract class KitDiffAppStore<TState, TDiff extends AppDiff<TSelectionDi
 }
 
 // #region 🔖Plain App Store (No YJS)
+// Non-YJS application stores using plain in-memory state with transaction support.
 
+// Abstract plain application store without Yjs backing for local-only state with undo/redo.
 export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
   public readonly guid: Guid;
   protected state: TState;
@@ -1016,6 +1027,7 @@ export abstract class PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TComma
   abstract executeCommand<T>(command: string, ...rest: any[]): Promise<T>;
 }
 
+// Abstract plain app store that integrates kit diff operations without YJS backing.
 export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> extends PlainAppStore<TState, TDiff, TSelectionDiff, TEdit, TCommandContext, TCommandResult> {
   protected readonly parentStore: SketchpadStore;
 
@@ -1133,7 +1145,9 @@ export abstract class PlainKitDiffAppStore<TState, TDiff, TSelectionDiff, TEdit,
 // #region 🔖File Provider
 
 // #region 🔖Memory File Provider
+// In-memory file storage provider for temporary or test scenarios.
 
+// Creates a file provider factory that stores files in memory.
 export function createMemoryFileProvider(config?: MemoryFileProviderConfig): FileProviderFactory {
   const storage = new Map<string, Blob>();
 
@@ -1175,7 +1189,9 @@ export function createMemoryFileProvider(config?: MemoryFileProviderConfig): Fil
 // #endregion 🔖Memory File Provider
 
 // #region 🔖Local File Provider (IndexedDB)
+// Browser-local file storage provider backed by IndexedDB.
 
+// Creates a file provider factory that persists files in IndexedDB.
 export function createLocalFileProvider(config?: LocalFileProviderConfig): FileProviderFactory {
   const dbName = config?.dbName || "semio-files";
   const storeName = config?.storeName || "files";
@@ -1271,7 +1287,9 @@ export function createLocalFileProvider(config?: LocalFileProviderConfig): FileP
 // #endregion 🔖Local File Provider (IndexedDB)
 
 // #region 🔖Remote File Provider
+// Remote file storage provider backed by a REST API.
 
+// Creates a file provider factory that uploads and downloads files from a remote server.
 export function createRemoteFileProvider(config: RemoteFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
     const getUrl = (kitId: string, fileId: string, path: string): string => {
@@ -1336,7 +1354,9 @@ export function createRemoteFileProvider(config: RemoteFileProviderConfig): File
 // #endregion 🔖Remote File Provider
 
 // #region 🔖Composite File Provider
+// Composite file storage provider that delegates to multiple underlying providers.
 
+// Creates a file provider factory that composes memory, local, and remote providers.
 export function createCompositeFileProvider(config: CompositeFileProviderConfig): FileProviderFactory {
   return async (kitId: string): Promise<FileProvider> => {
     const providers: FileProvider[] = [];
@@ -1401,6 +1421,7 @@ export function createCompositeFileProvider(config: CompositeFileProviderConfig)
 // #endregion 🔖File Provider
 
 // #region 🔖Kits
+// Yjs-backed attribute store for kit metadata.
 
 type YAttributeVal = string;
 type YAttribute = Y.Map<YAttributeVal>;
@@ -1479,6 +1500,7 @@ class AttributeStore {
 // #endregion 🔖Kits
 
 // #region 🔖Coord
+// Yjs-backed coordinate store managing u/v values.
 
 type YCoordVal = number;
 type YCoord = Y.Map<YCoordVal>;
@@ -1544,6 +1566,7 @@ class YCoordStore {
 // #endregion 🔖Coord
 
 // #region 🔖Vec
+// Yjs-backed 3D vector component store managing x/y/z values.
 
 type YVecVal = number;
 type YVec = Y.Map<YVecVal>;
@@ -1609,6 +1632,7 @@ class YVecStore {
 // #endregion 🔖Vec
 
 // #region 🔖Point
+// Yjs-backed 3D point store managing x/y/z coordinates.
 
 type YPointVal = number;
 type YPoint = Y.Map<YPointVal>;
@@ -1684,6 +1708,7 @@ class YPointStore {
 // #endregion 🔖Point
 
 // #region 🔖Vector
+// Yjs-backed 3D direction vector store managing x/y/z components.
 
 type YVectorVal = number;
 type YVector = Y.Map<YVectorVal>;
@@ -1759,6 +1784,7 @@ class YVectorStore {
 // #endregion 🔖Vector
 
 // #region 🔖Plane
+// Yjs-backed 3D plane store managing origin point and direction vectors.
 
 type YPlaneVal = YPoint | YVector;
 type YPlane = Y.Map<YPlaneVal>;
@@ -1824,6 +1850,7 @@ class YPlaneStore {
 // #endregion 🔖Plane
 
 // #region 🔖Camera
+// Yjs-backed camera store managing view target and perspective planes.
 
 type YCameraVal = YPoint | YVector;
 type YCamera = Y.Map<YCameraVal>;
@@ -1890,6 +1917,7 @@ class YCameraStore {
 // #endregion 🔖Camera
 
 // #region 🔖Location
+// Yjs-backed location store managing geographical and licensing metadata.
 
 type YLocationVal = number | string | YAttributes;
 type YLocation = Y.Map<YLocationVal>;
@@ -1981,6 +2009,7 @@ class YLocationStore {
 // #endregion 🔖Location
 
 // #region 🔖Author
+// Yjs-backed author store managing author identity and attributes.
 
 type YAuthorVal = string | YAttributes;
 type YAuthor = Y.Map<YAuthorVal>;
@@ -2085,6 +2114,7 @@ class AuthorStore {
 
 type AuthorScope = { guid: string };
 const AuthorScopeContext = createContext<AuthorScope | null>(null);
+// React context provider scoping author by guid.
 export const AuthorScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(AuthorScopeContext.Provider, { value }, props.children as any);
@@ -2102,6 +2132,7 @@ function useAuthorStore<T>(selector?: (store: AuthorStore) => T, guid?: string):
   return selector ? selector(authorStore) : authorStore;
 }
 
+// Hook for accessing author data with optional selector.
 export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: boolean = false): T | Author | null {
   const authorScope = useAuthorScope();
   const authorGuid = authorScope?.guid ?? id;
@@ -2114,6 +2145,7 @@ export function useAuthor<T>(selector?: (author: Author) => T, id?: Guid, deep: 
 // #endregion 🔖Author
 
 // #region 🔖File
+// Yjs-backed file store managing file metadata and content references.
 
 type YFile = Y.Map<string | number | YAttributes>;
 type YFiles = Y.Array<YFile>;
@@ -2259,6 +2291,7 @@ class FileStore {
 // #endregion 🔖File
 
 // #region 🔖Folder
+// Yjs-backed folder store managing folder hierarchy and file references.
 
 type YFolder = Y.Map<string | YAttributes>;
 type YFolders = Y.Array<YFolder>;
@@ -2392,6 +2425,7 @@ class FolderStore {
 // #endregion 🔖Folder
 
 // #region 🔖Benchmark
+// Yjs-backed benchmark store managing performance measurement data.
 
 type YBenchmark = Y.Map<string | number | boolean | YAttributes>;
 type YBenchmarks = Y.Array<YBenchmark>;
@@ -2512,10 +2546,12 @@ class BenchmarkStore {
 // #endregion 🔖Benchmark
 
 // #region 🔖Quality
+// Yjs-backed quality store managing quality criteria definitions.
 
 type YQuality = Y.Map<string | number | YAttributes>;
 type YQualities = Y.Array<YQuality>;
 
+// Yjs-backed quality store managing quality criteria data and change tracking.
 export class QualityStore {
   private yQuality: YQuality;
   private cache?: Quality;
@@ -2629,6 +2665,7 @@ export class QualityStore {
 // #endregion 🔖Quality
 
 // #region 🔖Prop
+// Yjs-backed prop store managing design property definitions.
 
 type YProp = Y.Map<string | number | boolean | YAttributes>;
 type YProps = Y.Array<YProp>;
@@ -2724,6 +2761,7 @@ class PropStore {
 // #endregion 🔖Prop
 
 // #region 🔖Model
+// Yjs-backed model store managing 3D model representations.
 
 type YModelVal = string | Y.Array<string> | YAttributes;
 type YModel = Y.Map<YModelVal>;
@@ -2845,6 +2883,7 @@ class ModelStore {
 // #endregion 🔖Model
 
 // #region 🔖Connector
+// Yjs-backed connector store managing type connectors and their ports.
 
 type YConnectorVal = string | number | boolean | YAttributes | Y.Array<string> | YPoint | YVector | YProps;
 type YConnector = Y.Map<YConnectorVal>;
@@ -2970,11 +3009,13 @@ class ConnectorStore {
 // #endregion 🔖Connector
 
 // #region 🔖Type
+// Yjs-backed type store managing architectural type definitions and connectors.
 
 type YTypeVal = string | number | boolean | YAuthorUuids | YAttributes | YModels | YConnectors | YProps | YLocation;
 type YType = Y.Map<YTypeVal>;
 type YTypes = Y.Array<YType>;
 
+// Yjs-backed type store managing architectural type definitions and their connectors.
 export class TypeStore {
   public readonly parent: KitStore;
   private yType: YType;
@@ -3368,11 +3409,14 @@ export class TypeStore {
 
 type TypeScope = { guid: string };
 const TypeScopeContext = createContext<TypeScope | null>(null);
+// React context provider scoping type by guid.
 export const TypeScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(TypeScopeContext.Provider, { value }, props.children as any);
 };
+// Hook returning the current type scope context.
 export const useTypeScope = () => useContext(TypeScopeContext);
+// Hook returning whether a type scope is active.
 export const useIsInTypeScope = () => useTypeScope() !== null;
 
 function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T | TypeStore | null {
@@ -3387,6 +3431,7 @@ function useTypeStore<T>(selector?: (store: TypeStore) => T, guid?: string): T |
   return selector ? selector(typeStore) : typeStore;
 }
 
+// Hook for accessing type data with optional selector.
 export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolean = false): T | Type | null {
   const typeScope = useTypeScope();
   const typeGuid = typeScope?.guid ?? id;
@@ -3398,11 +3443,14 @@ export function useType<T>(selector?: (type: Type) => T, id?: Guid, deep: boolea
 
 type QualityScope = { guid: string };
 const QualityScopeContext = createContext<QualityScope | null>(null);
+// React context provider scoping quality by guid.
 export const QualityScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(QualityScopeContext.Provider, { value }, props.children as any);
 };
+// Hook returning the current quality scope context.
 export const useQualityScope = () => useContext(QualityScopeContext);
+// Hook returning whether a quality scope is active.
 export const useIsInQualityScope = () => useQualityScope() !== null;
 
 function useQualityStore<T>(selector?: (store: QualityStore) => T, guid?: string): T | QualityStore | null {
@@ -3415,6 +3463,7 @@ function useQualityStore<T>(selector?: (store: QualityStore) => T, guid?: string
   return selector ? selector(qualityStore) : qualityStore;
 }
 
+// Hook for accessing quality data with optional selector.
 export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, deep: boolean = false): T | Quality | null {
   const qualityScope = useQualityScope();
   const qualityGuid = qualityScope?.guid ?? id;
@@ -3427,6 +3476,7 @@ export function useQuality<T>(selector?: (quality: Quality) => T, id?: Guid, dee
 // #endregion 🔖Type
 
 // #region 🔖Layer
+// Yjs-backed layer store managing visibility layers in designs.
 
 type YLayer = Y.Map<string | boolean | YAttributes>;
 type YLayers = Y.Array<YLayer>;
@@ -3544,6 +3594,7 @@ class LayerStore {
 // #endregion 🔖Layer
 
 // #region 🔖Piece
+// Yjs-backed piece store managing design piece instances and their transforms.
 
 type YPieceVal = string | number | boolean | YPlane | YAttributes | YCoord;
 type YPiece = Y.Map<YPieceVal>;
@@ -3839,10 +3890,12 @@ class PieceStore {
 
 type PieceScope = { guid: string };
 const PieceScopeContext = createContext<PieceScope | null>(null);
+// React context provider scoping piece by guid.
 export const PieceScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(PieceScopeContext.Provider, { value }, props.children as any);
 };
+// Hook returning the current piece scope context.
 export const usePieceScope = () => useContext(PieceScopeContext);
 
 function usePieceStore<T>(selector?: (store: PieceStore) => T, guid?: string): T | PieceStore {
@@ -3855,10 +3908,12 @@ function usePieceStore<T>(selector?: (store: PieceStore) => T, guid?: string): T
   return selector ? selector(pieceStore) : pieceStore;
 }
 
+// Hook for accessing piece data with optional selector.
 export function usePiece<T>(selector?: (piece: Piece) => T, id?: Guid, deep: boolean = false): T | Piece | null {
   return useSync<Piece, T>(usePieceStore(identitySelector, id) as PieceStore, selector ? selector : (identitySelector as any));
 }
 
+// Hook returning the plane of the current piece in scope.
 export function useCurrentPiecePlane(): Plane {
   const plane = usePiece((p) => p.plane) as Plane | undefined;
 
@@ -3873,6 +3928,7 @@ export function useCurrentPiecePlane(): Plane {
   return plane;
 }
 
+// Metadata for a piece including depth, parent, and connectivity.
 export type PieceMetadata = {
   plane: Plane;
   center: Coord;
@@ -3881,6 +3937,7 @@ export type PieceMetadata = {
   depth: number;
 };
 
+// Hook returning a map of piece guids to their computed metadata.
 export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
   const kitStore = useKitStore(identitySelector) as KitStore | null;
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
@@ -3903,6 +3960,7 @@ export function usePiecesMetadataMap(): Map<string, PieceMetadata> {
   return useDerived(designStore.derived, key, deps, compute) ?? emptyMap;
 }
 
+// Hook returning the metadata for a specific piece by guid.
 export function usePieceMetadata(pieceId?: Guid): PieceMetadata | undefined {
   const pieceScope = usePieceScope();
   const resolvedPieceId = pieceId ?? pieceScope?.guid;
@@ -3910,36 +3968,43 @@ export function usePieceMetadata(pieceId?: Guid): PieceMetadata | undefined {
   return resolvedPieceId ? metadataMap.get(resolvedPieceId) : undefined;
 }
 
+// Hook returning the flattened plane of a piece by guid.
 export function useFlatPiecePlane(id?: Guid): Plane {
   const meta = usePieceMetadata(id);
   return meta?.plane ?? { origin: { x: 0, y: 0, z: 0 }, xAxis: { x: 1, y: 0, z: 0 }, yAxis: { x: 0, y: 1, z: 0 } };
 }
 
+// Hook returning the flattened center coordinate of a piece.
 export function useFlatPieceCenter(id?: Guid): Coord {
   const meta = usePieceMetadata(id);
   return meta?.center ?? { u: 0, v: 0 };
 }
 
+// Hook returning whether a piece is connected to any other piece.
 export function useIsConnectedPiece(id?: Guid): boolean {
   const meta = usePieceMetadata(id);
   return meta ? meta.parentPieceId !== null : false;
 }
 
+// Hook returning the nesting depth of a piece in the hierarchy.
 export function usePieceDepth(id?: Guid): number {
   const meta = usePieceMetadata(id);
   return meta?.depth ?? 0;
 }
 
+// Hook returning the fixed piece id constraining a piece position.
 export function useFixedPieceId(id?: Guid): string | undefined {
   const meta = usePieceMetadata(id);
   return meta?.fixedPieceId;
 }
 
+// Hook returning the parent piece id of a piece.
 export function useParentPieceId(id?: Guid): string | null {
   const meta = usePieceMetadata(id);
   return meta?.parentPieceId ?? null;
 }
 
+// Hook returning the parent connection of a piece.
 export function usePieceParentConnection(id?: Guid): Connection | null {
   const pieceScope = usePieceScope();
   const pieceGuid = (typeof id === "string" ? id : (pieceScope?.guid ?? null)) as string | null;
@@ -3969,6 +4034,7 @@ export function usePieceParentConnection(id?: Guid): Connection | null {
 // #endregion 🔖Piece
 
 // #region 🔖Group
+// Yjs-backed group store managing piece grouping within designs.
 
 type YGroupVal = string | Y.Array<string> | YAttributes;
 type YGroup = Y.Map<YGroupVal>;
@@ -4082,6 +4148,7 @@ class GroupStore {
 // #endregion 🔖Group
 
 // #region 🔖Side
+// Side store managing connection endpoints for pieces.
 
 class SideStore {
   public readonly parent: DesignStore;
@@ -4220,6 +4287,7 @@ class SideStore {
 // #endregion 🔖Side
 
 // #region 🔖Connection
+// Yjs-backed connection store managing piece-to-piece connections.
 
 type YSideVal = string | number | YAttributes;
 type YSide = Y.Map<YSideVal>;
@@ -4415,10 +4483,12 @@ class ConnectionStore {
 
 type ConnectionScope = { guid: string };
 const ConnectionScopeContext = createContext<ConnectionScope | null>(null);
+// React context provider scoping connection by guid.
 export const ConnectionScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(ConnectionScopeContext.Provider, { value }, props.children as any);
 };
+// Hook returning the current connection scope context.
 export const useConnectionScope = () => useContext(ConnectionScopeContext);
 
 function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, guid?: string): T | ConnectionStore {
@@ -4431,6 +4501,7 @@ function useConnectionStore<T>(selector?: (store: ConnectionStore) => T, guid?: 
   return selector ? selector(connectionStore) : connectionStore;
 }
 
+// Hook for accessing connection data with optional selector.
 export function useConnection<T>(selector?: (connection: Connection) => T, id?: Guid, deep: boolean = false): T | Connection | null {
   return useSync<Connection, T>(useConnectionStore(identitySelector, id) as ConnectionStore, selector ? selector : (identitySelector as any));
 }
@@ -4438,6 +4509,7 @@ export function useConnection<T>(selector?: (connection: Connection) => T, id?: 
 // #endregion 🔖Connection
 
 // #region 🔖Stat
+// Yjs-backed stat store managing statistical measurement data.
 
 type YStat = Y.Map<string | number | boolean>;
 type YStats = Y.Array<YStat>;
@@ -4565,11 +4637,13 @@ class StatStore {
 // #endregion 🔖Stat
 
 // #region 🔖Design
+// Yjs-backed design store managing complete design layouts with pieces and connections.
 
 type YDesignVal = string | boolean | number | YAuthorUuids | YAttributes | YPieces | YConnections | YLayers | YGroups | YStats | YProps | YLocation | Y.Array<string>;
 type YDesign = Y.Map<YDesignVal>;
 type YDesigns = Y.Array<YDesign>;
 
+// Yjs-backed design store managing complete design layouts with pieces and connections.
 export class DesignStore {
   public readonly parent: KitStore;
   private yDesign: YDesign;
@@ -5295,6 +5369,7 @@ export class DesignStore {
   };
 
   // #region 🔖YPath API
+  // Path-based observation and subscription API for deep design Yjs map access.
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
@@ -5337,11 +5412,14 @@ export class DesignStore {
 
 type DesignScope = { guid: string };
 const DesignScopeContext = createContext<DesignScope | null>(null);
+// React context provider scoping design by guid.
 export const DesignScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(DesignScopeContext.Provider, { value }, props.children as any);
 };
+// Hook returning the current design scope context.
 export const useDesignScope = () => useContext(DesignScopeContext);
+// Hook returning whether a design scope is active.
 export const useIsInDesignScope = () => useDesignScope() !== null;
 
 function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string): T | DesignStore | null {
@@ -5353,6 +5431,7 @@ function useDesignStore<T>(selector?: (store: DesignStore) => T, guid?: string):
   return selector ? selector(designStore) : designStore;
 }
 
+// Hook for accessing design data with optional selector.
 export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, id?: Guid, deep: boolean = false): T | DesignShallow | Design | null {
   const designScope = useDesignScope();
   const designGuid = designScope?.guid ?? id;
@@ -5366,6 +5445,7 @@ export function useDesign<T>(selector?: (design: DesignShallow | Design) => T, i
 const EMPTY_PIECES: Piece[] = [];
 const EMPTY_CONNECTIONS: Connection[] = [];
 
+// Hook returning all pieces in the current design scope.
 export function usePieces(): Piece[] {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
@@ -5389,6 +5469,7 @@ export function usePieces(): Piece[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning all connections in the current design scope.
 export function useConnections(): Connection[] {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
@@ -5412,6 +5493,7 @@ export function useConnections(): Connection[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning all included sub-designs of the current design.
 export function useIncludedDesigns() {
   const designScope = useDesignScope();
   const pieces = usePieces();
@@ -5423,6 +5505,7 @@ export function useIncludedDesigns() {
   }, [designScope?.guid, pieces, connections]);
 }
 
+// Hook returning the guid of the design in scope.
 export function useDesignId() {
   const designStore = useDesignStore(identitySelector) as DesignStore | null;
 
@@ -5453,6 +5536,7 @@ export function useDesignId() {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning pieces matching the given list of piece guids.
 export function usePiecesFromIds(pieceIds: Guid[]) {
   const pieces = usePieces();
   const includedDesigns = useIncludedDesigns();
@@ -5494,6 +5578,7 @@ export function usePiecesFromIds(pieceIds: Guid[]) {
   }, [pieceIds, piecesMap, includedDesignMap]);
 }
 
+// Hook returning replaceable types for the specified pieces with optional variant filtering.
 export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]) {
   const kitTypes = useKitTypes();
   const designScope = useDesignScope();
@@ -5512,6 +5597,7 @@ export function useReplacableTypes(pieceIds: Guid[], selectedVariants?: string[]
   }, [kitTypes, pieces, connections, designScope?.guid, pieceIds, selectedVariants]);
 }
 
+// Hook returning replaceable design alternatives for a piece.
 export function useReplacableDesigns(piece: Piece) {
   const kitDesigns = useKitDesigns();
   const designScope = useDesignScope();
@@ -5524,6 +5610,7 @@ export function useReplacableDesigns(piece: Piece) {
   }, [kitDesigns, designScope?.guid, pieces, piece]);
 }
 
+// Hook returning design nodes that can be exploded from the current selection.
 export function useExplodeableDesignNodes(nodes: any[], selection: any) {
   const kitDesigns = useKitDesigns();
   return useMemo(() => {
@@ -5542,6 +5629,7 @@ export function useExplodeableDesignNodes(nodes: any[], selection: any) {
 // #endregion 🔖Design
 
 // #region 🔖Kit
+// Yjs-backed kit store managing the complete kit data structure.
 
 type YConceptVal = string | YAttributes;
 type YConcept = Y.Map<YConceptVal>;
@@ -5701,6 +5789,7 @@ type YKitVal = string | Y.Array<string> | YIdMap | YAttributes | YAuthors | YFil
 type YKit = Y.Map<YKitVal>;
 type YKits = Y.Array<YKit>;
 
+// Yjs-backed kit store managing the complete kit data structure with all entities.
 export class KitStore {
   public readonly parent: SketchpadStore;
   private readonly remoteProviders: RemoteProviders | undefined;
@@ -6505,6 +6594,7 @@ export class KitStore {
   };
 
   // #region 🔖YPath API
+  // Path-based observation and subscription API for deep kit Yjs map access.
 
   private pathSubscribers: Map<string, Set<() => void>> = new Map();
   private pathObservers: Map<string, Disposable> = new Map();
@@ -6818,13 +6908,17 @@ export class KitStore {
 
 type KitScope = { guid: string };
 const KitScopeContext = createContext<KitScope | null>(null);
+// React context provider scoping kit by guid.
 export const KitScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(KitScopeContext.Provider, { value }, props.children as any);
 };
+// Hook returning the current kit scope context.
 export const useKitScope = () => useContext(KitScopeContext);
+// Hook returning whether a kit scope is active.
 export const useIsInKitScope = () => useKitScope() !== null;
 
+// Hook for accessing the kit store with optional selector.
 export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string): T | KitStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -6834,6 +6928,7 @@ export function useKitStore<T>(selector?: (store: KitStore) => T, guid?: string)
   return selector ? selector(kitStore) : kitStore;
 }
 
+// Hook for accessing kit data with optional selector.
 export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, deep: boolean = false): T | KitShallow | Kit | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -6846,6 +6941,7 @@ export function useKit<T>(selector?: (kit: KitShallow | Kit) => T, guid?: Guid, 
 }
 
 // #region 🔖Targeted Kit Hooks
+// React hooks for accessing specific kit data through scope providers.
 
 const EMPTY_TYPES: Type[] = [];
 const EMPTY_AUTHORS: Author[] = [];
@@ -6869,6 +6965,7 @@ const selectPorts = (k: KitShallow | Kit) => k.ports ?? EMPTY_INTERFACES;
 const selectTags = (k: KitShallow | Kit) => k.tags ?? EMPTY_TAGS;
 const selectConcepts = (k: KitShallow | Kit) => k.concepts ?? EMPTY_CONCEPTS;
 
+// Hook returning all types in the targeted kit.
 export function useKitTypes(guid?: Guid): Type[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
@@ -6894,6 +6991,7 @@ export function useKitTypes(guid?: Guid): Type[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning the name of the targeted kit.
 export function useKitName(guid?: Guid): string {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
@@ -6918,6 +7016,7 @@ export function useKitName(guid?: Guid): string {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning the description of the targeted kit.
 export function useKitDescription(guid?: Guid): string | undefined {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
@@ -6942,6 +7041,7 @@ export function useKitDescription(guid?: Guid): string | undefined {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning all authors of the targeted kit.
 export function useKitAuthors(guid?: Guid): Author[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
@@ -6967,6 +7067,7 @@ export function useKitAuthors(guid?: Guid): Author[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning all files of the targeted kit.
 export function useKitFiles(guid?: Guid): SemioFile[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
@@ -6992,6 +7093,7 @@ export function useKitFiles(guid?: Guid): SemioFile[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning all qualities of the targeted kit.
 export function useKitQualities(guid?: Guid): Quality[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
@@ -7017,6 +7119,7 @@ export function useKitQualities(guid?: Guid): Quality[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning all designs of the targeted kit.
 export function useKitDesigns(guid?: Guid): Design[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
@@ -7042,10 +7145,12 @@ export function useKitDesigns(guid?: Guid): Design[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning all designs from the current kit scope.
 export function useDesigns(): Design[] {
   return useKitDesigns();
 }
 
+// Hook returning all folders of the targeted kit.
 export function useKitFolders(guid?: Guid): Folder[] {
   const kitScope = useKitScope();
   const resolvedGuid = guid ?? kitScope?.guid;
@@ -7071,28 +7176,34 @@ export function useKitFolders(guid?: Guid): Folder[] {
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook returning all ports of the targeted kit.
 export function useKitPorts(guid?: Guid): Port[] {
   return useKit(selectPorts, guid, true) as Port[];
 }
 
+// Hook returning all tags of the targeted kit.
 export function useKitTags(guid?: Guid): Tag[] {
   return useKit(selectTags, guid, true) as Tag[];
 }
 
+// Hook returning all concepts of the targeted kit.
 export function useKitConcepts(guid?: Guid): Concept[] {
   return useKit(selectConcepts, guid, true) as Concept[];
 }
 
+// Hook returning a specific type from the kit by guid.
 export function useTypeFromKit(typeGuid: Guid, kitGuid?: Guid): Type | undefined {
   const kitTypes = useKitTypes(kitGuid);
   return useMemo(() => kitTypes?.find((t) => t.guid === typeGuid), [kitTypes, typeGuid]);
 }
 
+// Hook returning a specific design from the kit by guid.
 export function useDesignFromKit(designGuid: Guid, kitGuid?: Guid): Design | undefined {
   const kitDesigns = useKitDesigns(kitGuid);
   return useMemo(() => kitDesigns?.find((d) => d.guid === designGuid), [kitDesigns, designGuid]);
 }
 
+// Hook returning connector compatibility information for the targeted kit.
 export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } {
   const ports = useKitPorts(kitGuid);
   return useMemo(() => ({ ports }), [ports]);
@@ -7100,6 +7211,7 @@ export function useKitConnectorCompatibility(kitGuid?: Guid): { ports: Port[] } 
 
 // #endregion 🔖Targeted Kit Hooks
 
+// Hook returning the resolved file URL map from the current kit store.
 export function useFileUrls(): Map<Url, Url> {
   const kitStore = useKitStore() as KitStore | null;
   if (!kitStore) {
@@ -7108,6 +7220,7 @@ export function useFileUrls(): Map<Url, Url> {
   return kitStore.fileUrls;
 }
 
+// Hook returning the transaction interface for the current kit.
 export function useKitTransaction(): Transaction {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -7128,6 +7241,7 @@ export function useKitTransaction(): Transaction {
   };
 }
 
+// Hook returning the command execution interface for the current kit.
 export function useKitCommands() {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -7185,9 +7299,11 @@ export function useKitCommands() {
 // #endregion 🔖Kit
 
 // #region 🔖Commands
+// Kit command definitions for import, export, and sync operations.
 
 const sqlWasmUrl = "https://sql.js.org/dist/sql-wasm.wasm";
 
+// Command map for kit CRUD operations on authors, types, designs, and other kit entities.
 export const kitCommands = {
   "semio.kit.createAuthor": (context: KitCommandContext, author: Author): KitCommandResult => {
     return {
@@ -7624,7 +7740,9 @@ export const kitCommands = {
 // #region 🔖Machine
 
 // #region 🔖Types
+// Type definitions for app state, machine input, and context structures.
 
+// Default panel visibility configuration with all panels hidden.
 export const defaultPanelVisibility: PanelVisibility = {
   toolbar: false,
   workbench: false,
@@ -7634,10 +7752,13 @@ export const defaultPanelVisibility: PanelVisibility = {
 };
 
 // #region 🔖App State Types
+// State shape interfaces for all application views: home, kit, design, type, quality.
 
+// Selection state for the home app view.
 export interface HomeAppSelection {
   kits?: Guid[];
 }
+// State for the home app view including panel visibility, selection, and sorting.
 export interface HomeAppState {
   panelVisibility: PanelVisibility;
   selection?: HomeAppSelection;
@@ -7647,8 +7768,11 @@ export interface HomeAppState {
   loadingKits: Array<{ tempGuid: string; name: string }>;
 }
 
+// Kind of feedback: bug report or idea suggestion.
 export type FeedbackKind = "bug" | "idea";
+// Kind of app context for feedback submission.
 export type FeedbackAppKind = "home" | "kit" | "design" | "type" | "quality" | "docs" | "feedback";
+// Form data shape for feedback submissions.
 export interface FeedbackFormData {
   kind: FeedbackKind;
   title: string;
@@ -7657,6 +7781,7 @@ export interface FeedbackFormData {
   name?: string;
   email?: string;
 }
+// State for the feedback app view.
 export interface FeedbackAppState {
   panelVisibility: PanelVisibility;
   formData: FeedbackFormData;
@@ -7665,6 +7790,7 @@ export interface FeedbackAppState {
   error?: string;
 }
 
+// Selection state for the kit app view.
 export interface KitAppSelection {
   types?: Guid[];
   designs?: Guid[];
@@ -7672,23 +7798,27 @@ export interface KitAppSelection {
   files?: Guid[];
   authors?: Guid[];
 }
+// Force simulation settings for the kit diagram view.
 export interface DiagramForceSettings {
   chargeStrength: number;
   linkDistance: number;
   collideRadius: number;
   centerStrength: number;
 }
+// Default force simulation settings for the kit diagram.
 export const defaultDiagramForceSettings: DiagramForceSettings = {
   chargeStrength: -150,
   linkDistance: 100,
   collideRadius: 40,
   centerStrength: 0.05,
 };
+// Fullscreen window options for the kit app view.
 export enum KitAppFullscreenWindow {
   None = "none",
   Table = "table",
   Diagram = "diagram",
 }
+// State for the kit app view including layout, selection, tools, and transactions.
 export interface KitAppState {
   panelVisibility: PanelVisibility;
   selection?: KitAppSelection;
@@ -7706,19 +7836,23 @@ export interface KitAppState {
   transaction: AppTransactionState;
 }
 
+// Selection state for the type app view.
 export interface TypeAppSelection {
   connectors?: Guid[];
   models?: Guid[];
 }
+// Hover state for the type app view.
 export interface TypeAppHover {
   connector?: Guid;
   model?: Guid;
 }
+// Fullscreen window options for the type app view.
 export enum TypeAppFullscreenWindow {
   None = "none",
   Scene = "scene",
 }
 
+// Transaction state tracking undo/redo stacks for app operations.
 export interface AppTransactionState<TEdit = any> {
   isTransactionActive: boolean;
   currentTransactionStack: TEdit[];
@@ -7726,6 +7860,7 @@ export interface AppTransactionState<TEdit = any> {
   redoStack: TEdit[];
 }
 
+// State for the type app view including tools, camera, and transactions.
 export interface TypeAppState {
   panelVisibility: PanelVisibility;
   activeTool: ToolKind;
@@ -7741,11 +7876,13 @@ export interface TypeAppState {
   transaction: AppTransactionState;
 }
 
+// Selection state for the design app view.
 export interface DesignAppSelection {
   pieces?: Guid[];
   connections?: Guid[];
   connectors?: Array<{ piece: Guid; connector: Guid }>;
 }
+// Hover state for the design app view.
 export interface DesignAppHover {
   pieces?: Guid[];
   connections?: Guid[];
@@ -7753,11 +7890,13 @@ export interface DesignAppHover {
   types?: Guid[];
   designs?: Guid[];
 }
+// Fullscreen window options for the design app view.
 export enum DesignAppFullscreenWindow {
   None = "none",
   Diagram = "diagram",
   Accessl = "accessl",
 }
+// State for the design app view including selection, camera, tools, and transactions.
 export interface DesignAppState {
   panelVisibility: PanelVisibility;
   selection?: DesignAppSelection;
@@ -7773,9 +7912,11 @@ export interface DesignAppState {
   transaction: AppTransactionState;
 }
 
+// Selection state for the quality app view.
 export interface QualityAppSelection {
   benchmarks?: Guid[];
 }
+// State for the quality app view.
 export interface QualityAppState {
   panelVisibility: PanelVisibility;
   selection?: QualityAppSelection;
@@ -7785,6 +7926,7 @@ export interface QualityAppState {
   transaction: AppTransactionState;
 }
 
+// Single step in a tutorial sequence.
 export interface TutorialStep {
   id: string;
   title: string;
@@ -7794,6 +7936,7 @@ export interface TutorialStep {
   completed?: boolean;
 }
 
+// Context state for managing the active tutorial and progress.
 export interface TutorialContext {
   activeTutorial?: string;
   currentStepIndex: number;
@@ -7806,11 +7949,13 @@ export interface TutorialContext {
 
 // #endregion 🔖App State Types
 
+// Input configuration for the sketchpad XState machine.
 export interface SketchpadMachineInput {
   id?: string;
   initialState?: Partial<SketchpadState>;
 }
 
+// Context state shape for the sketchpad XState machine.
 export interface SketchpadContext {
   id?: string;
   sketchpad: SketchpadState;
@@ -7828,6 +7973,7 @@ export interface SketchpadContext {
   backgroundOperations: Record<string, { type: string; status: "pending" | "running" | "completed" | "failed"; error?: string }>;
 }
 
+// Union type of all events the sketchpad machine can receive.
 export type SketchpadEvent =
   | { type: "NAVIGATE"; path: string }
   | { type: "NAVIGATE_BACK" }
@@ -7958,6 +8104,7 @@ export type SketchpadEvent =
 // #endregion 🔖Types
 
 // #region 🔖Helpers
+// Helper functions for path migration, default state creation, and store initialization.
 
 function migratePath(path: string): string {
   if (path.match(/^\/kit\/([^/]+)\/design\/([^/]+)/)) {
@@ -8086,6 +8233,7 @@ function applyDiff(yDoc: Y.Doc, ySketchpad: Y.Map<any>, diff: SketchpadDiff): vo
   });
 }
 
+// Creates the default empty transaction state.
 export function createDefaultTransactionState(): AppTransactionState {
   return {
     isTransactionActive: false,
@@ -8095,6 +8243,7 @@ export function createDefaultTransactionState(): AppTransactionState {
   };
 }
 
+// Creates the default design app state with initial transaction and panel settings.
 export function createDefaultDesignAppState(): DesignAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
@@ -8111,6 +8260,7 @@ export function createDefaultDesignAppState(): DesignAppState {
   };
 }
 
+// Creates the default type app state with initial transaction and panel settings.
 export function createDefaultTypeAppState(): TypeAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
@@ -8127,6 +8277,7 @@ export function createDefaultTypeAppState(): TypeAppState {
   };
 }
 
+// Creates the default kit app state with initial transaction and panel settings.
 export function createDefaultKitAppState(): KitAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
@@ -8144,6 +8295,7 @@ export function createDefaultKitAppState(): KitAppState {
   };
 }
 
+// Creates the default quality app state with initial transaction and panel settings.
 export function createDefaultQualityAppState(): QualityAppState {
   return {
     panelVisibility: { ...defaultPanelVisibility, toolbar: true },
@@ -8282,7 +8434,9 @@ function applySketchpadDiffToState(state: SketchpadState, diff: SketchpadDiff): 
 // #endregion 🔖Helpers
 
 // #region 🔖Sketchpad Machine
+// XState state machine definition for the sketchpad application lifecycle.
 
+// XState machine governing sketchpad navigation, kit management, and app state transitions.
 export const sketchpadMachine = setup({
   types: {
     context: {} as SketchpadContext,
@@ -8650,8 +8804,11 @@ export const sketchpadMachine = setup({
 });
 
 // #region 🔖Sketchpad Selectors
+// Selector functions for extracting state from the sketchpad machine context.
 
+// Union of possible navigation state values.
 export type NavigationState = "home" | "kit" | "design" | "type" | "quality" | "docs";
+// Selector deriving the current navigation state from the machine value.
 export const selectNavigationState = (state: { value: any }): NavigationState => {
   const value = state.value;
   if (typeof value === "object" && "navigation" in value) {
@@ -8663,22 +8820,37 @@ export const selectNavigationState = (state: { value: any }): NavigationState =>
   }
   return "home";
 };
+// Selector returning whether the navigation state is home.
 export const selectIsInHome = (state: { value: any }): boolean => selectNavigationState(state) === "home";
+// Selector returning whether the navigation state is kit.
 export const selectIsInKit = (state: { value: any }): boolean => selectNavigationState(state) === "kit";
+// Selector returning whether the navigation state is design.
 export const selectIsInDesign = (state: { value: any }): boolean => selectNavigationState(state) === "design";
+// Selector returning whether the navigation state is type.
 export const selectIsInType = (state: { value: any }): boolean => selectNavigationState(state) === "type";
+// Selector returning whether the navigation state is quality.
 export const selectIsInQuality = (state: { value: any }): boolean => selectNavigationState(state) === "quality";
+// Selector returning whether the navigation state is docs.
 export const selectIsInDocs = (state: { value: any }): boolean => selectNavigationState(state) === "docs";
 
+// Selector returning the home app state.
 export const selectHomeApp = (state: { context: SketchpadContext }) => state.context.homeApp;
+// Selector returning the home app panel visibility.
 export const selectHomePanelVisibility = (state: { context: SketchpadContext }) => state.context.homeApp.panelVisibility;
+// Selector returning the home app selection.
 export const selectHomeSelection = (state: { context: SketchpadContext }) => state.context.homeApp.selection;
+// Selector returning the home app hover.
 export const selectHomeHover = (state: { context: SketchpadContext }) => state.context.homeApp.hover;
+// Selector returning the home app sort column.
 export const selectHomeSortColumn = (state: { context: SketchpadContext }) => state.context.homeApp.sortColumn;
+// Selector returning the home app sort direction.
 export const selectHomeSortDirection = (state: { context: SketchpadContext }) => state.context.homeApp.sortDirection;
+// Selector returning the home app loading kits.
 export const selectHomeLoadingKits = (state: { context: SketchpadContext }) => state.context.homeApp.loadingKits;
 
+// Selector returning background operations.
 export const selectBackgroundOperations = (state: { context: SketchpadContext }) => state.context.backgroundOperations;
+// Selector returning kit import operations from background operations.
 export const selectKitImportOperations = (state: { context: SketchpadContext }) => {
   const ops = state.context.backgroundOperations;
   return Object.entries(ops)
@@ -8691,66 +8863,79 @@ export const selectKitImportOperations = (state: { context: SketchpadContext }) 
     }));
 };
 
+// Creates a selector for the design app state by kit and design guid.
 export const createDesignAppSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key] || createDefaultDesignAppState();
 };
 
+// Creates a selector for the design panel visibility.
 export const createDesignPanelVisibilitySelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.panelVisibility ?? defaultPanelVisibility;
 };
 
+// Creates a selector for the design selection.
 export const createDesignSelectionSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.selection;
 };
 
+// Creates a selector for the design hover.
 export const createDesignHoverSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.hover;
 };
 
+// Creates a selector for the design focused piece.
 export const createDesignFocusedPieceSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.focusedPiece;
 };
 
+// Creates a selector for the design selected model tags.
 export const createDesignSelectedModelTagsSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.selectedModelTags ?? {};
 };
 
+// Creates a selector for the design diagram center.
 export const createDesignDiagramCenterSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.diagramCenter;
 };
 
+// Creates a selector for the design diagram scale.
 export const createDesignDiagramScaleSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.diagramScale;
 };
 
+// Creates a selector for the design camera.
 export const createDesignCameraSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.camera;
 };
 
+// Creates a selector for the design active tool.
 export const createDesignActiveToolSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.activeTool;
 };
 
+// Creates a selector for the design fullscreen window.
 export const createDesignFullscreenWindowSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.fullscreenWindow;
 };
 
+// Creates a selector for the design others.
 export const createDesignOthersSelector = (kitGuid: Guid, designGuid: Guid) => {
   const key = `${kitGuid}:${designGuid}`;
   return (state: { context: SketchpadContext }) => state.context.designApps[key]?.others ?? [];
 };
 
+// Creates a selector for the type app state by kit and type guid.
 export const createTypeAppSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => {
@@ -8759,99 +8944,121 @@ export const createTypeAppSelector = (kitGuid: Guid, typeGuid: Guid) => {
   };
 };
 
+// Creates a selector for the type panel visibility.
 export const createTypePanelVisibilitySelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.panelVisibility ?? defaultPanelVisibility;
 };
 
+// Creates a selector for the type selection.
 export const createTypeSelectionSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.selection;
 };
 
+// Creates a selector for the type focused connector.
 export const createTypeFocusedConnectorSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.focusedConnector;
 };
 
+// Creates a selector for the type selected model tags.
 export const createTypeSelectedModelTagsSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.selectedModelTags ?? [];
 };
 
+// Creates a selector for the type camera.
 export const createTypeCameraSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.camera;
 };
 
+// Creates a selector for the type active tool.
 export const createTypeActiveToolSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.activeTool ?? ToolKind.SELECTION_NORMAL;
 };
 
+// Creates a selector for the type hover.
 export const createTypeHoverSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.hover;
 };
 
+// Creates a selector for the type fullscreen window.
 export const createTypeFullscreenWindowSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.fullscreenWindow ?? TypeAppFullscreenWindow.None;
 };
 
+// Creates a selector for the type others.
 export const createTypeOthersSelector = (kitGuid: Guid, typeGuid: Guid) => {
   const key = `${kitGuid}:${typeGuid}`;
   return (state: { context: SketchpadContext }) => state.context.typeApps[key]?.others ?? [];
 };
 
+// Creates a selector for the kit app state.
 export const createKitAppSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid] ?? createDefaultKitAppState();
 };
 
+// Creates a selector for the kit panel visibility.
 export const createKitPanelVisibilitySelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.panelVisibility ?? defaultPanelVisibility;
 };
 
+// Creates a selector for the kit selection.
 export const createKitSelectionSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.selection;
 };
 
+// Creates a selector for the kit hover.
 export const createKitHoverSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.hover;
 };
 
+// Creates a selector for the kit filter search.
 export const createKitFilterSearchSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.filterSearch ?? "";
 };
 
+// Creates a selector for the kit expanded rows.
 export const createKitExpandedRowsSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.expandedRows ?? new Set<string>();
 };
 
+// Creates a selector for the kit sort column.
 export const createKitSortColumnSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.sortColumn ?? "artifact";
 };
 
+// Creates a selector for the kit sort direction.
 export const createKitSortDirectionSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.sortDirection ?? "asc";
 };
 
+// Creates a selector for the kit fullscreen window.
 export const createKitFullscreenSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.fullscreenWindow ?? KitAppFullscreenWindow.None;
 };
 
+// Creates a selector for the kit others.
 export const createKitOthersSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.others ?? [];
 };
 
+// Creates a selector for the kit window layout.
 export const createKitWindowLayoutSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.windowLayout;
 };
 
+// Creates a selector for the kit diagram force settings.
 export const createKitDiagramForceSelector = (kitGuid: Guid) => {
   return (state: { context: SketchpadContext }) => state.context.kitApps[kitGuid]?.diagramForce;
 };
 
+// Creates a selector for the quality app state by kit and quality guid.
 export const createQualityAppSelector = (kitGuid: Guid, qualityGuid: Guid) => {
   const key = `${kitGuid}:${qualityGuid}`;
   return (state: { context: SketchpadContext }) => {
@@ -8868,30 +9075,48 @@ export const createQualityAppSelector = (kitGuid: Guid, qualityGuid: Guid) => {
   };
 };
 
+// Creates a selector for the quality panel visibility.
 export const createQualityPanelVisibilitySelector = (kitGuid: Guid, qualityGuid: Guid) => {
   const key = `${kitGuid}:${qualityGuid}`;
   return (state: { context: SketchpadContext }) => state.context.qualityApps[key]?.panelVisibility ?? defaultPanelVisibility;
 };
 
+// Selector returning the tutorial context.
 export const selectTutorial = (state: { context: SketchpadContext }) => state.context.tutorial;
+// Selector returning the active tutorial identifier.
 export const selectActiveTutorial = (state: { context: SketchpadContext }) => state.context.tutorial.activeTutorial;
+// Selector returning the tutorial current step index.
 export const selectTutorialCurrentStep = (state: { context: SketchpadContext }) => state.context.tutorial.currentStepIndex;
+// Selector returning the tutorial steps.
 export const selectTutorialSteps = (state: { context: SketchpadContext }) => state.context.tutorial.steps;
 
+// Selector returning the sketchpad kits map.
 export const selectSketchpadKits = (state: { context: SketchpadContext }) => state.context.kits;
 
+// Selector returning the sketchpad state.
 export const selectSketchpadState = (state: { context: SketchpadContext }) => state.context.sketchpad;
 
+// Selector returning the sketchpad navigation path.
 export const selectSketchpadNavigation = (state: { context: SketchpadContext }) => migratePath(state.context.sketchpad.navigation || "/");
+// Selector returning the sketchpad theme.
 export const selectSketchpadTheme = (state: { context: SketchpadContext }) => state.context.sketchpad.theme;
+// Selector returning the sketchpad language.
 export const selectSketchpadLanguage = (state: { context: SketchpadContext }) => state.context.sketchpad.language || "en";
+// Selector returning the sketchpad expertise level.
 export const selectSketchpadExpertise = (state: { context: SketchpadContext }) => state.context.sketchpad.expertise ?? Expertise.BEGINNER;
+// Selector returning the sketchpad mode.
 export const selectSketchpadMode = (state: { context: SketchpadContext }) => state.context.sketchpad.mode ?? Mode.USER;
+// Selector returning the sketchpad device.
 export const selectSketchpadDevice = (state: { context: SketchpadContext }) => state.context.sketchpad.device || "desktop";
+// Selector returning whether the sketchpad is fullscreen.
 export const selectSketchpadIsFullscreen = (state: { context: SketchpadContext }) => state.context.sketchpad.isFullscreen || false;
+// Selector returning the sketchpad panel sizes.
 export const selectSketchpadPanelSizes = (state: { context: SketchpadContext }) => state.context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
+// Selector returning the sketchpad navigation history.
 export const selectSketchpadNavigationHistory = (state: { context: SketchpadContext }) => (state.context.sketchpad.navigationHistory || ["/"]).map(migratePath);
+// Selector returning the sketchpad navigation history index.
 export const selectSketchpadNavigationHistoryIndex = (state: { context: SketchpadContext }) => state.context.sketchpad.navigationHistoryIndex ?? 0;
+// Selector returning the sketchpad settings.
 export const selectSketchpadSettings = (state: { context: SketchpadContext }) => state.context.sketchpad.settings || createDefaultSketchpadState().settings;
 
 const getAppTransaction = (context: SketchpadContext, appKey: string): AppTransactionState | undefined => {
@@ -8917,16 +9142,20 @@ const defaultTransactionState: AppTransactionState = {
   redoStack: [],
 };
 
+// Creates a selector for the transaction state of a given app key.
 export const createTransactionSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppTransaction(state.context, appKey) || defaultTransactionState;
 
+// Creates a selector returning whether a transaction is active.
 export const createTransactionIsActiveSelector = (appKey: string) => (state: { context: SketchpadContext }) => getAppTransaction(state.context, appKey)?.isTransactionActive ?? false;
 
+// Creates a selector returning whether an undo operation is available.
 export const createTransactionCanUndoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
   const tx = getAppTransaction(state.context, appKey);
   if (!tx) return false;
   return tx.isTransactionActive ? tx.currentTransactionStack.length > 0 : tx.pastTransactionStack.length > 0;
 };
 
+// Creates a selector returning whether a redo operation is available.
 export const createTransactionCanRedoSelector = (appKey: string) => (state: { context: SketchpadContext }) => {
   const tx = getAppTransaction(state.context, appKey);
   if (!tx) return false;
@@ -8937,37 +9166,50 @@ export const createTransactionCanRedoSelector = (appKey: string) => (state: { co
 
 // #endregion 🔖Sketchpad Machine
 
+// Union of entity kind identifiers for UI selection and hover.
 export type UiEntityKind = "kit" | "type" | "design" | "piece" | "connection" | "connector" | "model" | "quality" | "benchmark" | "file" | "folder" | "author" | "port" | "tag" | "concept";
 
+// Selector extracting the active kit guid from the navigation path.
 export const selectUiActiveKitGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
   const match = path.match(/\/kit\/([^/]+)/);
   return match ? match[1] : undefined;
 };
+// Selector extracting the active design guid from the navigation path.
 export const selectUiActiveDesignGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
   const match = path.match(/\/design\/([^/]+)/);
   return match ? match[1] : undefined;
 };
+// Selector extracting the active type guid from the navigation path.
 export const selectUiActiveTypeGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
   const match = path.match(/\/type\/([^/]+)/);
   return match ? match[1] : undefined;
 };
+// Selector extracting the active quality guid from the navigation path.
 export const selectUiActiveQualityGuid = (state: { context: SketchpadContext }) => {
   const path = state.context.sketchpad?.navigation || "/";
   const match = path.match(/\/quality\/([^/]+)/);
   return match ? match[1] : undefined;
 };
+// Selector alias for checking home navigation.
 export const selectUiIsInHome = selectIsInHome;
+// Selector alias for checking kit navigation.
 export const selectUiIsInKit = selectIsInKit;
+// Selector alias for checking design navigation.
 export const selectUiIsInDesign = selectIsInDesign;
+// Selector alias for checking type navigation.
 export const selectUiIsInType = selectIsInType;
+// Selector alias for checking quality navigation.
 export const selectUiIsInQuality = selectIsInQuality;
+// Selector alias for checking docs navigation.
 export const selectUiIsInDocs = selectIsInDocs;
 
 // #region 🔖Factory
+// Factory function to instantiate the sketchpad actor.
 
+// Instantiates and returns a sketchpad XState actor from the given input.
 export function createSketchpadActor(input: SketchpadMachineInput) {
   return createActor(sketchpadMachine, {
     input,
@@ -8984,7 +9226,9 @@ export function createSketchpadActor(input: SketchpadMachineInput) {
 // #endregion 🔖Factory
 
 // #region 🔖Legacy Type Exports
+// Legacy type exports for backward compatibility with existing consumers.
 
+// Legacy transaction context interface with typed edits.
 export interface TransactionContext<TEdit = any> {
   isTransactionActive: boolean;
   currentTransactionStack: TEdit[];
@@ -8993,10 +9237,12 @@ export interface TransactionContext<TEdit = any> {
   lastDeletedEdit?: TEdit;
 }
 
+// Legacy app machine input interface with optional identifier.
 export interface AppMachineInput<TId = any> {
   id?: TId;
 }
 
+// Legacy app machine context with selection and transaction state.
 export interface AppMachineContext<TSelection = any, TId = any> {
   id?: TId;
   panelVisibility: PanelVisibility;
@@ -9008,6 +9254,7 @@ export interface AppMachineContext<TSelection = any, TId = any> {
   redoStack: any[];
 }
 
+// Legacy kit machine input with Yjs document and map references.
 export interface KitMachineInput {
   yDoc: Y.Doc;
   yKit: Y.Map<any>;
@@ -9016,6 +9263,7 @@ export interface KitMachineInput {
   remote?: boolean;
 }
 
+// Legacy kit context with Yjs-backed state and caching.
 export interface KitContext {
   yDoc: Y.Doc;
   yKit: Y.Map<any>;
@@ -9026,6 +9274,7 @@ export interface KitContext {
   cache?: Kit;
 }
 
+// Legacy kit event union for CRUD and synchronization operations.
 export type KitEvent =
   | { type: "CHANGE"; diff: KitDiff }
   | { type: "CREATE_TYPE"; typeData: any }
@@ -9052,50 +9301,62 @@ function buildKitSnapshot(yKit: Y.Map<any>): Partial<Kit> {
   };
 }
 
+// Legacy selector returning the sketchpad state snapshot.
 export function selectSnapshot(context: SketchpadContext): SketchpadState {
   return context.sketchpad;
 }
 
+// Legacy selector returning the navigation path.
 export function selectNavigation(context: SketchpadContext): string {
   return migratePath(context.sketchpad.navigation || "/");
 }
 
+// Legacy selector returning the theme.
 export function selectTheme(context: SketchpadContext): Theme {
   return context.sketchpad.theme;
 }
 
+// Legacy selector returning the language.
 export function selectLanguage(context: SketchpadContext): string {
   return context.sketchpad.language || "en";
 }
 
+// Legacy selector returning the expertise level.
 export function selectExpertise(context: SketchpadContext): Expertise {
   return context.sketchpad.expertise ?? Expertise.BEGINNER;
 }
 
+// Legacy selector returning the mode.
 export function selectMode(context: SketchpadContext): Mode {
   return context.sketchpad.mode ?? Mode.USER;
 }
 
+// Legacy selector returning the device.
 export function selectDevice(context: SketchpadContext): Device {
   return context.sketchpad.device || "desktop";
 }
 
+// Legacy selector returning whether fullscreen is active.
 export function selectIsFullscreen(context: SketchpadContext): boolean {
   return context.sketchpad.isFullscreen || false;
 }
 
+// Legacy selector returning the panel sizes.
 export function selectPanelSizes(context: SketchpadContext): PanelSizes {
   return context.sketchpad.panelSizes || createDefaultSketchpadState().panelSizes;
 }
 
+// Legacy selector returning the kit guid from kit context.
 export function selectKitGuid(context: KitContext): Guid {
   return context.yKit.get("guid") as Guid;
 }
 
+// Legacy selector returning the kit name from kit context.
 export function selectKitName(context: KitContext): string {
   return context.yKit.get("name") as string;
 }
 
+// Legacy selector returning the kit snapshot with optional caching.
 export function selectKitSnapshot(context: KitContext): Partial<Kit> {
   if (!context.dirty && context.cache) {
     return context.cache;
@@ -9106,13 +9367,18 @@ export function selectKitSnapshot(context: KitContext): Partial<Kit> {
 // #endregion 🔖Legacy Type Exports
 
 // #region 🔖Actor Types
+// Type aliases for the sketchpad XState actor references and snapshots.
 
+// Actor reference type for the sketchpad machine.
 export type SketchpadActorRef = ActorRefFrom<typeof sketchpadMachine>;
 
+// Snapshot type for the sketchpad machine.
 export type SketchpadSnapshot = SnapshotFrom<typeof sketchpadMachine>;
 
+// State type alias for the sketchpad context.
 export type SketchpadState$ = { context: SketchpadContext };
 
+// React context holding the sketchpad actor reference.
 export const SketchpadActorContext = createContext<SketchpadActorRef | null>(null);
 
 // #endregion 🔖Actor Types
@@ -9120,9 +9386,12 @@ export const SketchpadActorContext = createContext<SketchpadActorRef | null>(nul
 // #endregion 🔖Machine
 
 // #region 🔖Apps
+// App-specific hooks for design, type, kit, and sketchpad views.
 
 // #region 🔖Design
+// Design app hooks for piece and connection selection, hover, and diff state.
 
+// Hook returning whether the current scoped piece is selected.
 export function useIsPieceSelected(): boolean {
   const piece = usePieceScope();
   const { useDesignAppIsPieceSelected } = getDesignAppHooks();
@@ -9130,6 +9399,7 @@ export function useIsPieceSelected(): boolean {
   return useDesignAppIsPieceSelected(undefined, piece?.guid ?? "");
 }
 
+// Hook returning whether the current scoped piece is hovered.
 export function useIsPieceHovered(): boolean {
   const pieceScope = usePieceScope();
   const { useDesignAppIsPieceHovered } = getDesignAppHooks();
@@ -9137,6 +9407,7 @@ export function useIsPieceHovered(): boolean {
   return useDesignAppIsPieceHovered(undefined, pieceScope?.guid ?? "");
 }
 
+// Hook returning whether the current scoped piece is transitively hovered.
 export function useIsPieceTransitiveHovered(): boolean {
   const pieceScope = usePieceScope();
   const { useDesignAppIsPieceTransitiveHovered } = getDesignAppHooks();
@@ -9146,6 +9417,7 @@ export function useIsPieceTransitiveHovered(): boolean {
   return isHovered;
 }
 
+// Hook returning the diff status of the current scoped piece.
 export function usePieceStatus(): DiffStatus {
   const piece = usePieceScope();
   const designScope = useDesignScope();
@@ -9191,6 +9463,7 @@ export function usePieceStatus(): DiffStatus {
   return DiffStatus.Unchanged;
 }
 
+// Hook returning the diffed piece with applied transaction edits.
 export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, deep: boolean = false): T | Piece {
   const originalPiece = usePiece(identitySelector, id, deep) as Piece;
   const pieceScope = usePieceScope();
@@ -9225,6 +9498,7 @@ export function useDiffedPiece<T>(selector?: (piece: Piece) => T, id?: string, d
   return selector ? selector(diffedPiece) : diffedPiece;
 }
 
+// Hook returning the piece center U coordinate with setter.
 export function usePieceCenterU(): HookResult<number> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
@@ -9239,6 +9513,7 @@ export function usePieceCenterU(): HookResult<number> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.u ?? 0, setter);
 }
 
+// Hook returning the piece center V coordinate with setter.
 export function usePieceCenterV(): HookResult<number> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
@@ -9253,6 +9528,7 @@ export function usePieceCenterV(): HookResult<number> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.center?.v ?? 0, setter);
 }
 
+// Hook returning the piece scale with setter.
 export function usePieceScale(): HookResult<number> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
@@ -9267,6 +9543,7 @@ export function usePieceScale(): HookResult<number> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.scale ?? 1, setter);
 }
 
+// Hook returning the piece hidden state with setter.
 export function usePieceIsHidden(): HookResult<boolean> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
@@ -9281,6 +9558,7 @@ export function usePieceIsHidden(): HookResult<boolean> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.isHidden ?? false, setter);
 }
 
+// Hook returning the piece locked state with setter.
 export function usePieceIsLocked(): HookResult<boolean> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
@@ -9295,6 +9573,7 @@ export function usePieceIsLocked(): HookResult<boolean> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.isLocked ?? false, setter);
 }
 
+// Hook returning the piece color with setter.
 export function usePieceColor(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
@@ -9309,6 +9588,7 @@ export function usePieceColor(): HookResult<string | undefined> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.color, setter);
 }
 
+// Hook returning the piece description with setter.
 export function usePieceDescription(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
@@ -9323,6 +9603,7 @@ export function usePieceDescription(): HookResult<string | undefined> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.description, setter);
 }
 
+// Hook returning the piece name with setter.
 export function usePieceName(): HookResult<string | undefined> {
   const pieceScope = usePieceScope();
   const piece = usePiece() as Piece | null;
@@ -9337,6 +9618,7 @@ export function usePieceName(): HookResult<string | undefined> {
   return conditionalHookResult(!!pieceScope && !!piece, piece?.name, setter);
 }
 
+// Hook returning whether the current scoped connection is selected.
 export function useIsConnectionSelected(): boolean {
   const connectionScope = useConnectionScope();
   const { useDesignAppIsConnectionSelected } = getDesignAppHooks();
@@ -9344,6 +9626,7 @@ export function useIsConnectionSelected(): boolean {
   return useDesignAppIsConnectionSelected(undefined, connectionScope?.guid ?? "");
 }
 
+// Hook returning whether the current scoped connection is hovered.
 export function useIsConnectionHovered(): boolean {
   const connectionScope = useConnectionScope();
   const { useDesignAppIsConnectionHovered } = getDesignAppHooks();
@@ -9351,6 +9634,7 @@ export function useIsConnectionHovered(): boolean {
   return useDesignAppIsConnectionHovered(undefined, connectionScope?.guid ?? "");
 }
 
+// Hook returning the diff status of the current scoped connection.
 export function useConnectionStatus(): DiffStatus {
   const connection = useConnectionScope();
   const { useDesignAppDiff } = getDesignAppHooks();
@@ -9388,6 +9672,7 @@ export function useConnectionStatus(): DiffStatus {
   return DiffStatus.Unchanged;
 }
 
+// Hook returning the connection gap with setter.
 export function useConnectionGap(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
@@ -9402,6 +9687,7 @@ export function useConnectionGap(): HookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.gap ?? 0, setter);
 }
 
+// Hook returning the connection shift with setter.
 export function useConnectionShift(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
@@ -9416,6 +9702,7 @@ export function useConnectionShift(): HookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.shift ?? 0, setter);
 }
 
+// Hook returning the connection rise with setter.
 export function useConnectionRise(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
@@ -9430,6 +9717,7 @@ export function useConnectionRise(): HookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.rise ?? 0, setter);
 }
 
+// Hook returning the connection rotation with setter.
 export function useConnectionRotation(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
@@ -9444,6 +9732,7 @@ export function useConnectionRotation(): HookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.rotation ?? 0, setter);
 }
 
+// Hook returning the connection turn with setter.
 export function useConnectionTurn(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
@@ -9458,6 +9747,7 @@ export function useConnectionTurn(): HookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.turn ?? 0, setter);
 }
 
+// Hook returning the connection tilt with setter.
 export function useConnectionTilt(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
@@ -9472,6 +9762,7 @@ export function useConnectionTilt(): HookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.tilt ?? 0, setter);
 }
 
+// Hook returning the connection U coordinate with setter.
 export function useConnectionU(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
@@ -9486,6 +9777,7 @@ export function useConnectionU(): HookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.u ?? 0, setter);
 }
 
+// Hook returning the connection V coordinate with setter.
 export function useConnectionV(): HookResult<number> {
   const connectionScope = useConnectionScope();
   const connection = useConnection() as Connection | null;
@@ -9500,6 +9792,7 @@ export function useConnectionV(): HookResult<number> {
   return conditionalHookResult(!!connectionScope && !!connection, connection?.v ?? 0, setter);
 }
 
+// Hook returning clusterable piece groups for the current design.
 export function useClusterableGroups() {
   const designScope = useDesignScope();
   const pieces = usePieces();
@@ -9513,6 +9806,7 @@ export function useClusterableGroups() {
   }, [designScope?.guid, pieces, connections, selection.pieces]);
 }
 
+// Hook returning the kit with applied transaction diffs.
 export function useDiffedKit(): Kit {
   const kit = useKit() as Kit;
   const { useDesignAppDiff } = getDesignAppHooks();
@@ -9520,6 +9814,7 @@ export function useDiffedKit(): Kit {
   return diff ? applyKitDiff(kit, diff) : kit;
 }
 
+// Hook returning types with port-colored connectors from the diffed kit.
 export function usePortColoredTypes(): Type[] {
   const diffedKit = useDiffedKit();
   const kitTypes = useKitTypes();
@@ -9532,6 +9827,7 @@ export function usePortColoredTypes(): Type[] {
   return typesWithColoredConnectors;
 }
 
+// Hook returning original and diffed piece with diff indicator.
 export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; hasDiff: boolean } {
   const originalPiece = usePiece() as Piece;
   const diffedPiece = useDiffedPiece() as Piece;
@@ -9546,6 +9842,7 @@ export function usePieceWithDiff(): { original: Piece; diffed: Piece | null; has
   };
 }
 
+// Hook returning stroke and fill colors based on connection diff status.
 export function useConnectionColor(): { stroke: string; fill: string } {
   const connection = useConnectionScope();
   const { useDesignAppDiff } = getDesignAppHooks();
@@ -9588,6 +9885,7 @@ export function useConnectionColor(): { stroke: string; fill: string } {
   return { stroke, fill };
 }
 
+// Hook returning the design with applied transaction diffs.
 export function useDiffedDesign(): Design {
   const kit = useDiffedKit();
   const designScope = useDesignScope();
@@ -9598,7 +9896,9 @@ export function useDiffedDesign(): Design {
 // #endregion 🔖Design
 
 // #region 🔖Sketchpad
+// Core reactive observation, synchronization hooks, and sketchpad store implementation.
 
+// Creates a Yjs observer that triggers the given subscription callback on changes.
 export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscribe, deep: boolean = false): Disposable {
   const callback = () => {
     subscribe(() => { });
@@ -9612,6 +9912,7 @@ export function createObserver<T>(yMap: Y.Map<T> | Y.Array<T>, subscribe: Subscr
   }
 }
 
+// Creates a Yjs field observer that tracks a single key on a Y.Map.
 export function createFieldObserver<T>(yMap: Y.Map<T>, key: string, subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
   let currentValue = yMap.get(key);
@@ -9644,6 +9945,7 @@ export function createFieldObserver<T>(yMap: Y.Map<T>, key: string, subscribe: S
   };
 }
 
+// Creates a Yjs observer that tracks multiple keys on a Y.Map.
 export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscribe: Subscribe, deep: boolean = false): Disposable {
   const disposables: Disposable[] = [];
   const keySet = new Set(keys);
@@ -9693,6 +9995,7 @@ export function createFieldsObserver<T>(yMap: Y.Map<T>, keys: string[], subscrib
   };
 }
 
+// Creates a Yjs observer tracking item membership in a Y.Array.
 export function createArrayItemMembershipObserver(getYArray: () => Y.Array<string> | undefined, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
   const notifySubscriber = () => subscribe(() => { });
@@ -9731,6 +10034,7 @@ export function createArrayItemMembershipObserver(getYArray: () => Y.Array<strin
   };
 }
 
+// Creates a Yjs observer tracking nested array item membership within a Y.Map.
 export function createNestedArrayItemMembershipObserver(yMap: Y.Map<any>, mapKey: string, arrayKey: string, itemId: string, subscribe: Subscribe): Disposable {
   let wasInArray = false;
   let currentNestedMap: Y.Map<any> | undefined;
@@ -9838,6 +10142,7 @@ let performanceLoggingEnabled = false;
 const performanceLogCounts = new Map<string, number>();
 const performanceLogTimestamps = new Map<string, number>();
 
+// Enables or disables performance logging for store operations.
 export function enablePerformanceLogging(enabled: boolean = true) {
   performanceLoggingEnabled = enabled;
   if (!enabled) {
@@ -9859,6 +10164,7 @@ function logStateAccess(hookName: string, storeType: string, selectorInfo?: stri
   }
 }
 
+// Hook synchronizing a store snapshot with React state via useSyncExternalStore.
 export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T }, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -9877,6 +10183,7 @@ export function useSync<T, TSelected = T>(store: { onChanged: (subscribe: Subscr
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook synchronizing an optional store snapshot returning null when absent.
 export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -9897,6 +10204,7 @@ export function useSyncOptional<T, TSelected = T>(store: { onChanged: (subscribe
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook synchronizing a store snapshot with deep observation support.
 export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe: Subscribe) => Disposable; snapshot: () => T } | null | undefined, selector: (value: T) => TSelected = identitySelector as any, deep?: boolean): TSelected | null {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -9917,6 +10225,7 @@ export function useSyncDeep<T, TSelected = T>(store: { onChangedDeep: (subscribe
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook synchronizing a single field of a Yjs-backed store.
 export function useSyncField<T, TSelected = T>(
   store: { onFieldChanged: (key: string, subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T; getFieldSnapshot?: (key: string) => any },
   key: string,
@@ -9978,6 +10287,7 @@ export function useSyncField<T, TSelected = T>(
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook synchronizing multiple fields of a Yjs-backed store.
 export function useSyncFields<T, TSelected = T>(
   store: { onFieldsChanged: (keys: string[], subscribe: Subscribe, deep?: boolean) => Disposable; snapshot: () => T },
   keys: string[],
@@ -10036,6 +10346,7 @@ export function useSyncFields<T, TSelected = T>(
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook tracking nested array item membership via Yjs observation.
 export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | null, mapKey: string, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -10061,6 +10372,7 @@ export function useSyncNestedArrayItemMembership(store: { yMap: Y.Map<any> } | n
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook tracking selection item membership via Yjs observation.
 export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | null, arrayKey: string, itemId: string): boolean {
   const subscribe = useCallback(
     (callback: () => void) => {
@@ -10087,6 +10399,7 @@ export function useSyncSelectionItemMembership(store: { yMap: Y.Map<any> } | nul
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook traversing a Yjs path and selecting a value from the resolved node.
 export function usePath<T, TSelected = T>(
   store: { onPathChanged: (path: YPath, subscribe: Subscribe) => Disposable; getPathSnapshot: (path: YPath) => any } | null,
   path: YPath,
@@ -10122,6 +10435,7 @@ export function usePath<T, TSelected = T>(
   return useSyncExternalStore(subscribe, getSnapshot);
 }
 
+// Hook computing and caching a derived value from store dependencies.
 export function useDerived<T, TSelected = T>(derivedStore: DerivedStore | null, key: string, deps: BaseDependency[], compute: () => T, selector: (value: T) => TSelected = identitySelector as any): TSelected | undefined {
   const nodeRef = useRef<DerivedNode<T> | null>(null);
   const depsKey = useMemo(() => JSON.stringify(deps.map((d) => ({ path: d.path }))), [deps]);
@@ -10197,6 +10511,7 @@ const nullStore: Synchronizable<null> = {
   snapshot: () => null,
 };
 
+// Hook synchronizing a store with state tracking for loading, error, and idle status.
 export function useSyncWithState<TAccessl, TSelected = TAccessl>(store: (Synchronizable<TAccessl> & Store<TAccessl>) | null, selector?: (state: TAccessl) => TSelected, deep: boolean = false): StoreState<TAccessl | TSelected> {
   const actualStore = store || (nullStore as unknown as Synchronizable<TAccessl> & Store<TAccessl>);
   const state = deep
@@ -10284,10 +10599,12 @@ import {
 let homeStoreFactory: HomeStoreFactory | undefined;
 let docsAppStoreFactory: DocsAppStoreFactory | undefined;
 
+// Registers the home store factory for lazy initialization.
 export function registerHomeStoreFactory(factory: HomeStoreFactory) {
   homeStoreFactory = factory;
 }
 
+// Registers the docs app store factory for lazy initialization.
 export function registerDocsAppStoreFactory(factory: DocsAppStoreFactory) {
   docsAppStoreFactory = factory;
 }
@@ -10307,6 +10624,7 @@ export { registerDesignAppStoreFactory, registerKitAppStoreFactory, registerQual
 type YSketchpadVal = string | number | boolean;
 type YSketchpad = Y.Map<YSketchpadVal>;
 
+// Central store managing Yjs-backed sketchpad state with reactive subscriptions.
 export class SketchpadStore {
   private static _modulesLoaded = false;
   public static _loadModules() {
@@ -11390,6 +11708,7 @@ if (import.meta.hot?.data.actors) {
 
 const SketchpadScopeContext = createContext<SketchpadScope | null>(null);
 
+// React context provider initializing and scoping the sketchpad store and actor.
 export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProviders; onWindowEvents?: WindowEvents; initialState?: ExtendedInitialState; importKitUrls?: string[]; children: React.ReactNode }) => {
   const id = useMemo(() => props.id || guid(), [props.id]);
   const [configsReady, setConfigsReady] = useState(false);
@@ -11443,8 +11762,10 @@ export const SketchpadScopeProvider = (props: { id?: string; remote?: RemoteProv
   return React.createElement(SketchpadScopeContext.Provider, { value: { id, remote: props.remote, onWindowEvents: props.onWindowEvents } }, React.createElement(SketchpadActorContext.Provider, { value: actor }, configsReady ? props.children : null));
 };
 
+// Hook returning the current sketchpad scope context.
 export const useSketchpadScope = () => useContext(SketchpadScopeContext);
 
+// Hook returning the sketchpad store instance for the current scope.
 export function useSketchpadStore(id?: string): SketchpadStore {
   const scope = useSketchpadScope();
   const storeId = scope?.id ?? id;
@@ -11454,15 +11775,18 @@ export function useSketchpadStore(id?: string): SketchpadStore {
   return store;
 }
 
+// Hook returning the sketchpad state with optional selector.
 export function useSketchpad<T>(selector?: (state: SketchpadState) => T, id?: string): T | SketchpadState | null {
   return useSync<SketchpadState, T>(useSketchpadStore(id), selector ? selector : (identitySelector as any));
 }
 
+// Hook returning the current navigation path from the router.
 export function useNavigation(): string {
   const location = useLocation();
   return location.pathname;
 }
 
+// Hook returning the current app kind based on navigation path.
 export function useAppType(): AppKind {
   const navigation = useNavigation();
   const apps = useSyncExternalStore(
@@ -11477,12 +11801,14 @@ export function useAppType(): AppKind {
   }, [navigation, apps]);
 }
 
+// Returns the app kind for a given navigation path.
 export function getAppTypeFromPath(path: string): AppKind {
   const pathParts = path.split("/").filter((p) => p);
   const app = appRegistry.getAppForPath(pathParts);
   return app?.id ?? "home";
 }
 
+// Hook returning the current theme with setter.
 export function useTheme(): HookResult<Theme> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectTheme(snapshot.context));
@@ -11495,6 +11821,7 @@ export function useTheme(): HookResult<Theme> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Hook returning the current language with setter.
 export function useLanguage(): HookResult<string> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
@@ -11507,6 +11834,7 @@ export function useLanguage(): HookResult<string> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Hook returning the current device with setter.
 export function useDevice(): HookResult<Device> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectDevice(snapshot.context));
@@ -11519,6 +11847,7 @@ export function useDevice(): HookResult<Device> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Hook returning the current mode with setter.
 export function useMode(): HookResult<Mode> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectMode(snapshot.context));
@@ -11531,6 +11860,7 @@ export function useMode(): HookResult<Mode> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Hook returning the current expertise level with setter.
 export function useExpertise(): HookResult<Expertise> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
@@ -11543,6 +11873,7 @@ export function useExpertise(): HookResult<Expertise> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Hook returning the fullscreen state with toggle setter.
 export function useFullscreen(): HookResult<boolean> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
@@ -11555,6 +11886,7 @@ export function useFullscreen(): HookResult<boolean> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Hook returning a tooltip resolver based on expertise level.
 export function useTooltip(): (key: string) => string | undefined {
   const [expertise] = useExpertise();
   return (key: string) => {
@@ -11563,29 +11895,35 @@ export function useTooltip(): (key: string) => string | undefined {
   };
 }
 
+// Hook returning semio tooltip context with current mode.
 export function useSemioTooltip() {
   const [mode] = useMode();
   return { mode };
 }
 
+// Hook returning whether the navbar is expanded on the current device.
 export function useIsNavbarExpanded(): boolean {
   const [device] = useDevice();
   return typeof device === "object" ? device.isNavbarExpanded : false;
 }
 
+// Hook returning whether the footer is expanded on the current device.
 export function useIsFooterExpanded(): boolean {
   const [device] = useDevice();
   return typeof device === "object" ? device.isFooterExpanded : false;
 }
 
+// Hook returning the currently active interaction identifier.
 export function useActiveInteraction(): string | undefined {
   return useSketchpad((s) => s.activeInteraction) as string | undefined;
 }
 
+// Hook returning whether the current device is mobile.
 export function useIsMobile(): boolean {
   return useSketchpad((s) => s.isMobile) as boolean;
 }
 
+// Hook returning the navigation history with forward and back capabilities.
 export function useNavigationHistory(): {
   history: string[];
   currentIndex: number;
@@ -11603,7 +11941,9 @@ export function useNavigationHistory(): {
 }
 
 // #region 🔖XState Hooks
+// React hooks for accessing XState sketchpad actor state and sending events.
 
+// Hook returning the sketchpad XState actor reference.
 export function useSketchpadActor(): SketchpadActorRef {
   const actor = useContext(SketchpadActorContext);
   if (!actor) {
@@ -11612,20 +11952,24 @@ export function useSketchpadActor(): SketchpadActorRef {
   return actor;
 }
 
+// Hook returning the sketchpad actor reference or null when outside scope.
 export function useSketchpadActorSafe(): SketchpadActorRef | null {
   return useContext(SketchpadActorContext);
 }
 
+// Hook selecting a value from the sketchpad actor snapshot.
 export function useSketchpadSelector<T>(selector: (snapshot: ReturnType<SketchpadActorRef["getSnapshot"]>) => T): T {
   const actor = useSketchpadActor();
   return useSelector(actor, selector);
 }
 
+// Hook returning the full sketchpad state snapshot.
 export function useSketchpadSnapshot(): SketchpadState {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectSnapshot(snapshot.context));
 }
 
+// Hook returning whether the given event can be sent to the sketchpad actor.
 export function useSketchpadCan(event: SketchpadEvent): boolean {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => {
@@ -11636,46 +11980,55 @@ export function useSketchpadCan(event: SketchpadEvent): boolean {
   });
 }
 
+// Hook returning the navigation path from XState actor.
 export function useNavigationXState(): string {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectNavigation(snapshot.context));
 }
 
+// Hook returning the theme from XState actor.
 export function useThemeXState(): Theme {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectTheme(snapshot.context));
 }
 
+// Hook returning the language from XState actor.
 export function useLanguageXState(): string {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectLanguage(snapshot.context));
 }
 
+// Hook returning the expertise level from XState actor.
 export function useExpertiseXState(): Expertise {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectExpertise(snapshot.context));
 }
 
+// Hook returning the mode from XState actor.
 export function useModeXState(): Mode {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectMode(snapshot.context));
 }
 
+// Hook returning the device from XState actor.
 export function useDeviceXState(): Device {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectDevice(snapshot.context));
 }
 
+// Hook returning the fullscreen state from XState actor.
 export function useIsFullscreenXState(): boolean {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectIsFullscreen(snapshot.context));
 }
 
+// Hook returning panel sizes from XState actor.
 export function usePanelSizesXState(): PanelSizes {
   const actor = useSketchpadActor();
   return useSelector(actor, (snapshot) => selectPanelSizes(snapshot.context));
 }
 
+// Hook returning a memoized object of sketchpad action dispatchers.
 export function useSketchpadActions() {
   const actor = useSketchpadActor();
 
@@ -11697,12 +12050,14 @@ export function useSketchpadActions() {
   );
 }
 
+// Hook wrapping an XState field value with a guarded setter.
 export function useXStateField<T, TEvent extends { type: string }>(value: T, canEvent: TEvent, createEvent: (next: T) => TEvent): Field<T> {
   const actor = useSketchpadActor();
   const canSet = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
   return useMemo(() => createFieldValue(value, (next: T) => actor.send(createEvent(next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createEvent, canSet]);
 }
 
+// Hook wrapping an XState field value with a scope-aware guarded setter.
 export function useXStateFieldWithScope<T, TEvent extends { type: string }>(value: T, canEvent: TEvent, createEvent: (next: T) => TEvent, hasScope: boolean): Field<T> {
   const actor = useSketchpadActor();
   const canSetFromSnapshot = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
@@ -11710,6 +12065,7 @@ export function useXStateFieldWithScope<T, TEvent extends { type: string }>(valu
   return useMemo(() => createFieldValue(value, (next: T) => actor.send(createEvent(next) as Parameters<typeof actor.send>[0]), canSet), [value, actor, createEvent, canSet]);
 }
 
+// Hook wrapping an XState action with a guard check.
 export function useXStateAction<TEvent extends { type: string }>(canEvent: TEvent, event: TEvent): ActionField {
   const actor = useSketchpadActor();
   const canExecute = useSelector(actor, (snapshot) => snapshot.can(canEvent as Parameters<typeof snapshot.can>[0]));
@@ -11718,59 +12074,70 @@ export function useXStateAction<TEvent extends { type: string }>(canEvent: TEven
 
 // #endregion 🔖XState Hooks
 
+// Hook returning the design app state for a given kit and design.
 export function useDesignAppXState(kitGuid: Guid, designGuid: Guid): DesignAppState {
   const actor = useSketchpadActor();
   const selector = useMemo(() => createDesignAppSelector(kitGuid, designGuid), [kitGuid, designGuid]);
   return useSelector(actor, selector);
 }
 
+// Hook returning the type app state for a given kit and type.
 export function useTypeAppXState(kitGuid: Guid, typeGuid: Guid): TypeAppState {
   const actor = useSketchpadActor();
   const selector = useMemo(() => createTypeAppSelector(kitGuid, typeGuid), [kitGuid, typeGuid]);
   return useSelector(actor, selector);
 }
 
+// Hook returning the kit app state for a given kit.
 export function useKitAppXState(kitGuid: Guid): KitAppState {
   const actor = useSketchpadActor();
   const selector = useMemo(() => createKitAppSelector(kitGuid), [kitGuid]);
   return useSelector(actor, selector);
 }
 
+// Hook returning the home app state.
 export function useHomeApp(): HomeAppState {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeApp);
 }
 
+// Hook returning the home panel visibility.
 export function useHomePanelVisibility(): PanelVisibility {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomePanelVisibility);
 }
 
+// Hook returning the home selection.
 export function useHomeSelection(): HomeAppSelection | undefined {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeSelection);
 }
 
+// Hook returning the home hover state.
 export function useHomeHover(): { kits?: Guid[] } | undefined {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeHover);
 }
 
+// Hook returning the home sort column.
 export function useHomeSortColumn(): string | undefined {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeSortColumn);
 }
 
+// Hook returning the home sort direction.
 export function useHomeSortDirection(): "asc" | "desc" | undefined {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeSortDirection);
 }
 
+// Hook returning the home loading kits list.
 export function useHomeLoadingKits(): Array<{ tempGuid: string; name: string }> {
   const actor = useSketchpadActor();
   return useSelector(actor, selectHomeLoadingKits);
 }
 
+// Hook returning the current kit import operations.
 export function useKitImportOperations(): Array<{
   operationId: string;
   kitName: string;
@@ -11781,6 +12148,7 @@ export function useKitImportOperations(): Array<{
   return useSelector(actor, selectKitImportOperations);
 }
 
+// Hook returning memoized home app command dispatchers.
 export function useHomeCommands() {
   const actor = useSketchpadActor();
   return useMemo(
@@ -11815,6 +12183,7 @@ export function useHomeCommands() {
   );
 }
 
+// Hook returning shallow kit data for all kits with reactive updates.
 export function useKitShallows(): KitShallow[] {
   const store = useSketchpadStore();
   return useSyncExternalStore(
@@ -11839,6 +12208,7 @@ export function useKitShallows(): KitShallow[] {
   );
 }
 
+// Hook returning whether a kit with the given guid exists.
 export function useHasKit(kitGuid: string): boolean {
   const store = useSketchpadStore();
   return useSyncExternalStore(
@@ -11854,6 +12224,7 @@ export function useHasKit(kitGuid: string): boolean {
   );
 }
 
+// Hook returning the persistence kind of a kit.
 export function useKitKind(kitGuid: string): "temporary" | "local" | "remote" | undefined {
   const store = useSketchpadStore();
   const hasKit = useHasKit(kitGuid);
@@ -11877,6 +12248,7 @@ export function useKitKind(kitGuid: string): "temporary" | "local" | "remote" | 
   );
 }
 
+// Hook returning a callback to get the persistence kind of any kit.
 export function useGetKitKind(): (kitGuid: string) => "temporary" | "local" | "remote" | undefined {
   const store = useSketchpadStore();
   return useCallback(
@@ -11891,6 +12263,7 @@ export function useGetKitKind(): (kitGuid: string) => "temporary" | "local" | "r
   );
 }
 
+// Hook returning kit shallows filtered by persistence kind.
 export function useFilteredKitShallows(kind?: "temporary" | "local" | "remote"): KitShallow[] {
   const store = useSketchpadStore();
   const allKits = useKitShallows();
@@ -11904,14 +12277,17 @@ export function useFilteredKitShallows(kind?: "temporary" | "local" | "remote"):
   }, [allKits, kind, store]);
 }
 
+// Hook returning the current panel sizes.
 export function usePanelSizes(): PanelSizes {
   return useSketchpad((state) => state.panelSizes) as PanelSizes;
 }
 
+// Hook returning the current settings.
 export function useSettings(): { apps: Record<string, any> } {
   return useSketchpad((state) => state.settings) as { apps: Record<string, any> };
 }
 
+// Hook returning the panel visibility for the current app.
 export function useAppPanelVisibility(): PanelVisibility {
   const navigation = useNavigation();
   const appType = useAppType();
@@ -11957,6 +12333,7 @@ export function useAppPanelVisibility(): PanelVisibility {
   return panelVisibility;
 }
 
+// Hook returning command dispatchers for the current app.
 export function useAppCommands() {
   const navigation = useNavigation();
   const appType = useAppType();
@@ -12055,6 +12432,7 @@ export function useAppCommands() {
   }, [store, appType, kitGuid, itemGuid, actor]);
 }
 
+// Hook returning a callback to update recent searches.
 export function useUpdateRecentSearches() {
   const store = useSketchpadStore();
   return useCallback(
@@ -12065,6 +12443,7 @@ export function useUpdateRecentSearches() {
   );
 }
 
+// Hook returning a callback to update recent focus items.
 export function useUpdateRecentFocusItems() {
   const store = useSketchpadStore();
   return useCallback(
@@ -12075,6 +12454,7 @@ export function useUpdateRecentFocusItems() {
   );
 }
 
+// Hook returning a navigation callback that syncs with the store.
 export function useNavigate() {
   const store = useSketchpadStore();
   const reactNavigate = useReactNavigate();
@@ -12093,6 +12473,7 @@ export function useNavigate() {
   );
 }
 
+// Hook returning memoized sketchpad command dispatchers.
 export function useSketchpadCommands() {
   const store = useSketchpadStore();
   const navigate = useNavigate();
@@ -12193,6 +12574,7 @@ export function useSketchpadCommands() {
   );
 }
 
+// Hook returning shallow kit data for all kits.
 export function useKits(): KitShallow[] {
   const store = useSketchpadStore();
 
@@ -12220,6 +12602,7 @@ export function useKits(): KitShallow[] {
   return kits;
 }
 
+// Hook returning kit command dispatchers for a specific kit by guid.
 export function useKitCommandsById(kitGuid?: string) {
   const store = useSketchpadStore();
   return useMemo(() => {
@@ -12256,7 +12639,9 @@ export function useKitCommandsById(kitGuid?: string) {
 // #endregion 🔖Sketchpad
 
 // #region 🔖Commands
+// Exported sketchpad command map for theme, language, mode, device, and navigation.
 
+// Map of sketchpad commands keyed by command identifier.
 export const commands = {
   "semio.sketchpad.setTheme": (context: SketchpadCommandContext, theme: Theme): SketchpadCommandResult => {
     return {
@@ -12434,6 +12819,7 @@ export const commands = {
   },
 };
 
+// Map of developer-only sketchpad commands.
 export const devCommands = {
   "semio.sketchpad.freeze": (context: SketchpadCommandContext): SketchpadCommandResult => {
     return {};
@@ -12448,7 +12834,9 @@ export const devCommands = {
 // #endregion 🔖Apps
 
 // #region 🔖Apps Registry
+// Dynamic app panel loader for registering app-specific panels.
 
+// Loads panel configurations for a given app by dynamic import.
 export async function loadAppPanels(appId: string): Promise<PanelConfig[]> {
   try {
     const module = await import(`./apps/${appId}/panels.ts`);
@@ -12576,6 +12964,7 @@ export { appRegistry, loadAppConfigs };
 // #endregion 🔖Apps Registry
 
 // #region 🔖Navbar
+// Focus-based navigation context provider for navbar breadcrumbs and search.
 
 interface FocusContextValue {
   focusItems: FocusItem[];
@@ -12586,6 +12975,7 @@ interface FocusContextValue {
 
 const FocusContext = createContext<FocusContextValue | null>(null);
 
+// React context provider managing focus items and focus callbacks.
 export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [focusItems, setFocusItems] = useState<FocusItem[]>([]);
   const onFocusItemCallbackRef = useRef<((itemId: string) => void) | undefined>(undefined);
@@ -12613,12 +13003,14 @@ export const FocusProvider: FC<{ children: ReactNode }> = ({ children }) => {
   return <FocusContext.Provider value={contextValue}>{children}</FocusContext.Provider>;
 };
 
+// Hook returning the focus context value.
 export const useFocus = () => {
   const context = useContext(FocusContext);
   if (!context) throw new Error("useFocus must be used within FocusProvider");
   return context;
 };
 
+// Hook returning the focus context value or null when outside provider.
 export const useFocusSafe = () => {
   const context = useContext(FocusContext);
   return context;
@@ -12632,6 +13024,7 @@ interface PanelSectionContextValue {
 
 const PanelSectionContext = createContext<PanelSectionContextValue | null>(null);
 
+// React context provider managing panel sections by panel key.
 export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [sections, setSections] = useState<PanelSections>({
     details: [],
@@ -12668,6 +13061,7 @@ export const PanelSectionProvider: FC<{ children: ReactNode }> = ({ children }) 
   return <PanelSectionContext.Provider value={contextValue}>{children}</PanelSectionContext.Provider>;
 };
 
+// Hook returning panel sections for a given panel key.
 export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
   const context = useContext(PanelSectionContext);
   if (!context) throw new Error("usePanelSections must be used within PanelSectionProvider");
@@ -12675,12 +13069,14 @@ export const usePanelSections = (panelKey: PanelKey): PanelSection[] => {
   return sections;
 };
 
+// Hook returning a callback to add a section to a panel.
 export const useAddPanelSection = () => {
   const context = useContext(PanelSectionContext);
   if (!context) throw new Error("useAddPanelSection must be used within PanelSectionProvider");
   return context.addSection;
 };
 
+// Hook returning a callback to remove a section from a panel.
 export const useRemovePanelSection = () => {
   const context = useContext(PanelSectionContext);
   if (!context) throw new Error("useRemovePanelSection must be used within PanelSectionProvider");
@@ -12690,6 +13086,7 @@ export const useRemovePanelSection = () => {
 // #endregion 🔖Navbar
 
 // #region 🔖SidePanel Tabs
+// Context provider managing side panel and HUD panel tab registration.
 
 interface SidePanelTabsState {
   left: SidePanelTab[];
@@ -12717,6 +13114,7 @@ interface SidePanelTabContextValue {
 
 const SidePanelTabContext = createContext<SidePanelTabContextValue | null>(null);
 
+// React context provider managing side panel and HUD panel tab registration.
 export const SidePanelTabProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [sidePanelTabs, setSidePanelTabs] = useState<SidePanelTabsState>({ left: [], right: [] });
   const [hudPanelTabs, setHudPanelTabs] = useState<HudPanelTabsState>({ tabs: [] });
@@ -12764,54 +13162,63 @@ export const SidePanelTabProvider: FC<{ children: ReactNode }> = ({ children }) 
   return <SidePanelTabContext.Provider value={contextValue}>{children}</SidePanelTabContext.Provider>;
 };
 
+// Hook returning side panel tabs for a given position.
 export const useSidePanelTabs = (position: "left" | "right"): SidePanelTab[] => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useSidePanelTabs must be used within SidePanelTabProvider");
   return context.sidePanelTabs[position];
 };
 
+// Hook returning HUD panel tabs.
 export const useHudPanelTabs = (): HudPanelTab[] => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useHudPanelTabs must be used within SidePanelTabProvider");
   return context.hudPanelTabs.tabs;
 };
 
+// Hook returning a callback to add a side panel tab.
 export const useAddSidePanelTab = () => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useAddSidePanelTab must be used within SidePanelTabProvider");
   return context.addSidePanelTab;
 };
 
+// Hook returning a callback to remove a side panel tab.
 export const useRemoveSidePanelTab = () => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useRemoveSidePanelTab must be used within SidePanelTabProvider");
   return context.removeSidePanelTab;
 };
 
+// Hook returning a callback to add a HUD panel tab.
 export const useAddHudPanelTab = () => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useAddHudPanelTab must be used within SidePanelTabProvider");
   return context.addHudPanelTab;
 };
 
+// Hook returning a callback to remove a HUD panel tab.
 export const useRemoveHudPanelTab = () => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useRemoveHudPanelTab must be used within SidePanelTabProvider");
   return context.removeHudPanelTab;
 };
 
+// Hook returning the active left tab ID with setter.
 export const useActiveLeftTabId = (): [string | undefined, (tabId: string) => void] => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useActiveLeftTabId must be used within SidePanelTabProvider");
   return [context.activeLeftTabId, context.setActiveLeftTabId];
 };
 
+// Hook returning the active right tab ID with setter.
 export const useActiveRightTabId = (): [string | undefined, (tabId: string) => void] => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useActiveRightTabId must be used within SidePanelTabProvider");
   return [context.activeRightTabId, context.setActiveRightTabId];
 };
 
+// Hook returning the active HUD tab ID with setter.
 export const useActiveHudTabId = (): [string | undefined, (tabId: string) => void] => {
   const context = useContext(SidePanelTabContext);
   if (!context) throw new Error("useActiveHudTabId must be used within SidePanelTabProvider");
@@ -12821,6 +13228,7 @@ export const useActiveHudTabId = (): [string | undefined, (tabId: string) => voi
 // #endregion 🔖SidePanel Tabs
 
 // #region 🔖Origin
+// Context provider for tracking the origin URL of the sketchpad instance.
 
 type OriginStore = {
   subscribe: (callback: () => void) => () => void;
@@ -12856,6 +13264,7 @@ function resolveOriginFromTarget(target: EventTarget | null): string {
 
 const OriginContext = createContext<OriginStore | null>(null);
 
+// React context provider tracking the UI origin of user interactions.
 export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const storeRef = useRef<ReturnType<typeof createOriginStore> | null>(null);
   if (!storeRef.current) storeRef.current = createOriginStore();
@@ -12877,11 +13286,13 @@ export const OriginProvider: FC<{ children: ReactNode }> = ({ children }) => {
   return <OriginContext.Provider value={storeRef.current}>{children}</OriginContext.Provider>;
 };
 
+// Hook returning a callback that resolves the current origin string.
 export function useOrigin(): () => string {
   const store = useContext(OriginContext);
   return useCallback(() => store?.getOrigin() ?? DEFAULT_ORIGIN, [store]);
 }
 
+// Hook returning the current origin string reactively.
 export function useOriginValue(): string {
   const store = useContext(OriginContext);
   return useSyncExternalStore(
@@ -12893,6 +13304,7 @@ export function useOriginValue(): string {
 // #endregion 🔖Origin
 
 // #region 🔖Footer Items
+// Context provider for dynamically registering footer bar items.
 
 interface FooterItemContextValue {
   items: FooterItem[];
@@ -12902,6 +13314,7 @@ interface FooterItemContextValue {
 
 const FooterItemContext = createContext<FooterItemContextValue | null>(null);
 
+// React context provider for dynamically registered footer items.
 export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<FooterItem[]>([]);
 
@@ -12921,18 +13334,21 @@ export const FooterItemProvider: FC<{ children: ReactNode }> = ({ children }) =>
   return <FooterItemContext.Provider value={contextValue}>{children}</FooterItemContext.Provider>;
 };
 
+// Hook returning the registered footer items.
 export const useFooterItems = (): FooterItem[] => {
   const context = useContext(FooterItemContext);
   if (!context) throw new Error("useFooterItems must be used within FooterItemProvider");
   return context.items;
 };
 
+// Hook returning a callback to add a footer item.
 export const useAddFooterItem = () => {
   const context = useContext(FooterItemContext);
   if (!context) throw new Error("useAddFooterItem must be used within FooterItemProvider");
   return context.addItem;
 };
 
+// Hook returning a callback to remove a footer item.
 export const useRemoveFooterItem = () => {
   const context = useContext(FooterItemContext);
   if (!context) throw new Error("useRemoveFooterItem must be used within FooterItemProvider");
@@ -12942,6 +13358,7 @@ export const useRemoveFooterItem = () => {
 // #endregion 🔖Footer Items
 
 // #region 🔖Global Footer Items
+// Global footer items component that registers persistent footer entries.
 
 const GlobalFooterItems: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -12967,7 +13384,9 @@ const GlobalFooterItems: FC = () => {
 // #endregion 🔖Global Footer Items
 
 // #region 🔖ConceptFilter
+// Filter component for narrowing results by architectural concepts.
 
+// Component rendering a concept filter strip with toggle actions.
 export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = ({ allConcepts, paramName = "concepts" }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedConcepts = paramName === "c" ? searchParams.getAll("c") : searchParams.get(paramName)?.split(",").filter(Boolean) || [];
@@ -13017,7 +13436,9 @@ export const ConceptFilter: FC<{ allConcepts: string[]; paramName?: string }> = 
 // #endregion 🔖ConceptFilter
 
 // #region 🔖ToolGroup
+// Toolbar group component for switching between tool modes.
 
+// Component rendering a tool group with mode selection popover.
 export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange }) => {
   const getActiveToolDefinition = () => {
     for (const tool of tools) {
@@ -13085,6 +13506,7 @@ export const ToolGroup: FC<ToolGroupProps> = ({ tools, activeTool, onToolChange 
 // #endregion 🔖ToolGroup
 
 // #region 🔖DragDrop
+// Context provider for drag-and-drop type placement interactions.
 
 interface DragDropContextValue {
   activeDraggedType: Type | null;
@@ -13095,6 +13517,7 @@ interface DragDropContextValue {
 
 const DragDropContext = createContext<DragDropContextValue | null>(null);
 
+// React context provider for drag-and-drop type and design placement.
 export const DragDropProvider: FC<{ children: ReactNode }> = ({ children }) => {
   const [activeDraggedType, setActiveDraggedType] = useState<Type | null>(null);
   const [activeDraggedDesign, setActiveDraggedDesign] = useState<Design | null>(null);
@@ -13102,6 +13525,7 @@ export const DragDropProvider: FC<{ children: ReactNode }> = ({ children }) => {
   return <DragDropContext.Provider value={{ activeDraggedType, activeDraggedDesign, setActiveDraggedType, setActiveDraggedDesign }}>{children}</DragDropContext.Provider>;
 };
 
+// Hook returning the drag-and-drop context value.
 export const useDragDrop = () => {
   const context = useContext(DragDropContext);
   if (!context) throw new Error("useDragDrop must be used within DragDropProvider");
@@ -13111,7 +13535,9 @@ export const useDragDrop = () => {
 // #endregion 🔖DragDrop
 
 // #region 🔖Hotkeys
+// Keyboard shortcut hook with configurable hotkey overrides.
 
+// Hook binding a keyboard shortcut with optional override resolution.
 export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?: { enableOnFormTags?: boolean }, deps?: React.DependencyList) {
   const hotkeyOverrides = useSketchpad((s) => s.hotkeyOverrides) as Record<string, string> | undefined;
   const resolvedHotkey = useHotkey(hotkeyOrPath);
@@ -13127,6 +13553,7 @@ export function useHotkeys(hotkeyOrPath: string, callback: () => void, options?:
 
 // #endregion 🔖Hotkeys
 
+// Hook returning the enriched panel configurations for all panel definitions.
 export function usePanelConfigs(): Record<string, EnrichedPanelDefinition[]> {
   const { t } = useI18nTranslation();
 
@@ -14436,10 +14863,12 @@ const PanelToggles: FC = ({ }) => {
 };
 
 // #region 🔖Canvas
+// Canvas layout components for window management and multi-pane rendering.
 
 export { createDefaultLayout } from "./shared";
 export type { AppWindowConfig, WindowControl, WindowKindDefinition } from "./shared";
 
+// Configuration for a canvas window pane.
 export type WindowConfig = {
   id: string;
   children: React.ReactNode;
@@ -14459,11 +14888,13 @@ export type WindowConfig = {
 
 const CanvasContext = createContext<{ activeWindow?: string; onActiveWindowChange?: (windowId: string) => void } | null>(null);
 
+// Hook returning the canvas context for active window management.
 export function useCanvasContext() {
   const context = useContext(CanvasContext);
   return context;
 }
 
+// Container component for canvas window layout.
 export const Canvas: FC<{ children: ReactNode; id?: string }> = ({ children, id }) => {
   return (
     <div id={id} className="h-full w-full box-border p-single">
@@ -14472,10 +14903,12 @@ export const Canvas: FC<{ children: ReactNode; id?: string }> = ({ children, id 
   );
 };
 
+// Layout component arranging windows horizontally.
 export const HorizontalWindows: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="flex flex-row h-full w-full gap-single">{children}</div>;
 };
 
+// Layout component arranging windows vertically.
 export const VerticalWindows: FC<{ children: ReactNode }> = ({ children }) => {
   return <div className="flex flex-col h-full w-full gap-single">{children}</div>;
 };
@@ -14572,6 +15005,7 @@ class LayoutErrorBoundary extends React.Component<LayoutErrorBoundaryProps, Layo
   }
 }
 
+// Component rendering the full canvas layout with window configuration.
 export const LayoutCanvas: FC<{
   windowConfig: AppWindowConfig;
   layoutState?: any;
@@ -15144,6 +15578,7 @@ export const LayoutCanvas: FC<{
 // #endregion 🔖Canvas
 
 // #region 🔖App Router
+// React Router integration with scope providers and route-based app switching.
 
 const ScopeWrapper: FC<{ ScopeProvider: ComponentType<{ guid: string; children: ReactNode }>; paramName: string; children: ReactNode }> = ({ ScopeProvider, paramName, children }) => {
   const params = useParams();
@@ -15221,6 +15656,7 @@ const AppRouter: FC = () => {
 // #endregion 🔖App Router
 
 // #region 🔖Sketchpad Components
+// Top-level sketchpad React components for rendering the complete application.
 
 const ToolbarScopeWrapper: FC<{ children: ReactNode }> = ({ children }) => {
   const location = useLocation();

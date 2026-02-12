@@ -1,0 +1,216 @@
+{
+  "title": "Fix Code Violations in Home Tsx and Tutorials Tsx",
+  "status": "closed",
+  "prompt": "Fix all code violations in Home.tsx (44) and Tutorials.tsx (59) by adding section summary comments and definition summary+spec comments",
+  "summary": "Added section summary comments (with MUST keyword for spec satisfaction) to 17 sections in Home.tsx and 14 sections in Tutorials.tsx. Added definition summary comments before all exported definitions: 18 in Home.tsx (enum/interface/type/const/re-exports/default export) and 33 in Tutorials.tsx (const/interface/enum/class). Added spec comment with RFC2119 keyword for the TutorialStore class. Total ~103 violations fixed across both files.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/523"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "started": "2026-02-11T23:02:13.183100151Z",
+  "finished": "2026-02-11T23:09:20.025625333Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-11 23:02:13",
+        "finished": "2026-02-11 23:09:20"
+      },
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix all code violations in Home.tsx (44) and Tutorials.tsx (59) by adding section summary comments and definition summary+spec comments",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx",
+              "lines": {
+                "added": 1742,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Hooks (XState-based)",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#App#Multi-Window App",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Canvas",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Canvas#Panels#Right#Settings",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Canvas#Panels#Right#Details",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Config",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Types",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Home App Plugin Registration",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Canvas#Windows",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Canvas#Panels",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Canvas#Panels#Right",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#DropZone",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#App",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Canvas#Windows#Table",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Canvas#Panels#Right#Chat",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Footer",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx§useHome",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Types§HomeSortColumn",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/Home.tsx#Types§HomeSortDirection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    }
+  ]
+}

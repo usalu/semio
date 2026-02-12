@@ -25,6 +25,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Entrypoint
+// Sketchpad application entrypoint registering apps and rendering the root.
+// Entrypoint MUST register all app configs before rendering the Sketchpad component.
+
 import { createRoot } from "react-dom/client";
 import { Sketchpad } from "@semio/js";
 import "./globals.css";
@@ -50,3 +54,4 @@ createRoot(document.getElementById("root")!).render(
     <Sketchpad importKitUrls={["/metabolism.zip"]} />
   </div>,
 );
+// #endregion 🔖Entrypoint

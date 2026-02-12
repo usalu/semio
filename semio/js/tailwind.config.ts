@@ -2,7 +2,7 @@
 
 // ⚙️semio/js/tailwind.config.ts
 
-// 2025 Ueli Saluz
+// 2025 Ueli Saluz <ueli@semio-tech.com>
 
 // #region 🔖License
 
@@ -24,9 +24,16 @@
 // #endregion 🔖Specs
 
 // #endregion 🔖Header
+
+// #region 🔖Configuration
+// Tailwind CSS configuration with typography plugin and custom prose styles.
+// Configuration MUST define content paths, dark mode, and typography theme extensions.
+
 import typography from "@tailwindcss/typography";
 import type { Config } from "tailwindcss";
 
+// Tailwind CSS configuration with prose color mappings for light and dark modes.
+// Export MUST satisfy the Tailwind Config type.
 export default {
   content: ["./**/*.{ts,tsx,mdx}"],
   darkMode: "media",
@@ -78,3 +85,5 @@ export default {
   },
   plugins: [typography],
 } satisfies Config;
+
+// #endregion 🔖Configuration

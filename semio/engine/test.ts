@@ -26,6 +26,8 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Test Runner
+
 import { execSync } from "child_process";
 
 execSync("poetry run pytest --cov --cov-config=pyproject.toml --cov-report html", {
@@ -34,3 +36,5 @@ execSync("poetry run pytest --cov --cov-config=pyproject.toml --cov-report html"
 });
 
 console.log("✅ Tests complete");
+
+// #endregion 🔖Test Runner

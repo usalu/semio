@@ -1,4 +1,9 @@
+// #region 🔖Header
+
 // 💻semio-repo/server/main.go
+
+// 2025 Ueli Saluz <ueli@semio-tech.com>
+
 // #region 🔖License
 
 // SPDX-License-Identifier: AGPL-3.0-or-later
@@ -11,11 +16,13 @@
 // #endregion 🔖Header
 
 // #region 🔖Package
+// Package declaration for the semio repo server binary. MUST be package main.
 package main
 
 // #endregion 🔖Package
 
 // #region 🔖Imports
+// Standard library and third-party imports MUST be grouped by origin.
 import (
 	"bufio"
 	"context"
@@ -45,7 +52,9 @@ import (
 // #endregion 🔖Imports
 
 // #region 🔖Config
+// Server configuration loading from environment variables. MUST provide sensible defaults.
 
+// Config holds all server configuration values.
 type Config struct {
 	Address          string
 	DatabasePath     string
@@ -56,6 +65,7 @@ type Config struct {
 	RequestBodyLimit int64
 }
 
+// loadConfig reads server configuration from environment variables with fallback defaults.
 func loadConfig() Config {
 	cwd, _ := os.Getwd()
 	return Config{
@@ -69,6 +79,7 @@ func loadConfig() Config {
 	}
 }
 
+// envOrDefault returns the environment variable value or the fallback if empty.
 func envOrDefault(key, fallback string) string {
 	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
 		return value
@@ -76,6 +87,7 @@ func envOrDefault(key, fallback string) string {
 	return fallback
 }
 
+// envOrDefaultInt64 returns the parsed int64 environment variable or the fallback.
 func envOrDefaultInt64(key string, fallback int64) int64 {
 	if value := strings.TrimSpace(os.Getenv(key)); value != "" {
 		if parsed, err := strconv.ParseInt(value, 10, 64); err == nil {
@@ -88,7 +100,9 @@ func envOrDefaultInt64(key string, fallback int64) int64 {
 // #endregion 🔖Config
 
 // #region 🔖Models
+// Data model types for tickets, scopes, warnings, violations, events, and API request/response payloads. MUST mirror the server SQLite schema.
 
+// Ticket represents a tracked work item with lifecycle status.
 type Ticket struct {
 	ID        string     `json:"id"`
 	Status    string     `json:"status"`
@@ -103,6 +117,7 @@ type Ticket struct {
 	ClosedAt  *time.Time `json:"closed_at"`
 }
 
+// Scope represents a code region (file, section, or definition) with line range.
 type Scope struct {
 	ID          string    `json:"id"`
 	Kind        string    `json:"kind"`
@@ -114,6 +129,7 @@ type Scope struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// Warning represents a detected issue such as a scope conflict between tickets.
 type Warning struct {
 	ID             string     `json:"id"`
 	Kind           string     `json:"kind"`
@@ -126,6 +142,7 @@ type Warning struct {
 	AcknowledgedBy string     `json:"ack_by"`
 }
 
+// Violation represents a policy violation detected in source code.
 type Violation struct {
 	ID         string     `json:"id"`
 	Kind       string     `json:"kind"`
@@ -142,6 +159,7 @@ type Violation struct {
 	ResolvedAt *time.Time `json:"resolved_at"`
 }
 
+// Event represents a system event persisted to the event log.
 type Event struct {
 	ID        string    `json:"id"`
 	Type      string    `json:"type"`
@@ -150,16 +168,19 @@ type Event struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+// LineRange represents a contiguous range of line numbers.
 type LineRange struct {
 	Start int
 	End   int
 }
 
+// DiffHunk represents a single hunk with old and new line ranges from a unified diff.
 type DiffHunk struct {
 	OldRange LineRange
 	NewRange LineRange
 }
 
+// DiffFile represents a single file entry in a unified diff with its hunks.
 type DiffFile struct {
 	Path    string
 	Hunks   []DiffHunk
@@ -167,15 +188,18 @@ type DiffFile struct {
 	Created bool
 }
 
+// DiffResult aggregates all parsed diff files from a patch.
 type DiffResult struct {
 	Files []DiffFile
 }
 
+// FileSnapshot holds the full content of a file for snapshot-based indexing.
 type FileSnapshot struct {
 	Path    string `json:"path"`
 	Content string `json:"content"`
 }
 
+// TicketOpenRequest is the JSON payload for opening a new ticket.
 type TicketOpenRequest struct {
 	TicketID    string `json:"ticket_id"`
 	Title       string `json:"title"`
@@ -186,12 +210,14 @@ type TicketOpenRequest struct {
 	GitHubIssue string `json:"github_issue"`
 }
 
+// TicketCloseRequest is the JSON payload for closing a ticket.
 type TicketCloseRequest struct {
 	TicketID string   `json:"ticket_id"`
 	Summary  string   `json:"summary"`
 	Files    []string `json:"files"`
 }
 
+// TicketReopenRequest is the JSON payload for reopening a closed ticket.
 type TicketReopenRequest struct {
 	TicketID string `json:"ticket_id"`
 	Prompt   string `json:"prompt"`
@@ -199,6 +225,7 @@ type TicketReopenRequest struct {
 	Title    string `json:"title"`
 }
 
+// DiffIngestRequest is the JSON payload for ingesting a diff patch.
 type DiffIngestRequest struct {
 	TicketID  string         `json:"ticket_id"`
 	RepoID    string         `json:"repo_id"`
@@ -206,6 +233,7 @@ type DiffIngestRequest struct {
 	Snapshots []FileSnapshot `json:"snapshots"`
 }
 
+// DiffIngestResponse holds the results of a diff ingestion operation.
 type DiffIngestResponse struct {
 	ChangedFiles  []string    `json:"changed_files"`
 	ClaimedScopes []string    `json:"claimed_scopes"`
@@ -214,6 +242,7 @@ type DiffIngestResponse struct {
 	Blockers      []string    `json:"blockers"`
 }
 
+// PrecommitRequest is the JSON payload for a pre-commit check.
 type PrecommitRequest struct {
 	TicketID      string `json:"ticket_id"`
 	Patch         string `json:"patch"`
@@ -221,6 +250,7 @@ type PrecommitRequest struct {
 	CommitMessage string `json:"commit_message"`
 }
 
+// PrecommitResponse holds the result of a pre-commit check.
 type PrecommitResponse struct {
 	OK           bool        `json:"ok"`
 	Blockers     []string    `json:"blockers"`
@@ -229,6 +259,7 @@ type PrecommitResponse struct {
 	AutofixPatch string      `json:"autofix_patch"`
 }
 
+// IndexFileRequest is the JSON payload for indexing a single file.
 type IndexFileRequest struct {
 	FilePath string `json:"file_path"`
 	Content  string `json:"content"`
@@ -237,11 +268,15 @@ type IndexFileRequest struct {
 // #endregion 🔖Models
 
 // #region 🔖Database
+// SQLite database layer for persistent storage of tickets, scopes, claims, warnings, violations, and events. MUST use WAL journal mode.
 
+// Database wraps a sql.DB connection to the SQLite store.
 type Database struct {
 	db *sql.DB
 }
 
+// openDatabase opens an SQLite database and runs schema migrations.
+// MUST enable WAL journal mode and foreign keys.
 func openDatabase(path string) (*Database, error) {
 	db, err := sql.Open("sqlite", path)
 	if err != nil {
@@ -260,6 +295,7 @@ func openDatabase(path string) (*Database, error) {
 	return store, nil
 }
 
+// migrate creates database tables if they do not already exist.
 func (d *Database) migrate() error {
 	statements := []string{
 		"CREATE TABLE IF NOT EXISTS repos (id TEXT PRIMARY KEY, name TEXT, path TEXT, created_at DATETIME)",
@@ -278,20 +314,25 @@ func (d *Database) migrate() error {
 	return nil
 }
 
+// Close closes the underlying SQL database connection.
+// MUST release all database resources.
 func (d *Database) Close() error {
 	return d.db.Close()
 }
 
+// insertEvent persists a new event record.
 func (d *Database) insertEvent(ctx context.Context, event Event) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO events (id, type, source, payload_json, created_at) VALUES (?, ?, ?, ?, ?)", event.ID, event.Type, event.Source, event.Payload, event.CreatedAt.UTC())
 	return err
 }
 
+// upsertTicket inserts or updates a ticket record.
 func (d *Database) upsertTicket(ctx context.Context, ticket Ticket) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO tickets (id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(id) DO UPDATE SET status=excluded.status, title=excluded.title, prompt=excluded.prompt, summary=excluded.summary, llm=excluded.llm, ui=excluded.ui, author=excluded.author, github_issue=excluded.github_issue, closed_at=excluded.closed_at", ticket.ID, ticket.Status, ticket.Title, ticket.Prompt, ticket.Summary, ticket.LLM, ticket.Client, ticket.Author, ticket.GitHub, ticket.CreatedAt.UTC(), ticket.ClosedAt)
 	return err
 }
 
+// listTickets queries tickets optionally filtered by status.
 func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, error) {
 	query := "SELECT id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets"
 	args := []interface{}{}
@@ -319,6 +360,7 @@ func (d *Database) listTickets(ctx context.Context, status string) ([]Ticket, er
 	return tickets, nil
 }
 
+// getTicket retrieves a single ticket by ID.
 func (d *Database) getTicket(ctx context.Context, ticketID string) (*Ticket, error) {
 	row := d.db.QueryRowContext(ctx, "SELECT id, status, title, prompt, summary, llm, ui, author, github_issue, created_at, closed_at FROM tickets WHERE id = ?", ticketID)
 	var ticket Ticket
@@ -332,6 +374,7 @@ func (d *Database) getTicket(ctx context.Context, ticketID string) (*Ticket, err
 	return &ticket, nil
 }
 
+// replaceScopes deletes existing scopes for the file and inserts the new ones.
 func (d *Database) replaceScopes(ctx context.Context, filePath string, scopes []Scope) error {
 	if _, err := d.db.ExecContext(ctx, "DELETE FROM scopes WHERE file_path = ?", filePath); err != nil {
 		return err
@@ -344,6 +387,7 @@ func (d *Database) replaceScopes(ctx context.Context, filePath string, scopes []
 	return nil
 }
 
+// listScopesByFile retrieves all scopes for a given file path.
 func (d *Database) listScopesByFile(ctx context.Context, filePath string) ([]Scope, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT id, kind, file_path, section_path, definition_name, start_line, end_line, updated_at FROM scopes WHERE file_path = ?", filePath)
 	if err != nil {
@@ -361,11 +405,13 @@ func (d *Database) listScopesByFile(ctx context.Context, filePath string) ([]Sco
 	return scopes, nil
 }
 
+// upsertClaim inserts or updates a ticket-scope claim record.
 func (d *Database) upsertClaim(ctx context.Context, ticketID string, scopeID string, claimType string, now time.Time) error {
 	_, err := d.db.ExecContext(ctx, "INSERT INTO ticket_claims (ticket_id, scope_id, claim_type, first_seen_at, last_seen_at) VALUES (?, ?, ?, ?, ?) ON CONFLICT(ticket_id, scope_id) DO UPDATE SET claim_type=excluded.claim_type, last_seen_at=excluded.last_seen_at", ticketID, scopeID, claimType, now.UTC(), now.UTC())
 	return err
 }
 
+// listClaimsByTicket retrieves all scopes claimed by a ticket.
 func (d *Database) listClaimsByTicket(ctx context.Context, ticketID string) ([]Scope, error) {
 	rows, err := d.db.QueryContext(ctx, "SELECT scopes.id, scopes.kind, scopes.file_path, scopes.section_path, scopes.definition_name, scopes.start_line, scopes.end_line, scopes.updated_at FROM scopes JOIN ticket_claims ON scopes.id = ticket_claims.scope_id WHERE ticket_claims.ticket_id = ?", ticketID)
 	if err != nil {
@@ -383,6 +429,7 @@ func (d *Database) listClaimsByTicket(ctx context.Context, ticketID string) ([]S
 	return scopes, nil
 }
 
+// replaceWarnings removes conflict warnings and inserts the new set.
 func (d *Database) replaceWarnings(ctx context.Context, warnings []Warning) error {
 	if _, err := d.db.ExecContext(ctx, "DELETE FROM warnings WHERE kind = ?", "conflict"); err != nil {
 		return err
@@ -395,6 +442,7 @@ func (d *Database) replaceWarnings(ctx context.Context, warnings []Warning) erro
 	return nil
 }
 
+// listWarnings retrieves warnings optionally filtered by ticket ID.
 func (d *Database) listWarnings(ctx context.Context, ticketID string) ([]Warning, error) {
 	query := "SELECT id, kind, severity, message, ticket_id, scope_id, created_at, acknowledged_at, ack_by FROM warnings"
 	args := []interface{}{}
@@ -422,6 +470,7 @@ func (d *Database) listWarnings(ctx context.Context, ticketID string) ([]Warning
 	return warnings, nil
 }
 
+// listViolations retrieves violations optionally filtered by ticket ID.
 func (d *Database) listViolations(ctx context.Context, ticketID string) ([]Violation, error) {
 	query := "SELECT id, kind, priority, scope_id, file_path, line, column, summary, excerpt, autofixable, detected_at, ticket_id, resolved_at FROM violations"
 	args := []interface{}{}
@@ -459,6 +508,7 @@ func (d *Database) listViolations(ctx context.Context, ticketID string) ([]Viola
 	return violations, nil
 }
 
+// listConflicts finds scopes claimed by more than one open ticket.
 func (d *Database) listConflicts(ctx context.Context) ([]struct {
 	ScopeID string
 	Tickets []string
@@ -489,9 +539,12 @@ func (d *Database) listConflicts(ctx context.Context) ([]struct {
 // #endregion 🔖Database
 
 // #region 🔖EventBus
+// Asynchronous in-process event bus for decoupled event publishing and subscription. MUST persist events to the database before dispatching.
 
+// EventHandler is a callback invoked when an event of a subscribed type is published.
 type EventHandler func(context.Context, Event)
 
+// EventBus is a buffered channel-based event dispatcher with persistent storage.
 type EventBus struct {
 	ch       chan Event
 	handlers map[string][]EventHandler
@@ -501,6 +554,8 @@ type EventBus struct {
 	wg       sync.WaitGroup
 }
 
+// NewEventBus creates a new event bus backed by the given database.
+// MUST initialize the channel buffer to 256 and create a cancellable context.
 func NewEventBus(db *Database) *EventBus {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &EventBus{
@@ -512,10 +567,14 @@ func NewEventBus(db *Database) *EventBus {
 	}
 }
 
+// Subscribe registers a handler for the given event type.
+// MUST append the handler to the handlers map.
 func (b *EventBus) Subscribe(eventType string, handler EventHandler) {
 	b.handlers[eventType] = append(b.handlers[eventType], handler)
 }
 
+// Publish persists an event and dispatches it to subscribers.
+// MUST store the event in the database before sending to the channel.
 func (b *EventBus) Publish(ctx context.Context, eventType string, source string, payload interface{}) error {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -539,6 +598,8 @@ func (b *EventBus) Publish(ctx context.Context, eventType string, source string,
 	}
 }
 
+// Start launches the event dispatch goroutine.
+// MUST consume events from the channel and invoke registered handlers.
 func (b *EventBus) Start() {
 	b.wg.Add(1)
 	go func() {
@@ -558,6 +619,8 @@ func (b *EventBus) Start() {
 	}()
 }
 
+// Stop cancels the event bus context and waits for the dispatch goroutine to finish.
+// MUST block until the goroutine exits.
 func (b *EventBus) Stop() {
 	b.cancel()
 	b.wg.Wait()
@@ -566,9 +629,12 @@ func (b *EventBus) Stop() {
 // #endregion 🔖EventBus
 
 // #region 🔖DiffParsing
+// Unified diff parser that extracts file paths and hunk line ranges from patch text. MUST handle standard git diff output format.
 
+// hunkHeader is a regex pattern matching unified diff hunk headers.
 var hunkHeader = regexp.MustCompile(`@@ -([0-9]+)(?:,([0-9]+))? \+([0-9]+)(?:,([0-9]+))? @@`)
 
+// parseUnifiedDiff extracts file paths and hunk ranges from a unified diff patch.
 func parseUnifiedDiff(patch string) DiffResult {
 	scanner := bufio.NewScanner(strings.NewReader(patch))
 	var files []DiffFile
@@ -613,11 +679,13 @@ func parseUnifiedDiff(patch string) DiffResult {
 	return DiffResult{Files: files}
 }
 
+// parseHunkInt parses a hunk header integer value.
 func parseHunkInt(value string) int {
 	parsed, _ := strconv.Atoi(value)
 	return parsed
 }
 
+// parseHunkIntWithDefault parses a hunk header integer or returns the fallback.
 func parseHunkIntWithDefault(value string, fallback int) int {
 	if value == "" {
 		return fallback
@@ -632,13 +700,16 @@ func parseHunkIntWithDefault(value string, fallback int) int {
 // #endregion 🔖DiffParsing
 
 // #region 🔖Indexing
+// Source code indexer that parses files into scopes covering files, sections, and definitions. MUST support region-marker-based sections and language-specific definition patterns.
 
+// IndexCache holds in-memory caches of indexed scopes partitioned by file path.
 type IndexCache struct {
 	Sections    map[string][]Scope
 	Definitions map[string][]Scope
 	Files       map[string]Scope
 }
 
+// newIndexCache creates an empty IndexCache with initialized maps.
 func newIndexCache() IndexCache {
 	return IndexCache{
 		Sections:    map[string][]Scope{},
@@ -647,6 +718,7 @@ func newIndexCache() IndexCache {
 	}
 }
 
+// buildScopesForFile parses a file into file, section, and definition scopes.
 func buildScopesForFile(path string, content string) []Scope {
 	lines := strings.Split(content, "\n")
 	now := time.Now().UTC()
@@ -688,6 +760,7 @@ func buildScopesForFile(path string, content string) []Scope {
 	return scopes
 }
 
+// parseSections extracts section scopes from region markers and markdown headings.
 func parseSections(lines []string, ext string) []Scope {
 	var scopes []Scope
 	type sectionFrame struct {
@@ -757,6 +830,7 @@ func parseSections(lines []string, ext string) []Scope {
 	return scopes
 }
 
+// parseRegionMarker detects region start/end markers in a line.
 func parseRegionMarker(line string) (string, bool, bool) {
 	trimmed := strings.TrimSpace(line)
 	trimmed = strings.TrimPrefix(trimmed, "//")
@@ -773,6 +847,7 @@ func parseRegionMarker(line string) (string, bool, bool) {
 	return "", false, false
 }
 
+// parseMarkdownHeading parses a markdown heading line into level and title.
 func parseMarkdownHeading(line string) (int, string) {
 	trimmed := strings.TrimSpace(line)
 	if !strings.HasPrefix(trimmed, "#") {
@@ -792,6 +867,7 @@ func parseMarkdownHeading(line string) (int, string) {
 	return level, name
 }
 
+// assignSectionPaths updates section IDs to include the file path.
 func assignSectionPaths(sections []Scope) []Scope {
 	for i := range sections {
 		sections[i].ID = fmt.Sprintf("section:%s#%s", sections[i].FilePath, sections[i].SectionPath)
@@ -799,6 +875,7 @@ func assignSectionPaths(sections []Scope) []Scope {
 	return sections
 }
 
+// parseDefinitions extracts definition scopes using language-specific patterns.
 func parseDefinitions(lines []string, ext string) []Scope {
 	var scopes []Scope
 	patterns := definitionPatterns(ext)
@@ -822,6 +899,7 @@ func parseDefinitions(lines []string, ext string) []Scope {
 	return scopes
 }
 
+// definitionPatterns returns language-specific regex patterns for extracting definitions.
 func definitionPatterns(ext string) []*regexp.Regexp {
 	switch ext {
 	case ".go":
@@ -857,7 +935,9 @@ func definitionPatterns(ext string) []*regexp.Regexp {
 // #endregion 🔖Indexing
 
 // #region 🔖Claims
+// Scope claim mapping logic that associates diff hunks with overlapping scopes. MUST detect multi-ticket conflicts.
 
+// mapClaims maps diff hunks to overlapping scopes and returns claimed IDs.
 func mapClaims(scopes []Scope, diff DiffResult) ([]string, map[string][]Scope) {
 	claimed := map[string][]Scope{}
 	var claimedIDs []string
@@ -887,6 +967,7 @@ func mapClaims(scopes []Scope, diff DiffResult) ([]string, map[string][]Scope) {
 	return claimedIDs, claimed
 }
 
+// filterScopesByFile returns scopes matching the given file path.
 func filterScopesByFile(scopes []Scope, filePath string) []Scope {
 	var filtered []Scope
 	for _, scope := range scopes {
@@ -897,6 +978,7 @@ func filterScopesByFile(scopes []Scope, filePath string) []Scope {
 	return filtered
 }
 
+// rangesOverlap tests whether two line ranges overlap.
 func rangesOverlap(a LineRange, b LineRange) bool {
 	if a.Start == 0 || b.Start == 0 {
 		return false
@@ -904,6 +986,7 @@ func rangesOverlap(a LineRange, b LineRange) bool {
 	return a.Start <= b.End && b.Start <= a.End
 }
 
+// appendIfMissing appends a string to a slice only if it is not already present.
 func appendIfMissing(list []string, value string) []string {
 	for _, item := range list {
 		if item == value {
@@ -916,7 +999,9 @@ func appendIfMissing(list []string, value string) []string {
 // #endregion 🔖Claims
 
 // #region 🔖Warnings
+// Conflict warning generation from multi-ticket scope overlaps. MUST produce error-severity warnings for blocking conflicts.
 
+// buildConflictWarnings creates warning records from detected scope conflicts.
 func buildConflictWarnings(conflicts []struct {
 	ScopeID string
 	Tickets []string
@@ -940,7 +1025,9 @@ func buildConflictWarnings(conflicts []struct {
 // #endregion 🔖Warnings
 
 // #region 🔖Server
+// HTTP server with ticket lifecycle, diff ingestion, pre-commit checks, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
 
+// Server is the main HTTP server holding configuration, database, event bus, and caches.
 type Server struct {
 	config      Config
 	db          *Database
@@ -952,6 +1039,8 @@ type Server struct {
 	ghLock      sync.Mutex
 }
 
+// NewServer creates a new Server with the given config, database, and event bus.
+// MUST initialize the index cache and GitHub comment cache.
 func NewServer(config Config, db *Database, bus *EventBus) *Server {
 	return &Server{
 		config:      config,
@@ -963,10 +1052,12 @@ func NewServer(config Config, db *Database, bus *EventBus) *Server {
 	}
 }
 
+// newRequestContext creates a request-scoped context with a 15-second timeout.
 func (s *Server) newRequestContext(r *http.Request) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(r.Context(), 15*time.Second)
 }
 
+// requireAuth checks the bearer token against the configured server token.
 func (s *Server) requireAuth(r *http.Request) bool {
 	if s.config.Token == "" {
 		return true
@@ -982,22 +1073,26 @@ func (s *Server) requireAuth(r *http.Request) bool {
 	return parts[1] == s.config.Token
 }
 
+// decodeJSON reads and decodes a JSON request body with size limits.
 func (s *Server) decodeJSON(r *http.Request, payload interface{}) error {
 	decoder := json.NewDecoder(io.LimitReader(r.Body, s.config.RequestBodyLimit))
 	decoder.DisallowUnknownFields()
 	return decoder.Decode(payload)
 }
 
+// writeJSON writes a JSON response with the given status code.
 func (s *Server) writeJSON(w http.ResponseWriter, status int, payload interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	_ = json.NewEncoder(w).Encode(payload)
 }
 
+// respondError writes a JSON error response.
 func (s *Server) respondError(w http.ResponseWriter, status int, message string) {
 	s.writeJSON(w, status, map[string]string{"error": message})
 }
 
+// handleHealth responds with 200 OK for liveness checks.
 func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1007,6 +1102,7 @@ func (s *Server) handleHealth(w http.ResponseWriter, r *http.Request) {
 	_, _ = w.Write([]byte("ok"))
 }
 
+// handleTicketOpen creates a new ticket from the request payload.
 func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1047,6 +1143,7 @@ func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
+// handleTicketClose closes an existing ticket with a summary.
 func (s *Server) handleTicketClose(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1084,6 +1181,7 @@ func (s *Server) handleTicketClose(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
+// handleTicketReopen reopens a closed ticket with a new prompt.
 func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1124,6 +1222,7 @@ func (s *Server) handleTicketReopen(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
+// handleTicketsQuery lists tickets optionally filtered by status.
 func (s *Server) handleTicketsQuery(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1144,6 +1243,7 @@ func (s *Server) handleTicketsQuery(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, tickets)
 }
 
+// handleTicketDetail returns a single ticket by its path-extracted ID.
 func (s *Server) handleTicketDetail(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1172,6 +1272,7 @@ func (s *Server) handleTicketDetail(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, ticket)
 }
 
+// handleTicketClaims returns scope claims for a ticket.
 func (s *Server) handleTicketClaims(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1192,6 +1293,7 @@ func (s *Server) handleTicketClaims(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, claims)
 }
 
+// handleDiffIngest ingests a diff patch, indexes changed files, maps claims, and returns results.
 func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1227,6 +1329,7 @@ func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, response)
 }
 
+// handlePrecommit runs a pre-commit check against a diff patch.
 func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1264,6 +1367,7 @@ func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, response)
 }
 
+// handleReindex walks the repo and re-indexes all files.
 func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1290,6 +1394,7 @@ func (s *Server) handleReindex(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]int{"files": len(files)})
 }
 
+// handleIndexFile indexes a single file from the request payload.
 func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1314,6 +1419,7 @@ func (s *Server) handleIndexFile(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
+// handleWarnings returns warnings optionally filtered by ticket ID.
 func (s *Server) handleWarnings(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1333,6 +1439,7 @@ func (s *Server) handleWarnings(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, warnings)
 }
 
+// handleViolations returns violations optionally filtered by ticket ID.
 func (s *Server) handleViolations(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1352,6 +1459,7 @@ func (s *Server) handleViolations(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, violations)
 }
 
+// handleScopes returns scopes for a given file query parameter.
 func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1379,13 +1487,17 @@ func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 // #endregion 🔖Server
 
 // #region 🔖Processing
+// Diff processing pipeline that indexes changed files, maps claims, detects conflicts, and produces warnings. MUST be transactional per request.
 
+// ProcessResult holds the outcome of a diff processing operation.
 type ProcessResult struct {
 	ChangedFiles  []string
 	ClaimedScopes []string
 	Blockers      []string
 }
 
+// processDiff parses the patch, indexes changed files, maps claims, and detects conflicts.
+// MUST return warnings and violations alongside the processing result.
 func (s *Server) processDiff(ctx context.Context, ticketID string, patch string, snapshots []FileSnapshot) (ProcessResult, []Warning, []Violation, error) {
 	diff := parseUnifiedDiff(patch)
 	changedFiles := uniqueFiles(diff.Files)
@@ -1440,6 +1552,7 @@ func (s *Server) processDiff(ctx context.Context, ticketID string, patch string,
 	return result, warnings, []Violation{}, nil
 }
 
+// uniqueFiles extracts deduplicated file paths from a diff result.
 func uniqueFiles(files []DiffFile) []string {
 	var list []string
 	for _, file := range files {
@@ -1450,6 +1563,7 @@ func uniqueFiles(files []DiffFile) []string {
 	return list
 }
 
+// snapshotMap converts a slice of file snapshots into a path-to-content map.
 func snapshotMap(snapshots []FileSnapshot) map[string]string {
 	mapping := map[string]string{}
 	for _, snapshot := range snapshots {
@@ -1458,6 +1572,7 @@ func snapshotMap(snapshots []FileSnapshot) map[string]string {
 	return mapping
 }
 
+// updateIndexForFile builds scopes from file content and updates both the database and cache.
 func (s *Server) updateIndexForFile(ctx context.Context, filePath string, content string) {
 	scopes := buildScopesForFile(filePath, content)
 	var fileScope Scope
@@ -1485,6 +1600,7 @@ func (s *Server) updateIndexForFile(ctx context.Context, filePath string, conten
 	_ = s.bus.Publish(ctx, "IndexUpdated", "server", map[string]interface{}{"file": filePath})
 }
 
+// buildScopeID generates a deterministic scope ID from the scope's kind and path.
 func buildScopeID(scope Scope) string {
 	if scope.Kind == "file" {
 		return fmt.Sprintf("file:%s", scope.FilePath)
@@ -1498,6 +1614,7 @@ func buildScopeID(scope Scope) string {
 	return fmt.Sprintf("def:%s#%s", scope.FilePath, scope.Definition)
 }
 
+// walkRepoFiles walks the repo root and returns all non-hidden file paths.
 func (s *Server) walkRepoFiles() ([]string, error) {
 	var files []string
 	err := filepath.Walk(s.config.RepoRoot, func(path string, info os.FileInfo, err error) error {
@@ -1526,7 +1643,9 @@ func (s *Server) walkRepoFiles() ([]string, error) {
 // #endregion 🔖Processing
 
 // #region 🔖Webhooks
+// GitHub webhook handlers for issue comment caching and issue event processing. MUST verify HMAC signatures when a secret is configured.
 
+// GitHubComment stores a cached GitHub issue comment for correlating close/reopen events.
 type GitHubComment struct {
 	Body      string
 	Actor     string
@@ -1535,6 +1654,7 @@ type GitHubComment struct {
 	Timestamp time.Time
 }
 
+// handleGitHubWebhook processes incoming GitHub webhook events.
 func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
@@ -1573,6 +1693,7 @@ func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// verifyGitHubSignature validates the HMAC-SHA256 signature of a webhook payload.
 func verifyGitHubSignature(body []byte, signature string, secret string) bool {
 	parts := strings.SplitN(signature, "=", 2)
 	if len(parts) != 2 {
@@ -1584,6 +1705,7 @@ func verifyGitHubSignature(body []byte, signature string, secret string) bool {
 	return hmac.Equal([]byte(computed), []byte(parts[1]))
 }
 
+// cacheGitHubComment stores a GitHub comment for correlating subsequent events.
 func (s *Server) cacheGitHubComment(payload map[string]interface{}) {
 	issue, repo, actor, body := extractIssueComment(payload)
 	if issue == 0 || repo == "" || actor == "" || body == "" {
@@ -1601,6 +1723,7 @@ func (s *Server) cacheGitHubComment(payload map[string]interface{}) {
 	s.ghLock.Unlock()
 }
 
+// handleGitHubIssueEvent processes GitHub issue close/reopen events.
 func (s *Server) handleGitHubIssueEvent(ctx context.Context, payload map[string]interface{}) {
 	action, _ := payload["action"].(string)
 	issueNumber := extractIssueNumber(payload)
@@ -1618,6 +1741,7 @@ func (s *Server) handleGitHubIssueEvent(ctx context.Context, payload map[string]
 	}
 }
 
+// findCachedComment retrieves a recently cached GitHub comment for the given issue.
 func (s *Server) findCachedComment(repo string, issue int, actor string) GitHubComment {
 	key := fmt.Sprintf("%s#%d#%s", repo, issue, actor)
 	s.ghLock.Lock()
@@ -1633,6 +1757,7 @@ func (s *Server) findCachedComment(repo string, issue int, actor string) GitHubC
 	return comment
 }
 
+// extractIssueComment extracts issue number, repo, actor, and body from a webhook payload.
 func extractIssueComment(payload map[string]interface{}) (int, string, string, string) {
 	issueNumber := extractIssueNumber(payload)
 	repo := extractRepoFullName(payload)
@@ -1644,6 +1769,7 @@ func extractIssueComment(payload map[string]interface{}) (int, string, string, s
 	return issueNumber, repo, actor, body
 }
 
+// extractIssueNumber extracts the issue number from a GitHub webhook payload.
 func extractIssueNumber(payload map[string]interface{}) int {
 	if issue, ok := payload["issue"].(map[string]interface{}); ok {
 		if number, ok := issue["number"].(float64); ok {
@@ -1653,6 +1779,7 @@ func extractIssueNumber(payload map[string]interface{}) int {
 	return 0
 }
 
+// extractRepoFullName extracts the repository full name from a GitHub webhook payload.
 func extractRepoFullName(payload map[string]interface{}) string {
 	if repo, ok := payload["repository"].(map[string]interface{}); ok {
 		if name, ok := repo["full_name"].(string); ok {
@@ -1662,6 +1789,7 @@ func extractRepoFullName(payload map[string]interface{}) string {
 	return ""
 }
 
+// extractActorLogin extracts the sender login from a GitHub webhook payload.
 func extractActorLogin(payload map[string]interface{}) string {
 	if sender, ok := payload["sender"].(map[string]interface{}); ok {
 		if login, ok := sender["login"].(string); ok {
@@ -1674,7 +1802,9 @@ func extractActorLogin(payload map[string]interface{}) string {
 // #endregion 🔖Webhooks
 
 // #region 🔖Discord
+// Discord notification integration for ticket lifecycle events. MUST silently skip when no webhook URL is configured.
 
+// notifyDiscord sends a message to the configured Discord webhook.
 func (s *Server) notifyDiscord(title string, body string) {
 	if s.config.DiscordWebhook == "" {
 		return
@@ -1690,6 +1820,7 @@ func (s *Server) notifyDiscord(title string, body string) {
 	_, _ = client.Do(request)
 }
 
+// registerNotifications subscribes to ticket lifecycle events and sends Discord notifications.
 func (s *Server) registerNotifications() {
 	s.bus.Subscribe("TicketOpened", func(ctx context.Context, event Event) {
 		s.notifyDiscord("# Prompt", event.Payload)
@@ -1705,7 +1836,9 @@ func (s *Server) registerNotifications() {
 // #endregion 🔖Discord
 
 // #region 🔖Utilities
+// Shared utility functions used across the server. MUST produce unique identifiers.
 
+// newID generates a unique identifier from the current timestamp and a random value.
 func newID() string {
 	return fmt.Sprintf("%d-%d", time.Now().UTC().UnixNano(), rand.Int63())
 }
@@ -1713,7 +1846,10 @@ func newID() string {
 // #endregion 🔖Utilities
 
 // #region 🔖Main
+// Application entry point that initializes the database, event bus, server, and HTTP routes. MUST register all handlers before listening.
 
+// main initializes the server and starts listening for HTTP requests.
+// MUST open the database, start the event bus, register all routes, and block on ListenAndServe.
 func main() {
 	config := loadConfig()
 	db, err := openDatabase(config.DatabasePath)

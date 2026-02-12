@@ -26,6 +26,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// External and internal module imports MUST be declared here.
 
 import { DragEndEvent, useDraggable, useDroppable } from "@dnd-kit/core";
 import React, { createContext, FC, memo, useCallback, useContext, useEffect, useMemo, useRef } from "react";
@@ -89,7 +90,9 @@ import {
 // #endregion 🔖Imports
 
 // #region 🔖Types
+// Type definitions MUST declare quality app state, selections, and formula structures.
 
+// Node in a formula graph with position, kind, and child references.
 export interface FormulaNode {
   id: Guid;
   kind: "function" | "quality" | "variable" | "unit" | "value";
@@ -99,34 +102,41 @@ export interface FormulaNode {
   y?: number;
 }
 
+// Selected formula node IDs in the quality app.
 export interface QualityAppSelection {
   formulaNodes?: Guid[];
 }
 
+// Diff for added and removed formula node selections.
 export interface QualityAppSelectionFormulaNodesDiff {
   added?: Guid[];
   removed?: Guid[];
 }
 
+// Diff for quality app selection changes.
 export interface QualityAppSelectionDiff {
   formulaNodes?: QualityAppSelectionFormulaNodesDiff;
 }
 
+// Fullscreen window state for the quality app panels.
 export enum QualityAppFullscreenWindow {
   None = "none",
   Formula = "formula",
   Diagram = "diagram",
 }
 
+// Window kind identifiers for quality app layout.
 export enum QualityAppWindowKind {
   Formula = "formula",
   Diagram = "diagram",
 }
 
+// Hover state tracking the currently hovered formula node.
 export interface QualityAppHover {
   formulaNode?: Guid;
 }
 
+// Diff describing partial quality app state changes.
 export interface QualityAppDiff {
   selection?: QualityAppSelectionDiff;
   hover?: QualityAppHover;
@@ -137,8 +147,10 @@ export interface QualityAppDiff {
   windowLayout?: any;
 }
 
+// Edit record for undo and redo in the quality app.
 export interface QualityAppEdit extends KitDiffAppEdit<QualityAppSelectionDiff> { }
 
+// Complete quality app state including selection, hover, formula nodes, and layout.
 export interface QualityAppState {
   fullscreenWindow: QualityAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -149,16 +161,19 @@ export interface QualityAppState {
   windowLayout?: any;
 }
 
+// Context passed to quality app command handlers.
 export interface QualityAppCommandContext extends KitCommandContext {
   qualityApp: QualityAppState;
   Guid: Guid;
 }
 
+// Result returned by quality app command handlers.
 export interface QualityAppCommandResult {
   diff?: QualityAppDiff;
   qualityDiff?: QualityDiff;
 }
 
+// Definition of a formula function with calculation and LaTeX rendering.
 export interface FormulaFunction {
   name: string;
   category: "numeric" | "branching" | "data" | "text" | "comparison";
@@ -172,7 +187,9 @@ export interface FormulaFunction {
 // #endregion 🔖Types
 
 // #region 🔖Functions
+// Formula function definitions, parsing, and LaTeX conversion utilities MUST be declared here.
 
+// Registry of available formula functions keyed by name.
 export const formulaFunctions: Record<string, FormulaFunction> = {
   Add: {
     name: "Add",
@@ -378,6 +395,8 @@ export const formulaFunctions: Record<string, FormulaFunction> = {
   },
 };
 
+// Parses a formula string into an S-expression AST.
+// The formula string MUST be a valid S-expression.
 export function parseFormula(formula: string): any {
   const tokens = tokenizeFormula(formula);
   const [ast] = parseTokens(tokens, 0);
@@ -443,6 +462,8 @@ function parseTokens(tokens: string[], start: number): [any, number] {
   return [token, start + 1];
 }
 
+// Converts a formula AST to a LaTeX string.
+// The AST MUST be produced by parseFormula.
 export function formulaToLatex(ast: any): string {
   if (typeof ast === "string") {
     if (ast.startsWith("'") && ast.endsWith("'")) {
@@ -493,6 +514,7 @@ function inverseQualityAppSelectionDiff(selection: QualityAppSelection, diff: Qu
 // #endregion 🔖Functions
 
 // #region 🔖Commands
+// Quality app command handlers MUST modify state through diff objects.
 
 const qualityAppCommands = {
   "semio.qualityApp.toggleFormulaFullscreen": (context: QualityAppCommandContext): QualityAppCommandResult => {
@@ -602,6 +624,7 @@ const qualityAppCommands = {
 // #endregion 🔖Commands
 
 // #region 🔖Store
+// Quality app store, hooks, and reactive state management MUST be declared here.
 
 class QualityAppStore extends PlainKitDiffAppStore<QualityAppState, QualityAppDiff, QualityAppSelectionDiff, QualityAppEdit, QualityAppCommandContext, QualityAppCommandResult> {
   private readonly Guid: QualityAppId;
@@ -760,6 +783,7 @@ if (typeof window !== "undefined") {
 }
 
 // #region 🔖Quality App Plugin Registration
+// Plugin registration and event handler wiring MUST initialize quality app context.
 
 const qualityAppPlugin: AppPlugin = {
   id: "quality",
@@ -807,12 +831,15 @@ if (typeof window !== "undefined") {
 
 type QualityAppScope = { guid: string };
 const QualityAppScopeContext = createContext<QualityAppScope | null>(null);
+// React context provider scoping quality app state by GUID.
 export const QualityAppScopeProvider = (props: { guid: string; children: React.ReactNode }) => {
   const value = { guid: props.guid };
   return React.createElement(QualityAppScopeContext.Provider, { value }, props.children as any);
 };
 const useQualityAppScope = () => useContext(QualityAppScopeContext);
 
+// Returns the quality app store instance, optionally applying a selector.
+// The hook MUST be called within a KitScopeProvider and QualityScopeProvider.
 export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, id?: QualityAppId): T | QualityAppStore | null {
   const store = useSketchpadStore();
   const kitScope = useKitScope();
@@ -826,6 +853,8 @@ export function useQualityAppStore<T>(selector?: (store: QualityAppStore) => T, 
   return selector ? selector(qualityAppStore) : qualityAppStore;
 }
 
+// Returns reactive quality app state, optionally applying a selector.
+// The hook MUST be called within a quality app scope.
 export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: QualityAppId): T | QualityAppState | null {
   const store = useQualityAppStore(identitySelector, id);
   if (!store) return null;
@@ -833,6 +862,8 @@ export function useQualityApp<T>(selector?: (state: QualityAppState) => T, id?: 
   return useSyncDeep<QualityAppState>(store as QualityAppStore, selectedSelector as (value: QualityAppState) => QualityAppState);
 }
 
+// Returns command handlers for the quality app.
+// Functions MUST be called with an origin string for tracking.
 export function useQualityAppCommands(id?: QualityAppId) {
   const store = useQualityAppStore(undefined, id) as QualityAppStore | null;
   if (!store) {
@@ -886,6 +917,8 @@ export function useQualityAppCommands(id?: QualityAppId) {
   };
 }
 
+// Returns the fullscreen window state with a setter.
+// The setter MUST receive a valid QualityAppFullscreenWindow value.
 export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -900,6 +933,8 @@ export function useQualityAppFullscreen(): HookResult<QualityAppFullscreenWindow
   return [fullscreen ?? QualityAppFullscreenWindow.None, setFullscreen, canSet];
 }
 
+// Returns the current selection state with a setter.
+// The setter MUST receive a valid QualityAppSelection object.
 export function useQualityAppSelection(): HookResult<QualityAppSelection> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -914,6 +949,8 @@ export function useQualityAppSelection(): HookResult<QualityAppSelection> {
   return [selection ?? {}, setSelection, canSet];
 }
 
+// Returns the hover state with a setter.
+// The setter MUST receive a QualityAppHover or undefined to clear.
 export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -928,6 +965,8 @@ export function useQualityAppHover(): HookResult<QualityAppHover | undefined> {
   return [hover, setHover, canSet];
 }
 
+// Returns the active tool kind with a setter.
+// The setter MUST receive a valid ToolKind value.
 export function useQualityAppActiveTool(): HookResult<ToolKind> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -942,6 +981,8 @@ export function useQualityAppActiveTool(): HookResult<ToolKind> {
   return [activeTool ?? ToolKind.SELECTION_NORMAL, setActiveTool, canSet];
 }
 
+// Returns the current formula nodes as a read-only hook result.
+// The hook MUST be called within a quality app scope.
 export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
   const qualityScope = useQualityScope();
   const formulaNodes = useQualityApp((s) => s.formulaNodes) as FormulaNode[];
@@ -949,6 +990,8 @@ export function useQualityAppFormulaNodes(): HookNoSetResult<FormulaNode[]> {
   return [formulaNodes ?? [], undefined, canRead];
 }
 
+// Returns the panel visibility state with a setter.
+// The setter MUST receive a complete PanelVisibility object.
 export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -963,6 +1006,8 @@ export function useQualityAppPanelVisibility(): HookResult<PanelVisibility> {
   return [panelVisibility ?? { toolbar: true, workbench: false, details: false, chat: false, settings: false }, setPanelVisibility, canSet];
 }
 
+// Returns the window layout state with a setter.
+// The setter MUST provide a valid layout configuration.
 export function useQualityAppWindowLayout(): HookResult<any> {
   const qualityScope = useQualityScope();
   const store = useQualityAppStore() as QualityAppStore | null;
@@ -978,9 +1023,13 @@ export function useQualityAppWindowLayout(): HookResult<any> {
 }
 
 //#region 🔖Action Hooks
+// Memoized action hooks MUST provide formula node interaction callbacks.
 
+// Result tuple from an action hook with optional action callback and availability flag.
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
+// Action hook to select a formula node by ID.
+// The nodeId MUST reference an existing formula node.
 export function useQualityAppSelectFormulaNode(): ActionHookResult<[nodeId: string]> {
   const [, setSelection, canSetSelection] = useQualityAppSelection();
   const action = useMemo(() => {
@@ -990,6 +1039,8 @@ export function useQualityAppSelectFormulaNode(): ActionHookResult<[nodeId: stri
   return [action, canSetSelection];
 }
 
+// Action hook to hover a formula node by ID.
+// The nodeId MUST reference an existing formula node.
 export function useQualityAppHoverFormulaNode(): ActionHookResult<[nodeId: string]> {
   const [, setHover, canSetHover] = useQualityAppHover();
   const action = useMemo(() => {
@@ -999,6 +1050,8 @@ export function useQualityAppHoverFormulaNode(): ActionHookResult<[nodeId: strin
   return [action, canSetHover];
 }
 
+// Action hook to clear the current hover state.
+// The action MUST reset hover to undefined.
 export function useQualityAppClearHover(): ActionHookResult<[]> {
   const [, setHover, canSetHover] = useQualityAppHover();
   const action = useMemo(() => {
@@ -1008,6 +1061,8 @@ export function useQualityAppClearHover(): ActionHookResult<[]> {
   return [action, canSetHover];
 }
 
+// Action hook to deselect all formula nodes.
+// The action MUST clear the entire selection.
 export function useQualityAppDeselectAll(): ActionHookResult<[]> {
   const [, setSelection, canSetSelection] = useQualityAppSelection();
   const action = useMemo(() => {
@@ -1017,6 +1072,8 @@ export function useQualityAppDeselectAll(): ActionHookResult<[]> {
   return [action, canSetSelection];
 }
 
+// Action hook to toggle a panel's visibility.
+// The panelKey MUST be a valid PanelVisibility key.
 export function useQualityAppTogglePanel(): ActionHookResult<[panelKey: keyof PanelVisibility]> {
   const [panelVisibility, setPanelVisibility, canSetPanelVisibility] = useQualityAppPanelVisibility();
   const action = useMemo(() => {
@@ -1028,6 +1085,8 @@ export function useQualityAppTogglePanel(): ActionHookResult<[panelKey: keyof Pa
   return [action, canSetPanelVisibility];
 }
 
+// Action hook to toggle the formula window fullscreen state.
+// The action MUST toggle between Formula and None fullscreen modes.
 export function useQualityAppToggleFormulaFullscreen(): ActionHookResult<[]> {
   const [fullscreen, setFullscreen, canSetFullscreen] = useQualityAppFullscreen();
   const action = useMemo(() => {
@@ -1037,6 +1096,8 @@ export function useQualityAppToggleFormulaFullscreen(): ActionHookResult<[]> {
   return [action, canSetFullscreen];
 }
 
+// Action hook to toggle the diagram window fullscreen state.
+// The action MUST toggle between Diagram and None fullscreen modes.
 export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
   const [fullscreen, setFullscreen, canSetFullscreen] = useQualityAppFullscreen();
   const action = useMemo(() => {
@@ -1051,6 +1112,7 @@ export function useQualityAppToggleDiagramFullscreen(): ActionHookResult<[]> {
 // #endregion 🔖Store
 
 // #region 🔖Components
+// React components MUST render the quality app formula diagram, details panel, and workbench.
 
 declare global {
   interface Window {
@@ -1266,6 +1328,7 @@ const Formula: FC = () => {
   );
 };
 
+// Detail panel component displaying quality property fields.
 export const QualityDetails: FC = () => {
   const quality = useQuality(undefined, undefined, true) as Quality | undefined;
   const { updateFormula } = useQualityAppCommands();
@@ -1404,6 +1467,7 @@ interface QualityAvatarProps {
   showHoverCard?: boolean;
 }
 
+// Draggable avatar component for a quality with optional hover card.
 export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qualityProp, showHoverCard = false }) => {
   const qualityFromStore = qualityId && !qualityProp ? (useQuality(undefined, qualityId) as Quality | null) : null;
   const quality = qualityProp || qualityFromStore;
@@ -1468,6 +1532,7 @@ export const QualityAvatar: FC<QualityAvatarProps> = ({ qualityId, quality: qual
   );
 };
 
+// Workbench panel component listing formula function nodes by category.
 export const QualityWorkbench: FC = () => {
   const { t } = useTranslation();
   const kit = useKit(undefined, undefined, true) as Kit | null;
@@ -1601,7 +1666,9 @@ const QualityWorkbenchQualities: FC = () => {
 // #endregion 🔖Components
 
 // #region 🔖App
+// Main quality app component MUST compose window layout, drag-drop, and hotkey handling.
 
+// Props for the quality app root component.
 export interface AppProps { }
 
 const FormulaWindow = memo(() => <Formula />);
@@ -1933,7 +2000,9 @@ export default App;
 // #endregion 🔖App
 
 // #region 🔖Config
+// Quality app route, panel, and path matching configuration MUST be exported.
 
+// Quality app configuration for routing, panels, and path matching.
 export const config: AppConfig = {
   id: "quality",
   component: App,

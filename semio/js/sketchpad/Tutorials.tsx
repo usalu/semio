@@ -26,6 +26,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// External and internal module imports MUST be declared here.
 
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
 import { CloseIcon, PauseIcon, PlayIcon, RecordIcon, SkipBackIcon, SkipForwardIcon, StopIcon } from "@semio/assets";
@@ -37,9 +38,12 @@ import { Mode } from "./shared";
 // #endregion 🔖Imports
 
 // #region 🔖Components
+// Tutorial UI components MUST provide playback and recording controls.
 
 // #region 🔖Tutorial Controls
+// Tutorial playback controls MUST render in the footer during active tutorials.
 
+// Footer controls component for tutorial playback.
 export const TutorialControls: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -116,7 +120,9 @@ const TutorialControlsContent: FC = () => {
 // #endregion 🔖Tutorial Controls
 
 // #region 🔖Recording Controls
+// Recording controls MUST render in the footer during active recording in dev mode.
 
+// Footer controls component for tutorial recording.
 export const RecordingControls: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -189,7 +195,9 @@ const RecordingControlsContent: FC = () => {
 // #endregion 🔖Recording Controls
 
 // #region 🔖Record Button
+// Record button MUST toggle recording in the footer when in dev mode.
 
+// Footer button component toggling tutorial recording.
 export const RecordButton: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -231,7 +239,9 @@ export const RecordButton: FC = () => {
 // #endregion 🔖Record Button
 
 // #region 🔖Tutorial Overlay
+// Tutorial overlay MUST render focus highlights and cursor animations during playback.
 
+// Overlay component rendering focus highlights and animated cursor.
 export const TutorialOverlay: FC = () => {
   const isTutorialActive = useIsTutorialActive();
   const currentMilestone = useCurrentMilestone();
@@ -369,7 +379,9 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
 
 // #endregion 🔖Components
 // #region 🔖Built-in Tutorials
+// Built-in tutorials MUST define default tutorial content shipped with the app.
 
+// Built-in hello tutorial introducing basic semio concepts.
 export const helloTutorial: Tutorial = {
   id: guid(),
   name: "Hello semio Tutorial",
@@ -445,6 +457,7 @@ export const helloTutorial: Tutorial = {
   ],
 };
 
+// Built-in sketchpad tour tutorial for core features.
 export const sketchpadTour: Tutorial = {
   id: guid(),
   name: "Sketchpad Tour",
@@ -505,16 +518,20 @@ export const sketchpadTour: Tutorial = {
 // #endregion 🔖Built-in Tutorials
 
 // #region 🔖Commands
+// Tutorial and recording command definitions MUST map command names to store actions.
 
+// Context passed to tutorial command handlers.
 export interface TutorialCommandContext {
   tutorialStore: any;
 }
 
+// Result returned from tutorial command execution.
 export interface TutorialCommandResult {
   success: boolean;
   data?: any;
 }
 
+// Map of tutorial command names to handler functions.
 export const tutorialCommands = {
   "semio.tutorial.start": (context: TutorialCommandContext, tutorial: Tutorial): TutorialCommandResult => {
     context.tutorialStore.startTutorial(tutorial);
@@ -554,6 +571,7 @@ export const tutorialCommands = {
   },
 };
 
+// Map of dev-mode recording command names to handler functions.
 export const devCommands = {
   "semio.recording.start": (context: TutorialCommandContext, name: string, tutorialId?: string): TutorialCommandResult => {
     context.tutorialStore.startRecording(name, tutorialId);
@@ -580,7 +598,9 @@ export const devCommands = {
 // #endregion 🔖Commands
 
 // #region 🔖Command Interceptor
+// Command interceptor MUST record events and check milestone completion during playback.
 
+// Hook intercepting commands to record events and check milestone completion.
 export const useTutorialCommandInterceptor = (onCommandExecute: (command: string, origin?: string, args?: any) => void) => {
   const store = useTutorialStore();
   const isRecording = useIsRecording();
@@ -602,25 +622,38 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
 // #endregion 🔖Command Interceptor
 
 // #region 🔖Hooks
+// Tutorial hooks MUST provide reactive access to tutorial and recording state.
 
+// Hook returning the tutorial store instance.
 export const useTutorialStore = () => useTutorialContext().store;
+// Hook returning the current tutorial state.
 export const useTutorialState = () => useTutorialContext().state;
+// Hook returning the currently active tutorial.
 export const useActiveTutorial = () => useTutorialContext().state.activeTutorial;
+// Hook returning the current milestone of the active tutorial.
 export const useCurrentMilestone = () => {
   const { state } = useTutorialContext();
   if (!state.activeTutorial) return null;
   return state.activeTutorial.milestones[state.currentMilestoneIndex] || null;
 };
+// Hook returning the current playback state.
 export const usePlaybackState = () => useTutorialContext().state.playbackState;
+// Hook returning the current playback time.
 export const usePlaybackTime = () => useTutorialContext().state.playbackTime;
+// Hook returning the current recording state.
 export const useRecordingState = () => useTutorialContext().state.recordingState;
+// Hook returning the active recording.
 export const useActiveRecording = () => useTutorialContext().state.activeRecording;
+// Hook returning all available tutorials.
 export const useAvailableTutorials = () => useTutorialContext().state.availableTutorials;
+// Hook returning whether recording is active.
 export const useIsRecording = () => useTutorialContext().state.recordingState === TutorialRecordingState.RECORDING;
+// Hook returning whether a tutorial is actively playing.
 export const useIsTutorialActive = () => {
   const state = useTutorialContext().state;
   return state.playbackState !== TutorialPlaybackState.IDLE && state.playbackState !== TutorialPlaybackState.COMPLETED;
 };
+// Hook returning the current tutorial progress metrics.
 export const useTutorialProgress = () => {
   const { state } = useTutorialContext();
   if (!state.activeTutorial) return { current: 0, total: 0, percentage: 0 };
@@ -633,6 +666,7 @@ export const useTutorialProgress = () => {
 // #endregion 🔖Hooks
 
 // #region 🔖Context
+// Tutorial context MUST provide the store and state to descendant components.
 
 interface TutorialContextValue {
   store: TutorialStore;
@@ -641,6 +675,7 @@ interface TutorialContextValue {
 
 const TutorialContext = createContext<TutorialContextValue | null>(null);
 
+// Provider component supplying tutorial store and state to descendants.
 export const TutorialProvider: FC<{ store: TutorialStore; children: ReactNode }> = ({ store, children }) => {
   const [state, setState] = useState<TutorialState>(store.snapshot());
 
@@ -673,9 +708,12 @@ const useTutorialContext = () => {
 // #endregion 🔖Context
 
 // #region 🔖Types
+// Tutorial type definitions MUST be declared here.
 
 // #region 🔖Tutorial Entities
+// Tutorial entity interfaces MUST define milestones, recordings, and playback state.
 
+// A single step within a tutorial with optional triggers and animations.
 export interface TutorialMilestone {
   id: Guid;
   title: string;
@@ -704,6 +742,7 @@ export interface TutorialMilestone {
   order: number;
 }
 
+// A complete tutorial with ordered milestones.
 export interface Tutorial {
   id: Guid;
   name: string;
@@ -715,6 +754,7 @@ export interface Tutorial {
   concepts?: string[];
 }
 
+// A timestamped event captured during tutorial recording.
 export interface TutorialRecordingEvent {
   timestamp: number;
   type: "command" | "cursor" | "interaction";
@@ -729,6 +769,7 @@ export interface TutorialRecordingEvent {
   };
 }
 
+// A complete recording session with captured events.
 export interface TutorialRecording {
   id: Guid;
   tutorialId?: Guid;
@@ -738,6 +779,7 @@ export interface TutorialRecording {
   events: TutorialRecordingEvent[];
 }
 
+// Playback lifecycle states for a tutorial.
 export enum TutorialPlaybackState {
   IDLE = "idle",
   PLAYING = "playing",
@@ -745,12 +787,14 @@ export enum TutorialPlaybackState {
   COMPLETED = "completed",
 }
 
+// Recording lifecycle states for a tutorial.
 export enum TutorialRecordingState {
   IDLE = "idle",
   RECORDING = "recording",
   PAUSED = "paused",
 }
 
+// Complete state of the tutorial system.
 export interface TutorialState {
   activeTutorial: Tutorial | null;
   currentMilestoneIndex: number;
@@ -761,6 +805,7 @@ export interface TutorialState {
   availableTutorials: Tutorial[];
 }
 
+// Partial state diff for updating tutorial state.
 export interface TutorialDiff {
   activeTutorial?: Tutorial | null;
   currentMilestoneIndex?: number;
@@ -775,7 +820,10 @@ export interface TutorialDiff {
 // #endregion 🔖Types
 
 // #region 🔖Store
+// Tutorial store MUST manage playback, recording, and milestone navigation state.
 
+// Tutorial store managing playback, recording, and milestone navigation.
+// TutorialStore MUST synchronize state changes through the notify pattern.
 export class TutorialStore {
   private state: TutorialState;
   private readonly listeners: Set<() => void> = new Set();

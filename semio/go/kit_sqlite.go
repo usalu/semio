@@ -1,3 +1,34 @@
+// #region 🔖Header
+
+// 💻semio/go/kit_sqlite.go
+
+// 2026 Ueli Saluz <ueli@semio-tech.de>
+
+// #region 🔖License
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Affero General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+//
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Affero General Public License for more details.
+//
+// You should have received a copy of the GNU Affero General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// #endregion 🔖License
+
+// #region 🔖Specs
+// #endregion 🔖Specs
+
+// #endregion 🔖Header
+
+// #region 🔖SQLite Kit Operations
+// SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.
+
 package semio
 
 import (
@@ -12,6 +43,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+// KitFromSqlite reads a Kit from a SQLite database file
+// Callers MUST provide a valid path to an existing SQLite database
 func KitFromSqlite(dbPath string) (*Kit, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -46,6 +79,8 @@ func KitFromSqlite(dbPath string) (*Kit, error) {
 	return kit, nil
 }
 
+// loadTypes loads all types belonging to a kit from the database
+// Callers MUST provide a valid open database connection and kit GUID
 func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
     rows, err := db.Query("SELECT guid, name, parent_guid, is_abstract, folder, stock, virtual, unit, description, icon, image FROM type WHERE kit_guid = ?", kitGuid)
     if err != nil { return nil, err }
@@ -80,6 +115,8 @@ func loadTypes(db *sql.DB, kitGuid string) ([]Type, error) {
     return types, nil
 }
 
+// loadDesigns loads all designs belonging to a kit from the database
+// Callers MUST provide a valid open database connection and kit GUID
 func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
     rows, err := db.Query(`SELECT guid, name, parent_guid, variant, unit, folder, 
         is_abstract, can_scale, can_mirror, description, icon, image, created, updated 
@@ -122,6 +159,8 @@ func loadDesigns(db *sql.DB, kitGuid string) ([]Design, error) {
     return designs, nil
 }
 
+// loadPieces loads all pieces belonging to a design from the database
+// Callers MUST provide a valid open database connection and design GUID
 func loadPieces(db *sql.DB, designGuid string) ([]Piece, error) {
     rows, err := db.Query(`SELECT guid, name, type_guid, design_guid_ref,
         plane_origin_x, plane_origin_y, plane_origin_z,
@@ -167,6 +206,8 @@ func loadPieces(db *sql.DB, designGuid string) ([]Piece, error) {
     return pieces, nil
 }
 
+// loadConnections loads all connections belonging to a design from the database
+// Callers MUST provide a valid open database connection and design GUID
 func loadConnections(db *sql.DB, designGuid string) ([]Connection, error) {
     rows, err := db.Query(`SELECT guid, connected_piece_guid, connected_connector_guid,
         connecting_piece_guid, connecting_connector_guid,
@@ -203,6 +244,8 @@ func loadConnections(db *sql.DB, designGuid string) ([]Connection, error) {
     return connections, nil
 }
 
+// loadConnectors loads all connectors belonging to a type from the database
+// Callers MUST provide a valid open database connection and type GUID
 func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
     rows, err := db.Query(`SELECT guid, name, point_x, point_y, point_z,
         direction_x, direction_y, direction_z, t, mandatory, port_guid, description
@@ -232,6 +275,8 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
     return connectors, nil
 }
 
+// KitToSqlite writes a Kit to a SQLite database file
+// Callers MUST provide a valid Kit, writable database path, and schema SQL
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
     db, err := sql.Open("sqlite3", dbPath)
     if err != nil { return err }
@@ -320,6 +365,8 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
     return nil
 }
 
+// KitFromZip extracts a Kit and its files from a zip archive
+// Callers MUST provide a valid path to an existing zip file containing kit.db
 func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
     tmpDir, err := os.MkdirTemp("", "semio-kit-*")
     if err != nil { return nil, nil, err }
@@ -363,6 +410,8 @@ func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
     return kit, files, nil
 }
 
+// KitToZip packages a Kit and its files into a zip archive
+// Callers MUST provide a valid Kit, file map, writable zip path, and schema SQL
 func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL string) error {
     tmpDir, err := os.MkdirTemp("", "semio-kit-*")
     if err != nil { return err }
@@ -397,3 +446,5 @@ func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL strin
 
     return nil
 }
+
+// #endregion 🔖SQLite Kit Operations

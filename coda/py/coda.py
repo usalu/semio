@@ -1,3 +1,34 @@
+# region Header
+
+# 💻coda/py/coda.py
+
+# 2026 Ueli Saluz <ueli@semio-tech.de>
+
+# region License
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as
+# published by the Free Software Foundation, either version 3 of the
+# License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+# endregion License
+
+# region Specs
+# endregion Specs
+
+# endregion Header
+
+# region Imports
+# Imports MUST include standard library, third-party FastMCP, and module-level configuration.
+
 """coda MCP server - ACC design assistant with resources, tools, and prompts."""
 
 from __future__ import annotations
@@ -15,6 +46,11 @@ mcp = FastMCP("coda", json_response=True)
 _CODA_ROOT = Path(__file__).resolve().parent
 _CODA_JSON_PATH = _CODA_ROOT / "coda.json"
 _PROJECT_ENV = "CODA_PROJECT"
+
+# endregion Imports
+
+# region Helpers
+# Helpers MUST provide private functions for config loading and project root resolution.
 
 def _load_json_with_comments(path: Path) -> dict:
     """Load JSON file, stripping // line comments."""
@@ -60,13 +96,22 @@ def _get_latest_iteration(run_dir: Path) -> Path | None:
     dirs = sorted(int(d.name) for d in iters.iterdir() if d.is_dir() and d.name.isdigit())
     return iters / str(dirs[-1]) if dirs else None
 
+# endregion Helpers
+
+# region Resources
+# Resources MUST expose MCP resource handlers for measures, targets, properties, rules, and project data.
+
 @mcp.resource("coda://measures")
+# Lists all available measures as JSON from the coda configuration.
+# Implementations MUST load the coda config and return the measures array.
 def get_measures() -> str:
     """List all measures that are available."""
     config = _get_coda_config()
     return json.dumps(config.get("measures", []), indent=2)
 
 @mcp.resource("coda://measure/{id}")
+# Retrieves a single measure by its id.
+# Implementations MUST return an error JSON object when the measure is not found.
 def get_measure(id: str) -> str:
     """Get a measure by id."""
     config = _get_coda_config()
@@ -76,12 +121,16 @@ def get_measure(id: str) -> str:
     return json.dumps({"error": f"measure not found: {id}"})
 
 @mcp.resource("coda://targets")
+# Lists all available targets as JSON.
+# Implementations MUST load the coda config and return the targets array.
 def get_targets() -> str:
     """List all targets."""
     config = _get_coda_config()
     return json.dumps(config.get("targets", []), indent=2)
 
 @mcp.resource("coda://target/{id}")
+# Retrieves a single target by its id.
+# Implementations MUST return an error JSON object when the target is not found.
 def get_target(id: str) -> str:
     """Get a target by id."""
     config = _get_coda_config()
@@ -91,6 +140,8 @@ def get_target(id: str) -> str:
     return json.dumps({"error": f"target not found: {id}"})
 
 @mcp.resource("coda://{target_id}/properties")
+# Lists all properties for a given target.
+# Implementations MUST return an error JSON object when the target is not found.
 def get_target_properties(target_id: str) -> str:
     """Get properties for a target."""
     config = _get_coda_config()
@@ -100,6 +151,8 @@ def get_target_properties(target_id: str) -> str:
     return json.dumps({"error": f"target not found: {target_id}"})
 
 @mcp.resource("coda://{target_id}/property/{id}")
+# Retrieves a single property by id for a given target.
+# Implementations MUST return an error JSON object when the target or property is not found.
 def get_target_property(target_id: str, id: str) -> str:
     """Get a property by id for a target."""
     config = _get_coda_config()
@@ -112,6 +165,8 @@ def get_target_property(target_id: str, id: str) -> str:
     return json.dumps({"error": f"target not found: {target_id}"})
 
 @mcp.resource("coda://{target_id}/rules")
+# Lists all rules for a given target.
+# Implementations MUST return an error JSON object when the target is not found.
 def get_target_rules(target_id: str) -> str:
     """Get rules for a target."""
     config = _get_coda_config()
@@ -121,6 +176,8 @@ def get_target_rules(target_id: str) -> str:
     return json.dumps({"error": f"target not found: {target_id}"})
 
 @mcp.resource("coda://{target_id}/rule/{id}")
+# Retrieves a single rule by id for a given target.
+# Implementations MUST return an error JSON object when the target or rule is not found.
 def get_target_rule(target_id: str, id: str) -> str:
     """Get a rule by id for a target."""
     config = _get_coda_config()
@@ -133,6 +190,8 @@ def get_target_rule(target_id: str, id: str) -> str:
     return json.dumps({"error": f"target not found: {target_id}"})
 
 @mcp.resource("coda://project")
+# Returns the current project configuration.
+# Implementations MUST return an error JSON object when no project root is found.
 def get_project() -> str:
     """Get the current project configuration."""
     proj = _get_project_config()
@@ -141,6 +200,8 @@ def get_project() -> str:
     return json.dumps(proj, indent=2)
 
 @mcp.resource("coda://current-run")
+# Returns the metadata of the current run.
+# Implementations MUST return an error JSON object when no project or run exists.
 def get_current_run() -> str:
     """Get the current run metadata."""
     root = _get_project_root()
@@ -154,6 +215,8 @@ def get_current_run() -> str:
     return json.dumps(data, indent=2)
 
 @mcp.resource("coda://current-iteration")
+# Returns the metadata of the current iteration.
+# Implementations MUST return an error JSON object when no project, run, or iteration exists.
 def get_current_iteration() -> str:
     """Get the current iteration metadata."""
     root = _get_project_root()
@@ -170,6 +233,8 @@ def get_current_iteration() -> str:
     return json.dumps(data, indent=2)
 
 @mcp.resource("coda://iterations")
+# Lists all iterations in the current run.
+# Implementations MUST return an empty array when no runs or iterations exist.
 def get_iterations() -> str:
     """List iterations in the current run."""
     root = _get_project_root()
@@ -186,6 +251,8 @@ def get_iterations() -> str:
     return json.dumps(entries, indent=2)
 
 @mcp.resource("coda://report")
+# Returns the report from the latest iteration.
+# Implementations MUST return an error JSON object when no project, run, iteration, or report exists.
 def get_report() -> str:
     """Get the current report from the latest iteration."""
     root = _get_project_root()
@@ -202,7 +269,14 @@ def get_report() -> str:
         return json.dumps({"error": "No report found"})
     return report_json.read_text(encoding="utf-8")
 
+# endregion Resources
+
+# region Tools
+# Tools MUST expose MCP tool handlers for run management, translation, and design fixes.
+
 @mcp.tool()
+# Starts a new run directory under .coda/runs.
+# Implementations MUST create the run directory with run.json and iterations subdirectory.
 def start_run() -> dict:
     """Start a new run. Creates a new run directory under .coda/runs."""
     root = _get_project_root()
@@ -218,6 +292,8 @@ def start_run() -> dict:
     return {"run_id": run_id, "path": str(run_dir)}
 
 @mcp.tool()
+# Starts a new iteration in the current or specified run.
+# Implementations MUST create the iteration directory with targets subdirectory and iteration.json.
 def start_iteration(run_id: str | None = None) -> dict:
     """Start a new iteration in the current or specified run."""
     root = _get_project_root()
@@ -243,6 +319,8 @@ def start_iteration(run_id: str | None = None) -> dict:
     return {"run_id": run_dir.name, "iteration_index": idx, "path": str(iter_dir)}
 
 @mcp.tool()
+# Translates a design to the specified target format.
+# Implementations MUST verify the target exists in the project before invoking translation.
 def translate(target_id: str) -> dict:
     """Translate design to target format. Invokes the translator agent for the given target."""
     proj = _get_project_config()
@@ -254,6 +332,8 @@ def translate(target_id: str) -> dict:
     return {"message": "Translate tool: invoke DESIGN-to-TARGET translator agent", "target_id": target_id}
 
 @mcp.tool()
+# Fixes design violations using the fixer agent.
+# Implementations MUST verify project existence before invoking the fixer.
 def fix(prompt: str) -> dict:
     """Fix design to address violations. Invokes the fixer agent with the given prompt."""
     proj = _get_project_config()
@@ -261,11 +341,25 @@ def fix(prompt: str) -> dict:
         return {"error": "No project"}
     return {"message": "Fix tool: invoke fixer agent via design MCP", "prompt": prompt}
 
+# endregion Tools
+
+# region Prompts
+# Prompts MUST expose MCP prompt handlers for design change instructions.
+
 @mcp.prompt()
+# Generates a design change prompt for the fixer agent.
+# Implementations MUST return a formatted instruction string from the user prompt.
 def change(prompt: str) -> str:
     """Change the design according to the given prompt. Use with the fixer agent."""
     return f"Change the design to address the following: {prompt}"
 
+# endregion Prompts
+
+# region Main
+# Main MUST provide the CLI entry point for the coda MCP server.
+
+# Parses CLI arguments and starts the MCP server.
+# Implementations MUST support both stdio and HTTP transport modes.
 def main() -> None:
     parser = argparse.ArgumentParser(description="coda MCP server")
     parser.add_argument("--mcp-stdio", action="store_true", help="Run MCP server over stdio")
@@ -277,3 +371,5 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# endregion Main

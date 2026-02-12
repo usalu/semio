@@ -25,6 +25,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// Imports MUST include VS Code API, Node.js utilities, and semio validation.
 
 import { deserializeKit, Problem, validateKit } from "@semio/js/semio";
 import { exec, execFile } from "child_process";
@@ -36,6 +37,7 @@ import * as vscode from "vscode";
 const execAsync = promisify(exec);
 const execFileAsync = promisify(execFile);
 
+// Structured event emitted by the repo CLI binary.
 export type RepoEvent = {
   kind: string;
   data?: unknown;
@@ -47,6 +49,7 @@ export type RepoEvent = {
 // #endregion 🔖Imports
 
 // #region 🔖Constants
+// Constants MUST define static configuration for diagnostics and UI strings.
 
 const SEMIO_KIT_LANGUAGE = "json";
 const DIAGNOSTIC_SOURCE = "semio";
@@ -71,13 +74,16 @@ const UI_STRINGS = {
 // #endregion 🔖Constants
 
 // #region 🔖Types
+// Types MUST define interfaces for repo events, tool results, and data models.
 
+// Structured output from a repo CLI tool invocation.
 export interface ToolResult<T = unknown> {
   output: { lines: { type: string; text: string }[]; exitCode: number };
   data?: T;
   error?: string;
 }
 
+// NX project metadata for a workspace package.
 export interface ProjectData {
   name: string;
   kind?: string;
@@ -87,12 +93,14 @@ export interface ProjectData {
   tags?: string[];
 }
 
+// Code policy configuration with id, name, and description.
 export interface PolicyData {
   id: string;
   name: string;
   description: string;
 }
 
+// YAML frontmatter fields parsed from a ticket markdown file.
 export interface TicketFrontmatter {
   status: string;
   prompt: string;
@@ -104,6 +112,7 @@ export interface TicketFrontmatter {
   ignore?: boolean;
 }
 
+// Single interaction record within a ticket lifecycle.
 export interface TicketInteraction {
   prompt: string;
   llm: string;
@@ -113,6 +122,7 @@ export interface TicketInteraction {
   commit: string;
 }
 
+// Full ticket data including date, slug, frontmatter, and interactions.
 export interface TicketData {
   year: number;
   month: number;
@@ -124,40 +134,47 @@ export interface TicketData {
   interactions?: TicketInteraction[];
 }
 
+// Line-level contribution metrics for added and removed lines.
 export interface ContributorLineMetrics {
   added: number;
   removed: number;
 }
 
+// Contributor metrics scoped to a single definition.
 export interface ContributorDefinitionData {
   name: string;
   lines: ContributorLineMetrics;
 }
 
+// Contributor metrics scoped to a file section and its definitions.
 export interface ContributorSectionData {
   name: string;
   lines: ContributorLineMetrics;
   definitions: ContributorDefinitionData[];
 }
 
+// Contributor metrics scoped to a single file and its sections.
 export interface ContributorFileData {
   name: string;
   lines: ContributorLineMetrics;
   sections: ContributorSectionData[];
 }
 
+// Contributor metrics scoped to a folder and its files.
 export interface ContributorFolderData {
   name: string;
   lines: ContributorLineMetrics;
   files: ContributorFileData[];
 }
 
+// Contributor metrics scoped to a bundle and its folders.
 export interface ContributorBundleData {
   name: string;
   lines: ContributorLineMetrics;
   folders: ContributorFolderData[];
 }
 
+// Ticket metadata associated with a contributor.
 export interface ContributorTicketData {
   year: number;
   month: number;
@@ -170,11 +187,13 @@ export interface ContributorTicketData {
   filePath?: string;
 }
 
+// Commit metadata associated with a contributor.
 export interface ContributorCommitData {
   title: string;
   sha: string;
 }
 
+// Full contributor profile with contributions across bundles, tickets, and commits.
 export interface ContributorData {
   github: string;
   name?: string;
@@ -249,6 +268,7 @@ interface GraphqlSection {
 // #endregion 🔖Types
 
 // #region 🔖Globals
+// Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
 
 let outputChannel: vscode.OutputChannel;
 let repoDiagnosticCollection: vscode.DiagnosticCollection;
@@ -265,6 +285,7 @@ let monorepoProvider: MonorepoTreeDataProvider | undefined;
 // #endregion 🔖Globals
 
 // #region 🔖Utilities
+// Utilities MUST provide shared functions for logging, shell execution, and binary resolution.
 
 function writeLog(level: string, args: any[]): void {
   const message = args.map(a => typeof a === 'object' ? JSON.stringify(a, null, 2) : String(a)).join(' ');
@@ -383,11 +404,15 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
   }
 }
 
+// Parses raw CLI output into structured repo events.
+// Implementations MUST split output by newlines and parse each non-empty line as JSON.
 export function parseRepoEvents(output: string): RepoEvent[] {
   const lines = output.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
   return lines.map((line) => JSON.parse(line) as RepoEvent);
 }
 
+// Extracts the final result payload from a sequence of repo events.
+// Implementations MUST throw on fatal errors and return the last meaningful result.
 export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
   const results: unknown[] = [];
   const controlKinds = new Set(["start", "progress", "log", "done"]);
@@ -424,7 +449,9 @@ export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> 
 // #endregion 🔖Utilities
 
 // #region 🔖URI Resolution
+// URI Resolution MUST handle parsing, tree node caching, and semiorepo URI navigation.
 
+// Tree node data structure representing a monorepo artifact in the sidebar tree.
 export interface TreeNodeData {
   Kind: string;
   ID: string;
@@ -446,11 +473,15 @@ let treeRootCache: TreeNodeData | null = null;
 let treeNodeCacheTime = 0;
 const TREE_CACHE_TTL = 30000;
 
+// Extracts the leading emoji characters from a text string.
+// Implementations MUST use Unicode emoji properties to detect the prefix.
 export function extractLeadingEmoji(text: string): string {
   const match = text.match(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}][\u{FE0E}\u{FE0F}\u{200D}\p{Emoji_Component}]*/u);
   return match ? match[0] : "";
 }
 
+// Computes the display label for a tree node including emoji prefix and status icon.
+// Implementations MUST prepend the node emoji and status indicator to the label.
 export function treeNodeDisplayLabel(node: TreeNodeData): string {
   if (node.Kind === "category") return node.Label;
   const emoji = extractLeadingEmoji(node.ID);
@@ -468,17 +499,23 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
   return `${prefix}${statusIcon}${label}`;
 }
 
+// Returns the VS Code context value for a tree node based on its kind and status.
+// Implementations MUST distinguish open and closed tickets.
 export function treeNodeContextValue(node: TreeNodeData): string {
   if (node.Kind === "ticket") return node.Status === "open" ? "ticketOpen" : "ticketClosed";
   return node.Kind;
 }
 
+// Returns the VS Code command to execute when a tree node is clicked.
+// Implementations MUST return undefined for category nodes and navigate for others.
 export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined {
   if (node.Kind === "category") return undefined;
   if (node.URI) return { command: "semio.navigate", title: "Navigate", arguments: [node.URI] };
   return undefined;
 }
 
+// Builds CLI tree command arguments from the current filter provider state.
+// Implementations MUST translate each filter toggle into the corresponding CLI flag.
 export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
   const args: string[] = [];
   if (!fp) return args;
@@ -529,6 +566,8 @@ export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
   return args;
 }
 
+// Converts text to an uppercase slug with non-alphanumeric characters replaced by hyphens.
+// Implementations MUST uppercase the input and strip leading and trailing hyphens.
 export function slugify(text: string): string {
   return text.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
@@ -594,12 +633,16 @@ async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | null> {
   }
 }
 
+// Clears the cached tree node data forcing a fresh fetch on next access.
+// Implementations MUST reset all cache fields and the timestamp.
 export function invalidateTreeNodeCache(): void {
   treeNodeCache = null;
   treeRootCache = null;
   treeNodeCacheTime = 0;
 }
 
+// Parses a semiorepo URI into its type and path components.
+// Implementations MUST return null for URIs that do not match the semiorepo scheme.
 export function parseUri(uri: string): { type: string; path: string } | null {
   const match = uri.match(/^semiorepo:\/\/([a-zA-Z]+)(?:\/(.*)?)?$/);
   if (!match) return null;
@@ -822,6 +865,7 @@ function findSectionByPath(section: any, sectionPath: string): any | null {
 // #endregion 🔖URI Resolution
 
 // #region 🔖Helpers
+// Helpers MUST provide file path extraction, ticket path resolution, and editor navigation.
 
 function extractFilePathFromScope(scope: string): string | undefined {
   let cleanScope = scope;
@@ -896,6 +940,7 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
 // #endregion 🔖Helpers
 
 // #region 🔖File Analysis & Diagnostics
+// File Analysis & Diagnostics MUST handle analysis, violation diagnostics, bundle caching, and kit validation.
 
 async function updateBundleCache() {
   const root = await getTreeRoot();
@@ -1064,7 +1109,10 @@ function validateKitDocument(document: vscode.TextDocument): void {
 // #endregion 🔖File Analysis & Diagnostics
 
 // #region 🔖Providers
+// Providers MUST implement VS Code tree data providers for filter, monorepo, and sections views.
 
+// Tree item representing a filter option in the filter sidebar view.
+// Implementations MUST extend vscode.TreeItem and expose filter metadata.
 export class FilterTreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
@@ -1079,6 +1127,8 @@ export class FilterTreeItem extends vscode.TreeItem {
   }
 }
 
+// Provides the tree data for the filter sidebar view with search and toggle state.
+// Implementations MUST implement vscode.TreeDataProvider and emit change events on toggle.
 export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<FilterTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -1279,6 +1329,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
   }
 }
 
+// Tree item representing a monorepo artifact in the sidebar tree.
+// Implementations MUST extend vscode.TreeItem and carry the original node data.
 export class MonorepoTreeItem extends vscode.TreeItem {
   constructor(
     public readonly label: string,
@@ -1293,6 +1345,8 @@ export class MonorepoTreeItem extends vscode.TreeItem {
   }
 }
 
+// Converts a TreeNodeData to a VS Code MonorepoTreeItem for the sidebar.
+// Implementations MUST set label, description, tooltip, and command from node data.
 export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
   const label = treeNodeDisplayLabel(node);
   const hasChildren = (node.Children && node.Children.length > 0);
@@ -1309,6 +1363,8 @@ export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
   return item;
 }
 
+// Provides the tree data for the monorepo sidebar view using CLI tree output.
+// Implementations MUST implement vscode.TreeDataProvider and fetch data via CLI.
 export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<MonorepoTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -1367,6 +1423,8 @@ class SectionTreeItem extends vscode.TreeItem {
   }
 }
 
+// Provides the tree data for the sections sidebar view of the active file.
+// Implementations MUST refresh when the active editor changes or the document is edited.
 export class SectionsTreeDataProvider implements vscode.TreeDataProvider<SectionTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<SectionTreeItem | undefined | null | void>();
   readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
@@ -1445,6 +1503,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
 // #endregion 🔖Providers
 
 // #region 🔖Activation
+// Activation MUST handle extension activation, command registration, and lifecycle management.
 
 function registerSidebarViews(context: vscode.ExtensionContext): void {
   filterProvider = new FilterTreeDataProvider();
@@ -1748,6 +1807,8 @@ async function loadAvailableFilterValues(): Promise<void> {
   }
 }
 
+// Activates the semio-repo VS Code extension and registers all providers and commands.
+// Implementations MUST register sidebar views, commands, diagnostics, and event handlers.
 export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel("semio-repo");
   context.subscriptions.push(outputChannel);
@@ -1798,6 +1859,8 @@ export function activate(context: vscode.ExtensionContext) {
   }
 }
 
+// Deactivates the semio-repo VS Code extension and releases resources.
+// Implementations MUST clean up any active subscriptions.
 export function deactivate() { }
 
 // #endregion 🔖Activation

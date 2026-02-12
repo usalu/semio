@@ -26,23 +26,9 @@
 
 # endregion Header
 
-from __future__ import annotations
-
-# region TODOs
-# TODO: Make loguru work on extra uvicorn engine process.
-# TODO: Replace prototype healing with one that makes more for every single property.
-# TODO: Try closest embedding instead of smallest Levenshtein distance.
-# TODO: Automatic derive from Id model.
-# TODO: Automatic emptying.
-# TODO: Automatic updating based on props.
-# TODO: Check how to automate docstring duplication, table=True and PLURAL and __tablename__.
-# TODO: Check if alias bug is fixed: https://github.com/fastapi/sqlmodel/issues/374
-# TODO: Proper mechanism of nullable fields.
-# TODO: Generalize to non-zip kits.
-# TODO: Think of using memory sqlite for caching.
-# TODO: Get rid of id_ because of bug https://github.com/graphql-python/graphene-sqlalchemy/issues/412
-# endregion TODOs
 # region Imports
+# Standard library, third-party and framework imports.
+from __future__ import annotations
 import abc
 import dataclasses
 import datetime
@@ -110,6 +96,7 @@ import sqlmodel
 # endregion Imports
 
 # region Type Hints
+# Custom type hint aliases used throughout the module.
 
 RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 """🔁 A recursive any list is either any or a list where the items are recursive any list."""
@@ -117,6 +104,7 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 # endregion Type Hints
 
 # region Constants
+# Global constants for limits, paths, encodings and configuration.
 
 NAME = "semio"
 EMAIL = "mail@semio-tech.com"
@@ -180,39 +168,56 @@ ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO
 # endregion Constants
 
 # region Utility
+# General-purpose utility functions for encoding, formatting and transformation.
 
+# encode MUST return a percent-encoded string safe for URL paths.
+# Encode a string to be URL-safe using percent-encoding.
 def encode(value: str) -> str:
     """ᗒ Encode a string to be url safe."""
     return urllib.parse.quote(value, safe="")
 
+# decode MUST return the original string from a percent-encoded input.
+# Decode a percent-encoded URL-safe string.
 def decode(value: str) -> str:
     """ᗕ Decode a url safe string."""
     return urllib.parse.unquote(value)
 
+# encodeList MUST encode each item and join them with commas.
+# Encode a list of strings into a comma-separated URL-safe string.
 def encodeList(items: list[str]) -> str:
     return ",".join([encode(t) for t in items])
 
+# decodeList MUST split by comma and decode each item.
+# Decode a comma-separated URL-safe string into a list of strings.
 def decodeList(encodedList: str) -> list[str]:
     return [decode(t) for t in encodedList.split(",")]
 
+# encodeRecursiveAnyList MUST recursively encode nested lists into a flat string.
+# Recursively encode a nested list into a flat URL-safe string.
 def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Encode a `RecursiveAnyList` to a url encoded string."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return encode(",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList]))
 
+# create_id MUST produce a deterministic identifier from any value or nested list.
+# Create a unique identifier from a value or recursive list.
 def create_id(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
     if not isinstance(recursiveAnyList, list):
         return encode(str(recursiveAnyList))
     return ",".join([encodeRecursiveAnyList(item) for item in recursiveAnyList])
 
+# pretty MUST format the number with up to 5 significant digits.
+# Format a floating-point number with significant digits and no trailing zeros.
 def pretty(number: float) -> str:
     """🦋 Pretty print a floating point number."""
     if number == -0.0:
         number = 0.0
     return f"{number:.5f}".rstrip("0").rstrip(".")
 
+# changeValues MUST apply the function to all occurrences of the key recursively.
+# Recursively change values for a given key in nested dicts and lists.
 def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
         if key in c:
@@ -225,6 +230,8 @@ def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], t
             if isinstance(v, dict) or isinstance(v, list):
                 changeValues(v, key, func)
 
+# changeKeys MUST apply the function to all dictionary keys recursively.
+# Recursively transform all keys in nested dicts and lists.
 def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
         for k in list(c.keys()):
@@ -238,6 +245,8 @@ def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) 
             if isinstance(v, dict) or isinstance(v, list):
                 changeKeys(v, func)
 
+# normalizeAngle MUST return an angle in the range [0, 360).
+# Normalize an angle to the range [0, 360) degrees.
 def normalizeAngle(angle: float) -> float:
     """🔃 Normalize an angle to be greater or equal to 0 and smaller than 360 degrees."""
     return (angle % 360 + 360) % 360
@@ -245,33 +254,47 @@ def normalizeAngle(angle: float) -> float:
 # endregion Utility
 
 # region Logging
+# Module-level logger configuration.
 
 logger = loguru.logger
 
 # endregion Logging
 
 # region Exceptions
+# Custom exception hierarchy for server, client and specification errors.
 
+# Error MUST provide a descriptive error message via __str__.
+# Base exception for all semio errors.
 class Error(Exception, abc.ABC):
     """❗ The base for all exceptions."""
 
     def __str__(self):
         return "❗ " + self.__class__.__name__
 
+# ServerError MUST provide a descriptive error message via __str__.
+# Base exception for server-side errors.
 class ServerError(Error, abc.ABC):
     """🖥 The base for all server errors."""
 
+# ClientError MUST provide a descriptive error message via __str__.
+# Base exception for client-side errors.
 class ClientError(Error, abc.ABC):
     """👩‍💼 The base for all client errors."""
 
+# CodeUnreachable MUST provide a descriptive error message via __str__.
+# Exception for code paths that should never be reached.
 class CodeUnreachable(ServerError):
     def __str__(self):
         return "🤷 This code should be unreachable."
 
+# FeatureNotYetSupported MUST provide a descriptive error message via __str__.
+# Exception for unimplemented features.
 class FeatureNotYetSupported(ServerError):
     def __str__(self):
         return "🔜 This feature is not yet supported."
 
+# RemoteKitsNotYetSupported MUST provide a descriptive error message via __str__.
+# Exception for unsupported remote kit access.
 class RemoteKitsNotYetSupported(FeatureNotYetSupported):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -279,26 +302,40 @@ class RemoteKitsNotYetSupported(FeatureNotYetSupported):
     def __str__(self):
         return "🔜 Remote kits are not yet supported."
 
+# NotFound MUST provide a descriptive error message via __str__.
+# Base exception for entities not found in the store.
 class NotFound(ClientError, abc.ABC):
     """🔍 The base for not found errors."""
 
+# SpecificationError MUST provide a descriptive error message via __str__.
+# Base exception for specification constraint violations.
 class SpecificationError(ClientError, abc.ABC):
     """📋 The base for all specification errors."""
 
+# NoParentAssigned MUST be subclassed and MUST NOT be instantiated directly.
+# No Parent Assigned definition.
 class NoParentAssigned(SpecificationError, abc.ABC):
     """👪 The base for all no parent assigned errors."""
 
+# NoTypeOrDesignAssigned MUST fulfill its documented contract.
+# No Type Or Design Assigned definition.
 class NoTypeOrDesignAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent type or design assigned."
 
+# NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned MUST fulfill its documented contract.
+# No Model Or Port Or Type Or Piece Or Connection Or Design Or Kit Assigned definition.
 class NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent model, connector, type, piece, connection, design, kit or folder assigned."
 
+# AlreadyExists MUST provide a descriptive error message via __str__.
+# Base exception for duplicate entity creation attempts.
 class AlreadyExists(SpecificationError, abc.ABC):
     """♊ The entity already exists in the store."""
 
+# Semio MUST implement idMembers and inherit from the appropriate field mixins.
+# Metadata table recording the database release and engine version.
 class Semio(sqlmodel.SQLModel, table=True):
     """ℹ Metadata about the database."""
 
@@ -316,7 +353,10 @@ class Semio(sqlmodel.SQLModel, table=True):
 # region Modeling
 
 # region Primitives
+# Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
+# SModel MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base model for all semio pydantic models.
 class SModel(sqlmodel.SQLModel, abc.ABC):
     """⚪ The base for models."""
 
@@ -337,36 +377,58 @@ class SModel(sqlmodel.SQLModel, abc.ABC):
 
 BaseModel = SModel
 
+# Field MUST declare exactly one field with appropriate constraints.
+# Field mixin for the  property.
 class Field(SModel, abc.ABC):
     """🎫 The base for a field of a model."""
 
+# RealField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the real property.
 class RealField(Field, abc.ABC):
     """🧑 The base for a real field of a model. No lie."""
 
+# MaskedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the masked property.
 class MaskedField(Field, abc.ABC):
     """🎭 The base for a mask of a field of a model. WYSIWYG but don't expect it to be there."""
 
+# Base MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for composite model groupings.
 class Base(SModel, abc.ABC):
     """👥 The base for models."""
 
+# Id MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for identity field groupings.
 class Id(Base, abc.ABC):
     """🪪 The base for ids. All fields that identify the entity here."""
 
+# Props MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for property field groupings.
 class Props(Base, abc.ABC):
     """🎫 The base for props. All fields except input-only, output-only or child entities."""
 
+# Input MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for input field groupings.
 class Input(Base, abc.ABC):
     """↘ The base for inputs. All fields that are required to create the entity."""
 
+# Context MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for context field groupings.
 class Context(Base, abc.ABC):
     """📑 The base for contexts. All fields that are required to understand the entity by an llm."""
 
+# Output MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for output field groupings.
 class Output(Base, abc.ABC):
     """↗ The base for outputs. All fields that are returned when the entity is fetched."""
 
+# Prediction MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for prediction field groupings.
 class Prediction(Base, abc.ABC):
     """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
 
+# Entity MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for all domain entities with identity and hierarchy.
 class Entity(SModel, abc.ABC):
     """▢ The base for entities. All fields and behavior of the entity."""
 
@@ -409,9 +471,13 @@ class Entity(SModel, abc.ABC):
         """🔄 Update the props of the entity."""
         return self
 
+# Table MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for database table models.
 class Table(SModel, abc.ABC):
     """▦ The base for tables. All resources that are stored in the database."""
 
+# TableEntity MUST be subclassed and MUST NOT be instantiated directly.
+# Abstract base for entities persisted as database tables.
 class TableEntity(Entity, Table, abc.ABC):
     """▢ The base for table entities."""
 
@@ -421,7 +487,10 @@ class TableEntity(Entity, Table, abc.ABC):
 # endregion Primitives
 
 # region Graphql
+# GraphQL node base classes for pydantic, sqlalchemy and relay integration.
 
+# Node MUST expose the model via Meta.
+# GraphQL node exposing  data.
 class Node(graphene_pydantic.PydanticObjectType):
     """A base class for all nodes that are not a table in the database."""
 
@@ -435,12 +504,16 @@ class Node(graphene_pydantic.PydanticObjectType):
 
         super().__init_subclass_with_meta__(model=model, **options)
 
+# InputNode MUST expose the input model via Meta.
+# GraphQL input node for  mutations.
 class InputNode(graphene_pydantic.PydanticInputObjectType):
     """A base class for all input nodes."""
 
     class Meta:
         abstract = True
 
+# RelayNode MUST expose the model via Meta.
+# Relay-compliant GraphQL node interface.
 class RelayNode(graphene.relay.Node):
     class Meta:
         name = "Node"
@@ -454,6 +527,8 @@ class RelayNode(graphene.relay.Node):
         entity = get(global_id)
         return entity
 
+# TableNode MUST expose the model via Meta.
+# Base GraphQL object type for SQLAlchemy table models.
 class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
     """A base class for all nodes that are a table in the database.
     It automatically excludes the fields that are defined in the table.
@@ -473,6 +548,8 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
 
         super().__init_subclass_with_meta__(model=model, **options)
 
+# TableEntityNode MUST expose the model via Meta.
+# Base GraphQL object type for table entities with Relay interface.
 class TableEntityNode(TableNode):
     """A base class for all nodes that are a table in the database and are entities.
     It automatically complies to the Relay Node interface."""
@@ -499,31 +576,50 @@ class TableEntityNode(TableNode):
 # region Domain
 
 # region Attribute
+# Attribute entity with key-value pairs and definitions.
 
+# AttributeKeyField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the key of a attribute.
 class AttributeKeyField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# AttributeValueField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the value of a attribute.
 class AttributeValueField(RealField, abc.ABC):
     value: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# AttributeDefinitionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the definition of a attribute.
 class AttributeDefinitionField(RealField, abc.ABC):
     definition: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# AttributeId MUST contain all fields that uniquely identify a attribute.
+# Identity fields for uniquely identifying a attribute.
 class AttributeId(AttributeKeyField, Id):
     pass
 
+# AttributeProps MUST contain all non-relational property fields.
+# Property fields for a attribute.
 class AttributeProps(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Props):
     pass
 
+# AttributeInput MUST contain all fields required for creation.
+# Input fields for creating or updating a attribute.
 class AttributeInput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Input):
     pass
 
+# AttributeContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a attribute by an LLM.
 class AttributeContext(AttributeValueField, AttributeKeyField, Context):
     pass
 
+# AttributeOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a attribute.
 class AttributeOutput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Output):
     pass
 
+# Attribute MUST implement idMembers and inherit from the appropriate field mixins.
+# Attribute entity storing a key-value pair with an optional definition.
 class Attribute(
     AttributeDefinitionField,
     AttributeValueField,
@@ -723,6 +819,8 @@ class Attribute(
             definition=obj.get("definition", ""),
         )
 
+# AttributeInputNode MUST expose the input model via Meta.
+# GraphQL input node for attribute mutations.
 class AttributeInputNode(InputNode):
     class Meta:
         model = AttributeInput
@@ -730,25 +828,40 @@ class AttributeInputNode(InputNode):
 # endregion Attribute
 
 # region Tag
+# Tag entity for categorizing and labeling kit elements.
 
+# TagGuidField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the guid of a tag.
 class TagGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
+# TagNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a tag.
 class TagNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# TagDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a tag.
 class TagDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# TagIconField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the icon of a tag.
 class TagIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
+# TagOrderField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the order of a tag.
 class TagOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field(default=0)
 
+# TagId MUST contain all fields that uniquely identify a tag.
+# Identity fields for uniquely identifying a tag.
 class TagId(TagGuidField, Id):
     pass
 
+# Tag MUST implement idMembers and inherit from the appropriate field mixins.
+# Tag entity for labeling kit elements with name, icon and order.
 class Tag(
     TagIconField,
     TagDescriptionField,
@@ -774,25 +887,40 @@ class Tag(
 # endregion Tag
 
 # region Concept
+# Concept entity for semantic grouping of design elements.
 
+# ConceptGuidField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the guid of a concept.
 class ConceptGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
+# ConceptNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a concept.
 class ConceptNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# ConceptDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a concept.
 class ConceptDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# ConceptIconField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the icon of a concept.
 class ConceptIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
+# ConceptOrderField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the order of a concept.
 class ConceptOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field(default=0)
 
+# ConceptId MUST contain all fields that uniquely identify a concept.
+# Identity fields for uniquely identifying a concept.
 class ConceptId(ConceptGuidField, Id):
     pass
 
+# Concept MUST implement idMembers and inherit from the appropriate field mixins.
+# Concept entity for semantic grouping with name, icon and order.
 class Concept(
     ConceptIconField,
     ConceptDescriptionField,
@@ -830,7 +958,10 @@ class Concept(
 # endregion Concept
 
 # region Coord
+# Coordinate primitive for three-dimensional values.
 
+# Coord MUST contain all coordinate or geometry fields.
+# Three-dimensional coordinate with x, y and z values.
 class Coord(SModel):
     u: float = sqlmodel.Field()
     v: float = sqlmodel.Field()
@@ -841,22 +972,34 @@ class Coord(SModel):
     def __repr__(self) -> str:
         return f"[{pretty(self.u)}, {pretty(self.v)}]"
 
+# CoordInput MUST contain all fields required for creation.
+# Input fields for creating or updating a coord.
 class CoordInput(Coord, Input):
     pass
 
+# CoordContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a coord by an LLM.
 class CoordContext(Coord, Context):
     pass
 
+# CoordOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a coord.
 class CoordOutput(Coord, Output):
     pass
 
+# CoordPrediction MUST contain all fields for LLM inference.
+# Prediction fields for LLM-based coord inference.
 class CoordPrediction(Coord, Prediction):
     pass
 
+# CoordNode MUST expose the model via Meta.
+# GraphQL node exposing coord data.
 class CoordNode(Node):
     class Meta:
         model = Coord
 
+# CoordInputNode MUST expose the input model via Meta.
+# GraphQL input node for coord mutations.
 class CoordInputNode(InputNode):
     class Meta:
         model = CoordInput
@@ -864,7 +1007,10 @@ class CoordInputNode(InputNode):
 # endregion Coord
 
 # region Point
+# Point primitive representing a position in 3D space.
 
+# Point MUST contain all coordinate or geometry fields.
+# Point in 3D space with x, y and z coordinates.
 class Point(SModel):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
@@ -876,22 +1022,34 @@ class Point(SModel):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
+# PointInput MUST contain all fields required for creation.
+# Input fields for creating or updating a point.
 class PointInput(Point, Input):
     pass
 
+# PointContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a point by an LLM.
 class PointContext(Point, Context):
     pass
 
+# PointOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a point.
 class PointOutput(Point, Output):
     pass
 
+# PointPrediction MUST contain all fields for LLM inference.
+# Prediction fields for LLM-based point inference.
 class PointPrediction(Point, Prediction):
     pass
 
+# PointNode MUST expose the model via Meta.
+# GraphQL node exposing point data.
 class PointNode(Node):
     class Meta:
         model = Point
 
+# PointInputNode MUST expose the input model via Meta.
+# GraphQL input node for point mutations.
 class PointInputNode(InputNode):
     class Meta:
         model = PointInput
@@ -899,7 +1057,10 @@ class PointInputNode(InputNode):
 # endregion Point
 
 # region Vector
+# Vector primitive representing a direction in 3D space.
 
+# Vector MUST contain all coordinate or geometry fields.
+# Direction vector in 3D space with x, y and z components.
 class Vector(SModel):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
@@ -911,22 +1072,34 @@ class Vector(SModel):
     def __repr__(self) -> str:
         return f"[{pretty(self.x)}, {pretty(self.y)}, {pretty(self.z)}]"
 
+# VectorInput MUST contain all fields required for creation.
+# Input fields for creating or updating a vector.
 class VectorInput(Vector, Input):
     pass
 
+# VectorContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a vector by an LLM.
 class VectorContext(Vector, Context):
     pass
 
+# VectorOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a vector.
 class VectorOutput(Vector, Output):
     pass
 
+# VectorPrediction MUST contain all fields for LLM inference.
+# Prediction fields for LLM-based vector inference.
 class VectorPrediction(Vector, Prediction):
     pass
 
+# VectorNode MUST expose the model via Meta.
+# GraphQL node exposing vector data.
 class VectorNode(Node):
     class Meta:
         model = Vector
 
+# VectorInputNode MUST expose the input model via Meta.
+# GraphQL input node for vector mutations.
 class VectorInputNode(InputNode):
     class Meta:
         model = VectorInput
@@ -934,29 +1107,44 @@ class VectorInputNode(InputNode):
 # endregion Vector
 
 # region Plane
+# Plane primitive representing an oriented coordinate frame in 3D space.
 
+# PlaneOriginField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the origin of a plane.
 class PlaneOriginField(MaskedField, abc.ABC):
     origin: Point = sqlmodel.Field()
 
+# PlaneXAxisField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the x axis of a plane.
 class PlaneXAxisField(MaskedField, abc.ABC):
     xAxis: Vector = sqlmodel.Field()
 
+# PlaneYAxisField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the y axis of a plane.
 class PlaneYAxisField(MaskedField, abc.ABC):
     yAxis: Vector = sqlmodel.Field()
 
+# PlaneInput MUST contain all fields required for creation.
+# Input fields for creating or updating a plane.
 class PlaneInput(Input):
     origin: PointInput = sqlmodel.Field()
     xAxis: VectorInput = sqlmodel.Field()
     yAxis: VectorInput = sqlmodel.Field()
 
+# PlaneContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a plane by an LLM.
 class PlaneContext(Context):
     origin: PointContext = sqlmodel.Field()
     xAxis: VectorContext = sqlmodel.Field()
     yAxis: VectorContext = sqlmodel.Field()
 
+# PlaneOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a plane.
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
     pass
 
+# Plane MUST contain all coordinate or geometry fields.
+# Oriented coordinate frame in 3D space with origin and axes.
 class Plane(Table, table=True):
     __tablename__ = "plane"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -1039,6 +1227,8 @@ class Plane(Table, table=True):
         entity["yAxis"] = self.yAxis
         return PlaneOutput(**entity)
 
+# PlaneInputNode MUST expose the input model via Meta.
+# GraphQL input node for plane mutations.
 class PlaneInputNode(InputNode):
     class Meta:
         model = PlaneInput
@@ -1046,22 +1236,35 @@ class PlaneInputNode(InputNode):
 # endregion Plane
 
 # region Location
+# Location entity for geographic coordinates with longitude, latitude and altitude.
 
+# LocationGuidField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the guid of a location.
 class LocationGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
+# LocationLongitudeField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the longitude of a location.
 class LocationLongitudeField(RealField, abc.ABC):
     longitude: float = sqlmodel.Field()
 
+# LocationLatitudeField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the latitude of a location.
 class LocationLatitudeField(RealField, abc.ABC):
     latitude: float = sqlmodel.Field()
 
+# LocationAltitudeField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the altitude of a location.
 class LocationAltitudeField(RealField, abc.ABC):
     altitude: typing.Optional[float] = sqlmodel.Field(default=None)
 
+# LocationId MUST contain all fields that uniquely identify a location.
+# Identity fields for uniquely identifying a location.
 class LocationId(LocationGuidField, Id):
     pass
 
+# Location MUST implement idMembers and inherit from the appropriate field mixins.
+# Geographic location with longitude, latitude and altitude.
 class Location(
     LocationAltitudeField,
     LocationLatitudeField,
@@ -1079,22 +1282,34 @@ class Location(
     )
     attributes: list[Attribute] = sqlmodel.Relationship(back_populates="location", cascade_delete=True)
 
+# LocationInput MUST contain all fields required for creation.
+# Input fields for creating or updating a location.
 class LocationInput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Input):
     pass
 
+# LocationOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a location.
 class LocationOutput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Output):
     pass
 
+# LocationContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a location by an LLM.
 class LocationContext(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Context):
     pass
 
+# LocationPrediction MUST contain all fields for LLM inference.
+# Prediction fields for LLM-based location inference.
 class LocationPrediction(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Prediction):
     pass
 
+# LocationNode MUST expose the model via Meta.
+# GraphQL node exposing location data.
 class LocationNode(Node):
     class Meta:
         model = LocationOutput
 
+# LocationInputNode MUST expose the input model via Meta.
+# GraphQL input node for location mutations.
 class LocationInputNode(InputNode):
     class Meta:
         model = LocationInput
@@ -1102,28 +1317,45 @@ class LocationInputNode(InputNode):
 # endregion Location
 
 # region Author
+# Author entity for tracking contributor identity and rank.
 
+# AuthorNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a author.
 class AuthorNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# AuthorEmailField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the email of a author.
 class AuthorEmailField(RealField, abc.ABC):
     email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
+# AuthorRankField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the rank of a author.
 class AuthorRankField(RealField, abc.ABC):
     rank: int = sqlmodel.Field(default=0)
 
+# AuthorId MUST contain all fields that uniquely identify a author.
+# Identity fields for uniquely identifying a author.
 class AuthorId(AuthorEmailField, Id):
     pass
 
+# AuthorProps MUST contain all non-relational property fields.
+# Property fields for a author.
 class AuthorProps(AuthorEmailField, AuthorNameField, Props):
     pass
 
+# AuthorInput MUST contain all fields required for creation.
+# Input fields for creating or updating a author.
 class AuthorInput(AuthorEmailField, AuthorNameField, Input):
     pass
 
+# AuthorOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a author.
 class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
     pass
 
+# Author MUST implement idMembers and inherit from the appropriate field mixins.
+# Author entity with name, email and contribution rank.
 class Author(
     AuthorRankField,
     AuthorEmailField,
@@ -1156,6 +1388,8 @@ class Author(
     def idMembers(self) -> RecursiveAnyList:
         return self.email
 
+# AuthorInputNode MUST expose the input model via Meta.
+# GraphQL input node for author mutations.
 class AuthorInputNode(InputNode):
     class Meta:
         model = AuthorInput
@@ -1163,10 +1397,15 @@ class AuthorInputNode(InputNode):
 # endregion Author
 
 # region ArtifactAuthor
+# Artifact-author association entity linking artifacts to authors by email.
 
+# ArtifactAuthorEmailField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the email of a artifact author.
 class ArtifactAuthorEmailField(RealField, abc.ABC):
     author_email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
+# ArtifactAuthor MUST implement idMembers and inherit from the appropriate field mixins.
+# Association entity linking an artifact to an author by email.
 class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
     PLURAL = "artifact_authors"
     __tablename__ = "artifact_author"
@@ -1217,43 +1456,70 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
 # endregion ArtifactAuthor
 
 # region File
+# File entity for managing binary assets with metadata and hashing.
 
+# FileGuidField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the guid of a file.
 class FileGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
+# FileNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a file.
 class FileNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# FileMimeField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the mime of a file.
 class FileMimeField(RealField, abc.ABC):
     mime: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
+# FileRemoteField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the remote of a file.
 class FileRemoteField(RealField, abc.ABC):
     remote: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
+# FileFolderField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the folder of a file.
 class FileFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
+# FileSizeField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the size of a file.
 class FileSizeField(RealField, abc.ABC):
     size: typing.Optional[int] = sqlmodel.Field(default=None)
 
+# FileHashField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the hash of a file.
 class FileHashField(RealField, abc.ABC):
     hash: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
+# FileCreatedAtField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created at of a file.
 class FileCreatedAtField(RealField, abc.ABC):
     createdAt: datetime.datetime = sqlmodel.Field()
 
+# FileCreatedByField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created by of a file.
 class FileCreatedByField(RealField, abc.ABC):
     createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# FileUpdatedAtField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated at of a file.
 class FileUpdatedAtField(RealField, abc.ABC):
     updatedAt: datetime.datetime = sqlmodel.Field()
 
+# FileUpdatedByField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated by of a file.
 class FileUpdatedByField(RealField, abc.ABC):
     updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# FileId MUST contain all fields that uniquely identify a file.
+# Identity fields for uniquely identifying a file.
 class FileId(FileGuidField, Id):
     pass
 
+# FileProps MUST contain all non-relational property fields.
+# Property fields for a file.
 class FileProps(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1270,6 +1536,8 @@ class FileProps(
 ):
     pass
 
+# FileInput MUST contain all fields required for creation.
+# Input fields for creating or updating a file.
 class FileInput(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1286,9 +1554,13 @@ class FileInput(
 ):
     pass
 
+# FileContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a file by an LLM.
 class FileContext(FileNameField, FileGuidField, Context):
     pass
 
+# FileOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a file.
 class FileOutput(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1305,6 +1577,8 @@ class FileOutput(
 ):
     pass
 
+# File MUST implement idMembers and inherit from the appropriate field mixins.
+# File entity for binary assets with metadata, hashing and timestamps.
 class File(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1344,6 +1618,8 @@ class File(
     def idMembers(self) -> RecursiveAnyList:
         return self.guid
 
+# FileInputNode MUST expose the input model via Meta.
+# GraphQL input node for file mutations.
 class FileInputNode(InputNode):
     class Meta:
         model = FileInput
@@ -1351,34 +1627,55 @@ class FileInputNode(InputNode):
 # endregion File
 
 # region Folder
+# Folder entity for hierarchical organization of kit content.
 
+# FolderGuidField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the guid of a folder.
 class FolderGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
+# FolderNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a folder.
 class FolderNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# FolderParentField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the parent of a folder.
 class FolderParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# FolderDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a folder.
 class FolderDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# FolderCreatedAtField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created at of a folder.
 class FolderCreatedAtField(RealField, abc.ABC):
     createdAt: datetime.datetime = sqlmodel.Field()
 
+# FolderCreatedByField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created by of a folder.
 class FolderCreatedByField(RealField, abc.ABC):
     createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# FolderUpdatedAtField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated at of a folder.
 class FolderUpdatedAtField(RealField, abc.ABC):
     updatedAt: datetime.datetime = sqlmodel.Field()
 
+# FolderUpdatedByField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated by of a folder.
 class FolderUpdatedByField(RealField, abc.ABC):
     updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# FolderId MUST contain all fields that uniquely identify a folder.
+# Identity fields for uniquely identifying a folder.
 class FolderId(FolderGuidField, Id):
     pass
 
+# FolderProps MUST contain all non-relational property fields.
+# Property fields for a folder.
 class FolderProps(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1392,6 +1689,8 @@ class FolderProps(
 ):
     pass
 
+# FolderInput MUST contain all fields required for creation.
+# Input fields for creating or updating a folder.
 class FolderInput(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1405,9 +1704,13 @@ class FolderInput(
 ):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
+# FolderContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a folder by an LLM.
 class FolderContext(FolderNameField, FolderGuidField, Context):
     pass
 
+# FolderOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a folder.
 class FolderOutput(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1421,6 +1724,8 @@ class FolderOutput(
 ):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
+# Folder MUST implement idMembers and inherit from the appropriate field mixins.
+# Folder entity for hierarchical content organization.
 class Folder(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1491,6 +1796,8 @@ class Folder(
             setattr(self, key, value)
         return self
 
+# FolderInputNode MUST expose the input model via Meta.
+# GraphQL input node for folder mutations.
 class FolderInputNode(InputNode):
     class Meta:
         model = FolderInput
@@ -1498,28 +1805,45 @@ class FolderInputNode(InputNode):
 # endregion Folder
 
 # region Benchmark
+# Benchmark entity for defining performance metrics with min-max bounds.
 
+# BenchmarkNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a benchmark.
 class BenchmarkNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# BenchmarkIconField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the icon of a benchmark.
 class BenchmarkIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# BenchmarkMinField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the min of a benchmark.
 class BenchmarkMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
 
+# BenchmarkMinExcludedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the min excluded of a benchmark.
 class BenchmarkMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=False)
 
+# BenchmarkMaxField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the max of a benchmark.
 class BenchmarkMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
 
+# BenchmarkMaxExcludedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the max excluded of a benchmark.
 class BenchmarkMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=False)
 
+# BenchmarkId MUST contain all fields that uniquely identify a benchmark.
+# Identity fields for uniquely identifying a benchmark.
 class BenchmarkId(BenchmarkNameField, Id):
     pass
 
+# BenchmarkProps MUST contain all non-relational property fields.
+# Property fields for a benchmark.
 class BenchmarkProps(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1531,6 +1855,8 @@ class BenchmarkProps(
 ):
     pass
 
+# BenchmarkInput MUST contain all fields required for creation.
+# Input fields for creating or updating a benchmark.
 class BenchmarkInput(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1542,6 +1868,8 @@ class BenchmarkInput(
 ):
     pass
 
+# BenchmarkOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a benchmark.
 class BenchmarkOutput(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1553,6 +1881,8 @@ class BenchmarkOutput(
 ):
     pass
 
+# Benchmark MUST implement idMembers and inherit from the appropriate field mixins.
+# Benchmark entity for performance metrics with min-max bounds.
 class Benchmark(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1581,70 +1911,115 @@ class Benchmark(
 # endregion Benchmark
 
 # region Quality
+# Quality entity for defining measurable properties with units and constraints.
 
+# QualityKeyField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the key of a quality.
 class QualityKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, primary_key=True)
 
+# QualityNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a quality.
 class QualityNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# QualityDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a quality.
 class QualityDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# QualityUriField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the uri of a quality.
 class QualityUriField(RealField, abc.ABC):
     uri: str = sqlmodel.Field(default="", max_length=URI_LENGTH_LIMIT)
 
+# QualityScalableField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the scalable of a quality.
 class QualityScalableField(RealField, abc.ABC):
     scalable: bool = sqlmodel.Field(default=False)
 
+# QualityKindField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the kind of a quality.
 class QualityKindField(RealField, abc.ABC):
     kind: int = sqlmodel.Field(default=0)
 
+# QualitySiField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the si of a quality.
 class QualitySiField(RealField, abc.ABC):
     si: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# QualityImperialField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the imperial of a quality.
 class QualityImperialField(RealField, abc.ABC):
     imperial: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# QualityMinField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the min of a quality.
 class QualityMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
 
+# QualityMinExcludedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the min excluded of a quality.
 class QualityMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=True)
 
+# QualityMaxField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the max of a quality.
 class QualityMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
 
+# QualityMaxExcludedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the max excluded of a quality.
 class QualityMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=True)
 
+# QualityDefaultField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the default of a quality.
 class QualityDefaultField(RealField, abc.ABC):
     default: typing.Optional[float] = sqlmodel.Field(default=None)
 
+# QualityFormulaField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the formula of a quality.
 class QualityFormulaField(RealField, abc.ABC):
     formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
 
+# QualityFolderField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the folder of a quality.
 class QualityFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
+# QualityIconField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the icon of a quality.
 class QualityIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
+# QualityImageField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the image of a quality.
 class QualityImageField(RealField, abc.ABC):
     image: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
+# QualityUnitField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the unit of a quality.
 class QualityUnitField(RealField, abc.ABC):
     unit: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
+# QualityCreatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created of a quality.
 class QualityCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# QualityUpdatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated of a quality.
 class QualityUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# QualityId MUST contain all fields that uniquely identify a quality.
+# Identity fields for uniquely identifying a quality.
 class QualityId(QualityKeyField, Id):
     pass
 
+# QualityProps MUST contain all non-relational property fields.
+# Property fields for a quality.
 class QualityProps(
     QualityUnitField,
     QualityImageField,
@@ -1668,6 +2043,8 @@ class QualityProps(
 ):
     pass
 
+# QualityInput MUST contain all fields required for creation.
+# Input fields for creating or updating a quality.
 class QualityInput(
     QualityUnitField,
     QualityImageField,
@@ -1691,9 +2068,13 @@ class QualityInput(
 ):
     pass
 
+# QualityContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a quality by an LLM.
 class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
     pass
 
+# QualityOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a quality.
 class QualityOutput(
     QualityUpdatedField,
     QualityCreatedField,
@@ -1720,6 +2101,8 @@ class QualityOutput(
     benchmarks: list["BenchmarkOutput"] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
+# Quality MUST implement idMembers and inherit from the appropriate field mixins.
+# Quality entity with units, constraints, formula and folder classification.
 class Quality(
     QualityUpdatedField,
     QualityCreatedField,
@@ -1769,25 +2152,40 @@ class Quality(
 # endregion Quality
 
 # region Prop
+# Prop entity for key-value property pairs with units.
 
+# PropKeyField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the key of a prop.
 class PropKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# PropValueField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the value of a prop.
 class PropValueField(RealField, abc.ABC):
     value: str = sqlmodel.Field(max_length=VALUE_LENGTH_LIMIT)
 
+# PropUnitField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the unit of a prop.
 class PropUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# PropCreatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created of a prop.
 class PropCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# PropUpdatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated of a prop.
 class PropUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# PropId MUST contain all fields that uniquely identify a prop.
+# Identity fields for uniquely identifying a prop.
 class PropId(PropKeyField, Id):
     pass
 
+# PropProps MUST contain all non-relational property fields.
+# Property fields for a prop.
 class PropProps(
     PropUpdatedField,
     PropCreatedField,
@@ -1798,9 +2196,13 @@ class PropProps(
 ):
     pass
 
+# PropInput MUST contain all fields required for creation.
+# Input fields for creating or updating a prop.
 class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
     pass
 
+# PropOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a prop.
 class PropOutput(
     PropUpdatedField,
     PropCreatedField,
@@ -1811,6 +2213,8 @@ class PropOutput(
 ):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
+# Prop MUST implement idMembers and inherit from the appropriate field mixins.
+# Prop entity for key-value properties with optional units.
 class Prop(
     PropUpdatedField,
     PropCreatedField,
@@ -1893,6 +2297,8 @@ class Prop(
         entity["attributes"] = [q.dump() for q in self.attributes]
         return PropOutput(**entity)
 
+# PropInputNode MUST expose the input model via Meta.
+# GraphQL input node for prop mutations.
 class PropInputNode(InputNode):
     class Meta:
         model = PropInput
@@ -1900,25 +2306,40 @@ class PropInputNode(InputNode):
 # endregion Prop
 
 # region Model
+# Model entity for 3D geometry representations linked to files.
 
+# ModelNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a model.
 class ModelNameField(RealField, abc.ABC):
     name: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
+# ModelUrlField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the url of a model.
 class ModelUrlField(RealField, abc.ABC):
     url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
 
+# ModelFileField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the file of a model.
 class ModelFileField(RealField, abc.ABC):
     file: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
+# ModelDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a model.
 class ModelDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# ModelTagsField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the tags of a model.
 class ModelTagsField(MaskedField, abc.ABC):
     tags: list[str] = sqlmodel.Field(default_factory=list)
 
+# ModelId MUST contain all fields that uniquely identify a model.
+# Identity fields for uniquely identifying a model.
 class ModelId(ModelTagsField, Id):
     pass
 
+# ModelProps MUST contain all non-relational property fields.
+# Property fields for a model.
 class ModelProps(
     ModelTagsField,
     ModelDescriptionField,
@@ -1929,6 +2350,8 @@ class ModelProps(
 ):
     pass
 
+# ModelInput MUST contain all fields required for creation.
+# Input fields for creating or updating a model.
 class ModelInput(
     ModelTagsField,
     ModelDescriptionField,
@@ -1939,9 +2362,13 @@ class ModelInput(
 ):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
+# ModelContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a model by an LLM.
 class ModelContext(ModelTagsField, ModelDescriptionField, ModelNameField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
+# ModelOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a model.
 class ModelOutput(
     ModelTagsField,
     ModelDescriptionField,
@@ -1952,6 +2379,8 @@ class ModelOutput(
 ):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
+# Model MUST implement idMembers and inherit from the appropriate field mixins.
+# Model entity for 3D geometry with name, URL and file reference.
 class Model(
     ModelDescriptionField,
     ModelNameField,
@@ -2017,10 +2446,14 @@ class Model(
     def idMembers(self) -> RecursiveAnyList:
         return [self.tags]
 
+# NoModelAssigned MUST fulfill its documented contract.
+# No Model Assigned definition.
 class NoModelAssigned(NoParentAssigned):
     def __str__(self):
         return " The entity has no parent model assigned."
 
+# ModelInputNode MUST expose the input model via Meta.
+# GraphQL input node for model mutations.
 class ModelInputNode(InputNode):
     class Meta:
         model = ModelInput
@@ -2028,31 +2461,50 @@ class ModelInputNode(InputNode):
 # endregion Model
 
 # region Port
+# Port entity for defining connection interfaces on types.
 
+# PortNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a port.
 class PortNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# PortDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a port.
 class PortDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# PortIconField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the icon of a port.
 class PortIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
+# PortCompatiblePortsField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the compatible ports of a port.
 class PortCompatiblePortsField(MaskedField, abc.ABC):
     compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
 
+# PortId MUST contain all fields that uniquely identify a port.
+# Identity fields for uniquely identifying a port.
 class PortId(PortNameField, Id):
     pass
 
+# PortProps MUST contain all non-relational property fields.
+# Property fields for a port.
 class PortProps(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
     pass
 
+# PortInput MUST contain all fields required for creation.
+# Input fields for creating or updating a port.
 class PortInput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
+# PortOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a port.
 class PortOutput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
+# Port MUST implement idMembers and inherit from the appropriate field mixins.
+# Port entity defining a named connection interface on a type.
 class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, table=True):
     PLURAL = "ports"
     __tablename__ = "port"
@@ -2071,6 +2523,8 @@ class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, tabl
 
 # TODO: Fix PortNode - was incorrectly changed to TableEntityNode in latest commit
 
+# PortInputNode MUST expose the input model via Meta.
+# GraphQL input node for port mutations.
 class PortInputNode(InputNode):
     class Meta:
         model = PortInput
@@ -2080,13 +2534,20 @@ class PortInputNode(InputNode):
 # region Connector
 
 # region CompatiblePort
+# Compatible port entity for specifying allowed port pairings on connectors.
 
+# CompatiblePortNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a compatible port.
 class CompatiblePortNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# CompatiblePortOrderField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the order of a compatible port.
 class CompatiblePortOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field()
 
+# CompatiblePort MUST implement idMembers and inherit from the appropriate field mixins.
+# Compatible port entity specifying an allowed port pairing.
 class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, table=True):
     __tablename__ = "compatible_port"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -2103,33 +2564,53 @@ class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, t
 
 # endregion CompatiblePort
 
+# ConnectorIdField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the id of a connector.
 class ConnectorIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(default="", max_length=ID_LENGTH_LIMIT)
 
+# ConnectorDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a connector.
 class ConnectorDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# ConnectorMandatoryField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the mandatory of a connector.
 class ConnectorMandatoryField(RealField, abc.ABC):
     is_mandatory: bool = sqlmodel.Field(default=False)
 
+# ConnectorPortField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the port of a connector.
 class ConnectorPortField(RealField, abc.ABC):
     port: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# ConnectorCompatiblePortsField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the compatible ports of a connector.
 class ConnectorCompatiblePortsField(MaskedField, abc.ABC):
     compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
 
+# ConnectorPointField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the point of a connector.
 class ConnectorPointField(MaskedField, abc.ABC):
     point: Point = sqlmodel.Field()
 
+# ConnectorDirectionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the direction of a connector.
 class ConnectorDirectionField(MaskedField, abc.ABC):
     direction: Vector = sqlmodel.Field()
 
+# ConnectorTField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the t of a connector.
 class ConnectorTField(RealField, abc.ABC):
     t: float = sqlmodel.Field(default=0.0)
 
+# ConnectorId MUST contain all fields that uniquely identify a connector.
+# Identity fields for uniquely identifying a connector.
 class ConnectorId(ConnectorIdField, Id):
     pass
 
+# ConnectorProps MUST contain all non-relational property fields.
+# Property fields for a connector.
 class ConnectorProps(
     ConnectorTField,
     ConnectorCompatiblePortsField,
@@ -2141,6 +2622,8 @@ class ConnectorProps(
 ):
     pass
 
+# ConnectorInput MUST contain all fields required for creation.
+# Input fields for creating or updating a connector.
 class ConnectorInput(
     ConnectorTField,
     ConnectorCompatiblePortsField,
@@ -2154,6 +2637,8 @@ class ConnectorInput(
     direction: VectorInput = sqlmodel.Field()
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
+# ConnectorContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a connector by an LLM.
 class ConnectorContext(
     ConnectorTField,
     ConnectorDirectionField,
@@ -2167,6 +2652,8 @@ class ConnectorContext(
 ):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
+# ConnectorOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a connector.
 class ConnectorOutput(
     ConnectorTField,
     ConnectorDirectionField,
@@ -2180,6 +2667,8 @@ class ConnectorOutput(
 ):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
+# Connector MUST implement idMembers and inherit from the appropriate field mixins.
+# Connector entity defining a localized connection point on a type.
 class Connector(
     ConnectorTField,
     ConnectorPortField,
@@ -2309,6 +2798,8 @@ class Connector(
     def idMembers(self) -> RecursiveAnyList:
         return self.id_
 
+# ConnectorNotFound MUST provide a descriptive error message via __str__.
+# Exception for a connector not found on a type.
 class ConnectorNotFound(NotFound):
     def __init__(self, parent: "Type", id: "ConnectorId") -> None:
         self.parent = parent
@@ -2318,10 +2809,14 @@ class ConnectorNotFound(NotFound):
         variant = f", {self.parent.variant}" if self.parent.variant else ""
         return f"Couldn't find the connector ({self.id.id_}) inside the parent type ({self.parent.name}{variant})."
 
+# ConnectorInputNode MUST expose the input model via Meta.
+# GraphQL input node for connector mutations.
 class ConnectorInputNode(InputNode):
     class Meta:
         model = ConnectorInput
 
+# ConnectorIdInputNode MUST expose the input model via Meta.
+# GraphQL input node for connector id mutations.
 class ConnectorIdInputNode(InputNode):
     class Meta:
         model = ConnectorId
@@ -2329,58 +2824,95 @@ class ConnectorIdInputNode(InputNode):
 # endregion Connector
 
 # region Type
+# Type entity for defining reusable parametric building blocks.
 
+# TypeNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a type.
 class TypeNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# TypeDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a type.
 class TypeDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# TypeIconField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the icon of a type.
 class TypeIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# TypeImageField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the image of a type.
 class TypeImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# TypeVariantField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the variant of a type.
 class TypeVariantField(RealField, abc.ABC):
     variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# TypeParentField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the parent of a type.
 class TypeParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# TypeIsAbstractField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the is abstract of a type.
 class TypeIsAbstractField(RealField, abc.ABC):
     is_abstract: bool = sqlmodel.Field(default=False)
 
+# TypeFolderField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the folder of a type.
 class TypeFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# TypeStockField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the stock of a type.
 class TypeStockField(RealField, abc.ABC):
     stock: int = sqlmodel.Field(default=2147483647)
 
+# TypeVirtualField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the virtual of a type.
 class TypeVirtualField(RealField, abc.ABC):
     is_virtual: bool = sqlmodel.Field(default=False)
 
+# TypeScalableField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the scalable of a type.
 class TypeScalableField(RealField, abc.ABC):
     can_scale: bool = sqlmodel.Field(default=True)
 
+# TypeMirrborableField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the mirrborable of a type.
 class TypeMirrborableField(RealField, abc.ABC):
     can_mirror: bool = sqlmodel.Field(default=True)
 
+# TypeUnitField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the unit of a type.
 class TypeUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# TypeLocationField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the location of a type.
 class TypeLocationField(MaskedField, abc.ABC):
     location: typing.Optional[Location] = sqlmodel.Field(default=None)
 
+# TypeCreatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created of a type.
 class TypeCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# TypeUpdatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated of a type.
 class TypeUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# TypeId MUST contain all fields that uniquely identify a type.
+# Identity fields for uniquely identifying a type.
 class TypeId(TypeVariantField, TypeNameField, Id):
     pass
 
+# TypeProps MUST contain all non-relational property fields.
+# Property fields for a type.
 class TypeProps(
     TypeUnitField,
     TypeLocationField,
@@ -2398,6 +2930,8 @@ class TypeProps(
 ):
     pass
 
+# TypeInput MUST contain all fields required for creation.
+# Input fields for creating or updating a type.
 class TypeInput(
     TypeUnitField,
     TypeVirtualField,
@@ -2420,6 +2954,8 @@ class TypeInput(
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
+# TypeOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a type.
 class TypeOutput(
     TypeUpdatedField,
     TypeCreatedField,
@@ -2444,6 +2980,8 @@ class TypeOutput(
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
+# TypeContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a type by an LLM.
 class TypeContext(
     TypeUnitField,
     TypeVirtualField,
@@ -2458,6 +2996,8 @@ class TypeContext(
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
+# Type MUST implement idMembers and inherit from the appropriate field mixins.
+# Type entity defining a reusable parametric building block.
 class Type(
     TypeUpdatedField,
     TypeCreatedField,
@@ -2656,6 +3196,8 @@ class Type(
     def idMembers(self) -> RecursiveAnyList:
         return [self.name, self.variant]
 
+# TypeNotFound MUST provide a descriptive error message via __str__.
+# Exception for a type not found in the kit.
 class TypeNotFound(NotFound):
     def __init__(self, id: "TypeId") -> None:
         self.id = id
@@ -2664,10 +3206,14 @@ class TypeNotFound(NotFound):
         variant = f", {self.id.variant}" if self.id.variant else ""
         return f"Couldn't find the type ({self.id.name}{variant})."
 
+# NoTypeAssigned MUST fulfill its documented contract.
+# No Type Assigned definition.
 class NoTypeAssigned(NoParentAssigned):
     def __str__(self):
         return " The entity has no parent type assigned."
 
+# TypeHasNotAllUsedConnectors MUST fulfill its documented contract.
+# Type Has Not All Used Connectors definition.
 class TypeHasNotAllUsedConnectors(SpecificationError):
     def __init__(self, missingConnectors: set[str]) -> None:
         self.missingConnectors = missingConnectors
@@ -2675,10 +3221,14 @@ class TypeHasNotAllUsedConnectors(SpecificationError):
     def __str__(self) -> str:
         return f" A design is using some connectors of the type. The new type is missing the following connectors: {', '.join(self.missingConnectors)}."
 
+# TypeInputNode MUST expose the input model via Meta.
+# GraphQL input node for type mutations.
 class TypeInputNode(InputNode):
     class Meta:
         model = TypeInput
 
+# TypeIdInputNode MUST expose the input model via Meta.
+# GraphQL input node for type id mutations.
 class TypeIdInputNode(InputNode):
     class Meta:
         model = TypeId
@@ -2686,25 +3236,40 @@ class TypeIdInputNode(InputNode):
 # endregion Type
 
 # region Layer
+# Layer entity for organizing design elements into visibility groups.
 
+# LayerNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a layer.
 class LayerNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# LayerDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a layer.
 class LayerDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# LayerColorField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the color of a layer.
 class LayerColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
 
+# LayerIsHiddenField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the is hidden of a layer.
 class LayerIsHiddenField(RealField, abc.ABC):
     is_hidden: bool = sqlmodel.Field(default=False)
 
+# LayerIsLockedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the is locked of a layer.
 class LayerIsLockedField(RealField, abc.ABC):
     is_locked: bool = sqlmodel.Field(default=False)
 
+# LayerId MUST contain all fields that uniquely identify a layer.
+# Identity fields for uniquely identifying a layer.
 class LayerId(LayerNameField, Id):
     pass
 
+# LayerProps MUST contain all non-relational property fields.
+# Property fields for a layer.
 class LayerProps(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -2715,6 +3280,8 @@ class LayerProps(
 ):
     pass
 
+# LayerInput MUST contain all fields required for creation.
+# Input fields for creating or updating a layer.
 class LayerInput(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -2725,6 +3292,8 @@ class LayerInput(
 ):
     pass
 
+# LayerOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a layer.
 class LayerOutput(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -2735,6 +3304,8 @@ class LayerOutput(
 ):
     pass
 
+# Layer MUST implement idMembers and inherit from the appropriate field mixins.
+# Layer entity for grouping design elements with visibility and locking.
 class Layer(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -2761,46 +3332,73 @@ class Layer(
 # endregion Layer
 
 # region Piece
+# Piece entity for placed instances of types within a design.
 
+# PieceIdField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the id of a piece.
 class PieceIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(
         default="",
         max_length=ID_LENGTH_LIMIT,
     )
 
+# PieceDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a piece.
 class PieceDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# PieceTypeField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the type of a piece.
 class PieceTypeField(MaskedField, abc.ABC):
     type: typing.Optional[TypeId] = sqlmodel.Field(default=None)
 
+# PieceDesignField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the design of a piece.
 class PieceDesignField(MaskedField, abc.ABC):
     designPiece: typing.Optional["DesignId"] = sqlmodel.Field(default=None)
 
+# PiecePlaneField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the plane of a piece.
 class PiecePlaneField(MaskedField, abc.ABC):
     plane: typing.Optional[Plane] = sqlmodel.Field(default=None)
 
+# PieceCenterField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the center of a piece.
 class PieceCenterField(MaskedField, abc.ABC):
     center: typing.Optional[Coord] = sqlmodel.Field(default=None)
 
+# PieceScaleField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the scale of a piece.
 class PieceScaleField(RealField, abc.ABC):
     scale: float = sqlmodel.Field(default=1.0)
 
+# PieceMirrorPlaneField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the mirror plane of a piece.
 class PieceMirrorPlaneField(MaskedField, abc.ABC):
     mirrorPlane: typing.Optional[Plane] = sqlmodel.Field(default=None)
 
+# PieceHiddenField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the hidden of a piece.
 class PieceHiddenField(RealField, abc.ABC):
     is_hidden: bool = sqlmodel.Field(default=False)
 
+# PieceLockedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the locked of a piece.
 class PieceLockedField(RealField, abc.ABC):
     is_locked: bool = sqlmodel.Field(default=False)
 
+# PieceColorField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the color of a piece.
 class PieceColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
 
+# PieceId MUST contain all fields that uniquely identify a piece.
+# Identity fields for uniquely identifying a piece.
 class PieceId(PieceIdField, Id):
     pass
 
+# PieceProps MUST contain all non-relational property fields.
+# Property fields for a piece.
 class PieceProps(
     PieceCenterField,
     PiecePlaneField,
@@ -2812,24 +3410,34 @@ class PieceProps(
 ):
     pass
 
+# PieceInput MUST contain all fields required for creation.
+# Input fields for creating or updating a piece.
 class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordInput] = sqlmodel.Field(default=None)
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
+# PieceContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a piece by an LLM.
 class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordContext] = sqlmodel.Field(default=None)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
+# PieceOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a piece.
 class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordOutput] = sqlmodel.Field(default=None)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
+# PiecePrediction MUST contain all fields for LLM inference.
+# Prediction fields for LLM-based piece inference.
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     pass
 
+# Piece MUST implement idMembers and inherit from the appropriate field mixins.
+# Piece entity for a placed instance of a type within a design.
 class Piece(
     PieceIdField,
     PieceHiddenField,
@@ -3003,6 +3611,8 @@ class Piece(
     def idMembers(self) -> RecursiveAnyList:
         return self.id_
 
+# PieceInputNode MUST expose the input model via Meta.
+# GraphQL input node for piece mutations.
 class PieceInputNode(InputNode):
     class Meta:
         model = PieceInput
@@ -3011,6 +3621,8 @@ class PieceInputNode(InputNode):
     type = TypeIdInputNode()
     designPiece = graphene.Field(lambda: DesignIdInputNode)
 
+# PieceIdInputNode MUST expose the input model via Meta.
+# GraphQL input node for piece id mutations.
 class PieceIdInputNode(InputNode):
     class Meta:
         model = PieceId
@@ -3018,29 +3630,46 @@ class PieceIdInputNode(InputNode):
 # endregion Piece
 
 # region Group
+# Group entity for named collections of pieces in a design.
 
+# GroupNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a group.
 class GroupNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# GroupDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a group.
 class GroupDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# GroupColorField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the color of a group.
 class GroupColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
 
+# GroupId MUST contain all fields that uniquely identify a group.
+# Identity fields for uniquely identifying a group.
 class GroupId(GroupNameField, Id):
     pass
 
+# GroupProps MUST contain all non-relational property fields.
+# Property fields for a group.
 class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
     pass
 
+# GroupInput MUST contain all fields required for creation.
+# Input fields for creating or updating a group.
 class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
     pass
 
+# GroupOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a group.
 class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
     pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
+# Group MUST implement idMembers and inherit from the appropriate field mixins.
+# Group entity for named collections of pieces.
 class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
     PLURAL = "groups"
     __tablename__ = "group"
@@ -3059,7 +3688,10 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity,
 # endregion Group
 
 # region Side
+# Side primitive for identifying a specific connector on a specific piece.
 
+# Side MUST contain all coordinate or geometry fields.
+# Side primitive identifying a specific connector on a specific piece.
 class Side(BaseModel):
     piece: PieceId = sqlmodel.Field()
     designPiece: typing.Optional[PieceId] = sqlmodel.Field(default=None)
@@ -3080,18 +3712,28 @@ class Side(BaseModel):
             designPiece = None
         return cls(piece=piece, designPiece=designPiece, connector=connector)
 
+# SideInput MUST contain all fields required for creation.
+# Input fields for creating or updating a side.
 class SideInput(Side, Input):
     pass
 
+# SideContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a side by an LLM.
 class SideContext(Side, Context):
     pass
 
+# SideOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a side.
 class SideOutput(Side, Output):
     pass
 
+# SidePrediction MUST contain all fields for LLM inference.
+# Prediction fields for LLM-based side inference.
 class SidePrediction(Side, Prediction):
     pass
 
+# SideNode MUST expose the model via Meta.
+# GraphQL node exposing side data.
 class SideNode(Node):
     class Meta:
         model = Side
@@ -3111,6 +3753,8 @@ class SideNode(Node):
     def resolve_connector(self, info):
         return self.connector
 
+# SideInputNode MUST expose the input model via Meta.
+# GraphQL input node for side mutations.
 class SideInputNode(InputNode):
     class Meta:
         model = SideInput
@@ -3124,43 +3768,70 @@ class SideInputNode(InputNode):
 # endregion Side
 
 # region Connection
+# Connection entity for linking two pieces through their connectors.
 
+# ConnectionConnectedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the connected of a connection.
 class ConnectionConnectedField(MaskedField, abc.ABC):
     connected: Side = sqlmodel.Field()
 
+# ConnectionConnectingField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the connecting of a connection.
 class ConnectionConnectingField(MaskedField, abc.ABC):
     connecting: Side = sqlmodel.Field()
 
+# ConnectionDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a connection.
 class ConnectionDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# ConnectionGapField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the gap of a connection.
 class ConnectionGapField(RealField, abc.ABC):
     gap: float = sqlmodel.Field(default=0)
 
+# ConnectionShiftField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the shift of a connection.
 class ConnectionShiftField(RealField, abc.ABC):
     shift: float = sqlmodel.Field(default=0)
 
+# ConnectionRiseField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the rise of a connection.
 class ConnectionRiseField(MaskedField, abc.ABC):
     rise: float = sqlmodel.Field(default=0)
 
+# ConnectionRotationField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the rotation of a connection.
 class ConnectionRotationField(RealField, abc.ABC):
     rotation: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
+# ConnectionTurnField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the turn of a connection.
 class ConnectionTurnField(RealField, abc.ABC):
     turn: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
+# ConnectionTiltField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the tilt of a connection.
 class ConnectionTiltField(RealField, abc.ABC):
     tilt: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
+# ConnectionUField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the u of a connection.
 class ConnectionUField(RealField, abc.ABC):
     u: float = sqlmodel.Field(default=0)
 
+# ConnectionVField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the v of a connection.
 class ConnectionVField(RealField, abc.ABC):
     v: float = sqlmodel.Field(default=0)
 
+# ConnectionId MUST contain all fields that uniquely identify a connection.
+# Identity fields for uniquely identifying a connection.
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
     pass
 
+# ConnectionProps MUST contain all non-relational property fields.
+# Property fields for a connection.
 class ConnectionProps(
     ConnectionVField,
     ConnectionUField,
@@ -3175,6 +3846,8 @@ class ConnectionProps(
 ):
     pass
 
+# ConnectionInput MUST contain all fields required for creation.
+# Input fields for creating or updating a connection.
 class ConnectionInput(
     ConnectionVField,
     ConnectionUField,
@@ -3192,6 +3865,8 @@ class ConnectionInput(
     connected: SideInput = sqlmodel.Field()
     connecting: SideInput = sqlmodel.Field()
 
+# ConnectionContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a connection by an LLM.
 class ConnectionContext(
     ConnectionVField,
     ConnectionUField,
@@ -3209,6 +3884,8 @@ class ConnectionContext(
     connected: SideContext = sqlmodel.Field()
     connecting: SideContext = sqlmodel.Field()
 
+# ConnectionOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a connection.
 class ConnectionOutput(
     ConnectionVField,
     ConnectionUField,
@@ -3226,6 +3903,8 @@ class ConnectionOutput(
     connected: SideOutput = sqlmodel.Field()
     connecting: SideOutput = sqlmodel.Field()
 
+# ConnectionPrediction MUST contain all fields for LLM inference.
+# Prediction fields for LLM-based connection inference.
 class ConnectionPrediction(
     ConnectionVField,
     ConnectionUField,
@@ -3243,6 +3922,8 @@ class ConnectionPrediction(
     connected: SidePrediction = sqlmodel.Field()
     connecting: SidePrediction = sqlmodel.Field()
 
+# Connection MUST implement idMembers and inherit from the appropriate field mixins.
+# Connection entity linking two pieces through their connectors.
 class Connection(
     ConnectionVField,
     ConnectionUField,
@@ -3530,6 +4211,8 @@ class Connection(
             self.connecting.connector.id_,
         ]
 
+# ConnectionInputNode MUST expose the input model via Meta.
+# GraphQL input node for connection mutations.
 class ConnectionInputNode(InputNode):
     class Meta:
         model = ConnectionInput
@@ -3537,34 +4220,55 @@ class ConnectionInputNode(InputNode):
 # endregion Connection
 
 # region Stat
+# Stat entity for recording computed statistics with bounds.
 
+# StatKeyField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the key of a stat.
 class StatKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# StatUnitField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the unit of a stat.
 class StatUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# StatMinField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the min of a stat.
 class StatMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
 
+# StatMinExcludedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the min excluded of a stat.
 class StatMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=False)
 
+# StatMaxField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the max of a stat.
 class StatMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
 
+# StatMaxExcludedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the max excluded of a stat.
 class StatMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=False)
 
+# StatCreatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created of a stat.
 class StatCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# StatUpdatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated of a stat.
 class StatUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# StatId MUST contain all fields that uniquely identify a stat.
+# Identity fields for uniquely identifying a stat.
 class StatId(StatKeyField, Id):
     pass
 
+# StatProps MUST contain all non-relational property fields.
+# Property fields for a stat.
 class StatProps(
     StatUpdatedField,
     StatCreatedField,
@@ -3578,6 +4282,8 @@ class StatProps(
 ):
     pass
 
+# StatInput MUST contain all fields required for creation.
+# Input fields for creating or updating a stat.
 class StatInput(
     StatMaxExcludedField,
     StatMaxField,
@@ -3589,6 +4295,8 @@ class StatInput(
 ):
     pass
 
+# StatOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a stat.
 class StatOutput(
     StatUpdatedField,
     StatCreatedField,
@@ -3602,6 +4310,8 @@ class StatOutput(
 ):
     pass
 
+# Stat MUST implement idMembers and inherit from the appropriate field mixins.
+# Stat entity for recording computed statistics with bounds.
 class Stat(
     StatUpdatedField,
     StatCreatedField,
@@ -3631,58 +4341,95 @@ class Stat(
 # endregion Stat
 
 # region Design
+# Design entity for composing pieces and connections into assemblies.
 
+# DesignNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a design.
 class DesignNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# DesignDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a design.
 class DesignDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# DesignIconField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the icon of a design.
 class DesignIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# DesignImageField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the image of a design.
 class DesignImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# DesignVariantField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the variant of a design.
 class DesignVariantField(RealField, abc.ABC):
     variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# DesignViewField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the view of a design.
 class DesignViewField(RealField, abc.ABC):
     view: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# DesignParentField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the parent of a design.
 class DesignParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# DesignIsAbstractField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the is abstract of a design.
 class DesignIsAbstractField(RealField, abc.ABC):
     is_abstract: bool = sqlmodel.Field(default=False)
 
+# DesignFolderField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the folder of a design.
 class DesignFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# DesignActiveLayerField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the active layer of a design.
 class DesignActiveLayerField(RealField, abc.ABC):
     activeLayer: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
+# DesignLocationField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the location of a design.
 class DesignLocationField(MaskedField, abc.ABC):
     location: typing.Optional[Location] = sqlmodel.Field(default=None)
 
+# DesignUnitField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the unit of a design.
 class DesignUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# DesignScalableField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the scalable of a design.
 class DesignScalableField(RealField, abc.ABC):
     can_scale: bool = sqlmodel.Field(default=True)
 
+# DesignMirrorableField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the mirrorable of a design.
 class DesignMirrorableField(RealField, abc.ABC):
     can_mirror: bool = sqlmodel.Field(default=True)
 
+# DesignCreatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created of a design.
 class DesignCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# DesignUpdatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated of a design.
 class DesignUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# DesignId MUST contain all fields that uniquely identify a design.
+# Identity fields for uniquely identifying a design.
 class DesignId(DesignNameField, DesignVariantField, Id):
     pass
 
+# DesignProps MUST contain all non-relational property fields.
+# Property fields for a design.
 class DesignProps(
     DesignUnitField,
     DesignViewField,
@@ -3700,6 +4447,8 @@ class DesignProps(
 ):
     pass
 
+# DesignInput MUST contain all fields required for creation.
+# Input fields for creating or updating a design.
 class DesignInput(
     DesignUnitField,
     DesignViewField,
@@ -3722,6 +4471,8 @@ class DesignInput(
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
+# DesignContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a design by an LLM.
 class DesignContext(
     DesignUnitField,
     DesignViewField,
@@ -3738,6 +4489,8 @@ class DesignContext(
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
+# DesignOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a design.
 class DesignOutput(
     DesignUpdatedField,
     DesignCreatedField,
@@ -3764,12 +4517,16 @@ class DesignOutput(
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
+# DesignPrediction MUST contain all fields for LLM inference.
+# Prediction fields for LLM-based design inference.
 class DesignPrediction(DesignDescriptionField, Prediction):
     pass
 
     pieces: list[PiecePrediction] = sqlmodel.Field(default_factory=list)
     connections: list[ConnectionPrediction] = sqlmodel.Field(default_factory=list)
 
+# Design MUST implement idMembers and inherit from the appropriate field mixins.
+# Design entity composing pieces and connections into an assembly.
 class Design(
     DesignNameField,
     DesignVariantField,
@@ -3963,14 +4720,20 @@ class Design(
     def idMembers(self) -> RecursiveAnyList:
         return [self.name, self.variant]
 
+# NoDesignAssigned MUST fulfill its documented contract.
+# No Design Assigned definition.
 class NoDesignAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent design assigned."
 
+# DesignInputNode MUST expose the input model via Meta.
+# GraphQL input node for design mutations.
 class DesignInputNode(InputNode):
     class Meta:
         model = DesignInput
 
+# DesignIdInputNode MUST expose the input model via Meta.
+# GraphQL input node for design id mutations.
 class DesignIdInputNode(InputNode):
     class Meta:
         model = DesignId
@@ -3978,46 +4741,75 @@ class DesignIdInputNode(InputNode):
 # endregion Design
 
 # region Kit
+# Kit entity for packaging types, designs, qualities and metadata.
 
+# KitUriField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the uri of a kit.
 class KitUriField(RealField, abc.ABC):
     uri: str = sqlmodel.Field(max_length=URI_LENGTH_LIMIT)
 
+# KitNameField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the name of a kit.
 class KitNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
+# KitDescriptionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the description of a kit.
 class KitDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
+# KitIconField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the icon of a kit.
 class KitIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# KitImageField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the image of a kit.
 class KitImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# KitPreviewField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the preview of a kit.
 class KitPreviewField(RealField, abc.ABC):
     preview: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# KitVersionField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the version of a kit.
 class KitVersionField(RealField, abc.ABC):
     version: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
+# KitRemoteField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the remote of a kit.
 class KitRemoteField(RealField, abc.ABC):
     remote: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# KitHomepageField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the homepage of a kit.
 class KitHomepageField(RealField, abc.ABC):
     homepage: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# KitLicenseField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the license of a kit.
 class KitLicenseField(RealField, abc.ABC):
     license: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
+# KitCreatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the created of a kit.
 class KitCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# KitUpdatedField MUST declare exactly one field with appropriate constraints.
+# Field mixin for the updated of a kit.
 class KitUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
+# KitId MUST contain all fields that uniquely identify a kit.
+# Identity fields for uniquely identifying a kit.
 class KitId(KitUriField, Id):
     pass
 
+# KitProps MUST contain all non-relational property fields.
+# Property fields for a kit.
 class KitProps(
     KitLicenseField,
     KitHomepageField,
@@ -4033,6 +4825,8 @@ class KitProps(
 ):
     pass
 
+# KitInput MUST contain all fields required for creation.
+# Input fields for creating or updating a kit.
 class KitInput(
     KitLicenseField,
     KitHomepageField,
@@ -4053,6 +4847,8 @@ class KitInput(
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
+# KitContext MUST contain all fields needed for LLM understanding.
+# Context fields for understanding a kit by an LLM.
 class KitContext(KitDescriptionField, KitNameField, Context):
     pass
 
@@ -4060,6 +4856,8 @@ class KitContext(KitDescriptionField, KitNameField, Context):
     designs: list[DesignContext] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
+# KitOutput MUST contain all fields returned on fetch.
+# Output fields returned when fetching a kit.
 class KitOutput(
     KitUpdatedField,
     KitCreatedField,
@@ -4083,6 +4881,8 @@ class KitOutput(
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
     concepts: list[str] = sqlmodel.Field(default_factory=list)
 
+# Kit MUST implement idMembers and inherit from the appropriate field mixins.
+# Kit entity packaging types, designs, qualities and metadata.
 class Kit(
     KitNameField,
     KitVersionField,
@@ -4213,6 +5013,7 @@ class Kit(
         return self.id()
 
     # region Design Family Helpers
+# Helper functions for querying design hierarchies and families.
 
     def find_design_by_guid(self, design_guid: str) -> "Design":
         """
@@ -4316,6 +5117,7 @@ class Kit(
     # endregion Design Family Helpers
 
     # region Type Family Helpers
+# Helper functions for querying type hierarchies and families.
 
     def find_type_by_guid(self, type_guid: str) -> "Type":
         """
@@ -4394,24 +5196,35 @@ class Kit(
 # endregion Kit
 
 # region Moved Graphene Nodes
+# Graphene node definitions moved here due to forward-reference resolution order.
 
+# AttributeNode MUST expose the model via Meta.
+# GraphQL node exposing attribute data.
 class AttributeNode(TableEntityNode):
     class Meta:
         model = Attribute
 
+# PlaneNode MUST expose the model via Meta.
+# GraphQL node exposing plane data.
 class PlaneNode(TableNode):
     class Meta:
         model = Plane
 
+# AuthorNode MUST expose the model via Meta.
+# GraphQL node exposing author data.
 class AuthorNode(TableEntityNode):
     class Meta:
         model = Author
 
+# ModelNode MUST expose the model via Meta.
+# GraphQL node exposing model data.
 class ModelNode(TableEntityNode):
     class Meta:
         model = Model
         excludedFields = ("tags_",)
 
+# ConnectorNode MUST expose the model via Meta.
+# GraphQL node exposing connector data.
 class ConnectorNode(TableEntityNode):
     class Meta:
         model = Connector
@@ -4422,10 +5235,14 @@ class ConnectorNode(TableEntityNode):
     def resolve_localId(self, info):
         return getattr(self, "id_", "")
 
+# TypeNode MUST expose the model via Meta.
+# GraphQL node exposing type data.
 class TypeNode(TableEntityNode):
     class Meta:
         model = Type
 
+# PieceNode MUST expose the model via Meta.
+# GraphQL node exposing piece data.
 class PieceNode(TableEntityNode):
     class Meta:
         model = Piece
@@ -4436,6 +5253,8 @@ class PieceNode(TableEntityNode):
     def resolve_localId(self, info):
         return getattr(self, "id_", "")
 
+# ConnectionNode MUST expose the model via Meta.
+# GraphQL node exposing connection data.
 class ConnectionNode(TableEntityNode):
     class Meta:
         model = Connection
@@ -4455,11 +5274,14 @@ class ConnectionNode(TableEntityNode):
     def resolve_connecting(self, info):
         return self.connecting
 
+# DesignNode MUST expose the model via Meta.
+# GraphQL node exposing design data.
 class DesignNode(TableEntityNode):
     class Meta:
         model = Design
 
 # endregion Moved Graphene Nodes
+# KitNotFound MUST provide a descriptive error message via __str__.
 class KitNotFound(NotFound):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -4467,6 +5289,8 @@ class KitNotFound(NotFound):
     def __str__(self):
         return f"🔍 Couldn't find an local or remote kit under uri:\n {self.uri}."
 
+# NoKitToDelete MUST fulfill its documented contract.
+# No Kit To Delete definition.
 class NoKitToDelete(KitNotFound):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -4474,6 +5298,8 @@ class NoKitToDelete(KitNotFound):
     def __str__(self):
         return f"🔍 Couldn't delete the kit because no local or remote kit was found under uri:\n {self.uri}."
 
+# KitZipDoesNotContainSemioFolder MUST fulfill its documented contract.
+# Kit Zip Does Not Contain Semio Folder definition.
 class KitZipDoesNotContainSemioFolder(KitNotFound):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -4481,6 +5307,8 @@ class KitZipDoesNotContainSemioFolder(KitNotFound):
     def __str__(self):
         return f"🔍 The remote zip kit ({self.uri}) is not a valid kit."
 
+# OnlyRemoteKitsCanBeCached MUST fulfill its documented contract.
+# Only Remote Kits Can Be Cached definition.
 class OnlyRemoteKitsCanBeCached(ClientError):
     def __init__(self, nonRemoteUri: str) -> None:
         self.nonRemoteUri = nonRemoteUri
@@ -4488,12 +5316,18 @@ class OnlyRemoteKitsCanBeCached(ClientError):
     def __str__(self):
         return f"🔍 Only remote kits can be cached. The uri ({self.nonRemoteUri}) doesn't start with http and ends with .zip"
 
+# KitUriNotValid MUST be subclassed and MUST NOT be instantiated directly.
+# Kit Uri Not Valid definition.
 class KitUriNotValid(ClientError, abc.ABC):
     """🆔 The base for all kit uri not valid errors."""
 
+# LocalKitUriNotValid MUST be subclassed and MUST NOT be instantiated directly.
+# Local Kit Uri Not Valid definition.
 class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
     """📂 The base for all local kit uri not valid errors."""
 
+# LocalKitUriIsNotAbsolute MUST fulfill its documented contract.
+# Local Kit Uri Is Not Absolute definition.
 class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -4501,6 +5335,8 @@ class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
     def __str__(self):
         return f"📂 The local kit uri ({self.uri}) is relative. It needs to be absolute (include the parent folders, drives, ...)."
 
+# LocalKitUriIsNotDirectory MUST fulfill its documented contract.
+# Local Kit Uri Is Not Directory definition.
 class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -4508,10 +5344,14 @@ class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
     def __str__(self):
         return f"📂 The local kit uri ({self.uri}) is not a directory."
 
+# NoKitAssigned MUST fulfill its documented contract.
+# No Kit Assigned definition.
 class NoKitAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent kit assigned."
 
+# KitAlreadyExists MUST provide a descriptive error message via __str__.
+# Exception for attempting to create a kit that already exists.
 class KitAlreadyExists(AlreadyExists, abc.ABC):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -4519,10 +5359,14 @@ class KitAlreadyExists(AlreadyExists, abc.ABC):
     def __str__(self) -> str:
         return f"♊ A kit under uri ({self.uri}) already exists."
 
+# KitInputNode MUST expose the input model via Meta.
+# GraphQL input node for kit mutations.
 class KitInputNode(InputNode):
     class Meta:
         model = KitInput
 
+# KitNode MUST expose the model via Meta.
+# GraphQL node exposing kit data.
 class KitNode(TableEntityNode):
     class Meta:
         model = Kit
@@ -4530,8 +5374,11 @@ class KitNode(TableEntityNode):
 # endregion Domain
 
 # region Validation
+# Validation logic for checking kit constraints and uniqueness rules.
 
 @dataclasses.dataclass
+# ValidationFix MUST contain a non-empty title and a valid diff dictionary.
+# A proposed fix for a validation problem with a title and diff.
 class ValidationFix:
     title: str
     diff: dict
@@ -4540,6 +5387,8 @@ class ValidationFix:
         return {"title": self.title, "diff": self.diff}
 
 @dataclasses.dataclass
+# Problem MUST contain a non-empty constraint identifier and message.
+# A validation problem with a constraint identifier and message.
 class Problem:
     constraintId: str
     message: str
@@ -4557,6 +5406,8 @@ class Problem:
         }
 
 @dataclasses.dataclass
+# ValidationResult MUST aggregate all problems and fixes for a single entity.
+# A validation result aggregating problems and fixes for an entity.
 class ValidationResult:
     problems: list[Problem]
 
@@ -4592,6 +5443,8 @@ def _normalizeGuids(obj: typing.Any) -> typing.Any:
         return {k: _normalizeGuids(v) for k, v in obj.items()}
     return obj
 
+# areValidationResultsEqual MUST compare all problems and fixes.
+# Check whether two validation results are semantically equal.
 def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
     if len(a.problems) != len(b.problems):
         return False
@@ -4612,6 +5465,8 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
                 return False
     return True
 
+# parseValidationResult MUST return a ValidationResult from a dict.
+# Parse a validation result from a dictionary representation.
 def parseValidationResult(jsonStr: str) -> ValidationResult:
     data = json.loads(jsonStr)
     problems = []
@@ -4628,6 +5483,8 @@ def parseValidationResult(jsonStr: str) -> ValidationResult:
         )
     return ValidationResult(problems=problems)
 
+# validateGuidUniqueness MUST report duplicate GUIDs as problems.
+# Validate that all GUIDs within a collection are unique.
 def validateGuidUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     seen: dict[str, str] = {}
@@ -4664,6 +5521,8 @@ def validateGuidUniqueness(kit: Kit) -> list[Problem]:
         check("Folder", fo.guid)
     return problems
 
+# validateTypeNameUniqueness MUST report duplicate type names as problems.
+# Validate that all type names within a kit are unique.
 def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Type]] = {}
@@ -4691,6 +5550,8 @@ def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
+# validateDesignNameUniqueness MUST report duplicate design names as problems.
+# Validate that all design names within a kit are unique.
 def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Design]] = {}
@@ -4718,6 +5579,8 @@ def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
+# validatePieceNameUniqueness MUST report duplicate piece names as problems.
+# Validate that all piece names within a design are unique.
 def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for design in kit.designs or []:
@@ -4740,6 +5603,8 @@ def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
+# validatePortNameUniqueness MUST report duplicate port names as problems.
+# Validate that all port names within a type are unique.
 def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for t in kit.types or []:
@@ -4762,6 +5627,8 @@ def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
+# validateModelNameUniqueness MUST report duplicate model names as problems.
+# Validate that all model names within a type are unique.
 def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for t in kit.types or []:
@@ -4784,6 +5651,8 @@ def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
+# validateQualityNameUniqueness MUST report duplicate quality names as problems.
+# Validate that all quality names within a kit are unique.
 def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     names: dict[str, list[Quality]] = {}
@@ -4804,6 +5673,8 @@ def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
                 )
     return problems
 
+# validateFileNameUniqueness MUST report duplicate file names as problems.
+# Validate that all file names within a kit are unique.
 def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     names: dict[str, list[File]] = {}
@@ -4824,6 +5695,8 @@ def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
                 )
     return problems
 
+# validateFolderNameUniqueness MUST report duplicate folder names as problems.
+# Validate that all folder names within a kit are unique.
 def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Folder]] = {}
@@ -4851,6 +5724,8 @@ def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
+# validateLayerPathUniqueness MUST report duplicate layer paths as problems.
+# Validate that all layer paths within a design are unique.
 def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for design in kit.designs or []:
@@ -4872,6 +5747,8 @@ def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
                     )
     return problems
 
+# validateKit MUST run all validation checks and return aggregated results.
+# Validate a kit entity against all constraint rules.
 def validateKit(kit: Kit) -> ValidationResult:
     problems: list[Problem] = []
     problems.extend(validateGuidUniqueness(kit))
@@ -4887,6 +5764,7 @@ def validateKit(kit: Kit) -> ValidationResult:
     return ValidationResult(problems=problems)
 
 # region Dict-based Validation
+# Dictionary-based validation functions for kit data integrity.
 
 def _makeFix(title: str, diff: dict) -> ValidationFix:
     return ValidationFix(title=title, diff=diff)
@@ -4899,6 +5777,8 @@ def _newGuid() -> str:
 
     return str(uuid.uuid4())
 
+# validateKitDict MUST validate a kit dictionary and return results.
+# Validate a kit dictionary against all constraint rules.
 def validateKitDict(kit: dict) -> ValidationResult:
     problems: list[Problem] = []
     seen: dict[str, str] = {}
@@ -5368,7 +6248,10 @@ def validateKitDict(kit: dict) -> ValidationResult:
 # endregion Validation
 
 # region Graph Operations
+# Graph construction and traversal for piece connectivity analysis.
 
+# buildPieceGraph MUST return a networkx graph with pieces as nodes.
+# Build a networkx graph from pieces and connections.
 def buildPieceGraph(design: Design | dict) -> networkx.Graph:
     G = networkx.Graph()
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
@@ -5387,6 +6270,8 @@ def buildPieceGraph(design: Design | dict) -> networkx.Graph:
             G.add_edge(sourceId, targetId, connection=connection)
     return G
 
+# findFixedPieces MUST return pieces that have no incoming connections.
+# Find all pieces that are fixed in the design hierarchy.
 def findFixedPieces(design: Design | dict) -> list[str]:
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
     result = []
@@ -5399,10 +6284,14 @@ def findFixedPieces(design: Design | dict) -> list[str]:
                 result.append(p.guid)
     return result
 
+# getConnectedComponents MUST return disjoint piece groups.
+# Get connected components of the piece graph.
 def getConnectedComponents(design: Design | dict) -> list[set[str]]:
     G = buildPieceGraph(design)
     return [set(c) for c in networkx.connected_components(G)]
 
+# getPieceHierarchy MUST return a topological ordering of pieces.
+# Get the hierarchical ordering of pieces from root to leaf.
 def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
     G = buildPieceGraph(design)
     if rootGuid not in G:
@@ -5412,13 +6301,18 @@ def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
 # endregion Graph Operations
 
 # region FlattenDesign
+# Design flattening to resolve nested sub-designs into a single coordinate space.
 
+# getTypeByGuid MUST return the type dict or raise if not found.
+# Look up a type by its GUID within a kit dictionary.
 def getTypeByGuid(kit: dict, guid: str) -> dict | None:
     for t in kit.get("types", []):
         if t.get("guid") == guid:
             return t
     return None
 
+# getConnectorFromType MUST return the matching connector dict.
+# Look up a connector by name from a type dictionary.
 def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
     if typeData is None:
         return None
@@ -5443,6 +6337,8 @@ def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | 
         return connectors[0]
     return None
 
+# planeToMatrixDict MUST produce a valid 4x4 homogeneous matrix.
+# Convert a plane dictionary to a 4x4 transformation matrix.
 def planeToMatrixDict(plane: dict) -> numpy.ndarray:
     origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
     xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
@@ -5456,6 +6352,8 @@ def planeToMatrixDict(plane: dict) -> numpy.ndarray:
     matrix[:3, 3] = origin
     return matrix
 
+# matrixToPlaneDict MUST extract origin, xAxis and yAxis from the matrix.
+# Convert a 4x4 transformation matrix to a plane dictionary.
 def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
     origin = matrix[:3, 3]
     xAxis = matrix[:3, 0]
@@ -5466,6 +6364,8 @@ def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
         "yAxis": {"x": float(yAxis[0]), "y": float(yAxis[1]), "z": float(yAxis[2])},
     }
 
+# quaternionFromUnitVectorsDict MUST compute the shortest rotation quaternion.
+# Compute a quaternion rotating one unit vector onto another.
 def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
     r = numpy.dot(vFrom, vTo) + 1
     if r < 0.000001:
@@ -5478,11 +6378,15 @@ def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> n
         q = numpy.array([cross[0], cross[1], cross[2], r])
     return q / numpy.linalg.norm(q)
 
+# quaternionFromAxisAngleDict MUST compute the quaternion for the given rotation.
+# Compute a quaternion from an axis-angle representation.
 def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
     halfAngle = angle / 2
     s = numpy.sin(halfAngle)
     return numpy.array([axis[0] * s, axis[1] * s, axis[2] * s, numpy.cos(halfAngle)])
 
+# quaternionToMatrixDict MUST produce a valid 3x3 rotation matrix.
+# Convert a quaternion to a 3x3 rotation matrix.
 def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
     x, y, z, w = q
     x2, y2, z2 = x + x, y + y, z + z
@@ -5501,9 +6405,13 @@ def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
     m[2, 2] = 1 - (xx + yy)
     return m
 
+# makeRotationAxisDict MUST return a 4x4 rotation matrix around the axis.
+# Create a 4x4 rotation matrix around an arbitrary axis.
 def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
     return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
 
+# makeTranslationDict MUST return a 4x4 translation matrix.
+# Create a 4x4 translation matrix from a displacement vector.
 def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
     m = numpy.eye(4)
     m[0, 3] = x
@@ -5511,6 +6419,8 @@ def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
     m[2, 3] = z
     return m
 
+# applyMatrix4ToVec3Dict MUST apply the full affine transformation.
+# Apply a 4x4 matrix to a 3D vector dictionary.
 def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
     return numpy.array(
         [
@@ -5520,6 +6430,8 @@ def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
         ]
     )
 
+# computeChildPlaneDict MUST compose parent and local transformations correctly.
+# Compute the world-space plane of a child piece from parent and local planes.
 def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
     parentMatrix = planeToMatrixDict(parentPlane)
     parentPoint = numpy.array([parentConnector["point"]["x"], parentConnector["point"]["y"], parentConnector["point"]["z"]])
@@ -5581,6 +6493,8 @@ def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnect
         "yAxis": {"x": round(result["yAxis"]["x"] / TOLERANCE) * TOLERANCE, "y": round(result["yAxis"]["y"] / TOLERANCE) * TOLERANCE, "z": round(result["yAxis"]["z"] / TOLERANCE) * TOLERANCE},
     }
 
+# flattenDesignDict MUST resolve all nested designs into world coordinates.
+# Flatten a nested design hierarchy into a single flat coordinate space.
 def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
     if design is None:
@@ -5686,6 +6600,7 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
 # endregion FlattenDesign
 
 # region Kit Diff Operations
+# Diffing and patching operations for comparing and merging kit versions.
 
 def _normalizeValue(value: typing.Any) -> typing.Any:
     """Normalize empty values to None for comparison."""
@@ -5705,6 +6620,8 @@ def _normalizeArray(arr: list | None) -> list:
         return [arr]
     return arr
 
+# areAttributesEqualDict MUST compare all attribute fields for equality.
+# Check whether two attribute dictionaries are equal.
 def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -5727,6 +6644,8 @@ def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False)
                 return False
     return True
 
+# arePropsEqualDict MUST compare all prop fields for equality.
+# Check whether two prop dictionaries are equal.
 def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -5751,6 +6670,8 @@ def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 return False
     return True
 
+# arePortsEqualDict MUST compare all port fields for equality.
+# Check whether two port dictionaries are equal.
 def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -5789,6 +6710,8 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 return False
     return True
 
+# areModelsEqualDict MUST compare all model fields for equality.
+# Check whether two model dictionaries are equal.
 def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -5820,6 +6743,8 @@ def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
                 return False
     return True
 
+# areTypesEqualDict MUST compare all type fields including children for equality.
+# Check whether two type dictionaries are equal.
 def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -5893,6 +6818,8 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 return False
     return True
 
+# arePiecesEqualDict MUST compare all piece fields for equality.
+# Check whether two piece dictionaries are equal.
 def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -5977,6 +6904,8 @@ def _getGuidFromRef(ref: typing.Any) -> str | None:
         return ref.get("guid")
     return ref
 
+# areConnectionsEqualDict MUST compare all connection fields for equality.
+# Check whether two connection dictionaries are equal.
 def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6030,6 +6959,8 @@ def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False
                 return False
     return True
 
+# areDesignsEqualDict MUST compare all design fields including children for equality.
+# Check whether two design dictionaries are equal.
 def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6083,6 +7014,8 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
                 return False
     return True
 
+# arePortsEqualDict MUST compare all port fields for equality.
+# Check whether two port dictionaries are equal.
 def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6105,6 +7038,8 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 return False
     return True
 
+# areQualitiesEqualDict MUST compare all quality fields for equality.
+# Check whether two quality dictionaries are equal.
 def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6127,6 +7062,8 @@ def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) 
                 return False
     return True
 
+# areFilesEqualDict MUST compare all file fields for equality.
+# Check whether two file dictionaries are equal.
 def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6145,6 +7082,8 @@ def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
                 return False
     return True
 
+# areFoldersEqualDict MUST compare all folder fields for equality.
+# Check whether two folder dictionaries are equal.
 def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6165,6 +7104,8 @@ def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) ->
                 return False
     return True
 
+# areAuthorsEqualDict MUST compare all author fields for equality.
+# Check whether two author dictionaries are equal.
 def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6187,6 +7128,8 @@ def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
                 return False
     return True
 
+# areConceptsEqualDict MUST compare all concept fields for equality.
+# Check whether two concept dictionaries are equal.
 def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6209,6 +7152,8 @@ def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -
                 return False
     return True
 
+# areTagsEqualDict MUST compare all tag fields for equality.
+# Check whether two tag dictionaries are equal.
 def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6231,6 +7176,8 @@ def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bo
                 return False
     return True
 
+# areKitsDictEqual MUST compare all kit fields and children recursively.
+# Check whether two kit dictionaries are semantically equal.
 def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
     """Deep equality check for kits (dict-based) - recursively compares all properties including nested entities.
 
@@ -6792,6 +7739,8 @@ def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
         inverse["definition"] = original.get("definition")
     return inverse
 
+# getKitDiffDict MUST identify all added, removed and changed entities.
+# Compute the difference between two kit dictionaries.
 def getKitDiffDict(before: dict, after: dict) -> dict:
     """Compute the diff between two kit dicts."""
     diff: dict = {}
@@ -6855,6 +7804,8 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
         diff["attributes"] = attributesDiff
     return diff
 
+# applyKitDiffDict MUST apply additions, removals and changes correctly.
+# Apply a kit diff to a kit dictionary to produce an updated kit.
 def applyKitDiffDict(base: dict, diff: dict) -> dict:
     """Apply a diff to a kit dict."""
     result = dict(base)
@@ -7073,6 +8024,8 @@ def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
             inverse[key] = original.get(key)
     return inverse
 
+# inverseKitDiffDict MUST swap additions and removals to reverse the diff.
+# Invert a kit diff to reverse its effect.
 def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
     """Compute the inverse of a kit diff."""
     inverse: dict = {}
@@ -7143,6 +8096,8 @@ def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
             return update[key].get("guid", "")
     return update.get("id", "")
 
+# areKitDiffsDictEqual MUST compare all diff entries for equality.
+# Check whether two kit diff dictionaries are equal.
 def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     """Deep equality check for kit diffs."""
     keys = [
@@ -7192,7 +8147,10 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 # endregion Kit Diff Operations
 
 # region Kit Import/Export
+# Import and export utilities for kit serialization and deserialization.
 
+# KitData MUST hold all kit entities in memory for import and export operations.
+# Data container for in-memory kit content during import and export.
 class KitData:
     """Simple in-memory kit representation that supports attribute access."""
 
@@ -7374,6 +8332,8 @@ def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[d
         "connections": connections,
     }
 
+# import_kit MUST handle both local directories and remote zip archives.
+# Import a kit from a local or remote URI into memory.
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
     """📦Import a kit from a .zip file (containing a .semio/kit.db sqlite database)."""
     if not os.path.exists(path):
@@ -7822,6 +8782,8 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
     conn.commit()
     conn.close()
 
+# export_kit MUST write the kit database and files to the target path.
+# Export a kit from memory to a local file path.
 def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
     """📦Export a kit to a .zip file (containing a .semio/kit.db sqlite database)."""
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -7840,13 +8802,18 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
 # endregion Kit Import/Export
 
 # region Spatial Math
+# Spatial math utilities for vector normalization and plane computation.
 
+# normalizeVector MUST return a unit-length vector or raise on zero length.
+# Normalize a 3D vector to unit length.
 def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
     length = numpy.linalg.norm(v)
     if length < 1e-10:
         return v
     return v / length
 
+# planeFromYAxis MUST derive orthogonal x and z axes from the y axis.
+# Construct a plane from an origin point and a Y-axis direction.
 def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.ndarray | None = None) -> Plane:
     if origin is None:
         origin = numpy.array([0.0, 0.0, 0.0])
@@ -7872,6 +8839,8 @@ def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.
     plane.yAxis = Vector(x=float(yAxis[0]), y=float(yAxis[1]), z=float(yAxis[2]))
     return plane
 
+# computeChildPlane MUST compose parent and local plane transformations.
+# Compute the world-space plane of a child from parent and local planes.
 def computeChildPlane(
     parentPlane: Plane,
     parentConnector: Connector,

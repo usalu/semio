@@ -29,127 +29,18 @@ elements:
 
 ## History
 
-All `#region <SECTIONNAME>` and `#endregion <SECTIONNAME>` for sections should be replaced with `// #region 🔖<SECTIONNAME>` and `// #endregion 🔖<SECTIONNAME>` respectively. Add a policy
+All `#region <SECTIONNAME>` and `#endregion <SECTIONNAME>` for sections should be replaced with `// #region 🔖<SECTIONNAME>` and `// #endregion 🔖<SECTIONNAME>` respectively.
 
 semio repo cli:
-The fix mechanism is not working properly. All emojis with a variation selector (such as VS15 / text presentation) should be removed and instead show the colorful emoji. Make sure to extend the existing tests to make sure after fix, just plain emojis are left.
+The fix mechanism is not working properly. When running `./semio-repo/cli/cli fix` the emojis are replaced with text rendering. It should do the opposite and remove all variation selector (such as VS15 / text presentation) and instead show the colorful emoji. Make sure to extend the existing tests to make sure after fix, just plain emojis are left.
 
 e.g 🏗,⌨,🖱,⚙,⚖,🏷,🛠,✂,🛡 should be 🏗️,⌨️,🖱️,⚙️,⚖️,🏷️,🛠️,✂️,🛡️
-e.g. this should not be possible:
-```go
-const (
-	EmojiRepo                = "🌍"
-	EmojiProjects            = "🏗"
-	EmojiProjectUser         = "👤"
-	EmojiProjectInfra        = "🧰"
-	EmojiProjectResearch     = "🔬"
-	EmojiBundles             = "📦"
-	EmojiBundleLibrary       = "📚"
-	EmojiBundleSchema        = "🛂"
-	EmojiBundleBinary        = "⌨"
-	EmojiBundleUI            = "🖱"
-	EmojiBundleExample       = "📔"
-	EmojiBundleSite          = "🌐"
-	EmojiBundleAssets        = "🏪"
-	EmojiFolders             = "📁"
-	EmojiFolderOrg           = "🗃"
-	EmojiFolderRequired      = "📁"
-	EmojiFiles               = "📄"
-	EmojiFileCode            = "💻"
-	EmojiFileTest            = "🧪"
-	EmojiFileScript          = "📜"
-	EmojiFileDocs            = "📃"
-	EmojiFileConfig          = "⚙"
-	EmojiFileResource        = "💾"
-	EmojiFileLicense         = "⚖"
-	EmojiSections            = "🔖"
-	EmojiSection             = "🔖"
-	EmojiDefinitions         = "🏷"
-	EmojiDefinitionImpl      = "🛠"
-	EmojiDefinitionInterface = "✂"
-	EmojiDefinitionConstant  = "🪨"
-	EmojiTickets             = "🎫"
-	EmojiTicket              = "🎫"
-	EmojiGoals               = "🎯"
-	EmojiGoal                = "🎯"
-	EmojiDrafts              = "✍"
-	EmojiDraft               = "✍"
-	EmojiTodos               = "📝"
-	EmojiTodo                = "📝"
-	EmojiPolicies            = "🛡"
-	EmojiPolicy              = "🛡"
-	EmojiViolationKinds      = "🚫"
-	EmojiViolationKind       = "🚫"
-	EmojiViolation           = "🚫"
-	EmojiContributors        = "👤"
-	EmojiContributor         = "👤"
-	EmojiCommits             = "🔀"
-	EmojiCommit              = "🔀"
-)
-```
-but it should be:
-```go
-const (
-	EmojiRepo                = "🌍"
-	EmojiProjects            = "🏗️"
-	EmojiProjectUser         = "👤"
-	EmojiProjectInfra        = "🧰"
-	EmojiProjectResearch     = "🔬"
-	EmojiBundles             = "📦"
-	EmojiBundleLibrary       = "📚"
-	EmojiBundleSchema        = "🛂"
-	EmojiBundleBinary        = "⌨️"
-	EmojiBundleUI            = "🖱️"
-	EmojiBundleExample       = "📔"
-	EmojiBundleSite          = "🌐"
-	EmojiBundleAssets        = "🏪"
-	EmojiFolders             = "📁"
-	EmojiFolderOrg           = "🗃️"
-	EmojiFolderRequired      = "📁"
-	EmojiFiles               = "📄"
-	EmojiFileCode            = "💻"
-	EmojiFileTest            = "🧪"
-	EmojiFileScript          = "📜"
-	EmojiFileDocs            = "📃"
-	EmojiFileConfig          = "⚙️"
-	EmojiFileResource        = "💾"
-	EmojiFileLicense         = "⚖️"
-	EmojiSections            = "🔖"
-	EmojiSection             = "🔖"
-	EmojiDefinitions         = "🏷️"
-	EmojiDefinitionImpl      = "🛠️"
-	EmojiDefinitionInterface = "✂️️"
-	EmojiDefinitionConstant  = "🪨"
-	EmojiTickets             = "🎫"
-	EmojiTicket              = "🎫"
-	EmojiGoals               = "🎯"
-	EmojiGoal                = "🎯"
-	EmojiDrafts              = "✍"
-	EmojiDraft               = "✍"
-	EmojiTodos               = "📝"
-	EmojiTodo                = "📝"
-	EmojiPolicies            = "🛡️️"
-	EmojiPolicy              = "🛡️️"
-	EmojiViolationKinds      = "🚫"
-	EmojiViolationKind       = "🚫"
-	EmojiViolation           = "🚫"
-	EmojiContributors        = "👤"
-	EmojiContributor         = "👤"
-	EmojiCommits             = "🔀"
-	EmojiCommit              = "🔀"
-)
-```
 
 semio-repo cli:
 The fix mechanism is not working properly.
 The comment fix is removing too lines. All linter or formatter specific comments should be ignored. Make sure to support all languages and frameworks. e.g. in python `# noqa: E402, F401` is currently removed.
 
-
-
-All script files (script files 📜 are programming files with a shebang header. programming files that are part of a bundle and are not exectuable are code files 💻) have a header to run them e.g. `#!/usr/bin/env python`, `#!/usr/bin/env tsx` or `#!/usr/bin/env sh`. They are not correctly identified for all languages and remove when running `./semio-repo/cli/cli fix`.
-
-
-When running `./semio-repo/cli/cli fix` the emojis are replaced with text rendering. It should do the opposite and remove all variation selector (such as VS15 / text presentation) and instead show the colorful emoji.
+All script files (script files 📜 are programming files with a shebang header. programming files that are part of a bundle and are not exectuable are code files 💻) have a header to run them e.g. `#!/usr/bin/env python`, `//#!/usr/bin/env tsx` or `#!/usr/bin/env sh`. They are not correctly identified for all languages and remove when running `./semio-repo/cli/cli fix`.
 
 semio-repo:
 Interactions should instead of this:
@@ -158,11 +49,17 @@ Interactions should instead of this:
   "version": "linux",
   "client": "copilot-chat"
 },
+"created": "2026-02-12T01:22:07.762840469Z",
+"finished": "2026-02-12T01:22:07.762840469Z",
 ```
-be flattened to this:
+this:
 ```json
 "system": "linux",
 "client": "copilot-chat"
+"dates": {
+  "created": "2026-02-12T01:22:07.762840469Z",
+  "finished": "2026-02-12T01:22:07.762840469Z"
+}
 ```
 Migrate all existing `goals.json` and `tickets.json` to the new format. Dont keep any legacy api or backwards compatiblity.
 
@@ -285,15 +182,28 @@ e.g. I get:
 
 Create a `generate docs` command that generates 
 
-Make sure to every single project, bundle, folder, file, section and definition has a summary, specs, todos and docs. Files additionally have id, contributors, license.
+You MUST make sure that project, bundle, folder, file, section and definition have the right mechanism to have a summary, specs, todos and docs. Files additionally have id, contributors, license.
 
-The following violation kinds should be extended/implemented/refactored/changed:
+Every file should look like this:
+
+The information about a bundle in a `README.md` file at the root of the bundle.
+The information about a folder in a `README.md` file at the root of the folder (a bundle root folder has no information because they are bundle-wide. Same for project root folders.)
+The information about a file in the header section.
+The information about a section is under the section start.
+The information about a definition is in the definition docstring. You MUST NOT use regular comments but you MUST use all language native docstring mechanism.
+
+You MUST implement and you MUST test everything for every language. Once you are done setting up the mechanism, check the violation report until all projects, bundles, folders, files, sections and definitions have the correct information.
+
+You MUST extended/implemented/refactored/changed the following policy/violation kind group/violation tree.
+You MAY leave existing policies, violation kind groups and violation kinds if they are not affected by the changes.
 - Code
   - File
     - Missing Header Region # Autofixable
     - Wrong Header Region Format
-    - Missing Id # Autofixable
-    - Wrong Id # Autofixable
+    - Missing Identification # Autofixable
+    - Wrong Identification # Autofixable
+      - Id # Autofixable
+      - Uri # Autofixable
     - Missing Contributors
     - Missing Summary
     - Missing License # Autofixable from the bundle license file
@@ -302,6 +212,11 @@ The following violation kinds should be extended/implemented/refactored/changed:
     - Missing Docs
   - Section
     - Wrong Format
+      - Summary
+        - Too Long Summary
+      - Specs
+        - Split Block # Autofixable by removing the line breaks between the blocks
+      - Docs
     - Missing Summary
     - Missing Specs
     - Missing Docs
@@ -311,14 +226,6 @@ The following violation kinds should be extended/implemented/refactored/changed:
     - Missing Specs
     - Missing Docs
 
-
-The information about a bundle should be placed in a `README.md` file at the root of the bundle.
-The information about a folder should be placed in a `README.md` file at the root of the folder (a bundle root folder has no information because they are bundle-wide. Same for project root folders.)
-The information about a file should be placed in the header section.
-The information about a section should be placed under the section start.
-The information about a definition should be placed in the definition docstring. Use all language native docstring mechanism.
-
-Implement and test everything for every language. Once you are done setting up the mechanism, check the violation report until all projects, bundles, folders, files, sections and definitions have the correct information.
 
 e.g. in README.md for bundles and folders:
 ```md
@@ -334,8 +241,12 @@ e.g. in README.md for bundles and folders:
 
 ### TODOs
 
-- TODO: <BUNDLEORFOLDERTODO>
-- TODO: <BUNDLEORFOLDERTODO>
+#### TODO: <BUNDLEORFOLDERTODONAME>
+<BUNDLEORFOLDERTODODESCRIPTION>?
+
+#### TODO: <BUNDLEORFOLDERTODONAME>
+<BUNDLEORFOLDERTODODESCRIPTION>?
+ 
  …
 
 ### Docs
@@ -365,8 +276,11 @@ e.g. in typescript:
 // <FILESPECS>
 //  …
 
-// TODO: <FILETODO>
-// TODO: <FILETODO>
+// TODO: <FILETODONAME>
+// <FILETODODESCRIPTION>?
+
+// TODO: <FILETODONAME>
+// <FILETODODESCRIPTION>?
 //  …
 
 // <FILEDOCS>
@@ -386,8 +300,11 @@ e.g. in typescript:
 // <SECTIONSPECS>
 //  …
 
-// TODO: <SECTIONTODO>
-// TODO: <SECTIONTODO>
+// TODO: <SECTIONTODONAME>
+// <SECTIONTODODESCRIPTION>?
+
+// TODO: <SECTIONTODONAME>
+// <SECTIONTODODESCRIPTION>?
 //  …
 
 // <SECTIONDOCS>
@@ -395,21 +312,25 @@ e.g. in typescript:
 //  …
 
 /**
- * [<DEFINITIONID>](<DEFINITIONURI>)
- * 
  * <DEFINITIONSUMMARY>
  * 
  * <DEFINITIONSPECS>
  * <DEFINITIONSPECS>
  *  …
  * 
- * TODO: <DEFINITIONTODO>
- * TODO: <DEFINITIONTODO>
+ * <DEFINITIONDOCS>
+ * <DEFINITIONDOCS>
  *  …
  * 
- * <DEFINITIONDOCS>
- * <DEFINITIONDOCS>
+ * TODO: <DEFINITIONTODONAME>
+ * <DEFINITIONTTODODESCRIPTION>?
+ * 
+ * TODO: <DEFINITIONTODONAME>
+ * <DEFINITIONTTODODESCRIPTION>?
+ * 
  *  …
+ * 
+ *  * [<DEFINITIONID>](<DEFINITIONURI>)
  */
 <DEFINITION>
 
@@ -417,6 +338,39 @@ e.g. in typescript:
 ```
 e.g.
 ```ts
+// #region 🔖Header
+
+// [💻semio/js/sketchpad/Design.tsx](semiorepo://file/SEMIO/JS/SKETCHPAD/DESIGN.TSX)
+
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+// 2026 KinanSarak <kinan@semio-tech.com>
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU Lesser General Public License as
+// published by the Free Software Foundation, either version 3 of the
+// License, or (at your option) any later version.
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU Lesser General Public License for more details.
+// You should have received a copy of the GNU Lesser General Public License
+// along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+// The design app allows to view and edit designs.
+
+// The design app MUST have two window kinds: diagram and scene.
+// The design app MUST have selection for: multiple pieces, multiple connections and one port.
+
+// TODO: Implement Flash Connect
+// When a port of a piece is selected then it should be highlighted and as soon as the second poirt is selected then a connection should be created between the two pieces for the given ports.
+
+// TODO: Implement Layer Panel Tab
+// The layer panel tab should show a tree of all pieces. Implement drag and drop to reorder the layers and pieces.
+
+// The design app uses the KitStore for kit access and SketchpadStore for sketchpad state.
+// The designAppCommands 
+
+// #endregion 🔖Header
 
 // #region 🔖State Managment
 
@@ -424,25 +378,25 @@ e.g.
 
 // There MUST be two mechnasism for state which interact together: local and shared.
 
-/**
+/** 
  * The kit store is used for CRUD operations on kits. It uses Y.js as backbone.
  * 
  * Kits MUST be shared and be synchronized between the different users that work on the same kit.
- * A kit must be editable offline and synchronize with the server when online.
- *  …
+ * A kit MUST be editable offline and synchronize with the server when online.
+ * 
+ * The KitStore is initialized with a Y.Doc that must be initialized and configured by the caller (different yjs hosts have different provider factories).
+ * For every compositional entity that is part of a kit there must be a corresponding substore that manages a Y.Map for the entity state and repexposes CRUD operations as methods for the entity.
+ * 
+ * TODO: Implement QualityStore
+ * The QualityStore should contain the quality data and maintain links to the types and designs. Links are not managed within yjs hence a manual garbage collection is needed to remove links to deleted entities.
+ * 
+ * TODO: Implement FileStore
+ * The FileStore works outside of yjs and uses e.g. S3 storage for file access. It needs a different provider factory and integration and only the metadata layer is managed within yjs.
+ * 
+ *  * [🛠️semio/js/sketchpad/Design.tsx#State Managment#Store§KitStore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
 **/
 export class KitStore {
   …
-
-/**
- * The sketchpad store is used for CRUD operations on all sketchpad state. It uses a stately machine as backbone.
- * 
- * Sketchpad state MUST be local and MAY be persisted locally.
- *  …
-**/
-export class SketchpadStore {
-  …
-// …
 ```
 
 The ids and uris in semio-repo are not consistent.
@@ -476,48 +430,78 @@ path: `header/missing-region`
 id: "🚫Code#Header#Missing Region"
 uri: `semiorepo://violationKind/CODE/HEADER/MISSING-REGION`
 
-Here you can see the wrong ids and uris and wrong flat list structure instead of tree:
+semio repo:
+Introduce a new resource: violation kinds 🗄️
+The violation kinds currently have paths that create a tree. Instead use violation kinds groups which allow to categorize and act as intermediate tree items. A violation kind group can either have violation kinds or other violation kind groups as children.
+Violation kind groups have a name and a description and scopes.
+The scopes act as filters. The filters are applied from general to specific. e.g "**.mdx" -> "sketchpad/**" -> "**story.*" will first match all mdx files, then all files in the sketchpad folder, then all files in the sketchpad folder that have story in the name.
+This affects trees, ids, uris, policies, violation kinds, violations, etc
+
+E.g.
 ```bash
 $ ./semio-repo/cli/cli policy tree
-- [🛡/code](semiorepo://policy/CODE) - `Validates source file headers, sections, and comments`
-  - [🚫code:header:missing-region](semiorepo://violationKind/CODE/HEADER/MISSING-REGION) - `Header region with license, filename, and contributors is required`
-  - [🚫code:header:wrong-file-id](semiorepo://violationKind/CODE/HEADER/WRONG-FILE-ID) - `File header must contain the correct artifact ID`
-  - [🚫code:header:missing-contributors](semiorepo://violationKind/CODE/HEADER/MISSING-CONTRIBUTORS) - `Contributors must be documented in header`
-  - [🚫code:header:missing-license](semiorepo://violationKind/CODE/HEADER/MISSING-LICENSE) - `AGPL license text is required in header`
-  - [🚫code:header:wrong-license](semiorepo://violationKind/CODE/HEADER/WRONG-LICENSE) - `License must be AGPL-3.0-or-later`
-  - [🚫code:section:empty](semiorepo://violationKind/CODE/SECTION/EMPTY) - `Empty sections should be removed`
-  - [🚫code:section:orphan-definition](semiorepo://violationKind/CODE/SECTION/ORPHAN-DEFINITION) - `All code must be inside named sections`
-  - [🚫code:section:missing-start-name](semiorepo://violationKind/CODE/SECTION/MISSING-START-NAME) - `Section start marker must have a name`
-  - [🚫code:section:missing-end-name](semiorepo://violationKind/CODE/SECTION/MISSING-END-NAME) - `Section end marker should have matching name`
-  - [🚫code:section:name-mismatch](semiorepo://violationKind/CODE/SECTION/NAME-MISMATCH) - `Section start and end names must match`
-  - [🚫code:comment:inline](semiorepo://violationKind/CODE/COMMENT/INLINE) - `Inline comments are forbidden`
-  - [🚫code:comment:block](semiorepo://violationKind/CODE/COMMENT/BLOCK) - `Block comments are forbidden`
-  - [🚫code:comment:jsdoc](semiorepo://violationKind/CODE/COMMENT/JSDOC) - `JSDoc comments are forbidden`
-  - [🚫code:specs:implementation-syntax](semiorepo://violationKind/CODE/SPECS/IMPLEMENTATION-SYNTAX) - `Specs must be implementation-agnostic and must not contain code syntax`
-  - [🚫code:unicode:emoji-variation](semiorepo://violationKind/CODE/UNICODE/EMOJI-VARIATION) - `Emoji variation selectors (VS15/VS16) are forbidden`
-  - [🚫code:docs:missing-readme](semiorepo://violationKind/CODE/DOCS/MISSING-README) - `Bundle or folder is missing a README.md with summary and specs`
-- [🛡/dev-docs](semiorepo://policy/DEV-DOCS) - `Validates README.md and AGENTS.md documentation structure`
-  - [🚫dev-docs:missing-file](semiorepo://violationKind/DEV-DOCS/MISSING-FILE) - `File exists but has no section in AGENTS.md Codebase`
-  - [🚫dev-docs:missing-folder](semiorepo://violationKind/DEV-DOCS/MISSING-FOLDER) - `Folder exists but has no section in AGENTS.md Codebase`
-  - [🚫dev-docs:wrong-file-path](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-PATH) - `File section path does not match actual file path`
-  - [🚫dev-docs:wrong-folder-path](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-PATH) - `Folder section path does not match actual folder path`
-  - [🚫dev-docs:wrong-file-name](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-NAME) - `File section name format is incorrect (should be ## 📄PATH)`
-  - [🚫dev-docs:wrong-folder-name](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-NAME) - `Folder section name format is incorrect (should be ## 📁PATH/)`
-  - [🚫dev-docs:wrong-file-order](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-ORDER) - `File sections are not in alphabetical order`
-  - [🚫dev-docs:wrong-folder-order](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-ORDER) - `Folder sections are not in alphabetical order`
-  - [🚫dev-docs:missing-component](semiorepo://violationKind/DEV-DOCS/MISSING-COMPONENT) - `Package.json workspace has no corresponding component in README.md`
-  - [🚫dev-docs:wrong-component-name](semiorepo://violationKind/DEV-DOCS/WRONG-COMPONENT-NAME) - `Component section name does not match workspace name`
-  - [🚫dev-docs:wrong-component-order](semiorepo://violationKind/DEV-DOCS/WRONG-COMPONENT-ORDER) - `Component sections are not in package.json workspaces order`
-- [🛡/repo](semiorepo://policy/REPO) - `Validates strict repo command implementation parity and ticket tracking`
-  - [🚫repo:missing-command](semiorepo://violationKind/REPO/MISSING-COMMAND) - `Command is missing from parity implementation (CLI, MCP, VS Code)`
-  - [🚫repo:missing-ticket-tracking](semiorepo://violationKind/REPO/MISSING-TICKET-TRACKING) - `Ticket tracking code is missing or incomplete`
-- [🛡/sketchpad](semiorepo://policy/SKETCHPAD) - `Validates sketchpad imports, state management, and hook patterns`
-  - [🚫sketchpad:import:third-party-outside-elements](semiorepo://violationKind/SKETCHPAD/IMPORT/THIRD-PARTY-OUTSIDE-ELEMENTS) - `Third party imports must only be in elements.tsx`
-  - [🚫sketchpad:state:multiple-machines](semiorepo://violationKind/SKETCHPAD/STATE/MULTIPLE-MACHINES) - `Only one state machine is allowed (createMachine can only be used once)`
-  - [🚫sketchpad:state:create-actor-usage](semiorepo://violationKind/SKETCHPAD/STATE/CREATE-ACTOR-USAGE) - `createActor is forbidden in sketchpad`
-  - [🚫sketchpad:state:yjs-app-state](semiorepo://violationKind/SKETCHPAD/STATE/YJS-APP-STATE) - `Yjs should only be used for kit data synchronization, not app state`
-  - [🚫sketchpad:state:forbidden-store](semiorepo://violationKind/SKETCHPAD/STATE/FORBIDDEN-STORE) - `Stores outside of State Management sections are forbidden`
-  - [🚫sketchpad:hooks:non-triadic](semiorepo://violationKind/SKETCHPAD/HOOKS/NON-TRIADIC) - `Client elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()`
+- [🛡️/code](semiorepo://policy/CODE) - `Validates source file headers, sections, and comments`
+  - comment
+    - [🚫Code#Comment#Block](semiorepo://violationKind/CODE/COMMENT/BLOCK) - `Block comments are forbidden`
+    - [🚫Code#Comment#Inline](semiorepo://violationKind/CODE/COMMENT/INLINE) - `Inline comments are forbidden`
+    - [🚫Code#Comment#Jsdoc](semiorepo://violationKind/CODE/COMMENT/JSDOC) - `JSDoc comments are forbidden`
+  - definition
+    - [🚫Code#Definition#Missing Docs](semiorepo://violationKind/CODE/DEFINITION/MISSING-DOCS) - `Definition must be documented in bundle README.md Docs section`
+    - [🚫Code#Definition#Missing Specs](semiorepo://violationKind/CODE/DEFINITION/MISSING-SPECS) - `Definition must have specs in its docstring`
+    - [🚫Code#Definition#Missing Summary](semiorepo://violationKind/CODE/DEFINITION/MISSING-SUMMARY) - `Definition must have a summary in its docstring`
+    - [🚫Code#Definition#Wrong Format](semiorepo://violationKind/CODE/DEFINITION/WRONG-FORMAT) - `Definition does not have a proper docstring`
+  - docs
+    - [🚫Code#Docs#Missing Readme](semiorepo://violationKind/CODE/DOCS/MISSING-README) - `Bundle or folder is missing a README.md with summary and specs`
+  - file
+    - [🚫Code#File#Missing Contributors](semiorepo://violationKind/CODE/FILE/MISSING-CONTRIBUTORS) - `Contributors must be documented in header`
+    - [🚫Code#File#Missing Docs](semiorepo://violationKind/CODE/FILE/MISSING-DOCS) - `File must be documented in bundle README.md Docs section`
+    - [🚫Code#File#Missing Header](semiorepo://violationKind/CODE/FILE/MISSING-HEADER) - `Header region with license, filename, and contributors is required`
+    - [🚫Code#File#Missing Id](semiorepo://violationKind/CODE/FILE/MISSING-ID) - `File header must contain an artifact ID`
+    - [🚫Code#File#Missing License](semiorepo://violationKind/CODE/FILE/MISSING-LICENSE) - `License text is required in header License subregion`
+    - [🚫Code#File#Missing Specs](semiorepo://violationKind/CODE/FILE/MISSING-SPECS) - `Specs subregion is required inside Header`
+    - [🚫Code#File#Missing Summary](semiorepo://violationKind/CODE/FILE/MISSING-SUMMARY) - `Summary must be documented in header`
+    - [🚫Code#File#Wrong Header Format](semiorepo://violationKind/CODE/FILE/WRONG-HEADER-FORMAT) - `Header region format is incorrect (missing License or Specs subregion)`
+    - [🚫Code#File#Wrong Id](semiorepo://violationKind/CODE/FILE/WRONG-ID) - `File header must contain the correct artifact ID`
+    - [🚫Code#File#Wrong License](semiorepo://violationKind/CODE/FILE/WRONG-LICENSE) - `License must be AGPL-3.0-or-later`
+  - section
+    - [🚫Code#Section#Empty](semiorepo://violationKind/CODE/SECTION/EMPTY) - `Empty sections should be removed`
+    - [🚫Code#Section#Missing Docs](semiorepo://violationKind/CODE/SECTION/MISSING-DOCS) - `Section must be documented in bundle README.md Docs section`
+    - [🚫Code#Section#Missing End Name](semiorepo://violationKind/CODE/SECTION/MISSING-END-NAME) - `Section end marker should have matching name`
+    - [🚫Code#Section#Missing Specs](semiorepo://violationKind/CODE/SECTION/MISSING-SPECS) - `Section must have specs comments after the summary`
+    - [🚫Code#Section#Missing Start Name](semiorepo://violationKind/CODE/SECTION/MISSING-START-NAME) - `Section start marker must have a name`
+    - [🚫Code#Section#Missing Summary](semiorepo://violationKind/CODE/SECTION/MISSING-SUMMARY) - `Section must have a summary comment after the region start`
+    - [🚫Code#Section#Name Mismatch](semiorepo://violationKind/CODE/SECTION/NAME-MISMATCH) - `Section start and end names must match`
+    - [🚫Code#Section#Orphan Definition](semiorepo://violationKind/CODE/SECTION/ORPHAN-DEFINITION) - `All code must be inside named sections`
+    - [🚫Code#Section#Wrong Format](semiorepo://violationKind/CODE/SECTION/WRONG-FORMAT) - `Section region marker format is incorrect`
+  - specs
+    - [🚫Code#Specs#Implementation Syntax](semiorepo://violationKind/CODE/SPECS/IMPLEMENTATION-SYNTAX) - `Specs must be implementation-agnostic and must not contain code syntax`
+  - unicode
+    - [🚫Code#Unicode#Emoji Variation](semiorepo://violationKind/CODE/UNICODE/EMOJI-VARIATION) - `Emoji variation selectors (VS15/VS16) are forbidden`
+- [🛡️/dev-docs](semiorepo://policy/DEV-DOCS) - `Validates README.md and AGENTS.md documentation structure`
+  - [🚫Dev Docs#Missing Component](semiorepo://violationKind/DEV-DOCS/MISSING-COMPONENT) - `Package.json workspace has no corresponding component in README.md`
+  - [🚫Dev Docs#Missing File](semiorepo://violationKind/DEV-DOCS/MISSING-FILE) - `File exists but has no section in AGENTS.md Codebase`
+  - [🚫Dev Docs#Missing Folder](semiorepo://violationKind/DEV-DOCS/MISSING-FOLDER) - `Folder exists but has no section in AGENTS.md Codebase`
+  - [🚫Dev Docs#Wrong Component Name](semiorepo://violationKind/DEV-DOCS/WRONG-COMPONENT-NAME) - `Component section name does not match workspace name`
+  - [🚫Dev Docs#Wrong Component Order](semiorepo://violationKind/DEV-DOCS/WRONG-COMPONENT-ORDER) - `Component sections are not in package.json workspaces order`
+  - [🚫Dev Docs#Wrong File Name](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-NAME) - `File section name format is incorrect (should be ## 📄PATH)`
+  - [🚫Dev Docs#Wrong File Order](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-ORDER) - `File sections are not in alphabetical order`
+  - [🚫Dev Docs#Wrong File Path](semiorepo://violationKind/DEV-DOCS/WRONG-FILE-PATH) - `File section path does not match actual file path`
+  - [🚫Dev Docs#Wrong Folder Name](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-NAME) - `Folder section name format is incorrect (should be ## 📁PATH/)`
+  - [🚫Dev Docs#Wrong Folder Order](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-ORDER) - `Folder sections are not in alphabetical order`
+  - [🚫Dev Docs#Wrong Folder Path](semiorepo://violationKind/DEV-DOCS/WRONG-FOLDER-PATH) - `Folder section path does not match actual folder path`
+- [🛡️/repo](semiorepo://policy/REPO) - `Validates strict repo command implementation parity and ticket tracking`
+  - [🚫Repo#Missing Command](semiorepo://violationKind/REPO/MISSING-COMMAND) - `Command is missing from parity implementation (CLI, MCP, VS Code)`
+  - [🚫Repo#Missing Ticket Tracking](semiorepo://violationKind/REPO/MISSING-TICKET-TRACKING) - `Ticket tracking code is missing or incomplete`
+- [🛡️/sketchpad](semiorepo://policy/SKETCHPAD) - `Validates sketchpad imports, state management, and hook patterns`
+  - hooks
+    - [🚫Sketchpad#Hooks#Non Triadic](semiorepo://violationKind/SKETCHPAD/HOOKS/NON-TRIADIC) - `Client elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()`
+  - import
+    - [🚫Sketchpad#Import#Third Party Outside Elements](semiorepo://violationKind/SKETCHPAD/IMPORT/THIRD-PARTY-OUTSIDE-ELEMENTS) - `Third party imports must only be in elements.tsx`
+  - state
+    - [🚫Sketchpad#State#Create Actor Usage](semiorepo://violationKind/SKETCHPAD/STATE/CREATE-ACTOR-USAGE) - `createActor is forbidden in sketchpad`
+    - [🚫Sketchpad#State#Forbidden Store](semiorepo://violationKind/SKETCHPAD/STATE/FORBIDDEN-STORE) - `Stores outside of State Management sections are forbidden`
+    - [🚫Sketchpad#State#Multiple Machines](semiorepo://violationKind/SKETCHPAD/STATE/MULTIPLE-MACHINES) - `Only one state machine is allowed (createMachine can only be used once)`
+    - [🚫Sketchpad#State#Yjs App State](semiorepo://violationKind/SKETCHPAD/STATE/YJS-APP-STATE) - `Yjs should only be used for kit data synchronization, not app state`
 ```
 
 The violation kind id follows the pattern `🚫<policy-id>#<path*>` and 

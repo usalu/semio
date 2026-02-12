@@ -25,6 +25,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Exports
+// Re-exports of Lucide React icons with semantic aliases for the UI.
+// Exports MUST map each Lucide icon to a domain-specific alias name.
+
 export {
   Plus as AddIcon,
   AlertCircle as AlertCircleIcon,
@@ -109,3 +113,5 @@ export {
 } from "lucide-react";
 
 export type { LucideIcon } from "lucide-react";
+
+// #endregion 🔖Exports

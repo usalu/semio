@@ -26,10 +26,15 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Build
+// Build script for the engine binary. MUST bundle the engine via PyInstaller.
+
 import { execSync } from "child_process";
 import { existsSync, rmSync } from "fs";
 import { join } from "path";
 
+// Engine build working directory.
+// MUST resolve to the engine folder.
 const cwd = __dirname;
 
 if (!existsSync(join(cwd, "../../.venv"))) {
@@ -45,6 +50,8 @@ if (existsSync(join(cwd, "dist"))) {
   rmSync(join(cwd, "dist"), { recursive: true });
 }
 
+// PyInstaller CLI arguments for bundling the engine binary.
+// MUST include all required metadata and hidden imports.
 const args = [
   "--name",
   "semio-engine",
@@ -72,3 +79,5 @@ if (!process.argv.includes("--skip-post-build")) {
 }
 
 console.log("✅ Build complete");
+
+// #endregion 🔖Build

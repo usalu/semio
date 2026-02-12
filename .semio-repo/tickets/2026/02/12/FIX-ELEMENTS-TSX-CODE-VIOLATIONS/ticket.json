@@ -1,0 +1,615 @@
+{
+  "title": "Fix Elements Tsx Code Violations",
+  "status": "closed",
+  "prompt": "Fix ALL 169 code violations in semio/js/sketchpad/elements.tsx by adding section summaries, definition summaries, and spec comments with RFC2119 keywords.",
+  "summary": "Fixed all 170 code violations in elements.tsx: 57 section summaries+specs, 112 definition summaries, 1 orphan fix. Analyzer now reports 0 violations.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/531"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "started": "2026-02-12T00:26:02.529363992Z",
+  "finished": "2026-02-12T00:50:48.26868463Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-12 00:26:02",
+        "finished": "2026-02-12 00:50:48"
+      },
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix ALL 169 code violations in semio/js/sketchpad/elements.tsx by adding section summaries, definition summaries, and spec comments with RFC2119 keywords.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 226,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx",
+              "lines": {
+                "added": 227,
+                "removed": 1
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Accordion",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Band",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Collapsible",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Dialog",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Navbar",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Resizable",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Scrollable",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Strip",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tabs",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Base Components",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Command",
+              "lines": {
+                "added": 3,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#Aside",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#Avatar",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#Card",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#DiagramNode",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#HoverCard",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#Icons",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#LoadingRow",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#NotFound",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#Section",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#Spinner",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Display Components#Steps",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Element",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Footer",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Imports",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#ActionGroup",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#Combobox",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#Input",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#Select",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#Slider",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#Stepper",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#Textarea",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#Toggle",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Input Components#ToggleGroup",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Interaction Context",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Layout",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Level Context",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Navigation Components#Breadcrumb",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Navigation Components#PageNavigation",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#BottomPanel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#HudPanel",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#LeftPanel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#MiddlePanel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#Panel",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#PanelGroup",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#RightPanel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#SidePanel",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Popover",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Section Specificity",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Tooltip",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Diagram",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Page",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Scene",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Table",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Window",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Aggregation Components#Tree§TreeStateContext",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Element§TransactionContext",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Element§useTransaction",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Interaction Context§ActiveInteractionContext",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Interaction Context§InteractionContext",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Level Context§Level",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Level Context§LevelContext",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Panel Components#Panel§ResizeSide",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Tooltip§getExpertiseFunction",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Diagram§DIAGRAM_UNIT",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Diagram§DiagramLayoutDirection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Scene§OnPlaneUpdate",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Scene§getComputedColor",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Scene§selectableCursorUsageCount",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components#Table§SortDirection",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx#Window Components§SceneSkeleton",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx§FileTree",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx§useActiveInteraction",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx§useInteractionCommands",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/elements.tsx§useLevel",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    }
+  ]
+}

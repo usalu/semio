@@ -24,7 +24,13 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Declarations
+// Ambient module declarations for non-standard import types.
+// Declarations MUST cover all custom asset import suffixes used in the project.
+
 declare module "*.wasm?url" {
   const value: string;
   export default value;
 }
+
+// #endregion 🔖Declarations

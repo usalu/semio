@@ -1,0 +1,622 @@
+{
+  "title": "Fix Shared Ts Code Violations",
+  "status": "closed",
+  "prompt": "Fix ALL 273 code violations in semio/js/sketchpad/shared.ts by adding section summaries, definition summaries, and spec comments with RFC2119 keywords on export function/class definitions",
+  "summary": "Fixed all 273 code violations in semio/js/sketchpad/shared.ts to 0. Added 32 section summary comments with MUST keywords for all sections (Imports, YPath Types, Granular Hook Types, Standard Empty Constants, Generic Diff Types, Enums, File Provider, App IDs, Panel, App Registry, Sketchpad State, Commands, Store, Complete State, Window, Tool, Focus, Footer, Panel Props, XState Types, Y.js-XState Bridge, Machine Factories, YPath Helpers, Derived Store, Store Factory Registry, App Plugin Registry, Dynamic Event Dispatch Registry, App Event Handler Factories, Transaction Handler Factory, Selector Factory Pattern, App Hooks Registry, App Registry Exports). Added 241 definition summary comments for all exported types, interfaces, enums, consts, functions, and classes. Added 100 spec comments with RFC2119 MUST keywords on all exported function and class definitions. Total 373 comment lines added.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/533"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "started": "2026-02-12T00:58:28.884078329Z",
+  "finished": "2026-02-12T01:04:25.989107893Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-12 00:58:28",
+        "finished": "2026-02-12 01:04:25"
+      },
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix ALL 273 code violations in semio/js/sketchpad/shared.ts by adding section summaries, definition summaries, and spec comments with RFC2119 keywords on export function/class definitions",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/js",
+              "lines": {
+                "added": 373,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio/js/sketchpad/shared.ts",
+              "lines": {
+                "added": 2858,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#App Event Handler Factories",
+              "lines": {
+                "added": 66,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#App Hooks Registry",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#App Plugin Registry",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#App Registry Exports",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Derived Store",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry",
+              "lines": {
+                "added": 28,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Enums",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Imports",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#App IDs",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#App Registry",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Commands",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Complete State",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#File Provider",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Focus",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Footer",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Panel",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Panel Props",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Sketchpad State",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Store",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Tool",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Ports#Window",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Selector Factory Pattern",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Transaction Handler Factory",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Generic Diff Types",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Granular Hook Types",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Standard Empty Constants",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#YPath Types",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#XState Integration#Machine Factories",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#XState Integration#XState Types",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#XState Integration#Y.js-XState Bridge",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#YPath Helpers",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#App Hooks Registry§registeredDesignAppHooks",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#App Hooks Registry§registeredKitAppHooks",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#App Plugin Registry§appPlugins",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#App Registry Exports§registeredDocsRegistry",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§eventHandlerRegistry",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Dynamic Event Dispatch Registry§guardRegistry",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry§DesignAppStoreFactory",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry§KitAppStoreFactory",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry§QualityAppStoreFactory",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry§TypeAppStoreFactory",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry§designAppStoreFactory",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry§kitAppStoreFactory",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry§qualityAppStoreFactory",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Store Factory Registry§typeAppStoreFactory",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Granular Hook Types§HookNoSetResult",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Granular Hook Types§HookResult",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Granular Hook Types§READONLY_CAN",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Granular Hook Types§READONLY_SETTER",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Standard Empty Constants§EMPTY_ARRAY",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Standard Empty Constants§EMPTY_GUID_ARRAY",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types#Standard Empty Constants§EMPTY_STRING_ARRAY",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts#Types§YPath",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§AppKind",
+              "lines": {
+                "added": 18,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§Device",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§Disposable",
+              "lines": {
+                "added": 22,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§FileProviderFactory",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§HotkeyOverrides",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§HotkeyPath",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§HotkeyValue",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§HudPanelKey",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§PanelKey",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§SidePanelKey",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§Subscribe",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§Transact",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§Unsubscribe",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§Url",
+              "lines": {
+                "added": 24,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YAttributes",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YConcept",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YConcepts",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YLeafMapNumber",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YLeafMapString",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YProviderFactory",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YStringArray",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YUuid",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/js/sketchpad/shared.ts§YUuidArray",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        }
+      }
+    }
+  ]
+}

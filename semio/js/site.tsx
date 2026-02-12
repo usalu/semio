@@ -25,6 +25,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Entrypoint
+// Site entrypoint that mounts the Sketchpad React component into the DOM.
+// Entrypoint MUST render into the root element defined in index.html.
+
 import { createRoot } from "react-dom/client";
 import { Sketchpad } from "@semio/js";
 import "./globals.css";
@@ -34,3 +38,5 @@ createRoot(document.getElementById("root")!).render(
     <Sketchpad />
   </div>,
 );
+
+// #endregion 🔖Entrypoint

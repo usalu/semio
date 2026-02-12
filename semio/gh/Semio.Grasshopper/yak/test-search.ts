@@ -26,7 +26,14 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Script
+// Test script for searching the Yak package manager test server.
+// Script MUST execute yak search against the test.yak.rhino3d.com server.
+
 import { execSync } from "child_process";
 
+// Path to the Yak package manager executable.
+// Yak path MUST point to the Rhino 8 System directory.
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 execSync(`"${yak}" search --source https://test.yak.rhino3d.com --all --prerelease semio`, { stdio: "inherit" });
+// #endregion 🔖Script

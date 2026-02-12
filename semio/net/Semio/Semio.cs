@@ -17,7 +17,6 @@
 // You should have received a copy of the GNU Lesser General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
 #endregion 🔖License
 
 #region 🔖Specs
@@ -25,22 +24,8 @@
 
 #endregion 🔖Header
 
-#region 🔖TODOs
-
-// TODO: Make remote uris work for diagram.
-// TODO: Remove computeChildPlane and separate the flatten diagram and flatten planes parts.
-// TODO: Refactor all ToSring() to use ToIdString() and add ABREVIATION(ID) to entity.
-// TODO: Develop a validation template for urls.
-// TODO: Replace GetHashcode() with a proper hash function.
-// TODO: Add logging mechanism to all API calls if they fail.
-// TODO: Implement reflexive validation for entity properties.
-// TODO: Add index to prop and add to list based on index not on source code order.
-// TODO: See if Utility.Encode(uri) can be added by attribute on parameters.
-// TODO: Turn inplace and leave clone to the user of the function.
-// TODO: Parametrize colors for diagram
-
-#endregion 🔖TODOs
-
+#region 🔖Imports
+// Callers MUST import all required namespaces listed here.
 using System.Collections;
 using System.Collections.Immutable;
 using System.Drawing;
@@ -65,9 +50,15 @@ using Svg.Transforms;
 using UnitsNet;
 using Formatting = Newtonsoft.Json.Formatting;
 
+#endregion 🔖Imports
+
+#region 🔖Namespace
+// Implementations MUST reside in this namespace.
 namespace Semio;
+#endregion 🔖Namespace
 
 #region 🔖Constants
+// Consumers MUST use these shared constants for configuration.
 
 public static class Constants
 {
@@ -128,6 +119,7 @@ public enum DiffStatus
 #endregion 🔖Constants
 
 #region 🔖Utility
+// Callers MUST use these utility functions for encoding and serialization.
 
 public static class Utility
 {
@@ -419,6 +411,9 @@ public static class Utility
 }
 
 #region 🔖Expressions
+// Implementations MUST evaluate expression trees through the Operator.Apply contract.
+// Abstract base for all expression tree nodes.
+// Implementations MUST be immutable value types within expression trees.
 public abstract class Symbol { }
 public abstract class Term : Symbol { }
 public abstract class Constant : Term { }
@@ -1475,7 +1470,10 @@ public class Expression
 #endregion 🔖Utility
 
 #region 🔖Entitying
+// Implementations MUST extend Entity for equality, validation, and diff support.
 
+// Abstract generic base class providing equality, hashing, cloning, and validation.
+// Implementations MUST override equality based on serialized representation.
 public abstract class Entity<T> where T : Entity<T>
 {
     public override string ToString() => GetType().Name;
@@ -1521,6 +1519,8 @@ public abstract class Entity<T> where T : Entity<T>
     }
 }
 
+// FluentValidation validator base for Entity subclasses.
+// Implementations MUST define validation rules in the constructor.
 public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 {
     public EntityValidator()
@@ -1529,6 +1529,7 @@ public class EntityValidator<T> : AbstractValidator<T> where T : Entity<T>
 }
 
 #region 🔖SemioValidation
+// Callers MUST use ValidationResult to report kit-level validation issues.
 
 public class SemioValidationFix
 {
@@ -1948,6 +1949,7 @@ public class KitDiffUpdate
 }
 
 #region 🔖Attribute
+// Implementations MUST provide key-value metadata for annotating entities.
 
 public class AttributeId : Entity<AttributeId>
 {
@@ -2058,6 +2060,7 @@ public class Attribute : Entity<Attribute>
 #endregion 🔖Attribute
 
 #region 🔖Coord
+// Implementations MUST share X, Y, Z coordinate fields for spatial types.
 
 public class Coord : Entity<Coord>
 {
@@ -2074,6 +2077,7 @@ public class Coord : Entity<Coord>
 #endregion 🔖Coord
 
 #region 🔖Point
+// Implementations MUST represent a 3D point with X, Y, Z coordinates.
 
 public class Point : Entity<Point>
 {
@@ -2085,6 +2089,7 @@ public class Point : Entity<Point>
 #endregion 🔖Point
 
 #region 🔖Vector
+// Implementations MUST represent a 3D vector with X, Y, Z components.
 
 public class Vector : Entity<Vector>
 {
@@ -2118,6 +2123,7 @@ public class Vector : Entity<Vector>
 #endregion 🔖Vector
 
 #region 🔖Plane
+// Implementations MUST define a 3D plane by origin and X/Y direction vectors.
 
 public class Plane : Entity<Plane>
 {
@@ -2150,6 +2156,7 @@ public class Plane : Entity<Plane>
 #endregion 🔖Plane
 
 #region 🔖Location
+// Implementations MUST combine a plane with rotation and elevation for placement.
 
 public class LocationId : Entity<LocationId>
 {
@@ -2175,6 +2182,7 @@ public class Location : Entity<Location>
 #endregion 🔖Location
 
 #region 🔖Author
+// Implementations MUST provide author identity with name and contact.
 
 public class AuthorId : Entity<AuthorId>
 {
@@ -2294,6 +2302,7 @@ public class AuthorsDiff : Entity<AuthorsDiff>
 #endregion 🔖Author
 
 #region 🔖File
+// Implementations MUST reference a file with URI, MIME type, and optional content.
 
 public class FileId : Entity<FileId>
 {
@@ -2397,6 +2406,7 @@ public class File : Entity<File>
 #endregion 🔖File
 
 #region 🔖Folder
+// Implementations MUST reference a folder with name and optional parent.
 
 public class FolderId : Entity<FolderId>
 {
@@ -2508,6 +2518,7 @@ public class Folder : Entity<Folder>
 #endregion 🔖Folder
 
 #region 🔖Benchmark
+// Implementations MUST capture benchmark metadata for performance measurement.
 
 public class BenchmarkId : Entity<BenchmarkId>
 {
@@ -2567,6 +2578,7 @@ public class BenchmarkDiff : Entity<BenchmarkDiff>
 #endregion 🔖Benchmark
 
 #region 🔖QualityKind
+// Implementations MUST categorize quality metrics by kind.
 
 [Flags]
 public enum QualityKind
@@ -2582,6 +2594,7 @@ public enum QualityKind
 #endregion 🔖QualityKind
 
 #region 🔖Quality
+// Implementations MUST combine kind, name, value, and unit for quality metrics.
 
 public class QualityId : Entity<QualityId>
 {
@@ -2667,6 +2680,7 @@ public class Quality : Entity<Quality>
 #endregion 🔖Quality
 
 #region 🔖Tag
+// Implementations MUST provide lightweight labels for categorizing entities.
 
 public class TagId : Entity<TagId>
 {
@@ -2718,6 +2732,7 @@ public class TagsDiff : Entity<TagsDiff>
 #endregion 🔖Tag
 
 #region 🔖Concept
+// Implementations MUST link a semantic concept name to description and icon.
 
 public class ConceptId : Entity<ConceptId>
 {
@@ -2779,6 +2794,7 @@ public class ConceptsDiff : Entity<ConceptsDiff>
 #endregion 🔖Concept
 
 #region 🔖Port
+// Implementations MUST define connection ports as typed interfaces on a type.
 
 public class PortId : Entity<PortId>
 {
@@ -2888,6 +2904,7 @@ public class Port : Entity<Port>
 #endregion 🔖Port
 
 #region 🔖Prop
+// Implementations MUST bind a property name to an expression value.
 
 public class PropId : Entity<PropId>
 {
@@ -2936,6 +2953,7 @@ public class PropDiff : Entity<PropDiff>
 #endregion 🔖Prop
 
 #region 🔖Model
+// Implementations MUST reference a 3D model with URI, MIME type, and local plane.
 
 public class ModelId : Entity<ModelId>
 {
@@ -3084,6 +3102,7 @@ public class Model : Entity<Model>
 #endregion 🔖Model
 
 #region 🔖Connector
+// Implementations MUST define located interface points on a type.
 
 public class ConnectorId : Entity<ConnectorId>
 {
@@ -3343,6 +3362,7 @@ public class Connector : Entity<Connector>
 #endregion 🔖Connector
 
 #region 🔖Type
+// Implementations MUST compose ports, connectors, and models into a parametric type.
 
 public class TypeId : Entity<TypeId>
 {
@@ -3721,6 +3741,7 @@ public class Type : Entity<Type>
 #endregion 🔖Type
 
 #region 🔖Layer
+// Implementations MUST organize pieces into named layers within a design.
 
 public class LayerId : Entity<LayerId>
 {
@@ -3777,6 +3798,7 @@ public class LayerDiff : Entity<LayerDiff>
 #endregion 🔖Layer
 
 #region 🔖Group
+// Implementations MUST group pieces by name within a design.
 
 public class GroupId : Entity<GroupId>
 {
@@ -3829,6 +3851,7 @@ public class GroupDiff : Entity<GroupDiff>
 #endregion 🔖Group
 
 #region 🔖Piece
+// Implementations MUST place an instantiated type within a design hierarchy.
 
 public class PieceId : Entity<PieceId>
 {
@@ -3981,6 +4004,7 @@ public class Piece : Entity<Piece>
 
 #endregion 🔖Piece
 #region 🔖Side
+// Implementations MUST reference a piece and connector as a connection endpoint.
 
 public class SideDiff : Entity<SideDiff>
 {
@@ -4076,6 +4100,7 @@ public class Side : Entity<Side>
 #endregion 🔖Side
 
 #region 🔖Connection
+// Implementations MUST link two sides to connect pieces in a design.
 
 public class ConnectionId : Entity<ConnectionId>
 {
@@ -4300,6 +4325,7 @@ public class Connection : Entity<Connection>
 #endregion 🔖Connection
 
 #region 🔖Stat
+// Implementations MUST associate statistical metrics with a design.
 
 public class StatId : Entity<StatId>
 {
@@ -4356,6 +4382,7 @@ public class StatDiff : Entity<StatDiff>
 #endregion 🔖Stat
 
 #region 🔖Design
+// Implementations MUST compose pieces, connections, and metadata into a layout.
 
 public class DesignsDiff : Entity<DesignsDiff>
 {
@@ -5605,6 +5632,7 @@ text {
 #endregion 🔖Design
 
 #region 🔖Kit
+// Implementations MUST collect types and designs into a reusable library.
 
 public class KitDiff : Entity<KitDiff>
 {
@@ -6145,6 +6173,7 @@ public class Kit : Entity<Kit>
     }
 
     #region 🔖Design Family Helpers
+    // Callers MUST use these helpers to traverse design parent-child hierarchies.
 
     public Design FindDesignByGuid(string designGuid)
     {
@@ -6205,6 +6234,7 @@ public class Kit : Entity<Kit>
     #endregion 🔖Design Family Helpers
 
     #region 🔖Type Family Helpers
+    // Callers MUST use these helpers to traverse type parent-child hierarchies.
 
     public Type FindTypeByGuid(string typeGuid)
     {
@@ -6255,6 +6285,7 @@ public class Kit : Entity<Kit>
 #endregion 🔖Kit
 
 #region 🔖Api
+// Callers MUST use these methods to communicate with the semio engine.
 
 public class PredictDesignBody
 {
@@ -6381,6 +6412,7 @@ public class ServerException : Exception
 #endregion 🔖Api
 
 #region 🔖ZipRoundtrip
+// Callers MUST use these methods to import and export kits as ZIP archives.
 
 public class KitImportResult
 {
@@ -6648,6 +6680,7 @@ public static class ZipRoundtrip
 #endregion 🔖ZipRoundtrip
 
 #region 🔖KitImporter
+// Callers MUST use ImportFromZip for high-level kit import.
 
 public static class KitImporter
 {
@@ -6661,6 +6694,7 @@ public static class KitImporter
 #endregion 🔖KitImporter
 
 #region 🔖KitExporter
+// Callers MUST use ExportToZip for high-level kit export.
 
 public static class KitExporter
 {
@@ -6696,6 +6730,7 @@ public static class KitExporter
 #endregion 🔖KitExporter
 
 #region 🔖SemioDiff
+// Callers MUST use these methods for diff computation and application on kits.
 
 public static class SemioDiff
 {

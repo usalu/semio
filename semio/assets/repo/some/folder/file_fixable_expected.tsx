@@ -1,43 +1,30 @@
 // #region 🔖Header
 
-// 💻semio/assets/repo/some/folder/file_fixable.tsx
+// [💻semio/assets/repo/some/folder/file_fixable.tsx](semiorepo://file/semio/assets/repo/some/folder/file_fixable.tsx)
 
 // 2025 Test User <test@test.com>
 
-// #region 🔖License
+// GNU Affero General Public License
+// https://www.gnu.org/licenses/
 
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Affero General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Affero General Public License for more details.
-// You should have received a copy of the GNU Affero General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// A fixable TypeScript file for testing.
 
 // #endregion 🔖Header
 
-// #region 🔖MissingEnd
+// #region 🔖SectionOne
 
-const missingEnd = 1;
+const sectionOne = 1;
 
-// #endregion 🔖MissingEnd
+// #endregion 🔖SectionOne
 
-// #region 🔖Alpha
+// #region 🔖SectionTwo
 
-const mismatchName = 2;
+const sectionTwo = 2;
 
-// #endregion 🔖Alpha
+// #endregion 🔖SectionTwo
 
-// #region 🔖Comments
+// #region 🔖SectionThree
 
-const insideComments = 3;
+const sectionThree = 3;
 
-// #endregion 🔖Comments
+// #endregion 🔖SectionThree

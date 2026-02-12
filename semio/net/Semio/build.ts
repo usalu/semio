@@ -26,8 +26,13 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Build
+// .NET build script. MUST compile the Semio C# project via MSBuild.
+
 import { execSync } from "child_process";
 
+// MSBuild executable path for Visual Studio 2022.
+// MUST point to the installed MSBuild binary.
 const msbuild = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\MSBuild\\Current\\Bin\\MSBuild.exe";
 
 execSync(`"${msbuild}" Semio.csproj /p:Configuration=Debug`, {
@@ -36,3 +41,5 @@ execSync(`"${msbuild}" Semio.csproj /p:Configuration=Debug`, {
 });
 
 console.log("✅ Semio.NET build complete");
+
+// #endregion 🔖Build

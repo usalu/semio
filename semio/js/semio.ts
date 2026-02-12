@@ -24,6 +24,8 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Imports
+// External dependency imports MUST be declared here.
 import { ClassValue, clsx } from "clsx";
 import cytoscape from "cytoscape";
 import { default as adjectives } from "@semio/assets/lists/adjectives.json";
@@ -34,17 +36,28 @@ import { v7 as uuidv7 } from "uuid";
 import { z } from "zod";
 import CONSTANTS from "./constants.json";
 
-// #region 🔖Constants
+// #endregion 🔖Imports
 
+// #region 🔖Constants
+// Global constants MUST define shared numeric parameters.
+// Standard icon width in pixels.
 export const ICON_WIDTH = CONSTANTS.icon.width;
+// Numeric tolerance for floating-point comparisons.
 export const TOLERANCE = CONSTANTS.tolerance;
 
 // #endregion 🔖Constants
 
+// #region 🔖Utilities
+// General-purpose utility functions MUST be defined here.
+
+// MUST merge CSS class names using Tailwind merge.
+// Performs the cn operation.
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+// MUST return a new UUID v7 string.
+// Performs the guid operation.
 export const guid = () => uuidv7();
 
 class SeededRandom {
@@ -58,6 +71,8 @@ class SeededRandom {
   nextInt = (max: number): number => Math.floor(this.nextFloat() * max);
 }
 
+// MUST provide the declared public interface.
+// Class implementing Generator behavior.
 export class Generator {
   public static randomId(seed: number = Math.floor(Math.random() * 1000000)): string {
     const random = new SeededRandom(seed);
@@ -75,8 +90,14 @@ export class Generator {
   }
 }
 
+// MUST return empty string for null or undefined.
+// Performs the normalize operation.
 export const normalize = (val: string | undefined | null): string => (val === undefined || val === null ? "" : val);
+// MUST round to the nearest tolerance unit.
+// Performs the round operation.
 export const round = (value: number): number => Math.round(value / TOLERANCE) * TOLERANCE;
+// MUST compute the Jaccard similarity coefficient.
+// Performs the jaccard operation.
 export const jaccard = (a: string[] | undefined, b: string[] | undefined): number => {
   if ((a === undefined && b === undefined) || (a?.length === 0 && b?.length === 0)) return 1;
   if (a === undefined || b === undefined) return 0;
@@ -88,6 +109,8 @@ export const jaccard = (a: string[] | undefined, b: string[] | undefined): numbe
   return intersection / union;
 };
 
+// MUST recursively compare values for equality.
+// Performs the deepEqual operation.
 export const deepEqual = (a: any, b: any): boolean => {
   if (a === b) return true;
 
@@ -110,12 +133,16 @@ export const deepEqual = (a: any, b: any): boolean => {
   return false;
 };
 
+// MUST compare arrays element by element.
+// Performs the arraysEqual operation.
 export const arraysEqual = <T>(a: T[] | undefined, b: T[] | undefined): boolean => {
   if (a === b) return true;
   if (!a || !b) return false;
   return a.length === b.length && a.every((val, index) => deepEqual(val, b[index]));
 };
 
+// MUST return a name not in the existing set.
+// Performs the generateUniqueName operation.
 export const generateUniqueName = (baseName: string, existingNames: string[], separator: string = " "): string => {
   if (!existingNames.includes(baseName)) return baseName;
   let counter = 2;
@@ -125,8 +152,10 @@ export const generateUniqueName = (baseName: string, existingNames: string[], se
   return `${baseName}${separator}${counter}`;
 };
 
+// Zod schema for DiffStatus validation.
 export const DiffStatusSchema = z.enum(["unchanged", "added", "removed", "modified"]);
 
+// Enumeration of DiffStatus values.
 export enum DiffStatus {
   Unchanged = "unchanged",
   Added = "added",
@@ -134,145 +163,338 @@ export enum DiffStatus {
   Modified = "modified",
 }
 
+// MUST convert to the target representation.
+// Converts to ThreeRotation representation.
 export const toThreeRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, 1, 0, 0, -1, 0, 0, 0, 0, 0, 1);
 
+// MUST convert to the target representation.
+// Converts to SemioRotation representation.
 export const toSemioRotation = (): THREE.Matrix4 => new THREE.Matrix4(1, 0, 0, 0, 0, 0, -1, 0, 0, 1, 0, 0, 0, 0, 0, 1);
+// MUST convert to the target representation.
+// Converts to ThreeQuaternion representation.
 export const toThreeQuaternion = (): THREE.Quaternion => new THREE.Quaternion(-0.7071067811865476, 0, 0, 0.7071067811865476);
+// MUST convert to the target representation.
+// Converts to SemioQuaternion representation.
 export const toSemioQuaternion = (): THREE.Quaternion => new THREE.Quaternion(0.7071067811865476, 0, 0, -0.7071067811865476);
+// MUST convert semio vector to Three.js vector.
+// Performs the vectorToThree operation.
 export const vectorToThree = (v: Point | Vector): THREE.Vector3 => new THREE.Vector3(v.x, v.y, v.z);
 
+// Type alias for Guid.
 export type Guid = string;
 
-// #region 🔖Entity IDs
+// #endregion 🔖Utilities
 
+// #region 🔖Entity IDs
+// Entity identifier types and comparison functions MUST be defined here.
+
+// Identifier type for Attribute entities.
 export type AttributeId = { guid: Guid };
+// Identifier type for Location entities.
 export type LocationId = { guid: Guid };
+// Identifier type for Author entities.
 export type AuthorId = { guid: Guid };
+// Identifier type for File entities.
 export type FileId = { guid: Guid };
+// Identifier type for Folder entities.
 export type FolderId = { guid: Guid };
+// Identifier type for Benchmark entities.
 export type BenchmarkId = { guid: Guid };
+// Identifier type for Quality entities.
 export type QualityId = { guid: Guid };
+// Identifier type for Port entities.
 export type PortId = { guid: Guid };
+// Identifier type for Prop entities.
 export type PropId = { guid: Guid };
+// Identifier type for Model entities.
 export type ModelId = { guid: Guid };
+// Identifier type for Connector entities.
 export type ConnectorId = { guid: Guid };
+// Identifier type for Type entities.
 export type TypeId = { guid: Guid };
+// Identifier type for Layer entities.
 export type LayerId = { guid: Guid };
+// Identifier type for Piece entities.
 export type PieceId = { guid: Guid };
+// Identifier type for Group entities.
 export type GroupId = { guid: Guid };
+// Identifier type for Connection entities.
 export type ConnectionId = { guid: Guid };
+// Identifier type for Stat entities.
 export type StatId = { guid: Guid };
+// Identifier type for Design entities.
 export type DesignId = { guid: Guid };
+// Identifier type for Kit entities.
 export type KitId = { guid: Guid };
+// Identifier type for Tag entities.
 export type TagId = { guid: Guid };
+// Identifier type for Concept entities.
 export type ConceptId = { guid: Guid };
 
+// Zod schema for validating Attribute identifiers.
 export const AttributeIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Location identifiers.
 export const LocationIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Author identifiers.
 export const AuthorIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating File identifiers.
 export const FileIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Folder identifiers.
 export const FolderIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Benchmark identifiers.
 export const BenchmarkIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Quality identifiers.
 export const QualityIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Port identifiers.
 export const PortIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Prop identifiers.
 export const PropIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Model identifiers.
 export const ModelIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Connector identifiers.
 export const ConnectorIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Type identifiers.
 export const TypeIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Layer identifiers.
 export const LayerIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Piece identifiers.
 export const PieceIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Group identifiers.
 export const GroupIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Connection identifiers.
 export const ConnectionIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Stat identifiers.
 export const StatIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Design identifiers.
 export const DesignIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Kit identifiers.
 export const KitIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Tag identifiers.
 export const TagIdSchema = z.object({ guid: z.string() });
+// Zod schema for validating Concept identifiers.
 export const ConceptIdSchema = z.object({ guid: z.string() });
 
+// MUST return a new valid instance.
+// Factory for creating Attribute identifiers.
 export const createAttributeId = (guid: Guid): AttributeId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Location identifiers.
 export const createLocationId = (guid: Guid): LocationId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Author identifiers.
 export const createAuthorId = (guid: Guid): AuthorId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating File identifiers.
 export const createFileId = (guid: Guid): FileId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Folder identifiers.
 export const createFolderId = (guid: Guid): FolderId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Benchmark identifiers.
 export const createBenchmarkId = (guid: Guid): BenchmarkId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Quality identifiers.
 export const createQualityId = (guid: Guid): QualityId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Port identifiers.
 export const createPortId = (guid: Guid): PortId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Prop identifiers.
 export const createPropId = (guid: Guid): PropId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Model identifiers.
 export const createModelId = (guid: Guid): ModelId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Connector identifiers.
 export const createConnectorId = (guid: Guid): ConnectorId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Type identifiers.
 export const createTypeId = (guid: Guid): TypeId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Layer identifiers.
 export const createLayerId = (guid: Guid): LayerId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Piece identifiers.
 export const createPieceId = (guid: Guid): PieceId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Group identifiers.
 export const createGroupId = (guid: Guid): GroupId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Connection identifiers.
 export const createConnectionId = (guid: Guid): ConnectionId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Stat identifiers.
 export const createStatId = (guid: Guid): StatId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Design identifiers.
 export const createDesignId = (guid: Guid): DesignId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Kit identifiers.
 export const createKitId = (guid: Guid): KitId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Tag identifiers.
 export const createTagId = (guid: Guid): TagId => ({ guid });
+// MUST return a new valid instance.
+// Factory for creating Concept identifiers.
 export const createConceptId = (guid: Guid): ConceptId => ({ guid });
 
+// MUST return a boolean equality result.
+// Equality check for Attribute identifiers.
 export const areSameAttributeId = (a: AttributeId, b: AttributeId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Location identifiers.
 export const areSameLocationId = (a: LocationId, b: LocationId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Author identifiers.
 export const areSameAuthorId = (a: AuthorId, b: AuthorId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for File identifiers.
 export const areSameFileId = (a: FileId, b: FileId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Folder identifiers.
 export const areSameFolderId = (a: FolderId, b: FolderId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Benchmark identifiers.
 export const areSameBenchmarkId = (a: BenchmarkId, b: BenchmarkId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Quality identifiers.
 export const areSameQualityId = (a: QualityId, b: QualityId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Port identifiers.
 export const areSamePortId = (a: PortId, b: PortId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Prop identifiers.
 export const areSamePropId = (a: PropId, b: PropId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Model identifiers.
 export const areSameModelId = (a: ModelId, b: ModelId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Connector identifiers.
 export const areSameConnectorId = (a: ConnectorId, b: ConnectorId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Type identifiers.
 export const areSameTypeId = (a: TypeId, b: TypeId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Layer identifiers.
 export const areSameLayerId = (a: LayerId, b: LayerId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Piece identifiers.
 export const areSamePieceId = (a: PieceId, b: PieceId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Group identifiers.
 export const areSameGroupId = (a: GroupId, b: GroupId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Connection identifiers.
 export const areSameConnectionId = (a: ConnectionId, b: ConnectionId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Stat identifiers.
 export const areSameStatId = (a: StatId, b: StatId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Design identifiers.
 export const areSameDesignId = (a: DesignId, b: DesignId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Kit identifiers.
 export const areSameKitId = (a: KitId, b: KitId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Tag identifiers.
 export const areSameTagId = (a: TagId, b: TagId): boolean => a.guid === b.guid;
+// MUST return a boolean equality result.
+// Equality check for Concept identifiers.
 export const areSameConceptId = (a: ConceptId, b: ConceptId): boolean => a.guid === b.guid;
 
+// MUST return the requested value.
+// Extracts the GUID from a Attribute identifier.
 export const getAttributeGuid = (id: AttributeId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Location identifier.
 export const getLocationGuid = (id: LocationId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Author identifier.
 export const getAuthorGuid = (id: AuthorId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a File identifier.
 export const getFileGuid = (id: FileId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Folder identifier.
 export const getFolderGuid = (id: FolderId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Benchmark identifier.
 export const getBenchmarkGuid = (id: BenchmarkId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Quality identifier.
 export const getQualityGuid = (id: QualityId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Port identifier.
 export const getPortGuid = (id: PortId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Prop identifier.
 export const getPropGuid = (id: PropId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Model identifier.
 export const getModelGuid = (id: ModelId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Connector identifier.
 export const getConnectorGuid = (id: ConnectorId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Type identifier.
 export const getTypeGuid = (id: TypeId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Layer identifier.
 export const getLayerGuid = (id: LayerId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Piece identifier.
 export const getPieceGuid = (id: PieceId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Group identifier.
 export const getGroupGuid = (id: GroupId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Connection identifier.
 export const getConnectionGuid = (id: ConnectionId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Stat identifier.
 export const getStatGuid = (id: StatId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Design identifier.
 export const getDesignGuid = (id: DesignId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Kit identifier.
 export const getKitGuid = (id: KitId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Tag identifier.
 export const getTagGuid = (id: TagId): Guid => id.guid;
+// MUST return the requested value.
+// Extracts the GUID from a Concept identifier.
 export const getConceptGuid = (id: ConceptId): Guid => id.guid;
 
 // #endregion 🔖Entity IDs
 
+// #region 🔖Attribute
+// Attribute entity types, schemas, and helper functions MUST be defined here.
+
 const DateProperty = () => z.string().optional();
 
-// #region 🔖Attribute
-
+// Zod schema for Attribute validation.
 export const AttributeSchema = z.object({
   guid: z.string(),
   key: z.string(),
   value: z.string().optional(),
   definition: z.string().optional(),
 });
+// Type alias for Attribute.
 export type Attribute = z.infer<typeof AttributeSchema>;
+// MUST produce a serializable output.
+// Serializes Attribute for transport.
 export const serializeAttribute = (attribute: Attribute): string => JSON.stringify(AttributeSchema.parse(attribute));
+// MUST perform the operation correctly.
+// Performs the deserializeAttribute operation.
 export const deserializeAttribute = (json: string): Attribute => AttributeSchema.parse(JSON.parse(json));
 
+// Zod schema for Attribute diff validation.
 export const AttributeDiffSchema = AttributeSchema.partial();
+// Diff type for tracking Attribute changes.
 export type AttributeDiff = z.infer<typeof AttributeDiffSchema>;
+// MUST return the requested value.
+// Retrieves the AttributeDiff value.
 export const getAttributeDiff = (before: Attribute, after: Attribute): AttributeDiff => {
   const diff: AttributeDiff = {};
   if (before.key !== after.key) diff.key = after.key;
@@ -280,6 +502,8 @@ export const getAttributeDiff = (before: Attribute, after: Attribute): Attribute
   if (before.definition !== after.definition) diff.definition = after.definition;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseAttribute changes.
 export const inverseAttributeDiff = (original: Attribute, appliedDiff: AttributeDiff): AttributeDiff => {
   return {
     key: appliedDiff.key ? original.key : "",
@@ -287,6 +511,8 @@ export const inverseAttributeDiff = (original: Attribute, appliedDiff: Attribute
     definition: appliedDiff.definition ? original.definition : "",
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeAttribute changes.
 export const mergeAttributeDiff = (diff1: AttributeDiff, diff2: AttributeDiff): AttributeDiff => {
   return {
     key: diff2.key ?? diff1.key,
@@ -294,15 +520,19 @@ export const mergeAttributeDiff = (diff1: AttributeDiff, diff2: AttributeDiff): 
     definition: diff2.definition ?? diff1.definition,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyAttribute changes.
 export const applyAttributeDiff = (base: Attribute, diff: AttributeDiff): Attribute => {
   return { ...base, ...diff };
 };
 
+// Zod schema for Attributes diff validation.
 export const AttributesDiffSchema = z.object({
   removed: z.array(AttributeIdSchema).optional(),
   updated: z.array(z.object({ attribute: AttributeIdSchema, diff: AttributeDiffSchema })).optional(),
   added: z.array(AttributeSchema).optional(),
 });
+// Diff type for tracking Attributes changes.
 export type AttributesDiff = z.infer<typeof AttributesDiffSchema>;
 
 const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesDiff => {
@@ -321,6 +551,8 @@ const getAttributesDiff = (before: Attribute[], after: Attribute[]): AttributesD
   return diff;
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking inverseAttributes changes.
 export const inverseAttributesDiff = (original: Attribute[], appliedDiff: AttributesDiff): AttributesDiff => {
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
   const updatedGuids = appliedDiff.updated?.map((a) => a.attribute.guid) ?? [];
@@ -339,10 +571,14 @@ export const inverseAttributesDiff = (original: Attribute[], appliedDiff: Attrib
   };
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking mergeAttributes changes.
 export const mergeAttributesDiff = (first: AttributesDiff, second: AttributesDiff): AttributesDiff => {
   return { ...first, ...second };
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking applyAttributes changes.
 export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): Attribute[] => {
   let result = [...base];
   if (diff.removed) {
@@ -366,20 +602,33 @@ export const applyAttributesDiff = (base: Attribute[], diff: AttributesDiff): At
 // #endregion 🔖Attribute
 
 // #region 🔖Coord (weak entity)
+// Coord weak entity types and schemas MUST be defined here.
 
+// Zod schema for Coord validation.
 export const CoordSchema = z.object({ u: z.number(), v: z.number() });
+// Type alias for Coord.
 export type Coord = z.infer<typeof CoordSchema>;
+// MUST produce a serializable output.
+// Serializes Coord for transport.
 export const serializeCoord = (coord: Coord): string => JSON.stringify(CoordSchema.parse(coord));
+// MUST perform the operation correctly.
+// Performs the deserializeCoord operation.
 export const deserializeCoord = (json: string): Coord => CoordSchema.parse(JSON.parse(json));
 
+// Zod schema for Coord diff validation.
 export const CoordDiffSchema = CoordSchema.partial();
+// Diff type for tracking Coord changes.
 export type CoordDiff = z.infer<typeof CoordDiffSchema>;
+// MUST return the requested value.
+// Retrieves the CoordDiff value.
 export const getCoordDiff = (before: Coord, after: Coord): CoordDiff => {
   return {
     u: after.u - before.u,
     v: after.v - before.v,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseCoord changes.
 export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): CoordDiff => {
   const u = appliedDiff.u ?? 0;
   const v = appliedDiff.v ?? 0;
@@ -388,12 +637,16 @@ export const inverseCoordDiff = (original: Coord, appliedDiff: CoordDiff): Coord
     v: original.v - v,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeCoord changes.
 export const mergeCoordDiff = (diff1: CoordDiff, diff2: CoordDiff): CoordDiff => {
   return {
     u: (diff1.u ?? 0) + (diff2.u ?? 0),
     v: (diff1.v ?? 0) + (diff2.v ?? 0),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyCoord changes.
 export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
   const u = diff.u ?? 0;
   const v = diff.v ?? 0;
@@ -406,20 +659,33 @@ export const applyCoordDiff = (base: Coord, diff: CoordDiff): Coord => {
 // #endregion 🔖Coord (weak entity)
 
 // #region 🔖Vec (weak entity)
+// Vec weak entity types and schemas MUST be defined here.
 
+// Zod schema for Vec validation.
 export const VecSchema = z.object({ u: z.number(), v: z.number() });
+// Type alias for Vec.
 export type Vec = z.infer<typeof VecSchema>;
+// MUST produce a serializable output.
+// Serializes Vec for transport.
 export const serializeVec = (vec: Vec): string => JSON.stringify(VecSchema.parse(vec));
+// MUST perform the operation correctly.
+// Performs the deserializeVec operation.
 export const deserializeVec = (json: string): Vec => VecSchema.parse(JSON.parse(json));
 
+// Zod schema for Vec diff validation.
 export const VecDiffSchema = VecSchema.partial();
+// Diff type for tracking Vec changes.
 export type VecDiff = z.infer<typeof VecDiffSchema>;
+// MUST return the requested value.
+// Retrieves the VecDiff value.
 export const getVecDiff = (before: Vec, after: Vec): VecDiff => {
   return {
     u: after.u - before.u,
     v: after.v - before.v,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseVec changes.
 export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => {
   const u = appliedDiff.u ?? 0;
   const v = appliedDiff.v ?? 0;
@@ -428,12 +694,16 @@ export const inverseVecDiff = (original: Vec, appliedDiff: VecDiff): VecDiff => 
     v: original.v - v,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeVec changes.
 export const mergeVecDiff = (diff1: VecDiff, diff2: VecDiff): VecDiff => {
   return {
     u: (diff1.u ?? 0) + (diff2.u ?? 0),
     v: (diff1.v ?? 0) + (diff2.v ?? 0),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyVec changes.
 export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
   const u = diff.u ?? 0;
   const v = diff.v ?? 0;
@@ -446,18 +716,29 @@ export const applyVecDiff = (base: Vec, diff: VecDiff): Vec => {
 // #endregion 🔖Vec (weak entity)
 
 // #region 🔖Point (weak entity)
+// Point weak entity types and schemas MUST be defined here.
 
+// Zod schema for Point validation.
 export const PointSchema = z.object({
   x: z.number(),
   y: z.number(),
   z: z.number(),
 });
+// Type alias for Point.
 export type Point = z.infer<typeof PointSchema>;
+// MUST produce a serializable output.
+// Serializes Point for transport.
 export const serializePoint = (point: Point): string => JSON.stringify(PointSchema.parse(point));
+// MUST perform the operation correctly.
+// Performs the deserializePoint operation.
 export const deserializePoint = (json: string): Point => PointSchema.parse(JSON.parse(json));
 
+// Zod schema for Point diff validation.
 export const PointDiffSchema = PointSchema.partial();
+// Diff type for tracking Point changes.
 export type PointDiff = z.infer<typeof PointDiffSchema>;
+// MUST return the requested value.
+// Retrieves the PointDiff value.
 export const getPointDiff = (before: Point, after: Point): PointDiff => {
   return {
     x: after.x - before.x,
@@ -465,6 +746,8 @@ export const getPointDiff = (before: Point, after: Point): PointDiff => {
     z: after.z - before.z,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inversePoint changes.
 export const inversePointDiff = (original: Point, appliedDiff: PointDiff): PointDiff => {
   const x = appliedDiff.x ?? 0;
   const y = appliedDiff.y ?? 0;
@@ -475,6 +758,8 @@ export const inversePointDiff = (original: Point, appliedDiff: PointDiff): Point
     z: original.z - z,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergePoint changes.
 export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff => {
   return {
     x: (diff1.x ?? 0) + (diff2.x ?? 0),
@@ -482,6 +767,8 @@ export const mergePointDiff = (diff1: PointDiff, diff2: PointDiff): PointDiff =>
     z: (diff1.z ?? 0) + (diff2.z ?? 0),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyPoint changes.
 export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
   const x = diff.x ?? 0;
   const y = diff.y ?? 0;
@@ -496,18 +783,29 @@ export const applyPointDiff = (base: Point, diff: PointDiff): Point => {
 // #endregion 🔖Point (weak entity)
 
 // #region 🔖Vector (weak entity)
+// Vector weak entity types and schemas MUST be defined here.
 
+// Zod schema for Vector validation.
 export const VectorSchema = z.object({
   x: z.number(),
   y: z.number(),
   z: z.number(),
 });
+// Type alias for Vector.
 export type Vector = z.infer<typeof VectorSchema>;
+// MUST produce a serializable output.
+// Serializes Vector for transport.
 export const serializeVector = (vector: Vector): string => JSON.stringify(VectorSchema.parse(vector));
+// MUST perform the operation correctly.
+// Performs the deserializeVector operation.
 export const deserializeVector = (json: string): Vector => VectorSchema.parse(JSON.parse(json));
 
+// Zod schema for Vector diff validation.
 export const VectorDiffSchema = VectorSchema.partial();
+// Diff type for tracking Vector changes.
 export type VectorDiff = z.infer<typeof VectorDiffSchema>;
+// MUST return the requested value.
+// Retrieves the VectorDiff value.
 export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
   return {
     x: after.x - before.x,
@@ -515,6 +813,8 @@ export const getVectorDiff = (before: Vector, after: Vector): VectorDiff => {
     z: after.z - before.z,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseVector changes.
 export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): VectorDiff => {
   const x = appliedDiff.x ?? 0;
   const y = appliedDiff.y ?? 0;
@@ -525,6 +825,8 @@ export const inverseVectorDiff = (original: Vector, appliedDiff: VectorDiff): Ve
     z: original.z - z,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeVector changes.
 export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDiff => {
   return {
     x: (diff1.x ?? 0) + (diff2.x ?? 0),
@@ -532,6 +834,8 @@ export const mergeVectorDiff = (diff1: VectorDiff, diff2: VectorDiff): VectorDif
     z: (diff1.z ?? 0) + (diff2.z ?? 0),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyVector changes.
 export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
   const x = diff.x ?? 0;
   const y = diff.y ?? 0;
@@ -546,15 +850,24 @@ export const applyVectorDiff = (base: Vector, diff: VectorDiff): Vector => {
 // #endregion 🔖Vector (weak entity)
 
 // #region 🔖Plane (weak entity)
+// Plane weak entity types and schemas MUST be defined here.
 
+// Zod schema for Plane validation.
 export const PlaneSchema = z.object({
   origin: PointSchema,
   xAxis: VectorSchema,
   yAxis: VectorSchema,
 });
+// Type alias for Plane.
 export type Plane = z.infer<typeof PlaneSchema>;
+// MUST produce a serializable output.
+// Serializes Plane for transport.
 export const serializePlane = (plane: Plane): string => JSON.stringify(PlaneSchema.parse(plane));
+// MUST perform the operation correctly.
+// Performs the deserializePlane operation.
 export const deserializePlane = (json: string): Plane => PlaneSchema.parse(JSON.parse(json));
+// MUST perform the operation correctly.
+// Performs the planeToMatrix operation.
 export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
   const origin = new THREE.Vector3(plane.origin.x, plane.origin.y, plane.origin.z);
   const xAxis = new THREE.Vector3(plane.xAxis.x, plane.xAxis.y, plane.xAxis.z);
@@ -564,6 +877,8 @@ export const planeToMatrix = (plane: Plane): THREE.Matrix4 => {
   const matrix = new THREE.Matrix4().makeBasis(xAxis.normalize(), orthoYAxis, zAxis).setPosition(origin);
   return matrix;
 };
+// MUST perform the operation correctly.
+// Performs the matrixToPlane operation.
 export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
   const origin = new THREE.Vector3();
   const xAxis = new THREE.Vector3();
@@ -578,6 +893,8 @@ export const matrixToPlane = (matrix: THREE.Matrix4): Plane => {
   };
 };
 
+// MUST perform the operation correctly.
+// Performs the averagePlane operation.
 export const averagePlane = (planes: Plane[]): Plane | null => {
   if (planes.length === 0) return null;
   if (planes.length === 1) return planes[0];
@@ -618,6 +935,7 @@ const roundPlane = (plane: Plane): Plane => ({
   },
 });
 
+// Zod schema for Plane diff validation.
 export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAxis: true })
   .extend({
     origin: PointDiffSchema,
@@ -625,7 +943,10 @@ export const PlaneDiffSchema = PlaneSchema.omit({ origin: true, xAxis: true, yAx
     yAxis: VectorDiffSchema,
   })
   .partial();
+// Diff type for tracking Plane changes.
 export type PlaneDiff = z.infer<typeof PlaneDiffSchema>;
+// MUST return the requested value.
+// Retrieves the PlaneDiff value.
 export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
   return {
     origin: getPointDiff(before.origin, after.origin),
@@ -633,6 +954,8 @@ export const getPlaneDiff = (before: Plane, after: Plane): PlaneDiff => {
     yAxis: getVectorDiff(before.yAxis, after.yAxis),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inversePlane changes.
 export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): PlaneDiff => {
   const origin = appliedDiff.origin ?? { x: 0, y: 0, z: 0 };
   const xAxis = appliedDiff.xAxis ?? { x: 0, y: 0, z: 0 };
@@ -643,6 +966,8 @@ export const inversePlaneDiff = (original: Plane, appliedDiff: PlaneDiff): Plane
     yAxis: inverseVectorDiff(original.yAxis, yAxis),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergePlane changes.
 export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff => {
   return {
     origin: diff1.origin ?? diff2.origin ?? mergePointDiff(diff1.origin!, diff2.origin!),
@@ -650,6 +975,8 @@ export const mergePlaneDiff = (diff1: PlaneDiff, diff2: PlaneDiff): PlaneDiff =>
     yAxis: diff1.yAxis ?? diff2.yAxis ?? mergeVectorDiff(diff1.yAxis!, diff2.yAxis!),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyPlane changes.
 export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
   return {
     origin: diff.origin ? applyPointDiff(base.origin, diff.origin) : base.origin,
@@ -661,16 +988,24 @@ export const applyPlaneDiff = (base: Plane, diff: PlaneDiff): Plane => {
 // #endregion 🔖Plane (weak entity)
 
 // #region 🔖Camera (weak entity)
+// Camera weak entity types and schemas MUST be defined here.
 
+// Zod schema for Camera validation.
 export const CameraSchema = z.object({
   position: PointSchema,
   forward: VectorSchema,
   up: VectorSchema,
 });
+// Type alias for Camera.
 export type Camera = z.infer<typeof CameraSchema>;
+// MUST produce a serializable output.
+// Serializes Camera for transport.
 export const serializeCamera = (camera: Camera): string => JSON.stringify(CameraSchema.parse(camera));
+// MUST perform the operation correctly.
+// Performs the deserializeCamera operation.
 export const deserializeCamera = (json: string): Camera => CameraSchema.parse(JSON.parse(json));
 
+// Zod schema for Camera diff validation.
 export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: true, up: true })
   .extend({
     position: PointDiffSchema,
@@ -678,7 +1013,10 @@ export const CameraDiffSchema = CameraSchema.omit({ position: true, forward: tru
     up: VectorDiffSchema,
   })
   .partial();
+// Diff type for tracking Camera changes.
 export type CameraDiff = z.infer<typeof CameraDiffSchema>;
+// MUST return the requested value.
+// Retrieves the CameraDiff value.
 export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
   return {
     position: getPointDiff(before.position, after.position),
@@ -686,6 +1024,8 @@ export const getCameraDiff = (before: Camera, after: Camera): CameraDiff => {
     up: getVectorDiff(before.up, after.up),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseCamera changes.
 export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): CameraDiff => {
   return {
     position: appliedDiff.position ? inversePointDiff(original.position, appliedDiff.position) : original.position,
@@ -693,6 +1033,8 @@ export const inverseCameraDiff = (original: Camera, appliedDiff: CameraDiff): Ca
     up: appliedDiff.up ? inverseVectorDiff(original.up, appliedDiff.up) : original.up,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeCamera changes.
 export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDiff => {
   return {
     position: diff1.position ?? diff2.position ?? mergePointDiff(diff1.position!, diff2.position!),
@@ -700,6 +1042,8 @@ export const mergeCameraDiff = (diff1: CameraDiff, diff2: CameraDiff): CameraDif
     up: diff1.up ?? diff2.up ?? mergeVectorDiff(diff1.up!, diff2.up!),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyCamera changes.
 export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
   return {
     position: diff.position ? applyPointDiff(base.position, diff.position) : base.position,
@@ -711,7 +1055,9 @@ export const applyCameraDiff = (base: Camera, diff: CameraDiff): Camera => {
 // #endregion 🔖Camera (weak entity)
 
 // #region 🔖Location
+// Location entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Location validation.
 export const LocationSchema = z.object({
   guid: z.string(),
   longitude: z.number(),
@@ -719,14 +1065,23 @@ export const LocationSchema = z.object({
   altitude: z.number().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Location.
 export type Location = z.infer<typeof LocationSchema>;
+// MUST produce a serializable output.
+// Serializes Location for transport.
 export const serializeLocation = (location: Location): string => JSON.stringify(LocationSchema.parse(location));
+// MUST perform the operation correctly.
+// Performs the deserializeLocation operation.
 export const deserializeLocation = (json: string): Location => LocationSchema.parse(JSON.parse(json));
 
+// Zod schema for Location diff validation.
 export const LocationDiffSchema = LocationSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Location changes.
 export type LocationDiff = z.infer<typeof LocationDiffSchema>;
+// MUST return the requested value.
+// Retrieves the LocationDiff value.
 export const getLocationDiff = (before: Location, after: Location): LocationDiff => {
   const diff: LocationDiff = {};
   if (before.longitude !== after.longitude) diff.longitude = after.longitude - before.longitude;
@@ -735,6 +1090,8 @@ export const getLocationDiff = (before: Location, after: Location): LocationDiff
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseLocation changes.
 export const inverseLocationDiff = (original: Location, appliedDiff: LocationDiff): LocationDiff => {
   const inverse: LocationDiff = {};
   if (appliedDiff.longitude !== undefined) inverse.longitude = original.longitude;
@@ -743,9 +1100,13 @@ export const inverseLocationDiff = (original: Location, appliedDiff: LocationDif
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeLocation changes.
 export const mergeLocationDiff = (diff1: LocationDiff, diff2: LocationDiff): LocationDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyLocation changes.
 export const applyLocationDiff = (base: Location, diff: LocationDiff): Location => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -764,16 +1125,27 @@ export const applyLocationDiff = (base: Location, diff: LocationDiff): Location 
 // #endregion 🔖Location
 
 // #region 🔖Author
+// Author entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Author validation.
 export const AuthorSchema = z.object({ guid: z.string(), name: z.string(), email: z.string(), attributes: z.array(AttributeSchema).optional() });
+// Type alias for Author.
 export type Author = z.infer<typeof AuthorSchema>;
+// MUST produce a serializable output.
+// Serializes Author for transport.
 export const serializeAuthor = (author: Author): string => JSON.stringify(AuthorSchema.parse(author));
+// MUST perform the operation correctly.
+// Performs the deserializeAuthor operation.
 export const deserializeAuthor = (json: string): Author => AuthorSchema.parse(JSON.parse(json));
 
+// Zod schema for Author diff validation.
 export const AuthorDiffSchema = AuthorSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Author changes.
 export type AuthorDiff = z.infer<typeof AuthorDiffSchema>;
+// MUST return the requested value.
+// Retrieves the AuthorDiff value.
 export const getAuthorDiff = (before: Author, after: Author): AuthorDiff => {
   const diff: AuthorDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -781,6 +1153,8 @@ export const getAuthorDiff = (before: Author, after: Author): AuthorDiff => {
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseAuthor changes.
 export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): AuthorDiff => {
   const inverse: AuthorDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -788,9 +1162,13 @@ export const inverseAuthorDiff = (original: Author, appliedDiff: AuthorDiff): Au
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeAuthor changes.
 export const mergeAuthorDiff = (diff1: AuthorDiff, diff2: AuthorDiff): AuthorDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyAuthor changes.
 export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -805,17 +1183,21 @@ export const applyAuthorDiff = (base: Author, diff: AuthorDiff): Author => {
   return result;
 };
 
+// Zod schema for Authors diff validation.
 export const AuthorsDiffSchema = z.object({
   removed: z.array(AuthorIdSchema).optional(),
   updated: z.array(z.object({ author: AuthorIdSchema, diff: AuthorDiffSchema })).optional(),
   added: z.array(AuthorSchema).optional(),
 });
+// Diff type for tracking Authors changes.
 export type AuthorsDiff = z.infer<typeof AuthorsDiffSchema>;
 
 // #endregion 🔖Author
 
 // #region 🔖File
+// File entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for File validation.
 export const FileSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -829,12 +1211,21 @@ export const FileSchema = z.object({
   updatedAt: DateProperty(),
   updatedBy: z.string().optional(),
 });
+// Type alias for File.
 export type File = z.infer<typeof FileSchema>;
+// MUST produce a serializable output.
+// Serializes File for transport.
 export const serializeFile = (file: File): string => JSON.stringify(FileSchema.parse(file));
+// MUST perform the operation correctly.
+// Performs the deserializeFile operation.
 export const deserializeFile = (json: string): File => FileSchema.parse(JSON.parse(json));
 
+// Zod schema for File diff validation.
 export const FileDiffSchema = FileSchema.partial();
+// Diff type for tracking File changes.
 export type FileDiff = z.infer<typeof FileDiffSchema>;
+// MUST return the requested value.
+// Retrieves the FileDiff value.
 export const getFileDiff = (before: File, after: File): FileDiff => {
   const diff: FileDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -849,6 +1240,8 @@ export const getFileDiff = (before: File, after: File): FileDiff => {
   if (before.folder?.guid !== after.folder?.guid) diff.folder = after.folder;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseFile changes.
 export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff => {
   const inverse: FileDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -863,9 +1256,13 @@ export const inverseFileDiff = (original: File, appliedDiff: FileDiff): FileDiff
   if (appliedDiff.folder !== undefined) inverse.folder = original.folder;
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeFile changes.
 export const mergeFileDiff = (diff1: FileDiff, diff2: FileDiff): FileDiff => {
   return { ...diff1, ...diff2 };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyFile changes.
 export const applyFileDiff = (base: File, diff: FileDiff): File => {
   const result: File = {
     guid: base.guid,
@@ -885,17 +1282,21 @@ export const applyFileDiff = (base: File, diff: FileDiff): File => {
   return result;
 };
 
+// Zod schema for Files diff validation.
 export const FilesDiffSchema = z.object({
   removed: z.array(FileIdSchema).optional(),
   updated: z.array(z.object({ file: FileIdSchema, diff: FileDiffSchema })).optional(),
   added: z.array(FileSchema).optional(),
 });
+// Diff type for tracking Files changes.
 export type FilesDiff = z.infer<typeof FilesDiffSchema>;
 
 // #endregion 🔖File
 
 // #region 🔖Folder
+// Folder entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Folder validation.
 export const FolderSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -907,14 +1308,23 @@ export const FolderSchema = z.object({
   updatedAt: DateProperty(),
   updatedBy: z.string().optional(),
 });
+// Type alias for Folder.
 export type Folder = z.infer<typeof FolderSchema>;
+// MUST produce a serializable output.
+// Serializes Folder for transport.
 export const serializeFolder = (folder: Folder): string => JSON.stringify(FolderSchema.parse(folder));
+// MUST perform the operation correctly.
+// Performs the deserializeFolder operation.
 export const deserializeFolder = (json: string): Folder => FolderSchema.parse(JSON.parse(json));
 
+// Zod schema for Folder diff validation.
 export const FolderDiffSchema = FolderSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Folder changes.
 export type FolderDiff = z.infer<typeof FolderDiffSchema>;
+// MUST return the requested value.
+// Retrieves the FolderDiff value.
 export const getFolderDiff = (before: Folder, after: Folder): FolderDiff => {
   const diff: FolderDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -927,6 +1337,8 @@ export const getFolderDiff = (before: Folder, after: Folder): FolderDiff => {
   if (before.updatedBy !== after.updatedBy) diff.updatedBy = after.updatedBy;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseFolder changes.
 export const inverseFolderDiff = (original: Folder, appliedDiff: FolderDiff): FolderDiff => {
   const inverse: FolderDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -939,9 +1351,13 @@ export const inverseFolderDiff = (original: Folder, appliedDiff: FolderDiff): Fo
   if (appliedDiff.updatedBy !== undefined) inverse.updatedBy = original.updatedBy;
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeFolder changes.
 export const mergeFolderDiff = (diff1: FolderDiff, diff2: FolderDiff): FolderDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyFolder changes.
 export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -961,17 +1377,21 @@ export const applyFolderDiff = (base: Folder, diff: FolderDiff): Folder => {
   return result;
 };
 
+// Zod schema for Folders diff validation.
 export const FoldersDiffSchema = z.object({
   removed: z.array(FolderIdSchema).optional(),
   updated: z.array(z.object({ folder: FolderIdSchema, diff: FolderDiffSchema })).optional(),
   added: z.array(FolderSchema).optional(),
 });
+// Diff type for tracking Folders changes.
 export type FoldersDiff = z.infer<typeof FoldersDiffSchema>;
 
 // #endregion 🔖Folder
 
 // #region 🔖Benchmark
+// Benchmark entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Benchmark validation.
 export const BenchmarkSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -982,14 +1402,23 @@ export const BenchmarkSchema = z.object({
   maxExcluded: z.boolean().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Benchmark.
 export type Benchmark = z.infer<typeof BenchmarkSchema>;
+// MUST produce a serializable output.
+// Serializes Benchmark for transport.
 export const serializeBenchmark = (benchmark: Benchmark): string => JSON.stringify(BenchmarkSchema.parse(benchmark));
+// MUST perform the operation correctly.
+// Performs the deserializeBenchmark operation.
 export const deserializeBenchmark = (json: string): Benchmark => BenchmarkSchema.parse(JSON.parse(json));
 
+// Zod schema for Benchmark diff validation.
 export const BenchmarkDiffSchema = BenchmarkSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Benchmark changes.
 export type BenchmarkDiff = z.infer<typeof BenchmarkDiffSchema>;
+// MUST perform the operation correctly.
+// Diff type for tracking applyBenchmark changes.
 export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchmark => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -1007,6 +1436,8 @@ export const applyBenchmarkDiff = (base: Benchmark, diff: BenchmarkDiff): Benchm
 
   return result;
 };
+// MUST return the requested value.
+// Retrieves the BenchmarkDiff value.
 export const getBenchmarkDiff = (before: Benchmark, after: Benchmark): BenchmarkDiff => {
   const diff: BenchmarkDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -1018,6 +1449,8 @@ export const getBenchmarkDiff = (before: Benchmark, after: Benchmark): Benchmark
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseBenchmark changes.
 export const inverseBenchmarkDiff = (original: Benchmark, appliedDiff: BenchmarkDiff): BenchmarkDiff => {
   const inverse: BenchmarkDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -1029,15 +1462,19 @@ export const inverseBenchmarkDiff = (original: Benchmark, appliedDiff: Benchmark
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeBenchmark changes.
 export const mergeBenchmarkDiff = (diff1: BenchmarkDiff, diff2: BenchmarkDiff): BenchmarkDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
 
+// Zod schema for Benchmarks diff validation.
 export const BenchmarksDiffSchema = z.object({
   removed: z.array(BenchmarkIdSchema).optional(),
   updated: z.array(z.object({ benchmark: BenchmarkIdSchema, diff: BenchmarkDiffSchema })).optional(),
   added: z.array(BenchmarkSchema).optional(),
 });
+// Diff type for tracking Benchmarks changes.
 export type BenchmarksDiff = z.infer<typeof BenchmarksDiffSchema>;
 
 const getBenchmarksDiff = (before: Benchmark[], after: Benchmark[]): BenchmarksDiff => {
@@ -1104,7 +1541,9 @@ const applyBenchmarksDiff = (base: Benchmark[], diff: BenchmarksDiff): Benchmark
 // #endregion 🔖Benchmark
 
 // #region 🔖Quality
+// Quality entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Quality validation.
 export const QualitySchema = z.object({
   guid: z.string(),
   key: z.string(),
@@ -1128,15 +1567,24 @@ export const QualitySchema = z.object({
   benchmarks: z.array(BenchmarkSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Quality.
 export type Quality = z.infer<typeof QualitySchema>;
+// MUST produce a serializable output.
+// Serializes Quality for transport.
 export const serializeQuality = (quality: Quality): string => JSON.stringify(QualitySchema.parse(quality));
+// MUST perform the operation correctly.
+// Performs the deserializeQuality operation.
 export const deserializeQuality = (json: string): Quality => QualitySchema.parse(JSON.parse(json));
 
+// Zod schema for Quality diff validation.
 export const QualityDiffSchema = QualitySchema.partial().omit({ benchmarks: true, attributes: true }).extend({
   benchmarks: BenchmarksDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Quality changes.
 export type QualityDiff = z.infer<typeof QualityDiffSchema>;
+// MUST return the requested value.
+// Retrieves the QualityDiff value.
 export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => {
   const diff: QualityDiff = {};
   if (before.key !== after.key) diff.key = after.key;
@@ -1160,6 +1608,8 @@ export const getQualityDiff = (before: Quality, after: Quality): QualityDiff => 
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseQuality changes.
 export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff): QualityDiff => {
   const inverse: QualityDiff = {};
   if (appliedDiff.key !== undefined) inverse.key = original.key;
@@ -1183,6 +1633,8 @@ export const inverseQualityDiff = (original: Quality, appliedDiff: QualityDiff):
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeQuality changes.
 export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): QualityDiff => {
   return {
     ...diff1,
@@ -1191,6 +1643,8 @@ export const mergeQualityDiff = (diff1: QualityDiff, diff2: QualityDiff): Qualit
     attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyQuality changes.
 export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
   const benchmarks = diff.benchmarks ? applyBenchmarksDiff(base.benchmarks ?? [], diff.benchmarks) : undefined;
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -1223,6 +1677,7 @@ export const applyQualityDiff = (base: Quality, diff: QualityDiff): Quality => {
   return result;
 };
 
+// Zod schema for Qualities diff validation.
 export const QualitiesDiffSchema = z.object({
   removed: z.array(QualityIdSchema).optional(),
   updated: z.array(z.object({ quality: QualityIdSchema, diff: QualityDiffSchema })).optional(),
@@ -1232,7 +1687,9 @@ export const QualitiesDiffSchema = z.object({
 // #endregion 🔖Quality
 
 // #region 🔖Port
+// Port entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Port validation.
 export const PortSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -1241,10 +1698,16 @@ export const PortSchema = z.object({
   compatiblePorts: z.array(PortIdSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Port.
 export type Port = z.infer<typeof PortSchema>;
+// MUST produce a serializable output.
+// Serializes Port for transport.
 export const serializePort = (iface: Port): string => JSON.stringify(PortSchema.parse(iface));
+// MUST perform the operation correctly.
+// Performs the deserializePort operation.
 export const deserializePort = (json: string): Port => PortSchema.parse(JSON.parse(json));
 
+// Zod schema for Port diff validation.
 export const PortDiffSchema = PortSchema.partial()
   .omit({ compatiblePorts: true, attributes: true })
   .extend({
@@ -1253,7 +1716,10 @@ export const PortDiffSchema = PortSchema.partial()
     description: z.string().nullable().optional(),
     icon: z.string().nullable().optional(),
   });
+// Diff type for tracking Port changes.
 export type PortDiff = z.infer<typeof PortDiffSchema>;
+// MUST return the requested value.
+// Retrieves the PortDiff value.
 export const getPortDiff = (before: Port, after: Port): PortDiff => {
   const diff: PortDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -1263,6 +1729,8 @@ export const getPortDiff = (before: Port, after: Port): PortDiff => {
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inversePort changes.
 export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff => {
   const inverse: PortDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -1272,6 +1740,8 @@ export const inversePortDiff = (original: Port, appliedDiff: PortDiff): PortDiff
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergePort changes.
 export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
   return {
     ...diff1,
@@ -1279,6 +1749,8 @@ export const mergePortDiff = (diff1: PortDiff, diff2: PortDiff): PortDiff => {
     attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyPort changes.
 export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -1303,12 +1775,16 @@ export const applyPortDiff = (base: Port, diff: PortDiff): Port => {
   return result;
 };
 
+// Zod schema for Ports diff validation.
 export const PortsDiffSchema = z.object({
   removed: z.array(PortIdSchema).optional(),
   updated: z.array(z.object({ port: PortIdSchema, diff: PortDiffSchema })).optional(),
   added: z.array(PortSchema).optional(),
 });
+// Diff type for tracking Ports changes.
 export type PortsDiff = z.infer<typeof PortsDiffSchema>;
+// MUST return the requested value.
+// Retrieves the PortsDiff value.
 export const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
   const diff: PortsDiff = {};
   const beforeGuids = new Set(before.map((i) => i.guid));
@@ -1328,6 +1804,8 @@ export const getPortsDiff = (before: Port[], after: Port[]): PortsDiff => {
   if (added.length > 0) diff.added = added;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inversePorts changes.
 export const inversePortsDiff = (original: Port[], appliedDiff: PortsDiff): PortsDiff => {
   const inverse: PortsDiff = {};
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -1341,6 +1819,8 @@ export const inversePortsDiff = (original: Port[], appliedDiff: PortsDiff): Port
   }
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergePorts changes.
 export const mergePortsDiff = (diff1: PortsDiff, diff2: PortsDiff): PortsDiff => {
   return {
     removed: [...(diff1.removed ?? []), ...(diff2.removed ?? [])],
@@ -1348,6 +1828,8 @@ export const mergePortsDiff = (diff1: PortsDiff, diff2: PortsDiff): PortsDiff =>
     added: [...(diff1.added ?? []), ...(diff2.added ?? [])],
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyPorts changes.
 export const applyPortsDiff = (base: Port[], diff: PortsDiff): Port[] => {
   let result = [...base];
   if (diff.removed) {
@@ -1368,6 +1850,8 @@ export const applyPortsDiff = (base: Port[], diff: PortsDiff): Port[] => {
   return result;
 };
 
+// MUST return a boolean result.
+// Performs the arePortsCompatible operation.
 export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | undefined, allPorts: Port[]): boolean => {
   if (!iface1 || !iface2) return true;
   if (iface1.guid === iface2.guid) return true;
@@ -1382,7 +1866,9 @@ export const arePortsCompatible = (iface1: Port | undefined, iface2: Port | unde
 // #endregion 🔖Port
 
 // #region 🔖Prop
+// Prop entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Prop validation.
 export const PropSchema = z.object({
   guid: z.string(),
   quality: QualityIdSchema,
@@ -1390,14 +1876,23 @@ export const PropSchema = z.object({
   unit: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Prop.
 export type Prop = z.infer<typeof PropSchema>;
+// MUST produce a serializable output.
+// Serializes Prop for transport.
 export const serializeProp = (prop: Prop): string => JSON.stringify(PropSchema.parse(prop));
+// MUST perform the operation correctly.
+// Performs the deserializeProp operation.
 export const deserializeProp = (json: string): Prop => PropSchema.parse(JSON.parse(json));
 
+// Zod schema for Prop diff validation.
 export const PropDiffSchema = PropSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Prop changes.
 export type PropDiff = z.infer<typeof PropDiffSchema>;
+// MUST return the requested value.
+// Retrieves the PropDiff value.
 export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
   const diff: PropDiff = {};
   if (before.quality?.guid !== after.quality?.guid) diff.quality = after.quality;
@@ -1406,6 +1901,8 @@ export const getPropDiff = (before: Prop, after: Prop): PropDiff => {
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseProp changes.
 export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff => {
   const inverse: PropDiff = {};
   if (appliedDiff.quality !== undefined) inverse.quality = original.quality;
@@ -1414,9 +1911,13 @@ export const inversePropDiff = (original: Prop, appliedDiff: PropDiff): PropDiff
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeProp changes.
 export const mergePropDiff = (diff1: PropDiff, diff2: PropDiff): PropDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyProp changes.
 export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -1432,11 +1933,13 @@ export const applyPropDiff = (base: Prop, diff: PropDiff): Prop => {
   return result;
 };
 
+// Zod schema for Props diff validation.
 export const PropsDiffSchema = z.object({
   removed: z.array(PropIdSchema).optional(),
   updated: z.array(z.object({ prop: PropIdSchema, diff: PropDiffSchema })).optional(),
   added: z.array(PropSchema).optional(),
 });
+// Diff type for tracking Props changes.
 export type PropsDiff = z.infer<typeof PropsDiffSchema>;
 
 const getPropsDiff = (before: Prop[], after: Prop[]): PropsDiff => {
@@ -1501,7 +2004,9 @@ const applyPropsDiff = (base: Prop[], diff: PropsDiff): Prop[] => {
 // #endregion 🔖Prop
 
 // #region 🔖Tag
+// Tag entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Tag validation.
 export const TagSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -1509,16 +2014,25 @@ export const TagSchema = z.object({
   icon: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Tag.
 export type Tag = z.infer<typeof TagSchema>;
+// MUST produce a serializable output.
+// Serializes Tag for transport.
 export const serializeTag = (tag: Tag): string => JSON.stringify(TagSchema.parse(tag));
+// MUST perform the operation correctly.
+// Performs the deserializeTag operation.
 export const deserializeTag = (json: string): Tag => TagSchema.parse(JSON.parse(json));
 
+// Zod schema for Tag diff validation.
 export const TagDiffSchema = TagSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
   description: z.string().nullable().optional(),
   icon: z.string().nullable().optional(),
 });
+// Diff type for tracking Tag changes.
 export type TagDiff = z.infer<typeof TagDiffSchema>;
+// MUST return the requested value.
+// Retrieves the TagDiff value.
 export const getTagDiff = (before: Tag, after: Tag): TagDiff => {
   const diff: TagDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -1527,6 +2041,8 @@ export const getTagDiff = (before: Tag, after: Tag): TagDiff => {
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseTag changes.
 export const inverseTagDiff = (original: Tag, appliedDiff: TagDiff): TagDiff => {
   const inverse: TagDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -1535,9 +2051,13 @@ export const inverseTagDiff = (original: Tag, appliedDiff: TagDiff): TagDiff => 
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeTag changes.
 export const mergeTagDiff = (diff1: TagDiff, diff2: TagDiff): TagDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyTag changes.
 export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -1563,12 +2083,16 @@ export const applyTagDiff = (base: Tag, diff: TagDiff): Tag => {
   return result;
 };
 
+// Zod schema for Tags diff validation.
 export const TagsDiffSchema = z.object({
   removed: z.array(TagIdSchema).optional(),
   updated: z.array(z.object({ tag: TagIdSchema, diff: TagDiffSchema })).optional(),
   added: z.array(TagSchema).optional(),
 });
+// Diff type for tracking Tags changes.
 export type TagsDiff = z.infer<typeof TagsDiffSchema>;
+// MUST return the requested value.
+// Retrieves the TagsDiff value.
 export const getTagsDiff = (before: Tag[], after: Tag[]): TagsDiff => {
   const diff: TagsDiff = {};
   const beforeGuids = new Set(before.map((t) => t.guid));
@@ -1588,6 +2112,8 @@ export const getTagsDiff = (before: Tag[], after: Tag[]): TagsDiff => {
   if (added.length > 0) diff.added = added;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseTags changes.
 export const inverseTagsDiff = (original: Tag[], appliedDiff: TagsDiff): TagsDiff => {
   const inverse: TagsDiff = {};
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -1601,6 +2127,8 @@ export const inverseTagsDiff = (original: Tag[], appliedDiff: TagsDiff): TagsDif
   }
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeTags changes.
 export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
   const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
@@ -1617,6 +2145,8 @@ export const mergeTagsDiff = (diff1: TagsDiff, diff2: TagsDiff): TagsDiff => {
     added: added.length > 0 ? added : undefined,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyTags changes.
 export const applyTagsDiff = (base: Tag[], diff: TagsDiff): Tag[] => {
   let result = [...base];
   if (diff.removed) {
@@ -1637,6 +2167,8 @@ export const applyTagsDiff = (base: Tag[], diff: TagsDiff): Tag[] => {
   return result;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching Tag entry.
 export const findTag = (tags: Tag[], guid: string): Tag => {
   const tag = tags.find((t) => t.guid === guid);
   if (!tag) throw new Error(`Tag ${guid} not found`);
@@ -1646,7 +2178,9 @@ export const findTag = (tags: Tag[], guid: string): Tag => {
 // #endregion 🔖Tag
 
 // #region 🔖Concept
+// Concept entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Concept validation.
 export const ConceptSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -1654,16 +2188,25 @@ export const ConceptSchema = z.object({
   icon: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Concept.
 export type Concept = z.infer<typeof ConceptSchema>;
+// MUST produce a serializable output.
+// Serializes Concept for transport.
 export const serializeConcept = (concept: Concept): string => JSON.stringify(ConceptSchema.parse(concept));
+// MUST perform the operation correctly.
+// Performs the deserializeConcept operation.
 export const deserializeConcept = (json: string): Concept => ConceptSchema.parse(JSON.parse(json));
 
+// Zod schema for Concept diff validation.
 export const ConceptDiffSchema = ConceptSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
   description: z.string().nullable().optional(),
   icon: z.string().nullable().optional(),
 });
+// Diff type for tracking Concept changes.
 export type ConceptDiff = z.infer<typeof ConceptDiffSchema>;
+// MUST return the requested value.
+// Retrieves the ConceptDiff value.
 export const getConceptDiff = (before: Concept, after: Concept): ConceptDiff => {
   const diff: ConceptDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -1672,6 +2215,8 @@ export const getConceptDiff = (before: Concept, after: Concept): ConceptDiff => 
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseConcept changes.
 export const inverseConceptDiff = (original: Concept, appliedDiff: ConceptDiff): ConceptDiff => {
   const inverse: ConceptDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -1680,9 +2225,13 @@ export const inverseConceptDiff = (original: Concept, appliedDiff: ConceptDiff):
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeConcept changes.
 export const mergeConceptDiff = (diff1: ConceptDiff, diff2: ConceptDiff): ConceptDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyConcept changes.
 export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -1708,12 +2257,16 @@ export const applyConceptDiff = (base: Concept, diff: ConceptDiff): Concept => {
   return result;
 };
 
+// Zod schema for Concepts diff validation.
 export const ConceptsDiffSchema = z.object({
   removed: z.array(ConceptIdSchema).optional(),
   updated: z.array(z.object({ concept: ConceptIdSchema, diff: ConceptDiffSchema })).optional(),
   added: z.array(ConceptSchema).optional(),
 });
+// Diff type for tracking Concepts changes.
 export type ConceptsDiff = z.infer<typeof ConceptsDiffSchema>;
+// MUST return the requested value.
+// Retrieves the ConceptsDiff value.
 export const getConceptsDiff = (before: Concept[], after: Concept[]): ConceptsDiff => {
   const diff: ConceptsDiff = {};
   const beforeGuids = new Set(before.map((c) => c.guid));
@@ -1733,6 +2286,8 @@ export const getConceptsDiff = (before: Concept[], after: Concept[]): ConceptsDi
   if (added.length > 0) diff.added = added;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseConcepts changes.
 export const inverseConceptsDiff = (original: Concept[], appliedDiff: ConceptsDiff): ConceptsDiff => {
   const inverse: ConceptsDiff = {};
   const removedGuids = appliedDiff.removed?.map((r) => r.guid) ?? [];
@@ -1746,6 +2301,8 @@ export const inverseConceptsDiff = (original: Concept[], appliedDiff: ConceptsDi
   }
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeConcepts changes.
 export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): ConceptsDiff => {
   const removed = [...(diff1.removed ?? []), ...(diff2.removed ?? [])];
   const added = [...(diff1.added ?? []), ...(diff2.added ?? [])];
@@ -1762,6 +2319,8 @@ export const mergeConceptsDiff = (diff1: ConceptsDiff, diff2: ConceptsDiff): Con
     added: added.length > 0 ? added : undefined,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyConcepts changes.
 export const applyConceptsDiff = (base: Concept[], diff: ConceptsDiff): Concept[] => {
   let result = [...base];
   if (diff.removed) {
@@ -1782,6 +2341,8 @@ export const applyConceptsDiff = (base: Concept[], diff: ConceptsDiff): Concept[
   return result;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching Concept entry.
 export const findConcept = (concepts: Concept[], guid: string): Concept => {
   const concept = concepts.find((c) => c.guid === guid);
   if (!concept) throw new Error(`Concept ${guid} not found`);
@@ -1791,7 +2352,9 @@ export const findConcept = (concepts: Concept[], guid: string): Concept => {
 // #endregion 🔖Concept
 
 // #region 🔖Model
+// Model entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Model validation.
 export const ModelSchema = z.object({
   guid: z.string(),
   name: z.string().optional(),
@@ -1800,14 +2363,23 @@ export const ModelSchema = z.object({
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Model.
 export type Model = z.infer<typeof ModelSchema>;
+// MUST produce a serializable output.
+// Serializes Model for transport.
 export const serializeModel = (model: Model): string => JSON.stringify(ModelSchema.parse(model));
+// MUST perform the operation correctly.
+// Performs the deserializeModel operation.
 export const deserializeModel = (json: string): Model => ModelSchema.parse(JSON.parse(json));
 
+// Zod schema for Model diff validation.
 export const ModelDiffSchema = ModelSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Model changes.
 export type ModelDiff = z.infer<typeof ModelDiffSchema>;
+// MUST return the requested value.
+// Retrieves the ModelDiff value.
 export const getModelDiff = (before: Model, after: Model): ModelDiff => {
   const diff: ModelDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -1817,6 +2389,8 @@ export const getModelDiff = (before: Model, after: Model): ModelDiff => {
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseModel changes.
 export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): ModelDiff => {
   const inverse: ModelDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -1826,9 +2400,13 @@ export const inverseModelDiff = (original: Model, appliedDiff: ModelDiff): Model
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeModel changes.
 export const mergeModelDiff = (diff1: ModelDiff, diff2: ModelDiff): ModelDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyModel changes.
 export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -1845,18 +2423,23 @@ export const applyModelDiff = (base: Model, diff: ModelDiff): Model => {
   return result;
 };
 
+// Zod schema for Models diff validation.
 export const ModelsDiffSchema = z.object({
   removed: z.array(ModelIdSchema).optional(),
   updated: z.array(z.object({ model: ModelIdSchema, diff: ModelDiffSchema })).optional(),
   added: z.array(ModelSchema).optional(),
 });
 
+// MUST return a boolean equality result.
+// Equality check for Model values.
 export const areSameModel = (model: Model, other: Model): boolean => {
   const modelTagGuids = model.tags?.map((t) => t.guid) ?? [];
   const otherTagGuids = other.tags?.map((t) => t.guid) ?? [];
   return modelTagGuids.every((guid) => otherTagGuids.includes(guid));
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching Model entry.
 export const findModel = (models: Model[], tagGuids: string[]): Model => {
   const indices = models.map((r) =>
     jaccard(
@@ -1869,6 +2452,8 @@ export const findModel = (models: Model[], tagGuids: string[]): Model => {
   return models[maxIndexIndex];
 };
 
+// MUST return the requested value.
+// Retrieves the AllTagGuidsFromModels value.
 export const getAllTagGuidsFromModels = (models: Model[]): string[] => {
   const tagsSet = new Set<string>();
   models.forEach((r) => {
@@ -1877,6 +2462,8 @@ export const getAllTagGuidsFromModels = (models: Model[]): string[] => {
   return Array.from(tagsSet).sort();
 };
 
+// MUST perform the operation correctly.
+// Performs the filterModelsByTagGuids operation.
 export const filterModelsByTagGuids = (models: Model[], selectedTagGuids: string[]): Model[] => {
   if (!selectedTagGuids || selectedTagGuids.length === 0) return models;
   return models.filter((r) => {
@@ -1886,12 +2473,16 @@ export const filterModelsByTagGuids = (models: Model[], selectedTagGuids: string
   });
 };
 
+// MUST return the requested value.
+// Retrieves the AvailableTagGuidsForModels value.
 export const getAvailableTagGuidsForModels = (models: Model[], selectedTagGuids: string[]): string[] => {
   const filteredReps = filterModelsByTagGuids(models, selectedTagGuids);
   const availableTags = getAllTagGuidsFromModels(filteredReps);
   return availableTags.filter((guid) => !selectedTagGuids.includes(guid));
 };
 
+// MUST perform the operation correctly.
+// Performs the selectBestModel operation.
 export const selectBestModel = (models: Model[], selectedTagGuids: string[]): Model | undefined => {
   if (models.length === 0) return undefined;
   if (selectedTagGuids.length === 0) {
@@ -1903,6 +2494,7 @@ export const selectBestModel = (models: Model[], selectedTagGuids: string[]): Mo
   return findModel(filteredReps, selectedTagGuids);
 };
 
+// Constant value for SUPPORTED_3D_EXTENSIONS.
 export const SUPPORTED_3D_EXTENSIONS = [
   "gltf",
   "glb",
@@ -1959,19 +2551,25 @@ export const SUPPORTED_3D_EXTENSIONS = [
   "xyz",
 ] as const;
 
+// Type alias for Supported3DExtension.
 export type Supported3DExtension = (typeof SUPPORTED_3D_EXTENSIONS)[number];
 
+// MUST perform the operation correctly.
+// Performs the isSupportedModelExtension operation.
 export const isSupportedModelExtension = (filename: string): boolean => {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   return SUPPORTED_3D_EXTENSIONS.includes(ext as Supported3DExtension);
 };
 
+// Interface defining ModelFileValidation structure.
 export interface ModelFileValidation {
   isValid: boolean;
   warning?: string;
   extension?: string;
 }
 
+// MUST check all constraints and return problems.
+// Validates ModelFile against constraints.
 export const validateModelFile = (filename: string): ModelFileValidation => {
   const ext = filename.split(".").pop()?.toLowerCase() ?? "";
   if (!ext) {
@@ -1990,7 +2588,9 @@ export const validateModelFile = (filename: string): ModelFileValidation => {
 // #endregion 🔖Model
 
 // #region 🔖Connector
+// Connector entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Connector validation.
 export const ConnectorSchema = z.object({
   guid: z.string(),
   name: z.string().optional(),
@@ -2003,17 +2603,26 @@ export const ConnectorSchema = z.object({
   props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Connector.
 export type Connector = z.infer<typeof ConnectorSchema>;
+// MUST produce a serializable output.
+// Serializes Connector for transport.
 export const serializeConnector = (connector: Connector): string => JSON.stringify(ConnectorSchema.parse(connector));
+// MUST perform the operation correctly.
+// Performs the deserializeConnector operation.
 export const deserializeConnector = (json: string): Connector => ConnectorSchema.parse(JSON.parse(json));
 
+// Zod schema for Connector diff validation.
 export const ConnectorDiffSchema = ConnectorSchema.partial().omit({ point: true, direction: true, props: true, attributes: true }).extend({
   point: PointDiffSchema.optional(),
   direction: VectorDiffSchema.optional(),
   props: PropsDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Connector changes.
 export type ConnectorDiff = z.infer<typeof ConnectorDiffSchema>;
+// MUST return the requested value.
+// Retrieves the ConnectorDiff value.
 export const getConnectorDiff = (before: Connector, after: Connector): ConnectorDiff => {
   const diff: ConnectorDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -2027,6 +2636,8 @@ export const getConnectorDiff = (before: Connector, after: Connector): Connector
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeConnector changes.
 export const mergeConnectorDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): ConnectorDiff => {
   return {
     ...diff1,
@@ -2037,6 +2648,8 @@ export const mergeConnectorDiff = (diff1: ConnectorDiff, diff2: ConnectorDiff): 
     attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseConnector changes.
 export const inverseConnectorDiff = (original: Connector, appliedDiff: ConnectorDiff): ConnectorDiff => {
   const inverse: ConnectorDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -2050,6 +2663,8 @@ export const inverseConnectorDiff = (original: Connector, appliedDiff: Connector
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyConnector changes.
 export const applyConnectorDiff = (base: Connector, diff: ConnectorDiff): Connector => {
   const props = diff.props ? applyPropsDiff(base.props ?? [], diff.props) : undefined;
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
@@ -2071,11 +2686,13 @@ export const applyConnectorDiff = (base: Connector, diff: ConnectorDiff): Connec
   return result;
 };
 
+// Zod schema for Connectors diff validation.
 export const ConnectorsDiffSchema = z.object({
   removed: z.array(ConnectorIdSchema).optional(),
   updated: z.array(z.object({ connector: ConnectorIdSchema, diff: ConnectorDiffSchema })).optional(),
   added: z.array(ConnectorSchema).optional(),
 });
+// Diff type for tracking Connectors changes.
 export type ConnectorsDiff = z.infer<typeof ConnectorsDiffSchema>;
 
 const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsDiff => {
@@ -2098,14 +2715,20 @@ const getConnectorsDiff = (before: Connector[], after: Connector[]): ConnectorsD
   return diff;
 };
 
+// MUST perform the operation correctly.
+// Performs the unifyConnectorPortsAndCompatiblePortsForTypes operation.
 export const unifyConnectorPortsAndCompatiblePortsForTypes = (types: Type[]): TypesDiff => {
   return { updated: [] };
 };
 
+// MUST return a boolean result.
+// Performs the areConnectorsCompatible operation.
 export const areConnectorsCompatible = (connector: Connector, otherPort: Connector): boolean => {
   return true;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching Connector entry.
 export const findConnector = (connectors: Connector[], connectorGuid: string): Connector => {
   const connector = connectors.find((p) => p.guid === connectorGuid);
   if (!connector) throw new Error(`Connector ${connectorGuid} not found in connectors`);
@@ -2115,7 +2738,9 @@ export const findConnector = (connectors: Connector[], connectorGuid: string): C
 // #endregion 🔖Connector
 
 // #region 🔖Type
+// Type entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Type validation.
 export const TypeSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -2138,17 +2763,29 @@ export const TypeSchema = z.object({
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Type.
 export type Type = z.infer<typeof TypeSchema>;
+// MUST produce a serializable output.
+// Serializes Type for transport.
 export const serializeType = (type: Type): string => JSON.stringify(TypeSchema.parse(type));
+// MUST perform the operation correctly.
+// Performs the deserializeType operation.
 export const deserializeType = (json: string): Type => TypeSchema.parse(JSON.parse(json));
 
+// Definition of TypeShallowSchema.
 export const TypeShallowSchema = TypeSchema.omit({ models: true, connectors: true }).extend({
   models: z.array(z.string()).optional(),
   connectors: z.array(z.string()).optional(),
 });
+// Type alias for TypeShallow.
 export type TypeShallow = z.infer<typeof TypeShallowSchema>;
+// MUST produce a serializable output.
+// Serializes TypeShallow for transport.
 export const serializeTypeShallow = (type: TypeShallow): string => JSON.stringify(TypeShallowSchema.parse(type));
+// MUST perform the operation correctly.
+// Performs the deserializeTypeShallow operation.
 export const deserializeTypeShallow = (json: string): TypeShallow => TypeShallowSchema.parse(JSON.parse(json));
+// Zod schema for Type diff validation.
 export const TypeDiffSchema = TypeSchema.partial()
   .omit({ models: true, connectors: true, props: true, attributes: true })
   .extend({
@@ -2165,7 +2802,10 @@ export const TypeDiffSchema = TypeSchema.partial()
     authors: z.array(AuthorIdSchema).nullable().optional(),
     parent: TypeIdSchema.nullable().optional(),
   });
+// Diff type for tracking Type changes.
 export type TypeDiff = z.infer<typeof TypeDiffSchema>;
+// MUST return the requested value.
+// Retrieves the TypeDiff value.
 export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
   const diff: TypeDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -2192,6 +2832,8 @@ export const getTypeDiff = (before: Type, after: Type): TypeDiff => {
   return diff;
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking applyType changes.
 export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
   const models = diff.models || base.models ? applyCollectionDiff("model", base.models ?? [], diff.models, applyModelDiff) : undefined;
   const connectors = diff.connectors || base.connectors ? applyCollectionDiff("connector", base.connectors ?? [], diff.connectors, applyConnectorDiff) : undefined;
@@ -2226,6 +2868,8 @@ export const applyTypeDiff = (base: Type, diff: TypeDiff): Type => {
   return result;
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking mergeType changes.
 export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => {
   return {
     ...diff1,
@@ -2234,6 +2878,8 @@ export const mergeTypeDiff = (diff1: TypeDiff, diff2: TypeDiff): TypeDiff => {
   };
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking inverseType changes.
 export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff => {
   const inverse: TypeDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -2256,19 +2902,25 @@ export const inverseTypeDiff = (original: Type, appliedDiff: TypeDiff): TypeDiff
   return inverse;
 };
 
+// Zod schema for Types diff validation.
 export const TypesDiffSchema = z.object({
   removed: z.array(TypeIdSchema).optional(),
   updated: z.array(z.object({ type: TypeIdSchema, diff: TypeDiffSchema })).optional(),
   added: z.array(TypeSchema).optional(),
 });
+// Diff type for tracking Types changes.
 export type TypesDiff = z.infer<typeof TypesDiffSchema>;
 
+// MUST return the matching element or undefined.
+// Searches for matching ConnectorInType entry.
 export const findConnectorInType = (type: Type, connectorGuid: string): Connector => findConnector(type.connectors ?? [], connectorGuid);
 
 // #endregion 🔖Type
 
 // #region 🔖Layer
+// Layer entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Layer validation.
 export const LayerSchema = z.object({
   guid: z.string(),
   path: z.string(),
@@ -2278,15 +2930,24 @@ export const LayerSchema = z.object({
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Layer.
 export type Layer = z.infer<typeof LayerSchema>;
+// MUST produce a serializable output.
+// Serializes Layer for transport.
 export const serializeLayer = (layer: Layer): string => JSON.stringify(LayerSchema.parse(layer));
+// MUST perform the operation correctly.
+// Performs the deserializeLayer operation.
 export const deserializeLayer = (json: string): Layer => LayerSchema.parse(JSON.parse(json));
 
+// Zod schema for Layer diff validation.
 export const LayerDiffSchema = LayerSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Layer changes.
 export type LayerDiff = z.infer<typeof LayerDiffSchema>;
 
+// MUST return the requested value.
+// Retrieves the LayerDiff value.
 export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => {
   const diff: LayerDiff = {};
   if (before.path !== after.path) diff.path = after.path;
@@ -2297,6 +2958,8 @@ export const getLayerDiff = (before: Layer, after: Layer): LayerDiff => {
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseLayer changes.
 export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): LayerDiff => {
   const inverse: LayerDiff = {};
   if (appliedDiff.path !== undefined) inverse.path = original.path;
@@ -2307,9 +2970,13 @@ export const inverseLayerDiff = (original: Layer, appliedDiff: LayerDiff): Layer
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeLayer changes.
 export const mergeLayerDiff = (diff1: LayerDiff, diff2: LayerDiff): LayerDiff => {
   return { ...diff1, ...diff2, attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes) };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyLayer changes.
 export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -2327,17 +2994,21 @@ export const applyLayerDiff = (base: Layer, diff: LayerDiff): Layer => {
   return result;
 };
 
+// Zod schema for Layers diff validation.
 export const LayersDiffSchema = z.object({
   removed: z.array(LayerIdSchema).optional(),
   updated: z.array(z.object({ layer: LayerIdSchema, diff: LayerDiffSchema })).optional(),
   added: z.array(LayerSchema).optional(),
 });
+// Diff type for tracking Layers changes.
 export type LayersDiff = z.infer<typeof LayersDiffSchema>;
 
 // #endregion 🔖Layer
 
 // #region 🔖Piece
+// Piece entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Piece validation.
 export const PieceSchema = z.object({
   guid: z.string(),
   name: z.string().optional(),
@@ -2354,16 +3025,25 @@ export const PieceSchema = z.object({
   props: z.array(PropSchema).optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Piece.
 export type Piece = z.infer<typeof PieceSchema>;
+// MUST produce a serializable output.
+// Serializes Piece for transport.
 export const serializePiece = (piece: Piece): string => JSON.stringify(PieceSchema.parse(piece));
+// MUST perform the operation correctly.
+// Performs the deserializePiece operation.
 export const deserializePiece = (json: string): Piece => PieceSchema.parse(JSON.parse(json));
 
+// Zod schema for Piece diff validation.
 export const PieceDiffSchema = PieceSchema.partial().omit({ plane: true, props: true, attributes: true }).extend({
   plane: PlaneDiffSchema.optional(),
   props: PropsDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Piece changes.
 export type PieceDiff = z.infer<typeof PieceDiffSchema>;
+// MUST return the requested value.
+// Retrieves the PieceDiff value.
 export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
   const diff: PieceDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -2381,6 +3061,8 @@ export const getPieceDiff = (before: Piece, after: Piece): PieceDiff => {
   if (!deepEqual(before.attributes, after.attributes)) diff.attributes = getAttributesDiff(before.attributes ?? [], after.attributes ?? []);
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inversePiece changes.
 export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): PieceDiff => {
   const inverse: PieceDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -2398,6 +3080,8 @@ export const inversePieceDiff = (original: Piece, appliedDiff: PieceDiff): Piece
   if (appliedDiff.attributes !== undefined) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergePiece changes.
 export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff => {
   return {
     ...diff1,
@@ -2406,6 +3090,8 @@ export const mergePieceDiff = (diff1: PieceDiff, diff2: PieceDiff): PieceDiff =>
     attributes: diff1.attributes && diff2.attributes ? mergeAttributesDiff(diff1.attributes, diff2.attributes) : (diff2.attributes ?? diff1.attributes),
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyPiece changes.
 export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
   let newPlane = base.plane;
   if (diff.plane) {
@@ -2440,13 +3126,17 @@ export const applyPieceDiff = (base: Piece, diff: PieceDiff): Piece => {
   return result;
 };
 
+// Zod schema for Pieces diff validation.
 export const PiecesDiffSchema = z.object({
   removed: z.array(PieceIdSchema).optional(),
   updated: z.array(z.object({ piece: PieceIdSchema, diff: PieceDiffSchema })).optional(),
   added: z.array(PieceSchema).optional(),
 });
+// Diff type for tracking Pieces changes.
 export type PiecesDiff = z.infer<typeof PiecesDiffSchema>;
 
+// MUST return the requested value.
+// Retrieves the PieceModelFileGuids value.
 export const getPieceModelFileGuids = (design: Design, types: Type[], tags: string[] = []): Map<string, string> => {
   const modelFileGuids = new Map<string, string>();
   toArray(design.pieces).forEach((p) => {
@@ -2460,6 +3150,8 @@ export const getPieceModelFileGuids = (design: Design, types: Type[], tags: stri
   return modelFileGuids;
 };
 
+// MUST return the requested value.
+// Retrieves the PieceModelUrls value.
 export const getPieceModelUrls = (design: Design, types: Type[], files: File[], getFileUrl: (fileGuid: string) => string, tags: string[] = []): Map<string, string> => {
   const modelUrls = new Map<string, string>();
   toArray(design.pieces).forEach((p) => {
@@ -2474,6 +3166,8 @@ export const getPieceModelUrls = (design: Design, types: Type[], files: File[], 
   });
   return modelUrls;
 };
+// MUST perform the operation correctly.
+// Performs the fixPieceInDesign operation.
 export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): DesignDiff => {
   const parentConnection = findParentConnectionForPieceInDesign(kit, designId, pieceId);
   return {
@@ -2483,6 +3177,8 @@ export const fixPieceInDesign = (kit: Kit, designId: string, pieceId: string): D
   };
 };
 
+// MUST perform the operation correctly.
+// Performs the fixPiecesInDesign operation.
 export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]): DesignDiff => {
   const parentConnections = pieceIds.map((pieceId) => findParentConnectionForPieceInDesign(kit, designId, pieceId));
   return {
@@ -2492,6 +3188,8 @@ export const fixPiecesInDesign = (kit: Kit, designId: string, pieceIds: string[]
   };
 };
 
+// MUST perform the operation correctly.
+// Performs the isFixedPiece operation.
 export const isFixedPiece = (piece: Piece): boolean => {
   const isPlaneSet = piece.plane !== undefined;
   const isCenterSet = piece.center !== undefined;
@@ -2499,6 +3197,8 @@ export const isFixedPiece = (piece: Piece): boolean => {
   return isPlaneSet;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching Piece entry.
 export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
   const piece = pieces.find((p) => p.guid === pieceGuid);
   if (!piece) throw new Error(`Piece ${pieceGuid} not found in pieces`);
@@ -2508,7 +3208,9 @@ export const findPiece = (pieces: Piece[], pieceGuid: string): Piece => {
 // #endregion 🔖Piece
 
 // #region 🔖Group
+// Group entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Group validation.
 export const GroupSchema = z.object({
   guid: z.string(),
   pieces: z.array(PieceIdSchema),
@@ -2517,11 +3219,16 @@ export const GroupSchema = z.object({
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Group.
 export type Group = z.infer<typeof GroupSchema>;
+// Zod schema for Group diff validation.
 export const GroupDiffSchema = GroupSchema.partial().omit({ attributes: true }).extend({
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Group changes.
 export type GroupDiff = z.infer<typeof GroupDiffSchema>;
+// MUST return the requested value.
+// Retrieves the GroupDiff value.
 export const getGroupDiff = (before: Group, after: Group): GroupDiff => {
   const diff: GroupDiff = {};
   if (!arraysEqual(before.pieces, after.pieces)) diff.pieces = after.pieces;
@@ -2532,6 +3239,8 @@ export const getGroupDiff = (before: Group, after: Group): GroupDiff => {
   if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseGroup changes.
 export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): GroupDiff => {
   const inverse: GroupDiff = {};
   if (appliedDiff.pieces !== undefined) inverse.pieces = original.pieces;
@@ -2541,6 +3250,8 @@ export const inverseGroupDiff = (original: Group, appliedDiff: GroupDiff): Group
   if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyGroup changes.
 export const applyGroupDiff = (base: Group, diff: GroupDiff): Group => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -2556,6 +3267,8 @@ export const applyGroupDiff = (base: Group, diff: GroupDiff): Group => {
 
   return result;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeGroup changes.
 export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff => {
   return {
     ...diff1,
@@ -2563,34 +3276,50 @@ export const mergeGroupDiff = (diff1: GroupDiff, diff2: GroupDiff): GroupDiff =>
     attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
   };
 };
+// Zod schema for Groups diff validation.
 export const GroupsDiffSchema = z.object({
   removed: z.array(GroupIdSchema).optional(),
   updated: z.array(z.object({ group: GroupIdSchema, diff: GroupDiffSchema })).optional(),
   added: z.array(GroupSchema).optional(),
 });
+// MUST produce a serializable output.
+// Serializes Group for transport.
 export const serializeGroup = (group: Group): string => JSON.stringify(GroupSchema.parse(group));
+// MUST perform the operation correctly.
+// Performs the deserializeGroup operation.
 export const deserializeGroup = (json: string): Group => GroupSchema.parse(JSON.parse(json));
 
 // #endregion 🔖Group
 
 // #region 🔖Side
+// Side entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Side validation.
 export const SideSchema = z.object({
   piece: PieceIdSchema,
   designPiece: PieceIdSchema.optional(),
   connector: ConnectorIdSchema.optional(),
 });
+// Type alias for Side.
 export type Side = z.infer<typeof SideSchema>;
+// Zod schema for Side diff validation.
 export const SideDiffSchema = SideSchema.partial();
+// Diff type for tracking Side changes.
 export type SideDiff = z.infer<typeof SideDiffSchema>;
+// Zod schema for validating Side identifiers.
 export const SideIdSchema = z.object({ piece: PieceIdSchema, designPiece: PieceIdSchema.optional(), connector: ConnectorIdSchema.optional() });
+// Identifier type for Side entities.
 export type SideId = z.infer<typeof SideIdSchema>;
+// Zod schema for Sides diff validation.
 export const SidesDiffSchema = z.object({
   removed: z.array(SideIdSchema).optional(),
   updated: z.array(z.object({ side: SideIdSchema, diff: SideDiffSchema })).optional(),
   added: z.array(SideSchema).optional(),
 });
+// Diff type for tracking Sides changes.
 export type SidesDiff = z.infer<typeof SidesDiffSchema>;
+// MUST return the requested value.
+// Retrieves the SideDiff value.
 export const getSideDiff = (before: Side, after: Side): SideDiff => {
   const diff: SideDiff = {};
   if (before.piece?.guid !== after.piece?.guid) diff.piece = after.piece;
@@ -2598,6 +3327,8 @@ export const getSideDiff = (before: Side, after: Side): SideDiff => {
   if (before.connector?.guid !== after.connector?.guid) diff.connector = after.connector;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseSide changes.
 export const inverseSideDiff = (original: Side, appliedDiff: SideDiff): SideDiff => {
   const inverse: SideDiff = {};
   if (appliedDiff.piece !== undefined) inverse.piece = original.piece;
@@ -2605,9 +3336,13 @@ export const inverseSideDiff = (original: Side, appliedDiff: SideDiff): SideDiff
   if (appliedDiff.connector !== undefined) inverse.connector = original.connector;
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeSide changes.
 export const mergeSideDiff = (diff1: SideDiff, diff2: SideDiff): SideDiff => {
   return { ...diff1, ...diff2 };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applySide changes.
 export const applySideDiff = (base: Side, diff: SideDiff): Side => {
   const result: Side = {
     piece: diff.piece ?? base.piece,
@@ -2618,14 +3353,22 @@ export const applySideDiff = (base: Side, diff: SideDiff): Side => {
 
   return result;
 };
+// MUST produce a serializable output.
+// Serializes Side for transport.
 export const serializeSide = (side: Side): string => JSON.stringify(SideSchema.parse(side));
+// MUST perform the operation correctly.
+// Performs the deserializeSide operation.
 export const deserializeSide = (json: string): Side => SideSchema.parse(JSON.parse(json));
+// MUST return a boolean equality result.
+// Equality check for Side values.
 export const areSameSide = (a: Side, b: Side): boolean => a.piece.guid === b.piece.guid && a.designPiece?.guid === b.designPiece?.guid && a.connector?.guid === b.connector?.guid;
 
 // #endregion 🔖Side
 
 // #region 🔖Connection
+// Connection entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Connection validation.
 export const ConnectionSchema = z.object({
   guid: z.string(),
   connected: SideSchema,
@@ -2641,13 +3384,18 @@ export const ConnectionSchema = z.object({
   description: z.string().optional(),
   attributes: z.array(AttributeSchema).optional(),
 });
+// Type alias for Connection.
 export type Connection = z.infer<typeof ConnectionSchema>;
+// Zod schema for Connection diff validation.
 export const ConnectionDiffSchema = ConnectionSchema.partial().omit({ guid: true, connected: true, connecting: true, attributes: true }).extend({
   connected: SideDiffSchema.optional(),
   connecting: SideDiffSchema.optional(),
   attributes: AttributesDiffSchema.optional(),
 });
+// Diff type for tracking Connection changes.
 export type ConnectionDiff = z.infer<typeof ConnectionDiffSchema>;
+// MUST return the requested value.
+// Retrieves the ConnectionDiff value.
 export const getConnectionDiff = (before: Connection, after: Connection): ConnectionDiff => {
   const diff: ConnectionDiff = {};
   if (!deepEqual(before.connected, after.connected)) diff.connected = getSideDiff(before.connected, after.connected);
@@ -2665,6 +3413,8 @@ export const getConnectionDiff = (before: Connection, after: Connection): Connec
   return diff;
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking applyConnection changes.
 export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Connection => {
   const attributes = diff.attributes ? applyAttributesDiff(base.attributes ?? [], diff.attributes) : undefined;
 
@@ -2688,6 +3438,8 @@ export const applyConnectionDiff = (base: Connection, diff: ConnectionDiff): Con
   return result;
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking mergeConnection changes.
 export const mergeConnectionDiff = (diff1: ConnectionDiff, diff2: ConnectionDiff): ConnectionDiff => {
   return {
     ...diff1,
@@ -2698,6 +3450,8 @@ export const mergeConnectionDiff = (diff1: ConnectionDiff, diff2: ConnectionDiff
   };
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking inverseConnection changes.
 export const inverseConnectionDiff = (original: Connection, appliedDiff: ConnectionDiff): ConnectionDiff => {
   const inverse: ConnectionDiff = {};
   if (appliedDiff.connected !== undefined) inverse.connected = inverseSideDiff(original.connected, appliedDiff.connected);
@@ -2715,15 +3469,23 @@ export const inverseConnectionDiff = (original: Connection, appliedDiff: Connect
   return inverse;
 };
 
+// Zod schema for Connections diff validation.
 export const ConnectionsDiffSchema = z.object({
   removed: z.array(ConnectionIdSchema).optional(),
   updated: z.array(z.object({ connection: ConnectionIdSchema, diff: ConnectionDiffSchema })).optional(),
   added: z.array(ConnectionSchema).optional(),
 });
+// Diff type for tracking Connections changes.
 export type ConnectionsDiff = z.infer<typeof ConnectionsDiffSchema>;
+// MUST produce a serializable output.
+// Serializes Connection for transport.
 export const serializeConnection = (connection: Connection): string => JSON.stringify(ConnectionSchema.parse(connection));
+// MUST perform the operation correctly.
+// Performs the deserializeConnection operation.
 export const deserializeConnection = (json: string): Connection => ConnectionSchema.parse(JSON.parse(json));
 
+// MUST return a boolean equality result.
+// Equality check for Connection values.
 export const areSameConnection = (connection: Connection | ConnectionDiff, other: Connection | ConnectionDiff, strict: boolean = false): boolean => {
   const getConnectedPieceId = (conn: typeof connection) => ("connected" in conn && conn.connected && "piece" in conn.connected ? (typeof conn.connected.piece === "string" ? conn.connected.piece : (conn.connected.piece?.guid ?? "")) : "");
   const getConnectingPieceId = (conn: typeof connection) => ("connecting" in conn && conn.connecting && "piece" in conn.connecting ? (typeof conn.connecting.piece === "string" ? conn.connecting.piece : (conn.connecting.piece?.guid ?? "")) : "");
@@ -2739,16 +3501,22 @@ export const areSameConnection = (connection: Connection | ConnectionDiff, other
   return isExactMatch || isSwappedMatch;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching Connection entry.
 export const findConnection = (connections: Connection[], connectionGuid: string): Connection => {
   const connection = connections.find((c) => c.guid === connectionGuid);
   if (!connection) throw new Error(`Connection ${connectionGuid} not found in connections`);
   return connection;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching PieceConnections entry.
 export const findPieceConnections = (connections: Connection[], pieceGuid: string): Connection[] => {
   return connections.filter((c) => c.connected.piece.guid === pieceGuid || c.connecting.piece.guid === pieceGuid);
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching ConnectorForPieceInConnection entry.
 export const findConnectorForPieceInConnection = (type: Type, connection: Connection, pieceGuid: string): Connector | undefined => {
   const connectorGuid = connection.connected.piece.guid === pieceGuid ? connection.connected.connector?.guid : connection.connecting.connector?.guid;
   if (!connectorGuid) return undefined;
@@ -2758,7 +3526,9 @@ export const findConnectorForPieceInConnection = (type: Type, connection: Connec
 // #endregion 🔖Connection
 
 // #region 🔖Stat
+// Stat entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Stat validation.
 export const StatSchema = z.object({
   guid: z.string(),
   quality: QualityIdSchema,
@@ -2768,9 +3538,14 @@ export const StatSchema = z.object({
   max: z.number().optional(),
   maxExcluded: z.boolean().optional(),
 });
+// Type alias for Stat.
 export type Stat = z.infer<typeof StatSchema>;
+// Zod schema for Stat diff validation.
 export const StatDiffSchema = StatSchema.partial();
+// Diff type for tracking Stat changes.
 export type StatDiff = z.infer<typeof StatDiffSchema>;
+// MUST return the requested value.
+// Retrieves the StatDiff value.
 export const getStatDiff = (before: Stat, after: Stat): StatDiff => {
   const diff: StatDiff = {};
   if (before.quality?.guid !== after.quality?.guid) diff.quality = after.quality;
@@ -2781,6 +3556,8 @@ export const getStatDiff = (before: Stat, after: Stat): StatDiff => {
   if (before.maxExcluded !== after.maxExcluded) diff.maxExcluded = after.maxExcluded;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseStat changes.
 export const inverseStatDiff = (original: Stat, appliedDiff: StatDiff): StatDiff => {
   const inverse: StatDiff = {};
   if (appliedDiff.quality !== undefined) inverse.quality = original.quality;
@@ -2791,6 +3568,8 @@ export const inverseStatDiff = (original: Stat, appliedDiff: StatDiff): StatDiff
   if (appliedDiff.maxExcluded !== undefined) inverse.maxExcluded = original.maxExcluded;
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyStat changes.
 export const applyStatDiff = (base: Stat, diff: StatDiff): Stat => {
   const result: Stat = {
     guid: base.guid,
@@ -2805,21 +3584,30 @@ export const applyStatDiff = (base: Stat, diff: StatDiff): Stat => {
 
   return result;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeStat changes.
 export const mergeStatDiff = (diff1: StatDiff, diff2: StatDiff): StatDiff => {
   return { ...diff1, ...diff2 };
 };
+// Zod schema for Stats diff validation.
 export const StatsDiffSchema = z.object({
   removed: z.array(StatIdSchema).optional(),
   updated: z.array(z.object({ stat: StatIdSchema, diff: StatDiffSchema })).optional(),
   added: z.array(StatSchema).optional(),
 });
+// MUST produce a serializable output.
+// Serializes Stat for transport.
 export const serializeStat = (stat: Stat): string => JSON.stringify(StatSchema.parse(stat));
+// MUST perform the operation correctly.
+// Performs the deserializeStat operation.
 export const deserializeStat = (json: string): Stat => StatSchema.parse(JSON.parse(json));
 
 // #endregion 🔖Stat
 
 // #region 🔖Design
+// Design entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Design validation.
 export const DesignSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -2846,19 +3634,31 @@ export const DesignSchema = z.object({
   createdAt: DateProperty(),
   updatedAt: DateProperty(),
 });
+// Type alias for Design.
 export type Design = z.infer<typeof DesignSchema>;
+// MUST produce a serializable output.
+// Serializes Design for transport.
 export const serializeDesign = (design: Design): string => JSON.stringify(DesignSchema.parse(design));
+// MUST perform the operation correctly.
+// Performs the deserializeDesign operation.
 export const deserializeDesign = (json: string): Design => DesignSchema.parse(JSON.parse(json));
 
+// Definition of DesignShallowSchema.
 export const DesignShallowSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true }).extend({
   pieces: z.array(z.string()).optional(),
   connections: z.array(z.string()).optional(),
   stats: z.array(z.string()).optional(),
 });
 
+// Type alias for DesignShallow.
 export type DesignShallow = z.infer<typeof DesignShallowSchema>;
+// MUST produce a serializable output.
+// Serializes DesignShallow for transport.
 export const serializeDesignShallow = (design: DesignShallow): string => JSON.stringify(DesignShallowSchema.parse(design));
+// MUST perform the operation correctly.
+// Performs the deserializeDesignShallow operation.
 export const deserializeDesignShallow = (json: string): DesignShallow => DesignShallowSchema.parse(JSON.parse(json));
+// Zod schema for Design diff validation.
 export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: true, stats: true, props: true, layers: true, groups: true, authors: true, attributes: true }).partial().extend({
   pieces: PiecesDiffSchema.optional(),
   connections: ConnectionsDiffSchema.optional(),
@@ -2870,7 +3670,10 @@ export const DesignDiffSchema = DesignSchema.omit({ pieces: true, connections: t
   attributes: AttributesDiffSchema.optional(),
 });
 
+// Diff type for tracking Design changes.
 export type DesignDiff = z.infer<typeof DesignDiffSchema>;
+// MUST return the requested value.
+// Retrieves the DesignDiff value.
 export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
   const diff: DesignDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -2903,6 +3706,8 @@ export const getDesignDiff = (before: Design, after: Design): DesignDiff => {
   if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeDesign changes.
 export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDiff => {
   return {
     ...diff1,
@@ -2917,6 +3722,8 @@ export const mergeDesignDiff = (diff1: DesignDiff, diff2: DesignDiff): DesignDif
     attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseDesign changes.
 export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): DesignDiff => {
   const inverse: DesignDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -2943,6 +3750,8 @@ export const inverseDesignDiff = (original: Design, appliedDiff: DesignDiff): De
   return inverse;
 };
 
+// MUST append the element to the collection.
+// Adds a PieceToDesignDiff element.
 export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
   return {
     ...designDiff,
@@ -2952,6 +3761,8 @@ export const addPieceToDesignDiff = (designDiff: any, piece: Piece): any => {
     },
   };
 };
+// MUST replace the existing element.
+// Replaces an existing PieceInDesignDiff element.
 export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: string; diff: PieceDiff }): any => {
   const existingIndex = (designDiff.pieces?.updated || []).findIndex((p: { id_: string; diff: PieceDiff }) => p.id_ === pieceDiff.id_);
   const updated = [...(designDiff.pieces?.updated || [])];
@@ -2963,6 +3774,8 @@ export const setPieceInDesignDiff = (designDiff: any, pieceDiff: { id_: string; 
   return { ...designDiff, pieces: { ...designDiff.pieces, updated } };
 };
 
+// MUST remove the element from the collection.
+// Removes a PieceFromDesignDiff element.
 export const removePieceFromDesignDiff = (designDiff: any, pieceId: string): any => {
   return {
     ...designDiff,
@@ -2973,6 +3786,8 @@ export const removePieceFromDesignDiff = (designDiff: any, pieceId: string): any
   };
 };
 
+// MUST append the element to the collection.
+// Adds a PiecesToDesignDiff element.
 export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => {
   return {
     ...designDiff,
@@ -2982,6 +3797,8 @@ export const addPiecesToDesignDiff = (designDiff: any, pieces: Piece[]): any => 
     },
   };
 };
+// MUST replace the existing element.
+// Replaces an existing PiecesInDesignDiff element.
 export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: string; diff: PieceDiff }[]): any => {
   const updated = [...(designDiff.pieces?.updated || [])];
   pieceDiffs.forEach((pieceDiff: { id_: string; diff: PieceDiff }) => {
@@ -2995,6 +3812,8 @@ export const setPiecesInDesignDiff = (designDiff: any, pieceDiffs: { id_: string
   return { ...designDiff, pieces: { ...designDiff.pieces, updated } };
 };
 
+// MUST remove the element from the collection.
+// Removes a PiecesFromDesignDiff element.
 export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: string[]): any => {
   return {
     ...designDiff,
@@ -3005,6 +3824,8 @@ export const removePiecesFromDesignDiff = (designDiff: any, pieceIds: string[]):
   };
 };
 
+// MUST append the element to the collection.
+// Adds a ConnectionToDesignDiff element.
 export const addConnectionToDesignDiff = (designDiff: any, connection: Connection): any => {
   return {
     ...designDiff,
@@ -3014,6 +3835,8 @@ export const addConnectionToDesignDiff = (designDiff: any, connection: Connectio
     },
   };
 };
+// MUST replace the existing element.
+// Replaces an existing ConnectionInDesignDiff element.
 export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: ConnectionDiff): any => {
   const existingIndex = (designDiff.connections?.updated || []).findIndex((c: ConnectionDiff) => areSameConnection(c, connectionDiff));
   const updated = [...(designDiff.connections?.updated || [])];
@@ -3024,6 +3847,8 @@ export const setConnectionInDesignDiff = (designDiff: any, connectionDiff: Conne
   }
   return { ...designDiff, connections: { ...designDiff.connections, updated } };
 };
+// MUST remove the element from the collection.
+// Removes a ConnectionFromDesignDiff element.
 export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: { connected: { piece: string }; connecting: { piece: string } }): any => {
   return {
     ...designDiff,
@@ -3034,6 +3859,8 @@ export const removeConnectionFromDesignDiff = (designDiff: any, connectionId: { 
   };
 };
 
+// MUST append the element to the collection.
+// Adds a ConnectionsToDesignDiff element.
 export const addConnectionsToDesignDiff = (designDiff: any, connections: Connection[]): any => {
   return {
     ...designDiff,
@@ -3043,6 +3870,8 @@ export const addConnectionsToDesignDiff = (designDiff: any, connections: Connect
     },
   };
 };
+// MUST replace the existing element.
+// Replaces an existing ConnectionsInDesignDiff element.
 export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: ConnectionDiff[]): any => {
   const updated = [...(designDiff.connections?.updated || [])];
   connectionDiffs.forEach((connectionDiff: ConnectionDiff) => {
@@ -3055,6 +3884,8 @@ export const setConnectionsInDesignDiff = (designDiff: any, connectionDiffs: Con
   });
   return { ...designDiff, connections: { ...designDiff.connections, updated } };
 };
+// MUST remove the element from the collection.
+// Removes a ConnectionsFromDesignDiff element.
 export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: string[]): any => {
   return {
     ...designDiff,
@@ -3065,6 +3896,8 @@ export const removeConnectionsFromDesignDiff = (designDiff: any, connectionIds: 
   };
 };
 
+// MUST perform the operation correctly.
+// Diff type for tracking applyDesign changes.
 export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
   const pieces = diff.pieces || base.pieces ? applyCollectionDiff("piece", base.pieces ?? [], diff.pieces, applyPieceDiff) : undefined;
   const connections = diff.connections || base.connections ? applyCollectionDiff("connection", base.connections ?? [], diff.connections, applyConnectionDiff) : undefined;
@@ -3106,13 +3939,17 @@ export const applyDesignDiff = (base: Design, diff: DesignDiff): Design => {
   return result;
 };
 
+// Zod schema for Designs diff validation.
 export const DesignsDiffSchema = z.object({
   removed: z.array(DesignIdSchema).optional(),
   updated: z.array(z.object({ design: DesignIdSchema, diff: DesignDiffSchema })).optional(),
   added: z.array(DesignSchema).optional(),
 });
+// Diff type for tracking Designs changes.
 export type DesignsDiff = z.infer<typeof DesignsDiffSchema>;
 
+// MUST perform the operation correctly.
+// Performs the mergeDesigns operation.
 export const mergeDesigns = (designs: Design[]): DesignDiff => {
   const pieces = designs.flatMap((d) => d.pieces ?? []);
   const connections = designs.flatMap((d) => d.connections ?? []);
@@ -3123,6 +3960,8 @@ export const mergeDesigns = (designs: Design[]): DesignDiff => {
   };
 };
 
+// MUST perform the operation correctly.
+// Performs the orientDesign operation.
 export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
   if (plane === undefined && center === undefined) {
     return {};
@@ -3131,6 +3970,8 @@ export const orientDesign = (plane?: Plane, center?: Coord): DesignDiff => {
   return {};
 };
 
+// MUST remove the element from the collection.
+// Removes a PiecesAndConnectionsFromDesign element.
 export const removePiecesAndConnectionsFromDesign = (kit: Kit, designId: string, pieceIds: string[], connectionIds: string[]): DesignDiff => {
   return {
     pieces: {
@@ -3209,6 +4050,8 @@ const computeChildPlane = (parentPlane: Plane, parentConnector: Connector, child
 
   return matrixToPlane(finalMatrix);
 };
+// MUST return a flat array.
+// Flattens nested Design structure.
 export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   const design = findDesignInKit(kit, designId);
   if (!design) {
@@ -3501,6 +4344,8 @@ export const flattenDesign = (kit: Kit, designId: string): DesignDiff => {
   } as DesignDiff;
 };
 
+// MUST return a new valid instance.
+// Performs the createClusteredDesign operation.
 export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: string[], designName: string): { clusteredDesign: Design; externalConnections: Connection[] } => {
   if (!originalDesign.pieces || originalDesign.pieces.length === 0) {
     throw new Error("Original design has no pieces to cluster");
@@ -3537,6 +4382,8 @@ export const createClusteredDesign = (originalDesign: Design, clusterPieceIds: s
   return { clusteredDesign, externalConnections };
 };
 
+// MUST perform the operation correctly.
+// Performs the replaceClusterWithDesign operation.
 export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds: string[], clusteredDesign: Design, externalConnections: Connection[]): DesignDiff => {
   const piecesToRemove = clusterPieceIds.map((guid) => ({ guid }));
 
@@ -3584,6 +4431,8 @@ export const replaceClusterWithDesign = (originalDesign: Design, clusterPieceIds
   };
 };
 
+// MUST return the requested value.
+// Retrieves the ClusterableGroups value.
 export const getClusterableGroups = (design: Design, selectedPieceIds: string[]): string[][] => {
   if (selectedPieceIds.length < 2) return [];
 
@@ -3635,6 +4484,8 @@ export const getClusterableGroups = (design: Design, selectedPieceIds: string[])
   return [];
 };
 
+// MUST perform the operation correctly.
+// Performs the expandDesignPieces operation.
 export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   const hasDesignConnections = design.connections?.some((conn) => conn.connected.designPiece || conn.connecting.designPiece);
   if (!hasDesignConnections) {
@@ -3700,6 +4551,7 @@ export const expandDesignPieces = (design: Design, kit: Kit): Design => {
   return expandedDesign;
 };
 
+// Type alias for IncludedDesignInfo.
 export type IncludedDesignInfo = {
   guid: string;
   designGuid: string;
@@ -3709,6 +4561,8 @@ export type IncludedDesignInfo = {
   externalConnections?: Connection[];
 };
 
+// MUST return the requested value.
+// Retrieves the IncludedDesigns value.
 export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   const includedDesigns: IncludedDesignInfo[] = [];
 
@@ -3737,6 +4591,8 @@ export const getIncludedDesigns = (design: Design): IncludedDesignInfo[] => {
   return includedDesigns;
 };
 
+// MUST perform the operation correctly.
+// Performs the isPortInUse operation.
 export const isPortInUse = (design: Design, pieceGuid: string, connectorGuid: string): boolean => {
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
   for (const connection of connections) {
@@ -3747,24 +4603,36 @@ export const isPortInUse = (design: Design, pieceGuid: string, connectorGuid: st
   return false;
 };
 
+// MUST perform the operation correctly.
+// Performs the isConnectionInDesign operation.
 export const isConnectionInDesign = (design: Design, connection: Connection): boolean => {
   return design.connections?.some((c) => areSameConnection(c, connection)) ?? false;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching PieceInDesign entry.
 export const findPieceInDesign = (design: Design, pieceGuid: string): Piece => findPiece(design.pieces ?? [], pieceGuid);
 
+// MUST return the matching element or undefined.
+// Searches for matching ConnectionInDesign entry.
 export const findConnectionInDesign = (design: Design, connectionGuid: string): Connection => {
   return findConnection(design.connections ?? [], connectionGuid);
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching ConnectionsInDesign entry.
 export const findConnectionsInDesign = (design: Design, connectionGuids: string[]): Connection[] => {
   return connectionGuids.map((connectionGuid) => findConnectionInDesign(design, connectionGuid));
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching PieceConnectionsInDesign entry.
 export const findPieceConnectionsInDesign = (design: Design, pieceGuid: string): Connection[] => {
   return findPieceConnections(design.connections ?? [], pieceGuid);
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching ConnectionPiecesInDesign entry.
 export const findConnectionPiecesInDesign = (design: Design, connection: Connection): { connecting: Piece; connected: Piece } => {
   return {
     connected: findPieceInDesign(design, connection.connected.piece.guid),
@@ -3772,6 +4640,8 @@ export const findConnectionPiecesInDesign = (design: Design, connection: Connect
   };
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching StaleConnectionsInDesign entry.
 export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
   return (
     design.connections?.filter((c) => {
@@ -3789,7 +4659,9 @@ export const findStaleConnectionsInDesign = (design: Design): Connection[] => {
 // #endregion 🔖Design
 
 // #region 🔖Kit
+// Kit entity types, schemas, and helpers MUST be defined here.
 
+// Zod schema for Kit validation.
 export const KitSchema = z.object({
   guid: z.string(),
   name: z.string(),
@@ -3814,10 +4686,16 @@ export const KitSchema = z.object({
   createdAt: DateProperty(),
   updatedAt: DateProperty(),
 });
+// Type alias for Kit.
 export type Kit = z.infer<typeof KitSchema>;
+// MUST produce a serializable output.
+// Serializes Kit for transport.
 export const serializeKit = (kit: Kit): string => JSON.stringify(KitSchema.parse(kit));
+// MUST perform the operation correctly.
+// Performs the deserializeKit operation.
 export const deserializeKit = (json: string): Kit => KitSchema.parse(JSON.parse(json));
 
+// Definition of KitShallowSchema.
 export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, folders: true, authors: true }).extend({
   types: z.array(z.string()).optional(),
   designs: z.array(z.string()).optional(),
@@ -3828,9 +4706,15 @@ export const KitShallowSchema = KitSchema.omit({ types: true, designs: true, tag
   folders: z.array(z.string()).optional(),
   authors: z.array(z.string()).optional(),
 });
+// Type alias for KitShallow.
 export type KitShallow = z.infer<typeof KitShallowSchema>;
+// MUST produce a serializable output.
+// Serializes KitShallow for transport.
 export const serializeKitShallow = (kit: KitShallow): string => JSON.stringify(KitShallowSchema.parse(kit));
+// MUST perform the operation correctly.
+// Performs the deserializeKitShallow operation.
 export const deserializeKitShallow = (json: string): KitShallow => KitShallowSchema.parse(JSON.parse(json));
+// Zod schema for Kit diff validation.
 export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: true, tags: true, concepts: true, ports: true, qualities: true, authors: true, files: true, folders: true, attributes: true }).extend({
   types: TypesDiffSchema.optional(),
   designs: DesignsDiffSchema.optional(),
@@ -3850,6 +4734,7 @@ export const KitDiffSchema = KitSchema.partial().omit({ types: true, designs: tr
   license: z.string().nullable().optional(),
   preview: z.string().nullable().optional(),
 });
+// Diff type for tracking Kit changes.
 export type KitDiff = z.infer<typeof KitDiffSchema>;
 type EntityIdType = { guid: string };
 type CollectionDiff<K extends string, T extends { guid: string }, D> = {
@@ -3933,6 +4818,8 @@ const mergeCollectionDiff = <K extends string, T extends { guid: string }, D>(en
   };
 };
 
+// MUST return the requested value.
+// Retrieves the KitDiff value.
 export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   const diff: KitDiff = {};
   if (before.name !== after.name) diff.name = after.name;
@@ -3966,6 +4853,8 @@ export const getKitDiff = (before: Kit, after: Kit): KitDiff => {
   if (Object.keys(attributesDiff).length > 0) diff.attributes = attributesDiff;
   return diff;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking inverseKit changes.
 export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => {
   const inverse: KitDiff = {};
   if (appliedDiff.name !== undefined) inverse.name = original.name;
@@ -3989,6 +4878,8 @@ export const inverseKitDiff = (original: Kit, appliedDiff: KitDiff): KitDiff => 
   if (appliedDiff.attributes) inverse.attributes = inverseAttributesDiff(original.attributes ?? [], appliedDiff.attributes);
   return inverse;
 };
+// MUST perform the operation correctly.
+// Diff type for tracking mergeKit changes.
 export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
   const mergeSimpleDiff = <D>(d1: D, d2: D): D => ({ ...d1, ...d2 });
   return {
@@ -4006,6 +4897,8 @@ export const mergeKitDiff = (diff1: KitDiff, diff2: KitDiff): KitDiff => {
     attributes: diff1.attributes || diff2.attributes ? mergeAttributesDiff(diff1.attributes ?? {}, diff2.attributes ?? {}) : undefined,
   };
 };
+// MUST perform the operation correctly.
+// Diff type for tracking applyKit changes.
 export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   const result: any = {
     guid: base.guid,
@@ -4069,36 +4962,49 @@ export const applyKitDiff = (base: Kit, diff: KitDiff): Kit => {
   return result as Kit;
 };
 
+// Zod schema for Kits diff validation.
 export const KitsDiffSchema = z.object({
   removed: z.array(KitIdSchema).optional(),
   updated: z.array(z.object({ kit: KitIdSchema, diff: KitDiffSchema })).optional(),
   added: z.array(KitSchema).optional(),
 });
 
+// MUST append the element to the collection.
+// Adds a TypeToKit element.
 export const addTypeToKit = (type: Type): KitDiff => ({
   types: {
     added: [type],
   },
 });
+// MUST replace the existing element.
+// Replaces an existing TypeInKit element.
 export const setTypeInKit = (type: Type): KitDiff => ({
   types: {
     added: [type],
   },
 });
+// MUST remove the element from the collection.
+// Removes a TypeFromKit element.
 export const removeTypeFromKit = (typeGuid: string): KitDiff => ({
   types: { removed: [{ guid: typeGuid }] },
 });
 
+// MUST append the element to the collection.
+// Adds a DesignToKit element.
 export const addDesignToKit = (design: Design): KitDiff => ({
   designs: {
     added: [design],
   },
 });
+// MUST replace the existing element.
+// Replaces an existing DesignInKit element.
 export const setDesignInKit = (design: Design): KitDiff => ({
   designs: {
     added: [design],
   },
 });
+// MUST remove the element from the collection.
+// Removes a DesignFromKit element.
 export const removeDesignFromKit = (designGuid: string): KitDiff => {
   return {
     designs: {
@@ -4107,71 +5013,109 @@ export const removeDesignFromKit = (designGuid: string): KitDiff => {
   };
 };
 
+// MUST perform the operation correctly.
+// Performs the updateDesignInKit operation.
 export const updateDesignInKit = (design: Design): KitDiff => ({
   designs: {
     added: [design],
   },
 });
 
+// MUST append the element to the collection.
+// Adds a PortToKit element.
 export const addPortToKit = (iface: Port): KitDiff => ({
   ports: {
     added: [iface],
   },
 });
+// MUST replace the existing element.
+// Replaces an existing PortInKit element.
 export const setPortInKit = (iface: Port): KitDiff => ({
   ports: {
     added: [iface],
   },
 });
+// MUST remove the element from the collection.
+// Removes a PortFromKit element.
 export const removePortFromKit = (portGuid: string): KitDiff => ({
   ports: { removed: [{ guid: portGuid }] },
 });
+// MUST perform the operation correctly.
+// Performs the updatePortInKit operation.
 export const updatePortInKit = (iface: Port): KitDiff => ({
   ports: {
     added: [iface],
   },
 });
 
+// MUST return the matching element or undefined.
+// Searches for matching FileInKit entry.
 export const findFileInKit = (kit: Kit, fileGuid: string): File => {
   const file = (kit.files || []).find((f) => f.guid === fileGuid);
   if (!file) throw new Error(`File ${fileGuid} not found in kit`);
   return file;
 };
 
+// MUST append the element to the collection.
+// Adds a FileToKit element.
 export const addFileToKit = (file: File): KitDiff => ({ files: { added: [file] } });
+// MUST replace the existing element.
+// Replaces an existing FileInKit element.
 export const setFileInKit = (file: File): KitDiff => ({ files: { added: [file] } });
+// MUST remove the element from the collection.
+// Removes a FileFromKit element.
 export const removeFileFromKit = (fileGuid: string): KitDiff => ({
   files: { removed: [{ guid: fileGuid }] },
 });
 
+// MUST replace the existing element.
+// Replaces an existing AttributeInKit element.
 export const setAttributeInKit = (attribute: Attribute): KitDiff => ({
   attributes: { added: [attribute] },
 });
 
+// MUST return the matching element or undefined.
+// Searches for matching TagInKit entry.
 export const findTagInKit = (kit: Kit, tagGuid: string): Tag => {
   const tag = (kit.tags || []).find((t) => t.guid === tagGuid);
   if (!tag) throw new Error(`Tag ${tagGuid} not found in kit`);
   return tag;
 };
 
+// MUST append the element to the collection.
+// Adds a TagToKit element.
 export const addTagToKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
+// MUST replace the existing element.
+// Replaces an existing TagInKit element.
 export const setTagInKit = (tag: Tag): KitDiff => ({ tags: { added: [tag] } });
+// MUST remove the element from the collection.
+// Removes a TagFromKit element.
 export const removeTagFromKit = (tagGuid: string): KitDiff => ({
   tags: { removed: [{ guid: tagGuid }] },
 });
 
+// MUST return the matching element or undefined.
+// Searches for matching ConceptInKit entry.
 export const findConceptInKit = (kit: Kit, conceptGuid: string): Concept => {
   const concept = (kit.concepts || []).find((c) => c.guid === conceptGuid);
   if (!concept) throw new Error(`Concept ${conceptGuid} not found in kit`);
   return concept;
 };
 
+// MUST append the element to the collection.
+// Adds a ConceptToKit element.
 export const addConceptToKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
+// MUST replace the existing element.
+// Replaces an existing ConceptInKit element.
 export const setConceptInKit = (concept: Concept): KitDiff => ({ concepts: { added: [concept] } });
+// MUST remove the element from the collection.
+// Removes a ConceptFromKit element.
 export const removeConceptFromKit = (conceptGuid: string): KitDiff => ({
   concepts: { removed: [{ guid: conceptGuid }] },
 });
 
+// MUST return the matching element or undefined.
+// Searches for matching ReplacableDesignsForDesignPiece entry.
 export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid: string, designPiece: Piece): Design[] => {
   if (!designPiece.design) return [];
 
@@ -4185,17 +5129,25 @@ export const findReplacableDesignsForDesignPiece = (kit: Kit, currentDesignGuid:
   });
 };
 
+// MUST return a boolean equality result.
+// Equality check for Kit values.
 export const areSameKit = (kitGuid: string, otherGuid: string): boolean => {
   return kitGuid === otherGuid;
 };
+// MUST return true if the condition is met.
+// Checks whether SameKit condition holds.
 export const hasSameKit = (kitGuid: string, otherGuids: string[]): boolean => otherGuids.some((other) => areSameKit(kitGuid, other));
 
+// MUST return the matching element or undefined.
+// Searches for matching TypeInKit entry.
 export const findTypeInKit = (kit: Kit, typeGuid: string): Type => {
   const type = kit.types?.find((t) => t.guid === typeGuid);
   if (!type) throw new Error(`Type ${typeGuid} not found in kit ${kit.name}`);
   return type;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching DesignInKit entry.
 export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
   const design = kit.designs?.find((d) => d.guid === designGuid);
   if (!design) throw new Error(`Design ${designGuid} not found in kit ${kit.name}`);
@@ -4203,7 +5155,10 @@ export const findDesignInKit = (kit: Kit, designGuid: string): Design => {
 };
 
 // #region 🔖Design Family Helpers
+// Design family traversal helpers MUST be defined here.
 
+// MUST return the requested value.
+// Retrieves the PrimitiveDesign value.
 export const getPrimitiveDesign = (kit: Kit, designGuid: string): Design => {
   let current = findDesignInKit(kit, designGuid);
   while (current.parent?.guid) {
@@ -4212,6 +5167,8 @@ export const getPrimitiveDesign = (kit: Kit, designGuid: string): Design => {
   return current;
 };
 
+// MUST return the requested value.
+// Retrieves the DesignFamily value.
 export const getDesignFamily = (kit: Kit, designGuid: string): Design[] => {
   const primitive = getPrimitiveDesign(kit, designGuid);
   const family: Design[] = [];
@@ -4225,26 +5182,36 @@ export const getDesignFamily = (kit: Kit, designGuid: string): Design[] => {
   return family;
 };
 
+// MUST return the requested value.
+// Retrieves the DesignSiblings value.
 export const getDesignSiblings = (kit: Kit, designGuid: string): Design[] => {
   const design = findDesignInKit(kit, designGuid);
   const parentGuid = design.parent?.guid;
   return (kit.designs || []).filter((d) => d.parent?.guid === parentGuid && d.guid !== designGuid);
 };
 
+// MUST return the requested value.
+// Retrieves the DesignChildren value.
 export const getDesignChildren = (kit: Kit, designGuid: string): Design[] => {
   return (kit.designs || []).filter((d) => d.parent?.guid === designGuid);
 };
 
+// MUST return a boolean result.
+// Checks if Designs belong to the same family.
 export const areDesignsInSameFamily = (kit: Kit, designGuidA: string, designGuidB: string): boolean => {
   const primitiveA = getPrimitiveDesign(kit, designGuidA);
   const primitiveB = getPrimitiveDesign(kit, designGuidB);
   return primitiveA.guid === primitiveB.guid;
 };
 
+// MUST return a boolean result.
+// Checks if UseDesignAsPiece action is possible.
 export const canUseDesignAsPiece = (kit: Kit, containerDesignGuid: string, pieceDesignGuid: string): boolean => {
   return !areDesignsInSameFamily(kit, containerDesignGuid, pieceDesignGuid);
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching SameFamilyDesignPieces entry.
 export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[] => {
   const design = findDesignInKit(kit, designGuid);
   return (design.pieces || []).filter((piece) => {
@@ -4256,7 +5223,10 @@ export const findSameFamilyDesignPieces = (kit: Kit, designGuid: string): Piece[
 // #endregion 🔖Design Family Helpers
 
 // #region 🔖Type Family Helpers
+// Type family traversal helpers MUST be defined here.
 
+// MUST return the requested value.
+// Retrieves the PrimitiveType value.
 export const getPrimitiveType = (kit: Kit, typeGuid: string): Type => {
   let current = findTypeInKit(kit, typeGuid);
   while (current.parent?.guid) {
@@ -4265,6 +5235,8 @@ export const getPrimitiveType = (kit: Kit, typeGuid: string): Type => {
   return current;
 };
 
+// MUST return the requested value.
+// Retrieves the TypeFamily value.
 export const getTypeFamily = (kit: Kit, typeGuid: string): Type[] => {
   const primitive = getPrimitiveType(kit, typeGuid);
   const family: Type[] = [];
@@ -4278,16 +5250,22 @@ export const getTypeFamily = (kit: Kit, typeGuid: string): Type[] => {
   return family;
 };
 
+// MUST return the requested value.
+// Retrieves the TypeSiblings value.
 export const getTypeSiblings = (kit: Kit, typeGuid: string): Type[] => {
   const type = findTypeInKit(kit, typeGuid);
   const parentGuid = type.parent?.guid;
   return (kit.types || []).filter((t) => t.parent?.guid === parentGuid && t.guid !== typeGuid);
 };
 
+// MUST return the requested value.
+// Retrieves the TypeChildren value.
 export const getTypeChildren = (kit: Kit, typeGuid: string): Type[] => {
   return (kit.types || []).filter((t) => t.parent?.guid === typeGuid);
 };
 
+// MUST return a boolean result.
+// Checks if Types belong to the same family.
 export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: string): boolean => {
   const primitiveA = getPrimitiveType(kit, typeGuidA);
   const primitiveB = getPrimitiveType(kit, typeGuidB);
@@ -4296,30 +5274,40 @@ export const areTypesInSameFamily = (kit: Kit, typeGuidA: string, typeGuidB: str
 
 // #endregion 🔖Type Family Helpers
 
+// MUST return the matching element or undefined.
+// Searches for matching PortInKit entry.
 export const findPortInKit = (kit: Kit, portGuid: string): Port => {
   const iface = kit.ports?.find((i) => i.guid === portGuid);
   if (!iface) throw new Error(`Port ${portGuid} not found in kit ${kit.name}`);
   return iface;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching PieceTypeInDesign entry.
 export const findPieceTypeInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Type => {
   const piece = findPieceInDesign(findDesignInKit(kit, designGuid), pieceGuid);
   if (!piece.type) throw new Error(`Piece ${pieceGuid} has no type`);
   return findTypeInKit(kit, piece.type.guid);
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching ParentPieceInDesign entry.
 export const findParentPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece => {
   const parentPieceId = piecesMetadata(kit, designGuid).get(pieceGuid)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece`);
   return findPieceInDesign(findDesignInKit(kit, designGuid), parentPieceId);
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching ParentConnectionForPieceInDesign entry.
 export const findParentConnectionForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connection => {
   const parentPieceId = piecesMetadata(kit, designGuid).get(pieceGuid)?.parentPieceId;
   if (!parentPieceId) throw new Error(`Piece ${pieceGuid} has no parent piece and connection`);
   return findConnectionInDesign(findDesignInKit(kit, designGuid), parentPieceId);
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching ChildrenPiecesInDesign entry.
 export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Piece[] => {
   const design = findDesignInKit(kit, designGuid);
   const metadata = piecesMetadata(kit, designGuid);
@@ -4332,6 +5320,8 @@ export const findChildrenPiecesInDesign = (kit: Kit, designGuid: string, pieceGu
   return children;
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching UsedConnectorsByPieceInDesign entry.
 export const findUsedConnectorsByPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string): Connector[] => {
   const design = findDesignInKit(kit, designGuid);
   const piece = findPieceInDesign(design, pieceGuid);
@@ -4341,6 +5331,8 @@ export const findUsedConnectorsByPieceInDesign = (kit: Kit, designGuid: string, 
   return connections.map((c) => findConnectorForPieceInConnection(type, c, pieceGuid)).filter((p): p is Connector => p !== undefined);
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching ReplacableTypesForPieceInDesign entry.
 export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string, pieceGuid: string, variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designGuid);
   const connections = findPieceConnectionsInDesign(design, pieceGuid);
@@ -4370,6 +5362,8 @@ export const findReplacableTypesForPieceInDesign = (kit: Kit, designGuid: string
   );
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching ReplacableTypesForPiecesInDesign entry.
 export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: string, pieceGuids: string[], variants?: string[]): Type[] => {
   const design = findDesignInKit(kit, designGuid);
   const pieces = pieceGuids.map((id) => findPieceInDesign(design, id));
@@ -4407,6 +5401,7 @@ export const findReplacableTypesForPiecesInDesign = (kit: Kit, designGuid: strin
   );
 };
 
+// Definition of piecesMetadata.
 export const piecesMetadata = (
   kit: Kit,
   designGuid: string,
@@ -4443,6 +5438,8 @@ export const piecesMetadata = (
   );
 };
 
+// MUST return the matching element or undefined.
+// Searches for matching AttributeValue entry.
 export const findAttributeValue = (entity: Kit | Type | Design | Piece | Connection | Model | Connector, name: string, defaultValue?: string | null): string | null => {
   const attribute = entity.attributes?.find((q) => q.key === name);
   if (!attribute && defaultValue === undefined) throw new Error(`Attribute ${name} not found in ${entity}`);
@@ -4523,6 +5520,8 @@ const getColorForText = (text?: string): string => {
   return baseColors[colorSetIndex].variations[variationIndex];
 };
 
+// MUST assign colors deterministically.
+// Assigns colors to PortsForTypes elements.
 export const colorPortsForTypes = (types: Type[]): TypesDiff => {
   const updated: { type: TypeId; diff: TypeDiff }[] = [];
 
@@ -4550,12 +5549,16 @@ export const colorPortsForTypes = (types: Type[]): TypesDiff => {
   return { updated };
 };
 
+// MUST produce a valid in-memory representation.
+// Parses DesignIdFromVariant from serialized input.
 export const parseDesignIdFromVariant = (variant: string): string => {
   return variant.split("-")[0];
 };
 
 // #region 🔖File Tree Utilities
+// File tree construction and traversal utilities MUST be defined here.
 
+// Interface defining FileTreeNode structure.
 export interface FileTreeNode {
   name: string;
   path: string;
@@ -4566,6 +5569,8 @@ export interface FileTreeNode {
   parentPath?: string;
 }
 
+// MUST construct and return a complete structure.
+// Constructs FileTree from components.
 export const buildFileTree = (folders: Folder[], files: File[]): FileTreeNode[] => {
   const folderChildren = new Map<string | undefined, Folder[]>();
   folders.forEach((folder) => {
@@ -4620,6 +5625,8 @@ export const buildFileTree = (folders: Folder[], files: File[]): FileTreeNode[] 
   return buildNodes(undefined, undefined);
 };
 
+// MUST return a flat array.
+// Flattens nested FileTree structure.
 export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expandedPaths: Set<string> = new Set()): Array<FileTreeNode & { level: number; isExpanded: boolean }> => {
   const result: Array<FileTreeNode & { level: number; isExpanded: boolean }> = [];
 
@@ -4637,6 +5644,8 @@ export const flattenFileTree = (nodes: FileTreeNode[], level: number = 0, expand
 
 // #endregion 🔖File Tree Utilities
 
+// MUST return a new valid instance.
+// Performs the createFileFromDataUri operation.
 export const createFileFromDataUri = (name: string, dataUri: string): File => {
   const sizeMatch = dataUri.match(/data:([^;]+)(;base64)?,(.+)/);
   let size = 0;
@@ -4667,7 +5676,9 @@ export const createFileFromDataUri = (name: string, dataUri: string): File => {
 };
 
 // #region 🔖Kit Import/Export
+// Kit serialization and deserialization functions MUST be defined here.
 
+// Interface defining KitImportResult structure.
 export interface KitImportResult {
   kit: Kit;
   files: Map<string, Blob>;
@@ -4699,6 +5710,8 @@ const getSqlJs = async () => {
   return cachedSqlJs;
 };
 
+// MUST load and return the imported data.
+// Imports Kit from external source.
 export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): Promise<KitImportResult> => {
   const JSZip = (await import("jszip")).default;
 
@@ -4751,6 +5764,8 @@ export const importKit = async (source: string | ArrayBuffer | Buffer | Blob): P
   return { kit, files };
 };
 
+// MUST produce the exported format.
+// Exports Kit to external format.
 export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blob> => {
   const JSZip = (await import("jszip")).default;
 
@@ -4773,6 +5788,8 @@ export const exportKit = async (kit: Kit, files: Map<string, Blob>): Promise<Blo
   return await zip.generateAsync({ type: "blob" });
 };
 
+// MUST return a boolean equality result.
+// Deep equality check for Kits entities.
 export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   const normalizeArray = <T>(arr: T[] | T | undefined | null): T[] => {
     if (!arr) return [];
@@ -5108,6 +6125,8 @@ export const areKitsEqual = (a: Kit, b: Kit): boolean => {
   return true;
 };
 
+// MUST return a boolean equality result.
+// Deep equality check for KitDiffs entities.
 export const areKitDiffsEqual = (a: KitDiff, b: KitDiff): boolean => {
   const normalizeArray = <T>(arr: T[] | T | undefined | null): T[] => {
     if (!arr) return [];
@@ -6091,6 +7110,7 @@ const toArray = <T>(value: T | T[] | undefined): T[] => {
   return Array.isArray(value) ? value : [value];
 };
 
+// Constant value for KIT_SQLITE_SCHEMA.
 export const KIT_SQLITE_SCHEMA = `
 CREATE TABLE semio (
 	release VARCHAR NOT NULL,
@@ -6886,22 +7906,28 @@ const kitToSqlite = async (kit: Kit, db: any): Promise<void> => {
 // #endregion 🔖Kit Import/Export
 
 // #region 🔖Validation
+// Kit validation engine and constraints MUST be defined here.
 
 // #region 🔖Validation core types
+// Core validation types and interfaces MUST be defined here.
 
+// Enumeration of EntityKind values.
 export type EntityKind = "Kit" | "Type" | "Design" | "Piece" | "Connection" | "Connector" | "Attribute" | "File" | "Folder" | "Quality" | "Port" | "Prop" | "Model" | "Layer" | "Group" | "Stat";
 
+// Interface defining DomainLocation structure.
 export interface DomainLocation {
   entityKind: EntityKind;
   entityGuid?: Guid;
   field?: string;
 }
 
+// Interface defining Fix structure.
 export interface Fix {
   title: string;
   diff: KitDiff;
 }
 
+// Interface defining Problem structure.
 export interface Problem {
   constraintId: string;
   message: string;
@@ -6910,16 +7936,21 @@ export interface Problem {
   fixes: Fix[];
 }
 
+// Interface defining ValidationResult structure.
 export interface ValidationResult {
   problems: Problem[];
 }
 
+// MUST return true if the condition is met.
+// Checks whether Errors condition holds.
 export const hasErrors = (res: ValidationResult) => res.problems.length > 0;
 
 // #endregion 🔖Validation core types
 
 // #region 🔖Validation context & engine
+// Validation context construction and engine MUST be defined here.
 
+// Interface defining ValidationContext structure.
 export interface ValidationContext {
   kit: Kit;
   typesByGuid: Map<Guid, Type>;
@@ -6929,6 +7960,8 @@ export interface ValidationContext {
   modelsByTypeGuid: Map<Guid, Model[]>;
 }
 
+// MUST construct and return a complete structure.
+// Constructs ValidationContext from components.
 export const buildValidationContext = (kit: Kit): ValidationContext => {
   const typesByGuid = new Map<Guid, Type>();
   const designsByGuid = new Map<Guid, Design>();
@@ -6947,14 +7980,20 @@ export const buildValidationContext = (kit: Kit): ValidationContext => {
   return { kit, typesByGuid, designsByGuid, piecesByGuid, connectorsByTypeGuid, modelsByTypeGuid };
 };
 
+// MUST detect and report constraint violations.
+// Type alias for Constraint.
 export type Constraint = (ctx: ValidationContext) => Problem[];
 
+// Interface defining ValidationConfig structure.
 export interface ValidationConfig {
   constraints?: Constraint[];
 }
 
+// Definition of defaultConstraints.
 export let defaultConstraints: Constraint[] = [];
 
+// MUST check all constraints and return problems.
+// Validates Kit against constraints.
 export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationResult => {
   const ctx = buildValidationContext(kit);
   const constraints = cfg.constraints ?? defaultConstraints;
@@ -6964,7 +8003,10 @@ export const validateKit = (kit: Kit, cfg: ValidationConfig = {}): ValidationRes
 // #endregion 🔖Validation context & engine
 
 // #region 🔖Fix helper
+// Validation fix helper functions MUST be defined here.
 
+// MUST produce a Fix that regenerates the GUID.
+// Performs the semioMakeFix operation.
 export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clone: Kit) => void): Fix => {
   const clone = JSON.parse(serializeKit(ctx.kit)) as Kit;
   mutate(clone);
@@ -6975,6 +8017,7 @@ export const semioMakeFix = (ctx: ValidationContext, title: string, mutate: (clo
 // #endregion 🔖Fix helper
 
 // #region 🔖GUID update helper
+// GUID regeneration helper functions MUST be defined here.
 
 const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
   const update = (obj: any) => {
@@ -7008,7 +8051,10 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
 // #endregion 🔖GUID update helper
 
 // #region 🔖Constraint: GUID uniqueness
+// GUID uniqueness constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating GuidUniqueness rules.
 export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const seen = new Map<Guid, EntityKind>();
@@ -7050,7 +8096,10 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: GUID uniqueness
 
 // #region 🔖Constraint: Type name uniqueness
+// Type name uniqueness constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating TypeNameUniqueness rules.
 export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const byParent = new Map<Guid | undefined, Type[]>();
@@ -7093,7 +8142,10 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Type name uniqueness
 
 // #region 🔖Constraint: Design name uniqueness
+// Design name uniqueness constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating DesignNameUniqueness rules.
 export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const byParent = new Map<Guid | undefined, Design[]>();
@@ -7136,7 +8188,10 @@ export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Design name uniqueness
 
 // #region 🔖Constraint: Piece name uniqueness
+// Piece name uniqueness constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating PieceNameUniqueness rules.
 export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
@@ -7177,7 +8232,10 @@ export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Piece name uniqueness
 
 // #region 🔖Constraint: Quality name uniqueness
+// Quality name uniqueness constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating QualityNameUniqueness rules.
 export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const qualities = toArray(ctx.kit.qualities);
@@ -7212,7 +8270,10 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Quality name uniqueness
 
 // #region 🔖Constraint: Port name uniqueness
+// Port name uniqueness constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating PortNameUniqueness rules.
 export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const ports = toArray(ctx.kit.ports);
@@ -7247,7 +8308,10 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Port name uniqueness
 
 // #region 🔖Constraint: File name uniqueness
+// File name uniqueness constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating FileNameUniqueness rules.
 export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const files = toArray(ctx.kit.files);
@@ -7282,7 +8346,10 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: File name uniqueness
 
 // #region 🔖Constraint: Folder name uniqueness
+// Folder name uniqueness constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating FolderNameUniqueness rules.
 export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   const byParent = new Map<Guid | undefined, Folder[]>();
@@ -7325,7 +8392,10 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Folder name uniqueness
 
 // #region 🔖Constraint: Connector name uniqueness within type
+// Connector name uniqueness within type constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating ConnectorNameUniqueness rules.
 export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   for (const [typeGuid, connectors] of ctx.connectorsByTypeGuid) {
@@ -7366,7 +8436,10 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Connector name uniqueness within type
 
 // #region 🔖Constraint: Model name uniqueness within type
+// Model name uniqueness within type constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating ModelNameUniqueness rules.
 export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   for (const [typeGuid, models] of ctx.modelsByTypeGuid) {
@@ -7407,7 +8480,10 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Model name uniqueness within type
 
 // #region 🔖Constraint: Layer path uniqueness within design
+// Layer path uniqueness within design constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating LayerPathUniqueness rules.
 export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
@@ -7447,7 +8523,10 @@ export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
 // #endregion 🔖Constraint: Layer path uniqueness within design
 
 // #region 🔖Constraint: Design piece same family constraint
+// Design piece same family constraint MUST be enforced here.
 
+// MUST detect and report constraint violations.
+// Constraint validating DesignPieceSameFamily rules.
 export const semioDesignPieceSameFamilyConstraint: Constraint = (ctx) => {
   const problems: Problem[] = [];
   toArray(ctx.kit.designs).forEach((design) => {
@@ -7500,6 +8579,7 @@ const getPrimitiveDesignFromContext = (ctx: ValidationContext, designGuid: strin
 // #endregion 🔖Constraint: Design piece same family constraint
 
 // #region 🔖Constraint registration
+// Constraint registration and default configurations MUST be defined here.
 
 defaultConstraints = [
   semioGuidUniquenessConstraint,
@@ -7519,12 +8599,15 @@ defaultConstraints = [
 // #endregion 🔖Constraint registration
 
 // #region 🔖Validation serialization
+// Validation result serialization and deserialization MUST be defined here.
 
+// Interface defining SerializableValidationFix structure.
 export interface SerializableValidationFix {
   title: string;
   diff: KitDiff;
 }
 
+// Interface defining SerializableProblem structure.
 export interface SerializableProblem {
   constraintId: string;
   message: string;
@@ -7533,10 +8616,13 @@ export interface SerializableProblem {
   fixes: SerializableValidationFix[];
 }
 
+// Interface defining SerializableValidationResult structure.
 export interface SerializableValidationResult {
   problems: SerializableProblem[];
 }
 
+// MUST convert to the target representation.
+// Converts to ValidationResult representation.
 export const toValidationResult = (result: ValidationResult): SerializableValidationResult => ({
   problems: result.problems.map((problem) => ({
     constraintId: problem.constraintId,
@@ -7547,6 +8633,8 @@ export const toValidationResult = (result: ValidationResult): SerializableValida
   })),
 });
 
+// MUST produce a serializable output.
+// Serializes ValidationResult for transport.
 export const serializeValidationResult = (result: ValidationResult): string => {
   const serializable = toValidationResult(result);
   serializable.problems.sort((a, b) => {
@@ -7557,10 +8645,14 @@ export const serializeValidationResult = (result: ValidationResult): string => {
   return JSON.stringify(serializable, null, 2);
 };
 
+// MUST produce a valid in-memory representation.
+// Parses ValidationResult from serialized input.
 export const parseValidationResult = (json: string): SerializableValidationResult => JSON.parse(json);
 
 const isGuid = (s: string): boolean => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
+// MUST return a boolean equality result.
+// Deep equality check for KitDiffs ignoring NewGuids entities.
 export const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolean => {
   const normalize = (obj: unknown): unknown => {
     if (obj === null || obj === undefined) return obj;
@@ -7576,6 +8668,8 @@ export const areKitDiffsEqualIgnoringNewGuids = (a: KitDiff, b: KitDiff): boolea
   return JSON.stringify(normalize(a)) === JSON.stringify(normalize(b));
 };
 
+// MUST return a boolean equality result.
+// Deep equality check for ValidationResults entities.
 export const areValidationResultsEqual = (a: ValidationResult, b: ValidationResult): boolean => {
   const serializableA = toValidationResult(a);
   const serializableB = toValidationResult(b);

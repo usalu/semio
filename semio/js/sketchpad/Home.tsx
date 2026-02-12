@@ -26,6 +26,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// External and internal module imports MUST be declared here.
 
 import { formatDistanceToNow } from "date-fns";
 import { de, enUS } from "date-fns/locale";
@@ -92,32 +93,41 @@ const useHome = useHomeApp;
 // #endregion 🔖Imports
 
 // #region 🔖Types
+// Home app type definitions MUST be declared here.
 
+// Window kind identifiers for the Home app.
 export enum HomeAppWindowKind {
   Table = "table",
 }
 
+// Selected kit GUIDs in the Home app.
 export interface HomeSelection {
   kits?: Guid[];
 }
 
+// Incremental selection changes with added and removed GUIDs.
 export interface HomeSelectionDiff {
   added?: Guid[];
   removed?: Guid[];
 }
 
+// Hovered kit GUIDs in the Home app.
 export interface HomeHover {
   kits?: Guid[];
 }
 
+// Available columns for sorting the Home kit table.
 export type HomeSortColumn = "name" | "type" | "updatedAt" | "createdAt";
+// Sort direction for the Home kit table.
 export type HomeSortDirection = "asc" | "desc";
 
+// A kit currently being loaded with a temporary GUID.
 export interface LoadingKit {
   tempGuid: Guid;
   name: string;
 }
 
+// Complete state of the Home app.
 export interface HomeState {
   panelVisibility: PanelVisibility;
   selection?: HomeSelection;
@@ -128,6 +138,7 @@ export interface HomeState {
   windowLayout?: any;
 }
 
+// Partial state diff for updating the Home app.
 export interface HomeDiff {
   panelVisibility?: Partial<PanelVisibility>;
   selection?: HomeSelectionDiff;
@@ -135,13 +146,16 @@ export interface HomeDiff {
   sortDirection?: HomeSortDirection;
 }
 
+// Edit event for the Home app selection.
 export interface HomeEdit extends AppEdit<HomeSelectionDiff> { }
 
+// Command context carrying Home state and origin.
 export interface HomeCommandContext {
   home: HomeState;
   origin?: string;
 }
 
+// Result returned from a Home command execution.
 export interface HomeCommandResult {
   diff?: HomeDiff;
 }
@@ -149,6 +163,7 @@ export interface HomeCommandResult {
 // #endregion 🔖Types
 
 // #region 🔖Home App Plugin Registration
+// Home app plugin and event handler registration MUST initialize XState context.
 
 const createDefaultHomeState = (): HomeState => ({
   panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
@@ -201,6 +216,7 @@ if (typeof window !== "undefined") {
 // #endregion 🔖Home App Plugin Registration
 
 // #region 🔖Hooks (XState-based)
+// XState-based hooks MUST re-export state selectors for the Home app.
 
 export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
 
@@ -209,10 +225,13 @@ export { useHome };
 // #endregion 🔖Hooks (XState-based)
 
 // #region 🔖Canvas
+// Canvas components MUST render the Home app visual content.
 
 // #region 🔖Windows
+// Window components MUST provide windowed views within the canvas.
 
 // #region 🔖Table
+// Table window MUST display kit entries in tabular form.
 
 export { };
 
@@ -221,11 +240,15 @@ export { };
 // #endregion 🔖Windows
 
 // #region 🔖Panels
+// Panel components MUST render sidebar panel content.
 
 // #region 🔖Right
+// Right panel components MUST render details, chat, and settings.
 
 // #region 🔖Details
+// Details panel MUST show properties of selected kits.
 
+// Kit section component displaying selected kit properties.
 export const KitSection: FC = () => {
   const home = useHome() as HomeState;
   const selection = home?.selection;
@@ -353,6 +376,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
 // #endregion 🔖Details
 
 // #region 🔖Chat
+// Chat panel MUST show the chat placeholder content.
 
 const ChatPlaceholder: FC = () => {
   return (
@@ -367,6 +391,7 @@ const ChatPlaceholder: FC = () => {
 // #endregion 🔖Chat
 
 // #region 🔖Settings
+// Settings panel MUST expose theme, language, device, expertise, and mode toggles.
 
 const SettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
@@ -473,6 +498,7 @@ const SettingsContent: FC = () => {
 // #endregion 🔖Canvas
 
 // #region 🔖Footer
+// Footer component MUST manage Home app footer items.
 
 const HomeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
@@ -491,6 +517,7 @@ const HomeAppFooter: FC = () => {
 // #endregion 🔖Footer
 
 // #region 🔖DropZone
+// DropZone component MUST handle drag-and-drop kit imports.
 
 const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDragging, setIsDragging] = useState(false);
@@ -599,6 +626,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 // #endregion 🔖DropZone
 
 // #region 🔖App
+// App components MUST compose the Home app toolbar, table, and logic.
 
 type KitKind = "temporary" | "local" | "remote";
 
@@ -1561,6 +1589,7 @@ const HomeTableContent: FC = () => {
 };
 
 // #region 🔖Multi-Window App
+// Multi-window app MUST orchestrate the Home canvas and layout.
 
 const TableWindow = memo(() => {
   return <HomeTableContent />;
@@ -1688,7 +1717,9 @@ export default Home;
 // #endregion 🔖App
 
 // #region 🔖Config
+// Config MUST define the Home app registration and panel setup.
 
+// Home app configuration defining routes and panels.
 export const config: AppConfig = {
   id: "home",
   component: Home,

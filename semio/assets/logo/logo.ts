@@ -1,7 +1,7 @@
-#!/usr/bin/env node
 // #region 🔖Header
+#!/usr/bin/env node
 
-// 📜semio/assets/logo/logo.ts
+// 💻semio/assets/logo/logo.ts
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -26,10 +26,15 @@
 
 // #endregion 🔖Header
 
+//#region 🔖Imports
+// MUST import Node.js file system, DOM parsing, and path resolution modules.
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
 import * as path from "path";
+//#endregion 🔖Imports
 
+//#region 🔖Types
+// Type definitions for SVG transform, group, and keyframe data structures.
 interface TransformData {
   translate: { x: number; y: number };
   rotate: { angle: number; cx: number; cy: number };
@@ -50,7 +55,10 @@ interface GroupData {
 interface KeyframeData {
   groups: GroupData[];
 }
+//#endregion 🔖Types
 
+//#region 🔖Logo Generation
+// Functions for parsing SVG files and generating animated SVG logos.
 function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
   const tx = translate.x;
   const ty = translate.y;
@@ -199,6 +207,9 @@ function parseTransform(transformStr: string): TransformData {
     return result;
   }
 
+  //#region 🔖Parse SVG
+  // MUST read SVG content and extract all group transforms and path attributes.
+  // Parses an SVG file and returns keyframe data with group transforms and paths.
   function parseSVGFile(filePath: string): KeyframeData {
     const svgContent = fs.readFileSync(filePath, "utf-8");
     const dom = new JSDOM(svgContent, { contentType: "text/xml" });
@@ -231,7 +242,11 @@ function parseTransform(transformStr: string): TransformData {
 
     return { groups };
   }
+  //#endregion 🔖Parse SVG
 
+  //#region 🔖Generate Keyframe Sequence
+  // MUST produce forward and reverse sequence for smooth animation looping.
+  // Generates a palindromic keyframe sequence with triple repetition per frame.
   function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
     const sequence: KeyframeData[] = [];
 
@@ -251,7 +266,11 @@ function parseTransform(transformStr: string): TransformData {
 
     return sequence;
   }
+  //#endregion 🔖Generate Keyframe Sequence
 
+  //#region 🔖Create Animated SVG
+  // MUST generate translate, rotate, scale, fill, stroke, and stroke-width animations.
+  // Creates an animated SVG file with SMIL animations from keyframe data.
   function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void {
     const sequence = generateKeyframeSequence(keyframes);
     const totalFrames = sequence.length;
@@ -383,6 +402,7 @@ function parseTransform(transformStr: string): TransformData {
     fs.writeFileSync(outputPath, svgContent);
     console.log(`Animated SVG created: ${outputPath}`);
   }
+  //#endregion 🔖Create Animated SVG
 
   function main(): void {
     const logoDir = path.dirname(__filename);
@@ -415,3 +435,4 @@ function parseTransform(transformStr: string): TransformData {
   }
 
   export { createAnimatedSVG, generateKeyframeSequence, parseSVGFile };
+//#endregion 🔖Logo Generation

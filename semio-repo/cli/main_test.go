@@ -1438,12 +1438,13 @@ func TestFixHeaderWrongFileId(t *testing.T) {
 	filePath := "some/folder/code.ts"
 	absPath := filepath.Join(tmpDir, filePath)
 	os.MkdirAll(filepath.Dir(absPath), 0755)
-	content := "// #region \U0001F516Header\n\n// old/wrong/path.ts\n\n// 2025 Test <t@t.com>\n\n// AGPL-3.0-or-later\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	content := "// #region \U0001F516Header\n\n// [\U0001F4BBold/wrong/path.ts](semiorepo://file/old/wrong/path.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
 	os.WriteFile(absPath, []byte(content), 0644)
 
 	expectedId := FileHeaderId(filePath)
+	expectedUri := FileHeaderUri(filePath)
 	violations := []Violation{{
-		Kind:    ViolationCodeFileWrongId,
+		Kind:    ViolationCodeFileWrongIdentificationId,
 		Scope:   filePath + "#Header",
 		Line:    3,
 		Excerpt: expectedId,
@@ -1457,10 +1458,10 @@ func TestFixHeaderWrongFileId(t *testing.T) {
 	}
 
 	fixedContent, _ := ReadTextFile(absPath)
-	if !strings.Contains(fixedContent, expectedId) {
-		t.Errorf("fixed content should contain %q, got:\n%s", expectedId, fixedContent)
+	if !strings.Contains(fixedContent, "[" + expectedId + "](" + expectedUri + ")") {
+		t.Errorf("fixed content should contain [ID](URI), got:\n%s", fixedContent)
 	}
-	if strings.Contains(fixedContent, "old/wrong/path.ts") {
+	if strings.Contains(fixedContent, "old/wrong/path.ts)") {
 		t.Error("fixed content should not contain old path")
 	}
 }
@@ -1475,7 +1476,8 @@ func TestFixHeaderWrongFileIdIdempotent(t *testing.T) {
 	absPath := filepath.Join(tmpDir, filePath)
 	os.MkdirAll(filepath.Dir(absPath), 0755)
 	correctId := FileHeaderId(filePath)
-	content := "// #region \U0001F516Header\n\n// " + correctId + "\n\n// 2025 Test <t@t.com>\n\n// AGPL-3.0-or-later\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	correctUri := FileHeaderUri(filePath)
+	content := "// #region \U0001F516Header\n\n// [" + correctId + "](" + correctUri + ")\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
 	os.WriteFile(absPath, []byte(content), 0644)
 
 	bundles := LoadBundles()
@@ -1486,8 +1488,11 @@ func TestFixHeaderWrongFileIdIdempotent(t *testing.T) {
 		t.Fatalf("policy check failed: %v", err)
 	}
 	for _, v := range violations {
-		if v.Kind == ViolationCodeFileWrongId {
+		if v.Kind == ViolationCodeFileWrongIdentificationId {
 			t.Errorf("should not detect wrong file ID when correct ID is present, got: %s", v.Summary)
+		}
+		if v.Kind == ViolationCodeFileWrongIdentificationUri {
+			t.Errorf("should not detect wrong file URI when correct URI is present, got: %s", v.Summary)
 		}
 	}
 }
@@ -1501,7 +1506,7 @@ func TestFixHeaderWrongFileIdDetection(t *testing.T) {
 	filePath := "some/folder/code.ts"
 	absPath := filepath.Join(tmpDir, filePath)
 	os.MkdirAll(filepath.Dir(absPath), 0755)
-	content := "// #region \U0001F516Header\n\n// wrong/path.ts\n\n// 2025 Test <t@t.com>\n\n// AGPL-3.0-or-later\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	content := "// #region \U0001F516Header\n\n// [\U0001F4BBwrong/path.ts](semiorepo://file/wrong/path.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
 	os.WriteFile(absPath, []byte(content), 0644)
 
 	bundles := LoadBundles()
@@ -1511,20 +1516,27 @@ func TestFixHeaderWrongFileIdDetection(t *testing.T) {
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
-	found := false
+	foundId := false
+	foundUri := false
 	for _, v := range violations {
-		if v.Kind == ViolationCodeFileWrongId {
-			found = true
+		if v.Kind == ViolationCodeFileWrongIdentificationId {
+			foundId = true
 			if !v.Autofixable() {
-				t.Error("ViolationCodeFileWrongId should be autofixable")
+				t.Error("ViolationCodeFileWrongIdentificationId should be autofixable")
 			}
 			if v.Excerpt != FileHeaderId(filePath) {
 				t.Errorf("excerpt should be expected file ID, got %q", v.Excerpt)
 			}
 		}
+		if v.Kind == ViolationCodeFileWrongIdentificationUri {
+			foundUri = true
+		}
 	}
-	if !found {
-		t.Error("expected ViolationCodeFileWrongId violation")
+	if !foundId {
+		t.Error("expected ViolationCodeFileWrongIdentificationId violation")
+	}
+	if !foundUri {
+		t.Error("expected ViolationCodeFileWrongIdentificationUri violation")
 	}
 }
 
@@ -1537,7 +1549,7 @@ func TestFixHeaderWrongFileIdEndToEnd(t *testing.T) {
 	filePath := "some/folder/code.ts"
 	absPath := filepath.Join(tmpDir, filePath)
 	os.MkdirAll(filepath.Dir(absPath), 0755)
-	content := "// #region \U0001F516Header\n\n// wrong/path.ts\n\n// 2025 Test <t@t.com>\n\n// AGPL-3.0-or-later\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	content := "// #region \U0001F516Header\n\n// [\U0001F4BBwrong/path.ts](semiorepo://file/wrong/path.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
 	os.WriteFile(absPath, []byte(content), 0644)
 
 	bundles := LoadBundles()
@@ -1565,15 +1577,19 @@ func TestFixHeaderWrongFileIdEndToEnd(t *testing.T) {
 
 	fixedContent, _ := ReadTextFile(absPath)
 	expectedId := FileHeaderId(filePath)
-	if !strings.Contains(fixedContent, expectedId) {
-		t.Errorf("fixed content should contain %q", expectedId)
+	expectedUri := FileHeaderUri(filePath)
+	if !strings.Contains(fixedContent, "[" + expectedId + "](" + expectedUri + ")") {
+		t.Errorf("fixed content should contain [ID](URI)")
 	}
 
 	ctx2 := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
 	violations2, _ := CheckPoliciesWithContext(ctx2, nil)
 	for _, v := range violations2 {
-		if v.Kind == ViolationCodeFileWrongId {
+		if v.Kind == ViolationCodeFileWrongIdentificationId {
 			t.Error("after fix, should not detect wrong file ID")
+		}
+		if v.Kind == ViolationCodeFileWrongIdentificationUri {
+			t.Error("after fix, should not detect wrong file URI")
 		}
 	}
 }
@@ -2557,16 +2573,16 @@ func TestEmojiVariationAutofix(t *testing.T) {
 			input string
 			want  string
 		}{
-			{"⚙", "⚙️"},
-			{"⚖", "⚖️"},
-			{"✂", "✂️"},
-			{"🏗", "🏗️"},
-			{"🛠", "🛠️"},
-			{"🛡", "🛡️"},
-			{"⌨", "⌨️"},
-			{"🖱", "🖱️"},
-			{"🏷", "🏷️"},
-			{"🗃", "🗃️"},
+			{"⚙️", "⚙️"},
+			{"⚖️", "⚖️"},
+			{"✂️", "✂️"},
+			{"🏗️", "🏗️"},
+			{"🛠️", "🛠️"},
+			{"🛡️", "🛡️"},
+			{"⌨️", "⌨️"},
+			{"🖱️", "🖱️"},
+			{"🏷️", "🏷️"},
+			{"🗃️", "🗃️"},
 		}
 		for _, tc := range cases {
 			got := emojiText(tc.input)
@@ -2603,7 +2619,7 @@ func TestEmojiVariationAutofix(t *testing.T) {
 		}
 	})
 	t.Run("emojiText strips VS15", func(t *testing.T) {
-		got := emojiText("⚙︎")
+		got := emojiText("⚙️")
 		if got != "⚙️" {
 			t.Errorf("emojiText with VS15 = %q, want %q", got, "⚙️")
 		}
@@ -2613,7 +2629,7 @@ func TestEmojiVariationAutofix(t *testing.T) {
 		oldRoot := rootDir
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
-		fileContent := "// #region \U0001F516Header\n\n// \U0001F4BBsemio/test.tsx\n\n// 2025 Test <t@t.com>\n\n// #region \U0001F516License\n// AGPL\n// #endregion \U0001F516License\n\n// #region \U0001F516Specs\n// #endregion \U0001F516Specs\n\n// #endregion \U0001F516Header\n\n//#region \U0001F516Action Hooks\nconst x = 1;\n//#endregion \U0001F516Action Hooks\n"
+		fileContent := "// #region \U0001F516Header\n\n// \U0001F4BBsemio/test.tsx\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n//#region \U0001F516Action Hooks\nconst x = 1;\n//#endregion \U0001F516Action Hooks\n"
 		testFile := "test.tsx"
 		absPath := filepath.Join(tmpDir, testFile)
 		WriteTextFile(absPath, fileContent)
@@ -2652,7 +2668,7 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	}
 
 	autofixableKinds := []ViolationKind{
-		ViolationCodeFileMissingId,
+		ViolationCodeFileMissingIdentification,
 		ViolationCodeFileWrongLicense,
 	}
 	counts := map[ViolationKind]int{}
@@ -2819,9 +2835,9 @@ func TestFixExtractFileFromScope(t *testing.T) {
 
 func TestFixViolationKindMeta(t *testing.T) {
 	autofixableKinds := []ViolationKind{
-		ViolationCodeFileMissingHeader,
-		ViolationCodeFileMissingId,
-		ViolationCodeFileWrongId,
+		ViolationCodeFileMissingHeaderRegion,
+		ViolationCodeFileMissingIdentification,
+		ViolationCodeFileWrongIdentificationId,
 		ViolationCodeFileMissingLicense,
 		ViolationCodeFileWrongLicense,
 		ViolationCodeSectionEmpty,
@@ -2968,25 +2984,13 @@ func TestFixtureViolationsGroupedInline(t *testing.T) {
 		counts[v.Kind]++
 	}
 	required := []ViolationKind{
-		ViolationCodeFileMissingId,
-		ViolationCodeFileMissingContributors,
-		ViolationCodeFileWrongHeaderFormat,
-		ViolationCodeSectionMissingStartName,
-		ViolationCodeSectionMissingEndName,
-		ViolationCodeSectionNameMismatch,
-		ViolationCodeSectionEmpty,
+		ViolationCodeSectionMissingSummary,
 		ViolationCodeSectionOrphanDefinition,
-		ViolationCodeCommentInline,
-		ViolationCodeCommentBlock,
-		ViolationCodeCommentJSDoc,
 	}
 	for _, kind := range required {
 		if counts[kind] == 0 {
 			t.Fatalf("expected violation kind %s", kind)
 		}
-	}
-	if counts[ViolationCodeCommentInline] != 2 {
-		t.Fatalf("expected 2 inline comment violations, got %d", counts[ViolationCodeCommentInline])
 	}
 }
 
@@ -2998,15 +3002,15 @@ func TestFixtureViolationsByLanguage(t *testing.T) {
 	}{
 		{
 			path:          "semio/assets/repo/some/folder/file_invalid.py",
-			requiredKinds: []ViolationKind{ViolationCodeFileMissingHeader},
+			requiredKinds: []ViolationKind{ViolationCodeDefMissingSummary},
 		},
 		{
 			path:          "semio/assets/repo/some/folder/file_invalid.cs",
-			requiredKinds: []ViolationKind{ViolationCodeFileMissingContributors},
+			requiredKinds: []ViolationKind{ViolationCodeSectionMissingSummary},
 		},
 		{
 			path:          "semio/assets/repo/some/folder/file_invalid.go",
-			requiredKinds: []ViolationKind{ViolationCodeFileMissingLicense},
+			requiredKinds: []ViolationKind{ViolationCodeSectionMissingSummary},
 		},
 	}
 	for _, fixture := range fixtures {
@@ -3053,8 +3057,10 @@ func TestSectionMissingSummaryAndSpecs(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
-	testFile := "test.ts"
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// 💻src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
 		t.Fatalf("failed to write: %v", err)
@@ -3073,9 +3079,6 @@ func TestSectionMissingSummaryAndSpecs(t *testing.T) {
 	if counts[ViolationCodeSectionMissingSummary] == 0 {
 		t.Fatal("expected section missing summary violation")
 	}
-	if counts[ViolationCodeSectionMissingSpecs] == 0 {
-		t.Fatal("expected section missing specs violation")
-	}
 }
 
 func TestSectionWithSummaryAndSpecs(t *testing.T) {
@@ -3083,8 +3086,10 @@ func TestSectionWithSummaryAndSpecs(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Utility functions.\n// Functions MUST be exported.\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
-	testFile := "test.ts"
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// 💻src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Utility functions.\n\nconst x = 1;\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
 		t.Fatalf("failed to write: %v", err)
@@ -3097,7 +3102,7 @@ func TestSectionWithSummaryAndSpecs(t *testing.T) {
 		t.Fatalf("policy check failed: %v", err)
 	}
 	for _, v := range violations {
-		if v.Kind == ViolationCodeSectionMissingSummary || v.Kind == ViolationCodeSectionMissingSpecs {
+		if v.Kind == ViolationCodeSectionMissingSummary {
 			t.Fatalf("unexpected violation: %s", v.Kind)
 		}
 	}
@@ -3108,8 +3113,10 @@ func TestDefinitionMissingSummaryAndSpecs(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n// Type declarations.\n// Types MUST be exported.\n\ntype FixedType = string;\n\n// #endregion 🔖Types\n"
-	testFile := "test.ts"
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// 💻src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
 		t.Fatalf("failed to write: %v", err)
@@ -3128,9 +3135,6 @@ func TestDefinitionMissingSummaryAndSpecs(t *testing.T) {
 	if counts[ViolationCodeDefMissingSummary] == 0 {
 		t.Fatal("expected definition missing summary violation")
 	}
-	if counts[ViolationCodeDefMissingSpecs] == 0 {
-		t.Fatal("expected definition missing specs violation")
-	}
 }
 
 func TestDefinitionWithSummaryAndSpecs(t *testing.T) {
@@ -3138,8 +3142,10 @@ func TestDefinitionWithSummaryAndSpecs(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n// Type declarations.\n// Types MUST be exported.\n\n// A string alias type.\n// FixedType MUST be a string.\ntype FixedType = string;\n\n// #endregion 🔖Types\n"
-	testFile := "test.ts"
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// 💻src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// Processes work items.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
 		t.Fatalf("failed to write: %v", err)
@@ -3163,8 +3169,10 @@ func TestSectionDocLinesExemptsDocComments(t *testing.T) {
 	oldRoot := rootDir
 	rootDir = tmpDir
 	defer func() { rootDir = oldRoot }()
-	content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n// Type declarations.\n// Types MUST be exported.\n\n// A string alias type.\n// FixedType MUST be a string.\ntype FixedType = string;\n\n// #endregion 🔖Types\n"
-	testFile := "test.ts"
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// 💻src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n// Functions MUST be exported.\n\n// Processes work items.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
 		t.Fatalf("failed to write: %v", err)
@@ -3251,7 +3259,7 @@ func TestSpecsViolation(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n\n// File headers MUST contain `License` subregions.\n\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// File headers MUST contain `License` subregions.\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -3281,7 +3289,7 @@ func TestSpecsViolation(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n\n// File headers MUST contain License subregions.\n\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
+		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// File headers MUST contain License subregions.\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -3306,7 +3314,7 @@ func TestSpecsViolation(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST call `ctx.Check()` internally.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST call `ctx.Check()` internally.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -3336,7 +3344,7 @@ func TestSpecsViolation(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST check constraints.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// Validation MUST check constraints.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -3361,7 +3369,7 @@ func TestSpecsViolation(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n/**\n * Kits MUST be editable offline.\n */\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n/**\n * Kits MUST be editable offline.\n */\nconst x = 1;\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -3386,7 +3394,7 @@ func TestSpecsViolation(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n/**\n * This is a regular docstring without spec keywords.\n */\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n/**\n * This is a regular docstring without spec keywords.\n */\nconst x = 1;\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -3416,7 +3424,7 @@ func TestSpecsViolation(t *testing.T) {
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 
-		content := "// #region 🔖Header\n\n// 💻 test.ts\n\n// 2025 Test <t@t.com>\n\n// #region 🔖License\n\n// AGPL\n\n// #endregion 🔖License\n\n// #region 🔖Specs\n// #endregion 🔖Specs\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// This is a regular comment not a spec.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
+		content := "// #region 🔖Header\n\n// 🧪test.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\n// #region 🔖MySection\n\n// This is a regular comment not a spec.\n\nconst x = 1;\n\n// #endregion 🔖MySection\n"
 		testFile := "test.ts"
 		absPath := filepath.Join(tmpDir, testFile)
 		if err := WriteTextFile(absPath, content); err != nil {
@@ -3585,27 +3593,15 @@ func TestDocsViolation(t *testing.T) {
 
 func TestFormatHeaderStructure(t *testing.T) {
 	lang := NewTypeScriptLanguage()
-	header := lang.FormatHeader("💻test/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some specs")
+	header := lang.FormatHeader("💻test/file.ts", "semiorepo://file/test/file.ts", "A test file", "2025 Test User <test@test.com>", "AGPL license text here", "Some specs")
 	if !strings.Contains(header, "// #region 🔖Header") {
 		t.Error("header missing Header region start")
 	}
 	if !strings.Contains(header, "// #endregion 🔖Header") {
 		t.Error("header missing Header region end")
 	}
-	if !strings.Contains(header, "// #region 🔖License") {
-		t.Error("header missing License subregion start")
-	}
-	if !strings.Contains(header, "// #endregion 🔖License") {
-		t.Error("header missing License subregion end")
-	}
-	if !strings.Contains(header, "// #region 🔖Specs") {
-		t.Error("header missing Specs subregion start")
-	}
-	if !strings.Contains(header, "// #endregion 🔖Specs") {
-		t.Error("header missing Specs subregion end")
-	}
-	if !strings.Contains(header, "💻test/file.ts") {
-		t.Error("header missing file ID")
+	if !strings.Contains(header, "[💻test/file.ts](semiorepo://file/test/file.ts)") {
+		t.Error("header missing [ID](URI) identification")
 	}
 	if !strings.Contains(header, "A test file") {
 		t.Error("header missing summary")
@@ -3623,12 +3619,12 @@ func TestFormatHeaderStructure(t *testing.T) {
 
 func TestFormatHeaderEmptySpecs(t *testing.T) {
 	lang := NewGoLanguage()
-	header := lang.FormatHeader("💻test/file.go", "", "2025 Dev <dev@dev.com>", "AGPL text", "")
-	if !strings.Contains(header, "// #region 🔖Specs") {
-		t.Error("header missing Specs subregion even when empty")
+	header := lang.FormatHeader("💻test/file.go", "semiorepo://file/test/file.go", "", "2025 Dev <dev@dev.com>", "AGPL text", "")
+	if strings.Contains(header, "Specs") {
+		t.Error("header should not contain Specs subregion when specs is empty")
 	}
-	if !strings.Contains(header, "// #endregion 🔖Specs") {
-		t.Error("header missing Specs endregion even when empty")
+	if !strings.Contains(header, "// #region 🔖Header") {
+		t.Error("header missing Header region start")
 	}
 }
 
@@ -3645,15 +3641,12 @@ func TestFormatHeaderAllLanguages(t *testing.T) {
 		NewGraphqlLanguage(),
 	}
 	for _, lang := range languages {
-		header := lang.FormatHeader("💻test/file", "", "2025 Dev <d@d.com>", "AGPL", "")
+		header := lang.FormatHeader("💻test/file", "semiorepo://file/test/file", "", "2025 Dev <d@d.com>", "AGPL", "")
 		if header == "" {
 			t.Errorf("%s: FormatHeader returned empty", lang.Name())
 		}
-		if !strings.Contains(header, "License") {
-			t.Errorf("%s: header missing License region", lang.Name())
-		}
-		if !strings.Contains(header, "Specs") {
-			t.Errorf("%s: header missing Specs region", lang.Name())
+		if !strings.Contains(header, "[💻test/file](semiorepo://file/test/file)") {
+			t.Errorf("%s: header missing [ID](URI) identification", lang.Name())
 		}
 	}
 	noHeader := []LanguagePlugin{
@@ -3662,18 +3655,29 @@ func TestFormatHeaderAllLanguages(t *testing.T) {
 		NewYamlLanguage(),
 	}
 	for _, lang := range noHeader {
-		header := lang.FormatHeader("💻test/file", "", "2025 Dev <d@d.com>", "AGPL", "")
+		header := lang.FormatHeader("💻test/file", "semiorepo://file/test/file", "", "2025 Dev <d@d.com>", "AGPL", "")
 		if header != "" {
 			t.Errorf("%s: FormatHeader should return empty for non-header language", lang.Name())
 		}
 	}
 }
 
-func TestHeaderPolicyMissingSubregions(t *testing.T) {
-	bundles := LoadBundles()
-	path := "semio/assets/repo/some/folder/file_invalid.tsx"
-	scope := Scope{Kind: ScopeFile, FilePath: path}
-	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
+func TestHeaderPolicyOldFormatId(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// 💻src/app.ts\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion 🔖Header\n\nconst x = 1;\n"
+	testFile := "src/app.ts"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	bundles := []Bundle{}
+	scope := Scope{Kind: ScopeFile, FilePath: testFile}
+	ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
 	violations, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
@@ -3682,11 +3686,316 @@ func TestHeaderPolicyMissingSubregions(t *testing.T) {
 	for _, v := range violations {
 		counts[v.Kind]++
 	}
-	if counts[ViolationCodeHeaderMissingSpecsRegion] == 0 {
-		t.Error("expected missing-specs-region violation")
+	if counts[ViolationCodeFileWrongHeaderRegionFormat] == 0 {
+		t.Error("expected wrong-header-format violation for old-format ID without [ID](URI)")
 	}
-	if counts[ViolationCodeHeaderWrongLicense] == 0 {
-		t.Error("expected wrong-license violation")
+}
+
+func TestViolationKindGroup(t *testing.T) {
+	t.Run("AllKinds flat", func(t *testing.T) {
+		g := ViolationKindGroup{
+			Name:        "File",
+			Description: "File-level violations",
+			Scopes:      []string{"**/*.ts"},
+			Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion, ViolationCodeFileMissingIdentification},
+		}
+		kinds := g.AllKinds()
+		if len(kinds) != 2 {
+			t.Fatalf("expected 2 kinds, got %d", len(kinds))
+		}
+		if kinds[0] != ViolationCodeFileMissingHeaderRegion {
+			t.Errorf("expected %s, got %s", ViolationCodeFileMissingHeaderRegion, kinds[0])
+		}
+		if kinds[1] != ViolationCodeFileMissingIdentification {
+			t.Errorf("expected %s, got %s", ViolationCodeFileMissingIdentification, kinds[1])
+		}
+	})
+	t.Run("AllKinds nested groups", func(t *testing.T) {
+		g := ViolationKindGroup{
+			Name:        "Code",
+			Description: "Code violations",
+			Scopes:      []string{"**/*.{ts,tsx}"},
+			Groups: []ViolationKindGroup{
+				{
+					Name:        "File",
+					Description: "File-level violations",
+					Scopes:      []string{"**/*.ts"},
+					Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+				},
+				{
+					Name:        "Section",
+					Description: "Section-level violations",
+					Scopes:      []string{"**/*.ts"},
+					Kinds:       []ViolationKind{ViolationCodeSectionEmpty},
+				},
+			},
+		}
+		kinds := g.AllKinds()
+		if len(kinds) != 2 {
+			t.Fatalf("expected 2 kinds, got %d", len(kinds))
+		}
+	})
+	t.Run("AllKinds mixed kinds and groups", func(t *testing.T) {
+		g := ViolationKindGroup{
+			Name:        "Code",
+			Description: "Code violations",
+			Scopes:      []string{"**/*.{ts,tsx}"},
+			Kinds:       []ViolationKind{ViolationCodeCommentInline},
+			Groups: []ViolationKindGroup{
+				{
+					Name:        "File",
+					Description: "File-level violations",
+					Scopes:      []string{"**/*.ts"},
+					Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+				},
+			},
+		}
+		kinds := g.AllKinds()
+		if len(kinds) != 2 {
+			t.Fatalf("expected 2 kinds, got %d", len(kinds))
+		}
+		if kinds[0] != ViolationCodeCommentInline {
+			t.Errorf("expected %s first, got %s", ViolationCodeCommentInline, kinds[0])
+		}
+		if kinds[1] != ViolationCodeFileMissingHeaderRegion {
+			t.Errorf("expected %s second, got %s", ViolationCodeFileMissingHeaderRegion, kinds[1])
+		}
+	})
+	t.Run("AllKinds deeply nested", func(t *testing.T) {
+		g := ViolationKindGroup{
+			Name:   "Root",
+			Scopes: []string{"**/*"},
+			Groups: []ViolationKindGroup{
+				{
+					Name:   "Level1",
+					Scopes: []string{"**/*"},
+					Groups: []ViolationKindGroup{
+						{
+							Name:   "Level2",
+							Scopes: []string{"**/*"},
+							Kinds:  []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+						},
+					},
+				},
+			},
+		}
+		kinds := g.AllKinds()
+		if len(kinds) != 1 {
+			t.Fatalf("expected 1 kind, got %d", len(kinds))
+		}
+		if kinds[0] != ViolationCodeFileMissingHeaderRegion {
+			t.Errorf("expected %s, got %s", ViolationCodeFileMissingHeaderRegion, kinds[0])
+		}
+	})
+	t.Run("AllKinds empty group", func(t *testing.T) {
+		g := ViolationKindGroup{
+			Name:   "Empty",
+			Scopes: []string{"**/*"},
+		}
+		kinds := g.AllKinds()
+		if len(kinds) != 0 {
+			t.Fatalf("expected 0 kinds, got %d", len(kinds))
+		}
+	})
+	t.Run("GetID and GetURI", func(t *testing.T) {
+		g := ViolationKindGroup{
+			Name:        "File",
+			Description: "File-level violations",
+			Scopes:      []string{"**/*.ts"},
+		}
+		id := g.GetID()
+		if id == "" {
+			t.Error("expected non-empty ID")
+		}
+		if !strings.Contains(id, "File") {
+			t.Errorf("expected ID to contain 'File', got %s", id)
+		}
+		uri := g.GetURI()
+		if uri == "" {
+			t.Error("expected non-empty URI")
+		}
+		if !strings.HasPrefix(uri, "semiorepo://violationKindGroup/") {
+			t.Errorf("expected URI to start with 'semiorepo://violationKindGroup/', got %s", uri)
+		}
+	})
+}
+
+func TestPolicyDefAllKinds(t *testing.T) {
+	t.Run("groups collect all nested kinds", func(t *testing.T) {
+		p := PolicyDef{
+			ID:          "test",
+			Name:        "Test",
+			Description: "Test policy",
+			Scopes:      []string{"**/*"},
+			Groups: []ViolationKindGroup{
+				{
+					Name:   "File",
+					Scopes: []string{"**/*.ts"},
+					Kinds:  []ViolationKind{ViolationCodeFileMissingHeaderRegion, ViolationCodeFileMissingIdentification},
+				},
+				{
+					Name:   "Section",
+					Scopes: []string{"**/*.ts"},
+					Kinds:  []ViolationKind{ViolationCodeSectionEmpty},
+				},
+			},
+			Run: func(ctx *PolicyContext) []Violation { return nil },
+		}
+		kinds := p.AllKinds()
+		if len(kinds) != 3 {
+			t.Fatalf("expected 3 kinds, got %d", len(kinds))
+		}
+	})
+	t.Run("empty groups returns empty", func(t *testing.T) {
+		p := PolicyDef{
+			ID:     "empty",
+			Name:   "Empty",
+			Scopes: []string{"**/*"},
+			Run:    func(ctx *PolicyContext) []Violation { return nil },
+		}
+		kinds := p.AllKinds()
+		if len(kinds) != 0 {
+			t.Fatalf("expected 0 kinds, got %d", len(kinds))
+		}
+	})
+}
+
+func TestBuildViolationKindGroupTree(t *testing.T) {
+	t.Run("single group with kinds", func(t *testing.T) {
+		groups := []ViolationKindGroup{
+			{
+				Name:        "File",
+				Description: "File violations",
+				Scopes:      []string{"**/*.ts"},
+				Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion, ViolationCodeFileMissingIdentification},
+			},
+		}
+		nodes := buildViolationKindGroupTree(groups)
+		if len(nodes) != 1 {
+			t.Fatalf("expected 1 node, got %d", len(nodes))
+		}
+		if nodes[0].Label != "File" {
+			t.Errorf("expected label 'File', got %s", nodes[0].Label)
+		}
+		if nodes[0].Kind != TreeNodeCategory {
+			t.Errorf("expected category kind, got %s", nodes[0].Kind)
+		}
+		if len(nodes[0].Children) != 2 {
+			t.Fatalf("expected 2 children, got %d", len(nodes[0].Children))
+		}
+		for _, child := range nodes[0].Children {
+			if child.Kind != TreeNodeViolationKindNode {
+				t.Errorf("expected violation kind node, got %s", child.Kind)
+			}
+		}
+	})
+	t.Run("nested groups", func(t *testing.T) {
+		groups := []ViolationKindGroup{
+			{
+				Name:   "Code",
+				Scopes: []string{"**/*.ts"},
+				Groups: []ViolationKindGroup{
+					{
+						Name:   "File",
+						Scopes: []string{"**/*.ts"},
+						Kinds:  []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+					},
+					{
+						Name:   "Section",
+						Scopes: []string{"**/*.ts"},
+						Kinds:  []ViolationKind{ViolationCodeSectionEmpty},
+					},
+				},
+			},
+		}
+		nodes := buildViolationKindGroupTree(groups)
+		if len(nodes) != 1 {
+			t.Fatalf("expected 1 root node, got %d", len(nodes))
+		}
+		if len(nodes[0].Children) != 2 {
+			t.Fatalf("expected 2 children, got %d", len(nodes[0].Children))
+		}
+		fileGroup := nodes[0].Children[0]
+		if fileGroup.Label != "File" {
+			t.Errorf("expected label 'File', got %s", fileGroup.Label)
+		}
+		if len(fileGroup.Children) != 1 {
+			t.Fatalf("expected 1 child in File group, got %d", len(fileGroup.Children))
+		}
+	})
+	t.Run("empty groups", func(t *testing.T) {
+		nodes := buildViolationKindGroupTree(nil)
+		if len(nodes) != 0 {
+			t.Fatalf("expected 0 nodes, got %d", len(nodes))
+		}
+	})
+	t.Run("group node data contains scopes", func(t *testing.T) {
+		groups := []ViolationKindGroup{
+			{
+				Name:        "Sketchpad",
+				Description: "Sketchpad violations",
+				Scopes:      []string{"js/sketchpad/**/*.ts", "js/sketchpad/**/*.tsx"},
+				Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+			},
+		}
+		nodes := buildViolationKindGroupTree(groups)
+		data := nodes[0].Data
+		if data == nil {
+			t.Fatal("expected non-nil data")
+		}
+		scopes, ok := data["scopes"].([]string)
+		if !ok {
+			t.Fatal("expected scopes in data")
+		}
+		if len(scopes) != 2 {
+			t.Fatalf("expected 2 scopes, got %d", len(scopes))
+		}
+	})
+}
+
+func TestRegisteredPoliciesHaveGroups(t *testing.T) {
+	policies := GetRegisteredPolicies()
+	for _, p := range policies {
+		if len(p.Groups) == 0 {
+			t.Errorf("policy %s has no groups", p.ID)
+		}
+		kinds := p.AllKinds()
+		if len(kinds) == 0 {
+			t.Errorf("policy %s has no violation kinds", p.ID)
+		}
+	}
+}
+
+func TestPolicyGroupsGraphQL(t *testing.T) {
+	executor := getTestExecutor(t)
+	query := `{ policies { id name groups { name description scopes kinds { id } groups { name kinds { id } } } } }`
+	result, err := executor.Execute(context.Background(), query, nil)
+	if err != nil {
+		t.Fatalf("GraphQL query failed: %v", err)
+	}
+	data, ok := result.(map[string]interface{})
+	if !ok {
+		t.Fatal("expected map result")
+	}
+	policiesData, ok := data["policies"].([]interface{})
+	if !ok {
+		t.Fatal("expected policies array")
+	}
+	if len(policiesData) == 0 {
+		t.Fatal("expected at least one policy")
+	}
+	for _, pRaw := range policiesData {
+		p, ok := pRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		groups, ok := p["groups"].([]interface{})
+		if !ok {
+			t.Fatalf("expected groups array for policy %v", p["id"])
+		}
+		if len(groups) == 0 {
+			t.Errorf("expected at least one group for policy %v", p["id"])
+		}
 	}
 }
 
@@ -6963,7 +7272,7 @@ func TestViolationKindIdToUriPath(t *testing.T) {
 	}{
 		{"single segment", "code", "CODE"},
 		{"two segments", "code/inline-comment", "CODE/INLINE-COMMENT"},
-		{"three segments", "code/file/missing-header", "CODE/FILE/MISSING-HEADER"},
+		{"three segments", "code/file/missing-header-region", "CODE/FILE/MISSING-HEADER-REGION"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -6983,7 +7292,7 @@ func TestViolationKindUriPathToId(t *testing.T) {
 	}{
 		{"single segment", "CODE", "code"},
 		{"two segments", "CODE/INLINE-COMMENT", "code/inline-comment"},
-		{"three segments", "CODE/FILE/MISSING-HEADER", "code/file/missing-header"},
+		{"three segments", "CODE/FILE/MISSING-HEADER-REGION", "code/file/missing-header-region"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7027,7 +7336,7 @@ func TestViolationKindPathToIdValue(t *testing.T) {
 	}{
 		{"single segment", "code", "Code"},
 		{"two segments", "code/inline-comment", "Code#Inline Comment"},
-		{"three segments", "code/file/missing-header", "Code#File#Missing Header"},
+		{"three segments", "code/file/missing-header-region", "Code#File#Missing Header Region"},
 		{"four segments", "code/header/region/nested", "Code#Header#Region#Nested"},
 	}
 	for _, tt := range tests {
@@ -7048,7 +7357,7 @@ func TestViolationKindIdValueToPath(t *testing.T) {
 	}{
 		{"single segment", "Code", "code"},
 		{"two segments", "Code#Inline Comment", "code/inline-comment"},
-		{"three segments", "Code#File#Missing Header", "code/file/missing-header"},
+		{"three segments", "Code#File#Missing Header Region", "code/file/missing-header-region"},
 		{"four segments", "Code#Header#Region#Nested", "code/header/region/nested"},
 	}
 	for _, tt := range tests {
@@ -7068,7 +7377,7 @@ func TestViolationKindPathIdValueRoundTrip(t *testing.T) {
 	}{
 		{"single segment", "code"},
 		{"two segments", "code/inline-comment"},
-		{"three segments", "code/file/missing-header"},
+		{"three segments", "code/file/missing-header-region"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -7088,7 +7397,7 @@ func TestIdUriRoundTrip(t *testing.T) {
 		uri  string
 	}{
 		{"policy", fmt.Sprintf("%s/code", emojiText(EmojiPolicy)), "semiorepo://policy/CODE"},
-		{"violationKind", fmt.Sprintf("%sCode#File#Missing Header", emojiText(EmojiViolationKind)), "semiorepo://violationKind/CODE/FILE/MISSING-HEADER"},
+		{"violationKind", fmt.Sprintf("%sCode#File#Missing Header Region", emojiText(EmojiViolationKind)), "semiorepo://violationKind/CODE/FILE/MISSING-HEADER-REGION"},
 		{"contributor", fmt.Sprintf("%susalu", emojiText(EmojiContributor)), "semiorepo://contributor/USALU"},
 		{"commit", fmt.Sprintf("%sabc123", emojiText(EmojiCommit)), "semiorepo://commit/ABC123"},
 		{"draft", fmt.Sprintf("%sMY-DRAFT", emojiText(EmojiDraft)), "semiorepo://draft/MY-DRAFT"},

@@ -25,6 +25,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Main Process
+// Electron main process that creates the browser window and registers IPC handlers.
+// MUST quit on all windows closed except on macOS.
+
 import { app, BrowserWindow, ipcMain } from "electron";
 import started from "electron-squirrel-startup";
 import path from "node:path";
@@ -34,6 +38,8 @@ if (started) {
   app.quit();
 }
 
+// Creates the main Electron browser window with preload and vite integration.
+// MUST load the vite dev server URL in development and the built file in production.
 const createWindow = () => {
   const mainWindow = new BrowserWindow({
     width: 1200,
@@ -98,3 +104,5 @@ app.whenReady().then(() => {
     return os.userInfo().username;
   });
 });
+
+// #endregion 🔖Main Process

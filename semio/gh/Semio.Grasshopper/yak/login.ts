@@ -26,9 +26,16 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Login
+// Yak login script. MUST authenticate with the Yak package manager.
+
 import { execSync } from "child_process";
 
+// Yak CLI executable path for Rhino 8.
+// MUST point to the installed Yak binary.
 const yak = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 execSync(`"${yak}" login`, { stdio: "inherit" });
 
 console.log("✅ Logged in to Yak");
+
+// #endregion 🔖Login

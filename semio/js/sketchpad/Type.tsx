@@ -26,6 +26,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// External and internal dependency imports. MUST group third-party and local imports.
 
 import { arrayMove } from "@dnd-kit/sortable";
 import { Line, Sphere, useFBX, useGLTF } from "@react-three/drei";
@@ -107,43 +108,54 @@ import { AddIcon, AwardIcon, CheckIcon, CodeIcon, ConnectorIcon, HandIcon, Monit
 // #endregion 🔖Imports
 
 // #region 🔖Internal State Management
+// TypeApp state interfaces, enums, and diffing types. MUST define all shared state shapes.
 
+// Selection state holding selected connector and model GUIDs.
 export interface TypeAppSelection {
   connectors?: Guid[];
   models?: Guid[];
 }
+// Diff for added and removed connector selections.
 export interface TypeAppSelectionPortsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Diff for added and removed model selections.
 export interface TypeAppSelectionModelsDiff {
   added?: Guid[];
   removed?: Guid[];
 }
+// Combined selection diff for connectors and models.
 export interface TypeAppSelectionDiff {
   connectors?: TypeAppSelectionPortsDiff;
   models?: TypeAppSelectionModelsDiff;
 }
+// Fullscreen window modes for the TypeApp.
 export enum TypeAppFullscreenWindow {
   None = "none",
   Connectors = "connectors",
   Models = "models",
 }
 
+// Window kind identifiers for the TypeApp layout.
 export enum TypeAppWindowKind {
   Scene = "scene",
 }
+// Presence state including cursor position and camera.
 export interface TypeAppPresence {
   cursor?: Coord;
   camera?: Camera;
 }
+// Hover state tracking which connector or model is hovered.
 export interface TypeAppHover {
   connector?: Guid;
   model?: Guid;
 }
+// Presence state of another user including their name.
 export interface TypeAppPresenceOther extends TypeAppPresence {
   name: string;
 }
+// Diff object describing partial changes to TypeApp state.
 export interface TypeAppDiff {
   selection?: TypeAppSelectionDiff;
   presence?: TypeAppPresence;
@@ -157,7 +169,9 @@ export interface TypeAppDiff {
   selectedModelTags?: string[];
   windowLayout?: any;
 }
+// Edit record combining a TypeApp selection diff with kit-level diff metadata.
 export interface TypeAppEdit extends KitDiffAppEdit<TypeAppSelectionDiff> { }
+// Full mutable state of a TypeApp instance.
 export interface TypeAppState {
   fullscreenWindow: TypeAppFullscreenWindow;
   panelVisibility: PanelVisibility;
@@ -173,10 +187,12 @@ export interface TypeAppState {
   windowLayout?: any;
 }
 
+// Context passed to TypeApp commands with kit, typeApp state, and target GUID.
 export interface TypeAppCommandContext extends KitCommandContext {
   typeApp: TypeAppState;
   Guid: Guid;
 }
+// Result of a TypeApp command containing optional app and type diffs.
 export interface TypeAppCommandResult {
   diff?: TypeAppDiff;
   typeDiff?: TypeDiff;
@@ -189,6 +205,7 @@ const EMPTY_MODEL_TAG_ARRAY: string[] = [];
 // #endregion 🔖Internal State Management
 
 // #region 🔖Type App Plugin Registration
+// Plugin registration and XState event handlers for the TypeApp. MUST register all event handlers at module load.
 
 const typeAppPlugin: AppPlugin = {
   id: "type",
@@ -403,7 +420,10 @@ if (typeof window !== "undefined") {
 // #endregion 🔖Type App Plugin Registration
 
 // #region 🔖XState Hooks
+// React hooks that read and write TypeApp XState machine state. MUST use memoized selectors for performance.
 
+// Selects a slice of TypeApp state for the current kit-type scope.
+// MUST return null when no kit or type scope is available.
 export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAppId): T | TypeAppState | null {
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -419,6 +439,8 @@ export function useTypeApp<T>(selector?: (state: TypeAppState) => T, id?: TypeAp
   return state as unknown as TypeAppState;
 }
 
+// Returns the current connector and model selection for the TypeApp.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppSelection(): HookResult<TypeAppSelection> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -438,6 +460,8 @@ export function useTypeAppSelection(): HookResult<TypeAppSelection> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Returns the current panel visibility state for the TypeApp.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -457,6 +481,8 @@ export function useTypeAppPanelVisibility(): HookResult<PanelVisibility> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Returns the list of other users' presence states.
+// MUST return a readonly hook result.
 export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -468,6 +494,8 @@ export function useTypeAppOthers(): HookResult<TypeAppPresenceOther[]> {
   return readonlyHookResult(value);
 }
 
+// Returns the current camera state for the TypeApp.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppCamera(): HookResult<Camera | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -487,6 +515,8 @@ export function useTypeAppCamera(): HookResult<Camera | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Returns the GUID of the focused connector for camera targeting.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppFocusedConnectorGuid(): HookResult<Guid | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -510,6 +540,8 @@ export function useTypeAppFocusedConnectorGuid(): HookResult<Guid | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Returns the current hover state indicating which connector or model is hovered.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -535,6 +567,8 @@ export function useTypeAppHover(): HookResult<TypeAppHover | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Returns the currently active tool kind for the TypeApp.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppActiveTool(): HookResult<ToolKind> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -560,6 +594,8 @@ interface Transaction {
   abort?: () => void;
 }
 
+// Returns a transaction object with start, finalize, and abort methods.
+// MUST return stub methods until XState transaction events are implemented.
 export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
   // TODO: Implement transaction via XState events
   return {
@@ -569,6 +605,8 @@ export function useTypeAppTransaction(_id?: TypeAppId): Transaction {
   };
 }
 
+// Returns an object of command functions for sending TypeApp XState events.
+// MUST return no-op functions when no kit or type scope is available.
 export function useTypeAppCommands(id?: TypeAppId) {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -640,6 +678,8 @@ export function useTypeAppCommands(id?: TypeAppId) {
   }, [actor, kitGuid, typeGuid]);
 }
 
+// Returns whether a specific connector is selected and a setter to toggle it.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -664,6 +704,8 @@ export function useTypeAppIsPortSelected(connectorId: string): HookResult<boolea
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Returns whether a specific connector is hovered and a setter to toggle it.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -688,6 +730,8 @@ export function useTypeAppIsPortHovered(connectorId: string): HookResult<boolean
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Returns the GUID of the selected model for mesh display.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppSelectedModelGuid(): HookResult<Guid | undefined> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -710,6 +754,8 @@ export function useTypeAppSelectedModelGuid(): HookResult<Guid | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Returns the selected model tags used for model filtering.
+// MUST return a conditionalHookResult with setter availability.
 export function useTypeAppSelectedModelTags(): HookResult<string[]> {
   const actor = useSketchpadActor();
   const kitScope = useKitScope();
@@ -730,9 +776,13 @@ export function useTypeAppSelectedModelTags(): HookResult<string[]> {
 }
 
 //#region 🔖Action Hooks
+// Convenience React hooks wrapping state hooks into single-purpose actions. MUST return action-canAct tuples.
 
+// Tuple type for action hooks returning the action callback and a can-act boolean.
 export type ActionHookResult<TArgs extends any[]> = readonly [action: ((...args: TArgs) => void) | undefined, canAct: boolean];
 
+// Selects a single connector replacing the current selection.
+// MUST clear model selection when selecting a connector.
 export function useTypeAppSelectConnector(): ActionHookResult<[connectorGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
@@ -743,6 +793,8 @@ export function useTypeAppSelectConnector(): ActionHookResult<[connectorGuid: st
   return [action, canSetSelection];
 }
 
+// Removes a connector from the current selection.
+// MUST filter the connector GUID from the selection array.
 export function useTypeAppDeselectConnector(): ActionHookResult<[connectorGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
@@ -756,6 +808,8 @@ export function useTypeAppDeselectConnector(): ActionHookResult<[connectorGuid: 
   return [action, canSetSelection];
 }
 
+// Sets the hover state to a specific connector.
+// MUST delegate to the hover state setter.
 export function useTypeAppHoverPort(): ActionHookResult<[connectorGuid: string]> {
   const [, setHover, canSetHover] = useTypeAppHover();
   const action = useMemo(() => {
@@ -765,6 +819,8 @@ export function useTypeAppHoverPort(): ActionHookResult<[connectorGuid: string]>
   return [action, canSetHover];
 }
 
+// Sets the hover state to a specific model.
+// MUST delegate to the hover state setter.
 export function useTypeAppHoverModel(): ActionHookResult<[modelGuid: string]> {
   const [, setHover, canSetHover] = useTypeAppHover();
   const action = useMemo(() => {
@@ -774,6 +830,8 @@ export function useTypeAppHoverModel(): ActionHookResult<[modelGuid: string]> {
   return [action, canSetHover];
 }
 
+// Clears the current hover state.
+// MUST set hover to undefined.
 export function useTypeAppClearHover(): ActionHookResult<[]> {
   const [, setHover, canSetHover] = useTypeAppHover();
   const action = useMemo(() => {
@@ -783,6 +841,8 @@ export function useTypeAppClearHover(): ActionHookResult<[]> {
   return [action, canSetHover];
 }
 
+// Sets the focused connector GUID for camera targeting.
+// MUST delegate to the focused connector state setter.
 export function useTypeAppFocusPort(): ActionHookResult<[connectorGuid: string]> {
   const [, setFocusedConnectorGuid, canSetFocusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
   const action = useMemo(() => {
@@ -792,6 +852,8 @@ export function useTypeAppFocusPort(): ActionHookResult<[connectorGuid: string]>
   return [action, canSetFocusedConnectorGuid];
 }
 
+// Clears the focused connector allowing the camera to return to default.
+// MUST set focused connector GUID to undefined.
 export function useTypeAppClearFocus(): ActionHookResult<[]> {
   const [, setFocusedConnectorGuid, canSetFocusedConnectorGuid] = useTypeAppFocusedConnectorGuid();
   const action = useMemo(() => {
@@ -801,6 +863,8 @@ export function useTypeAppClearFocus(): ActionHookResult<[]> {
   return [action, canSetFocusedConnectorGuid];
 }
 
+// Clears all connector and model selections.
+// MUST set both connector and model arrays to empty.
 export function useTypeAppDeselectAll(): ActionHookResult<[]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const action = useMemo(() => {
@@ -810,6 +874,8 @@ export function useTypeAppDeselectAll(): ActionHookResult<[]> {
   return [action, canSetSelection];
 }
 
+// Selects a single model replacing the current selection.
+// MUST clear connector selection when selecting a model.
 export function useTypeAppSelectModel(): ActionHookResult<[modelGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
@@ -820,6 +886,8 @@ export function useTypeAppSelectModel(): ActionHookResult<[modelGuid: string]> {
   return [action, canSetSelection];
 }
 
+// Removes a model from the current selection.
+// MUST filter the model GUID from the selection array.
 export function useTypeAppDeselectModel(): ActionHookResult<[modelGuid: string]> {
   const [, setSelection, canSetSelection] = useTypeAppSelection();
   const [selection] = useTypeAppSelection();
@@ -833,6 +901,8 @@ export function useTypeAppDeselectModel(): ActionHookResult<[modelGuid: string]>
   return [action, canSetSelection];
 }
 
+// Sets the currently active tool kind.
+// MUST delegate to the active tool state setter.
 export function useTypeAppSetActiveTool(): ActionHookResult<[tool: ToolKind]> {
   const [, setActiveTool, canSetActiveTool] = useTypeAppActiveTool();
   const action = useMemo(() => {
@@ -842,6 +912,8 @@ export function useTypeAppSetActiveTool(): ActionHookResult<[tool: ToolKind]> {
   return [action, canSetActiveTool];
 }
 
+// Sets the camera state for the TypeApp scene.
+// MUST delegate to the camera state setter.
 export function useTypeAppSetCamera(): ActionHookResult<[camera: Camera]> {
   const [, setCamera, canSetCamera] = useTypeAppCamera();
   const action = useMemo(() => {
@@ -851,6 +923,8 @@ export function useTypeAppSetCamera(): ActionHookResult<[camera: Camera]> {
   return [action, canSetCamera];
 }
 
+// Toggles a specific panel's visibility.
+// MUST flip the boolean value of the given panel key.
 export function useTypeAppTogglePanel(): ActionHookResult<[panelKey: keyof PanelVisibility]> {
   const [panelVisibility, setPanelVisibility, canSetPanelVisibility] = useTypeAppPanelVisibility();
   const action = useMemo(() => {
@@ -862,6 +936,8 @@ export function useTypeAppTogglePanel(): ActionHookResult<[panelKey: keyof Panel
   return [action, canSetPanelVisibility];
 }
 
+// Adds a tag to the selected model tags if not already present.
+// MUST avoid duplicate tags.
 export function useTypeAppAddModelTag(): ActionHookResult<[tag: string]> {
   const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedModelTags();
   const action = useMemo(() => {
@@ -875,6 +951,8 @@ export function useTypeAppAddModelTag(): ActionHookResult<[tag: string]> {
   return [action, canSetSelectedTags];
 }
 
+// Removes a tag from the selected model tags.
+// MUST filter the tag string from the tags array.
 export function useTypeAppRemoveModelTag(): ActionHookResult<[tag: string]> {
   const [selectedTags, setSelectedTags, canSetSelectedTags] = useTypeAppSelectedModelTags();
   const action = useMemo(() => {
@@ -886,6 +964,8 @@ export function useTypeAppRemoveModelTag(): ActionHookResult<[tag: string]> {
   return [action, canSetSelectedTags];
 }
 
+// Sets the selected model GUID for mesh display.
+// MUST delegate to the selected model state setter.
 export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: string]> {
   const [, setSelectedModel, canSetSelectedModel] = useTypeAppSelectedModelGuid();
   const action = useMemo(() => {
@@ -898,6 +978,7 @@ export function useTypeAppSetSelectedModel(): ActionHookResult<[modelGuid: strin
 //#endregion 🔖Action Hooks
 
 const TypeAppScopeContext = createContext<{ id: string } | undefined>(undefined);
+// Context provider that scopes TypeApp state to a specific app instance ID.
 export const TypeAppScopeProvider = (props: { id: string; children: React.ReactNode }) => {
   const value = { id: props.id };
   return React.createElement(TypeAppScopeContext.Provider, { value }, props.children as any);
@@ -907,7 +988,9 @@ const useTypeAppScope = () => useContext(TypeAppScopeContext);
 // #endregion 🔖XState Hooks
 
 // #region 🔖Commands
+// Command definitions for the TypeApp producing diffs from context. MUST return TypeAppCommandResult.
 
+// Command map producing TypeApp and type diffs from command context and arguments.
 export const commands = {
   "semio.typeApp.selectConnector": (context: TypeAppCommandContext, connectorGuid: Guid): TypeAppCommandResult => {
     const currentConnectors = context.typeApp.selection?.connectors || [];
@@ -1065,6 +1148,7 @@ export const commands = {
 // #endregion 🔖Commands
 
 // #region 🔖Scene
+// Three.js scene components for connectors, meshes, and the 3D viewport. MUST render inside a React Three Fiber canvas.
 
 const ConnectorVisual: FC<{ connector: Connector; isSelected: boolean; isHovered: boolean; onHover: () => void; onLeave: () => void; onClick: () => void; onDoubleClick: () => void }> = ({
   connector,
@@ -1661,11 +1745,15 @@ const Scene: FC<{ isDragOver?: boolean }> = ({ isDragOver = false }) => {
 // #endregion 🔖Scene
 
 // #region 🔖Panels
+// Panel UI sections for the right sidebar including details and settings editors. MUST use the panel section registration API.
 
 // #region 🔖Right
+// Right sidebar panel containing details and settings sub-sections. MUST nest detail and settings regions.
 
 // #region 🔖Details
+// Detail panel sections for editing type properties, connectors, models, authors, and attributes. MUST render within tree items.
 
+// Detail panel section displaying editable type properties.
 export const TypeDetails: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
@@ -1737,6 +1825,7 @@ const TypeDetailsForm: FC = () => {
   );
 };
 
+// Detail panel section for managing type models with add, remove, and reorder.
 export const ModelsSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
@@ -1892,6 +1981,7 @@ const ModelsSectionForm: FC = () => {
   );
 };
 
+// Detail panel section listing all type connectors with inline editing.
 export const ConnectorsListSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
@@ -2177,6 +2267,7 @@ const ConnectorsListSectionForm: FC = () => {
   );
 };
 
+// Detail panel section for managing type authors.
 export const AuthorsSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
@@ -2282,6 +2373,7 @@ const AuthorsSectionForm: FC = () => {
   );
 };
 
+// Detail panel section for managing type key-value attributes.
 export const AttributesSection: FC = () => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
@@ -2414,6 +2506,7 @@ const AttributesSectionForm: FC = () => {
   );
 };
 
+// Detail panel section for editing a single selected connector.
 export const ConnectorSection: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
@@ -2605,6 +2698,7 @@ const ConnectorSectionForm: FC<{ connectorGuid: Guid }> = ({ connectorGuid }) =>
   );
 };
 
+// Detail panel section for batch-editing multiple selected connectors.
 export const ConnectorsMultipleSection: FC<{ connectorGuids: Guid[] }> = ({ connectorGuids }) => {
   const isInTypeScope = useIsInTypeScope();
   if (!isInTypeScope) return null;
@@ -2779,6 +2873,7 @@ const ConnectorsMultipleSectionForm: FC<{ connectorGuids: Guid[] }> = ({ connect
 // #endregion 🔖Details
 
 // #region 🔖Settings
+// Settings panel for theme, language, device, expertise, and mode selection. MUST use toggle groups and select elements.
 
 const TypeSettingsContent: FC = () => {
   const [theme, setTheme, canSetTheme] = useTheme();
@@ -2883,6 +2978,7 @@ const TypeSettingsContent: FC = () => {
 // #endregion 🔖Panels
 
 // #region 🔖Tools
+// Tool definitions for selection modes and connector creation. MUST export tool objects and settings components.
 
 const toolModules = import.meta.glob<Record<string, Tool<TypeAppState>>>("./*Tool.tsx", { eager: true });
 
@@ -2890,6 +2986,7 @@ const ConnectorToolContent: FC<ToolRenderContext<TypeAppState>> = () => {
   return null;
 };
 
+// Tool definition for the connector creation tool.
 export const ConnectorTool: Tool<TypeAppState> = {
   id: ToolKind.CONNECTOR,
   icon: <ConnectorIcon className="size-tiny" />,
@@ -2898,24 +2995,28 @@ export const ConnectorTool: Tool<TypeAppState> = {
   }),
 };
 
+// Tool definition for the normal selection tool.
 export const SelectionNormalTool: Tool<TypeAppState> = {
   id: ToolKind.SELECTION_NORMAL,
   icon: <SelectToolIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
 
+// Tool definition for the additive selection tool.
 export const SelectionAdditiveTool: Tool<TypeAppState> = {
   id: ToolKind.SELECTION_ADDITIVE,
   icon: <AddIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
 
+// Tool definition for the subtractive selection tool.
 export const SelectionSubtractiveTool: Tool<TypeAppState> = {
   id: ToolKind.SELECTION_SUBTRACTIVE,
   icon: <RemoveIcon className="size-tiny" />,
   render: (context: ToolRenderContext<TypeAppState>) => ({}),
 };
 
+// Settings component for switching between selection tool modes.
 export const TypeSelectSettings: FC = () => {
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -2945,6 +3046,7 @@ export const TypeSelectSettings: FC = () => {
   );
 };
 
+// Settings component for toggling the connector creation tool.
 export const TypeConnectorSettings: FC = () => {
   const kitScope = useKitScope();
   const typeScope = useTypeScope();
@@ -2964,11 +3066,13 @@ export const TypeConnectorSettings: FC = () => {
   );
 };
 
+// Array of all TypeApp tool definitions.
 export const TypeAppTools: Tool<TypeAppState>[] = [SelectionNormalTool, SelectionAdditiveTool, SelectionSubtractiveTool, ConnectorTool];
 
 // #endregion Tools
 
 // #region 🔖App
+// Main TypeApp component orchestrating panels, scene, keyboard shortcuts, and drag-and-drop. MUST register sections on mount.
 
 const App: FC = () => {
   const addSection = useAddPanelSection();
@@ -3324,7 +3428,9 @@ export default TypeApp;
 // #endregion 🔖App
 
 // #region 🔖Footer
+// Footer component displaying model tag toggles. MUST update footer items when tags change.
 
+// Footer component rendering model tag toggle buttons.
 export const TypeAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -3407,7 +3513,9 @@ export const TypeAppFooter: FC = () => {
 // #endregion 🔖Footer
 
 // #region 🔖Config
+// App configuration for the TypeApp including route segments, panels, and path matching. MUST define all route segments.
 
+// TypeApp configuration defining routes, panels, and path matching.
 export const config: AppConfig = {
   id: "type",
   component: TypeApp,

@@ -26,6 +26,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Electron Fuses
+// Type declarations for Electron Forge fuse options.
+// Consumers MUST use these enums for configuring fuse settings.
+
 declare module "@electron/fuses" {
   export enum FuseVersion {
     V1 = "V1",
@@ -39,3 +43,5 @@ declare module "@electron/fuses" {
     OnlyLoadAppFromAsar = "OnlyLoadAppFromAsar",
   }
 }
+
+// #endregion 🔖Electron Fuses

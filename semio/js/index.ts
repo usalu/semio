@@ -25,6 +25,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Exports
+// Public API surface re-exporting sketchpad components, semio domain, and shared configs.
+// MUST re-export all public types alongside their runtime counterparts.
+
 import "./i18n";
 
 export type { TooltipConfig } from "./sketchpad/elements";
@@ -48,3 +52,5 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps, AsideProps
 export { default as eslintConfig } from "./eslint.config";
 export { default as postcssConfig } from "./postcss.config";
 export { default as tailwindConfig } from "./tailwind.config";
+
+// #endregion 🔖Exports

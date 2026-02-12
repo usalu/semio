@@ -25,6 +25,10 @@
 
 // #endregion 🔖Header
 
+// #region 🔖Preload
+// Electron preload script exposing window controls and OS APIs to the renderer.
+// Preload MUST use contextBridge to safely expose IPC methods.
+
 import { contextBridge, ipcRenderer } from "electron";
 
 contextBridge.exposeInMainWorld("windowControls", {
@@ -36,3 +40,4 @@ contextBridge.exposeInMainWorld("windowControls", {
 contextBridge.exposeInMainWorld("os", {
   getUserId: () => ipcRenderer.invoke("get-user-id"),
 });
+// #endregion 🔖Preload

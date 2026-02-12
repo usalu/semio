@@ -26,6 +26,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// MUST import external and internal modules for the Feedback app.
 
 import { useSelector } from "@xstate/react";
 import { FC, useCallback, useLayoutEffect, useMemo } from "react";
@@ -41,6 +42,7 @@ import { Canvas, createDefaultLayout, FeedbackAppKind, FeedbackAppState, Feedbac
 // #endregion 🔖Imports
 
 // #region 🔖Feedback App Plugin Registration
+// MUST register the Feedback app plugin with default state and event handlers.
 
 const createDefaultFeedbackState = (): FeedbackAppState => ({
   panelVisibility: { ...EMPTY_PANEL_VISIBILITY },
@@ -134,6 +136,7 @@ if (typeof window !== "undefined") {
 // #endregion 🔖Feedback App Plugin Registration
 
 // #region 🔖Triadic Hooks
+// MUST provide triadic hooks for accessing and mutating Feedback app state.
 
 const DEFAULT_FORM_DATA: FeedbackFormData = {
   kind: "bug",
@@ -144,6 +147,8 @@ const DEFAULT_FORM_DATA: FeedbackFormData = {
   email: undefined,
 };
 
+// Triadic hook for feedback form data state.
+// MUST return current form data, setter, and writability flag.
 export function useFeedbackFormData(): HookResult<FeedbackFormData> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.formData ?? DEFAULT_FORM_DATA);
@@ -158,6 +163,8 @@ export function useFeedbackFormData(): HookResult<FeedbackFormData> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Triadic hook for feedback submission loading state.
+// MUST return current submitting flag, setter, and writability flag.
 export function useFeedbackIsSubmitting(): HookResult<boolean> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.isSubmitting ?? false);
@@ -172,6 +179,8 @@ export function useFeedbackIsSubmitting(): HookResult<boolean> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Triadic hook for feedback submission completion state.
+// MUST return current submitted flag, setter, and writability flag.
 export function useFeedbackIsSubmitted(): HookResult<boolean> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.isSubmitted ?? false);
@@ -186,6 +195,8 @@ export function useFeedbackIsSubmitted(): HookResult<boolean> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Triadic hook for feedback error state.
+// MUST return current error message, setter, and writability flag.
 export function useFeedbackError(): HookResult<string | undefined> {
   const actor = useSketchpadActor();
   const value = useSelector(actor, (snapshot) => snapshot.context.feedbackApp?.error);
@@ -200,6 +211,8 @@ export function useFeedbackError(): HookResult<string | undefined> {
   return conditionalHookResult(canSet, value, setter);
 }
 
+// Triadic hook for resetting the feedback form to defaults.
+// MUST return reset callback and availability flag.
 export function useFeedbackReset(): [(() => void) | undefined, boolean] {
   const actor = useSketchpadActor();
   const canResetEvent = useMemo(() => ({ type: "FEEDBACK.RESET_FORM" as const }), []);
@@ -218,6 +231,7 @@ export function useFeedbackReset(): [(() => void) | undefined, boolean] {
 // #region 🔖Components
 
 // #region 🔖Form
+// MUST render feedback form for submitting bug reports and ideas.
 
 const FeedbackForm: FC = () => {
   const { t } = useTranslation();
@@ -436,6 +450,7 @@ const FeedbackForm: FC = () => {
 // #endregion 🔖Components
 
 // #region 🔖App
+// MUST integrate feedback app with toolbar and layout canvas.
 
 const FeedbackToolbar: FC = () => {
   const { t } = useTranslation();
@@ -535,7 +550,9 @@ export default Feedback;
 // #endregion 🔖App
 
 // #region 🔖Config
+// MUST define app configuration for the Feedback app.
 
+// Feedback app configuration with routing, component, and panel definitions.
 export const config: AppConfig = {
   id: "feedback",
   component: Feedback,
@@ -548,6 +565,7 @@ export const config: AppConfig = {
 // #endregion 🔖Config
 
 // #region 🔖Global Footer Item
+// MUST re-export the feedback icon for the footer item.
 
 export { FeedbackIcon };
 

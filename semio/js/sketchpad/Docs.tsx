@@ -26,6 +26,7 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+// External and internal module imports MUST be declared here.
 
 import { MDXProvider as BaseMDXProvider } from "@mdx-js/react";
 import { FC, ReactNode, Suspense, createContext, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
@@ -53,12 +54,15 @@ import { PanelKind, createPanelDefinition, parseWindowLayout, registerAppPlugin,
 // #endregion 🔖Imports
 
 // #region 🔖MDX Loader
+// MDX file loading and section discovery utilities MUST be declared here.
 
+// MDX module with default component and optional frontmatter.
 export interface MDXModule {
   default: React.ComponentType;
   frontmatter?: PageFrontmatter;
 }
 
+// Frontmatter metadata for a docs section index page.
 export interface SectionFrontmatter {
   title?: string;
   description?: string;
@@ -69,6 +73,7 @@ export interface SectionFrontmatter {
   };
 }
 
+// File info for a loaded MDX file including path, section, and frontmatter.
 export interface MDXFileInfo {
   path: string;
   section: string;
@@ -80,6 +85,7 @@ export interface MDXFileInfo {
   module?: MDXModule;
 }
 
+// Metadata for a docs section including label, icon, and sort order.
 export interface SectionInfo {
   id: string;
   label: string;
@@ -90,6 +96,8 @@ export interface SectionInfo {
 
 const mdxModules = import.meta.glob<MDXModule>("./pages/**/*.mdx", { eager: true });
 
+// Loads an MDX file by path from the eager-loaded module map.
+// The path MUST be relative to the pages directory without extension.
 export async function loadMDXFile(path: string): Promise<MDXModule | null> {
   const cleanPath = path.replace(/^docs\//, "");
   const possibleKeys = Object.keys(mdxModules).filter((key) => {
@@ -125,6 +133,8 @@ function pathToTitle(filePath: string, frontmatter?: PageFrontmatter): string {
     .join(" ");
 }
 
+// Returns all MDX files with resolved frontmatter and section info.
+// Index files for sections MUST be excluded from the flat list.
 export function getAllMDXFiles(): MDXFileInfo[] {
   return Object.keys(mdxModules)
     .filter((filePath) => {
@@ -151,12 +161,16 @@ export function getAllMDXFiles(): MDXFileInfo[] {
     });
 }
 
+// Returns MDX files filtered by section and sorted by order.
+// The section parameter MUST match a top-level page directory.
 export function getMDXFilesBySection(section: string): MDXFileInfo[] {
   return getAllMDXFiles()
     .filter((file) => file.section === section)
     .sort((a, b) => (a.order ?? 999) - (b.order ?? 999));
 }
 
+// Returns all docs sections discovered from the MDX file structure.
+// Sections MUST be sorted by their order field.
 export function getAllSections(): SectionInfo[] {
   const sectionsMap = new Map<string, SectionInfo>();
   Object.keys(mdxModules).forEach((filePath) => {
@@ -189,14 +203,18 @@ export function getAllSections(): SectionInfo[] {
 // #endregion 🔖MDX Loader
 
 // #region 🔖MDX Provider
+// MDX rendering context and heading components MUST be declared here.
 
 // #region 🔖SectionTree
+// Section tree navigation component MUST render docs file hierarchy.
 
+// Props for the SectionTree navigation component.
 export interface SectionTreeProps {
   title?: string;
   section?: string;
 }
 
+// Section tree component rendering a navigable file tree for a docs section.
 export const SectionTree: React.FC<SectionTreeProps> = ({ title, section }) => {
   const location = useLocation();
   const navigate = useNavigate();
@@ -221,6 +239,7 @@ export const SectionTree: React.FC<SectionTreeProps> = ({ title, section }) => {
 
 // #endregion 🔖SectionTree
 
+// Node representing a heading with ID, text, level, and optional children.
 export interface HeadingNode {
   id: string;
   text: string;
@@ -261,6 +280,7 @@ const headingsState = {
 const subscribeHeadings = (callback: () => void) => headingsState.subscribe(callback);
 const getHeadingsSnapshot = () => headingsState.getAll();
 
+// Hook providing heading registration and retrieval via external store.
 export const useHeadings = () => {
   const headings = useSyncExternalStore(subscribeHeadings, getHeadingsSnapshot);
 
@@ -476,6 +496,7 @@ interface HeadingsProviderProps {
   children: ReactNode;
 }
 
+// Context provider supplying heading state to descendant components.
 export const HeadingsProvider: FC<HeadingsProviderProps> = ({ children }) => {
   const { headings, registerHeading, clearHeadings } = useHeadings();
   return <HeadingsContext.Provider value={{ headings, registerHeading, clearHeadings }}>{children}</HeadingsContext.Provider>;
@@ -485,6 +506,7 @@ interface MDXProviderProps {
   children: ReactNode;
 }
 
+// MDX component provider wrapping children with custom heading and element renderers.
 export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
   const components = useMemo(() => createComponents(), []);
   return <BaseMDXProvider components={components}>{children}</BaseMDXProvider>;
@@ -493,7 +515,9 @@ export const MDXProvider: FC<MDXProviderProps> = ({ children }) => {
 // #endregion 🔖MDX Provider
 
 // #region 🔖Registry
+// Docs registry MUST provide page and section lookup for navigation.
 
+// Metadata for a docs page including path, section, and ordering.
 export interface DocsPage {
   title: string;
   description?: string;
@@ -504,6 +528,7 @@ export interface DocsPage {
   concepts?: string[];
 }
 
+// Extended section info for docs registry lookups.
 export interface DocsSection extends SectionInfo { }
 
 class DocsRegistry {
@@ -638,12 +663,15 @@ class DocsRegistry {
   }
 }
 
+// Singleton docs registry instance for page and section lookups.
 export const docsRegistry = new DocsRegistry();
 
 // #endregion 🔖Registry
 
 // #region 🔖Store
+// Docs app section state MUST be declared here.
 
+// Persisted state for a docs section including expansion and progress.
 export interface DocsSectionState {
   isExpanded: boolean;
   progress?: number;
@@ -653,42 +681,51 @@ export interface DocsSectionState {
 // #endregion 🔖Store
 
 // #region 🔖Types
+// Docs app state, selection, and diff type definitions MUST be declared here.
 
+// Current selection state of the docs app.
 export interface DocsAppSelection {
   section?: string;
   page?: string;
 }
 
+// Diff for docs app selection section and page changes.
 export interface DocsAppSelectionDiff {
   section?: { prev?: string; next?: string };
   page?: { prev?: string; next?: string };
 }
 
+// Section-level state for expansion, progress, and completed pages.
 export interface DocsAppSectionState {
   isExpanded?: boolean;
   progress?: number;
   completedPages?: string[];
 }
 
+// Complete state of the docs app including panels, selection, and section states.
 export interface DocsAppState {
   panelVisibility: PanelVisibility;
   selection?: DocsAppSelection;
   sectionStates?: Record<string, DocsAppSectionState>;
 }
 
+// Partial state diff for updating the docs app.
 export interface DocsAppDiff {
   panelVisibility?: Partial<PanelVisibility>;
   selection?: DocsAppSelectionDiff;
   sectionStatesDiff?: Record<string, Partial<DocsAppSectionState>>;
 }
 
+// Edit record for undo and redo in the docs app.
 export interface DocsAppEdit extends AppEdit<DocsAppSelectionDiff> { }
 
+// Context passed to docs app command handlers.
 export interface DocsCommandContext {
   docs: DocsAppState;
   origin?: string;
 }
 
+// Result returned by docs app command handlers.
 export interface DocsCommandResult {
   diff?: DocsAppDiff;
 }
@@ -696,7 +733,10 @@ export interface DocsCommandResult {
 // #endregion 🔖Types
 
 // #region 🔖Docs App Store
+// Docs app store MUST extend PlainAppStore with docs-specific state management.
 
+// Store managing docs app state including selection, sections, and commands.
+// The store MUST apply diffs immutably and record edits for undo and redo.
 export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsAppSelectionDiff, DocsAppEdit, DocsCommandContext, DocsCommandResult> {
   constructor(_parent: SketchpadStore) {
     const defaultState: DocsAppState = {
@@ -788,7 +828,9 @@ export class DocsAppStore extends PlainAppStore<DocsAppState, DocsAppDiff, DocsA
 // #endregion 🔖Docs App Store
 
 // #region 🔖Commands
+// Docs app command handlers MUST modify state through diff objects.
 
+// Command handlers for docs app page selection, section toggling, and progress tracking.
 export const docsCommands = {
   "semio.docsApp.selectPage": async (context: DocsCommandContext, section: string, page: string): Promise<DocsCommandResult> => {
     return {
@@ -846,6 +888,7 @@ if (typeof window !== "undefined") {
 }
 
 // #region 🔖Docs App Plugin Registration
+// Plugin registration MUST initialize docs app context and registry.
 
 const docsAppPlugin: AppPlugin = {
   id: "docs",
@@ -873,10 +916,13 @@ if (typeof window !== "undefined") {
 // #endregion 🔖Commands
 
 // #region 🔖Canvas
+// Canvas components MUST render the docs app visual content.
 
 // #region 🔖Windows
+// Window components MUST provide windowed views within the canvas.
 
 // #region 🔖Page
+// Page window MUST render MDX content with navigation and heading extraction.
 
 interface PageCanvasProps {
   MDXContent?: React.ComponentType;
@@ -1096,7 +1142,9 @@ const PageCanvas: FC<PageCanvasProps> = ({ MDXContent, frontmatter }) => {
 // #endregion 🔖Canvas
 
 // #region 🔖Footer
+// Footer component MUST manage docs app footer items.
 
+// Footer component for the docs app registering footer items.
 export const DocsAppFooter: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -1114,6 +1162,9 @@ export const DocsAppFooter: FC = () => {
 };
 
 // #endregion 🔖Footer
+
+// #region 🔖Panels
+// Panel components MUST render sidebar content for the docs app.
 
 const Workbench: FC = () => {
   const navigate = useNavigate();
@@ -1168,8 +1219,12 @@ const Settings: FC = () => {
   return <div className="text-sm text-muted-foreground">{useLabel("semio.sketchpad.panel.settings.placeholder")}</div>;
 };
 
-// #region 🔖App
+// #endregion 🔖Panels
 
+// #region 🔖App
+// Docs app root component MUST compose MDX routing, panel sections, and layout.
+
+// Window kind identifiers for docs app layout.
 export enum DocsAppWindowKind {
   Page = "page",
 }
@@ -1330,7 +1385,9 @@ export default App;
 // #endregion 🔖App
 
 // #region 🔖Config
+// Docs app route, panel, and path matching configuration MUST be exported.
 
+// Docs app configuration for routing, panels, and path matching.
 export const config: AppConfig = {
   id: "docs",
   component: App,
