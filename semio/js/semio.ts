@@ -36,15 +36,12 @@ import CONSTANTS from "./constants.json";
 // #endregion 🔖Imports
 
 // #region 🔖Constants
+// [🔖semio/js/semio.ts#Constants](semiorepo://section/semio/js/semio.ts/CONSTANTS)
+// Global constants MUST define shared numeric parameters.
 
-/**
- * [🔖semio/js/semio.ts#Constants](semiorepo://section/semio/js/semio.ts/CONSTANTS)
- * Standard icon width in pixels.
- *
- * Global constants MUST define shared numeric parameters.
- *
- *  * [🪨semio/js/semio.ts#Constants§ICON_WIDTH](semiorepo://definition/semio/js/semio.ts/CONSTANTS/ICON-WIDTH)
- **/
+/** Standard icon width in pixels.
+ * [🪨semio/js/semio.ts#Constants§ICON_WIDTH](semiorepo://definition/semio/js/semio.ts/CONSTANTS/ICON-WIDTH)
+**/
 export const ICON_WIDTH = CONSTANTS.icon.width;
 /**
  * Numeric tolerance for floating-point comparisons.

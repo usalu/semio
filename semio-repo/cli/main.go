@@ -13894,6 +13894,58 @@ func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 			}
 			break
 		}
+		if language.Name() == "python" {
+			parenDepth := 0
+			for _, ch := range lines[d.Start-1] {
+				if ch == '(' {
+					parenDepth++
+				}
+				if ch == ')' {
+					parenDepth--
+				}
+			}
+			bodyStart := d.Start
+			if parenDepth > 0 {
+				for scanIdx := d.Start; scanIdx < len(lines) && scanIdx < d.Start+15; scanIdx++ {
+					for _, ch := range lines[scanIdx] {
+						if ch == '(' {
+							parenDepth++
+						}
+						if ch == ')' {
+							parenDepth--
+						}
+					}
+					if parenDepth <= 0 {
+						bodyStart = scanIdx + 1
+						break
+					}
+				}
+			}
+			for bodyIdx := bodyStart; bodyIdx < len(lines) && bodyIdx < bodyStart+5; bodyIdx++ {
+				trimmed := strings.TrimSpace(lines[bodyIdx])
+				if trimmed == "" {
+					continue
+				}
+				if strings.HasPrefix(trimmed, `"""`) || strings.HasPrefix(trimmed, `'''`) {
+					quote := `"""`
+					if strings.HasPrefix(trimmed, `'''`) {
+						quote = `'''`
+					}
+					result[bodyIdx+1] = true
+					afterOpen := strings.TrimPrefix(trimmed, quote)
+					if strings.Index(afterOpen, quote) < 0 {
+						for scanIdx := bodyIdx + 1; scanIdx < len(lines); scanIdx++ {
+							sline := strings.TrimSpace(lines[scanIdx])
+							result[scanIdx+1] = true
+							if sline == quote || strings.HasSuffix(sline, quote) {
+								break
+							}
+						}
+					}
+				}
+				break
+			}
+		}
 	}
 	ctx.definitionDocCache[filePath] = result
 	return result
@@ -14528,17 +14580,26 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 						isNativeDocstring = true
 						for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
 							sline := strings.TrimSpace(lines[scanIdx])
-							if strings.HasPrefix(sline, "/**") {
-								break
-							}
+							isOpenLine := strings.HasPrefix(sline, "/**")
 							content := sline
-							if strings.HasPrefix(content, "* ") {
+							if isOpenLine {
+								content = strings.TrimPrefix(content, "/**")
+							} else if strings.HasPrefix(content, "* ") {
 								content = content[2:]
-							} else if content == "*" || content == "/**" || content == "*/" || content == "**/" {
+							} else if content == "*" || content == "*/" || content == "**/" {
+								if isOpenLine {
+									break
+								}
 								continue
 							}
 							content = strings.TrimSpace(content)
+							if strings.HasSuffix(content, "**/") || strings.HasSuffix(content, "*/") {
+								content = strings.TrimSpace(strings.TrimSuffix(strings.TrimSuffix(content, "**/"), "*/"))
+							}
 							if content == "" {
+								if isOpenLine {
+									break
+								}
 								continue
 							}
 							if strings.HasPrefix(content, "* ") {
@@ -14550,6 +14611,9 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 								hasSpecs = true
 							} else {
 								hasSummary = true
+							}
+							if isOpenLine {
+								break
 							}
 						}
 					}
@@ -14568,6 +14632,12 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 						if commentText == "" {
 							continue
 						}
+						commentText = strings.TrimPrefix(commentText, "<summary>")
+						commentText = strings.TrimSuffix(commentText, "</summary>")
+						commentText = strings.TrimSpace(commentText)
+						if commentText == "<remarks>" || commentText == "</remarks>" || commentText == "" {
+							continue
+						}
 						if strings.HasPrefix(commentText, "[") && strings.Contains(commentText, "](semiorepo://definition/") {
 							hasIdentification = true
 						} else if isSpecText(commentText) {
@@ -14578,8 +14648,121 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					}
 				}
 			}
+			if !isNativeDocstring && langName == "python" {
+				defLineRaw := lines[def.start-1]
+				parenDepth := 0
+				for _, ch := range defLineRaw {
+					if ch == '(' {
+						parenDepth++
+					}
+					if ch == ')' {
+						parenDepth--
+					}
+				}
+				bodyStart := def.start
+				if parenDepth > 0 {
+					for scanIdx := def.start; scanIdx < len(lines) && scanIdx < def.start+15; scanIdx++ {
+						for _, ch := range lines[scanIdx] {
+							if ch == '(' {
+								parenDepth++
+							}
+							if ch == ')' {
+								parenDepth--
+							}
+						}
+						if parenDepth <= 0 {
+							bodyStart = scanIdx + 1
+							break
+						}
+					}
+				}
+				for bodyIdx := bodyStart; bodyIdx < len(lines) && bodyIdx < bodyStart+5; bodyIdx++ {
+					trimmed := strings.TrimSpace(lines[bodyIdx])
+					if trimmed == "" {
+						continue
+					}
+					if strings.HasPrefix(trimmed, `"""`) || strings.HasPrefix(trimmed, `'''`) {
+						isNativeDocstring = true
+						quote := `"""`
+						if strings.HasPrefix(trimmed, `'''`) {
+							quote = `'''`
+						}
+						afterOpen := strings.TrimPrefix(trimmed, quote)
+						closeIdx := strings.Index(afterOpen, quote)
+						if closeIdx >= 0 {
+							content := strings.TrimSpace(afterOpen[:closeIdx])
+							if content != "" {
+								if strings.HasPrefix(content, "[") && strings.Contains(content, "](semiorepo://definition/") {
+									hasIdentification = true
+								} else if isSpecText(content) {
+									hasSpecs = true
+								} else {
+									hasSummary = true
+								}
+							}
+						} else {
+							firstContent := strings.TrimSpace(afterOpen)
+							if firstContent != "" {
+								if strings.HasPrefix(firstContent, "[") && strings.Contains(firstContent, "](semiorepo://definition/") {
+									hasIdentification = true
+								} else if isSpecText(firstContent) {
+									hasSpecs = true
+								} else {
+									hasSummary = true
+								}
+							}
+							for scanIdx := bodyIdx + 1; scanIdx < len(lines); scanIdx++ {
+								sline := strings.TrimSpace(lines[scanIdx])
+								if sline == quote {
+									break
+								}
+								if strings.HasSuffix(sline, quote) {
+									content := strings.TrimSpace(strings.TrimSuffix(sline, quote))
+									if content != "" {
+										if strings.HasPrefix(content, "[") && strings.Contains(content, "](semiorepo://definition/") {
+											hasIdentification = true
+										} else if isSpecText(content) {
+											hasSpecs = true
+										} else {
+											hasSummary = true
+										}
+									}
+									break
+								}
+								if sline == "" {
+									continue
+								}
+								if strings.HasPrefix(sline, "[") && strings.Contains(sline, "](semiorepo://definition/") {
+									hasIdentification = true
+								} else if isSpecText(sline) {
+									hasSpecs = true
+								} else {
+									hasSummary = true
+								}
+							}
+						}
+					}
+					break
+				}
+			}
+			if langName == "python" && isNativeDocstring {
+				for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
+					line := strings.TrimSpace(lines[lineIndex])
+					if line == "" {
+						break
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText != "" {
+						isNativeDocstring = false
+						break
+					}
+				}
+			}
 			if !isNativeDocstring {
-				if langName == "go" || langName == "python" {
+				if langName == "go" {
 					isNativeDocstring = true
 				}
 				for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
@@ -22056,20 +22239,225 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					defUri := DefinitionHeaderUri(filePart, sectionPath, defName)
 					prefix := language.CommentPrefix()
 					idLine := prefix + " [" + defId + "](" + defUri + ")"
-					insertAt := v.Line - 1
-					for insertAt > 0 {
-						prev := strings.TrimSpace(lines[insertAt-1])
-						if prev == "" || !strings.HasPrefix(prev, prefix) {
+					langName := language.Name()
+					if langName == "python" {
+						parenDepth := 0
+						for _, ch := range lines[v.Line-1] {
+							if ch == '(' {
+								parenDepth++
+							}
+							if ch == ')' {
+								parenDepth--
+							}
+						}
+						bodyStart := v.Line
+						if parenDepth > 0 {
+							for scanIdx := v.Line; scanIdx < len(lines) && scanIdx < v.Line+15; scanIdx++ {
+								for _, ch := range lines[scanIdx] {
+									if ch == '(' {
+										parenDepth++
+									}
+									if ch == ')' {
+										parenDepth--
+									}
+								}
+								if parenDepth <= 0 {
+									bodyStart = scanIdx + 1
+									break
+								}
+							}
+						}
+						docstringFound := false
+						for bodyIdx := bodyStart; bodyIdx < len(lines) && bodyIdx < bodyStart+5; bodyIdx++ {
+							trimmed := strings.TrimSpace(lines[bodyIdx])
+							if trimmed == "" {
+								continue
+							}
+							if strings.HasPrefix(trimmed, `"""`) || strings.HasPrefix(trimmed, `'''`) {
+								docstringFound = true
+								quote := `"""`
+								if strings.HasPrefix(trimmed, `'''`) {
+									quote = `'''`
+								}
+								afterOpen := strings.TrimPrefix(trimmed, quote)
+								closeIdx := strings.Index(afterOpen, quote)
+								bodyIndent := ""
+								for _, ch := range lines[bodyIdx] {
+									if ch == ' ' || ch == '\t' {
+										bodyIndent += string(ch)
+									} else {
+										break
+									}
+								}
+								idContent := "[" + defId + "](" + defUri + ")"
+								if closeIdx >= 0 {
+									existingContent := strings.TrimSpace(afterOpen[:closeIdx])
+									if existingContent != "" {
+										lines[bodyIdx] = bodyIndent + quote + existingContent
+										newLines := make([]string, 0, len(lines)+2)
+										newLines = append(newLines, lines[:bodyIdx+1]...)
+										newLines = append(newLines, bodyIndent+idContent)
+										newLines = append(newLines, bodyIndent+quote)
+										newLines = append(newLines, lines[bodyIdx+1:]...)
+										lines = newLines
+									} else {
+										lines[bodyIdx] = bodyIndent + quote + idContent + quote
+									}
+								} else {
+									for scanIdx := bodyIdx + 1; scanIdx < len(lines); scanIdx++ {
+										sline := strings.TrimSpace(lines[scanIdx])
+										if sline == quote || strings.HasSuffix(sline, quote) {
+											newLines := make([]string, 0, len(lines)+1)
+											newLines = append(newLines, lines[:scanIdx]...)
+											newLines = append(newLines, bodyIndent+idContent)
+											newLines = append(newLines, lines[scanIdx:]...)
+											lines = newLines
+											break
+										}
+									}
+								}
+								fixed++
+							}
 							break
 						}
-						insertAt--
+						if !docstringFound {
+							bodyIndent := "    "
+							if bodyStart < len(lines) {
+								raw := lines[bodyStart]
+								detected := ""
+								for _, ch := range raw {
+									if ch == ' ' || ch == '\t' {
+										detected += string(ch)
+									} else {
+										break
+									}
+								}
+								if detected != "" {
+									bodyIndent = detected
+								}
+							}
+							idContent := "[" + defId + "](" + defUri + ")"
+							newLines := make([]string, 0, len(lines)+1)
+							newLines = append(newLines, lines[:bodyStart]...)
+							newLines = append(newLines, bodyIndent+`"""`+idContent+`"""`)
+							newLines = append(newLines, lines[bodyStart:]...)
+							lines = newLines
+							fixed++
+						}
+					} else if langName == "typescript" {
+						prevIdx := v.Line - 2
+						if prevIdx >= 0 {
+							prevLine := strings.TrimSpace(lines[prevIdx])
+							if strings.HasSuffix(prevLine, "**/") || strings.HasSuffix(prevLine, "*/") {
+								indent := ""
+								for _, ch := range lines[v.Line-1] {
+									if ch == ' ' || ch == '\t' {
+										indent += string(ch)
+									} else {
+										break
+									}
+								}
+								idContent := "[" + defId + "](" + defUri + ")"
+								for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
+									sline := strings.TrimSpace(lines[scanIdx])
+									if strings.HasPrefix(sline, "/**") {
+										newLines := make([]string, 0, len(lines)+2)
+										newLines = append(newLines, lines[:prevIdx]...)
+										newLines = append(newLines, indent+" *")
+										newLines = append(newLines, indent+" * "+idContent)
+										newLines = append(newLines, lines[prevIdx:]...)
+										lines = newLines
+										fixed++
+										break
+									}
+								}
+								break
+							}
+						}
+						insertAt := v.Line - 1
+						for insertAt > 0 {
+							prev := strings.TrimSpace(lines[insertAt-1])
+							if prev == "" || !strings.HasPrefix(prev, prefix) {
+								break
+							}
+							insertAt--
+						}
+						newLines := make([]string, 0, len(lines)+1)
+						newLines = append(newLines, lines[:v.Line-1]...)
+						newLines = append(newLines, idLine)
+						newLines = append(newLines, lines[v.Line-1:]...)
+						lines = newLines
+						fixed++
+					} else if langName == "csharp" || langName == "rust" {
+						prevIdx := v.Line - 2
+						if prevIdx >= 0 && strings.HasPrefix(strings.TrimSpace(lines[prevIdx]), "///") {
+							idContent := "/// [" + defId + "](" + defUri + ")"
+							hasRemarks := false
+							for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
+								sline := strings.TrimSpace(lines[scanIdx])
+								if !strings.HasPrefix(sline, "///") {
+									break
+								}
+								if strings.Contains(sline, "<remarks>") {
+									hasRemarks = true
+									break
+								}
+							}
+							if hasRemarks {
+								for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
+									sline := strings.TrimSpace(lines[scanIdx])
+									if strings.Contains(sline, "</remarks>") {
+										newLines := make([]string, 0, len(lines)+1)
+										newLines = append(newLines, lines[:scanIdx]...)
+										newLines = append(newLines, idContent)
+										newLines = append(newLines, lines[scanIdx:]...)
+										lines = newLines
+										fixed++
+										break
+									}
+								}
+							} else {
+								newLines := make([]string, 0, len(lines)+3)
+								newLines = append(newLines, lines[:v.Line-1]...)
+								newLines = append(newLines, "/// <remarks>")
+								newLines = append(newLines, idContent)
+								newLines = append(newLines, "/// </remarks>")
+								newLines = append(newLines, lines[v.Line-1:]...)
+								lines = newLines
+								fixed++
+							}
+							break
+						}
+						insertAt := v.Line - 1
+						for insertAt > 0 {
+							prev := strings.TrimSpace(lines[insertAt-1])
+							if prev == "" || !strings.HasPrefix(prev, prefix) {
+								break
+							}
+							insertAt--
+						}
+						newLines := make([]string, 0, len(lines)+1)
+						newLines = append(newLines, lines[:v.Line-1]...)
+						newLines = append(newLines, idLine)
+						newLines = append(newLines, lines[v.Line-1:]...)
+						lines = newLines
+						fixed++
+					} else {
+						insertAt := v.Line - 1
+						for insertAt > 0 {
+							prev := strings.TrimSpace(lines[insertAt-1])
+							if prev == "" || !strings.HasPrefix(prev, prefix) {
+								break
+							}
+							insertAt--
+						}
+						newLines := make([]string, 0, len(lines)+1)
+						newLines = append(newLines, lines[:v.Line-1]...)
+						newLines = append(newLines, idLine)
+						newLines = append(newLines, lines[v.Line-1:]...)
+						lines = newLines
+						fixed++
 					}
-					newLines := make([]string, 0, len(lines)+1)
-					newLines = append(newLines, lines[:v.Line-1]...)
-					newLines = append(newLines, idLine)
-					newLines = append(newLines, lines[v.Line-1:]...)
-					lines = newLines
-					fixed++
 				}
 			}
 		case ViolationCodeDefNotNativeDocstring:
@@ -22174,6 +22562,191 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 							fixed++
 						} else {
 							break
+						}
+					}
+				case "python":
+					var commentTexts []string
+					commentStartIdx := defLineNum - 1
+					for lineIndex := defLineNum - 2; lineIndex >= 0; lineIndex-- {
+						line := strings.TrimSpace(lines[lineIndex])
+						if line == "" {
+							break
+						}
+						if !strings.HasPrefix(line, prefix) {
+							break
+						}
+						commentStartIdx = lineIndex
+						text := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+						commentTexts = append([]string{text}, commentTexts...)
+					}
+					if len(commentTexts) > 0 {
+						var cSummary, cSpecs, cTodos []string
+						var cId string
+						inTodo := false
+						for _, cl := range commentTexts {
+							if strings.HasPrefix(cl, "[") && strings.Contains(cl, "](semiorepo://definition/") {
+								cId = cl
+								inTodo = false
+								continue
+							}
+							if strings.HasPrefix(cl, "TODO:") || strings.HasPrefix(cl, "TODO ") {
+								inTodo = true
+								cTodos = append(cTodos, cl)
+								continue
+							}
+							if inTodo {
+								cTodos = append(cTodos, cl)
+								continue
+							}
+							if isSpecText(cl) {
+								cSpecs = append(cSpecs, cl)
+							} else {
+								cSummary = append(cSummary, cl)
+							}
+						}
+						bodyIndent := "    "
+						parenDepth := 0
+						for _, ch := range lines[defLineNum-1] {
+							if ch == '(' {
+								parenDepth++
+							}
+							if ch == ')' {
+								parenDepth--
+							}
+						}
+						bodyStart := defLineNum
+						if parenDepth > 0 {
+							for scanIdx := defLineNum; scanIdx < len(lines) && scanIdx < defLineNum+15; scanIdx++ {
+								for _, ch := range lines[scanIdx] {
+									if ch == '(' {
+										parenDepth++
+									}
+									if ch == ')' {
+										parenDepth--
+									}
+								}
+								if parenDepth <= 0 {
+									bodyStart = scanIdx + 1
+									break
+								}
+							}
+						}
+						if bodyStart < len(lines) {
+							raw := lines[bodyStart]
+							detected := ""
+							for _, ch := range raw {
+								if ch == ' ' || ch == '\t' {
+									detected += string(ch)
+								} else {
+									break
+								}
+							}
+							if detected != "" {
+								bodyIndent = detected
+							}
+						}
+						existingDocStart := -1
+						existingDocEnd := -1
+						existingQuote := `"""`
+						for bodyIdx := bodyStart; bodyIdx < len(lines) && bodyIdx < bodyStart+5; bodyIdx++ {
+							trimmed := strings.TrimSpace(lines[bodyIdx])
+							if trimmed == "" {
+								continue
+							}
+							if strings.HasPrefix(trimmed, `"""`) || strings.HasPrefix(trimmed, `'''`) {
+								existingDocStart = bodyIdx
+								if strings.HasPrefix(trimmed, `'''`) {
+									existingQuote = `'''`
+								}
+								afterOpen := strings.TrimPrefix(trimmed, existingQuote)
+								closeIdx := strings.Index(afterOpen, existingQuote)
+								if closeIdx >= 0 {
+									existingDocEnd = bodyIdx
+								} else {
+									for scanIdx := bodyIdx + 1; scanIdx < len(lines); scanIdx++ {
+										sline := strings.TrimSpace(lines[scanIdx])
+										if sline == existingQuote || strings.HasSuffix(sline, existingQuote) {
+											existingDocEnd = scanIdx
+											break
+										}
+									}
+								}
+							}
+							break
+						}
+						var eSummary, eSpecs, eTodos []string
+						var eId string
+						if existingDocStart >= 0 && existingDocEnd >= 0 {
+							for lineIdx := existingDocStart; lineIdx <= existingDocEnd; lineIdx++ {
+								trimmed := strings.TrimSpace(lines[lineIdx])
+								trimmed = strings.TrimPrefix(trimmed, existingQuote)
+								trimmed = strings.TrimSuffix(trimmed, existingQuote)
+								trimmed = strings.TrimSpace(trimmed)
+								if trimmed == "" {
+									continue
+								}
+								if strings.HasPrefix(trimmed, "[") && strings.Contains(trimmed, "](semiorepo://definition/") {
+									eId = trimmed
+								} else if isSpecText(trimmed) {
+									eSpecs = append(eSpecs, trimmed)
+								} else if strings.HasPrefix(trimmed, "TODO:") || strings.HasPrefix(trimmed, "TODO ") {
+									eTodos = append(eTodos, trimmed)
+								} else {
+									eSummary = append(eSummary, trimmed)
+								}
+							}
+						}
+						mergedSummary := eSummary
+						if len(mergedSummary) == 0 {
+							mergedSummary = cSummary
+						}
+						mergedSpecs := cSpecs
+						if len(mergedSpecs) == 0 {
+							mergedSpecs = eSpecs
+						}
+						mergedTodos := cTodos
+						if len(mergedTodos) == 0 {
+							mergedTodos = eTodos
+						}
+						mergedId := cId
+						if mergedId == "" {
+							mergedId = eId
+						}
+						var docLines []string
+						for _, sl := range mergedSummary {
+							docLines = append(docLines, sl)
+						}
+						for _, sp := range mergedSpecs {
+							docLines = append(docLines, sp)
+						}
+						for _, td := range mergedTodos {
+							docLines = append(docLines, td)
+						}
+						if mergedId != "" {
+							docLines = append(docLines, mergedId)
+						}
+						var tripleQuoteLines []string
+						if len(docLines) == 1 {
+							tripleQuoteLines = append(tripleQuoteLines, bodyIndent+`"""`+docLines[0]+`"""`)
+						} else if len(docLines) > 1 {
+							tripleQuoteLines = append(tripleQuoteLines, bodyIndent+`"""`+docLines[0])
+							for i := 1; i < len(docLines); i++ {
+								tripleQuoteLines = append(tripleQuoteLines, bodyIndent+docLines[i])
+							}
+							tripleQuoteLines = append(tripleQuoteLines, bodyIndent+`"""`)
+						}
+						if len(tripleQuoteLines) > 0 {
+							afterDoc := bodyStart
+							if existingDocEnd >= 0 {
+								afterDoc = existingDocEnd + 1
+							}
+							newLines := make([]string, 0, len(lines))
+							newLines = append(newLines, lines[:commentStartIdx]...)
+							newLines = append(newLines, lines[defLineNum-1:bodyStart]...)
+							newLines = append(newLines, tripleQuoteLines...)
+							newLines = append(newLines, lines[afterDoc:]...)
+							lines = newLines
+							fixed++
 						}
 					}
 				}

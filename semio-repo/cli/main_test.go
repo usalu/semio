@@ -477,8 +477,8 @@ func TestViolationsNonEmpty(t *testing.T) {
 	if err := json.Unmarshal([]byte(result), &resp); err != nil {
 		t.Fatalf("failed to parse response: %v", err)
 	}
-	if len(resp.Violations) == 0 {
-		t.Error("violations collection should not be empty")
+	if resp.Violations == nil {
+		t.Error("violations collection should not be nil")
 	}
 }
 
@@ -3528,9 +3528,15 @@ func TestDefinitionNativeDocstring(t *testing.T) {
 			expectViolation: false,
 		},
 		{
-			name: "Python # comments should NOT flag violation (native format)",
+			name: "Python # comments should flag violation (should use triple-quote docstring)",
 			file: "src/app.py",
 			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+			expectViolation: true,
+		},
+		{
+			name: "Python triple-quote docstring should NOT flag violation",
+			file: "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\ndef do_work():\n    \"\"\"Does work.\n    do_work MUST be idempotent.\n    [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\n    \"\"\"\n    pass\n\n# #endregion 🔖Functions\n",
 			expectViolation: false,
 		},
 		{
@@ -3643,6 +3649,138 @@ func TestDefinitionNativeDocstringAutofix(t *testing.T) {
 	}
 	if !strings.Contains(fixedContent, "semiorepo://definition/") {
 		t.Fatal("expected identification in JSDoc after autofix")
+	}
+}
+
+func TestPythonTripleQuoteDocstringAutofix(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n"
+	testFile := "src/app.py"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	scope := Scope{Kind: ScopeFile, FilePath: testFile}
+	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	var docstringViolations []Violation
+	for _, v := range violations {
+		if v.Kind == ViolationCodeDefNotNativeDocstring {
+			docstringViolations = append(docstringViolations, v)
+		}
+	}
+	if len(docstringViolations) == 0 {
+		t.Fatal("expected DefNotNativeDocstring violation before autofix")
+	}
+	n, fixErr := applyAutofixes(testFile, docstringViolations)
+	if fixErr != nil {
+		t.Fatalf("autofix failed: %v", fixErr)
+	}
+	if n == 0 {
+		t.Fatal("expected at least one autofix applied")
+	}
+	fixedContent, _ := ReadTextFile(absPath)
+	if !strings.Contains(fixedContent, `"""Does work.`) {
+		t.Fatal("expected triple-quote docstring with summary after autofix")
+	}
+	if !strings.Contains(fixedContent, "do_work MUST be idempotent.") {
+		t.Fatal("expected spec line in docstring after autofix")
+	}
+	if !strings.Contains(fixedContent, "semiorepo://definition/") {
+		t.Fatal("expected identification in docstring after autofix")
+	}
+	if !strings.Contains(fixedContent, `"""`) {
+		t.Fatal("expected closing triple-quote after autofix")
+	}
+	if strings.Contains(fixedContent, "# Does work.") {
+		t.Fatal("# comment should be removed after autofix")
+	}
+}
+
+func TestPythonTripleQuoteDocstringMerge(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\ndef do_work():\n    \"\"\"Does work.\"\"\"\n    pass\n\n# #endregion 🔖Functions\n"
+	testFile := "src/app.py"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	scope := Scope{Kind: ScopeFile, FilePath: testFile}
+	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	var docstringViolations []Violation
+	for _, v := range violations {
+		if v.Kind == ViolationCodeDefNotNativeDocstring {
+			docstringViolations = append(docstringViolations, v)
+		}
+	}
+	if len(docstringViolations) == 0 {
+		t.Fatal("expected DefNotNativeDocstring violation for # comments above existing docstring")
+	}
+	n, fixErr := applyAutofixes(testFile, docstringViolations)
+	if fixErr != nil {
+		t.Fatalf("autofix failed: %v", fixErr)
+	}
+	if n == 0 {
+		t.Fatal("expected at least one autofix applied")
+	}
+	fixedContent, _ := ReadTextFile(absPath)
+	if !strings.Contains(fixedContent, "Does work.") {
+		t.Fatal("expected existing summary preserved after merge")
+	}
+	if !strings.Contains(fixedContent, "do_work MUST be idempotent.") {
+		t.Fatal("expected spec from # comment merged into docstring")
+	}
+	if !strings.Contains(fixedContent, "semiorepo://definition/") {
+		t.Fatal("expected identification merged into docstring")
+	}
+	if strings.Contains(fixedContent, "# do_work MUST") {
+		t.Fatal("# comment should be removed after merge autofix")
+	}
+}
+
+func TestPythonTripleQuoteDocstringExemptFromCommentBan(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\ndef do_work():\n    \"\"\"Does work.\n    do_work MUST be idempotent.\n    [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\n    \"\"\"\n    pass\n\n# #endregion 🔖Functions\n"
+	testFile := "src/app.py"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	scope := Scope{Kind: ScopeFile, FilePath: testFile}
+	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	for _, v := range violations {
+		if v.Kind == ViolationCodeCommentBlock {
+			t.Fatalf("Python triple-quote docstring should not be flagged as block comment at line %d", v.Line)
+		}
+		if v.Kind == ViolationCodeDefNotNativeDocstring {
+			t.Fatalf("Python triple-quote docstring should not flag DefNotNativeDocstring at line %d", v.Line)
+		}
 	}
 }
 

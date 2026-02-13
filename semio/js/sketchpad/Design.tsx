@@ -8708,15 +8708,12 @@ const DesignAppScene: FC = () => {
 // #endregion 🔖Canvas
 
 // #region 🔖Windows
+// [🔖semio/js/sketchpad/Design.tsx#Windows](semiorepo://section/semio/js/sketchpad/Design.tsx/WINDOWS)
+// Window components MUST wrap diagram and scene views with hover and transaction providers.
 
-/**
- * [🔖semio/js/sketchpad/Design.tsx#Windows](semiorepo://section/semio/js/sketchpad/Design.tsx/WINDOWS)
- * Props interface for the Design app root component.
- *
- * Window components MUST wrap diagram and scene views with hover and transaction providers.
- *
- *  * [🪨semio/js/sketchpad/Design.tsx#Windows§AppProps](semiorepo://definition/semio/js/sketchpad/Design.tsx/WINDOWS/APPPROPS)
- **/
+/** Props interface for the Design app root component.
+ * [🪨semio/js/sketchpad/Design.tsx#Windows§AppProps](semiorepo://definition/semio/js/sketchpad/Design.tsx/WINDOWS/APPPROPS)
+**/
 export interface AppProps { }
 
 const DiagramWindow = memo<{ reactFlowInstanceRef: React.RefObject<ReactFlowInstance | null> }>(({ reactFlowInstanceRef }) => {

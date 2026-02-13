@@ -242,19 +242,15 @@ should be this:
 ```ts
 /** 
  * The kit store is used for CRUD operations on kits. It uses Y.js as backbone.
- * 
  * Kits MUST be shared and be synchronized between the different users that work on the same kit.
  * A kit MUST be editable offline and synchronize with the server when online.
- * 
- * The KitStore is initialized with a Y.Doc that must be initialized and configured by the caller (different yjs hosts have different provider factories).
- * For every compositional entity that is part of a kit there must be a corresponding substore that manages a Y.Map for the entity state and repexposes CRUD operations as methods for the entity.
- * 
+CRUD operations as methods for the entity.
  * TODO: Implement QualityStore
  * The QualityStore should contain the quality data and maintain links to the types and designs. Links are not managed within yjs hence a manual garbage collection is needed to remove links to deleted entities.
- * 
  * TODO: Implement FileStore
+ * The KitStore is initialized with a Y.Doc that must be initialized and configured by the caller (different yjs hosts have different provider factories).
+ * For every compositional entity that is part of a kit there must be a corresponding substore that manages a Y.Map for the entity state and repexposes 
  * The FileStore works outside of yjs and uses e.g. S3 storage for file access. It needs a different provider factory and integration and only the metadata layer is managed within yjs.
- * 
  *  * [🛠️semio/js/sketchpad/Design.tsx#State Managment#Store§KitStore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
 **/
 export class KitStore {
@@ -329,9 +325,11 @@ e.g. in README.md for bundles and folders:
 ### TODOs
 
 #### TODO: <BUNDLEORFOLDERTODONAME>
+
 <BUNDLEORFOLDERTODODESCRIPTION>?
 
 #### TODO: <BUNDLEORFOLDERTODONAME>
+
 <BUNDLEORFOLDERTODODESCRIPTION>?
  
  …
@@ -346,78 +344,54 @@ e.g. in README.md for bundles and folders:
 e.g. in typescript:
 ```ts
 // #region 🔖Header
-
 // [<FILEID>](<FILEURI>)
- 
 // <FILECONTRIBUTOR>
 // <FILECONTRIBUTOR>
 //  …
-
 // <FILELICENSE>
-// <FILELICENSE>
-//  …
-
 // <FILESUMMARY>
-
 // <FILESPECS>
 // <FILESPECS>
 //  …
-
 // TODO: <FILETODONAME>
 // <FILETODODESCRIPTION>?
-
 // TODO: <FILETODONAME>
 // <FILETODODESCRIPTION>?
 //  …
-
 // <FILEDOCS>
 // <FILEDOCS>
 //  …
-
 // #endregion 🔖Header
 
 
 // #region 🔖<SECTIONNAME>
-
 // [<SECTIONID>](<SECTIONURI>)
-
 // <SECTIONSUMMARY>
-
 // <SECTIONSPECS>
 // <SECTIONSPECS>
 //  …
-
 // TODO: <SECTIONTODONAME>
 // <SECTIONTODODESCRIPTION>?
-
 // TODO: <SECTIONTODONAME>
 // <SECTIONTODODESCRIPTION>?
 //  …
-
 // <SECTIONDOCS>
 // <SECTIONDOCS>
 //  …
 
 /**
  * <DEFINITIONSUMMARY>
- * 
  * <DEFINITIONSPECS>
  * <DEFINITIONSPECS>
  *  …
- * 
+ * TODO: <DEFINITIONTODONAME>
+ * <DEFINITIONTTODODESCRIPTION>?
+ * TODO: <DEFINITIONTODONAME>
+ * [<DEFINITIONID>](<DEFINITIONURI>)
+ * <DEFINITIONTTODODESCRIPTION>?
  * <DEFINITIONDOCS>
  * <DEFINITIONDOCS>
  *  …
- * 
- * TODO: <DEFINITIONTODONAME>
- * <DEFINITIONTTODODESCRIPTION>?
- * 
- * TODO: <DEFINITIONTODONAME>
- * <DEFINITIONTTODODESCRIPTION>?
- * 
- *  …
- * 
- *  * [<DEFINITIONID>](<DEFINITIONURI>)
  */
 <DEFINITION>
 
@@ -426,61 +400,36 @@ e.g. in typescript:
 e.g.
 ```ts
 // #region 🔖Header
-
-// [💻semio/js/sketchpad/Design.tsx](semiorepo://file/SEMIO/JS/SKETCHPAD/DESIGN.TSX)
-
-// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
-// 2026 KinanSarak <kinan@semio-tech.com>
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
-// published by the Free Software Foundation, either version 3 of the
-// License, or (at your option) any later version.
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// You should have received a copy of the GNU Lesser General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
 // The design app allows to view and edit designs.
-
 // The design app MUST have two window kinds: diagram and scene.
 // The design app MUST have selection for: multiple pieces, multiple connections and one port.
-
 // TODO: Implement Flash Connect
 // When a port of a piece is selected then it should be highlighted and as soon as the second poirt is selected then a connection should be created between the two pieces for the given ports.
-
 // TODO: Implement Layer Panel Tab
+// [💻semio/js/sketchpad/Design.tsx](semiorepo://file/SEMIO/JS/SKETCHPAD/DESIGN.TSX)
+// 2025-2026 Ueli Saluz <ueli@semio-tech.com>
+// 2026 KinanSarak <kinan@semio-tech.com>
+// This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 // The layer panel tab should show a tree of all pieces. Implement drag and drop to reorder the layers and pieces.
-
 // The design app uses the KitStore for kit access and SketchpadStore for sketchpad state.
-// The designAppCommands 
-
+// The designAppCommands are used to register the commands for the design app.
 // #endregion 🔖Header
 
 // #region 🔖State Managment
-
 // [🔖semio/js/sketchpad/Design.tsx#State Managment#Store](semiorepo://section/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE)
-
 // There MUST be two mechnasism for state which interact together: local and shared.
 
 /** 
  * The kit store is used for CRUD operations on kits. It uses Y.js as backbone.
- * 
  * Kits MUST be shared and be synchronized between the different users that work on the same kit.
  * A kit MUST be editable offline and synchronize with the server when online.
- * 
- * The KitStore is initialized with a Y.Doc that must be initialized and configured by the caller (different yjs hosts have different provider factories).
- * For every compositional entity that is part of a kit there must be a corresponding substore that manages a Y.Map for the entity state and repexposes CRUD operations as methods for the entity.
- * 
  * TODO: Implement QualityStore
  * The QualityStore should contain the quality data and maintain links to the types and designs. Links are not managed within yjs hence a manual garbage collection is needed to remove links to deleted entities.
- * 
  * TODO: Implement FileStore
  * The FileStore works outside of yjs and uses e.g. S3 storage for file access. It needs a different provider factory and integration and only the metadata layer is managed within yjs.
- * 
- *  * [🛠️semio/js/sketchpad/Design.tsx#State Managment#Store§KitStore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
+ * [🛠️semio/js/sketchpad/Design.tsx#State Managment#Store§KitStore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
+ * The KitStore is initialized with a Y.Doc that must be initialized and configured by the caller (different yjs hosts have different provider factories).
+ * For every compositional entity that is part of a kit there must be a corresponding substore that manages a Y.Map for the entity state and repexposes CRUD operations as methods for the entity.
 **/
 export class KitStore {
   …

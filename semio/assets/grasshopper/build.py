@@ -26,10 +26,11 @@
 import json
 import xml.etree.ElementTree as ET
 
-# Extracts parameter properties from an XML element
-# Callers MUST provide a valid XML element with child items
-# [🛠️semio/assets/grasshopper/build.py#Build§extract_param_props](semiorepo://definition/semio/assets/grasshopper/build.py/BUILD/EXTRACT-PARAM-PROPS)
 def extract_param_props(param_element):
+    """Extracts parameter properties from an XML element
+    Callers MUST provide a valid XML element with child items
+    [🛠️semio/assets/grasshopper/build.py#Build§extract_param_props](semiorepo://definition/semio/assets/grasshopper/build.py/BUILD/EXTRACT-PARAM-PROPS)
+    """
     props = {}
     for item in param_element.findall("./items/item"):
         name_attr = item.get("name")
@@ -43,20 +44,22 @@ def extract_param_props(param_element):
     props["kind"] = props.get("name", "unknown")
     return props
 
-# Checks whether a string value is numeric
-# Callers MUST provide a string or None value
-# [🛠️semio/assets/grasshopper/build.py#Build§is_numeric](semiorepo://definition/semio/assets/grasshopper/build.py/BUILD/IS-NUMERIC)
 def is_numeric(s):
+    """Checks whether a string value is numeric
+    Callers MUST provide a string or None value
+    [🛠️semio/assets/grasshopper/build.py#Build§is_numeric](semiorepo://definition/semio/assets/grasshopper/build.py/BUILD/IS-NUMERIC)
+    """
     try:
         float(s)
         return True
     except (TypeError, ValueError):
         return False
 
-# Retrieves the Y coordinate of the pivot point from a container chunk
-# Callers MUST provide a valid container XML chunk
-# [🛠️semio/assets/grasshopper/build.py#Build§get_pivot_y](semiorepo://definition/semio/assets/grasshopper/build.py/BUILD/GET-PIVOT-Y)
 def get_pivot_y(container_chunk):
+    """Retrieves the Y coordinate of the pivot point from a container chunk
+    Callers MUST provide a valid container XML chunk
+    [🛠️semio/assets/grasshopper/build.py#Build§get_pivot_y](semiorepo://definition/semio/assets/grasshopper/build.py/BUILD/GET-PIVOT-Y)
+    """
     attributes_chunk = container_chunk.find("./chunks/chunk[@name='Attributes']")
     if attributes_chunk is not None:
         for item in attributes_chunk.findall("./items/item"):
@@ -69,10 +72,11 @@ def get_pivot_y(container_chunk):
                         pass
     return float("inf")
 
-# Parses a Grasshopper XML file to extract components and groups
-# Callers MUST provide a valid path to a .ghx XML file
-# [🛠️semio/assets/grasshopper/build.py#Build§parse_components_and_groups_xml](semiorepo://definition/semio/assets/grasshopper/build.py/BUILD/PARSE-COMPONENTS-AND-GROUPS-XML)
 def parse_components_and_groups_xml(xml_file_path):
+    """Parses a Grasshopper XML file to extract components and groups
+    Callers MUST provide a valid path to a .ghx XML file
+    [🛠️semio/assets/grasshopper/build.py#Build§parse_components_and_groups_xml](semiorepo://definition/semio/assets/grasshopper/build.py/BUILD/PARSE-COMPONENTS-AND-GROUPS-XML)
+    """
     tree = ET.parse(xml_file_path)
     root = tree.getroot()
 

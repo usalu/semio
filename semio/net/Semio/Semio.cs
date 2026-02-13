@@ -414,12 +414,14 @@ public static class Utility
 }
 
 #region 🔖Expressions
+// [🔖semio/net/Semio/Semio.cs#Expressions](semiorepo://section/semio/net/Semio/Semio.cs/EXPRESSIONS)
+// Implementations MUST evaluate expression trees through the Operator.Apply contract.
 
-/// [🔖semio/net/Semio/Semio.cs#Expressions](semiorepo://section/semio/net/Semio/Semio.cs/EXPRESSIONS)
-/// Implementations MUST evaluate expression trees through the Operator.Apply contract.
-/// Abstract base for all expression tree nodes.
+/// <summary>Abstract base for all expression tree nodes.</summary>
+/// <remarks>
 /// Implementations MUST be immutable value types within expression trees.
 /// [🛠️semio/net/Semio/Semio.cs#Utility#Expressions§Symbol](semiorepo://definition/semio/net/Semio/Semio.cs/UTILITY/EXPRESSIONS/SYMBOL)
+/// </remarks>
 public abstract class Symbol { }
 public abstract class Term : Symbol { }
 public abstract class Constant : Term { }
