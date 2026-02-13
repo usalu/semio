@@ -3,18 +3,15 @@
   "status": "closed",
   "prompt": "Update gqlgen.yml to reference the new schema location at graphql/repo/schema.graphql",
   "goal": "AI-OPTIMIZED-REPO",
-  "started": "2026-01-07T09:52:14Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-07T09:52:14Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "a1c46c41e5c88ce33dad3bafcb07738a56e4e25d",
       "prompt": "Update gqlgen.yml to reference the new schema location at graphql/repo/schema.graphql",
-      "llm": "opus-4-5-20251101"
+      "llm": "opus-4-5-20251101",
+      "date": "2026-01-07T09:52:14Z"
     }
   ]
 }

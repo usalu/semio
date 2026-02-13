@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/495"
   },
   "goal": "EMOJI-VARIATION-FIX-COMPLETE",
-  "started": "2026-02-11T14:32:43.689927586Z",
-  "finished": "2026-02-11T16:23:31.972906023Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-11 14:32:43",
-        "finished": "2026-02-11 16:23:31"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -449,7 +443,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-11 14:32:43"
     }
   ]
 }

@@ -3,20 +3,15 @@
   "status": "closed",
   "prompt": "Refactor Docs.tsx useHeadings hook to use useSyncExternalStore instead of useState + useEffect + manual subscribe pattern",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
-  "started": "2025-12-20T13:31:45.583Z",
-  "finished": "2025-12-20T13:32:01.797Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-20T13:31:45.583Z",
-        "finished": "2025-12-20T13:32:01.797Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
       "prompt": "Refactor Docs.tsx useHeadings hook to use useSyncExternalStore instead of useState + useEffect + manual subscribe pattern",
-      "llm": "opus-4-5"
+      "llm": "opus-4-5",
+      "date": "2025-12-20T13:31:45.583Z"
     }
   ]
 }

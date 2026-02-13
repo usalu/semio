@@ -1,20 +1,17 @@
 {
   "title": "CODE-ISSUES",
   "status": "closed",
-  "prompt": "\u003ee-",
+  "prompt": ">e-",
   "goal": "AI-OPTIMIZED-REPO",
-  "started": "2025-12-22T21:55:19.826Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-22T21:55:19.826Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "",
-      "prompt": "\u003ee-",
-      "llm": "sonnet-4-5"
+      "prompt": ">e-",
+      "llm": "sonnet-4-5",
+      "date": "2025-12-22T21:55:19.826Z"
     }
   ]
 }

@@ -3,16 +3,13 @@
   "status": "closed",
   "prompt": "",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-DEFINITION-MECHANISM",
-  "started": "0001-01-01T00:00:00Z",
   "interactions": [
     {
-      "dates": {
-        "started": ""
-      },
       "author": "",
       "system": "",
       "client": "",
-      "commit": ""
+      "commit": "",
+      "date": ""
     }
   ]
 }

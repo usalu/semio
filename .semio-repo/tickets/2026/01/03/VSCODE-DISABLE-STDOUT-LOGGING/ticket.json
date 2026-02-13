@@ -3,18 +3,15 @@
   "status": "closed",
   "prompt": "The vscode extension shouldnt log anything from stdout",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "started": "2026-01-02T23:38:52Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-02T23:38:52Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb",
       "prompt": "The vscode extension shouldnt log anything from stdout",
-      "llm": "opus-4-5-20251101"
+      "llm": "opus-4-5-20251101",
+      "date": "2026-01-02T23:38:52Z"
     }
   ]
 }

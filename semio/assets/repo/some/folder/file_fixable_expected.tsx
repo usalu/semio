@@ -11,23 +11,28 @@
 
 // #endregion 🔖Header
 
-// #region 🔖SectionOne
-// [🔖semio/assets/repo/some/folder/file_fixable.tsx#SectionOne](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/SECTION-ONE)
+// #region 🔖MissingEnd
+// [🔖semio/assets/repo/some/folder/file_fixable.tsx#MissingEnd](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/MISSING-END)
+// MissingEnd MUST provide the missingend functionality.
 
-const sectionOne = 1;
+/** missingEnd holds the data fields for a missingEnd record.
+ * missingEnd MUST hold an integer.
+ *
+ *  * [🪨semio/assets/repo/some/folder/file_fixable.tsx#MissingEnd§missingEnd](semiorepo://definition/semio/assets/repo/some/folder/file_fixable.tsx/MISSING-END/MISSING-END)
+ **/
+const missingEnd = 1;
 
-// #endregion 🔖SectionOne
+// #endregion 🔖MissingEnd
 
-// #region 🔖SectionTwo
-// [🔖semio/assets/repo/some/folder/file_fixable.tsx#SectionTwo](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/SECTION-TWO)
+// #region 🔖Alpha
+// [🔖semio/assets/repo/some/folder/file_fixable.tsx#Alpha](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/ALPHA)
+// Alpha MUST provide the alpha functionality.
 
-const sectionTwo = 2;
+/** mismatchName holds the data fields for a mismatchName record.
+ * mismatchName MUST hold an integer.
+ *
+ *  * [🪨semio/assets/repo/some/folder/file_fixable.tsx#Alpha§mismatchName](semiorepo://definition/semio/assets/repo/some/folder/file_fixable.tsx/ALPHA/MISMATCH-NAME)
+ **/
+const mismatchName = 2;
 
-// #endregion 🔖SectionTwo
-
-// #region 🔖SectionThree
-// [🔖semio/assets/repo/some/folder/file_fixable.tsx#SectionThree](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/SECTION-THREE)
-
-const sectionThree = 3;
-
-// #endregion 🔖SectionThree
+// #endregion 🔖Alpha

@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/260"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FOLDER-MECHANISM",
-  "started": "2026-01-29T09:31:48.512717551Z",
-  "finished": "2026-01-29T09:35:48.329226376Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-29T09:31:48.512717551Z",
-        "finished": "2026-01-29T09:35:48.329226376Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -238,7 +232,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-01-29T09:31:48.512717551Z"
     }
   ]
 }

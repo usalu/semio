@@ -4,14 +4,8 @@
   "prompt": "Adjust configs for Project/Bundle layout",
   "summary": "Restructured monorepo to use project/bundle layout. Updated config files and README.",
   "goal": "AI-OPTIMIZED-REPO",
-  "started": "2026-02-01T13:59:36.720378767Z",
-  "finished": "2026-02-01T14:04:45.371944902Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-01T13:59:36.720378767Z",
-        "finished": "2026-02-01T14:04:45.371944902Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -662,7 +656,8 @@
           ],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-01T13:59:36.720378767Z"
     }
   ]
 }

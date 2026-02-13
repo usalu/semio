@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/478"
   },
   "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS/UPDATED-README-MD",
-  "started": "2026-02-09T23:40:31.9870271Z",
-  "finished": "2026-02-09T23:42:41.398730529Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-09 23:40:31",
-        "finished": "2026-02-09 23:42:41"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -916,7 +910,8 @@
           "modified": [],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-09 23:40:31"
     }
   ]
 }

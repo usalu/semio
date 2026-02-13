@@ -7,19 +7,10 @@
     "issue": "https://github.com/usalu/semio/issues/442"
   },
   "goal": "R26-02",
-  "started": "2026-02-07T23:53:49.918598683Z",
-  "finished": "2026-02-08T00:53:03.517305023Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-07 23:53:49",
-        "finished": "2026-02-08 00:53:03"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "All items should always be identically rendered across all commands regardless the originating command. Define rendering once for text and once for markdown, and reuse for all commands. Extend tests to guarantee identical representations.",
       "llm": "opus-4-6",
@@ -1559,7 +1550,9 @@
             }
           ]
         }
-      }
+      },
+      "client": "copilot-chat",
+      "date": "2026-02-07 23:53:49"
     }
   ]
 }

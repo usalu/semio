@@ -1,0 +1,74 @@
+{
+  "title": "Interaction format: system string, client top-level, dates.created/finished",
+  "status": "closed",
+  "prompt": "Interaction format: system string, client top-level, dates.created/finished",
+  "summary": "Interaction format migrated: system string, client top-level, dates.created/finished. InteractionDates.Started→Created, removed legacy system object unmarshaling, GraphQL schema updated, all ticket.json and goal.json migrated.",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
+  "interactions": [
+    {
+      "author": "usalu",
+      "system": "linux",
+      "client": "cursor-chat",
+      "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
+      "prompt": "Interaction format: system string, client top-level, dates.created/finished",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 34759,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Cli#Missing Utilities",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      },
+      "date": "2026-02-13 18:44:17"
+    }
+  ]
+}

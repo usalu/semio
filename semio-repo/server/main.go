@@ -54,6 +54,7 @@ import (
 	"sync"
 	"time"
 
+	repopkg "github.com/usalu/semio/semio-repo/go"
 	_ "modernc.org/sqlite"
 )
 
@@ -339,6 +340,7 @@ func (d *Database) migrate() error {
 		"CREATE TABLE IF NOT EXISTS violations (id TEXT PRIMARY KEY, kind TEXT, priority TEXT, scope_id TEXT, file_path TEXT, line INT, column INT, summary TEXT, excerpt TEXT, autofixable BOOL, detected_at DATETIME, ticket_id TEXT, resolved_at DATETIME)",
 		"CREATE TABLE IF NOT EXISTS warnings (id TEXT PRIMARY KEY, kind TEXT, severity TEXT, message TEXT, ticket_id TEXT, scope_id TEXT, created_at DATETIME, acknowledged_at DATETIME, ack_by TEXT)",
 		"CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, type TEXT, source TEXT, payload_json TEXT, created_at DATETIME)",
+		"CREATE TABLE IF NOT EXISTS contributor_work (github TEXT, kind TEXT, item_id TEXT, PRIMARY KEY (github, kind, item_id))",
 	}
 	for _, stmt := range statements {
 		if _, err := d.db.Exec(stmt); err != nil {
@@ -569,6 +571,42 @@ func (d *Database) listConflicts(ctx context.Context) ([]struct {
 		}{ScopeID: scopeID, Tickets: strings.Split(ticketIDs, ",")})
 	}
 	return results, nil
+}
+
+func (d *Database) addContributorWork(ctx context.Context, github string, kind string, itemID string) error {
+	_, err := d.db.ExecContext(ctx, "INSERT OR REPLACE INTO contributor_work (github, kind, item_id) VALUES (?, ?, ?)", github, kind, itemID)
+	return err
+}
+
+func (d *Database) removeContributorWork(ctx context.Context, github string, kindsAndIDs []struct{ Kind, ID string }) error {
+	for _, kv := range kindsAndIDs {
+		_, _ = d.db.ExecContext(ctx, "DELETE FROM contributor_work WHERE github = ? AND kind = ? AND item_id = ?", github, kv.Kind, kv.ID)
+	}
+	return nil
+}
+
+func (d *Database) listContributorsOnItem(ctx context.Context, kind string, itemID string) ([]string, error) {
+	rows, err := d.db.QueryContext(ctx, "SELECT github FROM contributor_work WHERE kind = ? AND item_id = ?", kind, itemID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []string
+	for rows.Next() {
+		var g string
+		if err := rows.Scan(&g); err != nil {
+			return nil, err
+		}
+		out = append(out, g)
+	}
+	return out, nil
+}
+
+func (d *Database) removeContributorWorkForCommit(ctx context.Context, github string, files []string) error {
+	for _, f := range files {
+		_, _ = d.db.ExecContext(ctx, "DELETE FROM contributor_work WHERE github = ? AND kind = 'file' AND item_id = ?", github, f)
+	}
+	return nil
 }
 
 // #endregion 🔖Database
@@ -1147,6 +1185,38 @@ func (s *Server) writeJSON(w http.ResponseWriter, status int, payload interface{
 // respondError writes a JSON error response.
 func (s *Server) respondError(w http.ResponseWriter, status int, message string) {
 	s.writeJSON(w, status, map[string]string{"error": message})
+}
+
+// handleEvents accepts CLI event payloads and persists/publishes them.
+func (s *Server) handleEvents(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+	if !s.requireAuth(r) {
+		s.respondError(w, http.StatusUnauthorized, "unauthorized")
+		return
+	}
+	var ev repopkg.Event
+	if err := s.decodeJSON(r, &ev); err != nil {
+		s.respondError(w, http.StatusBadRequest, err.Error())
+		return
+	}
+	if ev.Kind == "" {
+		s.respondError(w, http.StatusBadRequest, "kind required")
+		return
+	}
+	ctx, cancel := s.newRequestContext(r)
+	defer cancel()
+	var payload interface{}
+	if err := json.Unmarshal(ev.Payload, &payload); err != nil {
+		payload = map[string]string{"raw": string(ev.Payload)}
+	}
+	if err := s.bus.Publish(ctx, string(ev.Kind), ev.Source, payload); err != nil {
+		s.respondError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	s.writeJSON(w, http.StatusOK, map[string]string{"status": "ok"})
 }
 
 // handleHealth responds with 200 OK for liveness checks.
@@ -1753,6 +1823,11 @@ func (s *Server) handleGitHubWebhook(w http.ResponseWriter, r *http.Request) {
 		_ = json.Unmarshal(body, &payload)
 		s.handleGitHubIssueEvent(ctx, payload)
 	}
+	if eventType == "push" {
+		var payload map[string]interface{}
+		_ = json.Unmarshal(body, &payload)
+		s.handleGitHubPushEvent(ctx, payload)
+	}
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -1852,6 +1927,41 @@ func extractRepoFullName(payload map[string]interface{}) string {
 	return ""
 }
 
+func (s *Server) handleGitHubPushEvent(ctx context.Context, payload map[string]interface{}) {
+	actor := extractActorLogin(payload)
+	if actor == "" {
+		if pusher, ok := payload["pusher"].(map[string]interface{}); ok {
+			if name, ok := pusher["name"].(string); ok {
+				actor = name
+			}
+		}
+	}
+	var files []string
+	if commits, ok := payload["commits"].([]interface{}); ok {
+		for _, c := range commits {
+			if cm, ok := c.(map[string]interface{}); ok {
+				if added, ok := cm["added"].([]interface{}); ok {
+					for _, a := range added {
+						if p, ok := a.(string); ok {
+							files = append(files, p)
+						}
+					}
+				}
+				if modified, ok := cm["modified"].([]interface{}); ok {
+					for _, m := range modified {
+						if p, ok := m.(string); ok {
+							files = append(files, p)
+						}
+					}
+				}
+			}
+		}
+	}
+	if actor != "" && len(files) > 0 {
+		_ = s.db.removeContributorWorkForCommit(ctx, actor, files)
+	}
+}
+
 // extractActorLogin extracts the sender login from a GitHub webhook payload.
 func extractActorLogin(payload map[string]interface{}) string {
 	if sender, ok := payload["sender"].(map[string]interface{}); ok {
@@ -1896,6 +2006,112 @@ func (s *Server) registerNotifications() {
 	s.bus.Subscribe("TicketReopened", func(ctx context.Context, event Event) {
 		s.notifyDiscord("# Prompt", event.Payload)
 	})
+	for _, kind := range []repopkg.EventKind{
+		repopkg.EventTicketOpen, repopkg.EventTicketClose, repopkg.EventTicketReopen, repopkg.EventTicketChange,
+		repopkg.EventGoalOpen, repopkg.EventGoalClose, repopkg.EventGoalReopen, repopkg.EventGoalChange,
+		repopkg.EventContributorAdd, repopkg.EventContributorRemove,
+		repopkg.EventTodoCreate, repopkg.EventTodoChange, repopkg.EventTodoDelete,
+	} {
+		k := kind
+		s.bus.Subscribe(string(k), func(ctx context.Context, event Event) {
+			s.onCLIEvent(ctx, k, event)
+		})
+	}
+	s.bus.Subscribe(string(repopkg.EventCommit), func(ctx context.Context, event Event) {
+		s.onCommitEvent(ctx, event)
+	})
+}
+
+func (s *Server) onCLIEvent(ctx context.Context, kind repopkg.EventKind, event Event) {
+	s.notifyDiscord(string(kind), event.Payload)
+	author, items := s.extractAuthorAndItems(kind, event.Payload)
+	if author == "" {
+		return
+	}
+	for _, item := range items {
+		if item.Kind == "" || item.ID == "" {
+			continue
+		}
+		others, _ := s.db.listContributorsOnItem(ctx, item.Kind, item.ID)
+		others = filterOut(others, author)
+		if len(others) > 0 {
+			s.notifyDiscord("⚠️ Conflict", fmt.Sprintf("%s working on %s:%s (others: %v)", author, item.Kind, item.ID, others))
+		}
+		_ = s.db.addContributorWork(ctx, author, item.Kind, item.ID)
+	}
+}
+
+func (s *Server) onCommitEvent(ctx context.Context, event Event) {
+	var p repopkg.CommitPayload
+	if json.Unmarshal([]byte(event.Payload), &p) != nil {
+		return
+	}
+	files := p.FilesChanged
+	if len(files) == 0 {
+		files = p.Files
+	}
+	_ = s.db.removeContributorWorkForCommit(ctx, p.Author, files)
+}
+
+func (s *Server) extractAuthorAndItems(kind repopkg.EventKind, payloadJSON string) (author string, items []repopkg.WorkItem) {
+	switch kind {
+	case repopkg.EventTicketOpen, repopkg.EventTicketClose, repopkg.EventTicketReopen, repopkg.EventTicketChange:
+		var p repopkg.TicketPayload
+		if json.Unmarshal([]byte(payloadJSON), &p) != nil {
+			return "", nil
+		}
+		author = getAuthorFromPayload(payloadJSON)
+		if author == "" {
+			return "", nil
+		}
+		id := p.ID
+		if id == "" && (p.Year|p.Month|p.Day) != 0 {
+			id = fmt.Sprintf("%d/%02d/%02d/%s", p.Year, p.Month, p.Day, p.Slug)
+		}
+		return author, []repopkg.WorkItem{{Kind: "ticket", ID: id}}
+	case repopkg.EventGoalOpen, repopkg.EventGoalClose, repopkg.EventGoalReopen, repopkg.EventGoalChange:
+		var p repopkg.GoalPayload
+		if json.Unmarshal([]byte(payloadJSON), &p) != nil {
+			return "", nil
+		}
+		author = getAuthorFromPayload(payloadJSON)
+		return author, []repopkg.WorkItem{{Kind: "goal", ID: p.ID}}
+	case repopkg.EventContributorAdd, repopkg.EventContributorRemove:
+		var p repopkg.ContributorPayload
+		if json.Unmarshal([]byte(payloadJSON), &p) != nil {
+			return "", nil
+		}
+		return p.Author, []repopkg.WorkItem{{Kind: "contributor", ID: p.Github}}
+	case repopkg.EventTodoCreate, repopkg.EventTodoChange, repopkg.EventTodoDelete:
+		var p repopkg.TodoPayload
+		if json.Unmarshal([]byte(payloadJSON), &p) != nil {
+			return "", nil
+		}
+		return p.Author, []repopkg.WorkItem{{Kind: "todo", ID: p.ID}}
+	default:
+		return "", nil
+	}
+}
+
+func getAuthorFromPayload(payloadJSON string) string {
+	var m map[string]interface{}
+	if json.Unmarshal([]byte(payloadJSON), &m) != nil {
+		return ""
+	}
+	if a, ok := m["author"].(string); ok {
+		return a
+	}
+	return ""
+}
+
+func filterOut(list []string, exclude string) []string {
+	var out []string
+	for _, x := range list {
+		if x != exclude {
+			out = append(out, x)
+		}
+	}
+	return out
 }
 
 // #endregion 🔖Discord
@@ -1944,6 +2160,7 @@ func main() {
 	mux.HandleFunc("/warnings", server.handleWarnings)
 	mux.HandleFunc("/violations", server.handleViolations)
 	mux.HandleFunc("/scopes", server.handleScopes)
+	mux.HandleFunc("/events", server.handleEvents)
 	mux.HandleFunc("/webhooks/github", server.handleGitHubWebhook)
 	log.Printf("semio repo server listening on %s", config.Address)
 	if err := http.ListenAndServe(config.Address, mux); err != nil {

@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/467"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
-  "started": "2026-02-09T16:57:47.865391081Z",
-  "finished": "2026-02-09T22:12:26.448184883Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-09 16:57:47",
-        "finished": "2026-02-09 22:12:26"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -2545,7 +2539,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-09 16:57:47"
     }
   ]
 }

@@ -3,20 +3,15 @@
   "status": "closed",
   "prompt": "The engine should be a running graphql server, rest endpoint and mcp server (use the official python mcp sdk). Get it running and test that it works. semio.ts is the single source of truth for the engine. All CRUD operations from semio.ts should be exposed as tools in the mcp server.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MCP",
-  "started": "2025-12-30T16:47:41Z",
-  "finished": "2025-12-30T17:39:09Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-30T16:47:41Z",
-        "finished": "2025-12-30T17:39:09Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0114880d7f93beb16c97b2fd85cb3b0c5783ec82",
       "prompt": "The engine should be a running graphql server, rest endpoint and mcp server (use the official python mcp sdk). Get it running and test that it works. semio.ts is the single source of truth for the engine. All CRUD operations from semio.ts should be exposed as tools in the mcp server.",
-      "llm": "opus-4-20250514"
+      "llm": "opus-4-20250514",
+      "date": "2025-12-30T16:47:41Z"
     }
   ]
 }

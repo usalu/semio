@@ -3,15 +3,9 @@
   "status": "closed",
   "prompt": "Extend semio-repo/vscode extension.test.ts to cover Monorepo/Filter sideview behavior; fix vscode-test SIGSEGV; ensure build+tests pass; update README.md and AGENTS.md.",
   "summary": "Extended VS Code extension tests and stabilized headless test runner; aligned ticket interactions query; ensured build+tests pass.",
-  "started": "2026-02-04T15:06:15.60368767Z",
-  "finished": "2026-02-04T15:26:18.694928738Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-04 15:06:15",
-        "finished": "2026-02-04 15:26:18"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
@@ -335,7 +329,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-04 15:06:15"
     }
   ]
 }

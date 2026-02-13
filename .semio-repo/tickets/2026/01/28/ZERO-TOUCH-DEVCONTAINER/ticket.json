@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/245"
   },
   "goal": "AI-OPTIMIZED-REPO/SANDBOXED-REPO/ZERO-TOUCH-DEVCONTAINER",
-  "started": "2026-01-28T14:08:03.230808637Z",
-  "finished": "2026-01-28T14:09:56.918733579Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-28T14:08:03.230808637Z",
-        "finished": "2026-01-28T14:09:56.918733579Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -175,7 +169,8 @@
           "modified": [],
           "added": null
         }
-      }
+      },
+      "date": "2026-01-28T14:08:03.230808637Z"
     }
   ]
 }

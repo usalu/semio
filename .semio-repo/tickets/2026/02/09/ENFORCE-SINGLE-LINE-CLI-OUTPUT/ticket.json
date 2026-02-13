@@ -4,14 +4,8 @@
   "prompt": "All items returned from the CLI (either tree or list) should always be on a single line. All properties should be separated by `-` and wrapped in backticks. Multi-line content (e.g., summaries, descriptions) must be collapsed to a single line. Backticks in content must be escaped to prevent breaking markdown wrapping. Extend existing tests to cover everything.",
   "summary": "Enforced single-line output for all CLI tree and list items. Added sanitizeProp (strips newlines, replaces backticks with single quotes, collapses spaces) and sanitizeSingleLine (final rendering safety net) functions. Updated collectEntityProps, renderEntityMarkdownLink, and renderEntityHuman to use them. Extended TestCollectEntityPropsConsistency with 7 new sub-tests and added TestSingleLineOutput with 50+ sub-tests covering all entity kinds through every rendering path. Fixed missing io/fs import in test file. Updated AGENTS.md and README.md with specs and codebase docs.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "started": "2026-02-09T15:11:32.620236015Z",
-  "finished": "2026-02-09T15:18:00.539374793Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-09 15:11:32",
-        "finished": "2026-02-09 15:18:00"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "windsurf-chat",
@@ -776,7 +770,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-09 15:11:32"
     }
   ]
 }

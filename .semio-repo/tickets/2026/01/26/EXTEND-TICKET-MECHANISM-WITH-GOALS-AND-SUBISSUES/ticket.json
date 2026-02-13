@@ -7,8 +7,6 @@
     "issue": "https://github.com/usalu/semio/issues/219"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
-  "started": "0001-01-01T00:00:00Z",
-  "finished": "2026-02-03T08:49:43.282427136Z",
   "interactions": [
     {
       "prompt": "",
@@ -16,7 +14,8 @@
       "author": {},
       "started": "0001-01-01T00:00:00Z",
       "finished": "2026-02-03T08:49:43.282427136Z",
-      "commit": ""
+      "commit": "",
+      "date": ""
     }
   ]
 }

@@ -143,7 +143,7 @@ export interface TicketInteraction {
   llm: string;
   client: string;
   author: string;
-  dates: { started: string; finished?: string };
+  date: string;
   commit: string;
 }
 
@@ -1128,13 +1128,15 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   runningProcesses.set(processKey, controller);
 
   try {
-    const result = await runRepoCommandJson<ToolResult<AnalyzeReport>>(`analyze "${relativePath}"`);
+    const result = await runRepoCommandJson<ToolResult<{ analyze: AnalyzeReport }>>(`analyze "${relativePath}"`);
     if (controller.signal.aborted) return;
 
-    if (result?.data?.violations) {
-      fileViolationsMap.set(fileUri.toString(), result.data.violations);
-      updateFileDiagnostics(document, result.data.violations);
+    const violations = result?.data?.analyze?.violations;
+    if (violations && violations.length > 0) {
+      fileViolationsMap.set(fileUri.toString(), violations);
+      updateFileDiagnostics(document, violations);
     } else {
+      fileViolationsMap.delete(fileUri.toString());
       repoDiagnosticCollection.delete(fileUri);
     }
   } catch (error) {
@@ -1885,6 +1887,31 @@ function registerCommands(context: vscode.ExtensionContext): void {
     });
   });
 
+  register("semio.draftCreate", async () => {
+    const title = await vscode.window.showInputBox({ prompt: "Draft title" });
+    if (!title) return;
+    const binaryPath = getRepoBinaryPath();
+    if (!binaryPath) return;
+    const cp = require("child_process");
+    cp.execSync(`${binaryPath} draft create "${title}"`, { cwd: getWorkspaceRoot() });
+    monorepoProvider?.refresh();
+  });
+
+  register("semio.draftDelete", (item: MonorepoTreeItem) => {
+    const node = item?.data as TreeNodeData | undefined;
+    const slug = node?.Data?.slug ?? node?.Label;
+    if (!slug) return;
+    return vscode.window.showInformationMessage(`Delete draft: ${slug}?`, "Yes", "No").then(answer => {
+      if (answer === "Yes") {
+        const binaryPath = getRepoBinaryPath();
+        if (!binaryPath) return;
+        const cp = require("child_process");
+        cp.execSync(`${binaryPath} draft delete ${slug}`, { cwd: getWorkspaceRoot() });
+        monorepoProvider?.refresh();
+      }
+    });
+  });
+
   register("semio.copyCommitSha", (item: MonorepoTreeItem) => {
     const node = item?.data as TreeNodeData | undefined;
     const sha = node?.Data?.sha;
@@ -1989,9 +2016,30 @@ export function activate(context: vscode.ExtensionContext) {
     kitDiagnosticCollection = vscode.languages.createDiagnosticCollection("semio-kit");
     context.subscriptions.push(repoDiagnosticCollection, kitDiagnosticCollection);
 
-    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument(() => {
+    context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((document) => {
       invalidateTreeNodeCache();
       monorepoProvider?.refresh();
+      if (shouldAnalyzeFile(document)) analyzeFile(document);
+      if (isKitDocument(document)) validateKitDocument(document);
+    }));
+
+    context.subscriptions.push(vscode.workspace.onDidOpenTextDocument((document) => {
+      if (shouldAnalyzeFile(document)) analyzeFile(document);
+      if (isKitDocument(document)) validateKitDocument(document);
+    }));
+
+    const analyzeDebounceTimers = new Map<string, ReturnType<typeof setTimeout>>();
+    context.subscriptions.push(vscode.workspace.onDidChangeTextDocument((event) => {
+      const document = event.document;
+      if (!shouldAnalyzeFile(document) && !isKitDocument(document)) return;
+      const key = document.uri.toString();
+      const existing = analyzeDebounceTimers.get(key);
+      if (existing) clearTimeout(existing);
+      analyzeDebounceTimers.set(key, setTimeout(() => {
+        analyzeDebounceTimers.delete(key);
+        if (shouldAnalyzeFile(document)) analyzeFile(document);
+        if (isKitDocument(document)) validateKitDocument(document);
+      }, 1500));
     }));
 
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("semiorepo", {

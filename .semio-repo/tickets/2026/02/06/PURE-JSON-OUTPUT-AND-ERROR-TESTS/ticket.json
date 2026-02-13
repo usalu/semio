@@ -4,19 +4,10 @@
   "prompt": "All --json commands should return pure data without extra wrapping. Errors go to stderr. All commands must be tested with semantically wrong arguments.",
   "summary": "All --json CLI commands now return pure data without {\"data\": ...} GraphQL wrapper. Errors emitted to stderr. Cobra SilenceUsage/SilenceErrors set. Wrong-argument tests added for all command categories. TestCliJsonPureData and TestCliJsonErrorsToStderr verify output contract. Full test suite passes.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT",
-  "started": "2026-02-06T11:09:45.04768309Z",
-  "finished": "2026-02-06T11:33:11.72534163Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-06 11:09:45",
-        "finished": "2026-02-06 11:33:11"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "windsurf-chat"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "All --json commands should return pure data without extra wrapping. Errors go to stderr. All commands must be tested with semantically wrong arguments.",
       "llm": "sonnet-4-5",
@@ -3042,7 +3033,9 @@
             }
           ]
         }
-      }
+      },
+      "client": "windsurf-chat",
+      "date": "2026-02-06 11:09:45"
     }
   ]
 }

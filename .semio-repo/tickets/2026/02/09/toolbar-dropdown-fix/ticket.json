@@ -6,7 +6,7 @@
       "llm": "unknown",
       "ui": "unknown",
       "author": "unknown",
-      "date": "2026-02-09T00:00:00Z",
+      "date": "",
       "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
@@ -2855,8 +2855,5 @@
     }
   ],
   "status": "closed",
-  "dates": {
-    "closed": "2026-02-09T15:14:05.620470907Z"
-  },
   "summary": "Fixed toolbar dropdown positioning by centering the alignment. Updated the dropdown to include the currently selected tool in the list. Refactored Design app tool settings to display Additive/Subtractive modes for Selection tool and remove redundant Hand tool toggle."
 }

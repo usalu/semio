@@ -5,8 +5,8 @@
       "prompt": "The DiagramInner component in elements.tsx throws a ReferenceError because useMemo is used without the React. prefix when using namespace imports.",
       "llm": "gemini-3-flash",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-02T12:10:38.585004431Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -89,9 +89,6 @@
     }
   ],
   "status": "closed",
-  "dates": {
-    "closed": "2026-02-02T12:11:40.625114158Z"
-  },
   "summary": "Fixed ReferenceError: useMemo is not defined in DiagramInner",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/292"

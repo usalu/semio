@@ -4,20 +4,15 @@
   "prompt": "Add Toml, Yaml, Sql, and Graphql language plugins to the repo CLI language registry",
   "summary": "Bulk close",
   "goal": "AI-OPTIMIZED-REPO",
-  "started": "2026-01-07T20:52:32Z",
-  "finished": "2026-02-03T08:49:28.416944255Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-07T20:52:32Z",
-        "finished": "2026-02-03T08:49:28.416944255Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "2579ff5adb2f415787c4b6c83230b8c3bbed6508",
       "prompt": "Add Toml, Yaml, Sql, and Graphql language plugins to the repo CLI language registry",
-      "llm": "opus-4-5"
+      "llm": "opus-4-5",
+      "date": "2026-01-07T20:52:32Z"
     }
   ]
 }

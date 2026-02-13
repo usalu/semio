@@ -2,17 +2,13 @@
   "title": "Fix Kit Diagram Hierarchy Line Visibility",
   "status": "open",
   "prompt": "",
-  "summary": "Fixed missing hierarchy lines in Kit diagram by addressing a critical bug in row ID parsing where hyphens in GUIDs were causing incorrect kind/guid extraction. Unified parentGuid and folderGuid mappings in buildKitDiagramData to ensure all relationships (Type-\u003eParent, Design-\u003eParent, File-\u003eFolder, Folder-\u003eParent) are correctly represented as 'part-of' edges with unique prefixed IDs. This ensures that the diagram correctly reflects the kit hierarchy and maintains visibility even when ancestors are collapsed in the table via orphan prevention logic.",
+  "summary": "Fixed missing hierarchy lines in Kit diagram by addressing a critical bug in row ID parsing where hyphens in GUIDs were causing incorrect kind/guid extraction. Unified parentGuid and folderGuid mappings in buildKitDiagramData to ensure all relationships (Type->Parent, Design->Parent, File->Folder, Folder->Parent) are correctly represented as 'part-of' edges with unique prefixed IDs. This ensures that the diagram correctly reflects the kit hierarchy and maintains visibility even when ancestors are collapsed in the table via orphan prevention logic.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/223"
   },
-  "started": "0001-01-01T00:00:00Z",
   "interactions": [
     {
-      "dates": {
-        "started": ""
-      },
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
       "system": "",
       "client": "",
       "commit": "7f7fc35393b8fc23d8f7772e0ec32b56f4fc85c7",
@@ -306,17 +302,15 @@
             }
           ]
         }
-      }
+      },
+      "date": ""
     },
     {
-      "dates": {
-        "started": ""
-      },
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
       "system": "",
       "client": "",
       "commit": "7f7fc35393b8fc23d8f7772e0ec32b56f4fc85c7",
-      "prompt": "Part-of relationships (solid lines) are still not visible for Type-\u003eParent Type, Design-\u003eParent Design, File-\u003eFolder, and Folder-\u003eParent Folder.",
+      "prompt": "Part-of relationships (solid lines) are still not visible for Type->Parent Type, Design->Parent Design, File->Folder, and Folder->Parent Folder.",
       "llm": "gemini-3-flash",
       "diff": {
         "bundles": {
@@ -830,18 +824,17 @@
             }
           ]
         }
-      }
+      },
+      "date": ""
     },
     {
-      "dates": {
-        "started": ""
-      },
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
       "system": "",
       "client": "",
       "commit": "7f7fc35393b8fc23d8f7772e0ec32b56f4fc85c7",
       "prompt": "Missing solid lines even after fix. Reinvestigate mapping and FloatingEdge visibility.",
-      "llm": "gemini-3-flash"
+      "llm": "gemini-3-flash",
+      "date": ""
     }
   ]
 }

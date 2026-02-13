@@ -42,9 +42,11 @@ type FixedKind = "alpha" | "beta";
 // Rendering components for fixed types.
 // Components MUST accept FixedType props.
 
-// Renders a fixed component by returning its name.
-// FixedComponent MUST return the name property.
-// [🛠️semio/assets/repo/some/folder/file_fixed.tsx#Components§FixedComponent](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.tsx/COMPONENTS/FIXED-COMPONENT)
+/**
+ * Renders a fixed component by returning its name.
+ * FixedComponent MUST return the name property.
+ * [🛠️semio/assets/repo/some/folder/file_fixed.tsx#Components§FixedComponent](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.tsx/COMPONENTS/FIXED-COMPONENT)
+ **/
 export function FixedComponent(props: FixedType): string {
   return props.name;
 }

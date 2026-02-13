@@ -6,15 +6,9 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/344"
   },
-  "started": "2026-02-04T18:35:29.49128903Z",
-  "finished": "2026-02-04T18:39:00.138451003Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-04 18:35:29",
-        "finished": "2026-02-04 18:39:00"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "claude-code",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
@@ -90,7 +84,8 @@
           ],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-04 18:35:29"
     }
   ]
 }

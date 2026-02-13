@@ -3,18 +3,15 @@
   "status": "closed",
   "prompt": "Implement generalized diagram component and migrate Design/Kit/Quality; ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests pass.",
   "goal": "R26-02/RUNNING-SKETCHPAD",
-  "started": "2025-12-18T15:09:08.033Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-18T15:09:08.033Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "",
       "prompt": "Implement generalized diagram component and migrate Design/Kit/Quality; ensure only elements.tsx imports @xyflow/react; ensure sketchpad tests pass.",
-      "llm": "opus-4-5"
+      "llm": "opus-4-5",
+      "date": "2025-12-18T15:09:08.033Z"
     }
   ]
 }

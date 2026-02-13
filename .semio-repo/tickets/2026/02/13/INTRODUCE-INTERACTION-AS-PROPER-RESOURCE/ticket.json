@@ -1,0 +1,20 @@
+{
+  "title": "Introduce Interaction as Proper Resource",
+  "status": "open",
+  "prompt": "Introduce `interaction` as a proper resource. Interactions are aggregated from other resources that have interactions (e.g. tickets and goals). Add it to GraphQL schema. Add `interaction list` to the CLI (not MCP) that lists all interactions. With `--sorted` the list is not streamed but sorted by date. Add `interaction tree` to the CLI (not MCP) showing interactions within the parent tree (goal -\u003e ticket tree extended with interaction items).",
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
+  "started": "2026-02-13T21:23:26.133910448Z",
+  "interactions": [
+    {
+      "dates": {
+        "created": "2026-02-13 21:23:26"
+      },
+      "author": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
+      "prompt": "Introduce `interaction` as a proper resource. Interactions are aggregated from other resources that have interactions (e.g. tickets and goals). Add it to GraphQL schema. Add `interaction list` to the CLI (not MCP) that lists all interactions. With `--sorted` the list is not streamed but sorted by date. Add `interaction tree` to the CLI (not MCP) showing interactions within the parent tree (goal -\u003e ticket tree extended with interaction items).",
+      "llm": "sonnet-4-5"
+    }
+  ]
+}

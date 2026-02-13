@@ -3,18 +3,15 @@
   "status": "closed",
   "prompt": "'Refactor ticket mechanism: create takes title/prompt/llm/plan, creates ticket.json/plan.md/log.md/summary.md, checkpoints compute section metrics from git diffs'",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
-  "started": "2026-01-07T10:19:20Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-07T10:19:20Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "a1c46c41e5c88ce33dad3bafcb07738a56e4e25d",
       "prompt": "'Refactor ticket mechanism: create takes title/prompt/llm/plan, creates ticket.json/plan.md/log.md/summary.md, checkpoints compute section metrics from git diffs'",
-      "llm": "opus-4"
+      "llm": "opus-4",
+      "date": "2026-01-07T10:19:20Z"
     }
   ]
 }

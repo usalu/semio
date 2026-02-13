@@ -4,14 +4,8 @@
   "prompt": "Testing section order",
   "summary": "This is a test summary to verify section ordering works.",
   "goal": "AI-OPTIMIZED-REPO",
-  "started": "2026-02-02T21:35:50.269763804Z",
-  "finished": "2026-02-02T21:36:02.722459606Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-02T21:35:50.269763804Z",
-        "finished": "2026-02-02T21:36:02.722459606Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -1752,7 +1746,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-02T21:35:50.269763804Z"
     }
   ]
 }

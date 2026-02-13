@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/252"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "started": "2026-01-28T16:43:28.735847694Z",
-  "finished": "2026-01-28T16:44:34.412281118Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-28T16:43:28.735847694Z",
-        "finished": "2026-01-28T16:44:34.412281118Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -1955,7 +1949,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-01-28T16:43:28.735847694Z"
     }
   ]
 }

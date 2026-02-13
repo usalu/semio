@@ -493,21 +493,13 @@ type Ticket implements Node {
 }
 
 type Interaction {
-  dates: InteractionDates!
-  system: System!
+  kind: String!
+  date: String!
+  system: String!
+  client: String!
   prompt: String!
   author: String!
   commit: String
-}
-
-type System {
-  client: String
-  version: String
-}
-
-type InteractionDates {
-  started: DateTime!
-  finished: DateTime
 }
 
 enum TicketStatus {

@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/539"
   },
   "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
-  "started": "2026-02-12T11:03:41.341161687Z",
-  "finished": "2026-02-12T11:46:15.487926679Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-12 11:03:41",
-        "finished": "2026-02-12 11:46:15"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -411,7 +405,7 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -1894,14 +1888,14 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2751,7 +2745,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-12 11:03:41"
     }
   ]
 }

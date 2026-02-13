@@ -7,15 +7,9 @@
     "issue": "https://github.com/usalu/semio/issues/218"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "started": "0001-01-01T00:00:00Z",
-  "finished": "2026-02-06T09:36:20.665866172Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-06 09:32:14",
-        "finished": "2026-02-06 09:35:46"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -309,14 +303,11 @@
           "modified": [],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-06 09:32:14"
     },
     {
-      "dates": {
-        "started": "2026-02-06 09:36:00",
-        "finished": "2026-02-06 09:36:20"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -610,7 +601,8 @@
           "modified": [],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-06 09:36:00"
     }
   ]
 }

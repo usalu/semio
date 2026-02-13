@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/549"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
-  "started": "2026-02-13T07:31:14.94208871Z",
-  "finished": "2026-02-13T07:56:32.59927053Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-13 07:31:14",
-        "finished": "2026-02-13 07:56:32"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -435,7 +429,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-13 07:31:14"
     }
   ]
 }

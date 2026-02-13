@@ -6,20 +6,15 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/324"
   },
-  "started": "2026-02-03T15:37:06.673288609Z",
-  "finished": "2026-02-03T17:20:33.225604594Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-03T15:37:06.673288609Z",
-        "finished": "2026-02-03T17:20:33.225604594Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "496c84d380fd2ced3b1697893e7fbcad2761da94",
       "prompt": "Refactor ID and URI system to enforce uppercase slugs for URIs and human-readable IDs, updating Go repo and VS Code extension.",
-      "llm": "gemini-3-pro"
+      "llm": "gemini-3-pro",
+      "date": "2026-02-03T15:37:06.673288609Z"
     }
   ]
 }

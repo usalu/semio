@@ -1,0 +1,20 @@
+{
+  "title": "Add Folder Empty Policy and File Godfile Policy",
+  "status": "open",
+  "prompt": "Add a new Folder policy with Illegal/Empty violation kind (autofixable by removing empty folders). Extend the File policy with Illegal/Use Godfile violation kind that checks files against .semio-repo/files.json godfile list.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/563"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
+  "interactions": [
+    {
+      "author": "usalu",
+      "system": "linux",
+      "client": "windsurf-chat",
+      "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
+      "prompt": "Add a new Folder policy with Illegal/Empty violation kind (autofixable by removing empty folders). Extend the File policy with Illegal/Use Godfile violation kind that checks files against .semio-repo/files.json godfile list.",
+      "llm": "sonnet-4-5",
+      "date": "2026-02-13 21:06:34"
+    }
+  ]
+}

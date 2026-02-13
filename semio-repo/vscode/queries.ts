@@ -136,12 +136,10 @@ export const TicketsDocument = graphql(`
         dates { started finished }
         interactions {
           prompt
-          system { client version }
+          system
+          client
           author
-          dates {
-            started
-            finished
-          }
+          date
           commit
         }
       }

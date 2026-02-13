@@ -5,8 +5,8 @@
       "prompt": "Restore Design app feature parity by migrating key behaviors from .old files into new build (Details panel logic, cluster/expand commands, connection mapping), with transactions and tests.",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-09T12:05:26.514312038Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
@@ -2420,8 +2420,8 @@
       "prompt": "Make new features and UI visible/working. Details panel tree elements not visible; multiple UI elements not functioning. Investigate and fix.",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-09T13:12:38.640527756Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
@@ -4756,8 +4756,8 @@
       "prompt": "toggle panels still arent showing content. make sure they work as in the .old files",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-09T13:28:29.39739171Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
@@ -5300,8 +5300,8 @@
       "prompt": "Make the panel toggles in the new build behave exactly like the old build.",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-09T13:35:53.22833378Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
@@ -8721,8 +8721,8 @@
       "prompt": "some panels are dublicate, make sure to unify old and new build. also the icons of all toggle pannels arent showing",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-09T13:58:33.614975728Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
@@ -9580,8 +9580,8 @@
       "prompt": "detail panel has no content visible and all toggle panels dont show icons or correct hover effect at the right location",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-09T15:16:17.326290689Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
@@ -10520,8 +10520,5 @@
     }
   ],
   "status": "closed",
-  "dates": {
-    "closed": "2026-02-09T15:19:34.646066907Z"
-  },
   "summary": "Restored Details panel visibility/content by default in Design app state and unified navbar panel toggles to a single definition-driven icon strip with correct hover/active placement."
 }

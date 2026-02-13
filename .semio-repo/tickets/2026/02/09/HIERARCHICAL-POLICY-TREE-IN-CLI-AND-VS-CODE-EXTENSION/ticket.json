@@ -7,15 +7,9 @@
     "issue": "https://github.com/usalu/semio/issues/447"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
-  "started": "2026-02-09T07:53:30.442542211Z",
-  "finished": "2026-02-09T08:34:04.256142353Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-09 07:53:30",
-        "finished": "2026-02-09 08:34:04"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "b75598f17efe304824cda5c67a7b6535dd1e3c92",
@@ -2639,7 +2633,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-09 07:53:30"
     }
   ]
 }

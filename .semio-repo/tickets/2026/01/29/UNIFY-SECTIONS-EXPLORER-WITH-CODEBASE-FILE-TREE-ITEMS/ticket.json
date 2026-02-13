@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/266"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-SECTION-MECHANISM",
-  "started": "2026-01-29T10:29:22.849902564Z",
-  "finished": "2026-01-29T10:37:49.980795076Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-29T10:29:22.849902564Z",
-        "finished": "2026-01-29T10:37:49.980795076Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -414,7 +408,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-01-29T10:29:22.849902564Z"
     }
   ]
 }

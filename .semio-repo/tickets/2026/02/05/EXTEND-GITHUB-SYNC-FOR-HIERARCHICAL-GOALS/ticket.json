@@ -4,15 +4,9 @@
   "prompt": "Extend the GitHub sync mechanism for goals. Currently all goals are linked to milestones. Instead, only top-level goals (without parent) should be milestones. All child goals should be GitHub issues with the goal label. Migrate existing goals to the new system. No backwards compatibility needed.",
   "summary": "Implemented three-tier hierarchical GitHub sync: root goals as milestones, first-gen children as issues with milestone, deeper goals as sub-issues without milestone. Fixed milestone lookup bug (gh CLI needs title not number). Migrated all existing goals, cleaned non-root goal.json files, deleted orphaned milestones.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "started": "2026-02-05T11:03:29.04550353Z",
-  "finished": "2026-02-05T11:53:47.656329184Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-05 11:03:29",
-        "finished": "2026-02-05 11:13:17"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -1107,14 +1101,11 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-05 11:03:29"
     },
     {
-      "dates": {
-        "started": "2026-02-05 11:15:55",
-        "finished": "2026-02-05 11:20:41"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -2307,14 +2298,11 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-05 11:15:55"
     },
     {
-      "dates": {
-        "started": "2026-02-05 11:25:17",
-        "finished": "2026-02-05 11:53:47"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -3535,7 +3523,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-05 11:25:17"
     }
   ]
 }

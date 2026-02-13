@@ -3,14 +3,14 @@
   "status": "closed",
   "prompt": "",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
-  "started": "0001-01-01T00:00:00Z",
   "interactions": [
     {
       "prompt": "",
       "llm": "",
       "author": {},
       "started": "0001-01-01T00:00:00Z",
-      "commit": ""
+      "commit": "",
+      "date": ""
     }
   ]
 }

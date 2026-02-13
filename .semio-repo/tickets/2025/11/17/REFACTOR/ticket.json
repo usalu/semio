@@ -3,18 +3,15 @@
   "status": "closed",
   "prompt": "Migration from REFACTOR.md",
   "goal": "AI-OPTIMIZED-REPO",
-  "started": "2025-12-16T17:06:07.669Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-16T17:06:07.669Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Migration from REFACTOR.md",
-      "llm": "sonnet-4"
+      "llm": "sonnet-4",
+      "date": "2025-12-16T17:06:07.669Z"
     }
   ]
 }

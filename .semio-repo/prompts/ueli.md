@@ -29,6 +29,75 @@ elements:
 
 ## History
 
+semio repo cli:
+Remove all list and tree mcp tools except the main `tree` tool.
+
+Remove
+Remove status, prompt, started, finished from from ticket.json. Just leave title, goal, interactions. Derive status from interactions. I
+{
+  "title": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
+  "status": "closed",
+  "prompt": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
+  "goal": "R26-02/RUNNING-SKETCHPAD",
+  "started": "2025-12-16T17:06:07.672Z",
+  "interactions": [
+    {
+      "dates": {
+        "created": "2025-12-16T17:06:07.672Z"
+      },
+      "author": "uelisaluz",
+      "system": "",
+      "client": "",
+      "commit": "0000000000000000000000000000000000000000",
+      "prompt": "Migration from 2025-11-18_BREADCRUMB-RENDER-ERROR.md",
+      "llm": "sonnet-4"
+    }
+  ]
+}
+
+Rename 
+
+semio repo:
+Interactions are now pure events that happen at a moment instead of a duration. e.g. Ticket open and close should be two separate interactions. Interactions shouldnt have "dates":{created, finished} but just "date" of the moment of interaction. Some interaction calculate based on the files and the unstaged git diff a semantic codebase diff of the semio repo (deleted, renamed, modified, created for projects, bundles, folders, files sections, definitions)
+
+After adjusting the implementation and the tests, you MUST migrate all existing tickets and goals to the new format. Dont keep any legacy api or backwards compatiblity.
+
+semio repo:
+Extend interaction to have kind (e.g. "ticket.open", "ticket.close", "ticket.reopen", "ticket.change", "goal.open", "goal.close", "goal.reopen", "goal.change", "contributor.add", "contributor.remove", "commit", "todo.create", "todo.change", "todo.delete", etc. for all events. An event happens when a changing interaction is made.)
+
+semio repo:
+uri always have uppercase slug for everything dynamic inside the uri (e.g. file name, folder name, ticket title, etc). In the uri cant be a whitespace (but names can usually have them). Make sure to refactor and tests this.
+
+`semio-repo/svg` should be an svg library for 
+
+semio repo cli:
+When an interaction (such as ticket close) with a codebase diff is happening, then only consider the complete git diffs but only consider unstaged diffs.
+
+semio repo:
+The cli should communicate with the server. Choose a general event-based architecture.
+- the cli should emit an event whenever a changing interaction is made (e.g. ticket open, ticket close, ticket reopen, ticket change, goal open, goal close, goal reopen, goal change, contributor add, contributor remove, commit, todo create, todo change, todo delete)
+- the server is mainly a discord bot that sends messages to different channels.
+  - the server should store for every contributor the tickets, goals, todos, projects, bundles, folders, files, sections, definitions that they are working on. As soon as a github commit is made by the contributor, then the server should update the list and remove everything that was pushed to github. When another contributor is working on the same project, bundle, folder, file, section, definition, ticket, goal, todo, the server should send out a warning chat message.
+  - Send a message to the channel when a changing interaction is made (e.g. ticket open, ticket close, ticket reopen, ticket change, goal open, goal close, goal reopen, goal change, contributor add, contributor remove, commit, todo create, todo change, todo delete)
+
+Create a shared go library for `semio-repo/go` with a main.go godfile that both the cli and server use.
+E.g. shared are interactions
+
+Extend whatever is necessary to implement this.
+
+
+Extend the ticket open command to take bundles. 
+
+semio repo cli:
+When creating a ticket I get wrong id with date of 0s. The existing tests should catch this.
+[🎫0000/00/00/LOCAL-CACHE-AND-QUERY-FOR-SEMIO-REPO-CLI?OPEN](semiorepo://ticket/0000/00/00/LOCAL-CACHE-AND-QUERY-FOR-SEMIO-REPO-CLI) - `OPEN`
+
+Make sure to extend the tests to check that the index is working correctly and `tree <query>` is returning different related resources. Make sure the cache is not just for the complete repo but granular per project, folder, file, etc. E.g. when a file is changing then the index for the file, folder the file is in, bundle the file is in, project the fhe file is in should be updated.
+
+semio repo cli:
+The query mechanism should be extended with local caching under `.semio-repo/cache`.
+All content of all resources (projects, bundles, folders, files, sections, definitions, tickets, goals, policies, violationKinds, contributors, commits) should be cached in the cache directory should be indexed. The querying should use keywords and return all matching resources (only a subset of the resources need to match because often tasks involve multiple different resources).
+
 All `#region <SECTIONNAME>` and `#endregion <SECTIONNAME>` for sections should be replaced with `// #region 🔖<SECTIONNAME>` and `// #endregion 🔖<SECTIONNAME>` respectively.
 
 semio repo cli:
@@ -55,7 +124,7 @@ Interactions should instead of this:
 this:
 ```json
 "system": "linux",
-"client": "copilot-chat"
+"client": "copilot-chat",
 "dates": {
   "created": "2026-02-12T01:22:07.762840469Z",
   "finished": "2026-02-12T01:22:07.762840469Z"
@@ -63,7 +132,28 @@ this:
 ```
 Migrate all existing `goals.json` and `tickets.json` to the new format. Dont keep any legacy api or backwards compatiblity.
 
-Add a new `System` policiy that 
+semio repo cli:
+Add a new `Folder` policy:
+
+- Folder
+  - Illegal
+    - Empty # Autofixable by removing the emptyfolder
+  
+Extend the `File` policy with:
+
+- File
+  - Illegal
+    - Use Godfile # Fix: consolidate into the existing godfiles. There is .semio-repo/files.json that lists all allowed files. Add all files for now into the json.
+
+Add a new `System` policiy
+
+- System
+  - Devcontainer  
+    - VSCode
+      - Settings Outside Devcontainer #Autofixable by moving `.vscode/settings.json` to ` "customizations": { "vscode": { "settings": { … } } }` inside `.devcontainer/devcontainer.json`
+      - Recommended Extensions Outside Devcontainer #Autofixable by moving `.vscode/extensions.json` to ` "customizations": { "vscode": { "extensions": [ … ] } }` inside `.devcontainer/devcontainer.json`
+      
+
 
 semio repo cli:
 The error messages are not consistent or accurate. Make sure every commmand is called with wrong arguments and with wrong lifecycle (e.g. goal close when goal is not open).

@@ -7,19 +7,10 @@
     "issue": "https://github.com/usalu/semio/issues/427"
   },
   "goal": "CODEBASE",
-  "started": "2026-02-06T17:45:32.802487574Z",
-  "finished": "2026-02-06T19:14:12.646253851Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-06 17:45:32",
-        "finished": "2026-02-06 19:14:12"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "windsurf-chat"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "Replace file path in source file headers with artifact IDs from the semio repo ID system. Make ViolationCodeHeaderMissingFilename into ViolationCodeHeaderWrongFileId that is autofixable. Fix all existing headers. Extend tests.",
       "llm": "sonnet-4-5",
@@ -370,7 +361,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
               "lines": {
                 "added": 0,
                 "removed": 16
@@ -833,7 +824,7 @@
               }
             },
             {
-              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
               "lines": {
                 "added": 0,
                 "removed": 16
@@ -1004,7 +995,9 @@
             }
           ]
         }
-      }
+      },
+      "client": "windsurf-chat",
+      "date": "2026-02-06 17:45:32"
     }
   ]
 }

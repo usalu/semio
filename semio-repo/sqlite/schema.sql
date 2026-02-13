@@ -219,6 +219,7 @@ CREATE TABLE IF NOT EXISTS ticket_checkpoint (
     id TEXT PRIMARY KEY,
     ticket_id TEXT NOT NULL REFERENCES ticket(id) ON DELETE CASCADE,
     sequence INTEGER NOT NULL,
+    kind TEXT NOT NULL,
     prompt TEXT NOT NULL,
     model TEXT,
     author_id TEXT REFERENCES contributor(id) ON DELETE SET NULL,

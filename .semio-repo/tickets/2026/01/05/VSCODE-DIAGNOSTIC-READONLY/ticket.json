@@ -3,18 +3,15 @@
   "status": "closed",
   "prompt": "Fix VSCode diagnostics opening files as read-only preview instead of editable files when clicking on semio violation diagnostics.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "started": "2026-01-05T11:12:30Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-05T11:12:30Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "393dfeadd9c012eb01d37dad9cd10065832c6c1c",
       "prompt": "Fix VSCode diagnostics opening files as read-only preview instead of editable files when clicking on semio violation diagnostics.",
-      "llm": "opus-4-5"
+      "llm": "opus-4-5",
+      "date": "2026-01-05T11:12:30Z"
     }
   ]
 }

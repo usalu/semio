@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/523"
   },
   "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
-  "started": "2026-02-11T23:02:13.183100151Z",
-  "finished": "2026-02-11T23:09:20.025625333Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-11 23:02:13",
-        "finished": "2026-02-11 23:09:20"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -210,7 +204,8 @@
           ],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-11 23:02:13"
     }
   ]
 }

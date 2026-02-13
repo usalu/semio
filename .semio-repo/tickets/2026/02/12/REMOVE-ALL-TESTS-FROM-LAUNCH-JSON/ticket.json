@@ -4,14 +4,8 @@
   "prompt": "Remove all test configurations from .vscode/launch.json",
   "summary": "Removed all 14 test launch configurations",
   "goal": "AI-OPTIMIZED-REPO",
-  "started": "2026-02-12T23:31:07.674729515Z",
-  "finished": "2026-02-12T23:32:40.532116836Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-12 23:31:07",
-        "finished": "2026-02-12 23:32:40"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "claude-code",
@@ -143,7 +137,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-12 23:31:07"
     }
   ]
 }

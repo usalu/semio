@@ -7,20 +7,15 @@
     "issue": "https://github.com/usalu/semio/issues/280"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "started": "2026-01-29T21:09:40.387526517Z",
-  "finished": "2026-02-03T08:50:03.131685742Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-29T21:09:40.387526517Z",
-        "finished": "2026-02-03T08:50:03.131685742Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "vscode-extension-fixes",
-      "llm": "gemini-3-pro"
+      "llm": "gemini-3-pro",
+      "date": "2026-01-29T21:09:40.387526517Z"
     }
   ]
 }

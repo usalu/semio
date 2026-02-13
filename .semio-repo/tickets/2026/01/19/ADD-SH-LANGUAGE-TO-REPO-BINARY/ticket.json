@@ -6,14 +6,14 @@
     "issue": "https://github.com/usalu/semio/issues/167"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
-  "started": "0001-01-01T00:00:00Z",
   "interactions": [
     {
       "prompt": "",
       "llm": "",
       "author": {},
       "started": "0001-01-01T00:00:00Z",
-      "commit": ""
+      "commit": "",
+      "date": ""
     }
   ]
 }

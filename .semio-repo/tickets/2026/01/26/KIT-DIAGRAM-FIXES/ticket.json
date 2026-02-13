@@ -6,13 +6,9 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/216"
   },
-  "started": "0001-01-01T00:00:00Z",
   "interactions": [
     {
-      "dates": {
-        "started": ""
-      },
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
       "system": "",
       "client": "",
       "commit": "86d699419815d98b01c413b9a7f515a727af586b",
@@ -617,7 +613,8 @@
             }
           ]
         }
-      }
+      },
+      "date": ""
     }
   ]
 }

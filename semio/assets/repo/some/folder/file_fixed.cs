@@ -24,9 +24,11 @@
 // Domain classes for fixed values.
 // Classes MUST have public properties.
 
-// Represents a fixed value container.
-// FixedClass MUST have a Value property.
-// [🛠️semio/assets/repo/some/folder/file_fixed.cs#Classes§FixedClass](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.cs/CLASSES/FIXED-CLASS)
+/// <summary>Represents a fixed value container.</summary>
+/// <remarks>
+/// FixedClass MUST have a Value property.
+/// [🛠️semio/assets/repo/some/folder/file_fixed.cs#Classes§FixedClass](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.cs/CLASSES/FIXED-CLASS)
+/// </remarks>
 public class FixedClass {
     public int Value { get; set; }
 }

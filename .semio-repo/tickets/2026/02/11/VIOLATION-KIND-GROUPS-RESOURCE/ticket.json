@@ -4,14 +4,8 @@
   "prompt": "Introduce violation kind groups as a new resource. Replace path-based violation kind tree with explicit ViolationKindGroup hierarchy. Groups have name, description, scopes (glob filters applied general-to-specific). Groups can contain violation kinds or other groups as children. Update IDs, URIs, policies, trees, GraphQL schema, MCP tools, CLI commands, and tests.",
   "summary": "Introduced ViolationKindGroup as hierarchical intermediate tree item in policy system. Refactored PolicyDef to use Groups instead of flat Kinds. Updated GraphQL schema/resolvers, CLI tree rendering, and all tests. Fixed pre-existing test failures from concurrent dev changes (fixture files, section specs removal, test file detection, file ID emoji changes).",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
-  "started": "2026-02-11T21:23:58.509759464Z",
-  "finished": "2026-02-11T22:58:17.576864585Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-11 21:23:58",
-        "finished": "2026-02-11 22:58:17"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "windsurf-chat",
@@ -887,7 +881,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-11 21:23:58"
     }
   ]
 }

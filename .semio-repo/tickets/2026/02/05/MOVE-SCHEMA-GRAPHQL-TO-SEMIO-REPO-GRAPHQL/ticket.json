@@ -4,15 +4,9 @@
   "prompt": "Move schema.graphql and queries from semio-repo/cli to semio-repo/graphql. Fix the typo directory semio-repo/grapqhl. Update all references.",
   "summary": "Also fixed VSCode extension codegen.ts schema path reference.",
   "goal": "AI-OPTIMIZED-REPO/REPO-SERVER",
-  "started": "2026-02-05T10:50:51.006084564Z",
-  "finished": "2026-02-06T01:41:23.247101029Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-05 10:50:51",
-        "finished": "2026-02-05 10:53:15"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -528,14 +522,11 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-05 10:50:51"
     },
     {
-      "dates": {
-        "started": "2026-02-05 10:58:20",
-        "finished": "2026-02-05 10:58:49"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -1051,14 +1042,11 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-05 10:58:20"
     },
     {
-      "dates": {
-        "started": "2026-02-06 01:40:52",
-        "finished": "2026-02-06 01:41:23"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
       "system": "linux",
       "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
@@ -1118,7 +1106,8 @@
           ],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-06 01:40:52"
     }
   ]
 }

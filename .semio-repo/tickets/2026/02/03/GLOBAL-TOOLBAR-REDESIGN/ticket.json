@@ -5,8 +5,8 @@
       "prompt": "I want to redesign the existing global toolbar used across all applications while keeping it fixed at the bottom center of the screen, exactly where it is today. The new system consists of two distinct but synchronized toolbars aligned on the same horizontal axis.\n\nThe left toolbar is the primary tool strip. It is anchored at the bottom center and expands leftward as tools are added, while tools within the strip are ordered from left to right. Only one tool can be active at a time. This tool system is hierarchical and built as a tree structure. When a tool is selected, its sub-tools expand vertically upward from that tool. When a sub-tool is selected and contains further categories, sub-sub-tools expand horizontally to the right of the selected sub-tool.\n\nThe right toolbar is a contextual settings bar that displays settings for the currently selected tool, sub-tool, or sub-sub-tool. This bar expands from left to right, starting near the center of the screen and extending to the far right edge. The content of the settings bar must always stay fully synchronized with the current selection state, updating immediately whenever the selected tool level changes.\n\nThe interaction model must ensure that only one node in the tool hierarchy is active at any time and that all settings shown are driven solely by that active selection. The overall design should clearly express hierarchy through spatial layout (vertical for depth, horizontal for categories) without relying on animation.\n\nUse the provided sketch as a structural reference and deconstruct it alongside this description to fully understand the intended layout, hierarchy, and interaction model. Generate a professional, extremely detailed prompt that precisely describes this toolbar system, its behavior, and its design intent.",
       "llm": "gemini-3-pro",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T15:39:25.709228269Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -4042,8 +4042,8 @@
       "prompt": "Toolbar System Adaptation Plan (No Animation, Full Tool Coverage)",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T16:20:40.207475149Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -4163,8 +4163,8 @@
       "prompt": "Implement toolbar adaptation plan",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T16:28:25.236386742Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -8677,8 +8677,8 @@
       "prompt": "fix current bugs; rename right bar to tool setting bar; make toolbar and tool setting bar a single flat band with category dropdown toggles and selected-tool settings only",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T17:08:05.057747782Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -9725,8 +9725,8 @@
       "prompt": "restore tree logic with dropdown toggles: vertical sub-tools, horizontal sub-sub-tools; cluster selection/filter/create tools; tool setting bar scoped to selected tool with selection additive/subtractive controls and placeholder filter/create settings",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T17:29:24.417319996Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -10892,8 +10892,8 @@
       "prompt": "Create a redesigned bottom toolbar system specification: single flat band, upward-only dropdown category tools, contextual Tool Setting Bar synchronization rules",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T17:45:28.47255724Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -11013,8 +11013,8 @@
       "prompt": "Create redesigned bottom toolbar specification for all apps: single fixed bottom-center flat band with left tool zone, right contextual settings zone, upward-only dropdowns, single active path, and synchronized behavior rules.",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T17:51:10.038536742Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -11134,8 +11134,8 @@
       "prompt": "Implement global single-band bottom toolbar redesign specification and corresponding docs updates",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T17:59:08.918106934Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -12658,8 +12658,8 @@
       "prompt": "Fix toolbar center-origin sizing and simplify Tool Setting Bar content to named toggles/buttons without title/group headings.",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T18:53:02.641331574Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -13783,8 +13783,8 @@
       "prompt": "Adjust toolbar interactions: only Selection uses dropdown, Filter/Create are direct toolbar toggles, move Filter/Create option controls into settings bar, center-seam growth without gaps, and use icon+name labels in toolbar/settings controls.",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-03T19:16:40.047884818Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -14915,8 +14915,8 @@
       "prompt": "Slection in diagram windows doesnt work. i am only able to select through the table window",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-04T11:51:08.154639268Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -17083,8 +17083,8 @@
       "prompt": "Refactor apps: Use split toolbar architecture for Design/Type. Fix Tool Setting Bar visibility bug.",
       "llm": "gemini-3-pro",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-04T12:15:38.879569171Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -19926,9 +19926,6 @@
     }
   ],
   "status": "closed",
-  "dates": {
-    "closed": "2026-02-04T13:23:21.474024248Z"
-  },
   "summary": "Restored Kit diagram-window selection by re-enabling React Flow element selection/focus flags on the Diagram in js/semio/sketchpad/Kit.tsx, so direct diagram interactions again update shared Kit selection state.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/326"

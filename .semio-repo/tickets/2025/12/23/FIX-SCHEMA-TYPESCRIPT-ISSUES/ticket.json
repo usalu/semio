@@ -1,20 +1,17 @@
 {
   "title": "FIX-SCHEMA-TYPESCRIPT-ISSUES",
   "status": "closed",
-  "prompt": "\u003e-",
+  "prompt": ">-",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
-  "started": "2025-12-23T14:27:10.321Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-23T14:27:10.321Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "",
-      "prompt": "\u003e-",
-      "llm": "sonnet-4"
+      "prompt": ">-",
+      "llm": "sonnet-4",
+      "date": "2025-12-23T14:27:10.321Z"
     }
   ]
 }

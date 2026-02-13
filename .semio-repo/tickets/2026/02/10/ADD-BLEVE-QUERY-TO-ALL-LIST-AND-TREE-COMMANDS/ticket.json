@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/485"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI/REPO-CLI-FILTERS",
-  "started": "2026-02-10T18:45:31.430358946Z",
-  "finished": "2026-02-10T19:24:56.737868725Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-10 18:45:31",
-        "finished": "2026-02-10 19:24:56"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -617,7 +611,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-10 18:45:31"
     }
   ]
 }

@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/472"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
-  "started": "2026-02-09T23:00:10.274605131Z",
-  "finished": "2026-02-09T23:46:42.215105521Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-09 23:00:10",
-        "finished": "2026-02-09 23:46:42"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -473,7 +467,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field<T> Type",
               "lines": {
                 "added": 0,
                 "removed": 46
@@ -543,35 +537,35 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips",
               "lines": {
                 "added": 0,
                 "removed": 38
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Expertise Levels",
               "lines": {
                 "added": 0,
                 "removed": 10
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Components",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Content",
               "lines": {
                 "added": 0,
                 "removed": 8
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 0,
                 "removed": 10
@@ -641,28 +635,28 @@
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration",
               "lines": {
                 "added": 0,
                 "removed": 39
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#AppConfig",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#AppConfig",
               "lines": {
                 "added": 0,
                 "removed": 15
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Path Matching",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Path Matching",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Route Segments",
+              "path": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Route Segments",
               "lines": {
                 "added": 0,
                 "removed": 12
@@ -2108,7 +2102,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "from": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Scope Providers",
               "to": "AGENTS.md#Codebase#📁semio/js/",
               "lines": {
                 "added": 4,
@@ -2336,7 +2330,7 @@
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field<T> Type",
               "lines": {
                 "added": 0,
                 "removed": 46
@@ -2406,35 +2400,35 @@
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Expertise Levels",
               "lines": {
                 "added": 0,
                 "removed": 10
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Components",
               "lines": {
                 "added": 0,
                 "removed": 6
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Content",
               "lines": {
                 "added": 0,
                 "removed": 8
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 0,
                 "removed": 10
@@ -2504,35 +2498,35 @@
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing & App Registration",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#AppConfig",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#AppConfig",
               "lines": {
                 "added": 0,
                 "removed": 15
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Path Matching",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Path Matching",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Route Segments",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Route Segments",
               "lines": {
                 "added": 0,
                 "removed": 12
               }
             },
             {
-              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "path": "📃AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Scope Providers",
               "lines": {
                 "added": 0,
                 "removed": 4
@@ -5292,7 +5286,7 @@
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003e Type",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Core Types (shared.ts)#Field<T> Type",
               "lines": {
                 "added": 46,
                 "removed": 0
@@ -5362,35 +5356,35 @@
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise & Tooltips",
               "lines": {
                 "added": 38,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise & Tooltips#Expertise Levels",
               "lines": {
                 "added": 10,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise & Tooltips#Tooltip Components",
               "lines": {
                 "added": 6,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise & Tooltips#Tooltip Content",
               "lines": {
                 "added": 8,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -5460,35 +5454,35 @@
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing & App Registration",
               "lines": {
                 "added": 39,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration#AppConfig",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing & App Registration#AppConfig",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration#Path Matching",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing & App Registration#Path Matching",
               "lines": {
                 "added": 4,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration#Route Segments",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing & App Registration#Route Segments",
               "lines": {
                 "added": 12,
                 "removed": 0
               }
             },
             {
-              "path": "semio/js/README.md#Docs#📁js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "path": "semio/js/README.md#Docs#📁js/semio/#Routing & App Registration#Scope Providers",
               "lines": {
                 "added": 4,
                 "removed": 0
@@ -6596,7 +6590,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-09 23:00:10"
     }
   ]
 }

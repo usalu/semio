@@ -7,19 +7,10 @@
     "issue": "https://github.com/usalu/semio/issues/435"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "started": "2026-02-06T22:34:05.911772817Z",
-  "finished": "2026-02-07T01:36:18.277441962Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-06 22:34:05",
-        "finished": "2026-02-07 01:36:18"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "ed14664e8b9fd928006607e1035779b1723addc0",
       "prompt": "Fix emoji presentation in artifact IDs and URIs across all CLI list/tree commands. Remove U+FE0E text presentation selectors, fix duplicate emoji prefixes in file IDs/URIs, fix folder kind not appearing correctly, fix ticket tree intermediate nodes missing proper IDs/URIs. Extend test coverage for all list/tree markdown output.",
       "llm": "opus-4-6",
@@ -101,7 +92,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Expertise Levels",
               "to": "AGENTS.md#Codebase#📁js/#Policies",
               "lines": {
                 "added": 10,
@@ -230,7 +221,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Validation#Validation Types",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field<T>e Type",
               "lines": {
                 "added": 46,
                 "removed": 46
@@ -309,8 +300,8 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips",
               "lines": {
                 "added": 38,
                 "removed": 38
@@ -318,7 +309,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Store Hierarchy",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Expertise Levels",
               "lines": {
                 "added": 10,
                 "removed": 10
@@ -326,7 +317,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Coordinate System#semio Coordinate System",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Components",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -334,7 +325,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#File Providers#File Operations",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Content",
               "lines": {
                 "added": 8,
                 "removed": 8
@@ -342,7 +333,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#XState Hooks",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 10,
                 "removed": 10
@@ -422,7 +413,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Transaction State Management",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration",
               "lines": {
                 "added": 39,
                 "removed": 39
@@ -430,7 +421,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Styling",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#AppConfig",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#AppConfig",
               "lines": {
                 "added": 15,
                 "removed": 15
@@ -438,7 +429,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📄 .devcontainer/post-create.sh",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Path Matching",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Path Matching",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -446,7 +437,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Abstract Methods (in addition to Store)#Undo/Redo Behavior",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Route Segments",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Route Segments",
               "lines": {
                 "added": 12,
                 "removed": 12
@@ -454,7 +445,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📄 sql/sqlite/repo/schema.sql",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Scope Providers",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -589,7 +580,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Content",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#3. KitDiffAppStore (extends AppStore)#Usage",
               "lines": {
                 "added": 8,
@@ -605,7 +596,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Route Segments",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Route Segments",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#Abstract Methods (in addition to Store)#Undo/Redo Behavior",
               "lines": {
                 "added": 12,
@@ -669,7 +660,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Scope Providers",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#Command Registry",
               "lines": {
                 "added": 4,
@@ -901,7 +892,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#AppConfig",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#AppConfig",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#Plugin Structure#Styling",
               "lines": {
                 "added": 15,
@@ -925,7 +916,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#Transaction State Management",
               "lines": {
                 "added": 39,
@@ -933,7 +924,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#XState Hooks",
               "lines": {
                 "added": 10,
@@ -1093,7 +1084,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Components",
               "to": "AGENTS.md#Codebase#📁js/semio/#Validation#Cross-Platform Connectorable Validation#Fix Comparison Notes",
               "lines": {
                 "added": 6,
@@ -1213,7 +1204,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field<T>e Type",
               "to": "AGENTS.md#Codebase#📁js/semio/#Validation#Validation Types",
               "lines": {
                 "added": 46,
@@ -1557,7 +1548,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Path Matching",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Path Matching",
               "to": "AGENTS.md#Codebase#📄semio-repo/cli/main.go",
               "lines": {
                 "added": 4,
@@ -11816,7 +11807,9 @@
             }
           ]
         }
-      }
+      },
+      "client": "copilot-chat",
+      "date": "2026-02-06 22:34:05"
     }
   ]
 }

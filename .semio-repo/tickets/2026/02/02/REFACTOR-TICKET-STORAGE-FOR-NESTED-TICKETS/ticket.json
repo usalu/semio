@@ -4,20 +4,15 @@
   "prompt": "The semio repo cli binary should be extended/refactored/changed to support nested child tickets inside parent ticket folders.",
   "summary": "Bulk close",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
-  "started": "2026-02-02T16:44:26.030129772Z",
-  "finished": "2026-02-03T08:50:09.614869805Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-02T16:44:26.030129772Z",
-        "finished": "2026-02-03T08:50:09.614869805Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "4fdb2be42fa602ad50365ba4318c0bb452ced1c1",
       "prompt": "The semio repo cli binary should be extended/refactored/changed to support nested child tickets inside parent ticket folders.",
-      "llm": "gemini-3-pro"
+      "llm": "gemini-3-pro",
+      "date": "2026-02-02T16:44:26.030129772Z"
     }
   ]
 }

@@ -3,20 +3,15 @@
   "status": "closed",
   "prompt": "Redesign ticket schema with nested date objects and git-derived fields",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
-  "started": "2025-12-16T16:58:02.879Z",
-  "finished": "2025-12-16T17:08:05.259Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-16T16:58:02.879Z",
-        "finished": "2025-12-16T17:08:05.259Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "ffdd590ecaed3c4afbe8387585b6a36bc873408c",
       "prompt": "Redesign ticket schema with nested date objects and git-derived fields",
-      "llm": "opus-4-5"
+      "llm": "opus-4-5",
+      "date": "2025-12-16T16:58:02.879Z"
     }
   ]
 }

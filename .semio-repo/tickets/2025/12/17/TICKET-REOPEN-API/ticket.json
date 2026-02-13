@@ -3,20 +3,15 @@
   "status": "closed",
   "prompt": "Extend ticket api to be able to reopen a ticket. This should remove the total files and lines from the ticket (not from the individual interactions) and set the status to open.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
-  "started": "2025-12-17T18:39:01.076Z",
-  "finished": "2025-12-17T18:39:54.68Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-17T18:39:01.076Z",
-        "finished": "2025-12-17T18:39:54.68Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "7c4820638369104ae259b238d9240f08e429e67e",
       "prompt": "Extend ticket api to be able to reopen a ticket. This should remove the total files and lines from the ticket (not from the individual interactions) and set the status to open.",
-      "llm": "opus-4-5"
+      "llm": "opus-4-5",
+      "date": "2025-12-17T18:39:01.076Z"
     }
   ]
 }

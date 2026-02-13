@@ -3,20 +3,15 @@
   "status": "closed",
   "prompt": "\"Fix Smell 5: Non-reactive snapshot reads in Tutorials.tsx - RecordingControlsContent now uses reactive hooks instead of store.snapshot()\"",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
-  "started": "2025-12-20T13:19:54.449Z",
-  "finished": "2025-12-20T13:20:10.293Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-20T13:19:54.449Z",
-        "finished": "2025-12-20T13:20:10.293Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "4ff6fd77dee713af972c27bd3761939be4302c80",
       "prompt": "\"Fix Smell 5: Non-reactive snapshot reads in Tutorials.tsx - RecordingControlsContent now uses reactive hooks instead of store.snapshot()\"",
-      "llm": "opus-4-5"
+      "llm": "opus-4-5",
+      "date": "2025-12-20T13:19:54.449Z"
     }
   ]
 }

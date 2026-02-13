@@ -7,19 +7,10 @@
     "issue": "https://github.com/usalu/semio/issues/425"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
-  "started": "2026-02-06T16:18:56.288759774Z",
-  "finished": "2026-02-06T16:34:06.529759502Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-06 16:18:56",
-        "finished": "2026-02-06 16:34:06"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "Improve the comment fix logic to ignore TODOs and their descriptions, ignore config files, and support partial line removal for comments. Extend tests to cover these cases.",
       "llm": "sonnet-5",
@@ -1897,7 +1888,9 @@
             }
           ]
         }
-      }
+      },
+      "client": "copilot-chat",
+      "date": "2026-02-06 16:18:56"
     }
   ]
 }

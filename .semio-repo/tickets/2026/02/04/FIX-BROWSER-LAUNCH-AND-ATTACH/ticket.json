@@ -5,8 +5,8 @@
       "prompt": "unable launch browser, unable to attch browser",
       "llm": "gpt-5-2-codex",
       "ui": "copilot-chat",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-04T16:21:45.071314118Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -229,9 +229,6 @@
     }
   ],
   "status": "closed",
-  "dates": {
-    "closed": "2026-02-04T16:26:18.664542799Z"
-  },
   "summary": "Provisioned Playwright browsers in devcontainer setup and documented shared cache expectations.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/337"

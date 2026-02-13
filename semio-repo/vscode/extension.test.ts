@@ -779,7 +779,7 @@ suite("Data Structures Test Suite", () => {
       llm: "gpt-4",
       client: "vscode",
       author: "user",
-      dates: { started: "2024-01-01" },
+      date: "2024-01-01",
       commit: "sha123"
     };
     assert.ok(interaction);

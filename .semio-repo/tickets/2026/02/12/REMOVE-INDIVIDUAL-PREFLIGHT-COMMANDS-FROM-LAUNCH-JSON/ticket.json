@@ -4,14 +4,8 @@
   "prompt": "Remove all individual preflight launch configurations, keep only the general preflight",
   "summary": "Removed all 16 individual preflight launch configurations, kept only the general preflight. Also removed the semio/assets section which only had a preflight entry.",
   "goal": "AI-OPTIMIZED-REPO",
-  "started": "2026-02-12T23:35:00.766908305Z",
-  "finished": "2026-02-12T23:36:00.43220895Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-12 23:35:00",
-        "finished": "2026-02-12 23:36:00"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "claude-code",
@@ -143,7 +137,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-12 23:35:00"
     }
   ]
 }

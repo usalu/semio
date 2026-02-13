@@ -5,8 +5,8 @@
       "prompt": "create a color strategy for ports to enhance user experience, including compatible ports and different port types, and refactor as needed",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-04T12:02:31.922709254Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -3847,8 +3847,8 @@
       "prompt": "i cant see these color strategy",
       "llm": "gpt-5-2-codex",
       "ui": "codex",
-      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
-      "date": "2026-02-04T13:57:21.615194302Z",
+      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "date": "",
       "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
@@ -8823,9 +8823,6 @@
     }
   ],
   "status": "closed",
-  "dates": {
-    "closed": "2026-02-04T14:05:51.224048828Z"
-  },
   "summary": "Reapplied and strengthened visible port color strategy across Kit/Type/Design, fixed PortId editing paths, and ensured per-port identity colors remain visible without explicit compatibility links.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/334"

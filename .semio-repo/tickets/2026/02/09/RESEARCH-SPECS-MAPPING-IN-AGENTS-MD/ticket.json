@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/468"
   },
   "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS/UPDATED-AGENTS-MD",
-  "started": "2026-02-09T16:59:57.226173181Z",
-  "finished": "2026-02-09T17:02:02.24945086Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-09 16:59:57",
-        "finished": "2026-02-09 17:02:02"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -89,7 +83,8 @@
           "modified": [],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-09 16:59:57"
     }
   ]
 }

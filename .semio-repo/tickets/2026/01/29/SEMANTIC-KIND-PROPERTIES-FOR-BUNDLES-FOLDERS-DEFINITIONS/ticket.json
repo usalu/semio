@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/273"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-DEFINITION-MECHANISM",
-  "started": "2026-01-29T13:19:57.322659711Z",
-  "finished": "2026-01-29T17:24:09.584333056Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-29T13:19:57.322659711Z",
-        "finished": "2026-01-29T17:24:09.584333056Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -1723,7 +1717,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-01-29T13:19:57.322659711Z"
     }
   ]
 }

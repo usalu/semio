@@ -4,14 +4,8 @@
   "prompt": "Fix all 985 policy violations in semio/py/semio.py",
   "summary": "Fixed all 985 policy violations in semio/py/semio.py: 45 section summaries, 469 definition summaries, 470 definition specs, 1 orphan fix. 0 violations remaining.",
   "goal": "FIX-POLICY-VIOLATIONS/FIX-ALL-PY-VIOLATIONS",
-  "started": "2026-02-12T11:57:39.966922481Z",
-  "finished": "2026-02-12T11:58:22.715438941Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-12 11:57:39",
-        "finished": "2026-02-12 11:58:22"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -410,7 +404,8 @@
           "modified": [],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-12 11:57:39"
     }
   ]
 }

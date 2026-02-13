@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/329"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "started": "2026-02-03T17:28:19.164406822Z",
-  "finished": "2026-02-03T19:30:14.41809036Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-03T17:28:19.164406822Z",
-        "finished": "2026-02-03T19:30:14.41809036Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -224,7 +218,7 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
               "lines": {
                 "added": 133,
                 "removed": 0
@@ -331,7 +325,7 @@
               }
             },
             {
-              "path": "semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "path": "semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
               "lines": {
                 "added": 160,
                 "removed": 0
@@ -1538,7 +1532,7 @@
             },
             {
               "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§TicketTreeItem",
-              "to": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§allowedDotDirectories",
+              "to": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§allowedDotDirectories",
               "lines": {
                 "added": 10,
                 "removed": 10
@@ -1546,7 +1540,7 @@
             },
             {
               "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§SectionDefinitionItem",
-              "to": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§ignoredDirectories",
+              "to": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§ignoredDirectories",
               "lines": {
                 "added": 13,
                 "removed": 13
@@ -1554,7 +1548,7 @@
             },
             {
               "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§ContributorDefinitionItem",
-              "to": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§isInIgnoredDirectory",
+              "to": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§isInIgnoredDirectory",
               "lines": {
                 "added": 8,
                 "removed": 8
@@ -1562,7 +1556,7 @@
             },
             {
               "from": "📄semio-repo/vscode/extension.ts#Commands#Smart Wizards§ClientS",
-              "to": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§isKitDocument",
+              "to": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§isKitDocument",
               "lines": {
                 "added": 5,
                 "removed": 5
@@ -1570,7 +1564,7 @@
             },
             {
               "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§SectionFilter",
-              "to": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§shouldAnalyzeFile",
+              "to": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§shouldAnalyzeFile",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -1578,7 +1572,7 @@
             },
             {
               "from": "📄semio-repo/vscode/extension.ts#Sidebar Views§SectionItem",
-              "to": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§validateKitDocument",
+              "to": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§validateKitDocument",
               "lines": {
                 "added": 15,
                 "removed": 15
@@ -2065,49 +2059,49 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§allowedDotDirectories",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§allowedDotDirectories",
               "lines": {
                 "added": 9,
                 "removed": 10
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§ignoredDirectories",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§ignoredDirectories",
               "lines": {
                 "added": 12,
                 "removed": 13
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§isInIgnoredDirectory",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§isInIgnoredDirectory",
               "lines": {
                 "added": 8,
                 "removed": 8
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§isKitDocument",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§isKitDocument",
               "lines": {
                 "added": 5,
                 "removed": 5
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§shouldAnalyzeFile",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§shouldAnalyzeFile",
               "lines": {
                 "added": 3,
                 "removed": 4
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§updateFileDiagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§updateFileDiagnostics",
               "lines": {
                 "added": 30,
                 "removed": 34
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§validateKitDocument",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§validateKitDocument",
               "lines": {
                 "added": 14,
                 "removed": 15
@@ -4034,7 +4028,7 @@
           ],
           "added": [
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§updateFileDiagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§updateFileDiagnostics",
               "lines": {
                 "added": 34,
                 "removed": 0
@@ -4175,7 +4169,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-03T17:28:19.164406822Z"
     }
   ]
 }

@@ -6,20 +6,15 @@
     "issue": "https://github.com/usalu/semio/issues/421"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "started": "2026-02-06T15:14:07.719243386Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-06 15:14:07"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "Complete the refactoring for relative dates in the Go CLI. Implement a flexible time parser that handles both RFC3339 and YYYY-MM-DD formats. Update template functions and tree rendering logic to use this parser for consistent relative dates across goals and tickets.",
-      "llm": "sonnet-5"
+      "llm": "sonnet-5",
+      "client": "copilot-chat",
+      "date": "2026-02-06 15:14:07"
     }
   ]
 }

@@ -7,8 +7,6 @@
     "issue": "https://github.com/usalu/semio/issues/193"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
-  "started": "0001-01-01T00:00:00Z",
-  "finished": "2026-02-03T08:49:41.0313757Z",
   "interactions": [
     {
       "prompt": "",
@@ -16,7 +14,8 @@
       "author": {},
       "started": "0001-01-01T00:00:00Z",
       "finished": "2026-02-03T08:49:41.0313757Z",
-      "commit": ""
+      "commit": "",
+      "date": ""
     }
   ]
 }

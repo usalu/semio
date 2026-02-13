@@ -3,18 +3,15 @@
   "status": "closed",
   "prompt": "Restructure sketchpad tests to one test per app with parent initialization",
   "goal": "R26-02/RUNNING-SKETCHPAD",
-  "started": "2025-12-16T17:06:07.799Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-16T17:06:07.799Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Restructure sketchpad tests to one test per app with parent initialization",
-      "llm": "sonnet-4-5"
+      "llm": "sonnet-4-5",
+      "date": "2025-12-16T17:06:07.799Z"
     }
   ]
 }

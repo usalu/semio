@@ -5,19 +5,14 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/333"
   },
-  "started": "2026-02-04T08:57:55.318813171Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-04T08:57:55.318813171Z"
-      },
       "author": "usalu",
-      "system": {
-        "client": ""
-      },
+      "system": "linux",
       "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
       "prompt": "Rename interaction to interaction and standardize structure",
-      "llm": "gemini-3-pro"
+      "llm": "gemini-3-pro",
+      "date": "2026-02-04T08:57:55.318813171Z"
     }
   ]
 }

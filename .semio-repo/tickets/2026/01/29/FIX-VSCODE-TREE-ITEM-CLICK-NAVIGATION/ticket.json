@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/263"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "started": "2026-01-29T09:55:09.911254896Z",
-  "finished": "2026-01-29T10:00:30.700814525Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-01-29T09:55:09.911254896Z",
-        "finished": "2026-01-29T10:00:30.700814525Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -344,7 +338,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-01-29T09:55:09.911254896Z"
     }
   ]
 }

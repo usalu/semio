@@ -6,14 +6,8 @@
   "github": {
     "issue": "https://github.com/usalu/semio/issues/331"
   },
-  "started": "2026-02-03T19:16:30.746786544Z",
-  "finished": "2026-02-03T19:27:53.408490618Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-03T19:16:30.746786544Z",
-        "finished": "2026-02-03T19:27:53.408490618Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
@@ -217,7 +211,8 @@
             }
           ]
         }
-      }
+      },
+      "date": "2026-02-03T19:16:30.746786544Z"
     }
   ]
 }

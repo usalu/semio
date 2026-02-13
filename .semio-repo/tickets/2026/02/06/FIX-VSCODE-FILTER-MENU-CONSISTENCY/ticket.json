@@ -7,19 +7,10 @@
     "issue": "https://github.com/usalu/semio/issues/423"
   },
   "goal": "R26-02/RUNNING-SKETCHPAD",
-  "started": "2026-02-06T15:27:58.357159849Z",
-  "finished": "2026-02-06T17:12:55.816789645Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-06 15:27:58",
-        "finished": "2026-02-06 15:39:52"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "The menu items on the filter are not consistent. Dont use codeicons. Dont use text. Just use the emoji and show as tooltip what the filter does. Dont show the static emoji text.",
       "llm": "opus-4-6",
@@ -113,7 +104,7 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -248,18 +239,13 @@
           ],
           "added": null
         }
-      }
+      },
+      "client": "claude-code",
+      "date": "2026-02-06 15:27:58"
     },
     {
-      "dates": {
-        "started": "2026-02-06 17:08:13",
-        "finished": "2026-02-06 17:12:55"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "codex"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "The filter tree items should have a name. Just the menu buttons should just have the emoji. Dont use codeicons (e.g. bundles). Dont use text (most such as projects, etc)",
       "llm": "gpt-5-2-codex",
@@ -574,7 +560,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
               "lines": {
                 "added": 0,
                 "removed": 16
@@ -665,7 +651,7 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -1029,7 +1015,7 @@
               }
             },
             {
-              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
               "lines": {
                 "added": 0,
                 "removed": 16
@@ -1234,7 +1220,9 @@
           ],
           "added": null
         }
-      }
+      },
+      "client": "codex",
+      "date": "2026-02-06 17:08:13"
     }
   ]
 }

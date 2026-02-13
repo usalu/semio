@@ -3,18 +3,15 @@
   "status": "closed",
   "prompt": "Refactor IDs and diffs to use typed EntityId objects",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-TYPE-APP",
-  "started": "2025-12-16T17:06:07.855Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2025-12-16T17:06:07.855Z"
-      },
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Refactor IDs and diffs to use typed EntityId objects",
-      "llm": "sonnet-4-5"
+      "llm": "sonnet-4-5",
+      "date": "2025-12-16T17:06:07.855Z"
     }
   ]
 }

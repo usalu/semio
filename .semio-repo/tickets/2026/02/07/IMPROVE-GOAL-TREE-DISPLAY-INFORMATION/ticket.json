@@ -7,19 +7,10 @@
     "issue": "https://github.com/usalu/semio/issues/436"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-GOAL-MECHANISM",
-  "started": "2026-02-07T00:05:31.318644066Z",
-  "finished": "2026-02-07T00:10:55.308703281Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-07 00:05:31",
-        "finished": "2026-02-07 00:10:55"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "claude-code"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "0289c4bd83eb052f0aaeaa8256cff387196d7b60",
       "prompt": "Improve the goal tree command output to show more and better structured information including slug, status, creation date, due date, and description.",
       "llm": "opus-4-6",
@@ -952,7 +943,9 @@
             }
           ]
         }
-      }
+      },
+      "client": "claude-code",
+      "date": "2026-02-07 00:05:31"
     }
   ]
 }

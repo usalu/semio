@@ -13,15 +13,13 @@
   },
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-02T20:28:50.827685709Z"
-      },
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "",
       "prompt": "Release cycle for Mar 2026",
-      "llm": "sonnet-4-5"
+      "llm": "sonnet-4-5",
+      "date": "2026-02-02T20:28:50.827685709Z"
     }
   ]
 }

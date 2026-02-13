@@ -7,14 +7,8 @@
     "issue": "https://github.com/usalu/semio/issues/480"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT",
-  "started": "2026-02-10T10:06:50.826074456Z",
-  "finished": "2026-02-10T10:19:21.317201972Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-10 10:06:50",
-        "finished": "2026-02-10 10:19:21"
-      },
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -105,7 +99,8 @@
           ],
           "added": null
         }
-      }
+      },
+      "date": "2026-02-10 10:06:50"
     }
   ]
 }

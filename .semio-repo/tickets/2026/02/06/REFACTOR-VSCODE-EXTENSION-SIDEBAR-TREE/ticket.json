@@ -7,19 +7,10 @@
     "issue": "https://github.com/usalu/semio/issues/416"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
-  "started": "2026-02-06T13:12:28.422779595Z",
-  "finished": "2026-02-06T13:34:21.377406445Z",
   "interactions": [
     {
-      "dates": {
-        "started": "2026-02-06 13:12:28",
-        "finished": "2026-02-06 13:34:21"
-      },
-      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
-      "system": {
-        "version": "linux",
-        "client": "copilot-chat"
-      },
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Refactor monorepo tree view with correct kind icons, nested sections, file-save refresh, per-item refresh buttons, complete filter menus, violation kind trees, and extended tests.",
       "llm": "opus-4-6",
@@ -182,7 +173,7 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
               "lines": {
                 "added": 2,
                 "removed": 2
@@ -386,21 +377,21 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§allowedDotDirectories",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§allowedDotDirectories",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§ignoredDirectories",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§ignoredDirectories",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§isInIgnoredDirectory",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§isInIgnoredDirectory",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -823,7 +814,9 @@
             }
           ]
         }
-      }
+      },
+      "client": "copilot-chat",
+      "date": "2026-02-06 13:12:28"
     }
   ]
 }
