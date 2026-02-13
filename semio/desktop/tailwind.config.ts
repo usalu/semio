@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio/desktop/tailwind.config.ts#Configuration](semiorepo://section/semio/desktop/tailwind.config.ts/CONFIGURATION)
 // Tailwind CSS configuration extending the shared semio preset for the desktop application.
 // Configuration MUST use the shared tailwindConfig preset from @semio/js.
 

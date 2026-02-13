@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Imports
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Imports](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/IMPORTS)
 // External and internal module imports MUST be declared here.
 
 import { createContext, FC, ReactNode, useCallback, useContext, useEffect, useState } from "react";
@@ -32,12 +34,20 @@ import { Mode } from "./shared";
 // #endregion 🔖Imports
 
 // #region 🔖Components
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Components](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/COMPONENTS)
 // Tutorial UI components MUST provide playback and recording controls.
 
 // #region 🔖Tutorial Controls
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Tutorial Controls](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/TUTORIAL-CONTROLS)
 // Tutorial playback controls MUST render in the footer during active tutorials.
 
-// Footer controls component for tutorial playback.
+/**
+ * Footer controls component for tutorial playback.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Components#Tutorial Controls§TutorialControls](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMPONENTS/TUTORIAL-CONTROLS/TUTORIALCONTROLS)
+ **/
 export const TutorialControls: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -114,9 +124,15 @@ const TutorialControlsContent: FC = () => {
 // #endregion 🔖Tutorial Controls
 
 // #region 🔖Recording Controls
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Recording Controls](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/RECORDING-CONTROLS)
 // Recording controls MUST render in the footer during active recording in dev mode.
 
-// Footer controls component for tutorial recording.
+/**
+ * Footer controls component for tutorial recording.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Components#Recording Controls§RecordingControls](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMPONENTS/RECORDING-CONTROLS/RECORDINGCONTROLS)
+ **/
 export const RecordingControls: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -189,9 +205,15 @@ const RecordingControlsContent: FC = () => {
 // #endregion 🔖Recording Controls
 
 // #region 🔖Record Button
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Record Button](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/RECORD-BUTTON)
 // Record button MUST toggle recording in the footer when in dev mode.
 
-// Footer button component toggling tutorial recording.
+/**
+ * Footer button component toggling tutorial recording.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Components#Record Button§RecordButton](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMPONENTS/RECORD-BUTTON/RECORDBUTTON)
+ **/
 export const RecordButton: FC = () => {
   const addFooterItem = useAddFooterItem();
   const removeFooterItem = useRemoveFooterItem();
@@ -233,9 +255,15 @@ export const RecordButton: FC = () => {
 // #endregion 🔖Record Button
 
 // #region 🔖Tutorial Overlay
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Tutorial Overlay](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/TUTORIAL-OVERLAY)
 // Tutorial overlay MUST render focus highlights and cursor animations during playback.
 
-// Overlay component rendering focus highlights and animated cursor.
+/**
+ * Overlay component rendering focus highlights and animated cursor.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Components#Tutorial Overlay§TutorialOverlay](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMPONENTS/TUTORIAL-OVERLAY/TUTORIALOVERLAY)
+ **/
 export const TutorialOverlay: FC = () => {
   const isTutorialActive = useIsTutorialActive();
   const currentMilestone = useCurrentMilestone();
@@ -373,9 +401,15 @@ const MilestoneTooltip: FC<MilestoneTooltipProps> = ({ milestone }) => {
 
 // #endregion 🔖Components
 // #region 🔖Built-in Tutorials
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Built-in Tutorials](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/BUILT-IN-TUTORIALS)
 // Built-in tutorials MUST define default tutorial content shipped with the app.
 
-// Built-in hello tutorial introducing basic semio concepts.
+/**
+ * Built-in hello tutorial introducing basic semio concepts.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Built-in Tutorials§helloTutorial](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/BUILT-IN-TUTORIALS/HELLOTUTORIAL)
+ **/
 export const helloTutorial: Tutorial = {
   id: guid(),
   name: "Hello semio Tutorial",
@@ -451,7 +485,11 @@ export const helloTutorial: Tutorial = {
   ],
 };
 
-// Built-in sketchpad tour tutorial for core features.
+/**
+ * Built-in sketchpad tour tutorial for core features.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Built-in Tutorials§sketchpadTour](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/BUILT-IN-TUTORIALS/SKETCHPADTOUR)
+ **/
 export const sketchpadTour: Tutorial = {
   id: guid(),
   name: "Sketchpad Tour",
@@ -512,20 +550,34 @@ export const sketchpadTour: Tutorial = {
 // #endregion 🔖Built-in Tutorials
 
 // #region 🔖Commands
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Commands](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/COMMANDS)
 // Tutorial and recording command definitions MUST map command names to store actions.
 
-// Context passed to tutorial command handlers.
+/**
+ * Context passed to tutorial command handlers.
+ *
+ *  * [✂️semio/js/sketchpad/Tutorials.tsx#Commands§TutorialCommandContext](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMMANDS/TUTORIALCOMMANDCONTEXT)
+ **/
 export interface TutorialCommandContext {
   tutorialStore: any;
 }
 
-// Result returned from tutorial command execution.
+/**
+ * Result returned from tutorial command execution.
+ *
+ *  * [✂️semio/js/sketchpad/Tutorials.tsx#Commands§TutorialCommandResult](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMMANDS/TUTORIALCOMMANDRESULT)
+ **/
 export interface TutorialCommandResult {
   success: boolean;
   data?: any;
 }
 
-// Map of tutorial command names to handler functions.
+/**
+ * Map of tutorial command names to handler functions.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Commands§tutorialCommands](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMMANDS/TUTORIALCOMMANDS)
+ **/
 export const tutorialCommands = {
   "semio.tutorial.start": (context: TutorialCommandContext, tutorial: Tutorial): TutorialCommandResult => {
     context.tutorialStore.startTutorial(tutorial);
@@ -565,7 +617,11 @@ export const tutorialCommands = {
   },
 };
 
-// Map of dev-mode recording command names to handler functions.
+/**
+ * Map of dev-mode recording command names to handler functions.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Commands§devCommands](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMMANDS/DEVCOMMANDS)
+ **/
 export const devCommands = {
   "semio.recording.start": (context: TutorialCommandContext, name: string, tutorialId?: string): TutorialCommandResult => {
     context.tutorialStore.startRecording(name, tutorialId);
@@ -592,9 +648,15 @@ export const devCommands = {
 // #endregion 🔖Commands
 
 // #region 🔖Command Interceptor
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Command Interceptor](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/COMMAND-INTERCEPTOR)
 // Command interceptor MUST record events and check milestone completion during playback.
 
-// Hook intercepting commands to record events and check milestone completion.
+/**
+ * Hook intercepting commands to record events and check milestone completion.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Command Interceptor§useTutorialCommandInterceptor](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/COMMAND-INTERCEPTOR/USETUTORIALCOMMANDINTERCEPTOR)
+ **/
 export const useTutorialCommandInterceptor = (onCommandExecute: (command: string, origin?: string, args?: any) => void) => {
   const store = useTutorialStore();
   const isRecording = useIsRecording();
@@ -616,38 +678,88 @@ export const useTutorialCommandInterceptor = (onCommandExecute: (command: string
 // #endregion 🔖Command Interceptor
 
 // #region 🔖Hooks
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Hooks](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/HOOKS)
 // Tutorial hooks MUST provide reactive access to tutorial and recording state.
 
-// Hook returning the tutorial store instance.
+/**
+ * Hook returning the tutorial store instance.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useTutorialStore](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USETUTORIALSTORE)
+ **/
 export const useTutorialStore = () => useTutorialContext().store;
-// Hook returning the current tutorial state.
+/**
+ * Hook returning the current tutorial state.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useTutorialState](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USETUTORIALSTATE)
+ **/
 export const useTutorialState = () => useTutorialContext().state;
-// Hook returning the currently active tutorial.
+/**
+ * Hook returning the currently active tutorial.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useActiveTutorial](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USEACTIVETUTORIAL)
+ **/
 export const useActiveTutorial = () => useTutorialContext().state.activeTutorial;
-// Hook returning the current milestone of the active tutorial.
+/**
+ * Hook returning the current milestone of the active tutorial.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useCurrentMilestone](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USECURRENTMILESTONE)
+ **/
 export const useCurrentMilestone = () => {
   const { state } = useTutorialContext();
   if (!state.activeTutorial) return null;
   return state.activeTutorial.milestones[state.currentMilestoneIndex] || null;
 };
-// Hook returning the current playback state.
+/**
+ * Hook returning the current playback state.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§usePlaybackState](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USEPLAYBACKSTATE)
+ **/
 export const usePlaybackState = () => useTutorialContext().state.playbackState;
-// Hook returning the current playback time.
+/**
+ * Hook returning the current playback time.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§usePlaybackTime](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USEPLAYBACKTIME)
+ **/
 export const usePlaybackTime = () => useTutorialContext().state.playbackTime;
-// Hook returning the current recording state.
+/**
+ * Hook returning the current recording state.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useRecordingState](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USERECORDINGSTATE)
+ **/
 export const useRecordingState = () => useTutorialContext().state.recordingState;
-// Hook returning the active recording.
+/**
+ * Hook returning the active recording.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useActiveRecording](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USEACTIVERECORDING)
+ **/
 export const useActiveRecording = () => useTutorialContext().state.activeRecording;
-// Hook returning all available tutorials.
+/**
+ * Hook returning all available tutorials.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useAvailableTutorials](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USEAVAILABLETUTORIALS)
+ **/
 export const useAvailableTutorials = () => useTutorialContext().state.availableTutorials;
-// Hook returning whether recording is active.
+/**
+ * Hook returning whether recording is active.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useIsRecording](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USEISRECORDING)
+ **/
 export const useIsRecording = () => useTutorialContext().state.recordingState === TutorialRecordingState.RECORDING;
-// Hook returning whether a tutorial is actively playing.
+/**
+ * Hook returning whether a tutorial is actively playing.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useIsTutorialActive](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USEISTUTORIALACTIVE)
+ **/
 export const useIsTutorialActive = () => {
   const state = useTutorialContext().state;
   return state.playbackState !== TutorialPlaybackState.IDLE && state.playbackState !== TutorialPlaybackState.COMPLETED;
 };
-// Hook returning the current tutorial progress metrics.
+/**
+ * Hook returning the current tutorial progress metrics.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Hooks§useTutorialProgress](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/HOOKS/USETUTORIALPROGRESS)
+ **/
 export const useTutorialProgress = () => {
   const { state } = useTutorialContext();
   if (!state.activeTutorial) return { current: 0, total: 0, percentage: 0 };
@@ -660,6 +772,8 @@ export const useTutorialProgress = () => {
 // #endregion 🔖Hooks
 
 // #region 🔖Context
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Context](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/CONTEXT)
 // Tutorial context MUST provide the store and state to descendant components.
 
 interface TutorialContextValue {
@@ -669,7 +783,11 @@ interface TutorialContextValue {
 
 const TutorialContext = createContext<TutorialContextValue | null>(null);
 
-// Provider component supplying tutorial store and state to descendants.
+/**
+ * Provider component supplying tutorial store and state to descendants.
+ *
+ *  * [🪨semio/js/sketchpad/Tutorials.tsx#Context§TutorialProvider](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/CONTEXT/TUTORIALPROVIDER)
+ **/
 export const TutorialProvider: FC<{ store: TutorialStore; children: ReactNode }> = ({ store, children }) => {
   const [state, setState] = useState<TutorialState>(store.snapshot());
 
@@ -702,12 +820,20 @@ const useTutorialContext = () => {
 // #endregion 🔖Context
 
 // #region 🔖Types
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Types](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/TYPES)
 // Tutorial type definitions MUST be declared here.
 
 // #region 🔖Tutorial Entities
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Tutorial Entities](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/TUTORIAL-ENTITIES)
 // Tutorial entity interfaces MUST define milestones, recordings, and playback state.
 
-// A single step within a tutorial with optional triggers and animations.
+/**
+ * A single step within a tutorial with optional triggers and animations.
+ *
+ *  * [✂️semio/js/sketchpad/Tutorials.tsx#Types#Tutorial Entities§TutorialMilestone](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/TYPES/TUTORIAL-ENTITIES/TUTORIALMILESTONE)
+ **/
 export interface TutorialMilestone {
   id: Guid;
   title: string;
@@ -736,7 +862,11 @@ export interface TutorialMilestone {
   order: number;
 }
 
-// A complete tutorial with ordered milestones.
+/**
+ * A complete tutorial with ordered milestones.
+ *
+ *  * [✂️semio/js/sketchpad/Tutorials.tsx#Types#Tutorial Entities§Tutorial](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/TYPES/TUTORIAL-ENTITIES/TUTORIAL)
+ **/
 export interface Tutorial {
   id: Guid;
   name: string;
@@ -748,7 +878,11 @@ export interface Tutorial {
   concepts?: string[];
 }
 
-// A timestamped event captured during tutorial recording.
+/**
+ * A timestamped event captured during tutorial recording.
+ *
+ *  * [✂️semio/js/sketchpad/Tutorials.tsx#Types#Tutorial Entities§TutorialRecordingEvent](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/TYPES/TUTORIAL-ENTITIES/TUTORIALRECORDINGEVENT)
+ **/
 export interface TutorialRecordingEvent {
   timestamp: number;
   type: "command" | "cursor" | "interaction";
@@ -763,7 +897,11 @@ export interface TutorialRecordingEvent {
   };
 }
 
-// A complete recording session with captured events.
+/**
+ * A complete recording session with captured events.
+ *
+ *  * [✂️semio/js/sketchpad/Tutorials.tsx#Types#Tutorial Entities§TutorialRecording](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/TYPES/TUTORIAL-ENTITIES/TUTORIALRECORDING)
+ **/
 export interface TutorialRecording {
   id: Guid;
   tutorialId?: Guid;
@@ -773,7 +911,11 @@ export interface TutorialRecording {
   events: TutorialRecordingEvent[];
 }
 
-// Playback lifecycle states for a tutorial.
+/**
+ * Playback lifecycle states for a tutorial.
+ *
+ *  * [🛠️semio/js/sketchpad/Tutorials.tsx#Types#Tutorial Entities§TutorialPlaybackState](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/TYPES/TUTORIAL-ENTITIES/TUTORIALPLAYBACKSTATE)
+ **/
 export enum TutorialPlaybackState {
   IDLE = "idle",
   PLAYING = "playing",
@@ -781,14 +923,22 @@ export enum TutorialPlaybackState {
   COMPLETED = "completed",
 }
 
-// Recording lifecycle states for a tutorial.
+/**
+ * Recording lifecycle states for a tutorial.
+ *
+ *  * [🛠️semio/js/sketchpad/Tutorials.tsx#Types#Tutorial Entities§TutorialRecordingState](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/TYPES/TUTORIAL-ENTITIES/TUTORIALRECORDINGSTATE)
+ **/
 export enum TutorialRecordingState {
   IDLE = "idle",
   RECORDING = "recording",
   PAUSED = "paused",
 }
 
-// Complete state of the tutorial system.
+/**
+ * Complete state of the tutorial system.
+ *
+ *  * [✂️semio/js/sketchpad/Tutorials.tsx#Types#Tutorial Entities§TutorialState](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/TYPES/TUTORIAL-ENTITIES/TUTORIALSTATE)
+ **/
 export interface TutorialState {
   activeTutorial: Tutorial | null;
   currentMilestoneIndex: number;
@@ -799,7 +949,11 @@ export interface TutorialState {
   availableTutorials: Tutorial[];
 }
 
-// Partial state diff for updating tutorial state.
+/**
+ * Partial state diff for updating tutorial state.
+ *
+ *  * [✂️semio/js/sketchpad/Tutorials.tsx#Types#Tutorial Entities§TutorialDiff](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/TYPES/TUTORIAL-ENTITIES/TUTORIALDIFF)
+ **/
 export interface TutorialDiff {
   activeTutorial?: Tutorial | null;
   currentMilestoneIndex?: number;
@@ -814,10 +968,17 @@ export interface TutorialDiff {
 // #endregion 🔖Types
 
 // #region 🔖Store
+
+// [🔖semio/js/sketchpad/Tutorials.tsx#Store](semiorepo://section/semio/js/sketchpad/Tutorials.tsx/STORE)
 // Tutorial store MUST manage playback, recording, and milestone navigation state.
 
-// Tutorial store managing playback, recording, and milestone navigation.
-// TutorialStore MUST synchronize state changes through the notify pattern.
+/**
+ * Tutorial store managing playback, recording, and milestone navigation.
+ *
+ * TutorialStore MUST synchronize state changes through the notify pattern.
+ *
+ *  * [🛠️semio/js/sketchpad/Tutorials.tsx#Store§TutorialStore](semiorepo://definition/semio/js/sketchpad/Tutorials.tsx/STORE/TUTORIALSTORE)
+ **/
 export class TutorialStore {
   private state: TutorialState;
   private readonly listeners: Set<() => void> = new Set();

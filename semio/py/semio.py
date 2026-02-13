@@ -18,6 +18,8 @@
 # endregion Header
 
 # region Imports
+
+# [🔖semio/py/semio.py#Imports](semiorepo://section/semio/py/semio.py/IMPORTS)
 # Standard library, third-party and framework imports.
 from __future__ import annotations
 import abc
@@ -87,6 +89,8 @@ import sqlmodel
 # endregion Imports
 
 # region Type Hints
+
+# [🔖semio/py/semio.py#Type Hints](semiorepo://section/semio/py/semio.py/TYPE-HINTS)
 # Custom type hint aliases used throughout the module.
 
 RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
@@ -95,6 +99,8 @@ RecursiveAnyList = typing.Any | list["RecursiveAnyList"]
 # endregion Type Hints
 
 # region Constants
+
+# [🔖semio/py/semio.py#Constants](semiorepo://section/semio/py/semio.py/CONSTANTS)
 # Global constants for limits, paths, encodings and configuration.
 
 NAME = "semio"
@@ -159,32 +165,39 @@ ENVS = {key: value for key, value in os.environ.items() if key.startswith("SEMIO
 # endregion Constants
 
 # region Utility
+
+# [🔖semio/py/semio.py#Utility](semiorepo://section/semio/py/semio.py/UTILITY)
 # General-purpose utility functions for encoding, formatting and transformation.
 
 # encode MUST return a percent-encoded string safe for URL paths.
 # Encode a string to be URL-safe using percent-encoding.
+# [🛠️semio/py/semio.py#Utility§encode](semiorepo://definition/semio/py/semio.py/UTILITY/ENCODE)
 def encode(value: str) -> str:
     """ᗒ Encode a string to be url safe."""
     return urllib.parse.quote(value, safe="")
 
 # decode MUST return the original string from a percent-encoded input.
 # Decode a percent-encoded URL-safe string.
+# [🛠️semio/py/semio.py#Utility§decode](semiorepo://definition/semio/py/semio.py/UTILITY/DECODE)
 def decode(value: str) -> str:
     """ᗕ Decode a url safe string."""
     return urllib.parse.unquote(value)
 
 # encodeList MUST encode each item and join them with commas.
 # Encode a list of strings into a comma-separated URL-safe string.
+# [🛠️semio/py/semio.py#Utility§encodeList](semiorepo://definition/semio/py/semio.py/UTILITY/ENCODELIST)
 def encodeList(items: list[str]) -> str:
     return ",".join([encode(t) for t in items])
 
 # decodeList MUST split by comma and decode each item.
 # Decode a comma-separated URL-safe string into a list of strings.
+# [🛠️semio/py/semio.py#Utility§decodeList](semiorepo://definition/semio/py/semio.py/UTILITY/DECODELIST)
 def decodeList(encodedList: str) -> list[str]:
     return [decode(t) for t in encodedList.split(",")]
 
 # encodeRecursiveAnyList MUST recursively encode nested lists into a flat string.
 # Recursively encode a nested list into a flat URL-safe string.
+# [🛠️semio/py/semio.py#Utility§encodeRecursiveAnyList](semiorepo://definition/semio/py/semio.py/UTILITY/ENCODERECURSIVEANYLIST)
 def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Encode a `RecursiveAnyList` to a url encoded string."""
     if not isinstance(recursiveAnyList, list):
@@ -193,6 +206,7 @@ def encodeRecursiveAnyList(recursiveAnyList: RecursiveAnyList) -> str:
 
 # create_id MUST produce a deterministic identifier from any value or nested list.
 # Create a unique identifier from a value or recursive list.
+# [🛠️semio/py/semio.py#Utility§create_id](semiorepo://definition/semio/py/semio.py/UTILITY/CREATE-ID)
 def create_id(recursiveAnyList: RecursiveAnyList) -> str:
     """🆔 Turn any into `encoded(str(any))` or a recursive list into a flat comma [,] separated encoded list."""
     if not isinstance(recursiveAnyList, list):
@@ -201,6 +215,7 @@ def create_id(recursiveAnyList: RecursiveAnyList) -> str:
 
 # pretty MUST format the number with up to 5 significant digits.
 # Format a floating-point number with significant digits and no trailing zeros.
+# [🛠️semio/py/semio.py#Utility§pretty](semiorepo://definition/semio/py/semio.py/UTILITY/PRETTY)
 def pretty(number: float) -> str:
     """🦋 Pretty print a floating point number."""
     if number == -0.0:
@@ -209,6 +224,7 @@ def pretty(number: float) -> str:
 
 # changeValues MUST apply the function to all occurrences of the key recursively.
 # Recursively change values for a given key in nested dicts and lists.
+# [🛠️semio/py/semio.py#Utility§changeValues](semiorepo://definition/semio/py/semio.py/UTILITY/CHANGEVALUES)
 def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
         if key in c:
@@ -223,6 +239,7 @@ def changeValues(c: dict | list, key: str, func: typing.Callable[[typing.Any], t
 
 # changeKeys MUST apply the function to all dictionary keys recursively.
 # Recursively transform all keys in nested dicts and lists.
+# [🛠️semio/py/semio.py#Utility§changeKeys](semiorepo://definition/semio/py/semio.py/UTILITY/CHANGEKEYS)
 def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) -> None:
     if isinstance(c, dict):
         for k in list(c.keys()):
@@ -238,6 +255,7 @@ def changeKeys(c: dict | list, func: typing.Callable[[typing.Any], typing.Any]) 
 
 # normalizeAngle MUST return an angle in the range [0, 360).
 # Normalize an angle to the range [0, 360) degrees.
+# [🛠️semio/py/semio.py#Utility§normalizeAngle](semiorepo://definition/semio/py/semio.py/UTILITY/NORMALIZEANGLE)
 def normalizeAngle(angle: float) -> float:
     """🔃 Normalize an angle to be greater or equal to 0 and smaller than 360 degrees."""
     return (angle % 360 + 360) % 360
@@ -245,6 +263,8 @@ def normalizeAngle(angle: float) -> float:
 # endregion Utility
 
 # region Logging
+
+# [🔖semio/py/semio.py#Logging](semiorepo://section/semio/py/semio.py/LOGGING)
 # Module-level logger configuration.
 
 logger = loguru.logger
@@ -252,10 +272,13 @@ logger = loguru.logger
 # endregion Logging
 
 # region Exceptions
+
+# [🔖semio/py/semio.py#Exceptions](semiorepo://section/semio/py/semio.py/EXCEPTIONS)
 # Custom exception hierarchy for server, client and specification errors.
 
 # Error MUST provide a descriptive error message via __str__.
 # Base exception for all semio errors.
+# [🛠️semio/py/semio.py#Exceptions§Error](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/ERROR)
 class Error(Exception, abc.ABC):
     """❗ The base for all exceptions."""
 
@@ -264,28 +287,33 @@ class Error(Exception, abc.ABC):
 
 # ServerError MUST provide a descriptive error message via __str__.
 # Base exception for server-side errors.
+# [🛠️semio/py/semio.py#Exceptions§ServerError](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/SERVERERROR)
 class ServerError(Error, abc.ABC):
     """🖥 The base for all server errors."""
 
 # ClientError MUST provide a descriptive error message via __str__.
 # Base exception for client-side errors.
+# [🛠️semio/py/semio.py#Exceptions§ClientError](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/CLIENTERROR)
 class ClientError(Error, abc.ABC):
     """👩‍💼 The base for all client errors."""
 
 # CodeUnreachable MUST provide a descriptive error message via __str__.
 # Exception for code paths that should never be reached.
+# [🛠️semio/py/semio.py#Exceptions§CodeUnreachable](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/CODEUNREACHABLE)
 class CodeUnreachable(ServerError):
     def __str__(self):
         return "🤷 This code should be unreachable."
 
 # FeatureNotYetSupported MUST provide a descriptive error message via __str__.
 # Exception for unimplemented features.
+# [🛠️semio/py/semio.py#Exceptions§FeatureNotYetSupported](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/FEATURENOTYETSUPPORTED)
 class FeatureNotYetSupported(ServerError):
     def __str__(self):
         return "🔜 This feature is not yet supported."
 
 # RemoteKitsNotYetSupported MUST provide a descriptive error message via __str__.
 # Exception for unsupported remote kit access.
+# [🛠️semio/py/semio.py#Exceptions§RemoteKitsNotYetSupported](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/REMOTEKITSNOTYETSUPPORTED)
 class RemoteKitsNotYetSupported(FeatureNotYetSupported):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -295,38 +323,45 @@ class RemoteKitsNotYetSupported(FeatureNotYetSupported):
 
 # NotFound MUST provide a descriptive error message via __str__.
 # Base exception for entities not found in the store.
+# [🛠️semio/py/semio.py#Exceptions§NotFound](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/NOTFOUND)
 class NotFound(ClientError, abc.ABC):
     """🔍 The base for not found errors."""
 
 # SpecificationError MUST provide a descriptive error message via __str__.
 # Base exception for specification constraint violations.
+# [🛠️semio/py/semio.py#Exceptions§SpecificationError](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/SPECIFICATIONERROR)
 class SpecificationError(ClientError, abc.ABC):
     """📋 The base for all specification errors."""
 
 # NoParentAssigned MUST be subclassed and MUST NOT be instantiated directly.
 # No Parent Assigned definition.
+# [🛠️semio/py/semio.py#Exceptions§NoParentAssigned](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/NOPARENTASSIGNED)
 class NoParentAssigned(SpecificationError, abc.ABC):
     """👪 The base for all no parent assigned errors."""
 
 # NoTypeOrDesignAssigned MUST fulfill its documented contract.
 # No Type Or Design Assigned definition.
+# [🛠️semio/py/semio.py#Exceptions§NoTypeOrDesignAssigned](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/NOTYPEORDESIGNASSIGNED)
 class NoTypeOrDesignAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent type or design assigned."
 
 # NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned MUST fulfill its documented contract.
 # No Model Or Port Or Type Or Piece Or Connection Or Design Or Kit Assigned definition.
+# [🛠️semio/py/semio.py#Exceptions§NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/NOMODELORPORTORTYPEORPIECEORCONNECTIONORDESIGNORKITASSIGNED)
 class NoModelOrPortOrTypeOrPieceOrConnectionOrDesignOrKitAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent model, connector, type, piece, connection, design, kit or folder assigned."
 
 # AlreadyExists MUST provide a descriptive error message via __str__.
 # Base exception for duplicate entity creation attempts.
+# [🛠️semio/py/semio.py#Exceptions§AlreadyExists](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/ALREADYEXISTS)
 class AlreadyExists(SpecificationError, abc.ABC):
     """♊ The entity already exists in the store."""
 
 # Semio MUST implement idMembers and inherit from the appropriate field mixins.
 # Metadata table recording the database release and engine version.
+# [🛠️semio/py/semio.py#Exceptions§Semio](semiorepo://definition/semio/py/semio.py/EXCEPTIONS/SEMIO)
 class Semio(sqlmodel.SQLModel, table=True):
     """ℹ Metadata about the database."""
 
@@ -343,11 +378,16 @@ class Semio(sqlmodel.SQLModel, table=True):
 
 # region Modeling
 
+# [🔖semio/py/semio.py#Modeling](semiorepo://section/semio/py/semio.py/MODELING)
+
 # region Primitives
+
+# [🔖semio/py/semio.py#Primitives](semiorepo://section/semio/py/semio.py/PRIMITIVES)
 # Abstract base classes for models, fields, ids, inputs, outputs and entities.
 
 # SModel MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base model for all semio pydantic models.
+# [🛠️semio/py/semio.py#Modeling#Primitives§SModel](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/SMODEL)
 class SModel(sqlmodel.SQLModel, abc.ABC):
     """⚪ The base for models."""
 
@@ -370,56 +410,67 @@ BaseModel = SModel
 
 # Field MUST declare exactly one field with appropriate constraints.
 # Field mixin for the  property.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Field](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/FIELD)
 class Field(SModel, abc.ABC):
     """🎫 The base for a field of a model."""
 
 # RealField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the real property.
+# [🛠️semio/py/semio.py#Modeling#Primitives§RealField](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/REALFIELD)
 class RealField(Field, abc.ABC):
     """🧑 The base for a real field of a model. No lie."""
 
 # MaskedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the masked property.
+# [🛠️semio/py/semio.py#Modeling#Primitives§MaskedField](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/MASKEDFIELD)
 class MaskedField(Field, abc.ABC):
     """🎭 The base for a mask of a field of a model. WYSIWYG but don't expect it to be there."""
 
 # Base MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for composite model groupings.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Base](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/BASE)
 class Base(SModel, abc.ABC):
     """👥 The base for models."""
 
 # Id MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for identity field groupings.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Id](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/ID)
 class Id(Base, abc.ABC):
     """🪪 The base for ids. All fields that identify the entity here."""
 
 # Props MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for property field groupings.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Props](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/PROPS)
 class Props(Base, abc.ABC):
     """🎫 The base for props. All fields except input-only, output-only or child entities."""
 
 # Input MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for input field groupings.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Input](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/INPUT)
 class Input(Base, abc.ABC):
     """↘ The base for inputs. All fields that are required to create the entity."""
 
 # Context MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for context field groupings.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Context](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/CONTEXT)
 class Context(Base, abc.ABC):
     """📑 The base for contexts. All fields that are required to understand the entity by an llm."""
 
 # Output MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for output field groupings.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Output](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/OUTPUT)
 class Output(Base, abc.ABC):
     """↗ The base for outputs. All fields that are returned when the entity is fetched."""
 
 # Prediction MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for prediction field groupings.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Prediction](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/PREDICTION)
 class Prediction(Base, abc.ABC):
     """🔮 The base for predictions. All fields that are required to predict the entity by a llm."""
 
 # Entity MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for all domain entities with identity and hierarchy.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Entity](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/ENTITY)
 class Entity(SModel, abc.ABC):
     """▢ The base for entities. All fields and behavior of the entity."""
 
@@ -464,11 +515,13 @@ class Entity(SModel, abc.ABC):
 
 # Table MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for database table models.
+# [🛠️semio/py/semio.py#Modeling#Primitives§Table](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/TABLE)
 class Table(SModel, abc.ABC):
     """▦ The base for tables. All resources that are stored in the database."""
 
 # TableEntity MUST be subclassed and MUST NOT be instantiated directly.
 # Abstract base for entities persisted as database tables.
+# [🛠️semio/py/semio.py#Modeling#Primitives§TableEntity](semiorepo://definition/semio/py/semio.py/MODELING/PRIMITIVES/TABLEENTITY)
 class TableEntity(Entity, Table, abc.ABC):
     """▢ The base for table entities."""
 
@@ -478,10 +531,13 @@ class TableEntity(Entity, Table, abc.ABC):
 # endregion Primitives
 
 # region Graphql
+
+# [🔖semio/py/semio.py#Graphql](semiorepo://section/semio/py/semio.py/GRAPHQL)
 # GraphQL node base classes for pydantic, sqlalchemy and relay integration.
 
 # Node MUST expose the model via Meta.
 # GraphQL node exposing  data.
+# [🛠️semio/py/semio.py#Modeling#Graphql§Node](semiorepo://definition/semio/py/semio.py/MODELING/GRAPHQL/NODE)
 class Node(graphene_pydantic.PydanticObjectType):
     """A base class for all nodes that are not a table in the database."""
 
@@ -497,6 +553,7 @@ class Node(graphene_pydantic.PydanticObjectType):
 
 # InputNode MUST expose the input model via Meta.
 # GraphQL input node for  mutations.
+# [🛠️semio/py/semio.py#Modeling#Graphql§InputNode](semiorepo://definition/semio/py/semio.py/MODELING/GRAPHQL/INPUTNODE)
 class InputNode(graphene_pydantic.PydanticInputObjectType):
     """A base class for all input nodes."""
 
@@ -505,6 +562,7 @@ class InputNode(graphene_pydantic.PydanticInputObjectType):
 
 # RelayNode MUST expose the model via Meta.
 # Relay-compliant GraphQL node interface.
+# [🛠️semio/py/semio.py#Modeling#Graphql§RelayNode](semiorepo://definition/semio/py/semio.py/MODELING/GRAPHQL/RELAYNODE)
 class RelayNode(graphene.relay.Node):
     class Meta:
         name = "Node"
@@ -520,6 +578,7 @@ class RelayNode(graphene.relay.Node):
 
 # TableNode MUST expose the model via Meta.
 # Base GraphQL object type for SQLAlchemy table models.
+# [🛠️semio/py/semio.py#Modeling#Graphql§TableNode](semiorepo://definition/semio/py/semio.py/MODELING/GRAPHQL/TABLENODE)
 class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
     """A base class for all nodes that are a table in the database.
     It automatically excludes the fields that are defined in the table.
@@ -541,6 +600,7 @@ class TableNode(graphene_sqlalchemy.SQLAlchemyObjectType):
 
 # TableEntityNode MUST expose the model via Meta.
 # Base GraphQL object type for table entities with Relay interface.
+# [🛠️semio/py/semio.py#Modeling#Graphql§TableEntityNode](semiorepo://definition/semio/py/semio.py/MODELING/GRAPHQL/TABLEENTITYNODE)
 class TableEntityNode(TableNode):
     """A base class for all nodes that are a table in the database and are entities.
     It automatically complies to the Relay Node interface."""
@@ -566,51 +626,64 @@ class TableEntityNode(TableNode):
 
 # region Domain
 
+# [🔖semio/py/semio.py#Domain](semiorepo://section/semio/py/semio.py/DOMAIN)
+
 # region Attribute
+
+# [🔖semio/py/semio.py#Attribute](semiorepo://section/semio/py/semio.py/ATTRIBUTE)
 # Attribute entity with key-value pairs and definitions.
 
 # AttributeKeyField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the key of a attribute.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeKeyField](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTEKEYFIELD)
 class AttributeKeyField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # AttributeValueField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the value of a attribute.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeValueField](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTEVALUEFIELD)
 class AttributeValueField(RealField, abc.ABC):
     value: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # AttributeDefinitionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the definition of a attribute.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeDefinitionField](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTEDEFINITIONFIELD)
 class AttributeDefinitionField(RealField, abc.ABC):
     definition: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # AttributeId MUST contain all fields that uniquely identify a attribute.
 # Identity fields for uniquely identifying a attribute.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeId](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTEID)
 class AttributeId(AttributeKeyField, Id):
     pass
 
 # AttributeProps MUST contain all non-relational property fields.
 # Property fields for a attribute.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeProps](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTEPROPS)
 class AttributeProps(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Props):
     pass
 
 # AttributeInput MUST contain all fields required for creation.
 # Input fields for creating or updating a attribute.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeInput](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTEINPUT)
 class AttributeInput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Input):
     pass
 
 # AttributeContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a attribute by an LLM.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeContext](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTECONTEXT)
 class AttributeContext(AttributeValueField, AttributeKeyField, Context):
     pass
 
 # AttributeOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a attribute.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTEOUTPUT)
 class AttributeOutput(AttributeDefinitionField, AttributeValueField, AttributeKeyField, Output):
     pass
 
 # Attribute MUST implement idMembers and inherit from the appropriate field mixins.
 # Attribute entity storing a key-value pair with an optional definition.
+# [🛠️semio/py/semio.py#Domain#Attribute§Attribute](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTE)
 class Attribute(
     AttributeDefinitionField,
     AttributeValueField,
@@ -812,6 +885,7 @@ class Attribute(
 
 # AttributeInputNode MUST expose the input model via Meta.
 # GraphQL input node for attribute mutations.
+# [🛠️semio/py/semio.py#Domain#Attribute§AttributeInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/ATTRIBUTE/ATTRIBUTEINPUTNODE)
 class AttributeInputNode(InputNode):
     class Meta:
         model = AttributeInput
@@ -819,40 +893,49 @@ class AttributeInputNode(InputNode):
 # endregion Attribute
 
 # region Tag
+
+# [🔖semio/py/semio.py#Tag](semiorepo://section/semio/py/semio.py/TAG)
 # Tag entity for categorizing and labeling kit elements.
 
 # TagGuidField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the guid of a tag.
+# [🛠️semio/py/semio.py#Domain#Tag§TagGuidField](semiorepo://definition/semio/py/semio.py/DOMAIN/TAG/TAGGUIDFIELD)
 class TagGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 # TagNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a tag.
+# [🛠️semio/py/semio.py#Domain#Tag§TagNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/TAG/TAGNAMEFIELD)
 class TagNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # TagDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a tag.
+# [🛠️semio/py/semio.py#Domain#Tag§TagDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/TAG/TAGDESCRIPTIONFIELD)
 class TagDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # TagIconField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the icon of a tag.
+# [🛠️semio/py/semio.py#Domain#Tag§TagIconField](semiorepo://definition/semio/py/semio.py/DOMAIN/TAG/TAGICONFIELD)
 class TagIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 # TagOrderField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the order of a tag.
+# [🛠️semio/py/semio.py#Domain#Tag§TagOrderField](semiorepo://definition/semio/py/semio.py/DOMAIN/TAG/TAGORDERFIELD)
 class TagOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field(default=0)
 
 # TagId MUST contain all fields that uniquely identify a tag.
 # Identity fields for uniquely identifying a tag.
+# [🛠️semio/py/semio.py#Domain#Tag§TagId](semiorepo://definition/semio/py/semio.py/DOMAIN/TAG/TAGID)
 class TagId(TagGuidField, Id):
     pass
 
 # Tag MUST implement idMembers and inherit from the appropriate field mixins.
 # Tag entity for labeling kit elements with name, icon and order.
+# [🛠️semio/py/semio.py#Domain#Tag§Tag](semiorepo://definition/semio/py/semio.py/DOMAIN/TAG/TAG)
 class Tag(
     TagIconField,
     TagDescriptionField,
@@ -878,40 +961,49 @@ class Tag(
 # endregion Tag
 
 # region Concept
+
+# [🔖semio/py/semio.py#Concept](semiorepo://section/semio/py/semio.py/CONCEPT)
 # Concept entity for semantic grouping of design elements.
 
 # ConceptGuidField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the guid of a concept.
+# [🛠️semio/py/semio.py#Domain#Concept§ConceptGuidField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONCEPT/CONCEPTGUIDFIELD)
 class ConceptGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 # ConceptNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a concept.
+# [🛠️semio/py/semio.py#Domain#Concept§ConceptNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONCEPT/CONCEPTNAMEFIELD)
 class ConceptNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # ConceptDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a concept.
+# [🛠️semio/py/semio.py#Domain#Concept§ConceptDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONCEPT/CONCEPTDESCRIPTIONFIELD)
 class ConceptDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # ConceptIconField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the icon of a concept.
+# [🛠️semio/py/semio.py#Domain#Concept§ConceptIconField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONCEPT/CONCEPTICONFIELD)
 class ConceptIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 # ConceptOrderField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the order of a concept.
+# [🛠️semio/py/semio.py#Domain#Concept§ConceptOrderField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONCEPT/CONCEPTORDERFIELD)
 class ConceptOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field(default=0)
 
 # ConceptId MUST contain all fields that uniquely identify a concept.
 # Identity fields for uniquely identifying a concept.
+# [🛠️semio/py/semio.py#Domain#Concept§ConceptId](semiorepo://definition/semio/py/semio.py/DOMAIN/CONCEPT/CONCEPTID)
 class ConceptId(ConceptGuidField, Id):
     pass
 
 # Concept MUST implement idMembers and inherit from the appropriate field mixins.
 # Concept entity for semantic grouping with name, icon and order.
+# [🛠️semio/py/semio.py#Domain#Concept§Concept](semiorepo://definition/semio/py/semio.py/DOMAIN/CONCEPT/CONCEPT)
 class Concept(
     ConceptIconField,
     ConceptDescriptionField,
@@ -949,10 +1041,13 @@ class Concept(
 # endregion Concept
 
 # region Coord
+
+# [🔖semio/py/semio.py#Coord](semiorepo://section/semio/py/semio.py/COORD)
 # Coordinate primitive for three-dimensional values.
 
 # Coord MUST contain all coordinate or geometry fields.
 # Three-dimensional coordinate with x, y and z values.
+# [🛠️semio/py/semio.py#Domain#Coord§Coord](semiorepo://definition/semio/py/semio.py/DOMAIN/COORD/COORD)
 class Coord(SModel):
     u: float = sqlmodel.Field()
     v: float = sqlmodel.Field()
@@ -965,32 +1060,38 @@ class Coord(SModel):
 
 # CoordInput MUST contain all fields required for creation.
 # Input fields for creating or updating a coord.
+# [🛠️semio/py/semio.py#Domain#Coord§CoordInput](semiorepo://definition/semio/py/semio.py/DOMAIN/COORD/COORDINPUT)
 class CoordInput(Coord, Input):
     pass
 
 # CoordContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a coord by an LLM.
+# [🛠️semio/py/semio.py#Domain#Coord§CoordContext](semiorepo://definition/semio/py/semio.py/DOMAIN/COORD/COORDCONTEXT)
 class CoordContext(Coord, Context):
     pass
 
 # CoordOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a coord.
+# [🛠️semio/py/semio.py#Domain#Coord§CoordOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/COORD/COORDOUTPUT)
 class CoordOutput(Coord, Output):
     pass
 
 # CoordPrediction MUST contain all fields for LLM inference.
 # Prediction fields for LLM-based coord inference.
+# [🛠️semio/py/semio.py#Domain#Coord§CoordPrediction](semiorepo://definition/semio/py/semio.py/DOMAIN/COORD/COORDPREDICTION)
 class CoordPrediction(Coord, Prediction):
     pass
 
 # CoordNode MUST expose the model via Meta.
 # GraphQL node exposing coord data.
+# [🛠️semio/py/semio.py#Domain#Coord§CoordNode](semiorepo://definition/semio/py/semio.py/DOMAIN/COORD/COORDNODE)
 class CoordNode(Node):
     class Meta:
         model = Coord
 
 # CoordInputNode MUST expose the input model via Meta.
 # GraphQL input node for coord mutations.
+# [🛠️semio/py/semio.py#Domain#Coord§CoordInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/COORD/COORDINPUTNODE)
 class CoordInputNode(InputNode):
     class Meta:
         model = CoordInput
@@ -998,10 +1099,13 @@ class CoordInputNode(InputNode):
 # endregion Coord
 
 # region Point
+
+# [🔖semio/py/semio.py#Point](semiorepo://section/semio/py/semio.py/POINT)
 # Point primitive representing a position in 3D space.
 
 # Point MUST contain all coordinate or geometry fields.
 # Point in 3D space with x, y and z coordinates.
+# [🛠️semio/py/semio.py#Domain#Point§Point](semiorepo://definition/semio/py/semio.py/DOMAIN/POINT/POINT)
 class Point(SModel):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
@@ -1015,32 +1119,38 @@ class Point(SModel):
 
 # PointInput MUST contain all fields required for creation.
 # Input fields for creating or updating a point.
+# [🛠️semio/py/semio.py#Domain#Point§PointInput](semiorepo://definition/semio/py/semio.py/DOMAIN/POINT/POINTINPUT)
 class PointInput(Point, Input):
     pass
 
 # PointContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a point by an LLM.
+# [🛠️semio/py/semio.py#Domain#Point§PointContext](semiorepo://definition/semio/py/semio.py/DOMAIN/POINT/POINTCONTEXT)
 class PointContext(Point, Context):
     pass
 
 # PointOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a point.
+# [🛠️semio/py/semio.py#Domain#Point§PointOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/POINT/POINTOUTPUT)
 class PointOutput(Point, Output):
     pass
 
 # PointPrediction MUST contain all fields for LLM inference.
 # Prediction fields for LLM-based point inference.
+# [🛠️semio/py/semio.py#Domain#Point§PointPrediction](semiorepo://definition/semio/py/semio.py/DOMAIN/POINT/POINTPREDICTION)
 class PointPrediction(Point, Prediction):
     pass
 
 # PointNode MUST expose the model via Meta.
 # GraphQL node exposing point data.
+# [🛠️semio/py/semio.py#Domain#Point§PointNode](semiorepo://definition/semio/py/semio.py/DOMAIN/POINT/POINTNODE)
 class PointNode(Node):
     class Meta:
         model = Point
 
 # PointInputNode MUST expose the input model via Meta.
 # GraphQL input node for point mutations.
+# [🛠️semio/py/semio.py#Domain#Point§PointInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/POINT/POINTINPUTNODE)
 class PointInputNode(InputNode):
     class Meta:
         model = PointInput
@@ -1048,10 +1158,13 @@ class PointInputNode(InputNode):
 # endregion Point
 
 # region Vector
+
+# [🔖semio/py/semio.py#Vector](semiorepo://section/semio/py/semio.py/VECTOR)
 # Vector primitive representing a direction in 3D space.
 
 # Vector MUST contain all coordinate or geometry fields.
 # Direction vector in 3D space with x, y and z components.
+# [🛠️semio/py/semio.py#Domain#Vector§Vector](semiorepo://definition/semio/py/semio.py/DOMAIN/VECTOR/VECTOR)
 class Vector(SModel):
     x: float = sqlmodel.Field()
     y: float = sqlmodel.Field()
@@ -1065,32 +1178,38 @@ class Vector(SModel):
 
 # VectorInput MUST contain all fields required for creation.
 # Input fields for creating or updating a vector.
+# [🛠️semio/py/semio.py#Domain#Vector§VectorInput](semiorepo://definition/semio/py/semio.py/DOMAIN/VECTOR/VECTORINPUT)
 class VectorInput(Vector, Input):
     pass
 
 # VectorContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a vector by an LLM.
+# [🛠️semio/py/semio.py#Domain#Vector§VectorContext](semiorepo://definition/semio/py/semio.py/DOMAIN/VECTOR/VECTORCONTEXT)
 class VectorContext(Vector, Context):
     pass
 
 # VectorOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a vector.
+# [🛠️semio/py/semio.py#Domain#Vector§VectorOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/VECTOR/VECTOROUTPUT)
 class VectorOutput(Vector, Output):
     pass
 
 # VectorPrediction MUST contain all fields for LLM inference.
 # Prediction fields for LLM-based vector inference.
+# [🛠️semio/py/semio.py#Domain#Vector§VectorPrediction](semiorepo://definition/semio/py/semio.py/DOMAIN/VECTOR/VECTORPREDICTION)
 class VectorPrediction(Vector, Prediction):
     pass
 
 # VectorNode MUST expose the model via Meta.
 # GraphQL node exposing vector data.
+# [🛠️semio/py/semio.py#Domain#Vector§VectorNode](semiorepo://definition/semio/py/semio.py/DOMAIN/VECTOR/VECTORNODE)
 class VectorNode(Node):
     class Meta:
         model = Vector
 
 # VectorInputNode MUST expose the input model via Meta.
 # GraphQL input node for vector mutations.
+# [🛠️semio/py/semio.py#Domain#Vector§VectorInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/VECTOR/VECTORINPUTNODE)
 class VectorInputNode(InputNode):
     class Meta:
         model = VectorInput
@@ -1098,25 +1217,31 @@ class VectorInputNode(InputNode):
 # endregion Vector
 
 # region Plane
+
+# [🔖semio/py/semio.py#Plane](semiorepo://section/semio/py/semio.py/PLANE)
 # Plane primitive representing an oriented coordinate frame in 3D space.
 
 # PlaneOriginField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the origin of a plane.
+# [🛠️semio/py/semio.py#Domain#Plane§PlaneOriginField](semiorepo://definition/semio/py/semio.py/DOMAIN/PLANE/PLANEORIGINFIELD)
 class PlaneOriginField(MaskedField, abc.ABC):
     origin: Point = sqlmodel.Field()
 
 # PlaneXAxisField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the x axis of a plane.
+# [🛠️semio/py/semio.py#Domain#Plane§PlaneXAxisField](semiorepo://definition/semio/py/semio.py/DOMAIN/PLANE/PLANEXAXISFIELD)
 class PlaneXAxisField(MaskedField, abc.ABC):
     xAxis: Vector = sqlmodel.Field()
 
 # PlaneYAxisField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the y axis of a plane.
+# [🛠️semio/py/semio.py#Domain#Plane§PlaneYAxisField](semiorepo://definition/semio/py/semio.py/DOMAIN/PLANE/PLANEYAXISFIELD)
 class PlaneYAxisField(MaskedField, abc.ABC):
     yAxis: Vector = sqlmodel.Field()
 
 # PlaneInput MUST contain all fields required for creation.
 # Input fields for creating or updating a plane.
+# [🛠️semio/py/semio.py#Domain#Plane§PlaneInput](semiorepo://definition/semio/py/semio.py/DOMAIN/PLANE/PLANEINPUT)
 class PlaneInput(Input):
     origin: PointInput = sqlmodel.Field()
     xAxis: VectorInput = sqlmodel.Field()
@@ -1124,6 +1249,7 @@ class PlaneInput(Input):
 
 # PlaneContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a plane by an LLM.
+# [🛠️semio/py/semio.py#Domain#Plane§PlaneContext](semiorepo://definition/semio/py/semio.py/DOMAIN/PLANE/PLANECONTEXT)
 class PlaneContext(Context):
     origin: PointContext = sqlmodel.Field()
     xAxis: VectorContext = sqlmodel.Field()
@@ -1131,11 +1257,13 @@ class PlaneContext(Context):
 
 # PlaneOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a plane.
+# [🛠️semio/py/semio.py#Domain#Plane§PlaneOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/PLANE/PLANEOUTPUT)
 class PlaneOutput(PlaneYAxisField, PlaneXAxisField, PlaneOriginField, Output):
     pass
 
 # Plane MUST contain all coordinate or geometry fields.
 # Oriented coordinate frame in 3D space with origin and axes.
+# [🛠️semio/py/semio.py#Domain#Plane§Plane](semiorepo://definition/semio/py/semio.py/DOMAIN/PLANE/PLANE)
 class Plane(Table, table=True):
     __tablename__ = "plane"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -1220,6 +1348,7 @@ class Plane(Table, table=True):
 
 # PlaneInputNode MUST expose the input model via Meta.
 # GraphQL input node for plane mutations.
+# [🛠️semio/py/semio.py#Domain#Plane§PlaneInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/PLANE/PLANEINPUTNODE)
 class PlaneInputNode(InputNode):
     class Meta:
         model = PlaneInput
@@ -1227,35 +1356,43 @@ class PlaneInputNode(InputNode):
 # endregion Plane
 
 # region Location
+
+# [🔖semio/py/semio.py#Location](semiorepo://section/semio/py/semio.py/LOCATION)
 # Location entity for geographic coordinates with longitude, latitude and altitude.
 
 # LocationGuidField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the guid of a location.
+# [🛠️semio/py/semio.py#Domain#Location§LocationGuidField](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONGUIDFIELD)
 class LocationGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 # LocationLongitudeField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the longitude of a location.
+# [🛠️semio/py/semio.py#Domain#Location§LocationLongitudeField](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONLONGITUDEFIELD)
 class LocationLongitudeField(RealField, abc.ABC):
     longitude: float = sqlmodel.Field()
 
 # LocationLatitudeField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the latitude of a location.
+# [🛠️semio/py/semio.py#Domain#Location§LocationLatitudeField](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONLATITUDEFIELD)
 class LocationLatitudeField(RealField, abc.ABC):
     latitude: float = sqlmodel.Field()
 
 # LocationAltitudeField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the altitude of a location.
+# [🛠️semio/py/semio.py#Domain#Location§LocationAltitudeField](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONALTITUDEFIELD)
 class LocationAltitudeField(RealField, abc.ABC):
     altitude: typing.Optional[float] = sqlmodel.Field(default=None)
 
 # LocationId MUST contain all fields that uniquely identify a location.
 # Identity fields for uniquely identifying a location.
+# [🛠️semio/py/semio.py#Domain#Location§LocationId](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONID)
 class LocationId(LocationGuidField, Id):
     pass
 
 # Location MUST implement idMembers and inherit from the appropriate field mixins.
 # Geographic location with longitude, latitude and altitude.
+# [🛠️semio/py/semio.py#Domain#Location§Location](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATION)
 class Location(
     LocationAltitudeField,
     LocationLatitudeField,
@@ -1275,32 +1412,38 @@ class Location(
 
 # LocationInput MUST contain all fields required for creation.
 # Input fields for creating or updating a location.
+# [🛠️semio/py/semio.py#Domain#Location§LocationInput](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONINPUT)
 class LocationInput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Input):
     pass
 
 # LocationOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a location.
+# [🛠️semio/py/semio.py#Domain#Location§LocationOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONOUTPUT)
 class LocationOutput(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Output):
     pass
 
 # LocationContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a location by an LLM.
+# [🛠️semio/py/semio.py#Domain#Location§LocationContext](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONCONTEXT)
 class LocationContext(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Context):
     pass
 
 # LocationPrediction MUST contain all fields for LLM inference.
 # Prediction fields for LLM-based location inference.
+# [🛠️semio/py/semio.py#Domain#Location§LocationPrediction](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONPREDICTION)
 class LocationPrediction(LocationAltitudeField, LocationLatitudeField, LocationLongitudeField, Prediction):
     pass
 
 # LocationNode MUST expose the model via Meta.
 # GraphQL node exposing location data.
+# [🛠️semio/py/semio.py#Domain#Location§LocationNode](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONNODE)
 class LocationNode(Node):
     class Meta:
         model = LocationOutput
 
 # LocationInputNode MUST expose the input model via Meta.
 # GraphQL input node for location mutations.
+# [🛠️semio/py/semio.py#Domain#Location§LocationInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCATION/LOCATIONINPUTNODE)
 class LocationInputNode(InputNode):
     class Meta:
         model = LocationInput
@@ -1308,45 +1451,55 @@ class LocationInputNode(InputNode):
 # endregion Location
 
 # region Author
+
+# [🔖semio/py/semio.py#Author](semiorepo://section/semio/py/semio.py/AUTHOR)
 # Author entity for tracking contributor identity and rank.
 
 # AuthorNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a author.
+# [🛠️semio/py/semio.py#Domain#Author§AuthorNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHORNAMEFIELD)
 class AuthorNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # AuthorEmailField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the email of a author.
+# [🛠️semio/py/semio.py#Domain#Author§AuthorEmailField](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHOREMAILFIELD)
 class AuthorEmailField(RealField, abc.ABC):
     email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 # AuthorRankField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the rank of a author.
+# [🛠️semio/py/semio.py#Domain#Author§AuthorRankField](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHORRANKFIELD)
 class AuthorRankField(RealField, abc.ABC):
     rank: int = sqlmodel.Field(default=0)
 
 # AuthorId MUST contain all fields that uniquely identify a author.
 # Identity fields for uniquely identifying a author.
+# [🛠️semio/py/semio.py#Domain#Author§AuthorId](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHORID)
 class AuthorId(AuthorEmailField, Id):
     pass
 
 # AuthorProps MUST contain all non-relational property fields.
 # Property fields for a author.
+# [🛠️semio/py/semio.py#Domain#Author§AuthorProps](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHORPROPS)
 class AuthorProps(AuthorEmailField, AuthorNameField, Props):
     pass
 
 # AuthorInput MUST contain all fields required for creation.
 # Input fields for creating or updating a author.
+# [🛠️semio/py/semio.py#Domain#Author§AuthorInput](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHORINPUT)
 class AuthorInput(AuthorEmailField, AuthorNameField, Input):
     pass
 
 # AuthorOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a author.
+# [🛠️semio/py/semio.py#Domain#Author§AuthorOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHOROUTPUT)
 class AuthorOutput(AuthorEmailField, AuthorNameField, Output):
     pass
 
 # Author MUST implement idMembers and inherit from the appropriate field mixins.
 # Author entity with name, email and contribution rank.
+# [🛠️semio/py/semio.py#Domain#Author§Author](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHOR)
 class Author(
     AuthorRankField,
     AuthorEmailField,
@@ -1381,6 +1534,7 @@ class Author(
 
 # AuthorInputNode MUST expose the input model via Meta.
 # GraphQL input node for author mutations.
+# [🛠️semio/py/semio.py#Domain#Author§AuthorInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/AUTHOR/AUTHORINPUTNODE)
 class AuthorInputNode(InputNode):
     class Meta:
         model = AuthorInput
@@ -1388,15 +1542,19 @@ class AuthorInputNode(InputNode):
 # endregion Author
 
 # region ArtifactAuthor
+
+# [🔖semio/py/semio.py#ArtifactAuthor](semiorepo://section/semio/py/semio.py/ARTIFACTAUTHOR)
 # Artifact-author association entity linking artifacts to authors by email.
 
 # ArtifactAuthorEmailField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the email of a artifact author.
+# [🛠️semio/py/semio.py#Domain#ArtifactAuthor§ArtifactAuthorEmailField](semiorepo://definition/semio/py/semio.py/DOMAIN/ARTIFACTAUTHOR/ARTIFACTAUTHOREMAILFIELD)
 class ArtifactAuthorEmailField(RealField, abc.ABC):
     author_email: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 # ArtifactAuthor MUST implement idMembers and inherit from the appropriate field mixins.
 # Association entity linking an artifact to an author by email.
+# [🛠️semio/py/semio.py#Domain#ArtifactAuthor§ArtifactAuthor](semiorepo://definition/semio/py/semio.py/DOMAIN/ARTIFACTAUTHOR/ARTIFACTAUTHOR)
 class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
     PLURAL = "artifact_authors"
     __tablename__ = "artifact_author"
@@ -1447,70 +1605,85 @@ class ArtifactAuthor(ArtifactAuthorEmailField, TableEntity, table=True):
 # endregion ArtifactAuthor
 
 # region File
+
+# [🔖semio/py/semio.py#File](semiorepo://section/semio/py/semio.py/FILE)
 # File entity for managing binary assets with metadata and hashing.
 
 # FileGuidField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the guid of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileGuidField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEGUIDFIELD)
 class FileGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 # FileNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILENAMEFIELD)
 class FileNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # FileMimeField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the mime of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileMimeField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEMIMEFIELD)
 class FileMimeField(RealField, abc.ABC):
     mime: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 # FileRemoteField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the remote of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileRemoteField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEREMOTEFIELD)
 class FileRemoteField(RealField, abc.ABC):
     remote: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 # FileFolderField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the folder of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileFolderField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEFOLDERFIELD)
 class FileFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 # FileSizeField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the size of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileSizeField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILESIZEFIELD)
 class FileSizeField(RealField, abc.ABC):
     size: typing.Optional[int] = sqlmodel.Field(default=None)
 
 # FileHashField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the hash of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileHashField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEHASHFIELD)
 class FileHashField(RealField, abc.ABC):
     hash: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 # FileCreatedAtField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created at of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileCreatedAtField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILECREATEDATFIELD)
 class FileCreatedAtField(RealField, abc.ABC):
     createdAt: datetime.datetime = sqlmodel.Field()
 
 # FileCreatedByField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created by of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileCreatedByField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILECREATEDBYFIELD)
 class FileCreatedByField(RealField, abc.ABC):
     createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # FileUpdatedAtField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated at of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileUpdatedAtField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEUPDATEDATFIELD)
 class FileUpdatedAtField(RealField, abc.ABC):
     updatedAt: datetime.datetime = sqlmodel.Field()
 
 # FileUpdatedByField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated by of a file.
+# [🛠️semio/py/semio.py#Domain#File§FileUpdatedByField](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEUPDATEDBYFIELD)
 class FileUpdatedByField(RealField, abc.ABC):
     updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # FileId MUST contain all fields that uniquely identify a file.
 # Identity fields for uniquely identifying a file.
+# [🛠️semio/py/semio.py#Domain#File§FileId](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEID)
 class FileId(FileGuidField, Id):
     pass
 
 # FileProps MUST contain all non-relational property fields.
 # Property fields for a file.
+# [🛠️semio/py/semio.py#Domain#File§FileProps](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEPROPS)
 class FileProps(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1529,6 +1702,7 @@ class FileProps(
 
 # FileInput MUST contain all fields required for creation.
 # Input fields for creating or updating a file.
+# [🛠️semio/py/semio.py#Domain#File§FileInput](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEINPUT)
 class FileInput(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1547,11 +1721,13 @@ class FileInput(
 
 # FileContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a file by an LLM.
+# [🛠️semio/py/semio.py#Domain#File§FileContext](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILECONTEXT)
 class FileContext(FileNameField, FileGuidField, Context):
     pass
 
 # FileOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a file.
+# [🛠️semio/py/semio.py#Domain#File§FileOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEOUTPUT)
 class FileOutput(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1570,6 +1746,7 @@ class FileOutput(
 
 # File MUST implement idMembers and inherit from the appropriate field mixins.
 # File entity for binary assets with metadata, hashing and timestamps.
+# [🛠️semio/py/semio.py#Domain#File§File](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILE)
 class File(
     FileUpdatedByField,
     FileUpdatedAtField,
@@ -1611,6 +1788,7 @@ class File(
 
 # FileInputNode MUST expose the input model via Meta.
 # GraphQL input node for file mutations.
+# [🛠️semio/py/semio.py#Domain#File§FileInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/FILE/FILEINPUTNODE)
 class FileInputNode(InputNode):
     class Meta:
         model = FileInput
@@ -1618,55 +1796,67 @@ class FileInputNode(InputNode):
 # endregion File
 
 # region Folder
+
+# [🔖semio/py/semio.py#Folder](semiorepo://section/semio/py/semio.py/FOLDER)
 # Folder entity for hierarchical organization of kit content.
 
 # FolderGuidField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the guid of a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderGuidField](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERGUIDFIELD)
 class FolderGuidField(RealField, abc.ABC):
     guid: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 # FolderNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERNAMEFIELD)
 class FolderNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # FolderParentField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the parent of a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderParentField](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERPARENTFIELD)
 class FolderParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # FolderDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERDESCRIPTIONFIELD)
 class FolderDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # FolderCreatedAtField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created at of a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderCreatedAtField](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERCREATEDATFIELD)
 class FolderCreatedAtField(RealField, abc.ABC):
     createdAt: datetime.datetime = sqlmodel.Field()
 
 # FolderCreatedByField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created by of a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderCreatedByField](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERCREATEDBYFIELD)
 class FolderCreatedByField(RealField, abc.ABC):
     createdBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # FolderUpdatedAtField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated at of a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderUpdatedAtField](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERUPDATEDATFIELD)
 class FolderUpdatedAtField(RealField, abc.ABC):
     updatedAt: datetime.datetime = sqlmodel.Field()
 
 # FolderUpdatedByField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated by of a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderUpdatedByField](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERUPDATEDBYFIELD)
 class FolderUpdatedByField(RealField, abc.ABC):
     updatedBy: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # FolderId MUST contain all fields that uniquely identify a folder.
 # Identity fields for uniquely identifying a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderId](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERID)
 class FolderId(FolderGuidField, Id):
     pass
 
 # FolderProps MUST contain all non-relational property fields.
 # Property fields for a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderProps](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERPROPS)
 class FolderProps(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1682,6 +1872,7 @@ class FolderProps(
 
 # FolderInput MUST contain all fields required for creation.
 # Input fields for creating or updating a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderInput](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERINPUT)
 class FolderInput(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1697,11 +1888,13 @@ class FolderInput(
 
 # FolderContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a folder by an LLM.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderContext](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERCONTEXT)
 class FolderContext(FolderNameField, FolderGuidField, Context):
     pass
 
 # FolderOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a folder.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDEROUTPUT)
 class FolderOutput(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1717,6 +1910,7 @@ class FolderOutput(
 
 # Folder MUST implement idMembers and inherit from the appropriate field mixins.
 # Folder entity for hierarchical content organization.
+# [🛠️semio/py/semio.py#Domain#Folder§Folder](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDER)
 class Folder(
     FolderUpdatedByField,
     FolderUpdatedAtField,
@@ -1789,6 +1983,7 @@ class Folder(
 
 # FolderInputNode MUST expose the input model via Meta.
 # GraphQL input node for folder mutations.
+# [🛠️semio/py/semio.py#Domain#Folder§FolderInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/FOLDER/FOLDERINPUTNODE)
 class FolderInputNode(InputNode):
     class Meta:
         model = FolderInput
@@ -1796,45 +1991,55 @@ class FolderInputNode(InputNode):
 # endregion Folder
 
 # region Benchmark
+
+# [🔖semio/py/semio.py#Benchmark](semiorepo://section/semio/py/semio.py/BENCHMARK)
 # Benchmark entity for defining performance metrics with min-max bounds.
 
 # BenchmarkNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKNAMEFIELD)
 class BenchmarkNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # BenchmarkIconField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the icon of a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkIconField](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKICONFIELD)
 class BenchmarkIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # BenchmarkMinField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the min of a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkMinField](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKMINFIELD)
 class BenchmarkMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
 
 # BenchmarkMinExcludedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the min excluded of a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkMinExcludedField](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKMINEXCLUDEDFIELD)
 class BenchmarkMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=False)
 
 # BenchmarkMaxField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the max of a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkMaxField](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKMAXFIELD)
 class BenchmarkMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
 
 # BenchmarkMaxExcludedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the max excluded of a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkMaxExcludedField](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKMAXEXCLUDEDFIELD)
 class BenchmarkMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=False)
 
 # BenchmarkId MUST contain all fields that uniquely identify a benchmark.
 # Identity fields for uniquely identifying a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkId](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKID)
 class BenchmarkId(BenchmarkNameField, Id):
     pass
 
 # BenchmarkProps MUST contain all non-relational property fields.
 # Property fields for a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkProps](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKPROPS)
 class BenchmarkProps(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1848,6 +2053,7 @@ class BenchmarkProps(
 
 # BenchmarkInput MUST contain all fields required for creation.
 # Input fields for creating or updating a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkInput](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKINPUT)
 class BenchmarkInput(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1861,6 +2067,7 @@ class BenchmarkInput(
 
 # BenchmarkOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a benchmark.
+# [🛠️semio/py/semio.py#Domain#Benchmark§BenchmarkOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARKOUTPUT)
 class BenchmarkOutput(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1874,6 +2081,7 @@ class BenchmarkOutput(
 
 # Benchmark MUST implement idMembers and inherit from the appropriate field mixins.
 # Benchmark entity for performance metrics with min-max bounds.
+# [🛠️semio/py/semio.py#Domain#Benchmark§Benchmark](semiorepo://definition/semio/py/semio.py/DOMAIN/BENCHMARK/BENCHMARK)
 class Benchmark(
     BenchmarkMaxExcludedField,
     BenchmarkMaxField,
@@ -1902,115 +2110,139 @@ class Benchmark(
 # endregion Benchmark
 
 # region Quality
+
+# [🔖semio/py/semio.py#Quality](semiorepo://section/semio/py/semio.py/QUALITY)
 # Quality entity for defining measurable properties with units and constraints.
 
 # QualityKeyField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the key of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityKeyField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYKEYFIELD)
 class QualityKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT, primary_key=True)
 
 # QualityNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYNAMEFIELD)
 class QualityNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # QualityDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYDESCRIPTIONFIELD)
 class QualityDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # QualityUriField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the uri of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityUriField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYURIFIELD)
 class QualityUriField(RealField, abc.ABC):
     uri: str = sqlmodel.Field(default="", max_length=URI_LENGTH_LIMIT)
 
 # QualityScalableField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the scalable of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityScalableField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYSCALABLEFIELD)
 class QualityScalableField(RealField, abc.ABC):
     scalable: bool = sqlmodel.Field(default=False)
 
 # QualityKindField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the kind of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityKindField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYKINDFIELD)
 class QualityKindField(RealField, abc.ABC):
     kind: int = sqlmodel.Field(default=0)
 
 # QualitySiField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the si of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualitySiField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYSIFIELD)
 class QualitySiField(RealField, abc.ABC):
     si: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # QualityImperialField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the imperial of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityImperialField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYIMPERIALFIELD)
 class QualityImperialField(RealField, abc.ABC):
     imperial: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # QualityMinField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the min of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityMinField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYMINFIELD)
 class QualityMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
 
 # QualityMinExcludedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the min excluded of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityMinExcludedField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYMINEXCLUDEDFIELD)
 class QualityMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=True)
 
 # QualityMaxField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the max of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityMaxField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYMAXFIELD)
 class QualityMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
 
 # QualityMaxExcludedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the max excluded of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityMaxExcludedField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYMAXEXCLUDEDFIELD)
 class QualityMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=True)
 
 # QualityDefaultField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the default of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityDefaultField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYDEFAULTFIELD)
 class QualityDefaultField(RealField, abc.ABC):
     default: typing.Optional[float] = sqlmodel.Field(default=None)
 
 # QualityFormulaField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the formula of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityFormulaField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYFORMULAFIELD)
 class QualityFormulaField(RealField, abc.ABC):
     formula: str = sqlmodel.Field(default="", max_length=EXPRESSION_LENGTH_LIMIT)
 
 # QualityFolderField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the folder of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityFolderField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYFOLDERFIELD)
 class QualityFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 # QualityIconField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the icon of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityIconField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYICONFIELD)
 class QualityIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 # QualityImageField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the image of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityImageField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYIMAGEFIELD)
 class QualityImageField(RealField, abc.ABC):
     image: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 # QualityUnitField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the unit of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityUnitField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYUNITFIELD)
 class QualityUnitField(RealField, abc.ABC):
     unit: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 # QualityCreatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityCreatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYCREATEDFIELD)
 class QualityCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # QualityUpdatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated of a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityUpdatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYUPDATEDFIELD)
 class QualityUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # QualityId MUST contain all fields that uniquely identify a quality.
 # Identity fields for uniquely identifying a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityId](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYID)
 class QualityId(QualityKeyField, Id):
     pass
 
 # QualityProps MUST contain all non-relational property fields.
 # Property fields for a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityProps](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYPROPS)
 class QualityProps(
     QualityUnitField,
     QualityImageField,
@@ -2036,6 +2268,7 @@ class QualityProps(
 
 # QualityInput MUST contain all fields required for creation.
 # Input fields for creating or updating a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityInput](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYINPUT)
 class QualityInput(
     QualityUnitField,
     QualityImageField,
@@ -2061,11 +2294,13 @@ class QualityInput(
 
 # QualityContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a quality by an LLM.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityContext](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYCONTEXT)
 class QualityContext(QualityDescriptionField, QualityNameField, QualityKeyField, Context):
     pass
 
 # QualityOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a quality.
+# [🛠️semio/py/semio.py#Domain#Quality§QualityOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITYOUTPUT)
 class QualityOutput(
     QualityUpdatedField,
     QualityCreatedField,
@@ -2094,6 +2329,7 @@ class QualityOutput(
 
 # Quality MUST implement idMembers and inherit from the appropriate field mixins.
 # Quality entity with units, constraints, formula and folder classification.
+# [🛠️semio/py/semio.py#Domain#Quality§Quality](semiorepo://definition/semio/py/semio.py/DOMAIN/QUALITY/QUALITY)
 class Quality(
     QualityUpdatedField,
     QualityCreatedField,
@@ -2143,40 +2379,49 @@ class Quality(
 # endregion Quality
 
 # region Prop
+
+# [🔖semio/py/semio.py#Prop](semiorepo://section/semio/py/semio.py/PROP)
 # Prop entity for key-value property pairs with units.
 
 # PropKeyField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the key of a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropKeyField](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPKEYFIELD)
 class PropKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # PropValueField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the value of a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropValueField](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPVALUEFIELD)
 class PropValueField(RealField, abc.ABC):
     value: str = sqlmodel.Field(max_length=VALUE_LENGTH_LIMIT)
 
 # PropUnitField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the unit of a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropUnitField](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPUNITFIELD)
 class PropUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # PropCreatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created of a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropCreatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPCREATEDFIELD)
 class PropCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # PropUpdatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated of a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropUpdatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPUPDATEDFIELD)
 class PropUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # PropId MUST contain all fields that uniquely identify a prop.
 # Identity fields for uniquely identifying a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropId](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPID)
 class PropId(PropKeyField, Id):
     pass
 
 # PropProps MUST contain all non-relational property fields.
 # Property fields for a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropProps](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPPROPS)
 class PropProps(
     PropUpdatedField,
     PropCreatedField,
@@ -2189,11 +2434,13 @@ class PropProps(
 
 # PropInput MUST contain all fields required for creation.
 # Input fields for creating or updating a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropInput](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPINPUT)
 class PropInput(PropUnitField, PropValueField, PropKeyField, Input):
     pass
 
 # PropOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a prop.
+# [🛠️semio/py/semio.py#Domain#Prop§PropOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPOUTPUT)
 class PropOutput(
     PropUpdatedField,
     PropCreatedField,
@@ -2206,6 +2453,7 @@ class PropOutput(
 
 # Prop MUST implement idMembers and inherit from the appropriate field mixins.
 # Prop entity for key-value properties with optional units.
+# [🛠️semio/py/semio.py#Domain#Prop§Prop](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROP)
 class Prop(
     PropUpdatedField,
     PropCreatedField,
@@ -2290,6 +2538,7 @@ class Prop(
 
 # PropInputNode MUST expose the input model via Meta.
 # GraphQL input node for prop mutations.
+# [🛠️semio/py/semio.py#Domain#Prop§PropInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/PROP/PROPINPUTNODE)
 class PropInputNode(InputNode):
     class Meta:
         model = PropInput
@@ -2297,40 +2546,49 @@ class PropInputNode(InputNode):
 # endregion Prop
 
 # region Model
+
+# [🔖semio/py/semio.py#Model](semiorepo://section/semio/py/semio.py/MODEL)
 # Model entity for 3D geometry representations linked to files.
 
 # ModelNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELNAMEFIELD)
 class ModelNameField(RealField, abc.ABC):
     name: typing.Optional[str] = sqlmodel.Field(default=None, max_length=NAME_LENGTH_LIMIT)
 
 # ModelUrlField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the url of a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelUrlField](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELURLFIELD)
 class ModelUrlField(RealField, abc.ABC):
     url: str = sqlmodel.Field(max_length=URL_LENGTH_LIMIT)
 
 # ModelFileField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the file of a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelFileField](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELFILEFIELD)
 class ModelFileField(RealField, abc.ABC):
     file: str = sqlmodel.Field(max_length=ID_LENGTH_LIMIT)
 
 # ModelDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELDESCRIPTIONFIELD)
 class ModelDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # ModelTagsField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the tags of a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelTagsField](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELTAGSFIELD)
 class ModelTagsField(MaskedField, abc.ABC):
     tags: list[str] = sqlmodel.Field(default_factory=list)
 
 # ModelId MUST contain all fields that uniquely identify a model.
 # Identity fields for uniquely identifying a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelId](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELID)
 class ModelId(ModelTagsField, Id):
     pass
 
 # ModelProps MUST contain all non-relational property fields.
 # Property fields for a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelProps](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELPROPS)
 class ModelProps(
     ModelTagsField,
     ModelDescriptionField,
@@ -2343,6 +2601,7 @@ class ModelProps(
 
 # ModelInput MUST contain all fields required for creation.
 # Input fields for creating or updating a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelInput](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELINPUT)
 class ModelInput(
     ModelTagsField,
     ModelDescriptionField,
@@ -2355,11 +2614,13 @@ class ModelInput(
 
 # ModelContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a model by an LLM.
+# [🛠️semio/py/semio.py#Domain#Model§ModelContext](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELCONTEXT)
 class ModelContext(ModelTagsField, ModelDescriptionField, ModelNameField, Context):
     attributes: list[AttributeContext] = sqlmodel.Field(default_factory=list)
 
 # ModelOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a model.
+# [🛠️semio/py/semio.py#Domain#Model§ModelOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELOUTPUT)
 class ModelOutput(
     ModelTagsField,
     ModelDescriptionField,
@@ -2372,6 +2633,7 @@ class ModelOutput(
 
 # Model MUST implement idMembers and inherit from the appropriate field mixins.
 # Model entity for 3D geometry with name, URL and file reference.
+# [🛠️semio/py/semio.py#Domain#Model§Model](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODEL)
 class Model(
     ModelDescriptionField,
     ModelNameField,
@@ -2439,12 +2701,14 @@ class Model(
 
 # NoModelAssigned MUST fulfill its documented contract.
 # No Model Assigned definition.
+# [🛠️semio/py/semio.py#Domain#Model§NoModelAssigned](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/NOMODELASSIGNED)
 class NoModelAssigned(NoParentAssigned):
     def __str__(self):
         return " The entity has no parent model assigned."
 
 # ModelInputNode MUST expose the input model via Meta.
 # GraphQL input node for model mutations.
+# [🛠️semio/py/semio.py#Domain#Model§ModelInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MODEL/MODELINPUTNODE)
 class ModelInputNode(InputNode):
     class Meta:
         model = ModelInput
@@ -2452,50 +2716,61 @@ class ModelInputNode(InputNode):
 # endregion Model
 
 # region Port
+
+# [🔖semio/py/semio.py#Port](semiorepo://section/semio/py/semio.py/PORT)
 # Port entity for defining connection interfaces on types.
 
 # PortNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a port.
+# [🛠️semio/py/semio.py#Domain#Port§PortNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTNAMEFIELD)
 class PortNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # PortDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a port.
+# [🛠️semio/py/semio.py#Domain#Port§PortDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTDESCRIPTIONFIELD)
 class PortDescriptionField(RealField, abc.ABC):
     description: typing.Optional[str] = sqlmodel.Field(default=None, max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # PortIconField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the icon of a port.
+# [🛠️semio/py/semio.py#Domain#Port§PortIconField](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTICONFIELD)
 class PortIconField(RealField, abc.ABC):
     icon: typing.Optional[str] = sqlmodel.Field(default=None, max_length=URL_LENGTH_LIMIT)
 
 # PortCompatiblePortsField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the compatible ports of a port.
+# [🛠️semio/py/semio.py#Domain#Port§PortCompatiblePortsField](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTCOMPATIBLEPORTSFIELD)
 class PortCompatiblePortsField(MaskedField, abc.ABC):
     compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
 
 # PortId MUST contain all fields that uniquely identify a port.
 # Identity fields for uniquely identifying a port.
+# [🛠️semio/py/semio.py#Domain#Port§PortId](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTID)
 class PortId(PortNameField, Id):
     pass
 
 # PortProps MUST contain all non-relational property fields.
 # Property fields for a port.
+# [🛠️semio/py/semio.py#Domain#Port§PortProps](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTPROPS)
 class PortProps(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Props):
     pass
 
 # PortInput MUST contain all fields required for creation.
 # Input fields for creating or updating a port.
+# [🛠️semio/py/semio.py#Domain#Port§PortInput](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTINPUT)
 class PortInput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Input):
     attributes: list[AttributeInput] = sqlmodel.Field(default_factory=list)
 
 # PortOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a port.
+# [🛠️semio/py/semio.py#Domain#Port§PortOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTOUTPUT)
 class PortOutput(PortCompatiblePortsField, PortIconField, PortDescriptionField, PortNameField, Output):
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 # Port MUST implement idMembers and inherit from the appropriate field mixins.
 # Port entity defining a named connection interface on a type.
+# [🛠️semio/py/semio.py#Domain#Port§Port](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORT)
 class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, table=True):
     PLURAL = "ports"
     __tablename__ = "port"
@@ -2516,6 +2791,7 @@ class Port(PortIconField, PortDescriptionField, PortNameField, TableEntity, tabl
 
 # PortInputNode MUST expose the input model via Meta.
 # GraphQL input node for port mutations.
+# [🛠️semio/py/semio.py#Domain#Port§PortInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/PORT/PORTINPUTNODE)
 class PortInputNode(InputNode):
     class Meta:
         model = PortInput
@@ -2524,21 +2800,28 @@ class PortInputNode(InputNode):
 
 # region Connector
 
+# [🔖semio/py/semio.py#Connector](semiorepo://section/semio/py/semio.py/CONNECTOR)
+
 # region CompatiblePort
+
+# [🔖semio/py/semio.py#CompatiblePort](semiorepo://section/semio/py/semio.py/COMPATIBLEPORT)
 # Compatible port entity for specifying allowed port pairings on connectors.
 
 # CompatiblePortNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a compatible port.
+# [🛠️semio/py/semio.py#Domain#Connector#CompatiblePort§CompatiblePortNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/COMPATIBLEPORT/COMPATIBLEPORTNAMEFIELD)
 class CompatiblePortNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # CompatiblePortOrderField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the order of a compatible port.
+# [🛠️semio/py/semio.py#Domain#Connector#CompatiblePort§CompatiblePortOrderField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/COMPATIBLEPORT/COMPATIBLEPORTORDERFIELD)
 class CompatiblePortOrderField(RealField, abc.ABC):
     order: int = sqlmodel.Field()
 
 # CompatiblePort MUST implement idMembers and inherit from the appropriate field mixins.
 # Compatible port entity specifying an allowed port pairing.
+# [🛠️semio/py/semio.py#Domain#Connector#CompatiblePort§CompatiblePort](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/COMPATIBLEPORT/COMPATIBLEPORT)
 class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, table=True):
     __tablename__ = "compatible_port"
     pk: typing.Optional[int] = sqlmodel.Field(
@@ -2557,51 +2840,61 @@ class CompatiblePort(CompatiblePortOrderField, CompatiblePortNameField, Table, t
 
 # ConnectorIdField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the id of a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorIdField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORIDFIELD)
 class ConnectorIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(default="", max_length=ID_LENGTH_LIMIT)
 
 # ConnectorDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORDESCRIPTIONFIELD)
 class ConnectorDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # ConnectorMandatoryField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the mandatory of a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorMandatoryField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORMANDATORYFIELD)
 class ConnectorMandatoryField(RealField, abc.ABC):
     is_mandatory: bool = sqlmodel.Field(default=False)
 
 # ConnectorPortField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the port of a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorPortField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORPORTFIELD)
 class ConnectorPortField(RealField, abc.ABC):
     port: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # ConnectorCompatiblePortsField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the compatible ports of a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorCompatiblePortsField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORCOMPATIBLEPORTSFIELD)
 class ConnectorCompatiblePortsField(MaskedField, abc.ABC):
     compatiblePorts: list[str] = sqlmodel.Field(default_factory=list)
 
 # ConnectorPointField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the point of a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorPointField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORPOINTFIELD)
 class ConnectorPointField(MaskedField, abc.ABC):
     point: Point = sqlmodel.Field()
 
 # ConnectorDirectionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the direction of a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorDirectionField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORDIRECTIONFIELD)
 class ConnectorDirectionField(MaskedField, abc.ABC):
     direction: Vector = sqlmodel.Field()
 
 # ConnectorTField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the t of a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorTField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORTFIELD)
 class ConnectorTField(RealField, abc.ABC):
     t: float = sqlmodel.Field(default=0.0)
 
 # ConnectorId MUST contain all fields that uniquely identify a connector.
 # Identity fields for uniquely identifying a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorId](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORID)
 class ConnectorId(ConnectorIdField, Id):
     pass
 
 # ConnectorProps MUST contain all non-relational property fields.
 # Property fields for a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorProps](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORPROPS)
 class ConnectorProps(
     ConnectorTField,
     ConnectorCompatiblePortsField,
@@ -2615,6 +2908,7 @@ class ConnectorProps(
 
 # ConnectorInput MUST contain all fields required for creation.
 # Input fields for creating or updating a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorInput](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORINPUT)
 class ConnectorInput(
     ConnectorTField,
     ConnectorCompatiblePortsField,
@@ -2630,6 +2924,7 @@ class ConnectorInput(
 
 # ConnectorContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a connector by an LLM.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorContext](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORCONTEXT)
 class ConnectorContext(
     ConnectorTField,
     ConnectorDirectionField,
@@ -2645,6 +2940,7 @@ class ConnectorContext(
 
 # ConnectorOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a connector.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTOROUTPUT)
 class ConnectorOutput(
     ConnectorTField,
     ConnectorDirectionField,
@@ -2660,6 +2956,7 @@ class ConnectorOutput(
 
 # Connector MUST implement idMembers and inherit from the appropriate field mixins.
 # Connector entity defining a localized connection point on a type.
+# [🛠️semio/py/semio.py#Domain#Connector§Connector](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTOR)
 class Connector(
     ConnectorTField,
     ConnectorPortField,
@@ -2791,6 +3088,7 @@ class Connector(
 
 # ConnectorNotFound MUST provide a descriptive error message via __str__.
 # Exception for a connector not found on a type.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorNotFound](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORNOTFOUND)
 class ConnectorNotFound(NotFound):
     def __init__(self, parent: "Type", id: "ConnectorId") -> None:
         self.parent = parent
@@ -2802,12 +3100,14 @@ class ConnectorNotFound(NotFound):
 
 # ConnectorInputNode MUST expose the input model via Meta.
 # GraphQL input node for connector mutations.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORINPUTNODE)
 class ConnectorInputNode(InputNode):
     class Meta:
         model = ConnectorInput
 
 # ConnectorIdInputNode MUST expose the input model via Meta.
 # GraphQL input node for connector id mutations.
+# [🛠️semio/py/semio.py#Domain#Connector§ConnectorIdInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTOR/CONNECTORIDINPUTNODE)
 class ConnectorIdInputNode(InputNode):
     class Meta:
         model = ConnectorId
@@ -2815,95 +3115,115 @@ class ConnectorIdInputNode(InputNode):
 # endregion Connector
 
 # region Type
+
+# [🔖semio/py/semio.py#Type](semiorepo://section/semio/py/semio.py/TYPE)
 # Type entity for defining reusable parametric building blocks.
 
 # TypeNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPENAMEFIELD)
 class TypeNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # TypeDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEDESCRIPTIONFIELD)
 class TypeDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # TypeIconField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the icon of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeIconField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEICONFIELD)
 class TypeIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # TypeImageField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the image of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeImageField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEIMAGEFIELD)
 class TypeImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # TypeVariantField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the variant of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeVariantField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEVARIANTFIELD)
 class TypeVariantField(RealField, abc.ABC):
     variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # TypeParentField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the parent of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeParentField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEPARENTFIELD)
 class TypeParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # TypeIsAbstractField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the is abstract of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeIsAbstractField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEISABSTRACTFIELD)
 class TypeIsAbstractField(RealField, abc.ABC):
     is_abstract: bool = sqlmodel.Field(default=False)
 
 # TypeFolderField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the folder of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeFolderField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEFOLDERFIELD)
 class TypeFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # TypeStockField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the stock of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeStockField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPESTOCKFIELD)
 class TypeStockField(RealField, abc.ABC):
     stock: int = sqlmodel.Field(default=2147483647)
 
 # TypeVirtualField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the virtual of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeVirtualField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEVIRTUALFIELD)
 class TypeVirtualField(RealField, abc.ABC):
     is_virtual: bool = sqlmodel.Field(default=False)
 
 # TypeScalableField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the scalable of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeScalableField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPESCALABLEFIELD)
 class TypeScalableField(RealField, abc.ABC):
     can_scale: bool = sqlmodel.Field(default=True)
 
 # TypeMirrborableField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the mirrborable of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeMirrborableField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEMIRRBORABLEFIELD)
 class TypeMirrborableField(RealField, abc.ABC):
     can_mirror: bool = sqlmodel.Field(default=True)
 
 # TypeUnitField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the unit of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeUnitField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEUNITFIELD)
 class TypeUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # TypeLocationField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the location of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeLocationField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPELOCATIONFIELD)
 class TypeLocationField(MaskedField, abc.ABC):
     location: typing.Optional[Location] = sqlmodel.Field(default=None)
 
 # TypeCreatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeCreatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPECREATEDFIELD)
 class TypeCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # TypeUpdatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated of a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeUpdatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEUPDATEDFIELD)
 class TypeUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # TypeId MUST contain all fields that uniquely identify a type.
 # Identity fields for uniquely identifying a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeId](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEID)
 class TypeId(TypeVariantField, TypeNameField, Id):
     pass
 
 # TypeProps MUST contain all non-relational property fields.
 # Property fields for a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeProps](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEPROPS)
 class TypeProps(
     TypeUnitField,
     TypeLocationField,
@@ -2923,6 +3243,7 @@ class TypeProps(
 
 # TypeInput MUST contain all fields required for creation.
 # Input fields for creating or updating a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeInput](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEINPUT)
 class TypeInput(
     TypeUnitField,
     TypeVirtualField,
@@ -2947,6 +3268,7 @@ class TypeInput(
 
 # TypeOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a type.
+# [🛠️semio/py/semio.py#Domain#Type§TypeOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEOUTPUT)
 class TypeOutput(
     TypeUpdatedField,
     TypeCreatedField,
@@ -2973,6 +3295,7 @@ class TypeOutput(
 
 # TypeContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a type by an LLM.
+# [🛠️semio/py/semio.py#Domain#Type§TypeContext](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPECONTEXT)
 class TypeContext(
     TypeUnitField,
     TypeVirtualField,
@@ -2989,6 +3312,7 @@ class TypeContext(
 
 # Type MUST implement idMembers and inherit from the appropriate field mixins.
 # Type entity defining a reusable parametric building block.
+# [🛠️semio/py/semio.py#Domain#Type§Type](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPE)
 class Type(
     TypeUpdatedField,
     TypeCreatedField,
@@ -3189,6 +3513,7 @@ class Type(
 
 # TypeNotFound MUST provide a descriptive error message via __str__.
 # Exception for a type not found in the kit.
+# [🛠️semio/py/semio.py#Domain#Type§TypeNotFound](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPENOTFOUND)
 class TypeNotFound(NotFound):
     def __init__(self, id: "TypeId") -> None:
         self.id = id
@@ -3199,12 +3524,14 @@ class TypeNotFound(NotFound):
 
 # NoTypeAssigned MUST fulfill its documented contract.
 # No Type Assigned definition.
+# [🛠️semio/py/semio.py#Domain#Type§NoTypeAssigned](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/NOTYPEASSIGNED)
 class NoTypeAssigned(NoParentAssigned):
     def __str__(self):
         return " The entity has no parent type assigned."
 
 # TypeHasNotAllUsedConnectors MUST fulfill its documented contract.
 # Type Has Not All Used Connectors definition.
+# [🛠️semio/py/semio.py#Domain#Type§TypeHasNotAllUsedConnectors](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEHASNOTALLUSEDCONNECTORS)
 class TypeHasNotAllUsedConnectors(SpecificationError):
     def __init__(self, missingConnectors: set[str]) -> None:
         self.missingConnectors = missingConnectors
@@ -3214,12 +3541,14 @@ class TypeHasNotAllUsedConnectors(SpecificationError):
 
 # TypeInputNode MUST expose the input model via Meta.
 # GraphQL input node for type mutations.
+# [🛠️semio/py/semio.py#Domain#Type§TypeInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEINPUTNODE)
 class TypeInputNode(InputNode):
     class Meta:
         model = TypeInput
 
 # TypeIdInputNode MUST expose the input model via Meta.
 # GraphQL input node for type id mutations.
+# [🛠️semio/py/semio.py#Domain#Type§TypeIdInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/TYPE/TYPEIDINPUTNODE)
 class TypeIdInputNode(InputNode):
     class Meta:
         model = TypeId
@@ -3227,40 +3556,49 @@ class TypeIdInputNode(InputNode):
 # endregion Type
 
 # region Layer
+
+# [🔖semio/py/semio.py#Layer](semiorepo://section/semio/py/semio.py/LAYER)
 # Layer entity for organizing design elements into visibility groups.
 
 # LayerNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYERNAMEFIELD)
 class LayerNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # LayerDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYERDESCRIPTIONFIELD)
 class LayerDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # LayerColorField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the color of a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerColorField](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYERCOLORFIELD)
 class LayerColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
 
 # LayerIsHiddenField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the is hidden of a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerIsHiddenField](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYERISHIDDENFIELD)
 class LayerIsHiddenField(RealField, abc.ABC):
     is_hidden: bool = sqlmodel.Field(default=False)
 
 # LayerIsLockedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the is locked of a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerIsLockedField](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYERISLOCKEDFIELD)
 class LayerIsLockedField(RealField, abc.ABC):
     is_locked: bool = sqlmodel.Field(default=False)
 
 # LayerId MUST contain all fields that uniquely identify a layer.
 # Identity fields for uniquely identifying a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerId](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYERID)
 class LayerId(LayerNameField, Id):
     pass
 
 # LayerProps MUST contain all non-relational property fields.
 # Property fields for a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerProps](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYERPROPS)
 class LayerProps(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -3273,6 +3611,7 @@ class LayerProps(
 
 # LayerInput MUST contain all fields required for creation.
 # Input fields for creating or updating a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerInput](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYERINPUT)
 class LayerInput(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -3285,6 +3624,7 @@ class LayerInput(
 
 # LayerOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a layer.
+# [🛠️semio/py/semio.py#Domain#Layer§LayerOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYEROUTPUT)
 class LayerOutput(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -3297,6 +3637,7 @@ class LayerOutput(
 
 # Layer MUST implement idMembers and inherit from the appropriate field mixins.
 # Layer entity for grouping design elements with visibility and locking.
+# [🛠️semio/py/semio.py#Domain#Layer§Layer](semiorepo://definition/semio/py/semio.py/DOMAIN/LAYER/LAYER)
 class Layer(
     LayerIsLockedField,
     LayerIsHiddenField,
@@ -3323,10 +3664,13 @@ class Layer(
 # endregion Layer
 
 # region Piece
+
+# [🔖semio/py/semio.py#Piece](semiorepo://section/semio/py/semio.py/PIECE)
 # Piece entity for placed instances of types within a design.
 
 # PieceIdField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the id of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceIdField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEIDFIELD)
 class PieceIdField(MaskedField, abc.ABC):
     id_: str = sqlmodel.Field(
         default="",
@@ -3335,61 +3679,73 @@ class PieceIdField(MaskedField, abc.ABC):
 
 # PieceDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEDESCRIPTIONFIELD)
 class PieceDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # PieceTypeField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the type of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceTypeField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECETYPEFIELD)
 class PieceTypeField(MaskedField, abc.ABC):
     type: typing.Optional[TypeId] = sqlmodel.Field(default=None)
 
 # PieceDesignField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the design of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceDesignField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEDESIGNFIELD)
 class PieceDesignField(MaskedField, abc.ABC):
     designPiece: typing.Optional["DesignId"] = sqlmodel.Field(default=None)
 
 # PiecePlaneField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the plane of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PiecePlaneField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEPLANEFIELD)
 class PiecePlaneField(MaskedField, abc.ABC):
     plane: typing.Optional[Plane] = sqlmodel.Field(default=None)
 
 # PieceCenterField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the center of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceCenterField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECECENTERFIELD)
 class PieceCenterField(MaskedField, abc.ABC):
     center: typing.Optional[Coord] = sqlmodel.Field(default=None)
 
 # PieceScaleField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the scale of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceScaleField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECESCALEFIELD)
 class PieceScaleField(RealField, abc.ABC):
     scale: float = sqlmodel.Field(default=1.0)
 
 # PieceMirrorPlaneField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the mirror plane of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceMirrorPlaneField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEMIRRORPLANEFIELD)
 class PieceMirrorPlaneField(MaskedField, abc.ABC):
     mirrorPlane: typing.Optional[Plane] = sqlmodel.Field(default=None)
 
 # PieceHiddenField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the hidden of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceHiddenField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEHIDDENFIELD)
 class PieceHiddenField(RealField, abc.ABC):
     is_hidden: bool = sqlmodel.Field(default=False)
 
 # PieceLockedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the locked of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceLockedField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECELOCKEDFIELD)
 class PieceLockedField(RealField, abc.ABC):
     is_locked: bool = sqlmodel.Field(default=False)
 
 # PieceColorField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the color of a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceColorField](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECECOLORFIELD)
 class PieceColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
 
 # PieceId MUST contain all fields that uniquely identify a piece.
 # Identity fields for uniquely identifying a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceId](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEID)
 class PieceId(PieceIdField, Id):
     pass
 
 # PieceProps MUST contain all non-relational property fields.
 # Property fields for a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceProps](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEPROPS)
 class PieceProps(
     PieceCenterField,
     PiecePlaneField,
@@ -3403,6 +3759,7 @@ class PieceProps(
 
 # PieceInput MUST contain all fields required for creation.
 # Input fields for creating or updating a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceInput](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEINPUT)
 class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Input):
     plane: typing.Optional[PlaneInput] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordInput] = sqlmodel.Field(default=None)
@@ -3410,6 +3767,7 @@ class PieceInput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceI
 
 # PieceContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a piece by an LLM.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceContext](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECECONTEXT)
 class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Context):
     plane: typing.Optional[PlaneContext] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordContext] = sqlmodel.Field(default=None)
@@ -3417,6 +3775,7 @@ class PieceContext(PieceDesignField, PieceTypeField, PieceDescriptionField, Piec
 
 # PieceOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a piece.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEOUTPUT)
 class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Output):
     plane: typing.Optional[PlaneOutput] = sqlmodel.Field(default=None)
     center: typing.Optional[CoordOutput] = sqlmodel.Field(default=None)
@@ -3424,11 +3783,13 @@ class PieceOutput(PieceDesignField, PieceTypeField, PieceDescriptionField, Piece
 
 # PiecePrediction MUST contain all fields for LLM inference.
 # Prediction fields for LLM-based piece inference.
+# [🛠️semio/py/semio.py#Domain#Piece§PiecePrediction](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEPREDICTION)
 class PiecePrediction(PieceDesignField, PieceTypeField, PieceDescriptionField, PieceIdField, Prediction):
     pass
 
 # Piece MUST implement idMembers and inherit from the appropriate field mixins.
 # Piece entity for a placed instance of a type within a design.
+# [🛠️semio/py/semio.py#Domain#Piece§Piece](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECE)
 class Piece(
     PieceIdField,
     PieceHiddenField,
@@ -3604,6 +3965,7 @@ class Piece(
 
 # PieceInputNode MUST expose the input model via Meta.
 # GraphQL input node for piece mutations.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEINPUTNODE)
 class PieceInputNode(InputNode):
     class Meta:
         model = PieceInput
@@ -3614,6 +3976,7 @@ class PieceInputNode(InputNode):
 
 # PieceIdInputNode MUST expose the input model via Meta.
 # GraphQL input node for piece id mutations.
+# [🛠️semio/py/semio.py#Domain#Piece§PieceIdInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/PIECE/PIECEIDINPUTNODE)
 class PieceIdInputNode(InputNode):
     class Meta:
         model = PieceId
@@ -3621,46 +3984,56 @@ class PieceIdInputNode(InputNode):
 # endregion Piece
 
 # region Group
+
+# [🔖semio/py/semio.py#Group](semiorepo://section/semio/py/semio.py/GROUP)
 # Group entity for named collections of pieces in a design.
 
 # GroupNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a group.
+# [🛠️semio/py/semio.py#Domain#Group§GroupNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/GROUP/GROUPNAMEFIELD)
 class GroupNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # GroupDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a group.
+# [🛠️semio/py/semio.py#Domain#Group§GroupDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/GROUP/GROUPDESCRIPTIONFIELD)
 class GroupDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # GroupColorField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the color of a group.
+# [🛠️semio/py/semio.py#Domain#Group§GroupColorField](semiorepo://definition/semio/py/semio.py/DOMAIN/GROUP/GROUPCOLORFIELD)
 class GroupColorField(RealField, abc.ABC):
     color: str = sqlmodel.Field(default="", max_length=7)
 
 # GroupId MUST contain all fields that uniquely identify a group.
 # Identity fields for uniquely identifying a group.
+# [🛠️semio/py/semio.py#Domain#Group§GroupId](semiorepo://definition/semio/py/semio.py/DOMAIN/GROUP/GROUPID)
 class GroupId(GroupNameField, Id):
     pass
 
 # GroupProps MUST contain all non-relational property fields.
 # Property fields for a group.
+# [🛠️semio/py/semio.py#Domain#Group§GroupProps](semiorepo://definition/semio/py/semio.py/DOMAIN/GROUP/GROUPPROPS)
 class GroupProps(GroupColorField, GroupDescriptionField, GroupNameField, Props):
     pass
 
 # GroupInput MUST contain all fields required for creation.
 # Input fields for creating or updating a group.
+# [🛠️semio/py/semio.py#Domain#Group§GroupInput](semiorepo://definition/semio/py/semio.py/DOMAIN/GROUP/GROUPINPUT)
 class GroupInput(GroupColorField, GroupDescriptionField, GroupNameField, Input):
     pass
 
 # GroupOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a group.
+# [🛠️semio/py/semio.py#Domain#Group§GroupOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/GROUP/GROUPOUTPUT)
 class GroupOutput(GroupColorField, GroupDescriptionField, GroupNameField, Output):
     pieces: list["PieceOutput"] = sqlmodel.Field(default_factory=list)
     attributes: list[AttributeOutput] = sqlmodel.Field(default_factory=list)
 
 # Group MUST implement idMembers and inherit from the appropriate field mixins.
 # Group entity for named collections of pieces.
+# [🛠️semio/py/semio.py#Domain#Group§Group](semiorepo://definition/semio/py/semio.py/DOMAIN/GROUP/GROUP)
 class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity, table=True):
     PLURAL = "groups"
     __tablename__ = "group"
@@ -3679,10 +4052,13 @@ class Group(GroupColorField, GroupDescriptionField, GroupNameField, TableEntity,
 # endregion Group
 
 # region Side
+
+# [🔖semio/py/semio.py#Side](semiorepo://section/semio/py/semio.py/SIDE)
 # Side primitive for identifying a specific connector on a specific piece.
 
 # Side MUST contain all coordinate or geometry fields.
 # Side primitive identifying a specific connector on a specific piece.
+# [🛠️semio/py/semio.py#Domain#Side§Side](semiorepo://definition/semio/py/semio.py/DOMAIN/SIDE/SIDE)
 class Side(BaseModel):
     piece: PieceId = sqlmodel.Field()
     designPiece: typing.Optional[PieceId] = sqlmodel.Field(default=None)
@@ -3705,26 +4081,31 @@ class Side(BaseModel):
 
 # SideInput MUST contain all fields required for creation.
 # Input fields for creating or updating a side.
+# [🛠️semio/py/semio.py#Domain#Side§SideInput](semiorepo://definition/semio/py/semio.py/DOMAIN/SIDE/SIDEINPUT)
 class SideInput(Side, Input):
     pass
 
 # SideContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a side by an LLM.
+# [🛠️semio/py/semio.py#Domain#Side§SideContext](semiorepo://definition/semio/py/semio.py/DOMAIN/SIDE/SIDECONTEXT)
 class SideContext(Side, Context):
     pass
 
 # SideOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a side.
+# [🛠️semio/py/semio.py#Domain#Side§SideOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/SIDE/SIDEOUTPUT)
 class SideOutput(Side, Output):
     pass
 
 # SidePrediction MUST contain all fields for LLM inference.
 # Prediction fields for LLM-based side inference.
+# [🛠️semio/py/semio.py#Domain#Side§SidePrediction](semiorepo://definition/semio/py/semio.py/DOMAIN/SIDE/SIDEPREDICTION)
 class SidePrediction(Side, Prediction):
     pass
 
 # SideNode MUST expose the model via Meta.
 # GraphQL node exposing side data.
+# [🛠️semio/py/semio.py#Domain#Side§SideNode](semiorepo://definition/semio/py/semio.py/DOMAIN/SIDE/SIDENODE)
 class SideNode(Node):
     class Meta:
         model = Side
@@ -3746,6 +4127,7 @@ class SideNode(Node):
 
 # SideInputNode MUST expose the input model via Meta.
 # GraphQL input node for side mutations.
+# [🛠️semio/py/semio.py#Domain#Side§SideInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/SIDE/SIDEINPUTNODE)
 class SideInputNode(InputNode):
     class Meta:
         model = SideInput
@@ -3759,70 +4141,85 @@ class SideInputNode(InputNode):
 # endregion Side
 
 # region Connection
+
+# [🔖semio/py/semio.py#Connection](semiorepo://section/semio/py/semio.py/CONNECTION)
 # Connection entity for linking two pieces through their connectors.
 
 # ConnectionConnectedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the connected of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionConnectedField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONCONNECTEDFIELD)
 class ConnectionConnectedField(MaskedField, abc.ABC):
     connected: Side = sqlmodel.Field()
 
 # ConnectionConnectingField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the connecting of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionConnectingField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONCONNECTINGFIELD)
 class ConnectionConnectingField(MaskedField, abc.ABC):
     connecting: Side = sqlmodel.Field()
 
 # ConnectionDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONDESCRIPTIONFIELD)
 class ConnectionDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # ConnectionGapField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the gap of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionGapField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONGAPFIELD)
 class ConnectionGapField(RealField, abc.ABC):
     gap: float = sqlmodel.Field(default=0)
 
 # ConnectionShiftField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the shift of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionShiftField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONSHIFTFIELD)
 class ConnectionShiftField(RealField, abc.ABC):
     shift: float = sqlmodel.Field(default=0)
 
 # ConnectionRiseField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the rise of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionRiseField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONRISEFIELD)
 class ConnectionRiseField(MaskedField, abc.ABC):
     rise: float = sqlmodel.Field(default=0)
 
 # ConnectionRotationField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the rotation of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionRotationField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONROTATIONFIELD)
 class ConnectionRotationField(RealField, abc.ABC):
     rotation: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
 # ConnectionTurnField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the turn of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionTurnField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONTURNFIELD)
 class ConnectionTurnField(RealField, abc.ABC):
     turn: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
 # ConnectionTiltField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the tilt of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionTiltField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONTILTFIELD)
 class ConnectionTiltField(RealField, abc.ABC):
     tilt: float = sqlmodel.Field(ge=0, lt=360, default=0)
 
 # ConnectionUField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the u of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionUField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONUFIELD)
 class ConnectionUField(RealField, abc.ABC):
     u: float = sqlmodel.Field(default=0)
 
 # ConnectionVField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the v of a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionVField](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONVFIELD)
 class ConnectionVField(RealField, abc.ABC):
     v: float = sqlmodel.Field(default=0)
 
 # ConnectionId MUST contain all fields that uniquely identify a connection.
 # Identity fields for uniquely identifying a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionId](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONID)
 class ConnectionId(ConnectionConnectedField, ConnectionConnectingField, Id):
     pass
 
 # ConnectionProps MUST contain all non-relational property fields.
 # Property fields for a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionProps](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONPROPS)
 class ConnectionProps(
     ConnectionVField,
     ConnectionUField,
@@ -3839,6 +4236,7 @@ class ConnectionProps(
 
 # ConnectionInput MUST contain all fields required for creation.
 # Input fields for creating or updating a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionInput](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONINPUT)
 class ConnectionInput(
     ConnectionVField,
     ConnectionUField,
@@ -3858,6 +4256,7 @@ class ConnectionInput(
 
 # ConnectionContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a connection by an LLM.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionContext](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONCONTEXT)
 class ConnectionContext(
     ConnectionVField,
     ConnectionUField,
@@ -3877,6 +4276,7 @@ class ConnectionContext(
 
 # ConnectionOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a connection.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONOUTPUT)
 class ConnectionOutput(
     ConnectionVField,
     ConnectionUField,
@@ -3896,6 +4296,7 @@ class ConnectionOutput(
 
 # ConnectionPrediction MUST contain all fields for LLM inference.
 # Prediction fields for LLM-based connection inference.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionPrediction](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONPREDICTION)
 class ConnectionPrediction(
     ConnectionVField,
     ConnectionUField,
@@ -3915,6 +4316,7 @@ class ConnectionPrediction(
 
 # Connection MUST implement idMembers and inherit from the appropriate field mixins.
 # Connection entity linking two pieces through their connectors.
+# [🛠️semio/py/semio.py#Domain#Connection§Connection](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTION)
 class Connection(
     ConnectionVField,
     ConnectionUField,
@@ -4204,6 +4606,7 @@ class Connection(
 
 # ConnectionInputNode MUST expose the input model via Meta.
 # GraphQL input node for connection mutations.
+# [🛠️semio/py/semio.py#Domain#Connection§ConnectionInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/CONNECTION/CONNECTIONINPUTNODE)
 class ConnectionInputNode(InputNode):
     class Meta:
         model = ConnectionInput
@@ -4211,55 +4614,67 @@ class ConnectionInputNode(InputNode):
 # endregion Connection
 
 # region Stat
+
+# [🔖semio/py/semio.py#Stat](semiorepo://section/semio/py/semio.py/STAT)
 # Stat entity for recording computed statistics with bounds.
 
 # StatKeyField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the key of a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatKeyField](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATKEYFIELD)
 class StatKeyField(RealField, abc.ABC):
     key: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # StatUnitField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the unit of a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatUnitField](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATUNITFIELD)
 class StatUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # StatMinField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the min of a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatMinField](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATMINFIELD)
 class StatMinField(RealField, abc.ABC):
     min: typing.Optional[float] = sqlmodel.Field(default=None)
 
 # StatMinExcludedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the min excluded of a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatMinExcludedField](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATMINEXCLUDEDFIELD)
 class StatMinExcludedField(RealField, abc.ABC):
     min_excluded: bool = sqlmodel.Field(default=False)
 
 # StatMaxField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the max of a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatMaxField](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATMAXFIELD)
 class StatMaxField(RealField, abc.ABC):
     max: typing.Optional[float] = sqlmodel.Field(default=None)
 
 # StatMaxExcludedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the max excluded of a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatMaxExcludedField](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATMAXEXCLUDEDFIELD)
 class StatMaxExcludedField(RealField, abc.ABC):
     max_excluded: bool = sqlmodel.Field(default=False)
 
 # StatCreatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created of a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatCreatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATCREATEDFIELD)
 class StatCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # StatUpdatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated of a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatUpdatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATUPDATEDFIELD)
 class StatUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # StatId MUST contain all fields that uniquely identify a stat.
 # Identity fields for uniquely identifying a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatId](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATID)
 class StatId(StatKeyField, Id):
     pass
 
 # StatProps MUST contain all non-relational property fields.
 # Property fields for a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatProps](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATPROPS)
 class StatProps(
     StatUpdatedField,
     StatCreatedField,
@@ -4275,6 +4690,7 @@ class StatProps(
 
 # StatInput MUST contain all fields required for creation.
 # Input fields for creating or updating a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatInput](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATINPUT)
 class StatInput(
     StatMaxExcludedField,
     StatMaxField,
@@ -4288,6 +4704,7 @@ class StatInput(
 
 # StatOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a stat.
+# [🛠️semio/py/semio.py#Domain#Stat§StatOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STATOUTPUT)
 class StatOutput(
     StatUpdatedField,
     StatCreatedField,
@@ -4303,6 +4720,7 @@ class StatOutput(
 
 # Stat MUST implement idMembers and inherit from the appropriate field mixins.
 # Stat entity for recording computed statistics with bounds.
+# [🛠️semio/py/semio.py#Domain#Stat§Stat](semiorepo://definition/semio/py/semio.py/DOMAIN/STAT/STAT)
 class Stat(
     StatUpdatedField,
     StatCreatedField,
@@ -4332,95 +4750,115 @@ class Stat(
 # endregion Stat
 
 # region Design
+
+# [🔖semio/py/semio.py#Design](semiorepo://section/semio/py/semio.py/DESIGN)
 # Design entity for composing pieces and connections into assemblies.
 
 # DesignNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNNAMEFIELD)
 class DesignNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # DesignDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNDESCRIPTIONFIELD)
 class DesignDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # DesignIconField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the icon of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignIconField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNICONFIELD)
 class DesignIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # DesignImageField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the image of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignImageField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNIMAGEFIELD)
 class DesignImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # DesignVariantField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the variant of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignVariantField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNVARIANTFIELD)
 class DesignVariantField(RealField, abc.ABC):
     variant: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # DesignViewField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the view of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignViewField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNVIEWFIELD)
 class DesignViewField(RealField, abc.ABC):
     view: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # DesignParentField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the parent of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignParentField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNPARENTFIELD)
 class DesignParentField(RealField, abc.ABC):
     parent: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # DesignIsAbstractField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the is abstract of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignIsAbstractField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNISABSTRACTFIELD)
 class DesignIsAbstractField(RealField, abc.ABC):
     is_abstract: bool = sqlmodel.Field(default=False)
 
 # DesignFolderField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the folder of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignFolderField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNFOLDERFIELD)
 class DesignFolderField(RealField, abc.ABC):
     folder: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # DesignActiveLayerField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the active layer of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignActiveLayerField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNACTIVELAYERFIELD)
 class DesignActiveLayerField(RealField, abc.ABC):
     activeLayer: typing.Optional[str] = sqlmodel.Field(default=None, max_length=ID_LENGTH_LIMIT)
 
 # DesignLocationField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the location of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignLocationField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNLOCATIONFIELD)
 class DesignLocationField(MaskedField, abc.ABC):
     location: typing.Optional[Location] = sqlmodel.Field(default=None)
 
 # DesignUnitField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the unit of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignUnitField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNUNITFIELD)
 class DesignUnitField(RealField, abc.ABC):
     unit: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # DesignScalableField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the scalable of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignScalableField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNSCALABLEFIELD)
 class DesignScalableField(RealField, abc.ABC):
     can_scale: bool = sqlmodel.Field(default=True)
 
 # DesignMirrorableField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the mirrorable of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignMirrorableField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNMIRRORABLEFIELD)
 class DesignMirrorableField(RealField, abc.ABC):
     can_mirror: bool = sqlmodel.Field(default=True)
 
 # DesignCreatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignCreatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNCREATEDFIELD)
 class DesignCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # DesignUpdatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated of a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignUpdatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNUPDATEDFIELD)
 class DesignUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # DesignId MUST contain all fields that uniquely identify a design.
 # Identity fields for uniquely identifying a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignId](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNID)
 class DesignId(DesignNameField, DesignVariantField, Id):
     pass
 
 # DesignProps MUST contain all non-relational property fields.
 # Property fields for a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignProps](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNPROPS)
 class DesignProps(
     DesignUnitField,
     DesignViewField,
@@ -4440,6 +4878,7 @@ class DesignProps(
 
 # DesignInput MUST contain all fields required for creation.
 # Input fields for creating or updating a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignInput](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNINPUT)
 class DesignInput(
     DesignUnitField,
     DesignViewField,
@@ -4464,6 +4903,7 @@ class DesignInput(
 
 # DesignContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a design by an LLM.
+# [🛠️semio/py/semio.py#Domain#Design§DesignContext](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNCONTEXT)
 class DesignContext(
     DesignUnitField,
     DesignViewField,
@@ -4482,6 +4922,7 @@ class DesignContext(
 
 # DesignOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a design.
+# [🛠️semio/py/semio.py#Domain#Design§DesignOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNOUTPUT)
 class DesignOutput(
     DesignUpdatedField,
     DesignCreatedField,
@@ -4510,6 +4951,7 @@ class DesignOutput(
 
 # DesignPrediction MUST contain all fields for LLM inference.
 # Prediction fields for LLM-based design inference.
+# [🛠️semio/py/semio.py#Domain#Design§DesignPrediction](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNPREDICTION)
 class DesignPrediction(DesignDescriptionField, Prediction):
     pass
 
@@ -4518,6 +4960,7 @@ class DesignPrediction(DesignDescriptionField, Prediction):
 
 # Design MUST implement idMembers and inherit from the appropriate field mixins.
 # Design entity composing pieces and connections into an assembly.
+# [🛠️semio/py/semio.py#Domain#Design§Design](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGN)
 class Design(
     DesignNameField,
     DesignVariantField,
@@ -4713,18 +5156,21 @@ class Design(
 
 # NoDesignAssigned MUST fulfill its documented contract.
 # No Design Assigned definition.
+# [🛠️semio/py/semio.py#Domain#Design§NoDesignAssigned](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/NODESIGNASSIGNED)
 class NoDesignAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent design assigned."
 
 # DesignInputNode MUST expose the input model via Meta.
 # GraphQL input node for design mutations.
+# [🛠️semio/py/semio.py#Domain#Design§DesignInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNINPUTNODE)
 class DesignInputNode(InputNode):
     class Meta:
         model = DesignInput
 
 # DesignIdInputNode MUST expose the input model via Meta.
 # GraphQL input node for design id mutations.
+# [🛠️semio/py/semio.py#Domain#Design§DesignIdInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/DESIGN/DESIGNIDINPUTNODE)
 class DesignIdInputNode(InputNode):
     class Meta:
         model = DesignId
@@ -4732,75 +5178,91 @@ class DesignIdInputNode(InputNode):
 # endregion Design
 
 # region Kit
+
+# [🔖semio/py/semio.py#Kit](semiorepo://section/semio/py/semio.py/KIT)
 # Kit entity for packaging types, designs, qualities and metadata.
 
 # KitUriField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the uri of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitUriField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITURIFIELD)
 class KitUriField(RealField, abc.ABC):
     uri: str = sqlmodel.Field(max_length=URI_LENGTH_LIMIT)
 
 # KitNameField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the name of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitNameField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITNAMEFIELD)
 class KitNameField(RealField, abc.ABC):
     name: str = sqlmodel.Field(max_length=NAME_LENGTH_LIMIT)
 
 # KitDescriptionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the description of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitDescriptionField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITDESCRIPTIONFIELD)
 class KitDescriptionField(RealField, abc.ABC):
     description: str = sqlmodel.Field(default="", max_length=DESCRIPTION_LENGTH_LIMIT)
 
 # KitIconField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the icon of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitIconField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITICONFIELD)
 class KitIconField(RealField, abc.ABC):
     icon: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # KitImageField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the image of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitImageField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITIMAGEFIELD)
 class KitImageField(RealField, abc.ABC):
     image: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # KitPreviewField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the preview of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitPreviewField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITPREVIEWFIELD)
 class KitPreviewField(RealField, abc.ABC):
     preview: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # KitVersionField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the version of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitVersionField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITVERSIONFIELD)
 class KitVersionField(RealField, abc.ABC):
     version: str = sqlmodel.Field(default="", max_length=NAME_LENGTH_LIMIT)
 
 # KitRemoteField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the remote of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitRemoteField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITREMOTEFIELD)
 class KitRemoteField(RealField, abc.ABC):
     remote: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # KitHomepageField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the homepage of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitHomepageField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITHOMEPAGEFIELD)
 class KitHomepageField(RealField, abc.ABC):
     homepage: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # KitLicenseField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the license of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitLicenseField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITLICENSEFIELD)
 class KitLicenseField(RealField, abc.ABC):
     license: str = sqlmodel.Field(default="", max_length=URL_LENGTH_LIMIT)
 
 # KitCreatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the created of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitCreatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITCREATEDFIELD)
 class KitCreatedField(RealField, abc.ABC):
     created: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # KitUpdatedField MUST declare exactly one field with appropriate constraints.
 # Field mixin for the updated of a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitUpdatedField](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITUPDATEDFIELD)
 class KitUpdatedField(RealField, abc.ABC):
     updated: datetime.datetime = sqlmodel.Field(default_factory=datetime.datetime.now)
 
 # KitId MUST contain all fields that uniquely identify a kit.
 # Identity fields for uniquely identifying a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitId](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITID)
 class KitId(KitUriField, Id):
     pass
 
 # KitProps MUST contain all non-relational property fields.
 # Property fields for a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitProps](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITPROPS)
 class KitProps(
     KitLicenseField,
     KitHomepageField,
@@ -4818,6 +5280,7 @@ class KitProps(
 
 # KitInput MUST contain all fields required for creation.
 # Input fields for creating or updating a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitInput](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITINPUT)
 class KitInput(
     KitLicenseField,
     KitHomepageField,
@@ -4840,6 +5303,7 @@ class KitInput(
 
 # KitContext MUST contain all fields needed for LLM understanding.
 # Context fields for understanding a kit by an LLM.
+# [🛠️semio/py/semio.py#Domain#Kit§KitContext](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITCONTEXT)
 class KitContext(KitDescriptionField, KitNameField, Context):
     pass
 
@@ -4849,6 +5313,7 @@ class KitContext(KitDescriptionField, KitNameField, Context):
 
 # KitOutput MUST contain all fields returned on fetch.
 # Output fields returned when fetching a kit.
+# [🛠️semio/py/semio.py#Domain#Kit§KitOutput](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KITOUTPUT)
 class KitOutput(
     KitUpdatedField,
     KitCreatedField,
@@ -4874,6 +5339,7 @@ class KitOutput(
 
 # Kit MUST implement idMembers and inherit from the appropriate field mixins.
 # Kit entity packaging types, designs, qualities and metadata.
+# [🛠️semio/py/semio.py#Domain#Kit§Kit](semiorepo://definition/semio/py/semio.py/DOMAIN/KIT/KIT)
 class Kit(
     KitNameField,
     KitVersionField,
@@ -5004,6 +5470,8 @@ class Kit(
         return self.id()
 
     # region Design Family Helpers
+
+# [🔖semio/py/semio.py#Design Family Helpers](semiorepo://section/semio/py/semio.py/DESIGN-FAMILY-HELPERS)
 # Helper functions for querying design hierarchies and families.
 
     def find_design_by_guid(self, design_guid: str) -> "Design":
@@ -5108,6 +5576,8 @@ class Kit(
     # endregion Design Family Helpers
 
     # region Type Family Helpers
+
+# [🔖semio/py/semio.py#Type Family Helpers](semiorepo://section/semio/py/semio.py/TYPE-FAMILY-HELPERS)
 # Helper functions for querying type hierarchies and families.
 
     def find_type_by_guid(self, type_guid: str) -> "Type":
@@ -5187,28 +5657,34 @@ class Kit(
 # endregion Kit
 
 # region Moved Graphene Nodes
+
+# [🔖semio/py/semio.py#Moved Graphene Nodes](semiorepo://section/semio/py/semio.py/MOVED-GRAPHENE-NODES)
 # Graphene node definitions moved here due to forward-reference resolution order.
 
 # AttributeNode MUST expose the model via Meta.
 # GraphQL node exposing attribute data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§AttributeNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/ATTRIBUTENODE)
 class AttributeNode(TableEntityNode):
     class Meta:
         model = Attribute
 
 # PlaneNode MUST expose the model via Meta.
 # GraphQL node exposing plane data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§PlaneNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/PLANENODE)
 class PlaneNode(TableNode):
     class Meta:
         model = Plane
 
 # AuthorNode MUST expose the model via Meta.
 # GraphQL node exposing author data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§AuthorNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/AUTHORNODE)
 class AuthorNode(TableEntityNode):
     class Meta:
         model = Author
 
 # ModelNode MUST expose the model via Meta.
 # GraphQL node exposing model data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§ModelNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/MODELNODE)
 class ModelNode(TableEntityNode):
     class Meta:
         model = Model
@@ -5216,6 +5692,7 @@ class ModelNode(TableEntityNode):
 
 # ConnectorNode MUST expose the model via Meta.
 # GraphQL node exposing connector data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§ConnectorNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/CONNECTORNODE)
 class ConnectorNode(TableEntityNode):
     class Meta:
         model = Connector
@@ -5228,12 +5705,14 @@ class ConnectorNode(TableEntityNode):
 
 # TypeNode MUST expose the model via Meta.
 # GraphQL node exposing type data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§TypeNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/TYPENODE)
 class TypeNode(TableEntityNode):
     class Meta:
         model = Type
 
 # PieceNode MUST expose the model via Meta.
 # GraphQL node exposing piece data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§PieceNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/PIECENODE)
 class PieceNode(TableEntityNode):
     class Meta:
         model = Piece
@@ -5246,6 +5725,7 @@ class PieceNode(TableEntityNode):
 
 # ConnectionNode MUST expose the model via Meta.
 # GraphQL node exposing connection data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§ConnectionNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/CONNECTIONNODE)
 class ConnectionNode(TableEntityNode):
     class Meta:
         model = Connection
@@ -5267,12 +5747,14 @@ class ConnectionNode(TableEntityNode):
 
 # DesignNode MUST expose the model via Meta.
 # GraphQL node exposing design data.
+# [🛠️semio/py/semio.py#Domain#Moved Graphene Nodes§DesignNode](semiorepo://definition/semio/py/semio.py/DOMAIN/MOVED-GRAPHENE-NODES/DESIGNNODE)
 class DesignNode(TableEntityNode):
     class Meta:
         model = Design
 
 # endregion Moved Graphene Nodes
 # KitNotFound MUST provide a descriptive error message via __str__.
+# [🛠️semio/py/semio.py#Domain§KitNotFound](semiorepo://definition/semio/py/semio.py/DOMAIN/KITNOTFOUND)
 class KitNotFound(NotFound):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -5282,6 +5764,7 @@ class KitNotFound(NotFound):
 
 # NoKitToDelete MUST fulfill its documented contract.
 # No Kit To Delete definition.
+# [🛠️semio/py/semio.py#Domain§NoKitToDelete](semiorepo://definition/semio/py/semio.py/DOMAIN/NOKITTODELETE)
 class NoKitToDelete(KitNotFound):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -5291,6 +5774,7 @@ class NoKitToDelete(KitNotFound):
 
 # KitZipDoesNotContainSemioFolder MUST fulfill its documented contract.
 # Kit Zip Does Not Contain Semio Folder definition.
+# [🛠️semio/py/semio.py#Domain§KitZipDoesNotContainSemioFolder](semiorepo://definition/semio/py/semio.py/DOMAIN/KITZIPDOESNOTCONTAINSEMIOFOLDER)
 class KitZipDoesNotContainSemioFolder(KitNotFound):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -5300,6 +5784,7 @@ class KitZipDoesNotContainSemioFolder(KitNotFound):
 
 # OnlyRemoteKitsCanBeCached MUST fulfill its documented contract.
 # Only Remote Kits Can Be Cached definition.
+# [🛠️semio/py/semio.py#Domain§OnlyRemoteKitsCanBeCached](semiorepo://definition/semio/py/semio.py/DOMAIN/ONLYREMOTEKITSCANBECACHED)
 class OnlyRemoteKitsCanBeCached(ClientError):
     def __init__(self, nonRemoteUri: str) -> None:
         self.nonRemoteUri = nonRemoteUri
@@ -5309,16 +5794,19 @@ class OnlyRemoteKitsCanBeCached(ClientError):
 
 # KitUriNotValid MUST be subclassed and MUST NOT be instantiated directly.
 # Kit Uri Not Valid definition.
+# [🛠️semio/py/semio.py#Domain§KitUriNotValid](semiorepo://definition/semio/py/semio.py/DOMAIN/KITURINOTVALID)
 class KitUriNotValid(ClientError, abc.ABC):
     """🆔 The base for all kit uri not valid errors."""
 
 # LocalKitUriNotValid MUST be subclassed and MUST NOT be instantiated directly.
 # Local Kit Uri Not Valid definition.
+# [🛠️semio/py/semio.py#Domain§LocalKitUriNotValid](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCALKITURINOTVALID)
 class LocalKitUriNotValid(KitUriNotValid, abc.ABC):
     """📂 The base for all local kit uri not valid errors."""
 
 # LocalKitUriIsNotAbsolute MUST fulfill its documented contract.
 # Local Kit Uri Is Not Absolute definition.
+# [🛠️semio/py/semio.py#Domain§LocalKitUriIsNotAbsolute](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCALKITURIISNOTABSOLUTE)
 class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -5328,6 +5816,7 @@ class LocalKitUriIsNotAbsolute(LocalKitUriNotValid):
 
 # LocalKitUriIsNotDirectory MUST fulfill its documented contract.
 # Local Kit Uri Is Not Directory definition.
+# [🛠️semio/py/semio.py#Domain§LocalKitUriIsNotDirectory](semiorepo://definition/semio/py/semio.py/DOMAIN/LOCALKITURIISNOTDIRECTORY)
 class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -5337,12 +5826,14 @@ class LocalKitUriIsNotDirectory(LocalKitUriNotValid):
 
 # NoKitAssigned MUST fulfill its documented contract.
 # No Kit Assigned definition.
+# [🛠️semio/py/semio.py#Domain§NoKitAssigned](semiorepo://definition/semio/py/semio.py/DOMAIN/NOKITASSIGNED)
 class NoKitAssigned(NoParentAssigned):
     def __str__(self):
         return "👪 The entity has no parent kit assigned."
 
 # KitAlreadyExists MUST provide a descriptive error message via __str__.
 # Exception for attempting to create a kit that already exists.
+# [🛠️semio/py/semio.py#Domain§KitAlreadyExists](semiorepo://definition/semio/py/semio.py/DOMAIN/KITALREADYEXISTS)
 class KitAlreadyExists(AlreadyExists, abc.ABC):
     def __init__(self, uri: str) -> None:
         self.uri = uri
@@ -5352,12 +5843,14 @@ class KitAlreadyExists(AlreadyExists, abc.ABC):
 
 # KitInputNode MUST expose the input model via Meta.
 # GraphQL input node for kit mutations.
+# [🛠️semio/py/semio.py#Domain§KitInputNode](semiorepo://definition/semio/py/semio.py/DOMAIN/KITINPUTNODE)
 class KitInputNode(InputNode):
     class Meta:
         model = KitInput
 
 # KitNode MUST expose the model via Meta.
 # GraphQL node exposing kit data.
+# [🛠️semio/py/semio.py#Domain§KitNode](semiorepo://definition/semio/py/semio.py/DOMAIN/KITNODE)
 class KitNode(TableEntityNode):
     class Meta:
         model = Kit
@@ -5365,11 +5858,14 @@ class KitNode(TableEntityNode):
 # endregion Domain
 
 # region Validation
+
+# [🔖semio/py/semio.py#Validation](semiorepo://section/semio/py/semio.py/VALIDATION)
 # Validation logic for checking kit constraints and uniqueness rules.
 
 @dataclasses.dataclass
 # ValidationFix MUST contain a non-empty title and a valid diff dictionary.
 # A proposed fix for a validation problem with a title and diff.
+# [🛠️semio/py/semio.py#Validation§ValidationFix](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATIONFIX)
 class ValidationFix:
     title: str
     diff: dict
@@ -5380,6 +5876,7 @@ class ValidationFix:
 @dataclasses.dataclass
 # Problem MUST contain a non-empty constraint identifier and message.
 # A validation problem with a constraint identifier and message.
+# [🛠️semio/py/semio.py#Validation§Problem](semiorepo://definition/semio/py/semio.py/VALIDATION/PROBLEM)
 class Problem:
     constraintId: str
     message: str
@@ -5399,6 +5896,7 @@ class Problem:
 @dataclasses.dataclass
 # ValidationResult MUST aggregate all problems and fixes for a single entity.
 # A validation result aggregating problems and fixes for an entity.
+# [🛠️semio/py/semio.py#Validation§ValidationResult](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATIONRESULT)
 class ValidationResult:
     problems: list[Problem]
 
@@ -5436,6 +5934,7 @@ def _normalizeGuids(obj: typing.Any) -> typing.Any:
 
 # areValidationResultsEqual MUST compare all problems and fixes.
 # Check whether two validation results are semantically equal.
+# [🛠️semio/py/semio.py#Validation§areValidationResultsEqual](semiorepo://definition/semio/py/semio.py/VALIDATION/AREVALIDATIONRESULTSEQUAL)
 def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
     if len(a.problems) != len(b.problems):
         return False
@@ -5458,6 +5957,7 @@ def areValidationResultsEqual(a: ValidationResult, b: ValidationResult) -> bool:
 
 # parseValidationResult MUST return a ValidationResult from a dict.
 # Parse a validation result from a dictionary representation.
+# [🛠️semio/py/semio.py#Validation§parseValidationResult](semiorepo://definition/semio/py/semio.py/VALIDATION/PARSEVALIDATIONRESULT)
 def parseValidationResult(jsonStr: str) -> ValidationResult:
     data = json.loads(jsonStr)
     problems = []
@@ -5476,6 +5976,7 @@ def parseValidationResult(jsonStr: str) -> ValidationResult:
 
 # validateGuidUniqueness MUST report duplicate GUIDs as problems.
 # Validate that all GUIDs within a collection are unique.
+# [🛠️semio/py/semio.py#Validation§validateGuidUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEGUIDUNIQUENESS)
 def validateGuidUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     seen: dict[str, str] = {}
@@ -5514,6 +6015,7 @@ def validateGuidUniqueness(kit: Kit) -> list[Problem]:
 
 # validateTypeNameUniqueness MUST report duplicate type names as problems.
 # Validate that all type names within a kit are unique.
+# [🛠️semio/py/semio.py#Validation§validateTypeNameUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATETYPENAMEUNIQUENESS)
 def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Type]] = {}
@@ -5543,6 +6045,7 @@ def validateTypeNameUniqueness(kit: Kit) -> list[Problem]:
 
 # validateDesignNameUniqueness MUST report duplicate design names as problems.
 # Validate that all design names within a kit are unique.
+# [🛠️semio/py/semio.py#Validation§validateDesignNameUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEDESIGNNAMEUNIQUENESS)
 def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Design]] = {}
@@ -5572,6 +6075,7 @@ def validateDesignNameUniqueness(kit: Kit) -> list[Problem]:
 
 # validatePieceNameUniqueness MUST report duplicate piece names as problems.
 # Validate that all piece names within a design are unique.
+# [🛠️semio/py/semio.py#Validation§validatePieceNameUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEPIECENAMEUNIQUENESS)
 def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for design in kit.designs or []:
@@ -5596,6 +6100,7 @@ def validatePieceNameUniqueness(kit: Kit) -> list[Problem]:
 
 # validatePortNameUniqueness MUST report duplicate port names as problems.
 # Validate that all port names within a type are unique.
+# [🛠️semio/py/semio.py#Validation§validatePortNameUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEPORTNAMEUNIQUENESS)
 def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for t in kit.types or []:
@@ -5620,6 +6125,7 @@ def validatePortNameUniqueness(kit: Kit) -> list[Problem]:
 
 # validateModelNameUniqueness MUST report duplicate model names as problems.
 # Validate that all model names within a type are unique.
+# [🛠️semio/py/semio.py#Validation§validateModelNameUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEMODELNAMEUNIQUENESS)
 def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for t in kit.types or []:
@@ -5644,6 +6150,7 @@ def validateModelNameUniqueness(kit: Kit) -> list[Problem]:
 
 # validateQualityNameUniqueness MUST report duplicate quality names as problems.
 # Validate that all quality names within a kit are unique.
+# [🛠️semio/py/semio.py#Validation§validateQualityNameUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEQUALITYNAMEUNIQUENESS)
 def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     names: dict[str, list[Quality]] = {}
@@ -5666,6 +6173,7 @@ def validateQualityNameUniqueness(kit: Kit) -> list[Problem]:
 
 # validateFileNameUniqueness MUST report duplicate file names as problems.
 # Validate that all file names within a kit are unique.
+# [🛠️semio/py/semio.py#Validation§validateFileNameUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEFILENAMEUNIQUENESS)
 def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     names: dict[str, list[File]] = {}
@@ -5688,6 +6196,7 @@ def validateFileNameUniqueness(kit: Kit) -> list[Problem]:
 
 # validateFolderNameUniqueness MUST report duplicate folder names as problems.
 # Validate that all folder names within a kit are unique.
+# [🛠️semio/py/semio.py#Validation§validateFolderNameUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEFOLDERNAMEUNIQUENESS)
 def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     byParent: dict[str | None, list[Folder]] = {}
@@ -5717,6 +6226,7 @@ def validateFolderNameUniqueness(kit: Kit) -> list[Problem]:
 
 # validateLayerPathUniqueness MUST report duplicate layer paths as problems.
 # Validate that all layer paths within a design are unique.
+# [🛠️semio/py/semio.py#Validation§validateLayerPathUniqueness](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATELAYERPATHUNIQUENESS)
 def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
     problems: list[Problem] = []
     for design in kit.designs or []:
@@ -5740,6 +6250,7 @@ def validateLayerPathUniqueness(kit: Kit) -> list[Problem]:
 
 # validateKit MUST run all validation checks and return aggregated results.
 # Validate a kit entity against all constraint rules.
+# [🛠️semio/py/semio.py#Validation§validateKit](semiorepo://definition/semio/py/semio.py/VALIDATION/VALIDATEKIT)
 def validateKit(kit: Kit) -> ValidationResult:
     problems: list[Problem] = []
     problems.extend(validateGuidUniqueness(kit))
@@ -5755,6 +6266,8 @@ def validateKit(kit: Kit) -> ValidationResult:
     return ValidationResult(problems=problems)
 
 # region Dict-based Validation
+
+# [🔖semio/py/semio.py#Dict-based Validation](semiorepo://section/semio/py/semio.py/DICT-BASED-VALIDATION)
 # Dictionary-based validation functions for kit data integrity.
 
 def _makeFix(title: str, diff: dict) -> ValidationFix:
@@ -5770,6 +6283,7 @@ def _newGuid() -> str:
 
 # validateKitDict MUST validate a kit dictionary and return results.
 # Validate a kit dictionary against all constraint rules.
+# [🛠️semio/py/semio.py#Validation#Dict-based Validation§validateKitDict](semiorepo://definition/semio/py/semio.py/VALIDATION/DICT-BASED-VALIDATION/VALIDATEKITDICT)
 def validateKitDict(kit: dict) -> ValidationResult:
     problems: list[Problem] = []
     seen: dict[str, str] = {}
@@ -6239,10 +6753,13 @@ def validateKitDict(kit: dict) -> ValidationResult:
 # endregion Validation
 
 # region Graph Operations
+
+# [🔖semio/py/semio.py#Graph Operations](semiorepo://section/semio/py/semio.py/GRAPH-OPERATIONS)
 # Graph construction and traversal for piece connectivity analysis.
 
 # buildPieceGraph MUST return a networkx graph with pieces as nodes.
 # Build a networkx graph from pieces and connections.
+# [🛠️semio/py/semio.py#Graph Operations§buildPieceGraph](semiorepo://definition/semio/py/semio.py/GRAPH-OPERATIONS/BUILDPIECEGRAPH)
 def buildPieceGraph(design: Design | dict) -> networkx.Graph:
     G = networkx.Graph()
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
@@ -6263,6 +6780,7 @@ def buildPieceGraph(design: Design | dict) -> networkx.Graph:
 
 # findFixedPieces MUST return pieces that have no incoming connections.
 # Find all pieces that are fixed in the design hierarchy.
+# [🛠️semio/py/semio.py#Graph Operations§findFixedPieces](semiorepo://definition/semio/py/semio.py/GRAPH-OPERATIONS/FINDFIXEDPIECES)
 def findFixedPieces(design: Design | dict) -> list[str]:
     pieces = design.get("pieces", []) if isinstance(design, dict) else design.pieces
     result = []
@@ -6277,12 +6795,14 @@ def findFixedPieces(design: Design | dict) -> list[str]:
 
 # getConnectedComponents MUST return disjoint piece groups.
 # Get connected components of the piece graph.
+# [🛠️semio/py/semio.py#Graph Operations§getConnectedComponents](semiorepo://definition/semio/py/semio.py/GRAPH-OPERATIONS/GETCONNECTEDCOMPONENTS)
 def getConnectedComponents(design: Design | dict) -> list[set[str]]:
     G = buildPieceGraph(design)
     return [set(c) for c in networkx.connected_components(G)]
 
 # getPieceHierarchy MUST return a topological ordering of pieces.
 # Get the hierarchical ordering of pieces from root to leaf.
+# [🛠️semio/py/semio.py#Graph Operations§getPieceHierarchy](semiorepo://definition/semio/py/semio.py/GRAPH-OPERATIONS/GETPIECEHIERARCHY)
 def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
     G = buildPieceGraph(design)
     if rootGuid not in G:
@@ -6292,10 +6812,13 @@ def getPieceHierarchy(design: Design | dict, rootGuid: str) -> dict[str, int]:
 # endregion Graph Operations
 
 # region FlattenDesign
+
+# [🔖semio/py/semio.py#FlattenDesign](semiorepo://section/semio/py/semio.py/FLATTENDESIGN)
 # Design flattening to resolve nested sub-designs into a single coordinate space.
 
 # getTypeByGuid MUST return the type dict or raise if not found.
 # Look up a type by its GUID within a kit dictionary.
+# [🛠️semio/py/semio.py#FlattenDesign§getTypeByGuid](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/GETTYPEBYGUID)
 def getTypeByGuid(kit: dict, guid: str) -> dict | None:
     for t in kit.get("types", []):
         if t.get("guid") == guid:
@@ -6304,6 +6827,7 @@ def getTypeByGuid(kit: dict, guid: str) -> dict | None:
 
 # getConnectorFromType MUST return the matching connector dict.
 # Look up a connector by name from a type dictionary.
+# [🛠️semio/py/semio.py#FlattenDesign§getConnectorFromType](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/GETCONNECTORFROMTYPE)
 def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | None) -> dict | None:
     if typeData is None:
         return None
@@ -6330,6 +6854,7 @@ def getConnectorFromType(kit: dict, typeData: dict | None, connectorGuid: str | 
 
 # planeToMatrixDict MUST produce a valid 4x4 homogeneous matrix.
 # Convert a plane dictionary to a 4x4 transformation matrix.
+# [🛠️semio/py/semio.py#FlattenDesign§planeToMatrixDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/PLANETOMATRIXDICT)
 def planeToMatrixDict(plane: dict) -> numpy.ndarray:
     origin = numpy.array([plane["origin"]["x"], plane["origin"]["y"], plane["origin"]["z"]])
     xAxis = numpy.array([plane["xAxis"]["x"], plane["xAxis"]["y"], plane["xAxis"]["z"]])
@@ -6345,6 +6870,7 @@ def planeToMatrixDict(plane: dict) -> numpy.ndarray:
 
 # matrixToPlaneDict MUST extract origin, xAxis and yAxis from the matrix.
 # Convert a 4x4 transformation matrix to a plane dictionary.
+# [🛠️semio/py/semio.py#FlattenDesign§matrixToPlaneDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/MATRIXTOPLANEDICT)
 def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
     origin = matrix[:3, 3]
     xAxis = matrix[:3, 0]
@@ -6357,6 +6883,7 @@ def matrixToPlaneDict(matrix: numpy.ndarray) -> dict:
 
 # quaternionFromUnitVectorsDict MUST compute the shortest rotation quaternion.
 # Compute a quaternion rotating one unit vector onto another.
+# [🛠️semio/py/semio.py#FlattenDesign§quaternionFromUnitVectorsDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/QUATERNIONFROMUNITVECTORSDICT)
 def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> numpy.ndarray:
     r = numpy.dot(vFrom, vTo) + 1
     if r < 0.000001:
@@ -6371,6 +6898,7 @@ def quaternionFromUnitVectorsDict(vFrom: numpy.ndarray, vTo: numpy.ndarray) -> n
 
 # quaternionFromAxisAngleDict MUST compute the quaternion for the given rotation.
 # Compute a quaternion from an axis-angle representation.
+# [🛠️semio/py/semio.py#FlattenDesign§quaternionFromAxisAngleDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/QUATERNIONFROMAXISANGLEDICT)
 def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
     halfAngle = angle / 2
     s = numpy.sin(halfAngle)
@@ -6378,6 +6906,7 @@ def quaternionFromAxisAngleDict(axis: numpy.ndarray, angle: float) -> numpy.ndar
 
 # quaternionToMatrixDict MUST produce a valid 3x3 rotation matrix.
 # Convert a quaternion to a 3x3 rotation matrix.
+# [🛠️semio/py/semio.py#FlattenDesign§quaternionToMatrixDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/QUATERNIONTOMATRIXDICT)
 def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
     x, y, z, w = q
     x2, y2, z2 = x + x, y + y, z + z
@@ -6398,11 +6927,13 @@ def quaternionToMatrixDict(q: numpy.ndarray) -> numpy.ndarray:
 
 # makeRotationAxisDict MUST return a 4x4 rotation matrix around the axis.
 # Create a 4x4 rotation matrix around an arbitrary axis.
+# [🛠️semio/py/semio.py#FlattenDesign§makeRotationAxisDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/MAKEROTATIONAXISDICT)
 def makeRotationAxisDict(axis: numpy.ndarray, angle: float) -> numpy.ndarray:
     return quaternionToMatrixDict(quaternionFromAxisAngleDict(axis, angle))
 
 # makeTranslationDict MUST return a 4x4 translation matrix.
 # Create a 4x4 translation matrix from a displacement vector.
+# [🛠️semio/py/semio.py#FlattenDesign§makeTranslationDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/MAKETRANSLATIONDICT)
 def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
     m = numpy.eye(4)
     m[0, 3] = x
@@ -6412,6 +6943,7 @@ def makeTranslationDict(x: float, y: float, z: float) -> numpy.ndarray:
 
 # applyMatrix4ToVec3Dict MUST apply the full affine transformation.
 # Apply a 4x4 matrix to a 3D vector dictionary.
+# [🛠️semio/py/semio.py#FlattenDesign§applyMatrix4ToVec3Dict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/APPLYMATRIX4TOVEC3DICT)
 def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
     return numpy.array(
         [
@@ -6423,6 +6955,7 @@ def applyMatrix4ToVec3Dict(m: numpy.ndarray, v: numpy.ndarray) -> numpy.ndarray:
 
 # computeChildPlaneDict MUST compose parent and local transformations correctly.
 # Compute the world-space plane of a child piece from parent and local planes.
+# [🛠️semio/py/semio.py#FlattenDesign§computeChildPlaneDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/COMPUTECHILDPLANEDICT)
 def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnector: dict, connection: dict) -> dict:
     parentMatrix = planeToMatrixDict(parentPlane)
     parentPoint = numpy.array([parentConnector["point"]["x"], parentConnector["point"]["y"], parentConnector["point"]["z"]])
@@ -6486,6 +7019,7 @@ def computeChildPlaneDict(parentPlane: dict, parentConnector: dict, childConnect
 
 # flattenDesignDict MUST resolve all nested designs into world coordinates.
 # Flatten a nested design hierarchy into a single flat coordinate space.
+# [🛠️semio/py/semio.py#FlattenDesign§flattenDesignDict](semiorepo://definition/semio/py/semio.py/FLATTENDESIGN/FLATTENDESIGNDICT)
 def flattenDesignDict(kit: dict, designGuid: str) -> dict:
     design = next((d for d in kit.get("designs", []) if d.get("guid") == designGuid), None)
     if design is None:
@@ -6591,6 +7125,8 @@ def flattenDesignDict(kit: dict, designGuid: str) -> dict:
 # endregion FlattenDesign
 
 # region Kit Diff Operations
+
+# [🔖semio/py/semio.py#Kit Diff Operations](semiorepo://section/semio/py/semio.py/KIT-DIFF-OPERATIONS)
 # Diffing and patching operations for comparing and merging kit versions.
 
 def _normalizeValue(value: typing.Any) -> typing.Any:
@@ -6613,6 +7149,7 @@ def _normalizeArray(arr: list | None) -> list:
 
 # areAttributesEqualDict MUST compare all attribute fields for equality.
 # Check whether two attribute dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areAttributesEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREATTRIBUTESEQUALDICT)
 def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6637,6 +7174,7 @@ def areAttributesEqualDict(a: list | None, b: list | None, strict: bool = False)
 
 # arePropsEqualDict MUST compare all prop fields for equality.
 # Check whether two prop dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§arePropsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREPROPSEQUALDICT)
 def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6663,6 +7201,7 @@ def arePropsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 # arePortsEqualDict MUST compare all port fields for equality.
 # Check whether two port dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§arePortsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREPORTSEQUALDICT)
 def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6703,6 +7242,7 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 # areModelsEqualDict MUST compare all model fields for equality.
 # Check whether two model dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areModelsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREMODELSEQUALDICT)
 def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6736,6 +7276,7 @@ def areModelsEqualDict(a: list | None, b: list | None, strict: bool = False) -> 
 
 # areTypesEqualDict MUST compare all type fields including children for equality.
 # Check whether two type dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areTypesEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/ARETYPESEQUALDICT)
 def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6811,6 +7352,7 @@ def areTypesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 # arePiecesEqualDict MUST compare all piece fields for equality.
 # Check whether two piece dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§arePiecesEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREPIECESEQUALDICT)
 def arePiecesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6897,6 +7439,7 @@ def _getGuidFromRef(ref: typing.Any) -> str | None:
 
 # areConnectionsEqualDict MUST compare all connection fields for equality.
 # Check whether two connection dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areConnectionsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/ARECONNECTIONSEQUALDICT)
 def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -6952,6 +7495,7 @@ def areConnectionsEqualDict(a: list | None, b: list | None, strict: bool = False
 
 # areDesignsEqualDict MUST compare all design fields including children for equality.
 # Check whether two design dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areDesignsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREDESIGNSEQUALDICT)
 def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7007,6 +7551,7 @@ def areDesignsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 # arePortsEqualDict MUST compare all port fields for equality.
 # Check whether two port dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§arePortsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREPORTSEQUALDICT)
 def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7031,6 +7576,7 @@ def arePortsEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 # areQualitiesEqualDict MUST compare all quality fields for equality.
 # Check whether two quality dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areQualitiesEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREQUALITIESEQUALDICT)
 def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7055,6 +7601,7 @@ def areQualitiesEqualDict(a: list | None, b: list | None, strict: bool = False) 
 
 # areFilesEqualDict MUST compare all file fields for equality.
 # Check whether two file dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areFilesEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREFILESEQUALDICT)
 def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7075,6 +7622,7 @@ def areFilesEqualDict(a: list | None, b: list | None, strict: bool = False) -> b
 
 # areFoldersEqualDict MUST compare all folder fields for equality.
 # Check whether two folder dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areFoldersEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREFOLDERSEQUALDICT)
 def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7097,6 +7645,7 @@ def areFoldersEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 # areAuthorsEqualDict MUST compare all author fields for equality.
 # Check whether two author dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areAuthorsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREAUTHORSEQUALDICT)
 def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7121,6 +7670,7 @@ def areAuthorsEqualDict(a: list | None, b: list | None, strict: bool = False) ->
 
 # areConceptsEqualDict MUST compare all concept fields for equality.
 # Check whether two concept dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areConceptsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/ARECONCEPTSEQUALDICT)
 def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7145,6 +7695,7 @@ def areConceptsEqualDict(a: list | None, b: list | None, strict: bool = False) -
 
 # areTagsEqualDict MUST compare all tag fields for equality.
 # Check whether two tag dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areTagsEqualDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/ARETAGSEQUALDICT)
 def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bool:
     arrA = _normalizeArray(a)
     arrB = _normalizeArray(b)
@@ -7169,6 +7720,7 @@ def areTagsEqualDict(a: list | None, b: list | None, strict: bool = False) -> bo
 
 # areKitsDictEqual MUST compare all kit fields and children recursively.
 # Check whether two kit dictionaries are semantically equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areKitsDictEqual](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREKITSDICTEQUAL)
 def areKitsDictEqual(a: dict, b: dict, strict: bool = False) -> bool:
     """Deep equality check for kits (dict-based) - recursively compares all properties including nested entities.
 
@@ -7732,6 +8284,7 @@ def _inverseAttributeDiff(original: dict, appliedDiff: dict) -> dict:
 
 # getKitDiffDict MUST identify all added, removed and changed entities.
 # Compute the difference between two kit dictionaries.
+# [🛠️semio/py/semio.py#Kit Diff Operations§getKitDiffDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/GETKITDIFFDICT)
 def getKitDiffDict(before: dict, after: dict) -> dict:
     """Compute the diff between two kit dicts."""
     diff: dict = {}
@@ -7797,6 +8350,7 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
 
 # applyKitDiffDict MUST apply additions, removals and changes correctly.
 # Apply a kit diff to a kit dictionary to produce an updated kit.
+# [🛠️semio/py/semio.py#Kit Diff Operations§applyKitDiffDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/APPLYKITDIFFDICT)
 def applyKitDiffDict(base: dict, diff: dict) -> dict:
     """Apply a diff to a kit dict."""
     result = dict(base)
@@ -8017,6 +8571,7 @@ def _inverseAuthorDiff(original: dict, appliedDiff: dict) -> dict:
 
 # inverseKitDiffDict MUST swap additions and removals to reverse the diff.
 # Invert a kit diff to reverse its effect.
+# [🛠️semio/py/semio.py#Kit Diff Operations§inverseKitDiffDict](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/INVERSEKITDIFFDICT)
 def inverseKitDiffDict(original: dict, appliedDiff: dict) -> dict:
     """Compute the inverse of a kit diff."""
     inverse: dict = {}
@@ -8089,6 +8644,7 @@ def _extractUpdateGuid(update: dict, entityKeys: list[str]) -> str:
 
 # areKitDiffsDictEqual MUST compare all diff entries for equality.
 # Check whether two kit diff dictionaries are equal.
+# [🛠️semio/py/semio.py#Kit Diff Operations§areKitDiffsDictEqual](semiorepo://definition/semio/py/semio.py/KIT-DIFF-OPERATIONS/AREKITDIFFSDICTEQUAL)
 def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
     """Deep equality check for kit diffs."""
     keys = [
@@ -8138,10 +8694,13 @@ def areKitDiffsDictEqual(a: dict, b: dict) -> bool:
 # endregion Kit Diff Operations
 
 # region Kit Import/Export
+
+# [🔖semio/py/semio.py#Kit Import/Export](semiorepo://section/semio/py/semio.py/KIT-IMPORT-EXPORT)
 # Import and export utilities for kit serialization and deserialization.
 
 # KitData MUST hold all kit entities in memory for import and export operations.
 # Data container for in-memory kit content during import and export.
+# [🛠️semio/py/semio.py#Kit Import/Export§KitData](semiorepo://definition/semio/py/semio.py/KIT-IMPORT-EXPORT/KITDATA)
 class KitData:
     """Simple in-memory kit representation that supports attribute access."""
 
@@ -8325,6 +8884,7 @@ def _parse_design_from_sqlite(row: dict, pieces: list[dict], connections: list[d
 
 # import_kit MUST handle both local directories and remote zip archives.
 # Import a kit from a local or remote URI into memory.
+# [🛠️semio/py/semio.py#Kit Import/Export§import_kit](semiorepo://definition/semio/py/semio.py/KIT-IMPORT-EXPORT/IMPORT-KIT)
 def import_kit(path: str) -> tuple[KitData, dict[str, bytes]]:
     """📦Import a kit from a .zip file (containing a .semio/kit.db sqlite database)."""
     if not os.path.exists(path):
@@ -8775,6 +9335,7 @@ def _write_kit_to_sqlite(kit_data: KitData | dict, db_path: str) -> None:
 
 # export_kit MUST write the kit database and files to the target path.
 # Export a kit from memory to a local file path.
+# [🛠️semio/py/semio.py#Kit Import/Export§export_kit](semiorepo://definition/semio/py/semio.py/KIT-IMPORT-EXPORT/EXPORT-KIT)
 def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
     """📦Export a kit to a .zip file (containing a .semio/kit.db sqlite database)."""
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -8793,10 +9354,13 @@ def export_kit(kit: KitData, files: dict[str, bytes], path: str) -> None:
 # endregion Kit Import/Export
 
 # region Spatial Math
+
+# [🔖semio/py/semio.py#Spatial Math](semiorepo://section/semio/py/semio.py/SPATIAL-MATH)
 # Spatial math utilities for vector normalization and plane computation.
 
 # normalizeVector MUST return a unit-length vector or raise on zero length.
 # Normalize a 3D vector to unit length.
+# [🛠️semio/py/semio.py#Spatial Math§normalizeVector](semiorepo://definition/semio/py/semio.py/SPATIAL-MATH/NORMALIZEVECTOR)
 def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
     length = numpy.linalg.norm(v)
     if length < 1e-10:
@@ -8805,6 +9369,7 @@ def normalizeVector(v: numpy.ndarray) -> numpy.ndarray:
 
 # planeFromYAxis MUST derive orthogonal x and z axes from the y axis.
 # Construct a plane from an origin point and a Y-axis direction.
+# [🛠️semio/py/semio.py#Spatial Math§planeFromYAxis](semiorepo://definition/semio/py/semio.py/SPATIAL-MATH/PLANEFROMYAXIS)
 def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.ndarray | None = None) -> Plane:
     if origin is None:
         origin = numpy.array([0.0, 0.0, 0.0])
@@ -8832,6 +9397,7 @@ def planeFromYAxis(yAxis: numpy.ndarray, phiDegrees: float = 0.0, origin: numpy.
 
 # computeChildPlane MUST compose parent and local plane transformations.
 # Compute the world-space plane of a child from parent and local planes.
+# [🛠️semio/py/semio.py#Spatial Math§computeChildPlane](semiorepo://definition/semio/py/semio.py/SPATIAL-MATH/COMPUTECHILDPLANE)
 def computeChildPlane(
     parentPlane: Plane,
     parentConnector: Connector,

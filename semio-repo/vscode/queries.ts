@@ -20,11 +20,17 @@
 // #endregion 🔖Header
 
 //#region 🔖Queries
+
+// [🔖semio-repo/vscode/queries.ts#Queries](semiorepo://section/semio-repo/vscode/queries.ts/QUERIES)
 // Typed GraphQL document constants MUST use generated graphql tag functions.
 
 import { graphql } from "./generated/gql";
 
-// GraphQL document for querying the full repo structure with projects and bundles.
+/**
+ * GraphQL document for querying the full repo structure with projects and bundles.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§RepoStructureDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/REPOSTRUCTUREDOCUMENT)
+ **/
 export const RepoStructureDocument = graphql(`
   query RepoStructure {
     repo {
@@ -61,7 +67,11 @@ export const RepoStructureDocument = graphql(`
   }
 `);
 
-// GraphQL document for querying recent repo commits.
+/**
+ * GraphQL document for querying recent repo commits.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§RepoCommitsDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/REPOCOMMITSDOCUMENT)
+ **/
 export const RepoCommitsDocument = graphql(`
   query RepoCommits {
     repo {
@@ -75,7 +85,11 @@ export const RepoCommitsDocument = graphql(`
   }
 `);
 
-// GraphQL document for querying folder contents by path.
+/**
+ * GraphQL document for querying folder contents by path.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§FolderContentDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/FOLDERCONTENTDOCUMENT)
+ **/
 export const FolderContentDocument = graphql(`
   query FolderContent($path: String!) {
     folder(path: $path) {
@@ -93,7 +107,11 @@ export const FolderContentDocument = graphql(`
   }
 `);
 
-// GraphQL document for querying all bundles in the repo.
+/**
+ * GraphQL document for querying all bundles in the repo.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§BundlesDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/BUNDLESDOCUMENT)
+ **/
 export const BundlesDocument = graphql(`
   query Bundles {
     repo {
@@ -102,7 +120,11 @@ export const BundlesDocument = graphql(`
   }
 `);
 
-// GraphQL document for querying tickets with filtering by date and status.
+/**
+ * GraphQL document for querying tickets with filtering by date and status.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§TicketsDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/TICKETSDOCUMENT)
+ **/
 export const TicketsDocument = graphql(`
   query Tickets($year: Int, $month: Int, $day: Int, $status: TicketStatus) {
     repo {
@@ -127,7 +149,11 @@ export const TicketsDocument = graphql(`
   }
 `);
 
-// GraphQL document for querying policies and their violation kinds.
+/**
+ * GraphQL document for querying policies and their violation kinds.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§PoliciesDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/POLICIESDOCUMENT)
+ **/
 export const PoliciesDocument = graphql(`
   query Policies {
     repo {
@@ -136,7 +162,11 @@ export const PoliciesDocument = graphql(`
   }
 `);
 
-// GraphQL document for querying contributors with their contributions.
+/**
+ * GraphQL document for querying contributors with their contributions.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§ContributorsDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/CONTRIBUTORSDOCUMENT)
+ **/
 export const ContributorsDocument = graphql(`
   query Contributors {
     repo {
@@ -179,7 +209,11 @@ export const ContributorsDocument = graphql(`
   }
 `);
 
-// GraphQL document for running codebase analysis with optional scope.
+/**
+ * GraphQL document for running codebase analysis with optional scope.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§AnalyzeDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/ANALYZEDOCUMENT)
+ **/
 export const AnalyzeDocument = graphql(`
   query Analyze($scope: String) {
     analyze(scope: $scope) {
@@ -192,7 +226,11 @@ export const AnalyzeDocument = graphql(`
   }
 `);
 
-// GraphQL mutation document for applying autofixes with optional scope.
+/**
+ * GraphQL mutation document for applying autofixes with optional scope.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§FixDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/FIXDOCUMENT)
+ **/
 export const FixDocument = graphql(`
   mutation Fix($scope: String) {
     fix(scope: $scope) {
@@ -202,7 +240,11 @@ export const FixDocument = graphql(`
   }
 `);
 
-// GraphQL document for querying file content with sections and definitions.
+/**
+ * GraphQL document for querying file content with sections and definitions.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§FileContentDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/FILECONTENTDOCUMENT)
+ **/
 export const FileContentDocument = graphql(`
   query FileContent($path: String!) {
     file(path: $path) {
@@ -247,7 +289,11 @@ export const FileContentDocument = graphql(`
   }
 `);
 
-// GraphQL document for querying all goals in the repo.
+/**
+ * GraphQL document for querying all goals in the repo.
+ *
+ *  * [🪨semio-repo/vscode/queries.ts#Queries§GoalsDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/GOALSDOCUMENT)
+ **/
 export const GoalsDocument = graphql(`
   query Goals {
     repo {

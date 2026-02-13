@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Schema Export
+
+// [🔖semio/engine/sqliteschema.ts#Schema Export](semiorepo://section/semio/engine/sqliteschema.ts/SCHEMA-EXPORT)
 // SQLite schema export script. MUST dump the database schema to a SQL file.
 
 import { execSync } from "child_process";

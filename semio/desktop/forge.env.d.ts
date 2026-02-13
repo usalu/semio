@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Electron Fuses
+
+// [🔖semio/desktop/forge.env.d.ts#Electron Fuses](semiorepo://section/semio/desktop/forge.env.d.ts/ELECTRON-FUSES)
 // Type declarations for Electron Forge fuse options.
 // Consumers MUST use these enums for configuring fuse settings.
 

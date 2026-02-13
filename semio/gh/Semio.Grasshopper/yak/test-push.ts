@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Test Push
+
+// [🔖semio/gh/Semio.Grasshopper/yak/test-push.ts#Test Push](semiorepo://section/semio/gh/Semio.Grasshopper/yak/test-push.ts/TEST-PUSH)
 // Yak test push script. MUST push the package to the test Yak server.
 
 import { execSync } from "child_process";

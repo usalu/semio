@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Declarations
+
+// [🔖semio/js/vite-env.d.ts#Declarations](semiorepo://section/semio/js/vite-env.d.ts/DECLARATIONS)
 // Ambient module declarations for non-standard import types.
 // Declarations MUST cover all custom asset import suffixes used in the project.
 

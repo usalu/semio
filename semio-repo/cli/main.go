@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Preamble
+
+// [🔖semio-repo/cli/main.go#Preamble](semiorepo://section/semio-repo/cli/main.go/PREAMBLE)
 // Package declaration and dependency imports for the semio-repo CLI.
 
 package main
@@ -67,9 +69,12 @@ import (
 // #endregion 🔖Preamble
 
 // #region 🔖Engine Events
+
+// [🔖semio-repo/cli/main.go#Engine Events](semiorepo://section/semio-repo/cli/main.go/ENGINE-EVENTS)
 // Event types and payload structures for the engine event stream.
 
 // Kind represents a kind value.
+// [🪨semio-repo/cli/main.go#Engine Events§Kind](semiorepo://definition/semio-repo/cli/main.go/ENGINE-EVENTS/KIND)
 type Kind string
 
 const (
@@ -83,6 +88,7 @@ const (
 )
 
 // Event holds the data fields for a event record.
+// [🛠️semio-repo/cli/main.go#Engine Events§Event](semiorepo://definition/semio-repo/cli/main.go/ENGINE-EVENTS/EVENT)
 type Event struct {
 	Kind     Kind            `json:"kind"`
 	Command  string          `json:"command,omitempty"`
@@ -97,6 +103,7 @@ type Event struct {
 }
 
 // Progress holds the data fields for a progress record.
+// [🛠️semio-repo/cli/main.go#Engine Events§Progress](semiorepo://definition/semio-repo/cli/main.go/ENGINE-EVENTS/PROGRESS)
 type Progress struct {
 	Current int    `json:"current,omitempty"`
 	Total   int    `json:"total,omitempty"`
@@ -105,6 +112,7 @@ type Progress struct {
 }
 
 // Artifact holds the data fields for a artifact record.
+// [🛠️semio-repo/cli/main.go#Engine Events§Artifact](semiorepo://definition/semio-repo/cli/main.go/ENGINE-EVENTS/ARTIFACT)
 type Artifact struct {
 	Type string `json:"type"`
 	URI  string `json:"uri"`
@@ -112,6 +120,7 @@ type Artifact struct {
 }
 
 // ErrPayload holds the data fields for a err payload record.
+// [🛠️semio-repo/cli/main.go#Engine Events§ErrPayload](semiorepo://definition/semio-repo/cli/main.go/ENGINE-EVENTS/ERRPAYLOAD)
 type ErrPayload struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
@@ -120,6 +129,7 @@ type ErrPayload struct {
 }
 
 // DonePayload holds the data fields for a done payload record.
+// [🛠️semio-repo/cli/main.go#Engine Events§DonePayload](semiorepo://definition/semio-repo/cli/main.go/ENGINE-EVENTS/DONEPAYLOAD)
 type DonePayload struct {
 	ExitCode int    `json:"exit_code"`
 	Status   string `json:"status"`
@@ -128,9 +138,12 @@ type DonePayload struct {
 // #endregion 🔖Engine Events
 
 // #region 🔖Engine Errors
+
+// [🔖semio-repo/cli/main.go#Engine Errors](semiorepo://section/semio-repo/cli/main.go/ENGINE-ERRORS)
 // Error code constants for engine failure classification.
 
 // ErrorCode represents a error code value.
+// [🪨semio-repo/cli/main.go#Engine Errors§ErrorCode](semiorepo://definition/semio-repo/cli/main.go/ENGINE-ERRORS/ERRORCODE)
 type ErrorCode string
 
 const (
@@ -144,9 +157,12 @@ const (
 // #endregion 🔖Engine Errors
 
 // #region 🔖Engine Requests
+
+// [🔖semio-repo/cli/main.go#Engine Requests](semiorepo://section/semio-repo/cli/main.go/ENGINE-REQUESTS)
 // Request command types and argument structures for engine invocation.
 
 // Command represents a command value.
+// [🪨semio-repo/cli/main.go#Engine Requests§Command](semiorepo://definition/semio-repo/cli/main.go/ENGINE-REQUESTS/COMMAND)
 type Command string
 
 const (
@@ -163,6 +179,7 @@ const (
 )
 
 // Request holds the data fields for a request record.
+// [🛠️semio-repo/cli/main.go#Engine Requests§Request](semiorepo://definition/semio-repo/cli/main.go/ENGINE-REQUESTS/REQUEST)
 type Request struct {
 	Command  Command
 	Args     json.RawMessage
@@ -171,6 +188,7 @@ type Request struct {
 }
 
 // GraphQLArgs holds the data fields for a graph q l args record.
+// [🛠️semio-repo/cli/main.go#Engine Requests§GraphQLArgs](semiorepo://definition/semio-repo/cli/main.go/ENGINE-REQUESTS/GRAPHQLARGS)
 type GraphQLArgs struct {
 	Query     string         `json:"query"`
 	Variables map[string]any `json:"variables,omitempty"`
@@ -179,26 +197,32 @@ type GraphQLArgs struct {
 // #endregion 🔖Engine Requests
 
 // #region 🔖Engine
+
+// [🔖semio-repo/cli/main.go#Engine](semiorepo://section/semio-repo/cli/main.go/ENGINE)
 // Core engine that dispatches requests and emits events over a channel.
 
 // GraphQLExecutor defines the interface contract for graph q l executor operations.
+// [✂️semio-repo/cli/main.go#Engine§GraphQLExecutor](semiorepo://definition/semio-repo/cli/main.go/ENGINE/GRAPHQLEXECUTOR)
 type GraphQLExecutor interface {
 	Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error)
 }
 
 // Engine holds the data fields for a engine record.
+// [🛠️semio-repo/cli/main.go#Engine§Engine](semiorepo://definition/semio-repo/cli/main.go/ENGINE/ENGINE)
 type Engine struct {
 	GraphQL GraphQLExecutor
 }
 
 // NewEngine MUST initialize all required fields and return a valid Engine.
 // NewEngine creates and returns a new Engine instance.
+// [🛠️semio-repo/cli/main.go#Engine§NewEngine](semiorepo://definition/semio-repo/cli/main.go/ENGINE/NEWENGINE)
 func NewEngine(graphql GraphQLExecutor) *Engine {
 	return &Engine{GraphQL: graphql}
 }
 
 // Run MUST emit start, result or error, and done events in order.
 // Run dispatches the request and returns an event channel.
+// [🛠️semio-repo/cli/main.go#Engine§Run](semiorepo://definition/semio-repo/cli/main.go/ENGINE/RUN)
 func (e *Engine) Run(ctx context.Context, req Request) <-chan Event {
 	out := make(chan Event)
 	go func() {
@@ -279,9 +303,12 @@ const (
 // #endregion 🔖Engine
 
 // #region 🔖Cli Adapter
+
+// [🔖semio-repo/cli/main.go#Cli Adapter](semiorepo://section/semio-repo/cli/main.go/CLI-ADAPTER)
 // CLI adapter that wires cobra commands to the engine and renders output.
 
 // Config holds the data fields for a config record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§Config](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/CONFIG)
 type Config struct {
 	Format  string
 	Verbose bool
@@ -291,38 +318,45 @@ type Config struct {
 
 // IsJSON MUST return true only when the condition is met.
 // IsJSON reports whether the Config is j s o n.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§IsJSON](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/ISJSON)
 func (c *Config) IsJSON() bool {
 	return c.Format == "json"
 }
 
 // IsMarkdown MUST return true only when the condition is met.
 // IsMarkdown reports whether the Config is markdown.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§IsMarkdown](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/ISMARKDOWN)
 func (c *Config) IsMarkdown() bool {
 	return c.Format == "md"
 }
 
 // IsText MUST return true only when the condition is met.
 // IsText reports whether the Config is text.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§IsText](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/ISTEXT)
 func (c *Config) IsText() bool {
 	return c.Format == "text"
 }
 
 // EngineFactory is a function type for engine factory callbacks.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§EngineFactory](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/ENGINEFACTORY)
 type EngineFactory func(Config) (*Engine, error)
 
 // ExitError holds the data fields for a exit error record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§ExitError](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/EXITERROR)
 type ExitError struct {
 	Code int
 }
 
 // Error MUST return a formatted string representation.
 // Error returns the string representation of the error.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§Error](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/ERROR)
 func (e ExitError) Error() string {
 	return fmt.Sprintf("exit status %d", e.Code)
 }
 
 // NewRoot MUST initialize all required fields and return a valid Root.
 // NewRoot creates and returns a new Root instance.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§NewRoot](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/NEWROOT)
 func NewRoot(factory EngineFactory) *cobra.Command {
 	root, _ := NewRootWithConfig(factory)
 	return root
@@ -330,6 +364,7 @@ func NewRoot(factory EngineFactory) *cobra.Command {
 
 // NewRootWithConfig MUST initialize all required fields and return a valid RootWithConfig.
 // NewRootWithConfig creates and returns a new RootWithConfig instance.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§NewRootWithConfig](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/NEWROOTWITHCONFIG)
 func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	config := Config{}
 	root := &cobra.Command{
@@ -386,6 +421,7 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 
 // Execute MUST delegate to the root command and propagate errors.
 // Execute runs the root command and returns any error.
+// [🛠️semio-repo/cli/main.go#Cli Adapter§Execute](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/EXECUTE)
 func Execute(factory EngineFactory) error {
 	return NewRoot(factory).Execute()
 }
@@ -4045,6 +4081,8 @@ func extractCommand(factory EngineFactory, config *Config) *cobra.Command {
 }
 
 // #region 🔖Utilities
+
+// [🔖semio-repo/cli/main.go#Utilities](semiorepo://section/semio-repo/cli/main.go/UTILITIES)
 // General-purpose utility functions for time parsing and formatting.
 
 func parseFlexibleTime(t string) (time.Time, error) {
@@ -4067,9 +4105,12 @@ func parseFlexibleTime(t string) (time.Time, error) {
 // #endregion 🔖Utilities
 
 // #region 🔖Models
+
+// [🔖semio-repo/cli/main.go#Models](semiorepo://section/semio-repo/cli/main.go/MODELS)
 // Data model types for tickets, goals, and tree representation.
 
 // TicketNode holds the data fields for a ticket node record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models§TicketNode](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/TICKETNODE)
 type TicketNode struct {
 	ID, Slug, Status string
 	Title, URI       string
@@ -4082,6 +4123,7 @@ type TicketNode struct {
 }
 
 // GoalNode holds the data fields for a goal node record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models§GoalNode](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/GOALNODE)
 type GoalNode struct {
 	ID, Title, Status  string
 	DueDate, CreatedAt string
@@ -4091,9 +4133,12 @@ type GoalNode struct {
 }
 
 // #region 🔖Monorepo Tree Types
+
+// [🔖semio-repo/cli/main.go#Monorepo Tree Types](semiorepo://section/semio-repo/cli/main.go/MONOREPO-TREE-TYPES)
 // Tree node kinds, filter criteria, and matching logic for monorepo tree queries.
 
 // TreeNodeKind represents a tree node kind value.
+// [🪨semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeNodeKind](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/TREENODEKIND)
 type TreeNodeKind string
 
 const (
@@ -4114,6 +4159,7 @@ const (
 )
 
 // TreeNode holds the data fields for a tree node record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeNode](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/TREENODE)
 type TreeNode struct {
 	Kind        TreeNodeKind
 	ID          string
@@ -4132,6 +4178,7 @@ type TreeNode struct {
 }
 
 // TreeFilter holds the data fields for a tree filter record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeFilter](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/TREEFILTER)
 type TreeFilter struct {
 	Query               string
 	OnlyKinds           map[TreeNodeKind]bool
@@ -4153,12 +4200,14 @@ type TreeFilter struct {
 
 // HasOnlyKinds MUST return true only when the property is present.
 // HasOnlyKinds reports whether the TreeFilter has only kinds.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§HasOnlyKinds](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/HASONLYKINDS)
 func (f *TreeFilter) HasOnlyKinds() bool {
 	return len(f.OnlyKinds) > 0
 }
 
 // IsKindVisible MUST return true only when the condition is met.
 // IsKindVisible reports whether the TreeFilter is kind visible.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§IsKindVisible](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/ISKINDVISIBLE)
 func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
 	if kind == TreeNodeCategory {
 		return true
@@ -4171,6 +4220,7 @@ func (f *TreeFilter) IsKindVisible(kind TreeNodeKind) bool {
 
 // MatchesSubKind MUST operate on the TreeFilter receiver and return consistent results.
 // MatchesSubKind performs the matches sub kind operation on the TreeFilter.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesSubKind](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/MATCHESSUBKIND)
 func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
 	if subKind == "" {
 		return true
@@ -4195,6 +4245,7 @@ func (f *TreeFilter) MatchesSubKind(kind TreeNodeKind, subKind string) bool {
 
 // MatchesDate MUST operate on the TreeFilter receiver and return consistent results.
 // MatchesDate performs the matches date operation on the TreeFilter.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesDate](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/MATCHESDATE)
 func (f *TreeFilter) MatchesDate(year, month, day int) bool {
 	if len(f.OnlyYears) > 0 {
 		found := false
@@ -4252,6 +4303,7 @@ func (f *TreeFilter) MatchesDate(year, month, day int) bool {
 
 // MatchesStatus MUST operate on the TreeFilter receiver and return consistent results.
 // MatchesStatus performs the matches status operation on the TreeFilter.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesStatus](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/MATCHESSTATUS)
 func (f *TreeFilter) MatchesStatus(status string) bool {
 	if f.OnlyStatus == "" {
 		return true
@@ -4261,6 +4313,7 @@ func (f *TreeFilter) MatchesStatus(status string) bool {
 
 // MatchesContributor MUST operate on the TreeFilter receiver and return consistent results.
 // MatchesContributor performs the matches contributor operation on the TreeFilter.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§MatchesContributor](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/MATCHESCONTRIBUTOR)
 func (f *TreeFilter) MatchesContributor(contributor string) bool {
 	if len(f.OnlyContributors) > 0 {
 		for _, c := range f.OnlyContributors {
@@ -4283,6 +4336,8 @@ func (f *TreeFilter) MatchesContributor(contributor string) bool {
 // #endregion 🔖Models
 
 // #region 🔖Tree Logic
+
+// [🔖semio-repo/cli/main.go#Tree Logic](semiorepo://section/semio-repo/cli/main.go/TREE-LOGIC)
 // Tree construction, filtering, searching, and rendering for goals, sections, and monorepo nodes.
 
 func buildGoalTree(goalsRaw []interface{}, ticketsRaw []interface{}) []*GoalNode {
@@ -4620,15 +4675,19 @@ func renderTicketList(ticketsRaw []interface{}, isTTY bool, useMD bool) string {
 }
 
 // #region 🔖Monorepo Tree
+
+// [🔖semio-repo/cli/main.go#Monorepo Tree](semiorepo://section/semio-repo/cli/main.go/MONOREPO-TREE)
 // Monorepo tree builder that assembles all entity nodes into a unified tree.
 
 // TreeBuildOptions holds the data fields for a tree build options record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§TreeBuildOptions](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/TREE-LOGIC/MONOREPO-TREE/TREEBUILDOPTIONS)
 type TreeBuildOptions struct {
 	IncludeSections bool
 }
 
 // BuildMonorepoTree MUST assemble the monorepo tree from the available context data.
 // BuildMonorepoTree constructs and returns the monorepo tree structure.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§BuildMonorepoTree](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/TREE-LOGIC/MONOREPO-TREE/BUILDMONOREPOTREE)
 func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode {
 	var options TreeBuildOptions
 	if len(opts) > 0 {
@@ -5158,6 +5217,7 @@ func sortTreeChildren(node *TreeNode) {
 
 // FilterMonorepoTree MUST preserve the tree structure while removing non-matching nodes.
 // FilterMonorepoTree filters the monorepo tree based on the given criteria.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§FilterMonorepoTree](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/TREE-LOGIC/MONOREPO-TREE/FILTERMONOREPOTREE)
 func FilterMonorepoTree(root *TreeNode, filter *TreeFilter) *TreeNode {
 	if filter == nil {
 		return root
@@ -5239,6 +5299,7 @@ func collapseFilteredKinds(node *TreeNode, filter *TreeFilter) {
 
 // SearchMonorepoTree MUST match case-insensitively against node labels and descriptions.
 // SearchMonorepoTree performs a text search across the monorepo tree.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§SearchMonorepoTree](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/TREE-LOGIC/MONOREPO-TREE/SEARCHMONOREPOTREE)
 func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 	if query == "" {
 		return root
@@ -5331,6 +5392,7 @@ func pruneUnmatched(node *TreeNode, matchedIDs map[string]bool) *TreeNode {
 
 // RenderMonorepoTree MUST produce a complete monorepo tree output.
 // RenderMonorepoTree renders the monorepo tree into its output representation.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§RenderMonorepoTree](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/TREE-LOGIC/MONOREPO-TREE/RENDERMONOREPOTREE)
 func RenderMonorepoTree(root *TreeNode) string {
 	var sb strings.Builder
 	for i, c := range root.Children {
@@ -5341,6 +5403,7 @@ func RenderMonorepoTree(root *TreeNode) string {
 
 // RenderMonorepoTreeMarkdown MUST produce a complete monorepo tree markdown output.
 // RenderMonorepoTreeMarkdown renders the monorepo tree markdown into its output representation.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#Tree Logic#Monorepo Tree§RenderMonorepoTreeMarkdown](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/TREE-LOGIC/MONOREPO-TREE/RENDERMONOREPOTREEMARKDOWN)
 func RenderMonorepoTreeMarkdown(root *TreeNode) string {
 	var sb strings.Builder
 	for _, c := range root.Children {
@@ -5451,18 +5514,23 @@ func renderTreeNodeMarkdown(sb *strings.Builder, node *TreeNode, indent string) 
 // #endregion 🔖Tree Logic
 
 // #region 🔖CLI Renderers
+
+// [🔖semio-repo/cli/main.go#CLI Renderers](semiorepo://section/semio-repo/cli/main.go/CLI-RENDERERS)
 // Stream renderers that format engine events for NDJSON, human-readable, and markdown output.
 
 // StreamRenderer defines the interface contract for stream renderer operations.
+// [✂️semio-repo/cli/main.go#Cli Adapter#CLI Renderers§StreamRenderer](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/CLI-RENDERERS/STREAMRENDERER)
 type StreamRenderer interface {
 	Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error)
 }
 
 // NDJSONRenderer holds the data fields for a n d j s o n renderer record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#CLI Renderers§NDJSONRenderer](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/CLI-RENDERERS/NDJSONRENDERER)
 type NDJSONRenderer struct{}
 
 // Render MUST produce a complete  output.
 // Render renders the  into its output representation.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#CLI Renderers§Render](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/CLI-RENDERERS/RENDER)
 func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	encoder := json.NewEncoder(out)
 	encoder.SetEscapeHTML(false)
@@ -5491,6 +5559,8 @@ func (r NDJSONRenderer) Render(ctx context.Context, out, errOut io.Writer, strea
 }
 
 // #region 🔖ANSI
+
+// [🔖semio-repo/cli/main.go#ANSI](semiorepo://section/semio-repo/cli/main.go/ANSI)
 // ANSI escape code constants for terminal colorization.
 
 const (
@@ -5513,12 +5583,14 @@ func colorize(s string, color string, enabled bool) string {
 // #endregion 🔖ANSI
 
 // HumanRenderer holds the data fields for a human renderer record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#CLI Renderers§HumanRenderer](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/CLI-RENDERERS/HUMANRENDERER)
 type HumanRenderer struct {
 	Verbose bool
 }
 
 // Render MUST produce a complete  output.
 // Render renders the  into its output representation.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#CLI Renderers§Render](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/CLI-RENDERERS/RENDER)
 func (r HumanRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
 	isTTY := false
@@ -5809,10 +5881,12 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 }
 
 // MarkdownRenderer holds the data fields for a markdown renderer record.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#CLI Renderers§MarkdownRenderer](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/CLI-RENDERERS/MARKDOWNRENDERER)
 type MarkdownRenderer struct{}
 
 // Render MUST produce a complete  output.
 // Render renders the  into its output representation.
+// [🛠️semio-repo/cli/main.go#Cli Adapter#CLI Renderers§Render](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/CLI-RENDERERS/RENDER)
 func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, stream <-chan Event) (int, error) {
 	exitCode := 0
 	for event := range stream {
@@ -6101,15 +6175,19 @@ func runGraphQL(cmd *cobra.Command, factory EngineFactory, config *Config, query
 // #endregion 🔖Cli Adapter
 
 // #region 🔖GraphQL Types
+
+// [🔖semio-repo/cli/main.go#GraphQL Types](semiorepo://section/semio-repo/cli/main.go/GRAPHQL-TYPES)
 // GraphQL-facing domain types, enums, constants, and entity node implementations.
 
 // Node defines the interface contract for node operations.
+// [✂️semio-repo/cli/main.go#GraphQL Types§Node](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/NODE)
 type Node interface {
 	IsNode()
 	GetID() string
 }
 
 // DefinitionKind represents a definition kind value.
+// [🪨semio-repo/cli/main.go#GraphQL Types§DefinitionKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DEFINITIONKIND)
 type DefinitionKind string
 
 const (
@@ -6120,6 +6198,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the DefinitionKind is valid.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsValid](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISVALID)
 func (e DefinitionKind) IsValid() bool {
 	switch e {
 	case DefinitionKindImplementation, DefinitionKindInterface, DefinitionKindConstant:
@@ -6130,12 +6209,14 @@ func (e DefinitionKind) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the DefinitionKind.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§String](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/STRING)
 func (e DefinitionKind) String() string {
 	return string(e)
 }
 
 // DeriveDefinitionKind MUST return a valid value for any recognized input.
 // DeriveDefinitionKind infers and returns the definition kind from the given input.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§DeriveDefinitionKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DERIVEDEFINITIONKIND)
 func DeriveDefinitionKind(rawKind string) DefinitionKind {
 	switch strings.ToLower(rawKind) {
 	case "interface", "type", "trait", "abstract",
@@ -6151,6 +6232,7 @@ func DeriveDefinitionKind(rawKind string) DefinitionKind {
 }
 
 // TicketStatus represents a ticket status value.
+// [🪨semio-repo/cli/main.go#GraphQL Types§TicketStatus](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/TICKETSTATUS)
 type TicketStatus string
 
 const (
@@ -6160,6 +6242,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the TicketStatus is valid.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsValid](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISVALID)
 func (e TicketStatus) IsValid() bool {
 	switch e {
 	case TicketStatusOpen, TicketStatusClosed:
@@ -6170,11 +6253,13 @@ func (e TicketStatus) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the TicketStatus.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§String](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/STRING)
 func (e TicketStatus) String() string {
 	return string(e)
 }
 
 // ViolationPriority represents a violation priority value.
+// [🪨semio-repo/cli/main.go#GraphQL Types§ViolationPriority](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/VIOLATIONPRIORITY)
 type ViolationPriority string
 
 const (
@@ -6185,6 +6270,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the ViolationPriority is valid.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsValid](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISVALID)
 func (e ViolationPriority) IsValid() bool {
 	switch e {
 	case ViolationPriorityHigh, ViolationPriorityMedium, ViolationPriorityLow:
@@ -6195,11 +6281,13 @@ func (e ViolationPriority) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the ViolationPriority.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§String](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/STRING)
 func (e ViolationPriority) String() string {
 	return string(e)
 }
 
 // AllowedLLMs holds the allowed l l ms values.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§AllowedLLMs](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ALLOWEDLLMS)
 var AllowedLLMs = []string{
 	"opus-4-6",
 	"opus-4-5",
@@ -6218,6 +6306,7 @@ var AllowedLLMs = []string{
 }
 
 // AllowedClients holds the allowed clients values.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§AllowedClients](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ALLOWEDCLIENTS)
 var AllowedClients = []string{
 	"vscode",
 	"copilot-chat",
@@ -6234,18 +6323,21 @@ var AllowedClients = []string{
 
 // NormalizeLLMSlug MUST be idempotent for already-normalized values.
 // NormalizeLLMSlug normalizes the l l m slug to its canonical form.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§NormalizeLLMSlug](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/NORMALIZELLMSLUG)
 func NormalizeLLMSlug(llm string) string {
 	return strings.ToLower(Slugify(llm))
 }
 
 // NormalizeClientSlug MUST be idempotent for already-normalized values.
 // NormalizeClientSlug normalizes the client slug to its canonical form.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§NormalizeClientSlug](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/NORMALIZECLIENTSLUG)
 func NormalizeClientSlug(client string) string {
 	return strings.ToLower(Slugify(client))
 }
 
 // ResolveAllowedLLM MUST return an error for unrecognized values.
 // ResolveAllowedLLM resolves and validates the allowed l l m against known values.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ResolveAllowedLLM](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/RESOLVEALLOWEDLLM)
 func ResolveAllowedLLM(llm string) (string, error) {
 	llmSlug := NormalizeLLMSlug(llm)
 	bestMatch := ""
@@ -6264,6 +6356,7 @@ func ResolveAllowedLLM(llm string) (string, error) {
 
 // ResolveAllowedClient MUST return an error for unrecognized values.
 // ResolveAllowedClient resolves and validates the allowed client against known values.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ResolveAllowedClient](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/RESOLVEALLOWEDCLIENT)
 func ResolveAllowedClient(client string) (string, error) {
 	uiSlug := NormalizeClientSlug(client)
 	bestMatch := ""
@@ -6281,24 +6374,28 @@ func ResolveAllowedClient(client string) (string, error) {
 }
 
 // Range holds the data fields for a range record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Range](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/RANGE)
 type Range struct {
 	Start int `json:"start"`
 	End   int `json:"end"`
 }
 
 // LineMetrics holds the data fields for a line metrics record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§LineMetrics](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/LINEMETRICS)
 type LineMetrics struct {
 	Added   int `yaml:"added" json:"added"`
 	Removed int `yaml:"removed" json:"removed"`
 }
 
 // DiffLines holds the data fields for a diff lines record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§DiffLines](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DIFFLINES)
 type DiffLines struct {
 	Added   []int
 	Removed []int
 }
 
 // CountMetrics holds the data fields for a count metrics record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§CountMetrics](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/COUNTMETRICS)
 type CountMetrics struct {
 	Added   int `json:"added"`
 	Updated int `json:"updated"`
@@ -6306,6 +6403,7 @@ type CountMetrics struct {
 }
 
 // ContributorIcons holds the data fields for a contributor icons record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorIcons](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORICONS)
 type ContributorIcons struct {
 	Avatar      *string `json:"avatar,omitempty"`
 	AvatarRound *string `json:"avatarRound,omitempty"`
@@ -6313,18 +6411,21 @@ type ContributorIcons struct {
 }
 
 // ContributorLink holds the data fields for a contributor link record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorLink](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORLINK)
 type ContributorLink struct {
 	Name string `json:"name"`
 	URL  string `json:"url"`
 }
 
 // TicketDate holds the data fields for a ticket date record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§TicketDate](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/TICKETDATE)
 type TicketDate struct {
 	Created  time.Time  `json:"created"`
 	Finished *time.Time `json:"finished,omitempty"`
 }
 
 // TicketSectionMetrics holds the data fields for a ticket section metrics record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§TicketSectionMetrics](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/TICKETSECTIONMETRICS)
 type TicketSectionMetrics struct {
 	Range       *Range       `json:"range,omitempty"`
 	Definitions []string     `json:"definitions,omitempty"`
@@ -6332,6 +6433,7 @@ type TicketSectionMetrics struct {
 }
 
 // TicketFileMetricsEntry holds the data fields for a ticket file metrics entry record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§TicketFileMetricsEntry](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/TICKETFILEMETRICSENTRY)
 type TicketFileMetricsEntry struct {
 	Path     string                          `json:"path"`
 	Lines    *LineMetrics                    `json:"lines,omitempty"`
@@ -6339,6 +6441,7 @@ type TicketFileMetricsEntry struct {
 }
 
 // AnalyzeMetrics holds the data fields for a analyze metrics record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§AnalyzeMetrics](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ANALYZEMETRICS)
 type AnalyzeMetrics struct {
 	Total       int            `json:"total"`
 	ByPriority  *PriorityCount `json:"byPriority"`
@@ -6346,6 +6449,7 @@ type AnalyzeMetrics struct {
 }
 
 // PriorityCount holds the data fields for a priority count record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§PriorityCount](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/PRIORITYCOUNT)
 type PriorityCount struct {
 	High   int `json:"high"`
 	Medium int `json:"medium"`
@@ -6353,6 +6457,7 @@ type PriorityCount struct {
 }
 
 // Repo holds the data fields for a repo record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Repo](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/REPO)
 type Repo struct {
 	ID       string    `json:"id"`
 	Name     string    `json:"name"`
@@ -6363,15 +6468,19 @@ type Repo struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Repo is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (r *Repo) IsNode()        {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Repo.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (r *Repo) GetID() string  { return emojiText(EmojiRepo) }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Repo.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (r *Repo) GetURI() string { return "semiorepo://repo" }
 
 // ProjectKind represents a project kind value.
+// [🪨semio-repo/cli/main.go#GraphQL Types§ProjectKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/PROJECTKIND)
 type ProjectKind string
 
 const (
@@ -6382,11 +6491,13 @@ const (
 
 // String MUST return the canonical string value.
 // String returns the string representation of the ProjectKind.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§String](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/STRING)
 func (e ProjectKind) String() string {
 	return string(e)
 }
 
 // BundleKind represents a bundle kind value.
+// [🪨semio-repo/cli/main.go#GraphQL Types§BundleKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/BUNDLEKIND)
 type BundleKind string
 
 const (
@@ -6400,6 +6511,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the BundleKind is valid.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsValid](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISVALID)
 func (e BundleKind) IsValid() bool {
 	switch e {
 	case BundleKindLibrary, BundleKindSchema, BundleKindBinary, BundleKindUI, BundleKindSite, BundleKindAssets:
@@ -6410,12 +6522,14 @@ func (e BundleKind) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the BundleKind.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§String](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/STRING)
 func (e BundleKind) String() string {
 	return string(e)
 }
 
 // DeriveProjectKind MUST return a valid value for any recognized input.
 // DeriveProjectKind infers and returns the project kind from the given input.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§DeriveProjectKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DERIVEPROJECTKIND)
 func DeriveProjectKind(name string) ProjectKind {
 	switch name {
 	case "semio":
@@ -6433,6 +6547,7 @@ func DeriveProjectKind(name string) ProjectKind {
 
 // DeriveBundleKind MUST return a valid value for any recognized input.
 // DeriveBundleKind infers and returns the bundle kind from the given input.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§DeriveBundleKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DERIVEBUNDLEKIND)
 func DeriveBundleKind(name string, root string) BundleKind {
 	absRoot := root
 	if !filepath.IsAbs(absRoot) {
@@ -6459,6 +6574,7 @@ func DeriveBundleKind(name string, root string) BundleKind {
 }
 
 // Project holds the data fields for a project record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Project](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/PROJECT)
 type Project struct {
 	Name    string      `json:"name"`
 	Root    string      `json:"root"`
@@ -6468,9 +6584,11 @@ type Project struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Project is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (p *Project) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Project.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (p *Project) GetID() string {
 	emoji := EmojiProjectUser
 	switch string(p.Kind) {
@@ -6491,9 +6609,11 @@ func (p *Project) GetID() string {
 }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Project.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (p *Project) GetURI() string { return "semiorepo://project/@" + p.Name }
 
 // Bundle holds the data fields for a bundle record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Bundle](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/BUNDLE)
 type Bundle struct {
 	Name        string     `json:"name"`
 	Root        string     `json:"root"`
@@ -6505,6 +6625,7 @@ type Bundle struct {
 }
 
 // Package holds the data fields for a package record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Package](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/PACKAGE)
 type Package struct {
 	Name    string `json:"name"`
 	Version string `json:"version"`
@@ -6514,9 +6635,11 @@ type Package struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Bundle is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (b *Bundle) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Bundle.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (b *Bundle) GetID() string {
 	emoji := EmojiBundleLibrary
 	switch string(b.Kind) {
@@ -6540,6 +6663,7 @@ func (b *Bundle) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Bundle.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (b *Bundle) GetURI() string { return "semiorepo://bundle/" + b.Name }
 
 func normalizeBundleLabel(name string) string {
@@ -6576,6 +6700,7 @@ func bundlePathPrefix(name string) string {
 }
 
 // FolderKind represents a folder kind value.
+// [🪨semio-repo/cli/main.go#GraphQL Types§FolderKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/FOLDERKIND)
 type FolderKind string
 
 const (
@@ -6585,6 +6710,7 @@ const (
 
 // IsValid MUST return true only when the condition is met.
 // IsValid reports whether the FolderKind is valid.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsValid](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISVALID)
 func (e FolderKind) IsValid() bool {
 	switch e {
 	case FolderKindOrganization, FolderKindRequired:
@@ -6595,12 +6721,14 @@ func (e FolderKind) IsValid() bool {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the FolderKind.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§String](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/STRING)
 func (e FolderKind) String() string {
 	return string(e)
 }
 
 // DeriveFolderKind MUST return a valid value for any recognized input.
 // DeriveFolderKind infers and returns the folder kind from the given input.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§DeriveFolderKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DERIVEFOLDERKIND)
 func DeriveFolderKind(path string) FolderKind {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") {
@@ -6619,6 +6747,7 @@ func DeriveFolderKind(path string) FolderKind {
 
 // IsGeneratedFolder MUST return true only when the condition is met.
 // IsGeneratedFolder reports whether the value is generated folder.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsGeneratedFolder](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISGENERATEDFOLDER)
 func IsGeneratedFolder(path string) bool {
 	parts := strings.Split(filepath.ToSlash(path), "/")
 	for _, part := range parts {
@@ -6640,6 +6769,7 @@ func IsGeneratedFolder(path string) bool {
 }
 
 // Folder holds the data fields for a folder record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Folder](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/FOLDER)
 type Folder struct {
 	ID        string     `json:"id"`
 	Path      string     `json:"path"`
@@ -6654,9 +6784,11 @@ type Folder struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Folder is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (f *Folder) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Folder.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (f *Folder) GetID() string {
 	emoji := EmojiFolderRequired
 	if f.Kind == FolderKindOrganization {
@@ -6666,9 +6798,11 @@ func (f *Folder) GetID() string {
 }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Folder.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (f *Folder) GetURI() string { return "semiorepo://folder/" + f.Path }
 
 // File holds the data fields for a file record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§File](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/FILE)
 type File struct {
 	ID        string  `json:"id"`
 	Path      string  `json:"path"`
@@ -6746,6 +6880,7 @@ const (
 
 // DeriveFileKind MUST return a valid value for any recognized input.
 // DeriveFileKind infers and returns the file kind from the given input.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§DeriveFileKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DERIVEFILEKIND)
 func DeriveFileKind(name string) string {
 	ext := strings.ToLower(filepath.Ext(name))
 	nameLower := strings.ToLower(name)
@@ -6838,10 +6973,12 @@ func DeriveFileKind(name string) string {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the File is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (f *File) IsNode() {}
 
 // IsGenerated MUST return true only when the condition is met.
 // IsGenerated reports whether the value is generated.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsGenerated](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISGENERATED)
 func IsGenerated(path string) bool {
 	base := strings.ToLower(filepath.Base(path))
 	if base == "package-lock.json" || base == "yarn.lock" || base == "pnpm-lock.yaml" || base == "go.sum" || base == "uv.lock" {
@@ -6861,6 +6998,7 @@ func IsGenerated(path string) bool {
 
 // IsSemanticallyIgnored MUST return true only when the condition is met.
 // IsSemanticallyIgnored reports whether the value is semantically ignored.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsSemanticallyIgnored](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISSEMANTICALLYIGNORED)
 func IsSemanticallyIgnored(path string) bool {
 	base := filepath.Base(path)
 	if strings.HasPrefix(base, ".") && base != ".gitignore" && base != ".env" {
@@ -6876,6 +7014,7 @@ func IsSemanticallyIgnored(path string) bool {
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the File.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (f *File) GetID() string {
 	emoji := EmojiFiles
 	switch f.Kind {
@@ -6898,9 +7037,11 @@ func (f *File) GetID() string {
 }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the File.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (f *File) GetURI() string { return "semiorepo://file/" + f.Path }
 
 // Section holds the data fields for a section record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Section](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/SECTION)
 type Section struct {
 	ID          string       `json:"id,omitempty"`
 	Name        string       `json:"name"`
@@ -6916,9 +7057,11 @@ type Section struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Section is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (s *Section) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Section.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (s *Section) GetID() string {
 	val := s.Name
 	if s.Path != "" {
@@ -6934,6 +7077,7 @@ func (s *Section) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Section.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (s *Section) GetURI() string {
 	raw := ""
 	if s.FilePath != "" && s.Path != "" {
@@ -6945,6 +7089,7 @@ func (s *Section) GetURI() string {
 }
 
 // Definition holds the data fields for a definition record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Definition](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DEFINITION)
 type Definition struct {
 	ID          string         `json:"id,omitempty"`
 	Name        string         `json:"name"`
@@ -6959,9 +7104,11 @@ type Definition struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Definition is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (d *Definition) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Definition.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (d *Definition) GetID() string {
 	emoji := EmojiDefinitionImpl
 	switch d.Kind {
@@ -6992,6 +7139,7 @@ func (d *Definition) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Definition.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (d *Definition) GetURI() string {
 	raw := ""
 	if d.FilePath != "" {
@@ -7007,6 +7155,7 @@ func (d *Definition) GetURI() string {
 }
 
 // Contributor holds the data fields for a contributor record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Contributor](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTOR)
 type Contributor struct {
 	Github        string                          `yaml:"github" json:"github"`
 	Name          string                          `yaml:"name" json:"name"`
@@ -7020,6 +7169,7 @@ type Contributor struct {
 }
 
 // ContributorContributionsTree holds the data fields for a contributor contributions tree record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorContributionsTree](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORCONTRIBUTIONSTREE)
 type ContributorContributionsTree struct {
 	Commits []*Commit
 	Tickets []*Ticket
@@ -7027,6 +7177,7 @@ type ContributorContributionsTree struct {
 }
 
 // ContributorBundle holds the data fields for a contributor bundle record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorBundle](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORBUNDLE)
 type ContributorBundle struct {
 	Name    string
 	Lines   LineMetrics
@@ -7034,6 +7185,7 @@ type ContributorBundle struct {
 }
 
 // ContributorFolder holds the data fields for a contributor folder record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorFolder](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORFOLDER)
 type ContributorFolder struct {
 	Name  string
 	Lines LineMetrics
@@ -7041,6 +7193,7 @@ type ContributorFolder struct {
 }
 
 // ContributorFile holds the data fields for a contributor file record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorFile](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORFILE)
 type ContributorFile struct {
 	Name     string
 	Lines    LineMetrics
@@ -7048,6 +7201,7 @@ type ContributorFile struct {
 }
 
 // ContributorSection holds the data fields for a contributor section record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorSection](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORSECTION)
 type ContributorSection struct {
 	Name        string
 	Lines       LineMetrics
@@ -7055,6 +7209,7 @@ type ContributorSection struct {
 }
 
 // ContributorDefinition holds the data fields for a contributor definition record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorDefinition](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORDEFINITION)
 type ContributorDefinition struct {
 	Name  string
 	Lines LineMetrics
@@ -7062,20 +7217,24 @@ type ContributorDefinition struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Contributor is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (c *Contributor) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Contributor.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (c *Contributor) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiContributor), c.Github)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Contributor.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (c *Contributor) GetURI() string {
 	return "semiorepo://contributor/" + strings.ToUpper(c.Github)
 }
 
 // Commit holds the data fields for a commit record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Commit](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/COMMIT)
 type Commit struct {
 	ID       string    `json:"id"`
 	SHA      string    `json:"sha"`
@@ -7086,35 +7245,43 @@ type Commit struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Commit is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (c *Commit) IsNode() {}
 
 // #region 🔖Drafts
+
+// [🔖semio-repo/cli/main.go#Drafts](semiorepo://section/semio-repo/cli/main.go/DRAFTS)
 // Draft management for creating, listing, and deleting draft file sets.
 
 // Draft holds the data fields for a draft record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§Draft](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/DRAFT)
 type Draft struct {
 	ID string `json:"id"`
 }
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Draft.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/GETID)
 func (d *Draft) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiDraft), d.ID)
 }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Draft.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/GETURI)
 func (d *Draft) GetURI() string {
 	return "semiorepo://draft/" + strings.ToUpper(d.ID)
 }
 
 // GetDraftsPath MUST return the stored value without modification.
 // GetDraftsPath returns the drafts path of the value.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§GetDraftsPath](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/GETDRAFTSPATH)
 func GetDraftsPath() string {
 	return filepath.Join(GetRootDir(), ".semio-repo", "drafts")
 }
 
 // ListDrafts MUST return a consistent snapshot of available entries.
 // ListDrafts returns all available drafts entries.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§ListDrafts](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/LISTDRAFTS)
 func ListDrafts() ([]*Draft, error) {
 	draftsDir := GetDraftsPath()
 	if !IsDir(draftsDir) {
@@ -7135,6 +7302,7 @@ func ListDrafts() ([]*Draft, error) {
 
 // CreateDraft MUST persist the new entity and return a reference to it.
 // CreateDraft creates a new draft and persists it.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§CreateDraft](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/CREATEDRAFT)
 func CreateDraft(id string, files []string) (*Draft, error) {
 	id = Slugify(id)
 	if id == "" {
@@ -7162,6 +7330,7 @@ func CreateDraft(id string, files []string) (*Draft, error) {
 
 // DeleteDraft MUST remove all associated data for the entity.
 // DeleteDraft removes the specified draft.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§DeleteDraft](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/DELETEDRAFT)
 func DeleteDraft(id string) error {
 	draftPath := filepath.Join(GetDraftsPath(), id)
 	if !IsDir(draftPath) {
@@ -7174,14 +7343,17 @@ func DeleteDraft(id string) error {
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Commit.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (c *Commit) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiCommit), c.SHA) }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Commit.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (c *Commit) GetURI() string {
 	return "semiorepo://commit/" + strings.ToUpper(c.SHA)
 }
 
 // Ticket holds the data fields for a ticket record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Ticket](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/TICKET)
 type Ticket struct {
 	Year          int               `json:"-" yaml:"-"`
 	Month         int               `json:"-" yaml:"-"`
@@ -7205,9 +7377,11 @@ type Ticket struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Ticket is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (t *Ticket) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (t *Ticket) GetID() string {
 	id := fmt.Sprintf("%s%04d/%02d/%02d/%s", emojiText(EmojiTicket), t.Year, t.Month, t.Day, t.Slug)
 	if t.Status != "" {
@@ -7218,18 +7392,21 @@ func (t *Ticket) GetID() string {
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (t *Ticket) GetURI() string {
 	return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", t.Year, t.Month, t.Day, t.Slug)
 }
 
 // GetTitle MUST return the stored value without modification.
 // GetTitle returns the title of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetTitle](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETTITLE)
 func (t *Ticket) GetTitle() string {
 	return t.Title
 }
 
 // GetPrompt MUST return the stored value without modification.
 // GetPrompt returns the prompt of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetPrompt](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETPROMPT)
 func (t *Ticket) GetPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Prompt
@@ -7239,6 +7416,7 @@ func (t *Ticket) GetPrompt() string {
 
 // GetLatestPrompt MUST return the stored value without modification.
 // GetLatestPrompt returns the latest prompt of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetLatestPrompt](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETLATESTPROMPT)
 func (t *Ticket) GetLatestPrompt() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Prompt
@@ -7248,6 +7426,7 @@ func (t *Ticket) GetLatestPrompt() string {
 
 // GetLLM MUST return the stored value without modification.
 // GetLLM returns the l l m of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetLLM](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETLLM)
 func (t *Ticket) GetLLM() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].LLM
@@ -7257,6 +7436,7 @@ func (t *Ticket) GetLLM() string {
 
 // GetClient MUST return the stored value without modification.
 // GetClient returns the client of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetClient](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETCLIENT)
 func (t *Ticket) GetClient() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[len(t.Interactions)-1].Client
@@ -7266,12 +7446,14 @@ func (t *Ticket) GetClient() string {
 
 // GetStatus MUST return the stored value without modification.
 // GetStatus returns the status of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetStatus](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETSTATUS)
 func (t *Ticket) GetStatus() TicketStatus {
 	return t.Status
 }
 
 // GetAuthor MUST return the stored value without modification.
 // GetAuthor returns the author of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetAuthor](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETAUTHOR)
 func (t *Ticket) GetAuthor() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Author
@@ -7281,6 +7463,7 @@ func (t *Ticket) GetAuthor() string {
 
 // GetCommit MUST return the stored value without modification.
 // GetCommit returns the commit of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetCommit](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETCOMMIT)
 func (t *Ticket) GetCommit() string {
 	if len(t.Interactions) > 0 {
 		return t.Interactions[0].Commit
@@ -7290,24 +7473,28 @@ func (t *Ticket) GetCommit() string {
 
 // GetSummary MUST return the stored value without modification.
 // GetSummary returns the summary of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetSummary](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETSUMMARY)
 func (t *Ticket) GetSummary() string {
 	return t.Summary
 }
 
 // GetDateStarted MUST return the stored value without modification.
 // GetDateStarted returns the date started of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetDateStarted](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETDATESTARTED)
 func (t *Ticket) GetDateStarted() time.Time {
 	return t.Started
 }
 
 // GetDateFinished MUST return the stored value without modification.
 // GetDateFinished returns the date finished of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetDateFinished](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETDATEFINISHED)
 func (t *Ticket) GetDateFinished() *time.Time {
 	return t.Finished
 }
 
 // GetFiles MUST return the stored value without modification.
 // GetFiles returns the files of the Ticket.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetFiles](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETFILES)
 func (t *Ticket) GetFiles() *TicketDiffs {
 	result := newTicketDiffs()
 	for _, interaction := range t.Interactions {
@@ -7339,18 +7526,21 @@ func (t *Ticket) GetFiles() *TicketDiffs {
 }
 
 // TicketBundleContrib holds the data fields for a ticket bundle contrib record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§TicketBundleContrib](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/TICKETBUNDLECONTRIB)
 type TicketBundleContrib struct {
 	BundleID string              `json:"bundleId"`
 	Files    []TicketFileContrib `json:"files"`
 }
 
 // TicketFileContrib holds the data fields for a ticket file contrib record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§TicketFileContrib](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/TICKETFILECONTRIB)
 type TicketFileContrib struct {
 	FileID   string                 `json:"fileId"`
 	Sections []TicketSectionContrib `json:"sections"`
 }
 
 // TicketSectionContrib holds the data fields for a ticket section contrib record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§TicketSectionContrib](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/TICKETSECTIONCONTRIB)
 type TicketSectionContrib struct {
 	SectionID   string       `json:"sectionId"`
 	Definitions []string     `json:"definitions"`
@@ -7358,6 +7548,7 @@ type TicketSectionContrib struct {
 }
 
 // Policy holds the data fields for a policy record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§Policy](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/POLICY)
 type Policy struct {
 	ID             string               `json:"id"`
 	Name           string               `json:"name"`
@@ -7369,9 +7560,11 @@ type Policy struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Policy is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (p *Policy) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Policy.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (p *Policy) GetID() string {
 	slug := p.ID
 	if !strings.HasPrefix(slug, "/") {
@@ -7381,11 +7574,13 @@ func (p *Policy) GetID() string {
 }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Policy.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (p *Policy) GetURI() string {
 	return "semiorepo://policy/" + strings.ToUpper(Slugify(p.ID))
 }
 
 // ViolationKindMeta holds the data fields for a violation kind meta record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ViolationKindMeta](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/VIOLATIONKINDMETA)
 type ViolationKindMeta struct {
 	Kind        ViolationKind     `json:"kind"`
 	PolicyID    string            `json:"policyId"`
@@ -7397,26 +7592,31 @@ type ViolationKindMeta struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the ViolationKindMeta is node.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
 func (v *ViolationKindMeta) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the ViolationKindMeta.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (v *ViolationKindMeta) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiViolationKind), ViolationKindPathToIdValue(string(v.Kind)))
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the ViolationKindMeta.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (v *ViolationKindMeta) GetURI() string {
 	return "semiorepo://violationKind/" + ViolationKindIdToUriPath(string(v.Kind))
 }
 
 // AnalyzeResult holds the data fields for a analyze result record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§AnalyzeResult](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ANALYZERESULT)
 type AnalyzeResult struct {
 	Violations []*Violation    `json:"violations"`
 	Metrics    *AnalyzeMetrics `json:"metrics"`
 }
 
 // FixResult holds the data fields for a fix result record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§FixResult](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/FIXRESULT)
 type FixResult struct {
 	Fixed      int          `json:"fixed"`
 	Remaining  int          `json:"remaining"`
@@ -7424,6 +7624,7 @@ type FixResult struct {
 }
 
 // ContributorContributions holds the data fields for a contributor contributions record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributorContributions](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTORCONTRIBUTIONS)
 type ContributorContributions struct {
 	Bundles     []ContributionBundle     `json:"bundles"`
 	Folders     []ContributionFolder     `json:"folders"`
@@ -7433,36 +7634,42 @@ type ContributorContributions struct {
 }
 
 // ContributionBundle holds the data fields for a contribution bundle record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributionBundle](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTIONBUNDLE)
 type ContributionBundle struct {
 	BundleID string        `json:"bundleId"`
 	Metrics  *CountMetrics `json:"metrics"`
 }
 
 // ContributionFolder holds the data fields for a contribution folder record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributionFolder](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTIONFOLDER)
 type ContributionFolder struct {
 	FolderID string        `json:"folderId"`
 	Metrics  *CountMetrics `json:"metrics"`
 }
 
 // ContributionFile holds the data fields for a contribution file record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributionFile](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTIONFILE)
 type ContributionFile struct {
 	FileID  string       `json:"fileId"`
 	Metrics *LineMetrics `json:"metrics"`
 }
 
 // ContributionSection holds the data fields for a contribution section record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributionSection](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTIONSECTION)
 type ContributionSection struct {
 	SectionID string       `json:"sectionId"`
 	Metrics   *LineMetrics `json:"metrics"`
 }
 
 // ContributionDefinition holds the data fields for a contribution definition record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§ContributionDefinition](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/CONTRIBUTIONDEFINITION)
 type ContributionDefinition struct {
 	DefinitionID string       `json:"definitionId"`
 	Metrics      *LineMetrics `json:"metrics"`
 }
 
 // SemanticChangeType represents a semantic change type value.
+// [🪨semio-repo/cli/main.go#GraphQL Types§SemanticChangeType](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/SEMANTICCHANGETYPE)
 type SemanticChangeType string
 
 const (
@@ -7473,6 +7680,7 @@ const (
 )
 
 // SemanticChange holds the data fields for a semantic change record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§SemanticChange](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/SEMANTICCHANGE)
 type SemanticChange struct {
 	Kind     string
 	Status   SemanticChangeType
@@ -7828,6 +8036,7 @@ func buildDefinitionDiffs(baseCodebase, currentCodebase *Codebase, baseCommit st
 
 // BuildSemanticDiffs MUST assemble the semantic diffs from the available context data.
 // BuildSemanticDiffs constructs and returns the semantic diffs structure.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§BuildSemanticDiffs](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/BUILDSEMANTICDIFFS)
 func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit string, diffLines map[string]*DiffLines, diffStatuses []GitDiffStatus, bundles []Bundle) *TicketDiffs {
 	result := newTicketDiffs()
 	ctx := &CodebaseContext{Bundles: bundles}
@@ -7959,9 +8168,12 @@ func BuildSemanticDiffs(baseCodebase, currentCodebase *Codebase, baseCommit stri
 }
 
 // #region 🔖GraphQL Input Types
+
+// [🔖semio-repo/cli/main.go#GraphQL Input Types](semiorepo://section/semio-repo/cli/main.go/GRAPHQL-INPUT-TYPES)
 // GraphQL mutation input types for tickets, goals, todos, and contributors.
 
 // FileListInput holds the data fields for a file list input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§FileListInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/FILELISTINPUT)
 type FileListInput struct {
 	Updated []string `json:"updated,omitempty"`
 	Created []string `json:"created,omitempty"`
@@ -7969,6 +8181,7 @@ type FileListInput struct {
 }
 
 // TicketOpenInput holds the data fields for a ticket open input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketOpenInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/TICKETOPENINPUT)
 type TicketOpenInput struct {
 	Title    string `json:"title"`
 	Prompt   string `json:"prompt"`
@@ -7983,12 +8196,14 @@ type TicketOpenInput struct {
 }
 
 // DraftCreateInput holds the data fields for a draft create input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§DraftCreateInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/DRAFTCREATEINPUT)
 type DraftCreateInput struct {
 	Slug  string   `json:"slug"`
 	Files []string `json:"files,omitempty"`
 }
 
 // TicketProgressInput holds the data fields for a ticket progress input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketProgressInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/TICKETPROGRESSINPUT)
 type TicketProgressInput struct {
 	Year    int    `json:"year"`
 	Month   int    `json:"month"`
@@ -7998,6 +8213,7 @@ type TicketProgressInput struct {
 }
 
 // GoalCreateInput holds the data fields for a goal create input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§GoalCreateInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/GOALCREATEINPUT)
 type GoalCreateInput struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -8011,6 +8227,7 @@ type GoalCreateInput struct {
 }
 
 // GoalChangeInput holds the data fields for a goal change input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§GoalChangeInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/GOALCHANGEINPUT)
 type GoalChangeInput struct {
 	ID          string  `json:"id"`
 	Title       *string `json:"title,omitempty"`
@@ -8021,6 +8238,7 @@ type GoalChangeInput struct {
 }
 
 // GoalCloseInput holds the data fields for a goal close input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§GoalCloseInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/GOALCLOSEINPUT)
 type GoalCloseInput struct {
 	ID       string `json:"id"`
 	Summary  string `json:"summary"`
@@ -8028,6 +8246,7 @@ type GoalCloseInput struct {
 }
 
 // GoalReopenInput holds the data fields for a goal reopen input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§GoalReopenInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/GOALREOPENINPUT)
 type GoalReopenInput struct {
 	ID          string  `json:"id"`
 	Prompt      string  `json:"prompt"`
@@ -8041,12 +8260,14 @@ type GoalReopenInput struct {
 }
 
 // GoalDeleteInput holds the data fields for a goal delete input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§GoalDeleteInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/GOALDELETEINPUT)
 type GoalDeleteInput struct {
 	ID       string `json:"id"`
 	NoGithub bool   `json:"noGithub,omitempty"`
 }
 
 // TicketDeleteInput holds the data fields for a ticket delete input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketDeleteInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/TICKETDELETEINPUT)
 type TicketDeleteInput struct {
 	Year     int    `json:"year"`
 	Month    int    `json:"month"`
@@ -8056,6 +8277,7 @@ type TicketDeleteInput struct {
 }
 
 // TicketCloseInput holds the data fields for a ticket close input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketCloseInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/TICKETCLOSEINPUT)
 type TicketCloseInput struct {
 	Year     int      `json:"year"`
 	Month    int      `json:"month"`
@@ -8069,6 +8291,7 @@ type TicketCloseInput struct {
 }
 
 // TicketReopenInput holds the data fields for a ticket reopen input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketReopenInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/TICKETREOPENINPUT)
 type TicketReopenInput struct {
 	Year     int     `json:"year"`
 	Month    int     `json:"month"`
@@ -8085,6 +8308,7 @@ type TicketReopenInput struct {
 }
 
 // TicketChangeInput holds the data fields for a ticket change input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§TicketChangeInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/TICKETCHANGEINPUT)
 type TicketChangeInput struct {
 	Year     int     `json:"year"`
 	Month    int     `json:"month"`
@@ -8100,6 +8324,7 @@ type TicketChangeInput struct {
 }
 
 // ContributorAddInput holds the data fields for a contributor add input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§ContributorAddInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/CONTRIBUTORADDINPUT)
 type ContributorAddInput struct {
 	Github       string   `json:"github"`
 	Name         *string  `json:"name,omitempty"`
@@ -8111,6 +8336,7 @@ type ContributorAddInput struct {
 }
 
 // FilterInput holds the data fields for a filter input record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§FilterInput](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/FILTERINPUT)
 type FilterInput struct {
 	Filter         *string  `json:"filter,omitempty"`
 	Regex          *bool    `json:"regex,omitempty"`
@@ -8124,6 +8350,7 @@ type FilterInput struct {
 
 // ToStreamOptions MUST map all filter input fields to stream options.
 // ToStreamOptions converts the filter input into stream options.
+// [🛠️semio-repo/cli/main.go#GraphQL Types#GraphQL Input Types§ToStreamOptions](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES/TOSTREAMOPTIONS)
 func (f *FilterInput) ToStreamOptions() StreamOptions {
 	if f == nil {
 		return StreamOptions{}
@@ -8157,9 +8384,12 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 // #endregion 🔖GraphQL Types
 
 // #region 🔖Types
+
+// [🔖semio-repo/cli/main.go#Types](semiorepo://section/semio-repo/cli/main.go/TYPES)
 // Scope, todo, violation, and ticket metric types for the repository model.
 
 // ScopeKind represents a scope kind value.
+// [🪨semio-repo/cli/main.go#Types§ScopeKind](semiorepo://definition/semio-repo/cli/main.go/TYPES/SCOPEKIND)
 type ScopeKind string
 
 const (
@@ -8172,6 +8402,7 @@ const (
 )
 
 // Scope holds the data fields for a scope record.
+// [🛠️semio-repo/cli/main.go#Types§Scope](semiorepo://definition/semio-repo/cli/main.go/TYPES/SCOPE)
 type Scope struct {
 	Raw            string    `json:"raw"`
 	Kind           ScopeKind `json:"kind"`
@@ -8182,6 +8413,7 @@ type Scope struct {
 }
 
 // TodoCreateInput holds the data fields for a todo create input record.
+// [🛠️semio-repo/cli/main.go#Types§TodoCreateInput](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOCREATEINPUT)
 type TodoCreateInput struct {
 	ParentID    string `json:"parentId"`
 	Name        string `json:"name"`
@@ -8189,6 +8421,7 @@ type TodoCreateInput struct {
 }
 
 // TodoChangeInput holds the data fields for a todo change input record.
+// [🛠️semio-repo/cli/main.go#Types§TodoChangeInput](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOCHANGEINPUT)
 type TodoChangeInput struct {
 	ID          string  `json:"id"`
 	Name        *string `json:"name"`
@@ -8196,6 +8429,7 @@ type TodoChangeInput struct {
 }
 
 // Todo holds the data fields for a todo record.
+// [🛠️semio-repo/cli/main.go#Types§Todo](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODO)
 type Todo struct {
 	ID          string    `json:"id"`
 	Name        string    `json:"name"`
@@ -8206,15 +8440,19 @@ type Todo struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Todo is node.
+// [🛠️semio-repo/cli/main.go#Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/TYPES/ISNODE)
 func (t *Todo) IsNode()        {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Todo.
+// [🛠️semio-repo/cli/main.go#Types§GetID](semiorepo://definition/semio-repo/cli/main.go/TYPES/GETID)
 func (t *Todo) GetID() string  { return fmt.Sprintf("%s%s", emojiText(EmojiTodo), t.ID) }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Todo.
+// [🛠️semio-repo/cli/main.go#Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/GETURI)
 func (t *Todo) GetURI() string { return "semiorepo://todo/" + strings.ToUpper(Slugify(t.ID)) }
 
 // Location holds the data fields for a location record.
+// [🛠️semio-repo/cli/main.go#Types§Location](semiorepo://definition/semio-repo/cli/main.go/TYPES/LOCATION)
 type Location struct {
 	FilePath string `json:"filePath"`
 	Line     int    `json:"line"`
@@ -8222,6 +8460,7 @@ type Location struct {
 }
 
 // Violation holds the data fields for a violation record.
+// [🛠️semio-repo/cli/main.go#Types§Violation](semiorepo://definition/semio-repo/cli/main.go/TYPES/VIOLATION)
 type Violation struct {
 	ID      string        `json:"id"`
 	Summary string        `json:"summary"`
@@ -8234,43 +8473,54 @@ type Violation struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Violation is node.
+// [🛠️semio-repo/cli/main.go#Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/TYPES/ISNODE)
 func (v *Violation) IsNode()        {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Violation.
+// [🛠️semio-repo/cli/main.go#Types§GetID](semiorepo://definition/semio-repo/cli/main.go/TYPES/GETID)
 func (v *Violation) GetID() string  { return fmt.Sprintf("%s%s", emojiText(EmojiViolation), v.ID) }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Violation.
+// [🛠️semio-repo/cli/main.go#Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/GETURI)
 func (v *Violation) GetURI() string { return "semiorepo://violation/" + strings.ToUpper(Slugify(v.ID)) }
 
 // Priority MUST derive the value from the violation kind metadata.
 // Priority returns the priority of the violation from its kind metadata.
+// [🛠️semio-repo/cli/main.go#Types§Priority](semiorepo://definition/semio-repo/cli/main.go/TYPES/PRIORITY)
 func (v *Violation) Priority() ViolationPriority {
 	return v.Kind.Info().Priority
 }
 
 // Autofixable MUST return true only for violation kinds that support auto-fix.
 // Autofixable reports whether the violation kind supports automatic fixing.
+// [🛠️semio-repo/cli/main.go#Types§Autofixable](semiorepo://definition/semio-repo/cli/main.go/TYPES/AUTOFIXABLE)
 func (v *Violation) Autofixable() bool {
 	return v.Kind.Info().Autofixable
 }
 
 // TicketFileMetrics holds the data fields for a ticket file metrics record.
+// [🛠️semio-repo/cli/main.go#Types§TicketFileMetrics](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETFILEMETRICS)
 type TicketFileMetrics struct {
 	Sections map[string]TicketSectionMetrics `yaml:"sections" json:"sections"`
 }
 
 // TicketBundleMetrics holds the data fields for a ticket bundle metrics record.
+// [🛠️semio-repo/cli/main.go#Types§TicketBundleMetrics](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETBUNDLEMETRICS)
 type TicketBundleMetrics struct {
 	Files map[string]TicketFileMetrics `yaml:"files" json:"files"`
 }
 
 // TicketBundles represents a ticket bundles value.
+// [🛠️semio-repo/cli/main.go#Types§TicketBundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETBUNDLES)
 type TicketBundles map[string]TicketBundleMetrics
 
 // #region 🔖Languages
+
+// [🔖semio-repo/cli/main.go#Languages](semiorepo://section/semio-repo/cli/main.go/LANGUAGES)
 // Language plugin registry with parsers for sections, definitions, comments, imports, and headers.
 
 // LanguagePlugin defines the interface contract for language plugin operations.
+// [✂️semio-repo/cli/main.go#Types#Languages§LanguagePlugin](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/LANGUAGEPLUGIN)
 type LanguagePlugin interface {
 	Name() string
 	Extensions() []string
@@ -8300,6 +8550,7 @@ type LanguagePlugin interface {
 }
 
 // DefinitionRange holds the data fields for a definition range record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§DefinitionRange](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/DEFINITIONRANGE)
 type DefinitionRange struct {
 	Name    string
 	Kind    string
@@ -8309,6 +8560,7 @@ type DefinitionRange struct {
 }
 
 // BaseLanguage holds the data fields for a base language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§BaseLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/BASELANGUAGE)
 type BaseLanguage struct {
 	name               string
 	extensions         []string
@@ -8335,37 +8587,48 @@ type BaseLanguage struct {
 
 // Name MUST operate on the BaseLanguage receiver and return consistent results.
 // Name performs the name operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§Name](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/NAME)
 func (l *BaseLanguage) Name() string              { return l.name }
 // Extensions MUST operate on the BaseLanguage receiver and return consistent results.
 // Extensions performs the extensions operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§Extensions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/EXTENSIONS)
 func (l *BaseLanguage) Extensions() []string      { return l.extensions }
 // CommentPrefix MUST operate on the BaseLanguage receiver and return consistent results.
 // CommentPrefix performs the comment prefix operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§CommentPrefix](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/COMMENTPREFIX)
 func (l *BaseLanguage) CommentPrefix() string     { return l.commentPrefix }
 // BlockCommentStart MUST operate on the BaseLanguage receiver and return consistent results.
 // BlockCommentStart performs the block comment start operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§BlockCommentStart](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/BLOCKCOMMENTSTART)
 func (l *BaseLanguage) BlockCommentStart() string { return l.blockCommentStart }
 // BlockCommentEnd MUST operate on the BaseLanguage receiver and return consistent results.
 // BlockCommentEnd performs the block comment end operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§BlockCommentEnd](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/BLOCKCOMMENTEND)
 func (l *BaseLanguage) BlockCommentEnd() string   { return l.blockCommentEnd }
 // UsesIndentScoping MUST operate on the BaseLanguage receiver and return consistent results.
 // UsesIndentScoping performs the uses indent scoping operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§UsesIndentScoping](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/USESINDENTSCOPING)
 func (l *BaseLanguage) UsesIndentScoping() bool   { return l.usesIndentScoping }
 // SupportsSections MUST operate on the BaseLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§SupportsSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/SUPPORTSSECTIONS)
 func (l *BaseLanguage) SupportsSections() bool    { return l.sectionStart != nil }
 // SupportsDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§SupportsDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/SUPPORTSDEFINITIONS)
 func (l *BaseLanguage) SupportsDefinitions() bool { return l.definitionRegexp != nil }
 // SupportsComments MUST operate on the BaseLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§SupportsComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/SUPPORTSCOMMENTS)
 func (l *BaseLanguage) SupportsComments() bool    { return l.commentPrefix != "" }
 // SupportsHeaders MUST operate on the BaseLanguage receiver and return consistent results.
 // SupportsHeaders performs the supports headers operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§SupportsHeaders](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/SUPPORTSHEADERS)
 func (l *BaseLanguage) SupportsHeaders() bool     { return l.supportsHeaders }
 
 // MatchesExtension MUST operate on the BaseLanguage receiver and return consistent results.
 // MatchesExtension performs the matches extension operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§MatchesExtension](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/MATCHESEXTENSION)
 func (l *BaseLanguage) MatchesExtension(ext string) bool {
 	ext = strings.ToLower(ext)
 	for _, langExt := range l.extensions {
@@ -8378,6 +8641,7 @@ func (l *BaseLanguage) MatchesExtension(ext string) bool {
 
 // FormatSectionStart MUST produce a well-formed section start string.
 // FormatSectionStart formats the section start into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages§FormatSectionStart](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/FORMATSECTIONSTART)
 func (l *BaseLanguage) FormatSectionStart(name string) string {
 	if l.sectionStartFmt == "" {
 		return ""
@@ -8387,6 +8651,7 @@ func (l *BaseLanguage) FormatSectionStart(name string) string {
 
 // FormatSectionEnd MUST produce a well-formed section end string.
 // FormatSectionEnd formats the section end into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages§FormatSectionEnd](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/FORMATSECTIONEND)
 func (l *BaseLanguage) FormatSectionEnd(name string) string {
 	if l.sectionEndFmt == "" {
 		return ""
@@ -8396,6 +8661,7 @@ func (l *BaseLanguage) FormatSectionEnd(name string) string {
 
 // FormatSectionBoth MUST produce a well-formed section both string.
 // FormatSectionBoth formats the section both into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages§FormatSectionBoth](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/FORMATSECTIONBOTH)
 func (l *BaseLanguage) FormatSectionBoth(name string) string {
 	if l.sectionBothFmt == "" {
 		return ""
@@ -8408,6 +8674,7 @@ func (l *BaseLanguage) FormatSectionBoth(name string) string {
 
 // FormatHeader MUST produce a well-formed header string.
 // FormatHeader formats the header into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages§FormatHeader](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/FORMATHEADER)
 func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, license, specs string) string {
 	if !l.supportsHeaders {
 		return ""
@@ -8458,6 +8725,7 @@ func (l *BaseLanguage) FormatHeader(fileId, fileUri, summary, contributors, lice
 
 // PolicySectionStartMatch MUST operate on the BaseLanguage receiver and return consistent results.
 // PolicySectionStartMatch performs the policy section start match operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§PolicySectionStartMatch](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/POLICYSECTIONSTARTMATCH)
 func (l *BaseLanguage) PolicySectionStartMatch(line string) (bool, string) {
 	if l.policySectionStart == nil {
 		return false, ""
@@ -8475,6 +8743,7 @@ func (l *BaseLanguage) PolicySectionStartMatch(line string) (bool, string) {
 
 // PolicySectionEndMatch MUST operate on the BaseLanguage receiver and return consistent results.
 // PolicySectionEndMatch performs the policy section end match operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§PolicySectionEndMatch](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/POLICYSECTIONENDMATCH)
 func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 	if l.policySectionEnd == nil {
 		return false, ""
@@ -8492,6 +8761,7 @@ func (l *BaseLanguage) PolicySectionEndMatch(line string) (bool, string) {
 
 // ParseSections MUST return an error when the input is malformed.
 // ParseSections parses the input and returns the sections result.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ParseSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/PARSESECTIONS)
 func (l *BaseLanguage) ParseSections(content string) []Section {
 	if l.sectionStart == nil {
 		return nil
@@ -8559,6 +8829,7 @@ func (l *BaseLanguage) ParseSections(content string) []Section {
 
 // ParseDefinitions MUST return an error when the input is malformed.
 // ParseDefinitions parses the input and returns the definitions result.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ParseDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/PARSEDEFINITIONS)
 func (l *BaseLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
 	if l.definitionRegexp == nil {
 		return nil
@@ -8714,12 +8985,14 @@ func extractDefinitionKeyword(fullMatch, name string) string {
 
 // ExtraOrphanDefinitions MUST operate on the BaseLanguage receiver and return consistent results.
 // ExtraOrphanDefinitions performs the extra orphan definitions operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ExtraOrphanDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/EXTRAORPHANDEFINITIONS)
 func (l *BaseLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	return nil
 }
 
 // SkipDirectives MUST operate on the BaseLanguage receiver and return consistent results.
 // SkipDirectives performs the skip directives operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§SkipDirectives](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/SKIPDIRECTIVES)
 func (l *BaseLanguage) SkipDirectives() []string {
 	builtIn := []string{"TODO", "semio-ignore-"}
 	return append(builtIn, l.skipDirectives...)
@@ -8727,6 +9000,7 @@ func (l *BaseLanguage) SkipDirectives() []string {
 
 // ScanComments MUST operate on the BaseLanguage receiver and return consistent results.
 // ScanComments performs the scan comments operation on the BaseLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ScanComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/SCANCOMMENTS)
 func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation {
 	if l.commentPrefix == "" {
 		return nil
@@ -9046,32 +9320,39 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ExtractImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/EXTRACTIMPORTS)
 func (l *BaseLanguage) ExtractImports(content string) ([]string, string) {
 	return []string{}, content
 }
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages§FormatImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/FORMATIMPORTS)
 func (l *BaseLanguage) FormatImports(imports []string) string {
 	return ""
 }
 
 // ExtractPackage MUST return the extracted value without side effects.
 // ExtractPackage extracts the package from the given input.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ExtractPackage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/EXTRACTPACKAGE)
 func (l *BaseLanguage) ExtractPackage(content string) (string, string) {
 	return "", content
 }
 
 // #region 🔖TypeScript
+
+// [🔖semio-repo/cli/main.go#TypeScript](semiorepo://section/semio-repo/cli/main.go/TYPESCRIPT)
 // TypeScript language plugin with section, definition, comment, and import support.
 
 // TypeScriptLanguage holds the data fields for a type script language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript§TypeScriptLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/TYPESCRIPTLANGUAGE)
 type TypeScriptLanguage struct {
 	BaseLanguage
 }
 
 // NewTypeScriptLanguage MUST initialize all required fields and return a valid TypeScriptLanguage.
 // NewTypeScriptLanguage creates and returns a new TypeScriptLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript§NewTypeScriptLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/NEWTYPESCRIPTLANGUAGE)
 func NewTypeScriptLanguage() *TypeScriptLanguage {
 	return &TypeScriptLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9096,6 +9377,7 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 
 // ScanComments MUST operate on the TypeScriptLanguage receiver and return consistent results.
 // ScanComments performs the scan comments operation on the TypeScriptLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript§ScanComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/SCANCOMMENTS)
 func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation {
 	if DeriveFileKind(file) == FileKindConfig {
 		return nil
@@ -9132,7 +9414,27 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					scanState.BlockCommentHasTodo = true
 				}
 				if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
-					if !scanState.BlockCommentHasTodo && !ctx.IsSpecBlock(file, scanState.BlockCommentStartLine, lineNum, lines) {
+					isDefDocstring := false
+					if scanState.BlockCommentIsJsDoc {
+						restOfLine := strings.TrimSpace(line[j+2:])
+						nextDefLine := i + 1
+						if restOfLine == "" {
+							for k := nextDefLine; k < len(lines); k++ {
+								trimmedNext := strings.TrimSpace(lines[k])
+								if trimmedNext == "" {
+									continue
+								}
+								nextDefLine = k
+								break
+							}
+						} else {
+							nextDefLine = i
+						}
+						if nextDefLine < len(lines) {
+							isDefDocstring = ctx.IsDefinitionDocLine(file, scanState.BlockCommentStartLine)
+						}
+					}
+					if !isDefDocstring && !scanState.BlockCommentHasTodo && !ctx.IsSpecBlock(file, scanState.BlockCommentStartLine, lineNum, lines) {
 						if scanState.BlockCommentIsJsDoc {
 							violations = append(violations, ctx.CreateViolation(
 								fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
@@ -9302,6 +9604,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript§ExtractImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/EXTRACTIMPORTS)
 func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -9330,6 +9633,7 @@ func (l *TypeScriptLanguage) ExtractImports(content string) ([]string, string) {
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript§FormatImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/FORMATIMPORTS)
 func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -9346,15 +9650,19 @@ func (l *TypeScriptLanguage) FormatImports(imports []string) string {
 }
 
 // #region 🔖Go
+
+// [🔖semio-repo/cli/main.go#Go](semiorepo://section/semio-repo/cli/main.go/GO)
 // Go language plugin with section, definition, import, and package support.
 
 // GoLanguage holds the data fields for a go language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§GoLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/GOLANGUAGE)
 type GoLanguage struct {
 	BaseLanguage
 }
 
 // NewGoLanguage MUST initialize all required fields and return a valid GoLanguage.
 // NewGoLanguage creates and returns a new GoLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§NewGoLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/NEWGOLANGUAGE)
 func NewGoLanguage() *GoLanguage {
 	return &GoLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9381,6 +9689,7 @@ func NewGoLanguage() *GoLanguage {
 
 // ExtraOrphanDefinitions MUST operate on the GoLanguage receiver and return consistent results.
 // ExtraOrphanDefinitions performs the extra orphan definitions operation on the GoLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§ExtraOrphanDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/EXTRAORPHANDEFINITIONS)
 func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	for i := 0; i < len(lines); i++ {
@@ -9414,6 +9723,7 @@ func (l *GoLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§ExtractImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/EXTRACTIMPORTS)
 func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -9450,6 +9760,7 @@ func (l *GoLanguage) ExtractImports(content string) ([]string, string) {
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§FormatImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/FORMATIMPORTS)
 func (l *GoLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -9473,6 +9784,7 @@ func (l *GoLanguage) FormatImports(imports []string) string {
 
 // ExtractPackage MUST return the extracted value without side effects.
 // ExtractPackage extracts the package from the given input.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§ExtractPackage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/EXTRACTPACKAGE)
 func (l *GoLanguage) ExtractPackage(content string) (string, string) {
 	lines := strings.Split(content, "\n")
 	pkg := ""
@@ -9490,28 +9802,30 @@ func (l *GoLanguage) ExtractPackage(content string) (string, string) {
 }
 
 // PythonLanguage holds the data fields for a python language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§PythonLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/PYTHONLANGUAGE)
 type PythonLanguage struct {
 	BaseLanguage
 }
 
 // NewPythonLanguage MUST initialize all required fields and return a valid PythonLanguage.
 // NewPythonLanguage creates and returns a new PythonLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§NewPythonLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/NEWPYTHONLANGUAGE)
 func NewPythonLanguage() *PythonLanguage {
 	return &PythonLanguage{
 		BaseLanguage: BaseLanguage{
 			name:               "python",
 			extensions:         []string{".py"},
-			sectionStart:       regexp.MustCompile(`(?i)^\s*#\s*region\s+(.+?)\s*$`),
-			sectionEnd:         regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(.+?))?\s*$`),
+			sectionStart:       regexp.MustCompile(`(?i)^\s*#\s*#?region\s+(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*#\s*#?endregion(?:\s+(.+?))?\s*$`),
 			definitionRegexp:   regexp.MustCompile(`^(?:def|class|async\s+def)\s+([A-Za-z_][A-Za-z0-9_]*)`),
 			commentPrefix:      "#",
-			sectionStartFmt:    "# region %s",
-			sectionEndFmt:      "# endregion %s",
-			sectionBothFmt:     "\n# region %s\n\n# endregion %s\n",
+			sectionStartFmt:    "# #region 🔖%s",
+			sectionEndFmt:      "# #endregion 🔖%s",
+			sectionBothFmt:     "\n# #region 🔖%s\n\n# #endregion 🔖%s\n",
 			supportsHeaders:    true,
 			usesIndentScoping:  true,
-			policySectionStart: regexp.MustCompile(`(?i)^\s*#\s*region(?:\s+(\S.*?))?\s*$`),
-			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#\s*endregion(?:\s+(\S.*?))?\s*$`),
+			policySectionStart: regexp.MustCompile(`(?i)^\s*#\s*#?region(?:\s+(\S.*?))?\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#\s*#?endregion(?:\s+(\S.*?))?\s*$`),
 			hasTripleQuotes:    true,
 			skipDirectives:     []string{"noqa", "type: ignore", "pylint:", "pragma:"},
 		},
@@ -9520,6 +9834,7 @@ func NewPythonLanguage() *PythonLanguage {
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§ExtractImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/EXTRACTIMPORTS)
 func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -9537,6 +9852,7 @@ func (l *PythonLanguage) ExtractImports(content string) ([]string, string) {
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Go§FormatImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GO/FORMATIMPORTS)
 func (l *PythonLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -9556,33 +9872,37 @@ func (l *PythonLanguage) FormatImports(imports []string) string {
 // #endregion 🔖Go
 
 // #region 🔖C#
+
+// [🔖semio-repo/cli/main.go#C#](semiorepo://section/semio-repo/cli/main.go/C/)
 // C# language plugin with section, definition, and import support.
 
 // CSharpLanguage holds the data fields for a c sharp language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#C#§CSharpLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/C//CSHARPLANGUAGE)
 type CSharpLanguage struct {
 	BaseLanguage
 }
 
 // NewCSharpLanguage MUST initialize all required fields and return a valid CSharpLanguage.
 // NewCSharpLanguage creates and returns a new CSharpLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#C#§NewCSharpLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/C//NEWCSHARPLANGUAGE)
 func NewCSharpLanguage() *CSharpLanguage {
 	return &CSharpLanguage{
 		BaseLanguage: BaseLanguage{
 			name:               "csharp",
 			extensions:         []string{".cs"},
-			sectionStart:       regexp.MustCompile(`(?i)^\s*#region\s+(.+?)\s*$`),
-			sectionEnd:         regexp.MustCompile(`(?i)^\s*#endregion(?:\s+(.+?))?\s*$`),
+			sectionStart:       regexp.MustCompile(`(?i)^\s*(?://\s*)?#region\s+(.+?)\s*$`),
+			sectionEnd:         regexp.MustCompile(`(?i)^\s*(?://\s*)?#endregion(?:\s+(.+?))?\s*$`),
 			definitionRegexp:   regexp.MustCompile(`^(?:(?:public|private|protected|internal|static|partial|abstract|sealed|virtual|override|async)\s+)*(?:class|struct|interface|enum|delegate|record|void|string|int|bool|[A-Z][A-Za-z0-9_<>]*)\s+([A-Z][A-Za-z0-9_]*)\s*[<({]`),
 			commentPrefix:      "//",
 			blockCommentStart:  "/*",
 			blockCommentEnd:    "*/",
-			sectionStartFmt:    "#region 🔖%s",
-			sectionEndFmt:      "#endregion 🔖%s",
-			sectionBothFmt:     "\n#region 🔖%s\n\n#endregion 🔖%s\n",
+			sectionStartFmt:    "// #region 🔖%s",
+			sectionEndFmt:      "// #endregion 🔖%s",
+			sectionBothFmt:     "\n// #region 🔖%s\n\n// #endregion 🔖%s\n",
 			supportsHeaders:    true,
 			usesIndentScoping:  false,
-			policySectionStart: regexp.MustCompile(`(?i)^\s*#region(?:\s+(\S.*?))?\s*$`),
-			policySectionEnd:   regexp.MustCompile(`(?i)^\s*#endregion(?:\s+(\S.*?))?\s*$`),
+			policySectionStart: regexp.MustCompile(`(?i)^\s*(?://\s*)?#region(?:\s+(\S.*?))?\s*$`),
+			policySectionEnd:   regexp.MustCompile(`(?i)^\s*(?://\s*)?#endregion(?:\s+(\S.*?))?\s*$`),
 			hasVerbatimStrings: true,
 			skipDirectives:     []string{"pragma"},
 		},
@@ -9591,6 +9911,7 @@ func NewCSharpLanguage() *CSharpLanguage {
 
 // ExtractImports MUST return the extracted value without side effects.
 // ExtractImports extracts the imports from the given input.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#C#§ExtractImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/C//EXTRACTIMPORTS)
 func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
 	lines := strings.Split(content, "\n")
 	var imports []string
@@ -9608,6 +9929,7 @@ func (l *CSharpLanguage) ExtractImports(content string) ([]string, string) {
 
 // FormatImports MUST produce a well-formed imports string.
 // FormatImports formats the imports into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#C#§FormatImports](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/C//FORMATIMPORTS)
 func (l *CSharpLanguage) FormatImports(imports []string) string {
 	if len(imports) == 0 {
 		return ""
@@ -9627,15 +9949,19 @@ func (l *CSharpLanguage) FormatImports(imports []string) string {
 // #endregion 🔖C#
 
 // #region 🔖JSON
+
+// [🔖semio-repo/cli/main.go#JSON](semiorepo://section/semio-repo/cli/main.go/JSON)
 // JSON language plugin with section parsing via embedded comment keys.
 
 // JSONLanguage holds the data fields for a j s o n language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#JSON§JSONLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/JSON/JSONLANGUAGE)
 type JSONLanguage struct {
 	BaseLanguage
 }
 
 // NewJSONLanguage MUST initialize all required fields and return a valid JSONLanguage.
 // NewJSONLanguage creates and returns a new JSONLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#JSON§NewJSONLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/JSON/NEWJSONLANGUAGE)
 func NewJSONLanguage() *JSONLanguage {
 	return &JSONLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9649,19 +9975,24 @@ func NewJSONLanguage() *JSONLanguage {
 
 // SupportsSections MUST operate on the JSONLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the JSONLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#JSON§SupportsSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/JSON/SUPPORTSSECTIONS)
 func (l *JSONLanguage) SupportsSections() bool    { return true }
 // SupportsDefinitions MUST operate on the JSONLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the JSONLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#JSON§SupportsDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/JSON/SUPPORTSDEFINITIONS)
 func (l *JSONLanguage) SupportsDefinitions() bool { return false }
 // SupportsComments MUST operate on the JSONLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the JSONLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#JSON§SupportsComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/JSON/SUPPORTSCOMMENTS)
 func (l *JSONLanguage) SupportsComments() bool    { return false }
 // SupportsHeaders MUST operate on the JSONLanguage receiver and return consistent results.
 // SupportsHeaders performs the supports headers operation on the JSONLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#JSON§SupportsHeaders](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/JSON/SUPPORTSHEADERS)
 func (l *JSONLanguage) SupportsHeaders() bool     { return false }
 
 // ParseSections MUST return an error when the input is malformed.
 // ParseSections parses the input and returns the sections result.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#JSON§ParseSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/JSON/PARSESECTIONS)
 func (l *JSONLanguage) ParseSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
@@ -9670,15 +10001,19 @@ func (l *JSONLanguage) ParseSections(content string) []Section {
 // #endregion 🔖JSON
 
 // #region 🔖Markdown
+
+// [🔖semio-repo/cli/main.go#Markdown](semiorepo://section/semio-repo/cli/main.go/MARKDOWN)
 // Markdown language plugin with heading-based section parsing.
 
 // MarkdownLanguage holds the data fields for a markdown language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Markdown§MarkdownLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/MARKDOWN/MARKDOWNLANGUAGE)
 type MarkdownLanguage struct {
 	BaseLanguage
 }
 
 // NewMarkdownLanguage MUST initialize all required fields and return a valid MarkdownLanguage.
 // NewMarkdownLanguage creates and returns a new MarkdownLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Markdown§NewMarkdownLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/MARKDOWN/NEWMARKDOWNLANGUAGE)
 func NewMarkdownLanguage() *MarkdownLanguage {
 	return &MarkdownLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9696,16 +10031,20 @@ func NewMarkdownLanguage() *MarkdownLanguage {
 
 // SupportsSections MUST operate on the MarkdownLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the MarkdownLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Markdown§SupportsSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/MARKDOWN/SUPPORTSSECTIONS)
 func (l *MarkdownLanguage) SupportsSections() bool    { return true }
 // SupportsDefinitions MUST operate on the MarkdownLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the MarkdownLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Markdown§SupportsDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/MARKDOWN/SUPPORTSDEFINITIONS)
 func (l *MarkdownLanguage) SupportsDefinitions() bool { return false }
 // SupportsComments MUST operate on the MarkdownLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the MarkdownLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Markdown§SupportsComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/MARKDOWN/SUPPORTSCOMMENTS)
 func (l *MarkdownLanguage) SupportsComments() bool    { return false }
 
 // ParseSections MUST return an error when the input is malformed.
 // ParseSections parses the input and returns the sections result.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Markdown§ParseSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/MARKDOWN/PARSESECTIONS)
 func (l *MarkdownLanguage) ParseSections(content string) []Section {
 	return ParseMarkdownSectionsInternal(content)
 }
@@ -9713,15 +10052,19 @@ func (l *MarkdownLanguage) ParseSections(content string) []Section {
 // #endregion 🔖Markdown
 
 // #region 🔖Rust
+
+// [🔖semio-repo/cli/main.go#Rust](semiorepo://section/semio-repo/cli/main.go/RUST)
 // Rust language plugin with section, definition, and import support.
 
 // RustLanguage holds the data fields for a rust language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Rust§RustLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/RUST/RUSTLANGUAGE)
 type RustLanguage struct {
 	BaseLanguage
 }
 
 // NewRustLanguage MUST initialize all required fields and return a valid RustLanguage.
 // NewRustLanguage creates and returns a new RustLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Rust§NewRustLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/RUST/NEWRUSTLANGUAGE)
 func NewRustLanguage() *RustLanguage {
 	return &RustLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9746,6 +10089,7 @@ func NewRustLanguage() *RustLanguage {
 
 // ExtraOrphanDefinitions MUST operate on the RustLanguage receiver and return consistent results.
 // ExtraOrphanDefinitions performs the extra orphan definitions operation on the RustLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Rust§ExtraOrphanDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/RUST/EXTRAORPHANDEFINITIONS)
 func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	modRegexp := regexp.MustCompile(`^\s*(?:pub\s+)?mod\s+([A-Za-z_][A-Za-z0-9_]*)\s*;`)
@@ -9761,15 +10105,19 @@ func (l *RustLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 // #endregion 🔖Rust
 
 // #region 🔖Ruby
+
+// [🔖semio-repo/cli/main.go#Ruby](semiorepo://section/semio-repo/cli/main.go/RUBY)
 // Ruby language plugin with section, definition, and import support.
 
 // RubyLanguage holds the data fields for a ruby language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Ruby§RubyLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/RUBY/RUBYLANGUAGE)
 type RubyLanguage struct {
 	BaseLanguage
 }
 
 // NewRubyLanguage MUST initialize all required fields and return a valid RubyLanguage.
 // NewRubyLanguage creates and returns a new RubyLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Ruby§NewRubyLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/RUBY/NEWRUBYLANGUAGE)
 func NewRubyLanguage() *RubyLanguage {
 	return &RubyLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9794,6 +10142,7 @@ func NewRubyLanguage() *RubyLanguage {
 
 // ParseDefinitions MUST return an error when the input is malformed.
 // ParseDefinitions parses the input and returns the definitions result.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Ruby§ParseDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/RUBY/PARSEDEFINITIONS)
 func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []DefinitionRange {
 	if l.definitionRegexp == nil {
 		return nil
@@ -9853,6 +10202,7 @@ func (l *RubyLanguage) ParseDefinitions(content string, lines []string) []Defini
 
 // ExtraOrphanDefinitions MUST operate on the RubyLanguage receiver and return consistent results.
 // ExtraOrphanDefinitions performs the extra orphan definitions operation on the RubyLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Ruby§ExtraOrphanDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/RUBY/EXTRAORPHANDEFINITIONS)
 func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange {
 	var defs []DefinitionRange
 	moduleRegexp := regexp.MustCompile(`^\s*module\s+([A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*)`)
@@ -9868,15 +10218,19 @@ func (l *RubyLanguage) ExtraOrphanDefinitions(lines []string) []DefinitionRange 
 // #endregion 🔖Ruby
 
 // #region 🔖Shell
+
+// [🔖semio-repo/cli/main.go#Shell](semiorepo://section/semio-repo/cli/main.go/SHELL)
 // Shell language plugin with section and comment support.
 
 // ShellLanguage holds the data fields for a shell language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Shell§ShellLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/SHELL/SHELLLANGUAGE)
 type ShellLanguage struct {
 	BaseLanguage
 }
 
 // NewShellLanguage MUST initialize all required fields and return a valid ShellLanguage.
 // NewShellLanguage creates and returns a new ShellLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#Shell§NewShellLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/SHELL/NEWSHELLLANGUAGE)
 func NewShellLanguage() *ShellLanguage {
 	return &ShellLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9900,15 +10254,19 @@ func NewShellLanguage() *ShellLanguage {
 // #endregion 🔖Shell
 
 // #region 🔖TOML
+
+// [🔖semio-repo/cli/main.go#TOML](semiorepo://section/semio-repo/cli/main.go/TOML)
 // TOML language plugin with section heading and comment support.
 
 // TomlLanguage holds the data fields for a toml language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#TOML§TomlLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/TOML/TOMLLANGUAGE)
 type TomlLanguage struct {
 	BaseLanguage
 }
 
 // NewTomlLanguage MUST initialize all required fields and return a valid TomlLanguage.
 // NewTomlLanguage creates and returns a new TomlLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#TOML§NewTomlLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/TOML/NEWTOMLLANGUAGE)
 func NewTomlLanguage() *TomlLanguage {
 	return &TomlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9929,29 +10287,37 @@ func NewTomlLanguage() *TomlLanguage {
 
 // SupportsSections MUST operate on the TomlLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the TomlLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#TOML§SupportsSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/TOML/SUPPORTSSECTIONS)
 func (l *TomlLanguage) SupportsSections() bool    { return true }
 // SupportsDefinitions MUST operate on the TomlLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the TomlLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#TOML§SupportsDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/TOML/SUPPORTSDEFINITIONS)
 func (l *TomlLanguage) SupportsDefinitions() bool { return false }
 // SupportsComments MUST operate on the TomlLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the TomlLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#TOML§SupportsComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/TOML/SUPPORTSCOMMENTS)
 func (l *TomlLanguage) SupportsComments() bool    { return true }
 // SupportsHeaders MUST operate on the TomlLanguage receiver and return consistent results.
 // SupportsHeaders performs the supports headers operation on the TomlLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#TOML§SupportsHeaders](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/TOML/SUPPORTSHEADERS)
 func (l *TomlLanguage) SupportsHeaders() bool     { return false }
 
 // #endregion 🔖TOML
 
 // #region 🔖YAML
+
+// [🔖semio-repo/cli/main.go#YAML](semiorepo://section/semio-repo/cli/main.go/YAML)
 // YAML language plugin with section heading and comment support.
 
 // YamlLanguage holds the data fields for a yaml language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#YAML§YamlLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/YAML/YAMLLANGUAGE)
 type YamlLanguage struct {
 	BaseLanguage
 }
 
 // NewYamlLanguage MUST initialize all required fields and return a valid YamlLanguage.
 // NewYamlLanguage creates and returns a new YamlLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#YAML§NewYamlLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/YAML/NEWYAMLLANGUAGE)
 func NewYamlLanguage() *YamlLanguage {
 	return &YamlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -9972,29 +10338,37 @@ func NewYamlLanguage() *YamlLanguage {
 
 // SupportsSections MUST operate on the YamlLanguage receiver and return consistent results.
 // SupportsSections performs the supports sections operation on the YamlLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#YAML§SupportsSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/YAML/SUPPORTSSECTIONS)
 func (l *YamlLanguage) SupportsSections() bool    { return true }
 // SupportsDefinitions MUST operate on the YamlLanguage receiver and return consistent results.
 // SupportsDefinitions performs the supports definitions operation on the YamlLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#YAML§SupportsDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/YAML/SUPPORTSDEFINITIONS)
 func (l *YamlLanguage) SupportsDefinitions() bool { return false }
 // SupportsComments MUST operate on the YamlLanguage receiver and return consistent results.
 // SupportsComments performs the supports comments operation on the YamlLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#YAML§SupportsComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/YAML/SUPPORTSCOMMENTS)
 func (l *YamlLanguage) SupportsComments() bool    { return true }
 // SupportsHeaders MUST operate on the YamlLanguage receiver and return consistent results.
 // SupportsHeaders performs the supports headers operation on the YamlLanguage.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#YAML§SupportsHeaders](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/YAML/SUPPORTSHEADERS)
 func (l *YamlLanguage) SupportsHeaders() bool     { return false }
 
 // #endregion 🔖YAML
 
 // #region 🔖SQL
+
+// [🔖semio-repo/cli/main.go#SQL](semiorepo://section/semio-repo/cli/main.go/SQL)
 // SQL language plugin with section and comment support.
 
 // SqlLanguage holds the data fields for a sql language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#SQL§SqlLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/SQL/SQLLANGUAGE)
 type SqlLanguage struct {
 	BaseLanguage
 }
 
 // NewSqlLanguage MUST initialize all required fields and return a valid SqlLanguage.
 // NewSqlLanguage creates and returns a new SqlLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#SQL§NewSqlLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/SQL/NEWSQLLANGUAGE)
 func NewSqlLanguage() *SqlLanguage {
 	return &SqlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -10018,15 +10392,19 @@ func NewSqlLanguage() *SqlLanguage {
 // #endregion 🔖SQL
 
 // #region 🔖GraphQL
+
+// [🔖semio-repo/cli/main.go#GraphQL](semiorepo://section/semio-repo/cli/main.go/GRAPHQL)
 // GraphQL language plugin with section and comment support.
 
 // GraphqlLanguage holds the data fields for a graphql language record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#GraphQL§GraphqlLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GRAPHQL/GRAPHQLLANGUAGE)
 type GraphqlLanguage struct {
 	BaseLanguage
 }
 
 // NewGraphqlLanguage MUST initialize all required fields and return a valid GraphqlLanguage.
 // NewGraphqlLanguage creates and returns a new GraphqlLanguage instance.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript#GraphQL§NewGraphqlLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GRAPHQL/NEWGRAPHQLLANGUAGE)
 func NewGraphqlLanguage() *GraphqlLanguage {
 	return &GraphqlLanguage{
 		BaseLanguage: BaseLanguage{
@@ -10066,6 +10444,7 @@ var languageRegistry = []LanguagePlugin{
 
 // GetLanguage MUST return the stored value without modification.
 // GetLanguage returns the language of the value.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript§GetLanguage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GETLANGUAGE)
 func GetLanguage(filePath string) LanguagePlugin {
 	ext := strings.ToLower(filepath.Ext(filePath))
 	for _, lang := range languageRegistry {
@@ -10078,6 +10457,7 @@ func GetLanguage(filePath string) LanguagePlugin {
 
 // GetLanguageByName MUST return the stored value without modification.
 // GetLanguageByName returns the language by name of the value.
+// [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript§GetLanguageByName](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/GETLANGUAGEBYNAME)
 func GetLanguageByName(name string) LanguagePlugin {
 	for _, lang := range languageRegistry {
 		if lang.Name() == name {
@@ -10090,6 +10470,7 @@ func GetLanguageByName(name string) LanguagePlugin {
 // #endregion 🔖TypeScript
 
 // GitAuthor holds the data fields for a git author record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§GitAuthor](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GITAUTHOR)
 type GitAuthor struct {
 	Name   string `json:"name,omitempty" yaml:"name,omitempty"`
 	Email  string `json:"email,omitempty" yaml:"email,omitempty"`
@@ -10098,6 +10479,7 @@ type GitAuthor struct {
 
 // String MUST return the canonical string value.
 // String returns the string representation of the GitAuthor.
+// [🛠️semio-repo/cli/main.go#Types#Languages§String](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/STRING)
 func (a GitAuthor) String() string {
 	if a.Email != "" {
 		return fmt.Sprintf("%s <%s>", a.Name, a.Email)
@@ -10119,6 +10501,7 @@ func parseGitAuthor(s string) GitAuthor {
 
 // FindAndUpdateContributor MUST return nil when no match is found.
 // FindAndUpdateContributor searches for and returns the matching and update contributor.
+// [🛠️semio-repo/cli/main.go#Types#Languages§FindAndUpdateContributor](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/FINDANDUPDATECONTRIBUTOR)
 func FindAndUpdateContributor(authorStr string) string {
 	parsed := parseGitAuthor(authorStr)
 	if parsed.Name == "" && parsed.Email == "" {
@@ -10206,6 +10589,7 @@ func FindAndUpdateContributor(authorStr string) string {
 
 // GetSystem MUST return the stored value without modification.
 // GetSystem returns the system of the value.
+// [🛠️semio-repo/cli/main.go#Types#Languages§GetSystem](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GETSYSTEM)
 func GetSystem() string {
 	switch runtime.GOOS {
 	case "darwin":
@@ -10218,12 +10602,14 @@ func GetSystem() string {
 }
 
 // InteractionDates holds the data fields for a interaction dates record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§InteractionDates](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/INTERACTIONDATES)
 type InteractionDates struct {
 	Started  string  `json:"started" yaml:"started"`
 	Finished *string `json:"finished,omitempty" yaml:"finished,omitempty"`
 }
 
 // Interaction holds the data fields for a interaction record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§Interaction](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/INTERACTION)
 type Interaction struct {
 	Dates  InteractionDates `json:"dates" yaml:"dates"`
 	Author string           `json:"author" yaml:"author"`
@@ -10237,6 +10623,7 @@ type Interaction struct {
 
 // UnmarshalJSON MUST handle both legacy and current JSON layouts.
 // UnmarshalJSON performs the unmarshal j s o n operation on the Interaction.
+// [🛠️semio-repo/cli/main.go#Types#Languages§UnmarshalJSON](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/UNMARSHALJSON)
 func (i *Interaction) UnmarshalJSON(data []byte) error {
 	type Alias Interaction
 	raw := struct {
@@ -10323,6 +10710,7 @@ func resolveAuthorToGithub(name, email string) string {
 }
 
 // TicketSection holds the data fields for a ticket section record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§TicketSection](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETSECTION)
 type TicketSection struct {
 	Name        string       `json:"name"`
 	Range       *Range       `json:"range,omitempty"`
@@ -10331,17 +10719,20 @@ type TicketSection struct {
 }
 
 // TicketFile holds the data fields for a ticket file record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§TicketFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETFILE)
 type TicketFile struct {
 	Path  string       `json:"path"`
 	Lines *LineMetrics `json:"lines,omitempty"`
 }
 
 // TicketGithubData holds the data fields for a ticket github data record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§TicketGithubData](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETGITHUBDATA)
 type TicketGithubData struct {
 	Issue string `json:"issue,omitempty"`
 }
 
 // TicketFileRenamed holds the data fields for a ticket file renamed record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§TicketFileRenamed](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETFILERENAMED)
 type TicketFileRenamed struct {
 	From  string       `json:"from"`
 	To    string       `json:"to"`
@@ -10349,6 +10740,7 @@ type TicketFileRenamed struct {
 }
 
 // TicketDiffSet holds the data fields for a ticket diff set record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§TicketDiffSet](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETDIFFSET)
 type TicketDiffSet struct {
 	Deleted  []TicketFile        `json:"deleted"`
 	Renamed  []TicketFileRenamed `json:"renamed"`
@@ -10357,6 +10749,7 @@ type TicketDiffSet struct {
 }
 
 // TicketDiffs holds the data fields for a ticket diffs record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§TicketDiffs](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETDIFFS)
 type TicketDiffs struct {
 	Bundles     TicketDiffSet `json:"bundles"`
 	Folders     TicketDiffSet `json:"folders"`
@@ -10366,6 +10759,7 @@ type TicketDiffs struct {
 }
 
 // TicketData holds the data fields for a ticket data record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§TicketData](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETDATA)
 type TicketData struct {
 	Title        string            `json:"title"`
 	Interactions []Interaction     `json:"interactions"`
@@ -10378,6 +10772,7 @@ type TicketData struct {
 }
 
 // Goal holds the data fields for a goal record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§Goal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GOAL)
 type Goal struct {
 	Title        string          `json:"title"`
 	Description  string          `json:"description"`
@@ -10398,32 +10793,39 @@ type Goal struct {
 
 // IsNode MUST return true only when the condition is met.
 // IsNode reports whether the Goal is node.
+// [🛠️semio-repo/cli/main.go#Types#Languages§IsNode](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/ISNODE)
 func (g *Goal) IsNode()        {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Goal.
+// [🛠️semio-repo/cli/main.go#Types#Languages§GetID](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GETID)
 func (g *Goal) GetID() string  { return fmt.Sprintf("%s%s", emojiText(EmojiGoal), g.ID) }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Goal.
+// [🛠️semio-repo/cli/main.go#Types#Languages§GetURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GETURI)
 func (g *Goal) GetURI() string { return "semiorepo://goal/" + strings.ToUpper(g.ID) }
 
 // GoalDates holds the data fields for a goal dates record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§GoalDates](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GOALDATES)
 type GoalDates struct {
 	Due    string     `json:"due,omitempty"`
 	Closed *time.Time `json:"closed,omitempty"`
 }
 
 // GoalGithubData holds the data fields for a goal github data record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§GoalGithubData](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GOALGITHUBDATA)
 type GoalGithubData struct {
 	Milestone string `json:"milestone,omitempty"`
 	Issue     string `json:"issue,omitempty"`
 }
 
 // TicketDates holds the data fields for a ticket dates record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§TicketDates](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETDATES)
 type TicketDates struct {
 	Closed *time.Time `json:"closed,omitempty"`
 }
 
 // ViolationKind represents a violation kind value.
+// [🪨semio-repo/cli/main.go#Types#Languages§ViolationKind](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/VIOLATIONKIND)
 type ViolationKind string
 
 const (
@@ -10443,6 +10845,7 @@ const (
 	ViolationCodeSectionMissingStartName    ViolationKind = "code/section/missing-start-name"
 	ViolationCodeSectionMissingEndName      ViolationKind = "code/section/missing-end-name"
 	ViolationCodeSectionNameMismatch        ViolationKind = "code/section/name-mismatch"
+	ViolationCodeSectionMissingIdentification ViolationKind = "code/section/missing-identification"
 	ViolationCodeSectionWrongFormat         ViolationKind = "code/section/wrong-format"
 	ViolationCodeSectionWrongFormatSummaryTooLong  ViolationKind = "code/section/wrong-format/summary/too-long-summary"
 	ViolationCodeSectionWrongFormatSpecsSplitBlock ViolationKind = "code/section/wrong-format/specs/split-block"
@@ -10450,7 +10853,9 @@ const (
 	ViolationCodeSectionMissingSummary      ViolationKind = "code/section/missing-summary"
 	ViolationCodeSectionMissingSpecs        ViolationKind = "code/section/missing-specs"
 	ViolationCodeSectionMissingDocs         ViolationKind = "code/section/missing-docs"
+	ViolationCodeDefMissingIdentification   ViolationKind = "code/definition/missing-identification"
 	ViolationCodeDefWrongFormat             ViolationKind = "code/definition/wrong-format"
+	ViolationCodeDefNotNativeDocstring      ViolationKind = "code/definition/wrong-format/not-native-docstring"
 	ViolationCodeDefMissingSummary          ViolationKind = "code/definition/missing-summary"
 	ViolationCodeDefMissingSpecs            ViolationKind = "code/definition/missing-specs"
 	ViolationCodeDefMissingDocs             ViolationKind = "code/definition/missing-docs"
@@ -10636,6 +11041,13 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Solution:    "Fix the section docs format",
 		Autofixable: false,
 	},
+	ViolationCodeSectionMissingIdentification: {
+		Kind:        ViolationCodeSectionMissingIdentification,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Section must have an identification comment after the region start",
+		Solution:    "Add [sectionId](sectionUri) comment after section region start marker",
+		Autofixable: true,
+	},
 	ViolationCodeSectionMissingSummary: {
 		Kind:        ViolationCodeSectionMissingSummary,
 		Priority:    ViolationPriorityLow,
@@ -10657,12 +11069,26 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 		Solution:    "Add section documentation to bundle README.md",
 		Autofixable: false,
 	},
+	ViolationCodeDefMissingIdentification: {
+		Kind:        ViolationCodeDefMissingIdentification,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Definition must have an identification comment as the last line before the definition",
+		Solution:    "Add [definitionId](definitionUri) as the last line in the docstring",
+		Autofixable: true,
+	},
 	ViolationCodeDefWrongFormat: {
 		Kind:        ViolationCodeDefWrongFormat,
 		Priority:    ViolationPriorityLow,
 		Reason:      "Definition does not have a proper docstring",
 		Solution:    "Add language-native docstring to definition",
 		Autofixable: false,
+	},
+	ViolationCodeDefNotNativeDocstring: {
+		Kind:        ViolationCodeDefNotNativeDocstring,
+		Priority:    ViolationPriorityLow,
+		Reason:      "Definition must use language-native docstring format (JSDoc for TS/JS, /// for C#/Rust)",
+		Solution:    "Convert line comments to language-native docstring format",
+		Autofixable: true,
 	},
 	ViolationCodeDefMissingSummary: {
 		Kind:        ViolationCodeDefMissingSummary,
@@ -10850,6 +11276,7 @@ var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
 
 // Info MUST return the metadata entry for the violation kind.
 // Info returns the metadata for the violation kind.
+// [🛠️semio-repo/cli/main.go#Types#Languages§Info](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/INFO)
 func (k ViolationKind) Info() ViolationKindMeta {
 	if info, ok := violationKindInfoTable[k]; ok {
 		return info
@@ -10864,6 +11291,7 @@ func (k ViolationKind) Info() ViolationKindMeta {
 }
 
 // ViolationKindGroup holds the data fields for a violation kind group record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ViolationKindGroup](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/VIOLATIONKINDGROUP)
 type ViolationKindGroup struct {
 	Name        string               `json:"name"`
 	Description string               `json:"description"`
@@ -10874,6 +11302,7 @@ type ViolationKindGroup struct {
 
 // AllKinds MUST include all violation kinds from the group and its children.
 // AllKinds returns all violation kinds associated with the group.
+// [🛠️semio-repo/cli/main.go#Types#Languages§AllKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/ALLKINDS)
 func (g *ViolationKindGroup) AllKinds() []ViolationKind {
 	var result []ViolationKind
 	result = append(result, g.Kinds...)
@@ -10885,17 +11314,20 @@ func (g *ViolationKindGroup) AllKinds() []ViolationKind {
 
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the ViolationKindGroup.
+// [🛠️semio-repo/cli/main.go#Types#Languages§GetID](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GETID)
 func (g *ViolationKindGroup) GetID() string {
 	return fmt.Sprintf("%s%s", emojiText(EmojiViolationKindGroup), g.Name)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the ViolationKindGroup.
+// [🛠️semio-repo/cli/main.go#Types#Languages§GetURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GETURI)
 func (g *ViolationKindGroup) GetURI() string {
 	return "semiorepo://violationKindGroup/" + strings.ToUpper(Slugify(g.Name))
 }
 
 // PolicyDef holds the data fields for a policy def record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§PolicyDef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/POLICYDEF)
 type PolicyDef struct {
 	ID          string               `json:"id"`
 	Name        string               `json:"name"`
@@ -10908,6 +11340,7 @@ type PolicyDef struct {
 
 // AllKinds MUST include all violation kinds from the group and its children.
 // AllKinds returns all violation kinds associated with the group.
+// [🛠️semio-repo/cli/main.go#Types#Languages§AllKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/ALLKINDS)
 func (p *PolicyDef) AllKinds() []ViolationKind {
 	var result []ViolationKind
 	for _, g := range p.Groups {
@@ -10917,6 +11350,7 @@ func (p *PolicyDef) AllKinds() []ViolationKind {
 }
 
 // AnalyzeReport holds the data fields for a analyze report record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§AnalyzeReport](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/ANALYZEREPORT)
 type AnalyzeReport struct {
 	Timestamp  string      `json:"timestamp"`
 	Status     string      `json:"status"`
@@ -10926,6 +11360,7 @@ type AnalyzeReport struct {
 }
 
 // Summary holds the data fields for a summary record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§Summary](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/SUMMARY)
 type Summary struct {
 	Total      int            `json:"total"`
 	ByPriority map[string]int `json:"byPriority"`
@@ -10933,6 +11368,7 @@ type Summary struct {
 }
 
 // FileCache holds the data fields for a file cache record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§FileCache](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/FILECACHE)
 type FileCache struct {
 	FilePath   string      `json:"filePath"`
 	Hash       string      `json:"hash"`
@@ -10941,6 +11377,7 @@ type FileCache struct {
 }
 
 // OutputType represents a output type value.
+// [🪨semio-repo/cli/main.go#Types#Languages§OutputType](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/OUTPUTTYPE)
 type OutputType string
 
 const (
@@ -10952,18 +11389,21 @@ const (
 )
 
 // OutputLine holds the data fields for a output line record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§OutputLine](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/OUTPUTLINE)
 type OutputLine struct {
 	Type OutputType `json:"type"`
 	Text string     `json:"text"`
 }
 
 // CommandOutput holds the data fields for a command output record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§CommandOutput](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/COMMANDOUTPUT)
 type CommandOutput struct {
 	Lines    []OutputLine `json:"lines"`
 	ExitCode int          `json:"exitCode"`
 }
 
 // ToolResult holds the data fields for a tool result record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ToolResult](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TOOLRESULT)
 type ToolResult struct {
 	Output CommandOutput `json:"output"`
 	Data   interface{}   `json:"data,omitempty"`
@@ -10971,6 +11411,7 @@ type ToolResult struct {
 }
 
 // ContributorTicket holds the data fields for a contributor ticket record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ContributorTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CONTRIBUTORTICKET)
 type ContributorTicket struct {
 	Year     int          `json:"year"`
 	Month    int          `json:"month"`
@@ -10981,12 +11422,14 @@ type ContributorTicket struct {
 }
 
 // ContributorCommit holds the data fields for a contributor commit record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ContributorCommit](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CONTRIBUTORCOMMIT)
 type ContributorCommit struct {
 	Title string `json:"title"`
 	Sha   string `json:"sha"`
 }
 
 // ContributorContributionsStorage holds the data fields for a contributor contributions storage record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ContributorContributionsStorage](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CONTRIBUTORCONTRIBUTIONSSTORAGE)
 type ContributorContributionsStorage struct {
 	Bundles     []string            `json:"bundles,omitempty"`
 	Folders     []string            `json:"folders,omitempty"`
@@ -10999,9 +11442,12 @@ type ContributorContributionsStorage struct {
 }
 
 // #region 🔖Codebase Types
+
+// [🔖semio-repo/cli/main.go#Codebase Types](semiorepo://section/semio-repo/cli/main.go/CODEBASE-TYPES)
 // Internal metric, contributor, ticket, policy, violation, and tree node types for codebase analysis.
 
 // BundleMetricsInternal holds the data fields for a bundle metrics internal record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§BundleMetricsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/BUNDLEMETRICSINTERNAL)
 type BundleMetricsInternal struct {
 	Folders     int `json:"folders"`
 	Files       int `json:"files"`
@@ -11012,6 +11458,7 @@ type BundleMetricsInternal struct {
 }
 
 // FolderMetricsInternal holds the data fields for a folder metrics internal record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§FolderMetricsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/FOLDERMETRICSINTERNAL)
 type FolderMetricsInternal struct {
 	Files      int `json:"files"`
 	Lines      int `json:"lines"`
@@ -11019,6 +11466,7 @@ type FolderMetricsInternal struct {
 }
 
 // FileMetricsInternal holds the data fields for a file metrics internal record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§FileMetricsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/FILEMETRICSINTERNAL)
 type FileMetricsInternal struct {
 	Sections    int `json:"sections"`
 	Definitions int `json:"definitions"`
@@ -11026,6 +11474,7 @@ type FileMetricsInternal struct {
 }
 
 // SectionMetricsInternal holds the data fields for a section metrics internal record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§SectionMetricsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/SECTIONMETRICSINTERNAL)
 type SectionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
@@ -11033,6 +11482,7 @@ type SectionMetricsInternal struct {
 }
 
 // DefinitionMetricsInternal holds the data fields for a definition metrics internal record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§DefinitionMetricsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/DEFINITIONMETRICSINTERNAL)
 type DefinitionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
@@ -11040,18 +11490,21 @@ type DefinitionMetricsInternal struct {
 }
 
 // RangePosition holds the data fields for a range position record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§RangePosition](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/RANGEPOSITION)
 type RangePosition struct {
 	Line   int `json:"line"`
 	Column int `json:"column"`
 }
 
 // FileRange holds the data fields for a file range record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§FileRange](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/FILERANGE)
 type FileRange struct {
 	Start RangePosition `json:"start"`
 	End   RangePosition `json:"end"`
 }
 
 // ViolationFile holds the data fields for a violation file record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ViolationFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/VIOLATIONFILE)
 type ViolationFile struct {
 	ID    string     `json:"id"`
 	Path  string     `json:"path"`
@@ -11060,6 +11513,7 @@ type ViolationFile struct {
 }
 
 // ViolationFolder holds the data fields for a violation folder record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ViolationFolder](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/VIOLATIONFOLDER)
 type ViolationFolder struct {
 	ID   string `json:"id"`
 	Path string `json:"path"`
@@ -11067,6 +11521,7 @@ type ViolationFolder struct {
 }
 
 // CodebaseViolation holds the data fields for a codebase violation record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseViolation](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEVIOLATION)
 type CodebaseViolation struct {
 	ID          string            `json:"id"`
 	Folders     []ViolationFolder `json:"folders,omitempty"`
@@ -11079,6 +11534,7 @@ type CodebaseViolation struct {
 }
 
 // CodebaseBundle holds the data fields for a codebase bundle record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseBundle](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEBUNDLE)
 type CodebaseBundle struct {
 	ID           string                 `json:"id"`
 	Folder       string                 `json:"folder"`
@@ -11089,6 +11545,7 @@ type CodebaseBundle struct {
 }
 
 // CodebaseFolder holds the data fields for a codebase folder record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseFolder](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEFOLDER)
 type CodebaseFolder struct {
 	ID       string                 `json:"id"`
 	Path     string                 `json:"path"`
@@ -11099,6 +11556,7 @@ type CodebaseFolder struct {
 }
 
 // FileViolationRef holds the data fields for a file violation ref record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§FileViolationRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/FILEVIOLATIONREF)
 type FileViolationRef struct {
 	Kind        ViolationKind     `json:"kind"`
 	Priority    ViolationPriority `json:"priority"`
@@ -11107,6 +11565,7 @@ type FileViolationRef struct {
 }
 
 // CodebaseFile holds the data fields for a codebase file record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEFILE)
 type CodebaseFile struct {
 	ID         string               `json:"id"`
 	Path       string               `json:"path"`
@@ -11116,6 +11575,7 @@ type CodebaseFile struct {
 }
 
 // CodebaseSection holds the data fields for a codebase section record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseSection](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASESECTION)
 type CodebaseSection struct {
 	ID      string                  `json:"id"`
 	Path    string                  `json:"path"`
@@ -11124,6 +11584,7 @@ type CodebaseSection struct {
 }
 
 // CodebaseDefinition holds the data fields for a codebase definition record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseDefinition](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEDEFINITION)
 type CodebaseDefinition struct {
 	ID      string                     `json:"id"`
 	Path    string                     `json:"path"`
@@ -11132,36 +11593,42 @@ type CodebaseDefinition struct {
 }
 
 // ContributorBundleContrib holds the data fields for a contributor bundle contrib record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ContributorBundleContrib](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CONTRIBUTORBUNDLECONTRIB)
 type ContributorBundleContrib struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorFolderContrib holds the data fields for a contributor folder contrib record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ContributorFolderContrib](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CONTRIBUTORFOLDERCONTRIB)
 type ContributorFolderContrib struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorFileContrib holds the data fields for a contributor file contrib record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ContributorFileContrib](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CONTRIBUTORFILECONTRIB)
 type ContributorFileContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorSectionContrib holds the data fields for a contributor section contrib record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ContributorSectionContrib](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CONTRIBUTORSECTIONCONTRIB)
 type ContributorSectionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorDefinitionContrib holds the data fields for a contributor definition contrib record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ContributorDefinitionContrib](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CONTRIBUTORDEFINITIONCONTRIB)
 type ContributorDefinitionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 // ContributorContributionsInternal holds the data fields for a contributor contributions internal record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ContributorContributionsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CONTRIBUTORCONTRIBUTIONSINTERNAL)
 type ContributorContributionsInternal struct {
 	Bundles     []ContributorBundleContrib     `json:"bundles,omitempty"`
 	Folders     []ContributorFolderContrib     `json:"folders,omitempty"`
@@ -11171,6 +11638,7 @@ type ContributorContributionsInternal struct {
 }
 
 // ContributorMetricsInternal holds the data fields for a contributor metrics internal record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ContributorMetricsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CONTRIBUTORMETRICSINTERNAL)
 type ContributorMetricsInternal struct {
 	Commits     int `json:"commits"`
 	Tickets     int `json:"tickets"`
@@ -11183,6 +11651,7 @@ type ContributorMetricsInternal struct {
 }
 
 // CodebaseContributor holds the data fields for a codebase contributor record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseContributor](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASECONTRIBUTOR)
 type CodebaseContributor struct {
 	ID            string                            `json:"id"`
 	URI           string                            `json:"uri"`
@@ -11196,42 +11665,49 @@ type CodebaseContributor struct {
 }
 
 // TicketDateInfo holds the data fields for a ticket date info record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§TicketDateInfo](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/TICKETDATEINFO)
 type TicketDateInfo struct {
 	Created  string `json:"created,omitempty"`
 	Finished string `json:"finished,omitempty"`
 }
 
 // TicketBundleContribInfo holds the data fields for a ticket bundle contrib info record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§TicketBundleContribInfo](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/TICKETBUNDLECONTRIBINFO)
 type TicketBundleContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // TicketFolderContribInfo holds the data fields for a ticket folder contrib info record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§TicketFolderContribInfo](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/TICKETFOLDERCONTRIBINFO)
 type TicketFolderContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // TicketFileContribInfo holds the data fields for a ticket file contrib info record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§TicketFileContribInfo](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/TICKETFILECONTRIBINFO)
 type TicketFileContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // TicketSectionContribInfo holds the data fields for a ticket section contrib info record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§TicketSectionContribInfo](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/TICKETSECTIONCONTRIBINFO)
 type TicketSectionContribInfo struct {
 	ID      string        `json:"id"`
 	Metrics *CountMetrics `json:"metrics,omitempty"`
 }
 
 // TicketDefinitionContrib holds the data fields for a ticket definition contrib record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§TicketDefinitionContrib](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/TICKETDEFINITIONCONTRIB)
 type TicketDefinitionContrib struct {
 	ID      string       `json:"id"`
 	Metrics *LineMetrics `json:"metrics,omitempty"`
 }
 
 // CodebaseTicket holds the data fields for a codebase ticket record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASETICKET)
 type CodebaseTicket struct {
 	ID          string                     `json:"id"`
 	Path        string                     `json:"path"`
@@ -11254,6 +11730,7 @@ type CodebaseTicket struct {
 }
 
 // PolicyViolationRef holds the data fields for a policy violation ref record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§PolicyViolationRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/POLICYVIOLATIONREF)
 type PolicyViolationRef struct {
 	Kind        ViolationKind     `json:"kind"`
 	Priority    ViolationPriority `json:"priority"`
@@ -11262,6 +11739,7 @@ type PolicyViolationRef struct {
 }
 
 // CodebasePolicy holds the data fields for a codebase policy record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebasePolicy](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEPOLICY)
 type CodebasePolicy struct {
 	ID         string               `json:"id"`
 	Name       string               `json:"name"`
@@ -11270,6 +11748,7 @@ type CodebasePolicy struct {
 }
 
 // CbTreeNodeKind represents a cb tree node kind value.
+// [🪨semio-repo/cli/main.go#Types#Languages#Codebase Types§CbTreeNodeKind](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CBTREENODEKIND)
 type CbTreeNodeKind string
 
 const (
@@ -11282,12 +11761,14 @@ const (
 )
 
 // CbTreeNode holds the data fields for a cb tree node record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CbTreeNode](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CBTREENODE)
 type CbTreeNode struct {
 	Kind     CbTreeNodeKind         `json:"kind"`
 	Children map[string]*CbTreeNode `json:"children,omitempty"`
 }
 
 // Codebase holds the data fields for a codebase record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§Codebase](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASE)
 type Codebase struct {
 	Bundles      []CodebaseBundle       `json:"bundles"`
 	Folders      []CodebaseFolder       `json:"folders"`
@@ -11306,6 +11787,8 @@ type Codebase struct {
 // #endregion 🔖Languages
 
 // #region 🔖Utils
+
+// [🔖semio-repo/cli/main.go#Utils](semiorepo://section/semio-repo/cli/main.go/UTILS)
 // File system, git, path normalization, and formatting utilities.
 
 var (
@@ -11330,12 +11813,14 @@ func init() {
 
 // GetRootDir MUST return the stored value without modification.
 // GetRootDir returns the root dir of the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GetRootDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GETROOTDIR)
 func GetRootDir() string {
 	return rootDir
 }
 
 // SetRootDir MUST update the value on the receiver.
 // SetRootDir sets the root dir on the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§SetRootDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/SETROOTDIR)
 func SetRootDir(dir string) {
 	rootDir = dir
 	InvalidateProjectCache()
@@ -11343,12 +11828,14 @@ func SetRootDir(dir string) {
 
 // GetRepoMetaDir MUST return the stored value without modification.
 // GetRepoMetaDir returns the repo meta dir of the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GetRepoMetaDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GETREPOMETADIR)
 func GetRepoMetaDir() string {
 	return filepath.Join(rootDir, ".semio-repo")
 }
 
 // GetRepoMetaPath MUST return the stored value without modification.
 // GetRepoMetaPath returns the repo meta path of the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GetRepoMetaPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GETREPOMETAPATH)
 func GetRepoMetaPath(path string) string {
 	return filepath.Join(GetRepoMetaDir(), path)
 }
@@ -11385,6 +11872,7 @@ func findRepoRoot(startDir string) string {
 }
 
 // GitignorePattern holds the data fields for a gitignore pattern record.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GitignorePattern](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GITIGNOREPATTERN)
 type GitignorePattern struct {
 	Pattern string
 	Negate  bool
@@ -11498,18 +11986,21 @@ func isSourceFile(filePath string) bool {
 
 // NormalizePath MUST be idempotent for already-normalized values.
 // NormalizePath normalizes the path to its canonical form.
+// [🛠️semio-repo/cli/main.go#Types#Utils§NormalizePath](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/NORMALIZEPATH)
 func NormalizePath(p string) string {
 	return strings.ReplaceAll(p, "\\", "/")
 }
 
 // EnsureDir MUST be idempotent and MUST NOT fail if the target already exists.
 // EnsureDir ensures the dir exists, creating it if necessary.
+// [🛠️semio-repo/cli/main.go#Types#Utils§EnsureDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/ENSUREDIR)
 func EnsureDir(dirPath string) error {
 	return os.MkdirAll(dirPath, 0755)
 }
 
 // GetRelativePath MUST return the stored value without modification.
 // GetRelativePath returns the relative path of the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GetRelativePath](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GETRELATIVEPATH)
 func GetRelativePath(filePath string) string {
 	rel, err := filepath.Rel(rootDir, filePath)
 	if err != nil {
@@ -11520,6 +12011,7 @@ func GetRelativePath(filePath string) string {
 
 // ReadTextFile MUST return the full content from the given path.
 // ReadTextFile reads and returns the text file content.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ReadTextFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/READTEXTFILE)
 func ReadTextFile(filePath string) (string, error) {
 	data, err := os.ReadFile(filePath)
 	if err != nil {
@@ -11530,6 +12022,7 @@ func ReadTextFile(filePath string) (string, error) {
 
 // WriteTextFile MUST persist the content atomically.
 // WriteTextFile writes the text file content to storage.
+// [🛠️semio-repo/cli/main.go#Types#Utils§WriteTextFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/WRITETEXTFILE)
 func WriteTextFile(filePath string, content string) error {
 	if err := EnsureDir(filepath.Dir(filePath)); err != nil {
 		return err
@@ -11539,6 +12032,7 @@ func WriteTextFile(filePath string, content string) error {
 
 // WriteJSONFile MUST persist the content atomically.
 // WriteJSONFile writes the j s o n file content to storage.
+// [🛠️semio-repo/cli/main.go#Types#Utils§WriteJSONFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/WRITEJSONFILE)
 func WriteJSONFile(filePath string, data interface{}) error {
 	jsonBytes, err := json.MarshalIndent(data, "", "  ")
 	if err != nil {
@@ -11549,6 +12043,7 @@ func WriteJSONFile(filePath string, data interface{}) error {
 
 // ReadJSONFile MUST return the full content from the given path.
 // ReadJSONFile reads and returns the j s o n file content.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ReadJSONFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/READJSONFILE)
 func ReadJSONFile(filePath string, v interface{}) error {
 	data, err := ReadTextFile(filePath)
 	if err != nil {
@@ -11559,6 +12054,7 @@ func ReadJSONFile(filePath string, v interface{}) error {
 
 // FileExists MUST complete the operation and return consistent results.
 // FileExists performs the file exists operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§FileExists](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/FILEEXISTS)
 func FileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
@@ -11566,6 +12062,7 @@ func FileExists(path string) bool {
 
 // IsDir MUST return true only when the condition is met.
 // IsDir reports whether the value is dir.
+// [🛠️semio-repo/cli/main.go#Types#Utils§IsDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/ISDIR)
 func IsDir(path string) bool {
 	info, err := os.Stat(path)
 	if err != nil {
@@ -11576,6 +12073,7 @@ func IsDir(path string) bool {
 
 // LoadGitignore MUST read from the configured storage path.
 // LoadGitignore loads the gitignore from storage.
+// [🛠️semio-repo/cli/main.go#Types#Utils§LoadGitignore](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/LOADGITIGNORE)
 func LoadGitignore(cwd string) ([]string, error) {
 	gitignorePath := filepath.Join(cwd, ".gitignore")
 	if !FileExists(gitignorePath) {
@@ -11597,6 +12095,7 @@ func LoadGitignore(cwd string) ([]string, error) {
 
 // SimpleGlob MUST complete the operation and return consistent results.
 // SimpleGlob performs the simple glob operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§SimpleGlob](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/SIMPLEGLOB)
 func SimpleGlob(pattern string, cwd string, ignorePatterns []string, respectGitignore bool) ([]string, error) {
 	if cwd == "" {
 		cwd = rootDir
@@ -11701,32 +12200,50 @@ func globByExtension(root string, patternBase string, exts []string, ignorePatte
 
 // ISOTimestamp MUST complete the operation and return consistent results.
 // ISOTimestamp performs the i s o timestamp operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ISOTimestamp](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/ISOTIMESTAMP)
 func ISOTimestamp() string {
 	return time.Now().UTC().Format(time.RFC3339)
 }
 
 // FormatDate MUST produce a well-formed date string.
 // FormatDate formats the date into its string representation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§FormatDate](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/FORMATDATE)
 func FormatDate(t time.Time) (year, month, day int) {
 	return t.Year(), int(t.Month()), t.Day()
 }
 
 // PadNumber MUST complete the operation and return consistent results.
 // PadNumber performs the pad number operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§PadNumber](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/PADNUMBER)
 func PadNumber(n, width int) string {
 	return fmt.Sprintf("%0*d", width, n)
 }
 
 // Slugify MUST complete the operation and return consistent results.
 // Slugify performs the slugify operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Slugify](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/SLUGIFY)
 func Slugify(text string) string {
+	runes := []rune(text)
+	var buf strings.Builder
+	for i, r := range runes {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			prev := runes[i-1]
+			if prev >= 'a' && prev <= 'z' {
+				buf.WriteRune('-')
+			} else if prev >= 'A' && prev <= 'Z' && i+1 < len(runes) && runes[i+1] >= 'a' && runes[i+1] <= 'z' {
+				buf.WriteRune('-')
+			}
+		}
+		buf.WriteRune(r)
+	}
 	re := regexp.MustCompile(`[^A-Z0-9]+`)
-	slug := re.ReplaceAllString(strings.ToUpper(text), "-")
+	slug := re.ReplaceAllString(strings.ToUpper(buf.String()), "-")
 	return strings.Trim(slug, "-")
 }
 
 // TitleizeSlug MUST complete the operation and return consistent results.
 // TitleizeSlug performs the titleize slug operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§TitleizeSlug](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/TITLEIZESLUG)
 func TitleizeSlug(slug string) string {
 	words := strings.Split(slug, "-")
 	for i, w := range words {
@@ -11739,6 +12256,7 @@ func TitleizeSlug(slug string) string {
 
 // ViolationKindPathToIdValue MUST complete the operation and return consistent results.
 // ViolationKindPathToIdValue performs the violation kind path to id value operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ViolationKindPathToIdValue](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/VIOLATIONKINDPATHTOIDVALUE)
 func ViolationKindPathToIdValue(path string) string {
 	parts := strings.Split(path, "/")
 	for i, p := range parts {
@@ -11749,6 +12267,7 @@ func ViolationKindPathToIdValue(path string) string {
 
 // ViolationKindIdValueToPath MUST complete the operation and return consistent results.
 // ViolationKindIdValueToPath performs the violation kind id value to path operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ViolationKindIdValueToPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/VIOLATIONKINDIDVALUETOPATH)
 func ViolationKindIdValueToPath(idValue string) string {
 	parts := strings.Split(idValue, "#")
 	for i, p := range parts {
@@ -11759,6 +12278,7 @@ func ViolationKindIdValueToPath(idValue string) string {
 
 // ExecCommand MUST complete the operation and return consistent results.
 // ExecCommand performs the exec command operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ExecCommand](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/EXECCOMMAND)
 func ExecCommand(command string, args []string, cwd string) (stdout, stderr string, exitCode int) {
 	if cwd == "" {
 		cwd = rootDir
@@ -11782,6 +12302,7 @@ func ExecCommand(command string, args []string, cwd string) (stdout, stderr stri
 
 // GetGitAuthor MUST return the stored value without modification.
 // GetGitAuthor returns the git author of the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GetGitAuthor](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GETGITAUTHOR)
 func GetGitAuthor() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	email, _, _ := ExecCommand("git", []string{"config", "--get", "user.email"}, "")
@@ -11795,6 +12316,7 @@ func GetGitAuthor() string {
 
 // GetGitAuthorGithub MUST return the stored value without modification.
 // GetGitAuthorGithub returns the git author github of the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GetGitAuthorGithub](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GETGITAUTHORGITHUB)
 func GetGitAuthorGithub() string {
 	name, _, _ := ExecCommand("git", []string{"config", "--get", "user.name"}, "")
 	name = strings.TrimSpace(name)
@@ -11811,6 +12333,7 @@ func GetGitAuthorGithub() string {
 
 // GetGitCommit MUST return the stored value without modification.
 // GetGitCommit returns the git commit of the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GetGitCommit](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GETGITCOMMIT)
 func GetGitCommit() string {
 	commit, _, _ := ExecCommand("git", []string{"rev-parse", "HEAD"}, "")
 	return strings.TrimSpace(commit)
@@ -11818,6 +12341,7 @@ func GetGitCommit() string {
 
 // GetGitIgnoredSet MUST return the stored value without modification.
 // GetGitIgnoredSet returns the git ignored set of the value.
+// [🛠️semio-repo/cli/main.go#Types#Utils§GetGitIgnoredSet](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/GETGITIGNOREDSET)
 func GetGitIgnoredSet(paths []string) map[string]bool {
 	if len(paths) == 0 {
 		return make(map[string]bool)
@@ -11836,24 +12360,28 @@ func GetGitIgnoredSet(paths []string) map[string]bool {
 
 // NewOutput MUST initialize all required fields and return a valid Output.
 // NewOutput creates and returns a new Output instance.
+// [🛠️semio-repo/cli/main.go#Types#Utils§NewOutput](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/NEWOUTPUT)
 func NewOutput() *CommandOutput {
 	return &CommandOutput{Lines: []OutputLine{}, ExitCode: 0}
 }
 
 // Info MUST return the metadata entry for the violation kind.
 // Info returns the metadata for the violation kind.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Info](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/INFO)
 func (o *CommandOutput) Info(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputInfo, Text: text})
 }
 
 // Success MUST operate on the CommandOutput receiver and return consistent results.
 // Success performs the success operation on the CommandOutput.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Success](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/SUCCESS)
 func (o *CommandOutput) Success(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputSuccess, Text: text})
 }
 
 // Error MUST return a formatted string representation.
 // Error returns the string representation of the error.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Error](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/ERROR)
 func (o *CommandOutput) Error(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputError, Text: text})
 	o.ExitCode = 1
@@ -11861,18 +12389,21 @@ func (o *CommandOutput) Error(text string) {
 
 // Warn MUST operate on the CommandOutput receiver and return consistent results.
 // Warn performs the warn operation on the CommandOutput.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Warn](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/WARN)
 func (o *CommandOutput) Warn(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputWarn, Text: text})
 }
 
 // Plain MUST operate on the CommandOutput receiver and return consistent results.
 // Plain performs the plain operation on the CommandOutput.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Plain](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/PLAIN)
 func (o *CommandOutput) Plain(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputPlain, Text: text})
 }
 
 // Print MUST operate on the CommandOutput receiver and return consistent results.
 // Print performs the print operation on the CommandOutput.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Print](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/PRINT)
 func (o *CommandOutput) Print() {
 	for _, line := range o.Lines {
 		fmt.Println(line.Text)
@@ -11881,6 +12412,7 @@ func (o *CommandOutput) Print() {
 
 // Json MUST operate on the CommandOutput receiver and return consistent results.
 // Json performs the json operation on the CommandOutput.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Json](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/JSON)
 func (o *CommandOutput) Json(data interface{}) {
 	bytes, err := json.MarshalIndent(data, "", "  ")
 	if err == nil {
@@ -11890,6 +12422,7 @@ func (o *CommandOutput) Json(data interface{}) {
 
 // ListDirEntries MUST return a consistent snapshot of available entries.
 // ListDirEntries returns all available dir entries entries.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ListDirEntries](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/LISTDIRENTRIES)
 func ListDirEntries(dir string, dirsOnly bool) ([]string, error) {
 	entries, err := os.ReadDir(dir)
 	if err != nil {
@@ -11913,6 +12446,7 @@ func ListDirEntries(dir string, dirsOnly bool) ([]string, error) {
 
 // WalkDir MUST visit every entry and MUST stop when the callback returns an error.
 // WalkDir recursively walks the dir and invokes the callback.
+// [🛠️semio-repo/cli/main.go#Types#Utils§WalkDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/WALKDIR)
 func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 	return filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -11930,6 +12464,7 @@ func WalkDir(dir string, fn func(path string, isDir bool) error) error {
 
 // ParseScope MUST return an error when the input is malformed.
 // ParseScope parses the input and returns the scope result.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ParseScope](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/PARSESCOPE)
 func ParseScope(raw string) Scope {
 	if raw == "" || raw == "semio" {
 		return Scope{Raw: "semio", Kind: ScopeRepo}
@@ -11958,6 +12493,7 @@ func ParseScope(raw string) Scope {
 
 // ReadLines MUST return the full content from the given path.
 // ReadLines reads and returns the lines content.
+// [🛠️semio-repo/cli/main.go#Types#Utils§ReadLines](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/READLINES)
 func ReadLines(filePath string) ([]string, error) {
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -11975,10 +12511,13 @@ func ReadLines(filePath string) ([]string, error) {
 // #endregion 🔖Utils
 
 // #region 🔖Sections
+
+// [🔖semio-repo/cli/main.go#Sections](semiorepo://section/semio-repo/cli/main.go/SECTIONS)
 // Section parsing, JSON section manipulation, and section lookup utilities.
 
 // ParseCodeSections MUST return an error when the input is malformed.
 // ParseCodeSections parses the input and returns the code sections result.
+// [🛠️semio-repo/cli/main.go#Types#Sections§ParseCodeSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/PARSECODESECTIONS)
 func ParseCodeSections(content string, languageName string) []Section {
 	lang := GetLanguageByName(languageName)
 	if lang == nil || !lang.SupportsSections() {
@@ -11989,6 +12528,7 @@ func ParseCodeSections(content string, languageName string) []Section {
 
 // ParseMarkdownSectionsInternal MUST return an error when the input is malformed.
 // ParseMarkdownSectionsInternal parses the input and returns the markdown sections internal result.
+// [🛠️semio-repo/cli/main.go#Types#Sections§ParseMarkdownSectionsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/PARSEMARKDOWNSECTIONSINTERNAL)
 func ParseMarkdownSectionsInternal(content string) []Section {
 	lines := strings.Split(content, "\n")
 	var sections []Section
@@ -12048,6 +12588,7 @@ func ParseMarkdownSectionsInternal(content string) []Section {
 }
 
 // JsonSectionLocation holds the data fields for a json section location record.
+// [🛠️semio-repo/cli/main.go#Types#Sections§JsonSectionLocation](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/JSONSECTIONLOCATION)
 type JsonSectionLocation struct {
 	Path       string
 	KeyStart   int
@@ -12067,6 +12608,7 @@ type jsonContext struct {
 
 // ParseJSONSectionsDetailed MUST return an error when the input is malformed.
 // ParseJSONSectionsDetailed parses the input and returns the j s o n sections detailed result.
+// [🛠️semio-repo/cli/main.go#Types#Sections§ParseJSONSectionsDetailed](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/PARSEJSONSECTIONSDETAILED)
 func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSectionLocation, error) {
 	var sections []Section
 	locations := make(map[string]*JsonSectionLocation)
@@ -12238,6 +12780,7 @@ func ParseJSONSectionsDetailed(content string) ([]Section, map[string]*JsonSecti
 
 // ParseJSONSections MUST return an error when the input is malformed.
 // ParseJSONSections parses the input and returns the j s o n sections result.
+// [🛠️semio-repo/cli/main.go#Types#Sections§ParseJSONSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/PARSEJSONSECTIONS)
 func ParseJSONSections(content string) []Section {
 	sections, _, _ := ParseJSONSectionsDetailed(content)
 	return sections
@@ -12245,6 +12788,7 @@ func ParseJSONSections(content string) []Section {
 
 // ParseSections MUST return an error when the input is malformed.
 // ParseSections parses the input and returns the sections result.
+// [🛠️semio-repo/cli/main.go#Types#Sections§ParseSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/PARSESECTIONS)
 func ParseSections(content string, filePath string) []Section {
 	language := GetLanguage(filePath)
 	if language == nil {
@@ -12255,6 +12799,7 @@ func ParseSections(content string, filePath string) []Section {
 
 // ParseDefinitions MUST return an error when the input is malformed.
 // ParseDefinitions parses the input and returns the definitions result.
+// [🛠️semio-repo/cli/main.go#Types#Sections§ParseDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/PARSEDEFINITIONS)
 func ParseDefinitions(content string, filePath string) []Definition {
 	language := GetLanguage(filePath)
 	if language == nil {
@@ -12281,6 +12826,7 @@ func ParseDefinitions(content string, filePath string) []Definition {
 
 // HydrateSectionsWithDefinitions MUST attach all matching child elements to their parents.
 // HydrateSectionsWithDefinitions populates the sections with definitions with associated child data.
+// [🛠️semio-repo/cli/main.go#Types#Sections§HydrateSectionsWithDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/HYDRATESECTIONSWITHDEFINITIONS)
 func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition) []Section {
 	if len(sections) == 0 {
 		return sections
@@ -12320,6 +12866,7 @@ func HydrateSectionsWithDefinitions(sections []Section, definitions []Definition
 
 // NormalizeSectionPath MUST be idempotent for already-normalized values.
 // NormalizeSectionPath normalizes the section path to its canonical form.
+// [🛠️semio-repo/cli/main.go#Types#Sections§NormalizeSectionPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/NORMALIZESECTIONPATH)
 func NormalizeSectionPath(sectionPath string) []string {
 	cleaned := strings.ReplaceAll(sectionPath, "#", "/")
 	raw := strings.FieldsFunc(cleaned, func(r rune) bool { return r == '/' })
@@ -12591,6 +13138,7 @@ func jsonReindentEntry(entry string, indent string) string {
 
 // FindSection MUST return nil when no match is found.
 // FindSection searches for and returns the matching section.
+// [🛠️semio-repo/cli/main.go#Types#Sections§FindSection](semiorepo://definition/semio-repo/cli/main.go/TYPES/SECTIONS/FINDSECTION)
 func FindSection(sections []Section, name string) *Section {
 	for i := range sections {
 		if sections[i].Name == name {
@@ -12606,9 +13154,12 @@ func FindSection(sections []Section, name string) *Section {
 // #endregion 🔖Sections
 
 // #region 🔖Policies
+
+// [🔖semio-repo/cli/main.go#Policies](semiorepo://section/semio-repo/cli/main.go/POLICIES)
 // Policy definitions, context, checkers, and individual policy implementations.
 
 // PolicyFunc is a function type for policy func callbacks.
+// [🛠️semio-repo/cli/main.go#Types#Policies§PolicyFunc](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/POLICYFUNC)
 type PolicyFunc func(ctx *PolicyContext) []Violation
 
 var policies = []PolicyDef{
@@ -12616,13 +13167,13 @@ var policies = []PolicyDef{
 		ID:          "code",
 		Name:        "Code",
 		Description: "Validates source file headers, sections, and comments",
-		Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+		Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 		Priority:    ViolationPriorityLow,
 		Groups: []ViolationKindGroup{
 			{
 				Name:        "File",
 				Description: "File header region violations",
-				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Groups: []ViolationKindGroup{
 					{
 						Name:        "Wrong Identification",
@@ -12648,7 +13199,7 @@ var policies = []PolicyDef{
 			{
 				Name:        "Section",
 				Description: "Section structure violations",
-				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Groups: []ViolationKindGroup{
 					{
 						Name:        "Wrong Format",
@@ -12681,6 +13232,7 @@ var policies = []PolicyDef{
 					ViolationCodeSectionMissingStartName,
 					ViolationCodeSectionMissingEndName,
 					ViolationCodeSectionNameMismatch,
+					ViolationCodeSectionMissingIdentification,
 					ViolationCodeSectionMissingSummary,
 					ViolationCodeSectionMissingSpecs,
 					ViolationCodeSectionMissingDocs,
@@ -12689,9 +13241,19 @@ var policies = []PolicyDef{
 			{
 				Name:        "Definition",
 				Description: "Definition documentation violations",
-				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
+				Groups: []ViolationKindGroup{
+					{
+						Name:        "Wrong Format",
+						Description: "Definition format violations",
+						Kinds: []ViolationKind{
+							ViolationCodeDefWrongFormat,
+							ViolationCodeDefNotNativeDocstring,
+						},
+					},
+				},
 				Kinds: []ViolationKind{
-					ViolationCodeDefWrongFormat,
+					ViolationCodeDefMissingIdentification,
 					ViolationCodeDefMissingSummary,
 					ViolationCodeDefMissingSpecs,
 					ViolationCodeDefMissingDocs,
@@ -12700,7 +13262,7 @@ var policies = []PolicyDef{
 			{
 				Name:        "Comment",
 				Description: "Forbidden comment violations",
-				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Kinds: []ViolationKind{
 					ViolationCodeCommentInline,
 					ViolationCodeCommentBlock,
@@ -12710,7 +13272,7 @@ var policies = []PolicyDef{
 			{
 				Name:        "Specs",
 				Description: "Specification content violations",
-				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Kinds: []ViolationKind{
 					ViolationCodeSpecsSyntax,
 				},
@@ -12718,7 +13280,7 @@ var policies = []PolicyDef{
 			{
 				Name:        "Unicode",
 				Description: "Unicode character violations",
-				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Kinds: []ViolationKind{
 					ViolationCodeUnicodeEmojiVariation,
 				},
@@ -12726,7 +13288,7 @@ var policies = []PolicyDef{
 			{
 				Name:        "Docs",
 				Description: "Documentation file violations",
-				Scopes:      []string{"**/*.{ts,tsx,py,cs,go}"},
+				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 				Kinds: []ViolationKind{
 					ViolationCodeDocsMissingReadme,
 				},
@@ -12836,6 +13398,7 @@ var policies = []PolicyDef{
 
 // FindPolicy MUST return nil when no match is found.
 // FindPolicy searches for and returns the matching policy.
+// [🛠️semio-repo/cli/main.go#Types#Policies§FindPolicy](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/FINDPOLICY)
 func FindPolicy(id string) (PolicyDef, bool) {
 	for _, p := range policies {
 		if p.ID == id {
@@ -12847,12 +13410,14 @@ func FindPolicy(id string) (PolicyDef, bool) {
 
 // GetPolicies MUST return the stored value without modification.
 // GetPolicies returns the policies of the value.
+// [🛠️semio-repo/cli/main.go#Types#Policies§GetPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/GETPOLICIES)
 func GetPolicies() []PolicyDef {
 	return policies
 }
 
 // StreamPolicies MUST emit all matching entries and close the channel when done.
 // StreamPolicies streams the policies over a channel with optional filtering.
+// [🛠️semio-repo/cli/main.go#Types#Policies§StreamPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/STREAMPOLICIES)
 func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -12902,6 +13467,7 @@ func StreamPolicies(ctx context.Context, out chan<- PolicyDef, opts ...StreamOpt
 }
 
 // PolicyContext holds the data fields for a policy context record.
+// [🛠️semio-repo/cli/main.go#Types#Policies§PolicyContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/POLICYCONTEXT)
 type PolicyContext struct {
 	Scope           Scope
 	RootDir         string
@@ -12917,6 +13483,7 @@ type PolicyContext struct {
 
 // NewPolicyContext MUST initialize all required fields and return a valid PolicyContext.
 // NewPolicyContext creates and returns a new PolicyContext instance.
+// [🛠️semio-repo/cli/main.go#Types#Policies§NewPolicyContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/NEWPOLICYCONTEXT)
 func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 	return &PolicyContext{
 		Scope:        scope,
@@ -12930,6 +13497,7 @@ func NewPolicyContext(scope Scope, bundles []Bundle) *PolicyContext {
 
 // NewPolicyContextWithFiles MUST initialize all required fields and return a valid PolicyContextWithFiles.
 // NewPolicyContextWithFiles creates and returns a new PolicyContextWithFiles instance.
+// [🛠️semio-repo/cli/main.go#Types#Policies§NewPolicyContextWithFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/NEWPOLICYCONTEXTWITHFILES)
 func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *PolicyContext {
 	ctx := NewPolicyContext(scope, bundles)
 	ctx.filesOverride = files
@@ -12938,6 +13506,7 @@ func NewPolicyContextWithFiles(scope Scope, bundles []Bundle, files []string) *P
 
 // Files MUST operate on the PolicyContext receiver and return consistent results.
 // Files performs the files operation on the PolicyContext.
+// [🛠️semio-repo/cli/main.go#Types#Policies§Files](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/FILES)
 func (ctx *PolicyContext) Files() ([]string, error) {
 	if ctx.filesOverride != nil {
 		return ctx.filesOverride, nil
@@ -12947,6 +13516,7 @@ func (ctx *PolicyContext) Files() ([]string, error) {
 
 // ReadText MUST return the full content from the given path.
 // ReadText reads and returns the text content.
+// [🛠️semio-repo/cli/main.go#Types#Policies§ReadText](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/READTEXT)
 func (ctx *PolicyContext) ReadText(filePath string) string {
 	if ctx.fileCache == nil {
 		ctx.fileCache = make(map[string]string)
@@ -12966,6 +13536,7 @@ func (ctx *PolicyContext) ReadText(filePath string) string {
 
 // Sections MUST operate on the PolicyContext receiver and return consistent results.
 // Sections performs the sections operation on the PolicyContext.
+// [🛠️semio-repo/cli/main.go#Types#Policies§Sections](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/SECTIONS)
 func (ctx *PolicyContext) Sections(filePath string) []Section {
 	if ctx.sectionCache == nil {
 		ctx.sectionCache = make(map[string][]Section)
@@ -12981,6 +13552,7 @@ func (ctx *PolicyContext) Sections(filePath string) []Section {
 
 // ParseIgnoreDirectives MUST return an error when the input is malformed.
 // ParseIgnoreDirectives parses the input and returns the ignore directives result.
+// [🛠️semio-repo/cli/main.go#Types#Policies§ParseIgnoreDirectives](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/PARSEIGNOREDIRECTIVES)
 func ParseIgnoreDirectives(content string) map[int][]string {
 	result := make(map[int][]string)
 	lines := strings.Split(content, "\n")
@@ -13004,6 +13576,7 @@ func ParseIgnoreDirectives(content string) map[int][]string {
 
 // IgnoreDirectives MUST operate on the PolicyContext receiver and return consistent results.
 // IgnoreDirectives performs the ignore directives operation on the PolicyContext.
+// [🛠️semio-repo/cli/main.go#Types#Policies§IgnoreDirectives](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/IGNOREDIRECTIVES)
 func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 	if ignores, ok := ctx.ignoreCache[filePath]; ok {
 		return ignores
@@ -13016,6 +13589,7 @@ func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 
 // IsIgnored MUST return true only when the condition is met.
 // IsIgnored reports whether the PolicyContext is ignored.
+// [🛠️semio-repo/cli/main.go#Types#Policies§IsIgnored](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/ISIGNORED)
 func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind ViolationKind) bool {
 	ignores := ctx.IgnoreDirectives(filePath)
 	kindStr := string(kind)
@@ -13036,6 +13610,7 @@ func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind Vio
 
 // CreateViolation MUST persist the new entity and return a reference to it.
 // CreateViolation creates a new violation and persists it.
+// [🛠️semio-repo/cli/main.go#Types#Policies§CreateViolation](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/CREATEVIOLATION)
 func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, col int, excerpt string) Violation {
 	return Violation{
 		ID:      buildViolationID(scope, line, col),
@@ -13062,6 +13637,7 @@ func extractFileFromScope(scope string) string {
 
 // FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
 // FilterIgnored filters the ignored based on the given criteria.
+// [🛠️semio-repo/cli/main.go#Types#Policies§FilterIgnored](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/FILTERIGNORED)
 func (ctx *PolicyContext) FilterIgnored(violations []Violation) []Violation {
 	var result []Violation
 	for _, v := range violations {
@@ -13097,6 +13673,7 @@ func hasImplementationSyntax(text string) (bool, string) {
 
 // SpecLines MUST operate on the PolicyContext receiver and return consistent results.
 // SpecLines performs the spec lines operation on the PolicyContext.
+// [🛠️semio-repo/cli/main.go#Types#Policies§SpecLines](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/SPECLINES)
 func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 	if ctx.specLineCache == nil {
 		ctx.specLineCache = make(map[string]map[int]bool)
@@ -13158,12 +13735,14 @@ func (ctx *PolicyContext) SpecLines(filePath string) map[int]bool {
 
 // IsSpecLine MUST return true only when the condition is met.
 // IsSpecLine reports whether the PolicyContext is spec line.
+// [🛠️semio-repo/cli/main.go#Types#Policies§IsSpecLine](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/ISSPECLINE)
 func (ctx *PolicyContext) IsSpecLine(filePath string, lineNum int) bool {
 	return ctx.SpecLines(filePath)[lineNum]
 }
 
 // IsSpecBlock MUST return true only when the condition is met.
 // IsSpecBlock reports whether the PolicyContext is spec block.
+// [🛠️semio-repo/cli/main.go#Types#Policies§IsSpecBlock](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/ISSPECBLOCK)
 func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, lines []string) bool {
 	for i := startLine; i <= endLine && i <= len(lines); i++ {
 		if isSpecText(lines[i-1]) {
@@ -13175,6 +13754,7 @@ func (ctx *PolicyContext) IsSpecBlock(filePath string, startLine, endLine int, l
 
 // SectionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 // SectionDocLines performs the section doc lines operation on the PolicyContext.
+// [🛠️semio-repo/cli/main.go#Types#Policies§SectionDocLines](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/SECTIONDOCLINES)
 func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 	if ctx.sectionDocCache == nil {
 		ctx.sectionDocCache = make(map[string]map[int]bool)
@@ -13205,14 +13785,19 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 			return
 		}
 		var blockLines []int
+		foundFirstComment := false
 		for i := s.StartLine + 1; i < s.EndLine && i <= len(lines); i++ {
 			line := strings.TrimSpace(lines[i-1])
 			if line == "" {
+				if !foundFirstComment {
+					continue
+				}
 				break
 			}
 			if !strings.HasPrefix(line, prefix) {
 				break
 			}
+			foundFirstComment = true
 			blockLines = append(blockLines, i)
 			commentText := strings.TrimSpace(strings.TrimPrefix(line, prefix))
 			if isSpecText(commentText) {
@@ -13249,12 +13834,14 @@ func (ctx *PolicyContext) SectionDocLines(filePath string) map[int]bool {
 
 // IsSectionDocLine MUST return true only when the condition is met.
 // IsSectionDocLine reports whether the PolicyContext is section doc line.
+// [🛠️semio-repo/cli/main.go#Types#Policies§IsSectionDocLine](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/ISSECTIONDOCLINE)
 func (ctx *PolicyContext) IsSectionDocLine(filePath string, lineNum int) bool {
 	return ctx.SectionDocLines(filePath)[lineNum]
 }
 
 // DefinitionDocLines MUST operate on the PolicyContext receiver and return consistent results.
 // DefinitionDocLines performs the definition doc lines operation on the PolicyContext.
+// [🛠️semio-repo/cli/main.go#Types#Policies§DefinitionDocLines](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/DEFINITIONDOCLINES)
 func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 	if ctx.definitionDocCache == nil {
 		ctx.definitionDocCache = make(map[string]map[int]bool)
@@ -13288,10 +13875,24 @@ func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 			if line == "" {
 				break
 			}
-			if !strings.HasPrefix(line, prefix) {
-				break
+			if strings.HasPrefix(line, prefix) {
+				result[lineIndex+1] = true
+				continue
 			}
-			result[lineIndex+1] = true
+			if language.Name() == "typescript" {
+				if strings.HasSuffix(line, "**/") || strings.HasSuffix(line, "*/") || strings.HasPrefix(line, "* ") || line == "*" || strings.HasPrefix(line, "/**") {
+					result[lineIndex+1] = true
+					if strings.HasPrefix(line, "/**") {
+						break
+					}
+					continue
+				}
+			}
+			if (language.Name() == "csharp" || language.Name() == "rust") && strings.HasPrefix(line, "///") {
+				result[lineIndex+1] = true
+				continue
+			}
+			break
 		}
 	}
 	ctx.definitionDocCache[filePath] = result
@@ -13300,6 +13901,7 @@ func (ctx *PolicyContext) DefinitionDocLines(filePath string) map[int]bool {
 
 // IsDefinitionDocLine MUST return true only when the condition is met.
 // IsDefinitionDocLine reports whether the PolicyContext is definition doc line.
+// [🛠️semio-repo/cli/main.go#Types#Policies§IsDefinitionDocLine](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/ISDEFINITIONDOCLINE)
 func (ctx *PolicyContext) IsDefinitionDocLine(filePath string, lineNum int) bool {
 	return ctx.DefinitionDocLines(filePath)[lineNum]
 }
@@ -13315,6 +13917,7 @@ func randomString(n int) string {
 
 // CheckPolicies MUST run all applicable policies and aggregate violations.
 // CheckPolicies validates the policies and returns any violations.
+// [🛠️semio-repo/cli/main.go#Types#Policies§CheckPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/CHECKPOLICIES)
 func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Violation, error) {
 	ctx := NewPolicyContext(scope, bundles)
 	return CheckPoliciesWithContext(ctx, policyIDs)
@@ -13322,6 +13925,7 @@ func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Violati
 
 // CheckPoliciesWithContext MUST run all applicable policies and aggregate violations.
 // CheckPoliciesWithContext validates the policies with context and returns any violations.
+// [🛠️semio-repo/cli/main.go#Types#Policies§CheckPoliciesWithContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/CHECKPOLICIESWITHCONTEXT)
 func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Violation, error) {
 	var violations []Violation
 	var policiesToRun []PolicyDef
@@ -13703,6 +14307,7 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
 			}
 			if !isExempt && s.Name != "" && !isTestOrBenchmarkFile(file) {
+				hasIdentification := false
 				hasSummary := false
 				for i := 1; i < len(sectionLines)-1; i++ {
 					line := strings.TrimSpace(sectionLines[i])
@@ -13716,7 +14321,17 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					if commentText == "" {
 						continue
 					}
+					if strings.HasPrefix(commentText, "[") && strings.Contains(commentText, "](semiorepo://section/") {
+						hasIdentification = true
+						continue
+					}
 						hasSummary = true
+				}
+				if !hasIdentification {
+					violations = append(violations, ctx.CreateViolation(
+						fmt.Sprintf("Section \"%s\" is missing identification in %s", s.Name, file),
+						ViolationCodeSectionMissingIdentification,
+						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
 				}
 				if !hasSummary {
 					violations = append(violations, ctx.CreateViolation(
@@ -13902,23 +14517,105 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 			}
 			hasSummary := false
 			hasSpecs := false
-			for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
-				line := strings.TrimSpace(lines[lineIndex])
-				if line == "" {
-					break
+			hasIdentification := false
+			isNativeDocstring := false
+			langName := language.Name()
+			if langName == "typescript" {
+				prevIdx := def.start - 2
+				if prevIdx >= 0 {
+					prevLine := strings.TrimSpace(lines[prevIdx])
+					if strings.HasSuffix(prevLine, "**/") || strings.HasSuffix(prevLine, "*/") {
+						isNativeDocstring = true
+						for scanIdx := prevIdx; scanIdx >= 0; scanIdx-- {
+							sline := strings.TrimSpace(lines[scanIdx])
+							if strings.HasPrefix(sline, "/**") {
+								break
+							}
+							content := sline
+							if strings.HasPrefix(content, "* ") {
+								content = content[2:]
+							} else if content == "*" || content == "/**" || content == "*/" || content == "**/" {
+								continue
+							}
+							content = strings.TrimSpace(content)
+							if content == "" {
+								continue
+							}
+							if strings.HasPrefix(content, "* ") {
+								content = strings.TrimSpace(content[2:])
+							}
+							if strings.HasPrefix(content, "[") && strings.Contains(content, "](semiorepo://definition/") {
+								hasIdentification = true
+							} else if isSpecText(content) {
+								hasSpecs = true
+							} else {
+								hasSummary = true
+							}
+						}
+					}
 				}
-				if !strings.HasPrefix(line, commentPrefix) {
-					break
+			}
+			if langName == "csharp" || langName == "rust" {
+				prevIdx := def.start - 2
+				if prevIdx >= 0 && strings.HasPrefix(strings.TrimSpace(lines[prevIdx]), "///") {
+					isNativeDocstring = true
+					for lineIndex := prevIdx; lineIndex >= 0; lineIndex-- {
+						line := strings.TrimSpace(lines[lineIndex])
+						if !strings.HasPrefix(line, "///") {
+							break
+						}
+						commentText := strings.TrimSpace(strings.TrimPrefix(line, "///"))
+						if commentText == "" {
+							continue
+						}
+						if strings.HasPrefix(commentText, "[") && strings.Contains(commentText, "](semiorepo://definition/") {
+							hasIdentification = true
+						} else if isSpecText(commentText) {
+							hasSpecs = true
+						} else {
+							hasSummary = true
+						}
+					}
 				}
-				commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
-				if commentText == "" {
-					continue
+			}
+			if !isNativeDocstring {
+				if langName == "go" || langName == "python" {
+					isNativeDocstring = true
 				}
-				if isSpecText(commentText) {
-					hasSpecs = true
-				} else {
-					hasSummary = true
+				for lineIndex := def.start - 2; lineIndex >= 0; lineIndex-- {
+					line := strings.TrimSpace(lines[lineIndex])
+					if line == "" {
+						break
+					}
+					if !strings.HasPrefix(line, commentPrefix) {
+						break
+					}
+					commentText := strings.TrimSpace(strings.TrimPrefix(line, commentPrefix))
+					if commentText == "" {
+						continue
+					}
+					if strings.HasPrefix(commentText, "[") && strings.Contains(commentText, "](semiorepo://definition/") {
+						hasIdentification = true
+						continue
+					}
+					if isSpecText(commentText) {
+						hasSpecs = true
+					} else {
+						hasSummary = true
+					}
 				}
+			}
+			if !isNativeDocstring && (hasSummary || hasSpecs || hasIdentification) {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Definition \"%s\" is not using native docstring format in %s:%d", def.name, file, def.start),
+					ViolationCodeDefNotNativeDocstring,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
+			}
+			if !hasIdentification {
+				violations = append(violations, ctx.CreateViolation(
+					fmt.Sprintf("Definition \"%s\" is missing identification in %s:%d", def.name, file, def.start),
+					ViolationCodeDefMissingIdentification,
+					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
 			}
 			if !hasSummary {
 				violations = append(violations, ctx.CreateViolation(
@@ -13938,11 +14635,13 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 }
 
 // CommentTemplateState holds the data fields for a comment template state record.
+// [🛠️semio-repo/cli/main.go#Types#Policies§CommentTemplateState](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/COMMENTTEMPLATESTATE)
 type CommentTemplateState struct {
 	ExprDepth int
 }
 
 // CommentScanState holds the data fields for a comment scan state record.
+// [🛠️semio-repo/cli/main.go#Types#Policies§CommentScanState](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/COMMENTSCANSTATE)
 type CommentScanState struct {
 	InBlockComment          bool
 	BlockCommentStartLine   int
@@ -13963,6 +14662,7 @@ type CommentScanState struct {
 
 // InTemplateRaw MUST operate on the CommentScanState receiver and return consistent results.
 // InTemplateRaw performs the in template raw operation on the CommentScanState.
+// [🛠️semio-repo/cli/main.go#Types#Policies§InTemplateRaw](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/INTEMPLATERAW)
 func (state *CommentScanState) InTemplateRaw() bool {
 	if len(state.Templates) == 0 {
 		return false
@@ -14432,9 +15132,12 @@ func repoPolicy(ctx *PolicyContext) []Violation {
 // #endregion 🔖Policies
 
 // #region 🔖Codebase
+
+// [🔖semio-repo/cli/main.go#Codebase](semiorepo://section/semio-repo/cli/main.go/CODEBASE)
 // Codebase builder that assembles bundles, folders, files, sections, definitions, contributors, tickets, policies, and violations.
 
 // CodebaseContext holds the data fields for a codebase context record.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§CodebaseContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/CODEBASECONTEXT)
 type CodebaseContext struct {
 	RootDir    string
 	RootURI    string
@@ -14447,6 +15150,7 @@ type CodebaseContext struct {
 
 // NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
 // NewCodebaseContext creates and returns a new CodebaseContext instance.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§NewCodebaseContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/NEWCODEBASECONTEXT)
 func NewCodebaseContext() *CodebaseContext {
 	rootURI := "file://" + NormalizePath(rootDir)
 	return &CodebaseContext{
@@ -14457,12 +15161,14 @@ func NewCodebaseContext() *CodebaseContext {
 
 // LoadBundles MUST read from the configured storage path.
 // LoadBundles loads the bundles from storage.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§LoadBundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/LOADBUNDLES)
 func (ctx *CodebaseContext) LoadBundles() {
 	ctx.Bundles = GetProjects()
 }
 
 // LoadFiles MUST read from the configured storage path.
 // LoadFiles loads the files from storage.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§LoadFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/LOADFILES)
 func (ctx *CodebaseContext) LoadFiles() error {
 	files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, ctx.Bundles)
 	if err != nil {
@@ -14474,6 +15180,7 @@ func (ctx *CodebaseContext) LoadFiles() error {
 
 // LoadViolations MUST read from the configured storage path.
 // LoadViolations loads the violations from storage.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§LoadViolations](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/LOADVIOLATIONS)
 func (ctx *CodebaseContext) LoadViolations() error {
 	for _, file := range ctx.Files {
 		violations, err := AnalyzeFile(file, ctx.Bundles)
@@ -14487,6 +15194,7 @@ func (ctx *CodebaseContext) LoadViolations() error {
 
 // LoadTickets MUST read from the configured storage path.
 // LoadTickets loads the tickets from storage.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§LoadTickets](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/LOADTICKETS)
 func (ctx *CodebaseContext) LoadTickets() error {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -14498,12 +15206,14 @@ func (ctx *CodebaseContext) LoadTickets() error {
 
 // LoadPolicies MUST read from the configured storage path.
 // LoadPolicies loads the policies from storage.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§LoadPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/LOADPOLICIES)
 func (ctx *CodebaseContext) LoadPolicies() {
 	ctx.Policies = GetPolicies()
 }
 
 // GetBundleForFile MUST return the stored value without modification.
 // GetBundleForFile returns the bundle for file of the CodebaseContext.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§GetBundleForFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/GETBUNDLEFORFILE)
 func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
 	name, _, ok := ctx.GetBundleInfo(filePath)
 	if !ok {
@@ -14514,6 +15224,7 @@ func (ctx *CodebaseContext) GetBundleForFile(filePath string) string {
 
 // GetBundleInfo MUST return the stored value without modification.
 // GetBundleInfo returns the bundle info of the CodebaseContext.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§GetBundleInfo](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/GETBUNDLEINFO)
 func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bool) {
 	normalizedPath := NormalizePath(path)
 	var matchedBundle string
@@ -14537,30 +15248,35 @@ func (ctx *CodebaseContext) GetBundleInfo(path string) (name, root string, ok bo
 
 // GetFileID MUST return the stored value without modification.
 // GetFileID returns the file i d of the CodebaseContext.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§GetFileID](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/GETFILEID)
 func (ctx *CodebaseContext) GetFileID(file string) string {
 	return buildFileID(file, nil)
 }
 
 // GetFolderID MUST return the stored value without modification.
 // GetFolderID returns the folder i d of the CodebaseContext.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§GetFolderID](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/GETFOLDERID)
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
 	return "📂" + NormalizePath(folder)
 }
 
 // FileURI MUST operate on the CodebaseContext receiver and return consistent results.
 // FileURI performs the file u r i operation on the CodebaseContext.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§FileURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/FILEURI)
 func (ctx *CodebaseContext) FileURI(path string) string {
 	return "semiorepo://file/" + NormalizePath(path)
 }
 
 // FolderURI MUST operate on the CodebaseContext receiver and return consistent results.
 // FolderURI performs the folder u r i operation on the CodebaseContext.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§FolderURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/FOLDERURI)
 func (ctx *CodebaseContext) FolderURI(path string) string {
 	return "semiorepo://folder/" + NormalizePath(path)
 }
 
 // BuildCodebaseBundles MUST assemble the codebase bundles from the available context data.
 // BuildCodebaseBundles constructs and returns the codebase bundles structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseBundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEBUNDLES)
 func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	var result []CodebaseBundle
 	fileCounts := make(map[string]int)
@@ -14724,6 +15440,7 @@ func countSections(sections []Section) int {
 
 // BuildCodebaseFolders MUST assemble the codebase folders from the available context data.
 // BuildCodebaseFolders constructs and returns the codebase folders structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseFolders](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEFOLDERS)
 func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
@@ -14779,6 +15496,7 @@ func extractFilePath(scope string) string {
 
 // BuildCodebaseFiles MUST assemble the codebase files from the available context data.
 // BuildCodebaseFiles constructs and returns the codebase files structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEFILES)
 func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 	var result []CodebaseFile
 	violationsByFile := make(map[string][]Violation)
@@ -14837,6 +15555,7 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 
 // BuildCodebaseSections MUST assemble the codebase sections from the available context data.
 // BuildCodebaseSections constructs and returns the codebase sections structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASESECTIONS)
 func BuildCodebaseSections(ctx *CodebaseContext) []CodebaseSection {
 	var result []CodebaseSection
 
@@ -14890,6 +15609,7 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, 
 
 // BuildCodebaseDefinitions MUST assemble the codebase definitions from the available context data.
 // BuildCodebaseDefinitions constructs and returns the codebase definitions structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEDEFINITIONS)
 func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 	var result []CodebaseDefinition
 
@@ -14934,6 +15654,7 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 
 // BuildCodebaseContributors MUST assemble the codebase contributors from the available context data.
 // BuildCodebaseContributors constructs and returns the codebase contributors structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseContributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASECONTRIBUTORS)
 func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -15013,6 +15734,7 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 // BuildCodebaseTickets MUST assemble the codebase tickets from the available context data.
 // BuildCodebaseTickets constructs and returns the codebase tickets structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseTickets](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASETICKETS)
 func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 	var result []CodebaseTicket
 
@@ -15094,6 +15816,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 
 // BuildCodebasePolicies MUST assemble the codebase policies from the available context data.
 // BuildCodebasePolicies constructs and returns the codebase policies structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebasePolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEPOLICIES)
 func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 	var result []CodebasePolicy
 	violationsByPolicy := make(map[string][]Violation)
@@ -15129,6 +15852,7 @@ func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 
 // BuildCodebaseViolations MUST assemble the codebase violations from the available context data.
 // BuildCodebaseViolations constructs and returns the codebase violations structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseViolations](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEVIOLATIONS)
 func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
 	var result []CodebaseViolation
 
@@ -15188,6 +15912,7 @@ func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
 
 // BuildCodebaseTree MUST assemble the codebase tree from the available context data.
 // BuildCodebaseTree constructs and returns the codebase tree structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseTree](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASETREE)
 func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []CodebaseFile, sections []CodebaseSection, definitions []CodebaseDefinition) map[string]*CbTreeNode {
 	tree := make(map[string]*CbTreeNode)
 	tree["semio"] = &CbTreeNode{Kind: CbTreeNodeRepo, Children: make(map[string]*CbTreeNode)}
@@ -15235,6 +15960,7 @@ func BuildCodebaseTree(ctx *CodebaseContext, bundles []CodebaseBundle, files []C
 
 // BuildCodebase MUST assemble the codebase from the available context data.
 // BuildCodebase constructs and returns the codebase structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebase](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASE)
 func BuildCodebase(ctx *CodebaseContext) *Codebase {
 	bundles := BuildCodebaseBundles(ctx)
 	folders := BuildCodebaseFolders(ctx)
@@ -15263,6 +15989,7 @@ func BuildCodebase(ctx *CodebaseContext) *Codebase {
 
 // BuildCodebaseSnapshot MUST assemble the codebase snapshot from the available context data.
 // BuildCodebaseSnapshot constructs and returns the codebase snapshot structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseSnapshot](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASESNAPSHOT)
 func BuildCodebaseSnapshot(files []string, bundles []Bundle, commit string) (*Codebase, error) {
 	ctx := &CodebaseContext{RootDir: rootDir, RootURI: "file://" + NormalizePath(rootDir)}
 	ctx.Bundles = bundles
@@ -15280,6 +16007,7 @@ func BuildCodebaseSnapshot(files []string, bundles []Bundle, commit string) (*Co
 
 // BuildCodebaseBundlesForFiles MUST assemble the codebase bundles for files from the available context data.
 // BuildCodebaseBundlesForFiles constructs and returns the codebase bundles for files structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseBundlesForFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEBUNDLESFORFILES)
 func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []CodebaseBundle {
 	var result []CodebaseBundle
 	fileCounts := make(map[string]int)
@@ -15355,6 +16083,7 @@ func BuildCodebaseBundlesForFiles(ctx *CodebaseContext, commit string) []Codebas
 
 // BuildCodebaseFoldersForFiles MUST assemble the codebase folders for files from the available context data.
 // BuildCodebaseFoldersForFiles constructs and returns the codebase folders for files structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseFoldersForFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEFOLDERSFORFILES)
 func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
@@ -15400,6 +16129,7 @@ func BuildCodebaseFoldersForFiles(ctx *CodebaseContext, commit string) []Codebas
 
 // BuildCodebaseFilesForFiles MUST assemble the codebase files for files from the available context data.
 // BuildCodebaseFilesForFiles constructs and returns the codebase files for files structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseFilesForFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEFILESFORFILES)
 func BuildCodebaseFilesForFiles(ctx *CodebaseContext, commit string) []CodebaseFile {
 	var result []CodebaseFile
 	for _, file := range ctx.Files {
@@ -15435,6 +16165,7 @@ func BuildCodebaseFilesForFiles(ctx *CodebaseContext, commit string) []CodebaseF
 
 // BuildCodebaseSectionsForFiles MUST assemble the codebase sections for files from the available context data.
 // BuildCodebaseSectionsForFiles constructs and returns the codebase sections for files structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseSectionsForFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASESECTIONSFORFILES)
 func BuildCodebaseSectionsForFiles(ctx *CodebaseContext, commit string) []CodebaseSection {
 	var result []CodebaseSection
 	for _, file := range ctx.Files {
@@ -15483,6 +16214,7 @@ func addSectionsForContent(ctx *CodebaseContext, result *[]CodebaseSection, file
 
 // BuildCodebaseDefinitionsForFiles MUST assemble the codebase definitions for files from the available context data.
 // BuildCodebaseDefinitionsForFiles constructs and returns the codebase definitions for files structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseDefinitionsForFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEDEFINITIONSFORFILES)
 func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, commit string) []CodebaseDefinition {
 	var result []CodebaseDefinition
 	for _, file := range ctx.Files {
@@ -15522,6 +16254,7 @@ func BuildCodebaseDefinitionsForFiles(ctx *CodebaseContext, commit string) []Cod
 
 // ToolCodebase MUST complete the operation and return consistent results.
 // ToolCodebase performs the tool codebase operation.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§ToolCodebase](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/TOOLCODEBASE)
 func ToolCodebase() ToolResult {
 	output := NewOutput()
 	ctx := NewCodebaseContext()
@@ -15549,34 +16282,41 @@ func ToolCodebase() ToolResult {
 // #endregion 🔖Codebase
 
 // #region 🔖Tickets
+
+// [🔖semio-repo/cli/main.go#Tickets](semiorepo://section/semio-repo/cli/main.go/TICKETS)
 // Ticket and goal lifecycle management including creation, closing, reopening, deletion, and diff computation.
 
 // GetTicketsDir MUST return the stored value without modification.
 // GetTicketsDir returns the tickets dir of the value.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§GetTicketsDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/GETTICKETSDIR)
 func GetTicketsDir() string {
 	return filepath.Join(GetRepoMetaDir(), "tickets")
 }
 
 // GetTicketPath MUST return the stored value without modification.
 // GetTicketPath returns the ticket path of the value.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§GetTicketPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/GETTICKETPATH)
 func GetTicketPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketsDir(), strconv.Itoa(year), PadNumber(month, 2), PadNumber(day, 2), slug)
 }
 
 // GetTicketFilePath MUST return the stored value without modification.
 // GetTicketFilePath returns the ticket file path of the value.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§GetTicketFilePath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/GETTICKETFILEPATH)
 func GetTicketFilePath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.md")
 }
 
 // GetImportantFilePath MUST return the stored value without modification.
 // GetImportantFilePath returns the important file path of the value.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§GetImportantFilePath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/GETIMPORTANTFILEPATH)
 func GetImportantFilePath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "important.md")
 }
 
 // GetTicketJsonPath MUST return the stored value without modification.
 // GetTicketJsonPath returns the ticket json path of the value.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§GetTicketJsonPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/GETTICKETJSONPATH)
 func GetTicketJsonPath(year, month, day int, slug string) string {
 	return filepath.Join(GetTicketPath(year, month, day, slug), "ticket.json")
 }
@@ -15591,6 +16331,7 @@ func hasTicketKeyword(text, keyword string) bool {
 
 // FindTicketBySlug MUST return nil when no match is found.
 // FindTicketBySlug searches for and returns the matching ticket by slug.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§FindTicketBySlug](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/FINDTICKETBYSLUG)
 func FindTicketBySlug(slug string) (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -15607,6 +16348,7 @@ func FindTicketBySlug(slug string) (*Ticket, error) {
 
 // LatestTicket MUST complete the operation and return consistent results.
 // LatestTicket performs the latest ticket operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§LatestTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/LATESTTICKET)
 func LatestTicket() (*Ticket, error) {
 	tickets, err := ListTickets(nil, nil, nil)
 	if err != nil {
@@ -15640,6 +16382,7 @@ func shouldSkipTicket(prompt string) bool {
 
 // OpenTicket MUST complete the operation and return consistent results.
 // OpenTicket performs the open ticket operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§OpenTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/OPENTICKET)
 func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
 	if prompt == "" {
 		prompt = title
@@ -15662,6 +16405,7 @@ func OpenTicket(title, prompt, llm, client, draft string, noIssue bool, goal str
 
 // OpenGoal MUST complete the operation and return consistent results.
 // OpenGoal performs the open goal operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§OpenGoal](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/OPENGOAL)
 func OpenGoal(title, description, prompt, dueDate, client, llm string, noGithub bool) (*Goal, error) {
 	ctx := NewRepoContext(rootDir)
 	input := GoalCreateInput{
@@ -15678,6 +16422,7 @@ func OpenGoal(title, description, prompt, dueDate, client, llm string, noGithub 
 
 // UpdateTicketTitle MUST complete the operation and return consistent results.
 // UpdateTicketTitle performs the update ticket title operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§UpdateTicketTitle](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/UPDATETICKETTITLE)
 func UpdateTicketTitle(ticket *Ticket, title string) error {
 	if ticket == nil {
 		return fmt.Errorf("ticket is nil")
@@ -15722,6 +16467,7 @@ func UpdateTicketTitle(ticket *Ticket, title string) error {
 
 // CreateTicket MUST persist the new entity and return a reference to it.
 // CreateTicket creates a new ticket and persists it.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§CreateTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/CREATETICKET)
 func CreateTicket(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) (*Ticket, error) {
 	title = strings.TrimSpace(title)
 	if goal == "" {
@@ -15918,6 +16664,7 @@ func ghAssignIssueToCurrentUser(issueURL string) {
 
 // CountLines MUST complete the operation and return consistent results.
 // CountLines performs the count lines operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§CountLines](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/COUNTLINES)
 func CountLines(content string) int {
 	if content == "" {
 		return 0
@@ -15927,6 +16674,7 @@ func CountLines(content string) int {
 
 // CountLinesInFile MUST complete the operation and return consistent results.
 // CountLinesInFile performs the count lines in file operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§CountLinesInFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/COUNTLINESINFILE)
 func CountLinesInFile(path string) int {
 	content, err := ReadTextFile(path)
 	if err != nil {
@@ -15937,6 +16685,7 @@ func CountLinesInFile(path string) int {
 
 // CountLinesAtCommit MUST complete the operation and return consistent results.
 // CountLinesAtCommit performs the count lines at commit operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§CountLinesAtCommit](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/COUNTLINESATCOMMIT)
 func CountLinesAtCommit(commit, filePath string) int {
 	stdout, _, exitCode := ExecCommand("git", []string{"show", fmt.Sprintf("%s:%s", commit, filePath)}, "")
 	if exitCode != 0 {
@@ -15947,6 +16696,7 @@ func CountLinesAtCommit(commit, filePath string) int {
 
 // ReadTextFileAtCommit MUST return the text file at commit content or an error if unavailable.
 // ReadTextFileAtCommit reads and returns text file at commit from the source.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ReadTextFileAtCommit](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/READTEXTFILEATCOMMIT)
 func ReadTextFileAtCommit(commit, filePath string) (string, error) {
 	if commit == "" {
 		return ReadTextFile(filepath.Join(rootDir, filePath))
@@ -15960,6 +16710,7 @@ func ReadTextFileAtCommit(commit, filePath string) (string, error) {
 
 // ListFilesAtCommit MUST return all available files at commit entries.
 // ListFilesAtCommit returns a list of files at commit entries.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ListFilesAtCommit](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/LISTFILESATCOMMIT)
 func ListFilesAtCommit(commit string) ([]string, error) {
 	if commit == "" {
 		files, err := ScopeToFiles(Scope{Kind: ScopeRepo}, GetProjects())
@@ -16054,6 +16805,7 @@ func replaceSectionContent(content, sectionHeading, newContent string) string {
 
 // FilterTicketWorkspaceFiles MUST return only entries that match the filter criteria.
 // FilterTicketWorkspaceFiles returns the subset of ticket workspace files matching the criteria.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§FilterTicketWorkspaceFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/FILTERTICKETWORKSPACEFILES)
 func FilterTicketWorkspaceFiles(ticket *Ticket, files []string) []string {
 	if ticket == nil {
 		return files
@@ -16391,6 +17143,7 @@ func ghListOpenIssuesWithLabel(label string) ([]string, error) {
 
 // SaveTicket MUST persist the ticket atomically to the data store.
 // SaveTicket persists ticket to the data store.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§SaveTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/SAVETICKET)
 func SaveTicket(ticket *Ticket) error {
 	jsonBytes, err := json.MarshalIndent(ticket, "", "  ")
 	if err != nil {
@@ -16401,6 +17154,7 @@ func SaveTicket(ticket *Ticket) error {
 
 // ReadTicket MUST return the ticket content or an error if unavailable.
 // ReadTicket reads and returns ticket from the source.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ReadTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/READTICKET)
 func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 	folderPath := GetTicketPath(year, month, day, slug)
 	jsonPath := GetTicketJsonPath(year, month, day, slug)
@@ -16431,6 +17185,7 @@ func ReadTicket(year, month, day int, slug string) (*Ticket, error) {
 
 // ListTickets MUST return all available tickets entries.
 // ListTickets returns a list of tickets entries.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ListTickets](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/LISTTICKETS)
 func ListTickets(year, month, day *int) ([]Ticket, error) {
 	ticketsDir := GetTicketsDir()
 	if !FileExists(ticketsDir) {
@@ -16523,6 +17278,7 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 
 // StreamTickets MUST invoke the callback for each matching tickets entry.
 // StreamTickets streams tickets entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§StreamTickets](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/STREAMTICKETS)
 func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket, opts ...StreamOptions) error {
 	defer close(out)
 
@@ -16717,6 +17473,7 @@ var (
 
 // InvalidateProjectCache MUST clear the cached state to force a reload.
 // InvalidateProjectCache invalidates the cached project cache.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§InvalidateProjectCache](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/INVALIDATEPROJECTCACHE)
 func InvalidateProjectCache() {
 	projectCacheMutex.Lock()
 	defer projectCacheMutex.Unlock()
@@ -16726,6 +17483,7 @@ func InvalidateProjectCache() {
 
 // LoadProjects MUST return all matching projects from the data source.
 // LoadProjects loads and returns projects from the data source.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§LoadProjects](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/LOADPROJECTS)
 func LoadProjects() []Project {
 	projectCacheMutex.Lock()
 	defer projectCacheMutex.Unlock()
@@ -16827,6 +17585,7 @@ func loadProjectsInternal() []Project {
 
 // LoadCommits MUST return all matching commits from the data source.
 // LoadCommits loads and returns commits from the data source.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§LoadCommits](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/LOADCOMMITS)
 func LoadCommits(limit *int) []Commit {
 	args := []string{"log", "--pretty=format:%H|%aN|%ad|%s", "--date=iso-strict"}
 	if limit != nil {
@@ -16863,6 +17622,7 @@ func LoadCommits(limit *int) []Commit {
 
 // LoadBundles MUST return all matching bundles from the data source.
 // LoadBundles loads and returns bundles from the data source.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§LoadBundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/LOADBUNDLES)
 func LoadBundles() []Bundle {
 	var bundles []Bundle
 	projects := LoadProjects()
@@ -16874,12 +17634,14 @@ func LoadBundles() []Bundle {
 
 // GetProjects MUST retrieve the requested value or return an error.
 // GetProjects retrieves and returns the projects.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§GetProjects](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/GETPROJECTS)
 func GetProjects() []Bundle {
 	return LoadBundles()
 }
 
 // StreamBundles MUST invoke the callback for each matching bundles entry.
 // StreamBundles streams bundles entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§StreamBundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/STREAMBUNDLES)
 func StreamBundles(ctx context.Context, out chan<- Bundle, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -17054,6 +17816,7 @@ func loadPackages(bundleRoot string) []Package {
 
 // StreamProjects MUST invoke the callback for each matching projects entry.
 // StreamProjects streams projects entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§StreamProjects](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/STREAMPROJECTS)
 func StreamProjects(ctx context.Context, out chan<- Project, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -17141,6 +17904,7 @@ func runProjectTree(factory EngineFactory, config Config, cmd *cobra.Command, ar
 }
 
 // StreamOptions holds the data fields for a stream options record.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§StreamOptions](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/STREAMOPTIONS)
 type StreamOptions struct {
 	ShowIgnored    bool
 	ShowGenerated  bool
@@ -17373,6 +18137,7 @@ func shouldIncludeDefinitionKind(kind DefinitionKind, opts StreamOptions) bool {
 
 // StreamFolders MUST invoke the callback for each matching folders entry.
 // StreamFolders streams folders entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§StreamFolders](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/STREAMFOLDERS)
 func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -17481,6 +18246,7 @@ func StreamFolders(ctx context.Context, scope string, out chan<- Folder, opts ..
 
 // StreamFiles MUST invoke the callback for each matching files entry.
 // StreamFiles streams files entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§StreamFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/STREAMFILES)
 func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -17672,6 +18438,7 @@ func hydrateSectionMetadata(s *Section, filePath string, prefix string) {
 
 // StreamSections MUST invoke the callback for each matching sections entry.
 // StreamSections streams sections entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§StreamSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/STREAMSECTIONS)
 func StreamSections(ctx context.Context, scope string, out chan<- Section, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -17733,6 +18500,7 @@ func StreamSections(ctx context.Context, scope string, out chan<- Section, opts 
 
 // StreamDefinitions MUST invoke the callback for each matching definitions entry.
 // StreamDefinitions streams definitions entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§StreamDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/STREAMDEFINITIONS)
 func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -17803,6 +18571,7 @@ func StreamDefinitions(ctx context.Context, scope string, out chan<- Definition,
 
 // ResolveBundleForPath MUST return the resolved value or an error if unresolvable.
 // ResolveBundleForPath resolves and returns the bundle for path.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ResolveBundleForPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/RESOLVEBUNDLEFORPATH)
 func ResolveBundleForPath(filePath string, bundles []Bundle) string {
 	var bestMatch string
 	var maxLen int
@@ -17994,6 +18763,7 @@ func generateMetricsComment(diffs *TicketDiffs, bundles []Bundle) string {
 
 // ProgressTicket MUST return a non-nil error when the operation fails.
 // ProgressTicket performs the progress ticket operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ProgressTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/PROGRESSTICKET)
 func ProgressTicket(ticket *Ticket, summary string) (string, error) {
 	if summary == "" {
 		return "No summary provided", nil
@@ -18029,6 +18799,7 @@ func ProgressTicket(ticket *Ticket, summary string) (string, error) {
 
 // FinishTicket MUST return a non-nil error when the operation fails.
 // FinishTicket performs the finish ticket operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§FinishTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/FINISHTICKET)
 func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool, bulk bool) error {
 	if ticket.Status != TicketStatusOpen {
 		return fmt.Errorf("ticket is not open")
@@ -18140,6 +18911,7 @@ func FinishTicket(ticket *Ticket, summary string, files []string, noGithub bool,
 
 // ReopenTicket MUST return a non-nil error when the operation fails.
 // ReopenTicket performs the reopen ticket operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ReopenTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/REOPENTICKET)
 func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string, parent string, noGithub bool) error {
 	if ticket.Status == TicketStatusOpen {
 		return fmt.Errorf("ticket is already open")
@@ -18233,6 +19005,7 @@ func ReopenTicket(ticket *Ticket, prompt, llm, client, draft string, goal string
 
 // ToolTicketOpen MUST complete the operation successfully.
 // ToolTicketOpen performs the tool ticket open operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolTicketOpen](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLTICKETOPEN)
 func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal string, parent string, noGithub bool, issue string) ToolResult {
 	ticket, err := OpenTicket(title, prompt, llm, client, draft, noIssue, goal, parent, noGithub, issue)
 	if err != nil {
@@ -18258,6 +19031,7 @@ func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal
 
 // ToolTicketList MUST complete the operation successfully.
 // ToolTicketList performs the tool ticket list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolTicketList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLTICKETLIST)
 func ToolTicketList(year, month, day *int) ToolResult {
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
@@ -18287,6 +19061,7 @@ func ToolTicketList(year, month, day *int) ToolResult {
 
 // ToolTicketRead MUST complete the operation successfully.
 // ToolTicketRead performs the tool ticket read operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolTicketRead](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLTICKETREAD)
 func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -18318,6 +19093,7 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 
 // ToolTicketClose MUST complete the operation successfully.
 // ToolTicketClose performs the tool ticket close operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolTicketClose](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLTICKETCLOSE)
 func ToolTicketClose(year, month, day int, slug, summary string, files []string, title string, noGithub bool) ToolResult {
 	ticket, err := ReadTicket(year, month, day, slug)
 	if err != nil {
@@ -18356,6 +19132,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 
 // ToolTicketReopen MUST complete the operation successfully.
 // ToolTicketReopen performs the tool ticket reopen operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolTicketReopen](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLTICKETREOPEN)
 func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft string, title string, goal string, parent string, noGithub bool) ToolResult {
 	output := NewOutput()
 	ticket, err := ReadTicket(year, month, day, slug)
@@ -18381,6 +19158,7 @@ func ToolTicketReopen(year, month, day int, slug, prompt, llm, client, draft str
 
 // ToolDraftCreate MUST complete the operation successfully.
 // ToolDraftCreate performs the tool draft create operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolDraftCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLDRAFTCREATE)
 func ToolDraftCreate(slug string, files []string) ToolResult {
 	output := NewOutput()
 	draft, err := CreateDraft(slug, files)
@@ -18393,6 +19171,7 @@ func ToolDraftCreate(slug string, files []string) ToolResult {
 
 // ToolDraftList MUST complete the operation successfully.
 // ToolDraftList performs the tool draft list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolDraftList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLDRAFTLIST)
 func ToolDraftList() ToolResult {
 	drafts, err := ListDrafts()
 	if err != nil {
@@ -18408,6 +19187,7 @@ func ToolDraftList() ToolResult {
 
 // ToolDraftDelete MUST complete the operation successfully.
 // ToolDraftDelete performs the tool draft delete operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolDraftDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLDRAFTDELETE)
 func ToolDraftDelete(slug string) ToolResult {
 	if err := DeleteDraft(slug); err != nil {
 		return toolErrorResult(err)
@@ -18417,6 +19197,7 @@ func ToolDraftDelete(slug string) ToolResult {
 
 // ToolGoalCreate MUST complete the operation successfully.
 // ToolGoalCreate performs the tool goal create operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolGoalCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLGOALCREATE)
 func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noGithub bool, parent, milestone string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	goal, err := ctx.GoalCreate(GoalCreateInput{
@@ -18450,6 +19231,7 @@ func ToolGoalCreate(title, description, prompt, dueDate, llm, client string, noG
 
 // ToolGoalList MUST complete the operation successfully.
 // ToolGoalList performs the tool goal list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolGoalList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLGOALLIST)
 func ToolGoalList() ToolResult {
 	goals, err := ListGoals()
 	if err != nil {
@@ -18465,6 +19247,7 @@ func ToolGoalList() ToolResult {
 
 // ToolGoalClose MUST complete the operation successfully.
 // ToolGoalClose performs the tool goal close operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolGoalClose](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLGOALCLOSE)
 func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.GoalClose(GoalCloseInput{
@@ -18487,6 +19270,7 @@ func ToolGoalClose(id, summary string, noGithub bool) ToolResult {
 
 // ToolGoalReopen MUST complete the operation successfully.
 // ToolGoalReopen performs the tool goal reopen operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolGoalReopen](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLGOALREOPEN)
 func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string, noGithub bool) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	var titlePtr, descriptionPtr, dueDatePtr *string
@@ -18524,6 +19308,7 @@ func ToolGoalReopen(id, prompt, llm, client, title, description, dueDate string,
 
 // ToolContributorAdd MUST complete the operation successfully.
 // ToolContributorAdd performs the tool contributor add operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolContributorAdd](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLCONTRIBUTORADD)
 func ToolContributorAdd(github string) ToolResult {
 	contributor, err := CreateContributor(github)
 	if err != nil {
@@ -18543,6 +19328,7 @@ func ToolContributorAdd(github string) ToolResult {
 
 // ToolContributorList MUST complete the operation successfully.
 // ToolContributorList performs the tool contributor list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolContributorList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLCONTRIBUTORLIST)
 func ToolContributorList() ToolResult {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -18558,6 +19344,7 @@ func ToolContributorList() ToolResult {
 
 // ToolContributorRemove MUST complete the operation successfully.
 // ToolContributorRemove performs the tool contributor remove operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolContributorRemove](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLCONTRIBUTORREMOVE)
 func ToolContributorRemove(github string) ToolResult {
 	if err := RemoveContributor(github); err != nil {
 		return toolErrorResult(err)
@@ -18571,6 +19358,7 @@ func ToolContributorRemove(github string) ToolResult {
 
 // ToolProjectList MUST complete the operation successfully.
 // ToolProjectList performs the tool project list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolProjectList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLPROJECTLIST)
 func ToolProjectList() ToolResult {
 	projects := LoadProjects()
 	sort.Slice(projects, func(i, j int) bool { return projects[i].Name < projects[j].Name })
@@ -18584,6 +19372,7 @@ func ToolProjectList() ToolResult {
 
 // ToolBundleList MUST complete the operation successfully.
 // ToolBundleList performs the tool bundle list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolBundleList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLBUNDLELIST)
 func ToolBundleList() ToolResult {
 	bundles := LoadBundles()
 	sort.Slice(bundles, func(i, j int) bool { return bundles[i].Name < bundles[j].Name })
@@ -18597,6 +19386,7 @@ func ToolBundleList() ToolResult {
 
 // ToolProjectTree MUST complete the operation successfully.
 // ToolProjectTree performs the tool project tree operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolProjectTree](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLPROJECTTREE)
 func ToolProjectTree() ToolResult {
 	projChan := make(chan Project)
 	go func() {
@@ -18618,6 +19408,7 @@ func ToolProjectTree() ToolResult {
 }
 // ToolFolderCreate MUST complete the operation successfully.
 // ToolFolderCreate performs the tool folder create operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFolderCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFOLDERCREATE)
 func ToolFolderCreate(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -18633,6 +19424,7 @@ func ToolFolderCreate(path string) ToolResult {
 
 // ToolFolderMove MUST complete the operation successfully.
 // ToolFolderMove performs the tool folder move operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFolderMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFOLDERMOVE)
 func ToolFolderMove(source, target string) ToolResult {
 	output := NewOutput()
 	absSource := filepath.Join(rootDir, source)
@@ -18656,6 +19448,7 @@ func ToolFolderMove(source, target string) ToolResult {
 
 // ToolFolderDelete MUST complete the operation successfully.
 // ToolFolderDelete performs the tool folder delete operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFolderDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFOLDERDELETE)
 func ToolFolderDelete(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -18671,6 +19464,7 @@ func ToolFolderDelete(path string) ToolResult {
 
 // ToolFolderList MUST complete the operation successfully.
 // ToolFolderList performs the tool folder list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFolderList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFOLDERLIST)
 func ToolFolderList(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -18702,6 +19496,7 @@ func ToolFolderList(path string) ToolResult {
 
 // ToolFolderTree MUST complete the operation successfully.
 // ToolFolderTree performs the tool folder tree operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFolderTree](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFOLDERTREE)
 func ToolFolderTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -18759,6 +19554,7 @@ func printTree(output *CommandOutput, dir, prefix string) {
 
 // ToolFileCreate MUST complete the operation successfully.
 // ToolFileCreate performs the tool file create operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFileCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFILECREATE)
 func ToolFileCreate(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -18776,6 +19572,7 @@ func ToolFileCreate(path string) ToolResult {
 
 // FileHeaderId MUST complete the operation successfully.
 // FileHeaderId performs the file header id operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§FileHeaderId](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/FILEHEADERID)
 func FileHeaderId(path string) string {
 	kind := DeriveFileKind(filepath.Base(path))
 	if kind == FileKindCode {
@@ -18797,6 +19594,7 @@ func FileHeaderId(path string) string {
 
 // AGPLLicenseText MUST complete the operation successfully.
 // AGPLLicenseText performs the a g p l license text operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§AGPLLicenseText](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/AGPLLICENSETEXT)
 func AGPLLicenseText() string {
 	return `This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
@@ -18814,9 +19612,53 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.`
 
 // FileHeaderUri MUST return the semiorepo URI for a file path.
 // FileHeaderUri returns the artifact URI for the given file path.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§FileHeaderUri](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/FILEHEADERURI)
 func FileHeaderUri(path string) string {
 	data := map[string]interface{}{"path": path}
 	return GetArtifactURI("file", data)
+}
+
+// SectionHeaderId MUST return the section artifact ID for a file path and section path.
+// SectionHeaderId returns the section identification string.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§SectionHeaderId](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/SECTIONHEADERID)
+func SectionHeaderId(filePath string, sectionPath string) string {
+	data := map[string]interface{}{"path": filePath + "#" + sectionPath}
+	return GetArtifactID("section", data)
+}
+
+// SectionHeaderUri MUST return the semiorepo URI for a section.
+// SectionHeaderUri returns the section artifact URI.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§SectionHeaderUri](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/SECTIONHEADERURI)
+func SectionHeaderUri(filePath string, sectionPath string) string {
+	path := filePath + "#" + sectionPath
+	data := map[string]interface{}{"path": path}
+	return GetArtifactURI("section", data)
+}
+
+// DefinitionHeaderId MUST return the definition artifact ID for a file path, section path, and definition name.
+// DefinitionHeaderId returns the definition identification string.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§DefinitionHeaderId](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/DEFINITIONHEADERID)
+func DefinitionHeaderId(filePath string, sectionPath string, name string, kind DefinitionKind) string {
+	data := map[string]interface{}{
+		"filePath":    filePath,
+		"sectionPath": sectionPath,
+		"name":        name,
+		"kind":        string(kind),
+	}
+	return GetArtifactID("definition", data)
+}
+
+// DefinitionHeaderUri MUST return the semiorepo URI for a definition.
+// DefinitionHeaderUri returns the definition artifact URI.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§DefinitionHeaderUri](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/DEFINITIONHEADERURI)
+func DefinitionHeaderUri(filePath string, sectionPath string, name string) string {
+	val := filePath
+	if sectionPath != "" {
+		val += "#" + sectionPath
+	}
+	val += "§" + name
+	data := map[string]interface{}{"id": val}
+	return GetArtifactURI("definition", data)
 }
 func generateFileHeader(path string, language LanguagePlugin) string {
 	if language == nil || !language.SupportsHeaders() {
@@ -18830,6 +19672,7 @@ func generateFileHeader(path string, language LanguagePlugin) string {
 
 // ToolFileMove MUST complete the operation successfully.
 // ToolFileMove performs the tool file move operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFileMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFILEMOVE)
 func ToolFileMove(source, target string) ToolResult {
 	output := NewOutput()
 	absSource := filepath.Join(rootDir, source)
@@ -18853,6 +19696,7 @@ func ToolFileMove(source, target string) ToolResult {
 
 // ToolFileDelete MUST complete the operation successfully.
 // ToolFileDelete performs the tool file delete operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFileDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFILEDELETE)
 func ToolFileDelete(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, path)
@@ -18868,6 +19712,7 @@ func ToolFileDelete(path string) ToolResult {
 
 // ToolFileList MUST complete the operation successfully.
 // ToolFileList performs the tool file list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFileList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFILELIST)
 func ToolFileList(scopeRaw string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(scopeRaw)
@@ -18889,6 +19734,7 @@ func ToolFileList(scopeRaw string) ToolResult {
 
 // ToolFileTree MUST complete the operation successfully.
 // ToolFileTree performs the tool file tree operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolFileTree](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLFILETREE)
 func ToolFileTree(path string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.TrimSuffix(path, "/"))
@@ -18902,6 +19748,7 @@ func ToolFileTree(path string) ToolResult {
 
 // ToolSectionCreate MUST complete the operation successfully.
 // ToolSectionCreate performs the tool section create operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolSectionCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLSECTIONCREATE)
 func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -18961,6 +19808,7 @@ func ToolSectionCreate(filePath, sectionPath string) ToolResult {
 
 // ToolSectionMove MUST complete the operation successfully.
 // ToolSectionMove performs the tool section move operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolSectionMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLSECTIONMOVE)
 func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -19040,6 +19888,7 @@ func ToolSectionMove(filePath, oldPath, newPath string) ToolResult {
 
 // ToolIntegrate MUST complete the operation successfully.
 // ToolIntegrate performs the tool integrate operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolIntegrate](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLINTEGRATE)
 func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSectionName string) ToolResult {
 	output := NewOutput()
 
@@ -19149,6 +19998,7 @@ func ToolIntegrate(sourcePath, targetSectionName, targetFilePath, targetParentSe
 
 // ToolExtract MUST complete the operation successfully.
 // ToolExtract performs the tool extract operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolExtract](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLEXTRACT)
 func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolResult {
 	output := NewOutput()
 
@@ -19239,6 +20089,7 @@ func ToolExtract(sourceFilePath, sourceSectionName, targetFilePath string) ToolR
 
 // UpdateAgentsDocsPath MUST apply the update and return an error if the target is missing.
 // UpdateAgentsDocsPath modifies an existing agents docs path entry.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§UpdateAgentsDocsPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/UPDATEAGENTSDOCSPATH)
 func UpdateAgentsDocsPath(oldPath, newPath string) {
 	agentsPath := filepath.Join(rootDir, "AGENTS.md")
 	if !FileExists(agentsPath) {
@@ -19280,6 +20131,7 @@ func UpdateAgentsDocsPath(oldPath, newPath string) {
 
 // RemoveAgentsDocsEntry MUST remove the target and return an error on failure.
 // RemoveAgentsDocsEntry removes the specified agents docs entry.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§RemoveAgentsDocsEntry](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/REMOVEAGENTSDOCSENTRY)
 func RemoveAgentsDocsEntry(filePath string) {
 	agentsPath := filepath.Join(rootDir, "AGENTS.md")
 	if !FileExists(agentsPath) {
@@ -19327,6 +20179,7 @@ func RemoveAgentsDocsEntry(filePath string) {
 
 // SplitHeader MUST complete the operation successfully.
 // SplitHeader splits the header into parts.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§SplitHeader](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/SPLITHEADER)
 func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 	sections := lang.ParseSections(content)
 	for _, s := range sections {
@@ -19341,6 +20194,7 @@ func SplitHeader(content string, lang LanguagePlugin) (string, string) {
 
 // MergeHeaders MUST combine the inputs and return the merged result.
 // MergeHeaders combines the headers entries into one.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§MergeHeaders](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/MERGEHEADERS)
 func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string {
 	if targetHeader == "" {
 		return sourceHeader
@@ -19394,6 +20248,7 @@ func MergeHeaders(targetHeader, sourceHeader string, lang LanguagePlugin) string
 
 // UniqueStrings MUST complete the operation successfully.
 // UniqueStrings performs the unique strings operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§UniqueStrings](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/UNIQUESTRINGS)
 func UniqueStrings(input []string) []string {
 	keys := make(map[string]bool)
 	list := []string{}
@@ -19408,6 +20263,7 @@ func UniqueStrings(input []string) []string {
 
 // ToolSectionDelete MUST complete the operation successfully.
 // ToolSectionDelete performs the tool section delete operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolSectionDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLSECTIONDELETE)
 func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -19464,6 +20320,7 @@ func ToolSectionDelete(filePath, sectionPath string) ToolResult {
 
 // ToolSectionList MUST complete the operation successfully.
 // ToolSectionList performs the tool section list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolSectionList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLSECTIONLIST)
 func ToolSectionList(filePath string) ToolResult {
 	output := NewOutput()
 	scope := ParseScope(filePath)
@@ -19498,6 +20355,7 @@ func ToolSectionList(filePath string) ToolResult {
 
 // ToolSectionTree MUST complete the operation successfully.
 // ToolSectionTree performs the tool section tree operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolSectionTree](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLSECTIONTREE)
 func ToolSectionTree(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, strings.Split(filePath, "#")[0])
@@ -19528,6 +20386,7 @@ func ToolSectionTree(filePath string) ToolResult {
 
 // ToolDefinitionList MUST complete the operation successfully.
 // ToolDefinitionList performs the tool definition list operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolDefinitionList](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLDEFINITIONLIST)
 func ToolDefinitionList(filePath string) ToolResult {
 	output := NewOutput()
 	absPath := filepath.Join(rootDir, filePath)
@@ -19541,12 +20400,14 @@ func ToolDefinitionList(filePath string) ToolResult {
 
 // ToolDefinitionTree MUST complete the operation successfully.
 // ToolDefinitionTree performs the tool definition tree operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolDefinitionTree](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLDEFINITIONTREE)
 func ToolDefinitionTree(filePath string) ToolResult {
 	return ToolDefinitionList(filePath)
 }
 
 // ToolUpdateMetabolism MUST complete the operation successfully.
 // ToolUpdateMetabolism performs the tool update metabolism operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets§ToolUpdateMetabolism](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/TOOLUPDATEMETABOLISM)
 func ToolUpdateMetabolism() ToolResult {
 	output := NewOutput()
 	output.Info("\n🔄 Running update-metabolism via npx tsx...")
@@ -19559,9 +20420,12 @@ func ToolUpdateMetabolism() ToolResult {
 }
 
 // #region 🔖SQLite Export
+
+// [🔖semio-repo/cli/main.go#SQLite Export](semiorepo://section/semio-repo/cli/main.go/SQLITE-EXPORT)
 // SQLite export functions for persisting repository data.
 
 // ExportResult holds the data fields for a export result record.
+// [🛠️semio-repo/cli/main.go#Types#Tickets#SQLite Export§ExportResult](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/SQLITE-EXPORT/EXPORTRESULT)
 type ExportResult struct {
 	Path           string `json:"path"`
 	Bundles        int    `json:"bundles"`
@@ -19578,6 +20442,7 @@ type ExportResult struct {
 
 // ExportToSQLite MUST write the complete output to the target.
 // ExportToSQLite exports the to s q lite to the target format.
+// [🛠️semio-repo/cli/main.go#Types#Tickets#SQLite Export§ExportToSQLite](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/SQLITE-EXPORT/EXPORTTOSQLITE)
 func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	if outputPath == "" {
 		outputPath = filepath.Join(ctx.GetRootDir(), "repo.db")
@@ -19987,6 +20852,7 @@ func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
 
 // ToolExport MUST complete the operation successfully.
 // ToolExport performs the tool export operation.
+// [🛠️semio-repo/cli/main.go#Types#Tickets#SQLite Export§ToolExport](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/SQLITE-EXPORT/TOOLEXPORT)
 func ToolExport(outputPath string) ToolResult {
 	output := NewOutput()
 	output.Info("\n📦Exporting repo to SQLite...")
@@ -20014,9 +20880,12 @@ func ToolExport(outputPath string) ToolResult {
 // #endregion 🔖Tickets
 
 // #region 🔖GraphQL Context Port
+
+// [🔖semio-repo/cli/main.go#GraphQL Context Port](semiorepo://section/semio-repo/cli/main.go/GRAPHQL-CONTEXT-PORT)
 // GraphQL context port adapter for request context propagation.
 
 // RepoContext defines the interface for repo context operations.
+// [✂️semio-repo/cli/main.go#Types#GraphQL Context Port§RepoContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-CONTEXT-PORT/REPOCONTEXT)
 type RepoContext interface {
 	GetRootDir() string
 	GetBundles() []*Bundle
@@ -20070,9 +20939,12 @@ type RepoContext interface {
 // #endregion 🔖GraphQL Context Port
 
 // #region 🔖GraphQL Resolver
+
+// [🔖semio-repo/cli/main.go#GraphQL Resolver](semiorepo://section/semio-repo/cli/main.go/GRAPHQL-RESOLVER)
 // GraphQL resolver implementation binding queries to data sources.
 
 // Resolver holds the data fields for a resolver record.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Resolver§Resolver](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-RESOLVER/RESOLVER)
 type Resolver struct {
 	RootDir string
 	Ctx     RepoContext
@@ -20080,12 +20952,14 @@ type Resolver struct {
 
 // NewResolver MUST initialize all required fields and return a valid resolver.
 // NewResolver creates and returns a new resolver instance.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Resolver§NewResolver](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-RESOLVER/NEWRESOLVER)
 func NewResolver(rootDir string) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: NewRepoContext(rootDir)}
 }
 
 // NewResolverWithContext MUST initialize all required fields and return a valid resolver with context.
 // NewResolverWithContext creates and returns a new resolver with context instance.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Resolver§NewResolverWithContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-RESOLVER/NEWRESOLVERWITHCONTEXT)
 func NewResolverWithContext(rootDir string, ctx RepoContext) *Resolver {
 	return &Resolver{RootDir: rootDir, Ctx: ctx}
 }
@@ -20097,6 +20971,8 @@ func (r *Resolver) context() RepoContext {
 // #endregion 🔖GraphQL Resolver
 
 // #region 🔖Default Context
+
+// [🔖semio-repo/cli/main.go#Default Context](semiorepo://section/semio-repo/cli/main.go/DEFAULT-CONTEXT)
 // Default context factory providing baseline resolver context.
 
 type defaultContext struct {
@@ -20105,6 +20981,7 @@ type defaultContext struct {
 
 // NewDefaultContext MUST initialize all required fields and return a valid default context.
 // NewDefaultContext creates and returns a new default context instance.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§NewDefaultContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/NEWDEFAULTCONTEXT)
 func NewDefaultContext(rootDir string) RepoContext {
 	return &defaultContext{rootDir: rootDir}
 }
@@ -20116,6 +20993,7 @@ type repoContext struct {
 
 // NewRepoContext MUST initialize all required fields and return a valid repo context.
 // NewRepoContext creates and returns a new repo context instance.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§NewRepoContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/NEWREPOCONTEXT)
 func NewRepoContext(rootDir string) RepoContext {
 	ctx := &repoContext{rootDir: rootDir}
 	ctx.bundles = LoadBundles()
@@ -20124,10 +21002,12 @@ func NewRepoContext(rootDir string) RepoContext {
 
 // GetRootDir MUST retrieve the requested value or return an error.
 // GetRootDir retrieves and returns the root dir.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetRootDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETROOTDIR)
 func (c *repoContext) GetRootDir() string { return c.rootDir }
 
 // GetFileID MUST retrieve the requested value or return an error.
 // GetFileID retrieves and returns the file i d.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetFileID](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETFILEID)
 func (c *repoContext) GetFileID(path string) string {
 	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	return ctx.GetFileID(path)
@@ -20135,6 +21015,7 @@ func (c *repoContext) GetFileID(path string) string {
 
 // GetFolderID MUST retrieve the requested value or return an error.
 // GetFolderID retrieves and returns the folder i d.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetFolderID](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETFOLDERID)
 func (c *repoContext) GetFolderID(path string) string {
 	ctx := &CodebaseContext{RootDir: c.rootDir, Bundles: c.bundles}
 	return ctx.GetFolderID(path)
@@ -20142,6 +21023,7 @@ func (c *repoContext) GetFolderID(path string) string {
 
 // GetBundles MUST retrieve the requested value or return an error.
 // GetBundles retrieves and returns the bundles.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetBundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETBUNDLES)
 func (c *repoContext) GetBundles() []*Bundle {
 	result := make([]*Bundle, len(c.bundles))
 	for i := range c.bundles {
@@ -20152,6 +21034,7 @@ func (c *repoContext) GetBundles() []*Bundle {
 
 // GetProjects MUST retrieve the requested value or return an error.
 // GetProjects retrieves and returns the projects.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetProjects](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETPROJECTS)
 func (c *repoContext) GetProjects() []*Project {
 	projects := LoadProjects()
 	res := make([]*Project, len(projects))
@@ -20163,6 +21046,7 @@ func (c *repoContext) GetProjects() []*Project {
 
 // GetCommits MUST retrieve the requested value or return an error.
 // GetCommits retrieves and returns the commits.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetCommits](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETCOMMITS)
 func (c *repoContext) GetCommits(limit *int) ([]*Commit, error) {
 	commits := LoadCommits(limit)
 	res := make([]*Commit, len(commits))
@@ -20174,6 +21058,7 @@ func (c *repoContext) GetCommits(limit *int) ([]*Commit, error) {
 
 // GetFolders MUST retrieve the requested value or return an error.
 // GetFolders retrieves and returns the folders.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetFolders](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETFOLDERS)
 func (c *repoContext) GetFolders() []*Folder {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -20204,6 +21089,7 @@ func (c *repoContext) GetFolders() []*Folder {
 
 // GetFiles MUST retrieve the requested value or return an error.
 // GetFiles retrieves and returns the files.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETFILES)
 func (c *repoContext) GetFiles() []*File {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -20236,6 +21122,7 @@ func (c *repoContext) GetFiles() []*File {
 
 // GetDefinitions MUST retrieve the requested value or return an error.
 // GetDefinitions retrieves and returns the definitions.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETDEFINITIONS)
 func (c *repoContext) GetDefinitions() []*Definition {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -20274,6 +21161,7 @@ func (c *repoContext) GetDefinitions() []*Definition {
 
 // GetSections MUST retrieve the requested value or return an error.
 // GetSections retrieves and returns the sections.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETSECTIONS)
 func (c *repoContext) GetSections() []*Section {
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
@@ -20309,6 +21197,7 @@ func (c *repoContext) GetSections() []*Section {
 
 // GetContributors MUST retrieve the requested value or return an error.
 // GetContributors retrieves and returns the contributors.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetContributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETCONTRIBUTORS)
 func (c *repoContext) GetContributors() ([]*Contributor, error) {
 	contributors, err := ListContributors()
 	if err != nil {
@@ -20323,6 +21212,7 @@ func (c *repoContext) GetContributors() ([]*Contributor, error) {
 
 // GetTickets MUST retrieve the requested value or return an error.
 // GetTickets retrieves and returns the tickets.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetTickets](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETTICKETS)
 func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	tickets, err := ListTickets(year, month, day)
 	if err != nil {
@@ -20339,12 +21229,14 @@ func (c *repoContext) GetTickets(year, month, day *int, status *TicketStatus) ([
 
 // GetGoals MUST retrieve the requested value or return an error.
 // GetGoals retrieves and returns the goals.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetGoals](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETGOALS)
 func (c *repoContext) GetGoals() ([]*Goal, error) {
 	return ListGoals()
 }
 
 // GoalCreate MUST return a non-nil error when the operation fails.
 // GoalCreate performs the goal create operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALCREATE)
 func (c *repoContext) GoalCreate(input GoalCreateInput) (*Goal, error) {
 
 	if input.Title == "" {
@@ -20482,6 +21374,7 @@ func parseMilestoneNumber(milestone string) (int, error) {
 
 // UpdateGoalTitle MUST apply the update and return an error if the target is missing.
 // UpdateGoalTitle modifies an existing goal title entry.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§UpdateGoalTitle](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/UPDATEGOALTITLE)
 func UpdateGoalTitle(goal *Goal, title string) error {
 	title = strings.TrimSpace(title)
 	if title == "" {
@@ -20520,6 +21413,7 @@ func UpdateGoalTitle(goal *Goal, title string) error {
 
 // GoalChange MUST return a non-nil error when the operation fails.
 // GoalChange performs the goal change operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALCHANGE)
 func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -20601,6 +21495,7 @@ func (c *repoContext) GoalChange(input GoalChangeInput) (*Goal, error) {
 
 // GoalClose MUST return a non-nil error when the operation fails.
 // GoalClose performs the goal close operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalClose](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALCLOSE)
 func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -20646,6 +21541,7 @@ func (c *repoContext) GoalClose(input GoalCloseInput) (*Goal, error) {
 
 // GoalReopen MUST return a non-nil error when the operation fails.
 // GoalReopen performs the goal reopen operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalReopen](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALREOPEN)
 func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -20720,6 +21616,7 @@ func (c *repoContext) GoalReopen(input GoalReopenInput) (*Goal, error) {
 
 // TicketChange MUST return a non-nil error when the operation fails.
 // TicketChange performs the ticket change operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETCHANGE)
 func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -20785,6 +21682,7 @@ func (c *repoContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 
 // GoalDelete MUST return a non-nil error when the operation fails.
 // GoalDelete performs the goal delete operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALDELETE)
 func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, input.ID, "goal.json")
@@ -20822,6 +21720,7 @@ func (c *repoContext) GoalDelete(input GoalDeleteInput) (bool, error) {
 
 // TicketDelete MUST return a non-nil error when the operation fails.
 // TicketDelete performs the ticket delete operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETDELETE)
 func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -20858,24 +21757,28 @@ func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 
 // GetDrafts MUST retrieve the requested value or return an error.
 // GetDrafts retrieves and returns the drafts.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetDrafts](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETDRAFTS)
 func (c *repoContext) GetDrafts() ([]*Draft, error) {
 	return ListDrafts()
 }
 
 // DraftCreate MUST return a non-nil error when the operation fails.
 // DraftCreate performs the draft create operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§DraftCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/DRAFTCREATE)
 func (c *repoContext) DraftCreate(input DraftCreateInput) (*Draft, error) {
 	return CreateDraft(input.Slug, input.Files)
 }
 
 // DraftDelete MUST return a non-nil error when the operation fails.
 // DraftDelete performs the draft delete operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§DraftDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/DRAFTDELETE)
 func (c *repoContext) DraftDelete(id string) (bool, error) {
 	return true, DeleteDraft(id)
 }
 
 // GetPolicies MUST retrieve the requested value or return an error.
 // GetPolicies retrieves and returns the policies.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETPOLICIES)
 func (c *repoContext) GetPolicies() []*Policy {
 	policies := GetRegisteredPolicies()
 	result := make([]*Policy, len(policies))
@@ -20905,6 +21808,7 @@ func (c *repoContext) GetPolicies() []*Policy {
 
 // GetViolationKinds MUST retrieve the requested value or return an error.
 // GetViolationKinds retrieves and returns the violation kinds.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETVIOLATIONKINDS)
 func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
 	var result []*ViolationKindMeta
 	for _, meta := range violationKindInfoTable {
@@ -20916,6 +21820,7 @@ func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
 
 // Analyze MUST return a non-nil error when the operation fails.
 // Analyze performs the analyze operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§Analyze](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/ANALYZE)
 func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	scopeStr := "semio"
 	if scope != nil {
@@ -20937,6 +21842,7 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 
 // Fix MUST return a non-nil error when the operation fails.
 // Fix performs the fix operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§Fix](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FIX)
 func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 	scopeStr := "semio"
 	if scope != nil {
@@ -21087,6 +21993,189 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 				if startName != "" {
 					lines[v.Line-1] = language.FormatSectionEnd(startName)
 					fixed++
+				}
+			}
+		case ViolationCodeSectionMissingIdentification:
+			if v.Line > 0 && v.Line <= len(lines) && language != nil {
+				sectionPath := ""
+				if idx := strings.Index(v.Scope, "#"); idx >= 0 {
+					sectionPath = v.Scope[idx+1:]
+				}
+				if sectionPath != "" {
+					sectionId := SectionHeaderId(file, sectionPath)
+					sectionUri := SectionHeaderUri(file, sectionPath)
+					prefix := language.CommentPrefix()
+					idLine := prefix + " [" + sectionId + "](" + sectionUri + ")"
+					insertAt := v.Line
+					newLines := make([]string, 0, len(lines)+1)
+					newLines = append(newLines, lines[:insertAt]...)
+					newLines = append(newLines, idLine)
+					newLines = append(newLines, lines[insertAt:]...)
+					lines = newLines
+					fixed++
+				}
+			}
+		case ViolationCodeDefMissingIdentification:
+			if v.Line > 0 && v.Line <= len(lines) && language != nil {
+				defName := ""
+				filePart := file
+				if idx := strings.Index(v.Scope, "::"); idx >= 0 {
+					defName = v.Scope[idx+2:]
+					filePart = v.Scope[:idx]
+				}
+				if defName != "" {
+					sectionPath := ""
+					sections := language.ParseSections(strings.Join(lines, "\n"))
+					var findSectionForLine func(secs []Section, lineNum int) string
+					findSectionForLine = func(secs []Section, lineNum int) string {
+						for _, s := range secs {
+							if lineNum >= s.StartLine && lineNum <= s.EndLine {
+								childResult := findSectionForLine(s.Children, lineNum)
+								if childResult != "" {
+									return s.Name + "#" + childResult
+								}
+								return s.Name
+							}
+						}
+						return ""
+					}
+					sectionPath = findSectionForLine(sections, v.Line)
+					if sectionPath == "Header" || strings.HasPrefix(sectionPath, "Header#") {
+						sectionPath = ""
+					}
+					defKind := DefinitionKind("implementation")
+					for lineIdx := v.Line - 1; lineIdx < len(lines) && lineIdx < v.Line+2; lineIdx++ {
+						l := lines[lineIdx]
+						if strings.Contains(l, "interface ") || strings.Contains(l, "trait ") || strings.Contains(l, "protocol ") {
+							defKind = "interface"
+						} else if strings.HasPrefix(strings.TrimSpace(l), "const ") || strings.HasPrefix(strings.TrimSpace(l), "export const ") {
+							defKind = "constant"
+						}
+					}
+					defId := DefinitionHeaderId(filePart, sectionPath, defName, defKind)
+					defUri := DefinitionHeaderUri(filePart, sectionPath, defName)
+					prefix := language.CommentPrefix()
+					idLine := prefix + " [" + defId + "](" + defUri + ")"
+					insertAt := v.Line - 1
+					for insertAt > 0 {
+						prev := strings.TrimSpace(lines[insertAt-1])
+						if prev == "" || !strings.HasPrefix(prev, prefix) {
+							break
+						}
+						insertAt--
+					}
+					newLines := make([]string, 0, len(lines)+1)
+					newLines = append(newLines, lines[:v.Line-1]...)
+					newLines = append(newLines, idLine)
+					newLines = append(newLines, lines[v.Line-1:]...)
+					lines = newLines
+					fixed++
+				}
+			}
+		case ViolationCodeDefNotNativeDocstring:
+			if v.Line > 0 && v.Line <= len(lines) && language != nil {
+				langName := language.Name()
+				defLineNum := v.Line
+				prefix := language.CommentPrefix()
+				switch langName {
+				case "typescript":
+					var commentTexts []string
+					commentStartIdx := defLineNum - 1
+					for lineIndex := defLineNum - 2; lineIndex >= 0; lineIndex-- {
+						line := strings.TrimSpace(lines[lineIndex])
+						if line == "" {
+							break
+						}
+						if !strings.HasPrefix(line, prefix) {
+							break
+						}
+						commentStartIdx = lineIndex
+						text := strings.TrimSpace(strings.TrimPrefix(line, prefix))
+						commentTexts = append([]string{text}, commentTexts...)
+					}
+					if len(commentTexts) > 0 {
+						var summaryLines, specLines, todoLines []string
+						var identificationLine string
+						inTodo := false
+						for _, cl := range commentTexts {
+							if strings.HasPrefix(cl, "[") && strings.Contains(cl, "](semiorepo://definition/") {
+								identificationLine = cl
+								inTodo = false
+								continue
+							}
+							if strings.HasPrefix(cl, "TODO:") || strings.HasPrefix(cl, "TODO ") {
+								inTodo = true
+								todoLines = append(todoLines, cl)
+								continue
+							}
+							if inTodo {
+								todoLines = append(todoLines, cl)
+								continue
+							}
+							if isSpecText(cl) {
+								specLines = append(specLines, cl)
+							} else {
+								summaryLines = append(summaryLines, cl)
+							}
+						}
+						indent := ""
+						if defLineNum-1 < len(lines) {
+							raw := lines[defLineNum-1]
+							for _, ch := range raw {
+								if ch == ' ' || ch == '\t' {
+									indent += string(ch)
+								} else {
+									break
+								}
+							}
+						}
+						var jsdocLines []string
+						jsdocLines = append(jsdocLines, indent+"/**")
+						for _, sl := range summaryLines {
+							jsdocLines = append(jsdocLines, indent+" * "+sl)
+						}
+						if len(specLines) > 0 {
+							if len(summaryLines) > 0 {
+								jsdocLines = append(jsdocLines, indent+" *")
+							}
+							for _, sp := range specLines {
+								jsdocLines = append(jsdocLines, indent+" * "+sp)
+							}
+						}
+						if len(todoLines) > 0 {
+							jsdocLines = append(jsdocLines, indent+" *")
+							for _, td := range todoLines {
+								jsdocLines = append(jsdocLines, indent+" * "+td)
+							}
+						}
+						if identificationLine != "" {
+							jsdocLines = append(jsdocLines, indent+" *")
+							jsdocLines = append(jsdocLines, indent+" *  * "+identificationLine)
+						}
+						jsdocLines = append(jsdocLines, indent+" **/")
+						newLines := make([]string, 0, len(lines)-len(commentTexts)+len(jsdocLines))
+						newLines = append(newLines, lines[:commentStartIdx]...)
+						newLines = append(newLines, jsdocLines...)
+						newLines = append(newLines, lines[defLineNum-1:]...)
+						lines = newLines
+						fixed++
+					}
+				case "csharp", "rust":
+					for lineIndex := defLineNum - 2; lineIndex >= 0; lineIndex-- {
+						line := strings.TrimSpace(lines[lineIndex])
+						if line == "" {
+							break
+						}
+						if strings.HasPrefix(line, "///") {
+							break
+						}
+						if strings.HasPrefix(line, "//") {
+							lines[lineIndex] = strings.Replace(lines[lineIndex], "// ", "/// ", 1)
+							fixed++
+						} else {
+							break
+						}
+					}
 				}
 			}
 		case ViolationCodeCommentInline:
@@ -21329,12 +22418,14 @@ func findMatchingSectionStartName(lines []string, endLineIdx int, language Langu
 
 // TicketOpen MUST return a non-nil error when the operation fails.
 // TicketOpen performs the ticket open operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketOpen](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETOPEN)
 func (c *repoContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 	return OpenTicket(input.Title, input.Prompt, input.LLM, input.Client, input.Draft, input.NoIssue, input.Goal, input.Parent, input.NoGithub, input.Issue)
 }
 
 // TicketProgress MUST return a non-nil error when the operation fails.
 // TicketProgress performs the ticket progress operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketProgress](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETPROGRESS)
 func (c *repoContext) TicketProgress(input TicketProgressInput) (string, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -21345,6 +22436,7 @@ func (c *repoContext) TicketProgress(input TicketProgressInput) (string, error) 
 
 // TicketClose MUST return a non-nil error when the operation fails.
 // TicketClose performs the ticket close operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketClose](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETCLOSE)
 func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	if input.All {
 		tickets, err := ListTickets(nil, nil, nil)
@@ -21403,6 +22495,7 @@ func (c *repoContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 
 // TicketReopen MUST return a non-nil error when the operation fails.
 // TicketReopen performs the ticket reopen operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketReopen](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETREOPEN)
 func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	ticket, err := ReadTicket(input.Year, input.Month, input.Day, input.Slug)
 	if err != nil {
@@ -21428,10 +22521,12 @@ func (c *repoContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 
 // FolderCreate MUST return a non-nil error when the operation fails.
 // FolderCreate performs the folder create operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FolderCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FOLDERCREATE)
 func (c *repoContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
 
 // FolderMove MUST return a non-nil error when the operation fails.
 // FolderMove performs the folder move operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FolderMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FOLDERMOVE)
 func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 	result := ToolFolderMove(src, dst)
 	if result.Error != "" {
@@ -21443,6 +22538,7 @@ func (c *repoContext) FolderMove(src, dst string) (*Folder, error) {
 
 // FolderDelete MUST return a non-nil error when the operation fails.
 // FolderDelete performs the folder delete operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FolderDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FOLDERDELETE)
 func (c *repoContext) FolderDelete(path string) error {
 	result := ToolFolderDelete(path)
 	if result.Error != "" {
@@ -21453,6 +22549,7 @@ func (c *repoContext) FolderDelete(path string) error {
 
 // FileCreate MUST return a non-nil error when the operation fails.
 // FileCreate performs the file create operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FileCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FILECREATE)
 func (c *repoContext) FileCreate(path string) (*File, error) {
 	result := ToolFileCreate(path)
 	if result.Error != "" {
@@ -21464,6 +22561,7 @@ func (c *repoContext) FileCreate(path string) (*File, error) {
 
 // FileMove MUST return a non-nil error when the operation fails.
 // FileMove performs the file move operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FileMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FILEMOVE)
 func (c *repoContext) FileMove(src, dst string) (*File, error) {
 	result := ToolFileMove(src, dst)
 	if result.Error != "" {
@@ -21475,6 +22573,7 @@ func (c *repoContext) FileMove(src, dst string) (*File, error) {
 
 // FileDelete MUST return a non-nil error when the operation fails.
 // FileDelete performs the file delete operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FileDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FILEDELETE)
 func (c *repoContext) FileDelete(path string) error {
 	result := ToolFileDelete(path)
 	if result.Error != "" {
@@ -21485,6 +22584,7 @@ func (c *repoContext) FileDelete(path string) error {
 
 // SectionCreate MUST return a non-nil error when the operation fails.
 // SectionCreate performs the section create operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§SectionCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/SECTIONCREATE)
 func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	sectionPath := name
 	if parent != nil && *parent != "" {
@@ -21501,6 +22601,7 @@ func (c *repoContext) SectionCreate(file, name string, parent *string) (*Section
 
 // SectionMove MUST return a non-nil error when the operation fails.
 // SectionMove performs the section move operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§SectionMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/SECTIONMOVE)
 func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	result := ToolSectionMove(file, oldName, newName)
 	if result.Error != "" {
@@ -21513,6 +22614,7 @@ func (c *repoContext) SectionMove(file, oldName, newName string) (*Section, erro
 
 // SectionDelete MUST return a non-nil error when the operation fails.
 // SectionDelete performs the section delete operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§SectionDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/SECTIONDELETE)
 func (c *repoContext) SectionDelete(file, name string) error {
 	result := ToolSectionDelete(file, name)
 	if result.Error != "" {
@@ -21523,6 +22625,7 @@ func (c *repoContext) SectionDelete(file, name string) error {
 
 // Integrate MUST return a non-nil error when the operation fails.
 // Integrate performs the integrate operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§Integrate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/INTEGRATE)
 func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
 	s := ""
 	if source != nil {
@@ -21549,6 +22652,7 @@ func (c *repoContext) Integrate(source, targetSection, targetFile, targetParent 
 
 // Extract MUST return the extracted component from the input.
 // Extract extracts the extract from the source.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§Extract](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/EXTRACT)
 func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	s := ""
 	if sourceFile != nil {
@@ -21572,6 +22676,7 @@ func (c *repoContext) Extract(sourceFile, sourceSection, targetFile *string) (*F
 
 // ContributorAdd MUST return a non-nil error when the operation fails.
 // ContributorAdd performs the contributor add operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§ContributorAdd](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/CONTRIBUTORADD)
 func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	contributor, err := LoadContributor(input.Github)
 	if err != nil {
@@ -21624,6 +22729,7 @@ func (c *repoContext) ContributorAdd(input ContributorAddInput) (*Contributor, e
 
 // ContributorRemove MUST return a non-nil error when the operation fails.
 // ContributorRemove performs the contributor remove operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§ContributorRemove](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/CONTRIBUTORREMOVE)
 func (c *repoContext) ContributorRemove(github string) error { return nil }
 
 func updateGoalMilestone(goal *Goal, number int) (int, error) {
@@ -21690,6 +22796,7 @@ func ensureGoalMilestone(goal *Goal) (*ghMilestone, error) {
 
 // SyncGithub MUST return a non-nil error when the operation fails.
 // SyncGithub performs the sync github operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§SyncGithub](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/SYNCGITHUB)
 func (c *repoContext) SyncGithub() (bool, error) {
 	fmt.Println("Syncing local tickets and goals with GitHub...")
 
@@ -21935,211 +23042,258 @@ var _ RepoContext = (*repoContext)(nil)
 
 // GetRootDir MUST retrieve the requested value or return an error.
 // GetRootDir retrieves and returns the root dir.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetRootDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETROOTDIR)
 func (c *defaultContext) GetRootDir() string { return c.rootDir }
 
 // GetBundles MUST retrieve the requested value or return an error.
 // GetBundles retrieves and returns the bundles.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetBundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETBUNDLES)
 func (c *defaultContext) GetBundles() []*Bundle   { return []*Bundle{} }
 // GetProjects MUST retrieve the requested value or return an error.
 // GetProjects retrieves and returns the projects.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetProjects](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETPROJECTS)
 func (c *defaultContext) GetProjects() []*Project { return []*Project{} }
 // GetCommits MUST retrieve the requested value or return an error.
 // GetCommits retrieves and returns the commits.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetCommits](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETCOMMITS)
 func (c *defaultContext) GetCommits(limit *int) ([]*Commit, error) {
 	return []*Commit{}, nil
 }
 
 // GetFolders MUST retrieve the requested value or return an error.
 // GetFolders retrieves and returns the folders.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetFolders](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETFOLDERS)
 func (c *defaultContext) GetFolders() []*Folder { return []*Folder{} }
 
 // GetFiles MUST retrieve the requested value or return an error.
 // GetFiles retrieves and returns the files.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETFILES)
 func (c *defaultContext) GetFiles() []*File { return []*File{} }
 
 // GetDefinitions MUST retrieve the requested value or return an error.
 // GetDefinitions retrieves and returns the definitions.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetDefinitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETDEFINITIONS)
 func (c *defaultContext) GetDefinitions() []*Definition { return []*Definition{} }
 
 // GetSections MUST retrieve the requested value or return an error.
 // GetSections retrieves and returns the sections.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETSECTIONS)
 func (c *defaultContext) GetSections() []*Section { return []*Section{} }
 
 // GetContributors MUST retrieve the requested value or return an error.
 // GetContributors retrieves and returns the contributors.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetContributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETCONTRIBUTORS)
 func (c *defaultContext) GetContributors() ([]*Contributor, error) { return []*Contributor{}, nil }
 
 // GetTickets MUST retrieve the requested value or return an error.
 // GetTickets retrieves and returns the tickets.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetTickets](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETTICKETS)
 func (c *defaultContext) GetTickets(year, month, day *int, status *TicketStatus) ([]*Ticket, error) {
 	return []*Ticket{}, nil
 }
 
 // GetPolicies MUST retrieve the requested value or return an error.
 // GetPolicies retrieves and returns the policies.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETPOLICIES)
 func (c *defaultContext) GetPolicies() []*Policy { return []*Policy{} }
 
 // GetViolationKinds MUST retrieve the requested value or return an error.
 // GetViolationKinds retrieves and returns the violation kinds.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETVIOLATIONKINDS)
 func (c *defaultContext) GetViolationKinds() []*ViolationKindMeta { return []*ViolationKindMeta{} }
 
 // Analyze MUST return a non-nil error when the operation fails.
 // Analyze performs the analyze operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§Analyze](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/ANALYZE)
 func (c *defaultContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	return &AnalyzeResult{Violations: []*Violation{}, Metrics: &AnalyzeMetrics{}}, nil
 }
 
 // Fix MUST return a non-nil error when the operation fails.
 // Fix performs the fix operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§Fix](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FIX)
 func (c *defaultContext) Fix(scope *string) (*FixResult, error) {
 	return &FixResult{Violations: []*Violation{}}, nil
 }
 
 // TicketOpen MUST return a non-nil error when the operation fails.
 // TicketOpen performs the ticket open operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketOpen](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETOPEN)
 func (c *defaultContext) TicketOpen(input TicketOpenInput) (*Ticket, error) {
 	return nil, nil
 }
 
 // TicketProgress MUST return a non-nil error when the operation fails.
 // TicketProgress performs the ticket progress operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketProgress](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETPROGRESS)
 func (c *defaultContext) TicketProgress(input TicketProgressInput) (string, error) {
 	return "", nil
 }
 
 // TicketClose MUST return a non-nil error when the operation fails.
 // TicketClose performs the ticket close operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketClose](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETCLOSE)
 func (c *defaultContext) TicketClose(input TicketCloseInput) (*Ticket, error) {
 	return nil, nil
 }
 
 // TicketReopen MUST return a non-nil error when the operation fails.
 // TicketReopen performs the ticket reopen operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketReopen](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETREOPEN)
 func (c *defaultContext) TicketReopen(input TicketReopenInput) (*Ticket, error) {
 	return nil, nil
 }
 
 // TicketChange MUST return a non-nil error when the operation fails.
 // TicketChange performs the ticket change operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETCHANGE)
 func (c *defaultContext) TicketChange(input TicketChangeInput) (*Ticket, error) {
 	return nil, nil
 }
 
 // FolderCreate MUST return a non-nil error when the operation fails.
 // FolderCreate performs the folder create operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FolderCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FOLDERCREATE)
 func (c *defaultContext) FolderCreate(path string) (*Folder, error) { return nil, nil }
 
 // FolderMove MUST return a non-nil error when the operation fails.
 // FolderMove performs the folder move operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FolderMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FOLDERMOVE)
 func (c *defaultContext) FolderMove(src, dst string) (*Folder, error) { return nil, nil }
 
 // FolderDelete MUST return a non-nil error when the operation fails.
 // FolderDelete performs the folder delete operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FolderDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FOLDERDELETE)
 func (c *defaultContext) FolderDelete(path string) error { return nil }
 
 // FileCreate MUST return a non-nil error when the operation fails.
 // FileCreate performs the file create operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FileCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FILECREATE)
 func (c *defaultContext) FileCreate(path string) (*File, error) { return nil, nil }
 
 // FileMove MUST return a non-nil error when the operation fails.
 // FileMove performs the file move operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FileMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FILEMOVE)
 func (c *defaultContext) FileMove(src, dst string) (*File, error) { return nil, nil }
 
 // FileDelete MUST return a non-nil error when the operation fails.
 // FileDelete performs the file delete operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§FileDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FILEDELETE)
 func (c *defaultContext) FileDelete(path string) error { return nil }
 
 // SectionCreate MUST return a non-nil error when the operation fails.
 // SectionCreate performs the section create operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§SectionCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/SECTIONCREATE)
 func (c *defaultContext) SectionCreate(file, name string, parent *string) (*Section, error) {
 	return nil, nil
 }
 
 // SectionMove MUST return a non-nil error when the operation fails.
 // SectionMove performs the section move operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§SectionMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/SECTIONMOVE)
 func (c *defaultContext) SectionMove(file, oldName, newName string) (*Section, error) {
 	return nil, nil
 }
 
 // SectionDelete MUST return a non-nil error when the operation fails.
 // SectionDelete performs the section delete operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§SectionDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/SECTIONDELETE)
 func (c *defaultContext) SectionDelete(file, name string) error { return nil }
 
 // Integrate MUST return a non-nil error when the operation fails.
 // Integrate performs the integrate operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§Integrate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/INTEGRATE)
 func (c *defaultContext) Integrate(source, targetSection, targetFile, targetParent *string) (*File, error) {
 	return nil, nil
 }
 
 // Extract MUST return the extracted component from the input.
 // Extract extracts the extract from the source.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§Extract](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/EXTRACT)
 func (c *defaultContext) Extract(sourceFile, sourceSection, targetFile *string) (*File, error) {
 	return nil, nil
 }
 
 // ContributorAdd MUST return a non-nil error when the operation fails.
 // ContributorAdd performs the contributor add operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§ContributorAdd](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/CONTRIBUTORADD)
 func (c *defaultContext) ContributorAdd(input ContributorAddInput) (*Contributor, error) {
 	return nil, nil
 }
 
 // ContributorRemove MUST return a non-nil error when the operation fails.
 // ContributorRemove performs the contributor remove operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§ContributorRemove](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/CONTRIBUTORREMOVE)
 func (c *defaultContext) ContributorRemove(github string) error { return nil }
 
 // SyncGithub MUST return a non-nil error when the operation fails.
 // SyncGithub performs the sync github operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§SyncGithub](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/SYNCGITHUB)
 func (c *defaultContext) SyncGithub() (bool, error) { return false, nil }
 
 // GetGoals MUST retrieve the requested value or return an error.
 // GetGoals retrieves and returns the goals.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetGoals](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETGOALS)
 func (c *defaultContext) GetGoals() ([]*Goal, error) { return []*Goal{}, nil }
 
 // GoalCreate MUST return a non-nil error when the operation fails.
 // GoalCreate performs the goal create operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALCREATE)
 func (c *defaultContext) GoalCreate(input GoalCreateInput) (*Goal, error) { return nil, nil }
 
 // GoalChange MUST return a non-nil error when the operation fails.
 // GoalChange performs the goal change operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALCHANGE)
 func (c *defaultContext) GoalChange(input GoalChangeInput) (*Goal, error) { return nil, nil }
 
 // GoalClose MUST return a non-nil error when the operation fails.
 // GoalClose performs the goal close operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalClose](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALCLOSE)
 func (c *defaultContext) GoalClose(input GoalCloseInput) (*Goal, error) { return nil, nil }
 
 // GoalReopen MUST return a non-nil error when the operation fails.
 // GoalReopen performs the goal reopen operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalReopen](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALREOPEN)
 func (c *defaultContext) GoalReopen(input GoalReopenInput) (*Goal, error) { return nil, nil }
 
 // GoalDelete MUST return a non-nil error when the operation fails.
 // GoalDelete performs the goal delete operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GoalDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GOALDELETE)
 func (c *defaultContext) GoalDelete(input GoalDeleteInput) (bool, error) { return false, nil }
 
 // TicketDelete MUST return a non-nil error when the operation fails.
 // TicketDelete performs the ticket delete operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TicketDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TICKETDELETE)
 func (c *defaultContext) TicketDelete(input TicketDeleteInput) (bool, error) { return false, nil }
 
 // GetDrafts MUST retrieve the requested value or return an error.
 // GetDrafts retrieves and returns the drafts.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetDrafts](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETDRAFTS)
 func (c *defaultContext) GetDrafts() ([]*Draft, error)                       { return []*Draft{}, nil }
 // DraftCreate MUST return a non-nil error when the operation fails.
 // DraftCreate performs the draft create operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§DraftCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/DRAFTCREATE)
 func (c *defaultContext) DraftCreate(input DraftCreateInput) (*Draft, error) { return nil, nil }
 // DraftDelete MUST return a non-nil error when the operation fails.
 // DraftDelete performs the draft delete operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§DraftDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/DRAFTDELETE)
 func (c *defaultContext) DraftDelete(id string) (bool, error)                { return false, nil }
 
 // GetTodos MUST retrieve the requested value or return an error.
 // GetTodos retrieves and returns the todos.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetTodos](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETTODOS)
 func (c *defaultContext) GetTodos(filter *FilterInput) ([]*Todo, error)   { return []*Todo{}, nil }
 // TodoCreate MUST return a non-nil error when the operation fails.
 // TodoCreate performs the todo create operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TodoCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TODOCREATE)
 func (c *defaultContext) TodoCreate(input TodoCreateInput) (*Todo, error) { return nil, nil }
 // TodoChange MUST return a non-nil error when the operation fails.
 // TodoChange performs the todo change operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TodoChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TODOCHANGE)
 func (c *defaultContext) TodoChange(input TodoChangeInput) (*Todo, error) { return nil, nil }
 // TodoDelete MUST return a non-nil error when the operation fails.
 // TodoDelete performs the todo delete operation on the default context.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§TodoDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/TODODELETE)
 func (c *defaultContext) TodoDelete(id string) (bool, error)              { return false, nil }
 
 var _ RepoContext = (*defaultContext)(nil)
@@ -22147,6 +23301,8 @@ var _ RepoContext = (*defaultContext)(nil)
 // #endregion 🔖Default Context
 
 // #region 🔖GraphQL Executor
+
+// [🔖semio-repo/cli/main.go#GraphQL Executor](semiorepo://section/semio-repo/cli/main.go/GRAPHQL-EXECUTOR)
 // GraphQL executor dispatching queries against the schema.
 
 func parseFileListInput(f map[string]interface{}) *FileListInput {
@@ -22176,6 +23332,7 @@ func parseFileListInput(f map[string]interface{}) *FileListInput {
 }
 
 // Executor holds the data fields for a executor record.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Executor§Executor](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-EXECUTOR/EXECUTOR)
 type Executor struct {
 	resolver *Resolver
 	schema   graphql.Schema
@@ -22183,6 +23340,7 @@ type Executor struct {
 
 // NewExecutor MUST initialize all required fields and return a valid executor.
 // NewExecutor creates and returns a new executor instance.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Executor§NewExecutor](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-EXECUTOR/NEWEXECUTOR)
 func NewExecutor(rootDir string) (*Executor, error) {
 	resolver := NewResolver(rootDir)
 	schema, err := buildSchema(resolver)
@@ -22197,6 +23355,7 @@ func NewExecutor(rootDir string) (*Executor, error) {
 
 // NewExecutorWithContext MUST initialize all required fields and return a valid executor with context.
 // NewExecutorWithContext creates and returns a new executor with context instance.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Executor§NewExecutorWithContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-EXECUTOR/NEWEXECUTORWITHCONTEXT)
 func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) {
 	resolver := NewResolverWithContext(rootDir, ctx)
 	schema, err := buildSchema(resolver)
@@ -22211,6 +23370,7 @@ func NewExecutorWithContext(rootDir string, ctx RepoContext) (*Executor, error) 
 
 // Execute MUST execute the operation to completion and report any errors.
 // Execute executes the ute operation.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Executor§Execute](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-EXECUTOR/EXECUTE)
 func (e *Executor) Execute(ctx context.Context, query string, variables map[string]interface{}) (interface{}, error) {
 	result := graphql.Do(graphql.Params{
 		Context:        ctx,
@@ -22226,6 +23386,7 @@ func (e *Executor) Execute(ctx context.Context, query string, variables map[stri
 
 // ExecuteJSON MUST execute the operation to completion and report any errors.
 // ExecuteJSON executes the ute j s o n operation.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Executor§ExecuteJSON](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-EXECUTOR/EXECUTEJSON)
 func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[string]interface{}) (string, error) {
 	data, err := e.Execute(ctx, query, variables)
 	if err != nil {
@@ -22240,6 +23401,7 @@ func (e *Executor) ExecuteJSON(ctx context.Context, query string, variables map[
 
 // ValidateQuery MUST return nil when valid and a descriptive error otherwise.
 // ValidateQuery checks the query for correctness and returns any errors.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Executor§ValidateQuery](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-EXECUTOR/VALIDATEQUERY)
 func (e *Executor) ValidateQuery(query string) error {
 	_, err := parser.Parse(parser.ParseParams{
 		Source: query,
@@ -22252,6 +23414,7 @@ func (e *Executor) ValidateQuery(query string) error {
 
 // GetOperationType MUST retrieve the requested value or return an error.
 // GetOperationType retrieves and returns the operation type.
+// [🛠️semio-repo/cli/main.go#Types#GraphQL Executor§GetOperationType](semiorepo://definition/semio-repo/cli/main.go/TYPES/GRAPHQL-EXECUTOR/GETOPERATIONTYPE)
 func (e *Executor) GetOperationType(query string) (string, error) {
 	doc, err := parser.Parse(parser.ParseParams{
 		Source: query,
@@ -22273,6 +23436,8 @@ func (e *Executor) GetOperationType(query string) (string, error) {
 // #endregion 🔖GraphQL Executor
 
 // #region 🔖Schema Builder
+
+// [🔖semio-repo/cli/main.go#Schema Builder](semiorepo://section/semio-repo/cli/main.go/SCHEMA-BUILDER)
 // Schema builder constructing the GraphQL schema from type definitions.
 
 func buildSchema(resolver *Resolver) (graphql.Schema, error) {
@@ -24870,10 +26035,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 // #endregion 🔖Schema Builder
 
 // #region 🔖Query Resolvers
+
+// [🔖semio-repo/cli/main.go#Query Resolvers](semiorepo://section/semio-repo/cli/main.go/QUERY-RESOLVERS)
 // Query resolver methods implementing GraphQL read operations.
 
 // Query MUST execute the query and return matching results.
 // Query executes the query query.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Query](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/QUERY)
 func (r *Resolver) Query() QueryResolver {
 	return &queryResolver{r}
 }
@@ -24882,6 +26050,7 @@ type queryResolver struct{ *Resolver }
 
 // Drafts MUST return a non-nil error when the operation fails.
 // Drafts performs the drafts operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Drafts](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/DRAFTS)
 func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDrafts()
@@ -24891,6 +26060,7 @@ func (r *queryResolver) Drafts(ctx context.Context) ([]*Draft, error) {
 
 // Node MUST return a non-nil error when the operation fails.
 // Node performs the node operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Node](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/NODE)
 func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 
 	cleanID := strings.ReplaceAll(id, "\uFE0E", "")
@@ -25031,6 +26201,7 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 
 // Repo MUST return a non-nil error when the operation fails.
 // Repo performs the repo operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Repo](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/REPO)
 func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 	projects, _ := r.Projects(ctx, nil)
 	bundles, _ := r.Bundles(ctx, &FilterInput{})
@@ -25055,6 +26226,7 @@ func (r *queryResolver) Repo(ctx context.Context) (*Repo, error) {
 
 // Projects MUST return a non-nil error when the operation fails.
 // Projects performs the projects operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Projects](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/PROJECTS)
 func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*Project, error) {
 	allBundles, err := r.Bundles(ctx, &FilterInput{})
 	if err != nil {
@@ -25109,6 +26281,7 @@ func (r *queryResolver) Projects(ctx context.Context, filter *FilterInput) ([]*P
 
 // Project MUST return a non-nil error when the operation fails.
 // Project performs the project operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Project](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/PROJECT)
 func (r *queryResolver) Project(ctx context.Context, name string) (*Project, error) {
 	all, err := r.Projects(ctx, nil)
 	if err != nil {
@@ -25124,6 +26297,7 @@ func (r *queryResolver) Project(ctx context.Context, name string) (*Project, err
 
 // Bundles MUST return a non-nil error when the operation fails.
 // Bundles performs the bundles operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Bundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/BUNDLES)
 func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -25141,6 +26315,7 @@ func (r *queryResolver) Bundles(ctx context.Context, filter *FilterInput) ([]*Bu
 
 // Folders MUST return a non-nil error when the operation fails.
 // Folders performs the folders operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Folders](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/FOLDERS)
 func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFolders(), nil
@@ -25150,6 +26325,7 @@ func (r *queryResolver) Folders(ctx context.Context) ([]*Folder, error) {
 
 // Files MUST return a non-nil error when the operation fails.
 // Files performs the files operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Files](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/FILES)
 func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFiles(), nil
@@ -25159,6 +26335,7 @@ func (r *queryResolver) Files(ctx context.Context) ([]*File, error) {
 
 // Sections MUST return a non-nil error when the operation fails.
 // Sections performs the sections operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Sections](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/SECTIONS)
 func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetSections(), nil
@@ -25168,6 +26345,7 @@ func (r *queryResolver) Sections(ctx context.Context) ([]*Section, error) {
 
 // Definitions MUST return a non-nil error when the operation fails.
 // Definitions performs the definitions operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Definitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/DEFINITIONS)
 func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDefinitions(), nil
@@ -25177,6 +26355,7 @@ func (r *queryResolver) Definitions(ctx context.Context) ([]*Definition, error) 
 
 // Contributors MUST return a non-nil error when the operation fails.
 // Contributors performs the contributors operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Contributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/CONTRIBUTORS)
 func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -25194,6 +26373,7 @@ func (r *queryResolver) Contributors(ctx context.Context, filter *FilterInput) (
 
 // Todos MUST return a non-nil error when the operation fails.
 // Todos performs the todos operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Todos](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/TODOS)
 func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetTodos(filter)
@@ -25203,6 +26383,7 @@ func (r *queryResolver) Todos(ctx context.Context, filter *FilterInput) ([]*Todo
 
 // Tickets MUST return a non-nil error when the operation fails.
 // Tickets performs the tickets operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Tickets](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/TICKETS)
 func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -25223,6 +26404,7 @@ func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day 
 
 // Policies MUST return a non-nil error when the operation fails.
 // Policies performs the policies operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Policies](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/POLICIES)
 func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -25253,6 +26435,7 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 
 // ViolationKinds MUST return a non-nil error when the operation fails.
 // ViolationKinds performs the violation kinds operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§ViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONKINDS)
 func (r *queryResolver) ViolationKinds(ctx context.Context) ([]*ViolationKindMeta, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetViolationKinds(), nil
@@ -25262,6 +26445,7 @@ func (r *queryResolver) ViolationKinds(ctx context.Context) ([]*ViolationKindMet
 
 // Violations MUST return a non-nil error when the operation fails.
 // Violations performs the violations operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Violations](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONS)
 func (r *queryResolver) Violations(ctx context.Context, scope *string) ([]*Violation, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
@@ -25275,6 +26459,7 @@ func (r *queryResolver) Violations(ctx context.Context, scope *string) ([]*Viola
 
 // Bundle MUST return a non-nil error when the operation fails.
 // Bundle performs the bundle operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Bundle](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/BUNDLE)
 func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error) {
 	if r.Ctx != nil {
 		bundles := r.Ctx.GetBundles()
@@ -25292,6 +26477,7 @@ func (r *queryResolver) Bundle(ctx context.Context, name string) (*Bundle, error
 
 // Folder MUST return a non-nil error when the operation fails.
 // Folder performs the folder operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Folder](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/FOLDER)
 func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
@@ -25313,6 +26499,7 @@ func (r *queryResolver) Folder(ctx context.Context, path string) (*Folder, error
 
 // File MUST return a non-nil error when the operation fails.
 // File performs the file operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§File](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/FILE)
 func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 	normalizedPath := strings.ReplaceAll(path, "\\", "/")
 	name := filepath.Base(normalizedPath)
@@ -25343,6 +26530,7 @@ func (r *queryResolver) File(ctx context.Context, path string) (*File, error) {
 
 // Section MUST return a non-nil error when the operation fails.
 // Section performs the section operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Section](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/SECTION)
 func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []string) (*Section, error) {
 	sectionName := strings.Join(sectionPath, "#")
 	return &Section{
@@ -25352,6 +26540,7 @@ func (r *queryResolver) Section(ctx context.Context, path string, sectionPath []
 
 // Definition MUST return a non-nil error when the operation fails.
 // Definition performs the definition operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Definition](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/DEFINITION)
 func (r *queryResolver) Definition(ctx context.Context, path string, name string) (*Definition, error) {
 	return &Definition{
 		Name: name,
@@ -25361,6 +26550,7 @@ func (r *queryResolver) Definition(ctx context.Context, path string, name string
 
 // Contributor MUST return a non-nil error when the operation fails.
 // Contributor performs the contributor operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Contributor](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/CONTRIBUTOR)
 func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributor, error) {
 	if r.Ctx != nil {
 		contributors, err := r.Ctx.GetContributors()
@@ -25381,6 +26571,7 @@ func (r *queryResolver) Contributor(ctx context.Context, id string) (*Contributo
 
 // Ticket MUST return a non-nil error when the operation fails.
 // Ticket performs the ticket operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Ticket](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/TICKET)
 func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int, slug string) (*Ticket, error) {
 	if r.Ctx != nil {
 		y, m, d := year, month, day
@@ -25403,6 +26594,7 @@ func (r *queryResolver) Ticket(ctx context.Context, year int, month int, day int
 
 // Policy MUST return a non-nil error when the operation fails.
 // Policy performs the policy operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Policy](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/POLICY)
 func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) {
 	if r.Ctx != nil {
 		policies := r.Ctx.GetPolicies()
@@ -25421,6 +26613,7 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 
 // ViolationKind MUST return a non-nil error when the operation fails.
 // ViolationKind performs the violation kind operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§ViolationKind](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONKIND)
 func (r *queryResolver) ViolationKind(ctx context.Context, id string) (*ViolationKindMeta, error) {
 	if r.Ctx != nil {
 		kinds := r.Ctx.GetViolationKinds()
@@ -25441,6 +26634,7 @@ func (r *queryResolver) ViolationKind(ctx context.Context, id string) (*Violatio
 
 // Analyze MUST return a non-nil error when the operation fails.
 // Analyze performs the analyze operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Analyze](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/ANALYZE)
 func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Analyze(scope)
@@ -25458,10 +26652,13 @@ func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeRes
 // #endregion 🔖Query Resolvers
 
 // #region 🔖Mutation Resolvers
+
+// [🔖semio-repo/cli/main.go#Mutation Resolvers](semiorepo://section/semio-repo/cli/main.go/MUTATION-RESOLVERS)
 // Mutation resolver methods implementing GraphQL write operations.
 
 // Mutation MUST complete the operation successfully.
 // Mutation performs the mutation operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§Mutation](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/MUTATION)
 func (r *Resolver) Mutation() MutationResolver {
 	return &mutationResolver{r}
 }
@@ -25470,6 +26667,7 @@ type mutationResolver struct{ *Resolver }
 
 // SyncGithub MUST return a non-nil error when the operation fails.
 // SyncGithub performs the sync github operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§SyncGithub](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/SYNCGITHUB)
 func (r *mutationResolver) SyncGithub(ctx context.Context) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SyncGithub()
@@ -25479,6 +26677,7 @@ func (r *mutationResolver) SyncGithub(ctx context.Context) (bool, error) {
 
 // Fix MUST return a non-nil error when the operation fails.
 // Fix performs the fix operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§Fix](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/FIX)
 func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Fix(scope)
@@ -25492,6 +26691,7 @@ func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, 
 
 // DraftCreate MUST return a non-nil error when the operation fails.
 // DraftCreate performs the draft create operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§DraftCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/DRAFTCREATE)
 func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInput) (*Draft, error) {
 	if r.Ctx != nil {
 		return r.Ctx.DraftCreate(input)
@@ -25501,6 +26701,7 @@ func (r *mutationResolver) DraftCreate(ctx context.Context, input DraftCreateInp
 
 // DraftDelete MUST return a non-nil error when the operation fails.
 // DraftDelete performs the draft delete operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§DraftDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/DRAFTDELETE)
 func (r *mutationResolver) DraftDelete(ctx context.Context, id string) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.DraftDelete(id)
@@ -25510,6 +26711,7 @@ func (r *mutationResolver) DraftDelete(ctx context.Context, id string) (bool, er
 
 // TicketOpen MUST return a non-nil error when the operation fails.
 // TicketOpen performs the ticket open operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TicketOpen](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TICKETOPEN)
 func (r *mutationResolver) TicketOpen(ctx context.Context, input TicketOpenInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketOpen(input)
@@ -25519,6 +26721,7 @@ func (r *mutationResolver) TicketOpen(ctx context.Context, input TicketOpenInput
 
 // TicketClose MUST return a non-nil error when the operation fails.
 // TicketClose performs the ticket close operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TicketClose](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TICKETCLOSE)
 func (r *mutationResolver) TicketClose(ctx context.Context, input TicketCloseInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketClose(input)
@@ -25528,6 +26731,7 @@ func (r *mutationResolver) TicketClose(ctx context.Context, input TicketCloseInp
 
 // TicketReopen MUST return a non-nil error when the operation fails.
 // TicketReopen performs the ticket reopen operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TicketReopen](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TICKETREOPEN)
 func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketReopen(input)
@@ -25537,6 +26741,7 @@ func (r *mutationResolver) TicketReopen(ctx context.Context, input TicketReopenI
 
 // TicketChange MUST return a non-nil error when the operation fails.
 // TicketChange performs the ticket change operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TicketChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TICKETCHANGE)
 func (r *mutationResolver) TicketChange(ctx context.Context, input TicketChangeInput) (*Ticket, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketChange(input)
@@ -25546,6 +26751,7 @@ func (r *mutationResolver) TicketChange(ctx context.Context, input TicketChangeI
 
 // GoalCreate MUST return a non-nil error when the operation fails.
 // GoalCreate performs the goal create operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§GoalCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/GOALCREATE)
 func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalCreate(input)
@@ -25555,6 +26761,7 @@ func (r *mutationResolver) GoalCreate(ctx context.Context, input GoalCreateInput
 
 // GoalChange MUST return a non-nil error when the operation fails.
 // GoalChange performs the goal change operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§GoalChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/GOALCHANGE)
 func (r *mutationResolver) GoalChange(ctx context.Context, id string, input GoalChangeInput) (*Goal, error) {
 	if r.Ctx != nil {
 		input.ID = id
@@ -25565,6 +26772,7 @@ func (r *mutationResolver) GoalChange(ctx context.Context, id string, input Goal
 
 // GoalClose MUST return a non-nil error when the operation fails.
 // GoalClose performs the goal close operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§GoalClose](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/GOALCLOSE)
 func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalClose(input)
@@ -25574,6 +26782,7 @@ func (r *mutationResolver) GoalClose(ctx context.Context, input GoalCloseInput) 
 
 // TodoCreate MUST return a non-nil error when the operation fails.
 // TodoCreate performs the todo create operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TodoCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TODOCREATE)
 func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput) (*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoCreate(input)
@@ -25583,6 +26792,7 @@ func (r *mutationResolver) TodoCreate(ctx context.Context, input TodoCreateInput
 
 // TodoChange MUST return a non-nil error when the operation fails.
 // TodoChange performs the todo change operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TodoChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TODOCHANGE)
 func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput) (*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoChange(input)
@@ -25592,6 +26802,7 @@ func (r *mutationResolver) TodoChange(ctx context.Context, input TodoChangeInput
 
 // TodoDelete MUST return a non-nil error when the operation fails.
 // TodoDelete performs the todo delete operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TodoDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TODODELETE)
 func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TodoDelete(id)
@@ -25601,6 +26812,7 @@ func (r *mutationResolver) TodoDelete(ctx context.Context, id string) (bool, err
 
 // GoalReopen MUST return a non-nil error when the operation fails.
 // GoalReopen performs the goal reopen operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§GoalReopen](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/GOALREOPEN)
 func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput) (*Goal, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalReopen(input)
@@ -25610,6 +26822,7 @@ func (r *mutationResolver) GoalReopen(ctx context.Context, input GoalReopenInput
 
 // TicketProgress MUST return a non-nil error when the operation fails.
 // TicketProgress performs the ticket progress operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TicketProgress](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TICKETPROGRESS)
 func (r *mutationResolver) TicketProgress(ctx context.Context, input TicketProgressInput) (string, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketProgress(input)
@@ -25619,6 +26832,7 @@ func (r *mutationResolver) TicketProgress(ctx context.Context, input TicketProgr
 
 // GoalDelete MUST return a non-nil error when the operation fails.
 // GoalDelete performs the goal delete operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§GoalDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/GOALDELETE)
 func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GoalDelete(input)
@@ -25628,6 +26842,7 @@ func (r *mutationResolver) GoalDelete(ctx context.Context, input GoalDeleteInput
 
 // TicketDelete MUST return a non-nil error when the operation fails.
 // TicketDelete performs the ticket delete operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§TicketDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/TICKETDELETE)
 func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteInput) (bool, error) {
 	if r.Ctx != nil {
 		return r.Ctx.TicketDelete(input)
@@ -25637,6 +26852,7 @@ func (r *mutationResolver) TicketDelete(ctx context.Context, input TicketDeleteI
 
 // ContributorAdd MUST return a non-nil error when the operation fails.
 // ContributorAdd performs the contributor add operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§ContributorAdd](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/CONTRIBUTORADD)
 func (r *mutationResolver) ContributorAdd(ctx context.Context, input ContributorAddInput) (*Contributor, error) {
 	if r.Ctx != nil {
 		return r.Ctx.ContributorAdd(input)
@@ -25646,6 +26862,7 @@ func (r *mutationResolver) ContributorAdd(ctx context.Context, input Contributor
 
 // ContributorRemove MUST return a non-nil error when the operation fails.
 // ContributorRemove performs the contributor remove operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§ContributorRemove](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/CONTRIBUTORREMOVE)
 func (r *mutationResolver) ContributorRemove(ctx context.Context, github string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.ContributorRemove(github)
@@ -25656,6 +26873,7 @@ func (r *mutationResolver) ContributorRemove(ctx context.Context, github string)
 
 // FolderCreate MUST return a non-nil error when the operation fails.
 // FolderCreate performs the folder create operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§FolderCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/FOLDERCREATE)
 func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FolderCreate(path)
@@ -25665,6 +26883,7 @@ func (r *mutationResolver) FolderCreate(ctx context.Context, path string) (*Fold
 
 // FolderMove MUST return a non-nil error when the operation fails.
 // FolderMove performs the folder move operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§FolderMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/FOLDERMOVE)
 func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst string) (*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FolderMove(src, dst)
@@ -25674,6 +26893,7 @@ func (r *mutationResolver) FolderMove(ctx context.Context, src string, dst strin
 
 // FolderDelete MUST return a non-nil error when the operation fails.
 // FolderDelete performs the folder delete operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§FolderDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/FOLDERDELETE)
 func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.FolderDelete(path)
@@ -25684,6 +26904,7 @@ func (r *mutationResolver) FolderDelete(ctx context.Context, path string) (bool,
 
 // FileCreate MUST return a non-nil error when the operation fails.
 // FileCreate performs the file create operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§FileCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/FILECREATE)
 func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FileCreate(path)
@@ -25693,6 +26914,7 @@ func (r *mutationResolver) FileCreate(ctx context.Context, path string) (*File, 
 
 // FileMove MUST return a non-nil error when the operation fails.
 // FileMove performs the file move operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§FileMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/FILEMOVE)
 func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.FileMove(src, dst)
@@ -25702,6 +26924,7 @@ func (r *mutationResolver) FileMove(ctx context.Context, src string, dst string)
 
 // FileDelete MUST return a non-nil error when the operation fails.
 // FileDelete performs the file delete operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§FileDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/FILEDELETE)
 func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.FileDelete(path)
@@ -25712,6 +26935,7 @@ func (r *mutationResolver) FileDelete(ctx context.Context, path string) (bool, e
 
 // SectionCreate MUST return a non-nil error when the operation fails.
 // SectionCreate performs the section create operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§SectionCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/SECTIONCREATE)
 func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name string, parent *string) (*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SectionCreate(file, name, parent)
@@ -25721,6 +26945,7 @@ func (r *mutationResolver) SectionCreate(ctx context.Context, file string, name 
 
 // SectionMove MUST return a non-nil error when the operation fails.
 // SectionMove performs the section move operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§SectionMove](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/SECTIONMOVE)
 func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName string, newName string) (*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.SectionMove(file, oldName, newName)
@@ -25730,6 +26955,7 @@ func (r *mutationResolver) SectionMove(ctx context.Context, file string, oldName
 
 // SectionDelete MUST return a non-nil error when the operation fails.
 // SectionDelete performs the section delete operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§SectionDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/SECTIONDELETE)
 func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name string) (bool, error) {
 	if r.Ctx != nil {
 		err := r.Ctx.SectionDelete(file, name)
@@ -25740,6 +26966,7 @@ func (r *mutationResolver) SectionDelete(ctx context.Context, file string, name 
 
 // Integrate MUST return a non-nil error when the operation fails.
 // Integrate performs the integrate operation on the mutation resolver.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§Integrate](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/INTEGRATE)
 func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection, targetFile, targetParent *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Integrate(source, targetSection, targetFile, targetParent)
@@ -25749,6 +26976,7 @@ func (r *mutationResolver) Integrate(ctx context.Context, source, targetSection,
 
 // Extract MUST return the extracted component from the input.
 // Extract extracts the extract from the source.
+// [🛠️semio-repo/cli/main.go#Types#Mutation Resolvers§Extract](semiorepo://definition/semio-repo/cli/main.go/TYPES/MUTATION-RESOLVERS/EXTRACT)
 func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSection, targetFile *string) (*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.Extract(sourceFile, sourceSection, targetFile)
@@ -25759,18 +26987,22 @@ func (r *mutationResolver) Extract(ctx context.Context, sourceFile, sourceSectio
 // #endregion 🔖Mutation Resolvers
 
 // #region 🔖Entity Resolvers
+
+// [🔖semio-repo/cli/main.go#Entity Resolvers](semiorepo://section/semio-repo/cli/main.go/ENTITY-RESOLVERS)
 // Entity resolver methods implementing GraphQL entity lookups.
 
 type repoResolver struct{ *Resolver }
 
 // Repo_ MUST complete the operation successfully.
 // Repo_ performs the repo_ operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Repo_](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/REPO)
 func (r *Resolver) Repo_() RepoResolver {
 	return &repoResolver{r}
 }
 
 // Bundles MUST return a non-nil error when the operation fails.
 // Bundles performs the bundles operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Bundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/BUNDLES)
 func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -25788,6 +27020,7 @@ func (r *repoResolver) Bundles(ctx context.Context, obj *Repo, filter *FilterInp
 
 // Folders MUST return a non-nil error when the operation fails.
 // Folders performs the folders operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Folders](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/FOLDERS)
 func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFolders(), nil
@@ -25797,6 +27030,7 @@ func (r *repoResolver) Folders(ctx context.Context, obj *Repo) ([]*Folder, error
 
 // Files MUST return a non-nil error when the operation fails.
 // Files performs the files operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Files](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/FILES)
 func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetFiles(), nil
@@ -25806,6 +27040,7 @@ func (r *repoResolver) Files(ctx context.Context, obj *Repo) ([]*File, error) {
 
 // Sections MUST return a non-nil error when the operation fails.
 // Sections performs the sections operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Sections](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/SECTIONS)
 func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetSections(), nil
@@ -25815,6 +27050,7 @@ func (r *repoResolver) Sections(ctx context.Context, obj *Repo) ([]*Section, err
 
 // Definitions MUST return a non-nil error when the operation fails.
 // Definitions performs the definitions operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Definitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/DEFINITIONS)
 func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definition, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetDefinitions(), nil
@@ -25824,6 +27060,7 @@ func (r *repoResolver) Definitions(ctx context.Context, obj *Repo) ([]*Definitio
 
 // Contributors MUST return a non-nil error when the operation fails.
 // Contributors performs the contributors operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Contributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/CONTRIBUTORS)
 func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Contributor, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -25841,6 +27078,7 @@ func (r *repoResolver) Contributors(ctx context.Context, obj *Repo, filter *Filt
 
 // Todos MUST return a non-nil error when the operation fails.
 // Todos performs the todos operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Todos](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/TODOS)
 func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Todo, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetTodos(filter)
@@ -25850,6 +27088,7 @@ func (r *repoResolver) Todos(ctx context.Context, obj *Repo, filter *FilterInput
 
 // Tickets MUST return a non-nil error when the operation fails.
 // Tickets performs the tickets operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Tickets](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/TICKETS)
 func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -25870,6 +27109,7 @@ func (r *repoResolver) Tickets(ctx context.Context, obj *Repo, year *int, month 
 
 // Policies MUST return a non-nil error when the operation fails.
 // Policies performs the policies operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Policies](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/POLICIES)
 func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Policy, error) {
 	if r.Ctx != nil {
 		opts := filter.ToStreamOptions()
@@ -25900,6 +27140,7 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 
 // ViolationKinds MUST return a non-nil error when the operation fails.
 // ViolationKinds performs the violation kinds operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§ViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/VIOLATIONKINDS)
 func (r *repoResolver) ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error) {
 	if r.Ctx != nil {
 		return r.Ctx.GetViolationKinds(), nil
@@ -25909,6 +27150,7 @@ func (r *repoResolver) ViolationKinds(ctx context.Context, obj *Repo) ([]*Violat
 
 // Violations MUST return a non-nil error when the operation fails.
 // Violations performs the violations operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Violations](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/VIOLATIONS)
 func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
@@ -25928,9 +27170,12 @@ func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string)
 // #endregion 🔖Entity Resolvers
 
 // #region 🔖Resolver Interfaces
+
+// [🔖semio-repo/cli/main.go#Resolver Interfaces](semiorepo://section/semio-repo/cli/main.go/RESOLVER-INTERFACES)
 // Resolver interface definitions for the GraphQL server.
 
 // QueryResolver defines the interface for query resolver operations.
+// [✂️semio-repo/cli/main.go#Types#Resolver Interfaces§QueryResolver](semiorepo://definition/semio-repo/cli/main.go/TYPES/RESOLVER-INTERFACES/QUERYRESOLVER)
 type QueryResolver interface {
 	Node(ctx context.Context, id string) (Node, error)
 	Repo(ctx context.Context) (*Repo, error)
@@ -25956,6 +27201,7 @@ type QueryResolver interface {
 }
 
 // MutationResolver defines the interface for mutation resolver operations.
+// [✂️semio-repo/cli/main.go#Types#Resolver Interfaces§MutationResolver](semiorepo://definition/semio-repo/cli/main.go/TYPES/RESOLVER-INTERFACES/MUTATIONRESOLVER)
 type MutationResolver interface {
 	SyncGithub(ctx context.Context) (bool, error)
 	Fix(ctx context.Context, scope *string) (*FixResult, error)
@@ -25981,6 +27227,7 @@ type MutationResolver interface {
 }
 
 // RepoResolver defines the interface for repo resolver operations.
+// [✂️semio-repo/cli/main.go#Types#Resolver Interfaces§RepoResolver](semiorepo://definition/semio-repo/cli/main.go/TYPES/RESOLVER-INTERFACES/REPORESOLVER)
 type RepoResolver interface {
 	Bundles(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Bundle, error)
 	Folders(ctx context.Context, obj *Repo) ([]*Folder, error)
@@ -25996,6 +27243,8 @@ type RepoResolver interface {
 // #endregion 🔖Resolver Interfaces
 
 // #region 🔖Mcp
+
+// [🔖semio-repo/cli/main.go#Mcp](semiorepo://section/semio-repo/cli/main.go/MCP)
 // MCP protocol handlers for the model context protocol server.
 
 func createMcpServer() *server.MCPServer {
@@ -26506,6 +27755,8 @@ func toolResultToMCP(result ToolResult) (*mcp.CallToolResult, error) {
 }
 
 // #region 🔖Args
+
+// [🔖semio-repo/cli/main.go#Args](semiorepo://section/semio-repo/cli/main.go/ARGS)
 // Argument parsing utilities for CLI and MCP commands.
 func getArgs(request mcp.CallToolRequest) map[string]interface{} {
 	if args, ok := request.Params.Arguments.(map[string]interface{}); ok {
@@ -26595,6 +27846,8 @@ func getBoolArg(args map[string]interface{}, key string) (bool, bool, error) {
 // #endregion 🔖Args
 
 // #region 🔖Paths
+
+// [🔖semio-repo/cli/main.go#Paths](semiorepo://section/semio-repo/cli/main.go/PATHS)
 // Path resolution utilities for file and folder operations.
 func requireFilePath(path string) error {
 	info, err := os.Stat(path)
@@ -26649,6 +27902,8 @@ func requireFolderTargetPath(path string) error {
 // #endregion 🔖Paths
 
 // #region 🔖GraphQL
+
+// [🔖semio-repo/cli/main.go#GraphQL](semiorepo://section/semio-repo/cli/main.go/GRAPHQL)
 // GraphQL query and mutation string constants.
 
 func jsonToYaml(jsonStr string) (string, error) {
@@ -26670,6 +27925,8 @@ func gql(query string, variables map[string]interface{}) (string, error) {
 // #endregion 🔖GraphQL
 
 // #region 🔖Handlers
+
+// [🔖semio-repo/cli/main.go#Handlers](semiorepo://section/semio-repo/cli/main.go/HANDLERS)
 // Request handler functions for CLI and MCP operations.
 
 func renderPromptTemplate(name string, data map[string]string) (string, error) {
@@ -27455,6 +28712,8 @@ func navigateTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallTo
 }
 
 // #region 🔖Mcp Resources Handlers
+
+// [🔖semio-repo/cli/main.go#Mcp Resources Handlers](semiorepo://section/semio-repo/cli/main.go/MCP-RESOURCES-HANDLERS)
 // MCP resource handler functions for resource listing and reading.
 
 func handleRepoResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
@@ -27932,7 +29191,11 @@ func handleCommitResource(ctx context.Context, request mcp.ReadResourceRequest) 
 
 // #region 🔖Cli
 
+// [🔖semio-repo/cli/main.go#Cli](semiorepo://section/semio-repo/cli/main.go/CLI)
+
 // #region 🔖GraphQL Helpers
+
+// [🔖semio-repo/cli/main.go#GraphQL Helpers](semiorepo://section/semio-repo/cli/main.go/GRAPHQL-HELPERS)
 // GraphQL helper functions for query construction and execution.
 
 func printGQL(query string, variables map[string]interface{}) error {
@@ -27947,6 +29210,8 @@ func printGQL(query string, variables map[string]interface{}) error {
 // #endregion 🔖GraphQL Helpers
 
 // #region 🔖Analyze Command
+
+// [🔖semio-repo/cli/main.go#Analyze Command](semiorepo://section/semio-repo/cli/main.go/ANALYZE-COMMAND)
 // Analyze command implementation for policy violation detection.
 
 var analyzeCmd = &cobra.Command{
@@ -28002,6 +29267,8 @@ var analyzeCmd = &cobra.Command{
 // #endregion 🔖Analyze Command
 
 // #region 🔖Fix Command
+
+// [🔖semio-repo/cli/main.go#Fix Command](semiorepo://section/semio-repo/cli/main.go/FIX-COMMAND)
 // Fix command implementation for automatic policy violation repair.
 
 var fixCmd = &cobra.Command{
@@ -28037,10 +29304,13 @@ var fixCmd = &cobra.Command{
 // #endregion 🔖Fix Command
 
 // #region 🔖Missing Utilities
+
+// [🔖semio-repo/cli/main.go#Missing Utilities](semiorepo://section/semio-repo/cli/main.go/MISSING-UTILITIES)
 // Utility functions that are missing from the main codebase.
 
 // ScopeToFiles MUST return a non-nil error when the operation fails.
 // ScopeToFiles performs the scope to files operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§ScopeToFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/SCOPETOFILES)
 func ScopeToFiles(scope Scope, bundles []Bundle) ([]string, error) {
 	ignorePatterns := []string{"**/node_modules/**", "**/.venv/**"}
 	var files []string
@@ -28127,6 +29397,7 @@ func filterConsideredFiles(files []string) []string {
 
 // ComputeTicketFiles MUST return the computed result deterministically.
 // ComputeTicketFiles computes and returns the ticket files.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§ComputeTicketFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/COMPUTETICKETFILES)
 func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 	if len(ticket.Interactions) == 0 {
 		return nil, fmt.Errorf("no interactions found for ticket")
@@ -28190,6 +29461,7 @@ func ComputeTicketFiles(ticket *Ticket, files []string) (*TicketDiffs, error) {
 
 // GetGitDiffLines MUST retrieve the requested value or return an error.
 // GetGitDiffLines retrieves and returns the git diff lines.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§GetGitDiffLines](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/GETGITDIFFLINES)
 func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]*DiffLines, error) {
 	if baseCommit == "" {
 		return nil, fmt.Errorf("base commit is required")
@@ -28255,6 +29527,7 @@ func buildViolationID(scope string, line int, col int) string {
 
 // CanCloseTicket MUST return a deterministic boolean result.
 // CanCloseTicket performs the can close ticket operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§CanCloseTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/CANCLOSETICKET)
 func CanCloseTicket(ticket *Ticket) (bool, []string) {
 	var reasons []string
 	if ticket == nil {
@@ -28266,6 +29539,7 @@ func CanCloseTicket(ticket *Ticket) (bool, []string) {
 
 // GetBundleByPath MUST retrieve the requested value or return an error.
 // GetBundleByPath retrieves and returns the bundle by path.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§GetBundleByPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/GETBUNDLEBYPATH)
 func GetBundleByPath(path string) *Bundle {
 	bundles := GetProjects()
 	normalizedPath := NormalizePath(path)
@@ -28337,6 +29611,7 @@ func buildDefinitionID(fileID string, sectionPath []string, name string) string 
 
 // GuessSectionName MUST complete the operation successfully.
 // GuessSectionName performs the guess section name operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§GuessSectionName](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/GUESSSECTIONNAME)
 func GuessSectionName(filePath string) string {
 	base := filepath.Base(filePath)
 	ext := filepath.Ext(base)
@@ -28355,12 +29630,14 @@ func GuessSectionName(filePath string) string {
 
 // GetGitDiffSectionLineMetrics MUST retrieve the requested value or return an error.
 // GetGitDiffSectionLineMetrics retrieves and returns the git diff section line metrics.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§GetGitDiffSectionLineMetrics](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/GETGITDIFFSECTIONLINEMETRICS)
 func GetGitDiffSectionLineMetrics(baseCommit, endCommit, filePath string) map[string]LineMetrics {
 	return nil
 }
 
 // FlattenSections MUST return a single-level collection with all nested items.
 // FlattenSections flattens the nested sections into a single level.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§FlattenSections](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/FLATTENSECTIONS)
 func FlattenSections(sections []Section) []Section {
 	var result []Section
 	var flatten func(secs []Section)
@@ -28513,6 +29790,7 @@ func findSectionForLine(sections []Section, line int) string {
 
 // BuildGitDiffArgs MUST construct and return the fully initialized result.
 // BuildGitDiffArgs constructs and returns the git diff args.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§BuildGitDiffArgs](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/BUILDGITDIFFARGS)
 func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []string {
 	if headCommit == "" {
 		if len(paths) == 0 {
@@ -28527,6 +29805,7 @@ func BuildGitDiffArgs(flag, baseCommit, headCommit string, paths []string) []str
 }
 
 // GitDiffStatus holds the data fields for a git diff status record.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§GitDiffStatus](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/GITDIFFSTATUS)
 type GitDiffStatus struct {
 	Status string
 	From   string
@@ -28535,6 +29814,7 @@ type GitDiffStatus struct {
 
 // GetGitDiffStatus MUST retrieve the requested value or return an error.
 // GetGitDiffStatus retrieves and returns the git diff status.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§GetGitDiffStatus](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/GETGITDIFFSTATUS)
 func GetGitDiffStatus(baseCommit, headCommit string, paths []string) ([]GitDiffStatus, error) {
 	if baseCommit == "" {
 		return nil, fmt.Errorf("base commit is required")
@@ -28582,6 +29862,7 @@ func GetGitDiffStatus(baseCommit, headCommit string, paths []string) ([]GitDiffS
 
 // GetFolderChildren MUST retrieve the requested value or return an error.
 // GetFolderChildren retrieves and returns the folder children.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§GetFolderChildren](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/GETFOLDERCHILDREN)
 func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 	absPath := filepath.Join(rootDir, folderPath)
 	entries, err := os.ReadDir(absPath)
@@ -28627,6 +29908,7 @@ func GetFolderChildren(folderPath string, bundleID *string) ([]*Folder, error) {
 
 // GetFolderFiles MUST retrieve the requested value or return an error.
 // GetFolderFiles retrieves and returns the folder files.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Utilities§GetFolderFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-UTILITIES/GETFOLDERFILES)
 func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 	absPath := filepath.Join(rootDir, folderPath)
 	entries, err := os.ReadDir(absPath)
@@ -28669,6 +29951,7 @@ func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 
 // AnalyzeFile MUST return a non-nil error when the operation fails.
 // AnalyzeFile performs the analyze file operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli§AnalyzeFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/ANALYZEFILE)
 func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
 	scope := Scope{
 		Kind:     ScopeFile,
@@ -28682,6 +29965,7 @@ func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
 
 // ParseContributorIdentity MUST return the parsed result or an error for invalid input.
 // ParseContributorIdentity parses and returns the contributor identity from the input.
+// [🛠️semio-repo/cli/main.go#Types#Cli§ParseContributorIdentity](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/PARSECONTRIBUTORIDENTITY)
 func ParseContributorIdentity(line string) (name, email string, ok bool) {
 	re := regexp.MustCompile(`\d{4}\s+(.+?)\s*<([^>]+)>`)
 	m := re.FindStringSubmatch(line)
@@ -28711,6 +29995,7 @@ func findSectionForDefinition(sections []Section, startLine, endLine int, prefix
 
 // ListContributors MUST return all available contributors entries.
 // ListContributors returns a list of contributors entries.
+// [🛠️semio-repo/cli/main.go#Types#Cli§ListContributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/LISTCONTRIBUTORS)
 func ListContributors() ([]Contributor, error) {
 	var result []Contributor
 	dir := filepath.Join(GetRepoMetaDir(), "contributors")
@@ -28739,6 +30024,7 @@ func ListContributors() ([]Contributor, error) {
 
 // StreamContributors MUST invoke the callback for each matching contributors entry.
 // StreamContributors streams contributors entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Cli§StreamContributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/STREAMCONTRIBUTORS)
 func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -28794,24 +30080,28 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 
 // GetContributorAvatarPath MUST retrieve the requested value or return an error.
 // GetContributorAvatarPath retrieves and returns the contributor avatar path.
+// [🛠️semio-repo/cli/main.go#Types#Cli§GetContributorAvatarPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GETCONTRIBUTORAVATARPATH)
 func GetContributorAvatarPath(github string) string {
 	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar.png")
 }
 
 // GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
 // GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
+// [🛠️semio-repo/cli/main.go#Types#Cli§GetContributorAvatarRoundPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GETCONTRIBUTORAVATARROUNDPATH)
 func GetContributorAvatarRoundPath(github string) string {
 	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar-round.png")
 }
 
 // GetContributorPath MUST retrieve the requested value or return an error.
 // GetContributorPath retrieves and returns the contributor path.
+// [🛠️semio-repo/cli/main.go#Types#Cli§GetContributorPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GETCONTRIBUTORPATH)
 func GetContributorPath(github string) string {
 	return filepath.Join(GetRepoMetaDir(), "contributors", github)
 }
 
 // CreateContributor MUST create a new entry and return an error on conflict.
 // CreateContributor creates a new contributor entry.
+// [🛠️semio-repo/cli/main.go#Types#Cli§CreateContributor](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/CREATECONTRIBUTOR)
 func CreateContributor(github string) (*Contributor, error) {
 	dir := GetContributorPath(github)
 	if FileExists(dir) {
@@ -28826,6 +30116,7 @@ func CreateContributor(github string) (*Contributor, error) {
 
 // LoadContributor MUST return all matching contributor from the data source.
 // LoadContributor loads and returns contributor from the data source.
+// [🛠️semio-repo/cli/main.go#Types#Cli§LoadContributor](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/LOADCONTRIBUTOR)
 func LoadContributor(github string) (*Contributor, error) {
 	path := filepath.Join(GetContributorPath(github), "contributor.json")
 	if !FileExists(path) {
@@ -28844,6 +30135,7 @@ func LoadContributor(github string) (*Contributor, error) {
 
 // SaveContributor MUST persist the contributor atomically to the data store.
 // SaveContributor persists contributor to the data store.
+// [🛠️semio-repo/cli/main.go#Types#Cli§SaveContributor](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/SAVECONTRIBUTOR)
 func SaveContributor(c Contributor) error {
 	dir := GetContributorPath(c.Github)
 	if !FileExists(dir) {
@@ -28858,6 +30150,7 @@ func SaveContributor(c Contributor) error {
 
 // RemoveContributor MUST remove the target and return an error on failure.
 // RemoveContributor removes the specified contributor.
+// [🛠️semio-repo/cli/main.go#Types#Cli§RemoveContributor](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/REMOVECONTRIBUTOR)
 func RemoveContributor(github string) error {
 	dir := filepath.Join(GetRepoMetaDir(), "contributors", github)
 	if !FileExists(dir) {
@@ -28868,6 +30161,7 @@ func RemoveContributor(github string) error {
 
 // GetRegisteredPolicies MUST retrieve the requested value or return an error.
 // GetRegisteredPolicies retrieves and returns the registered policies.
+// [🛠️semio-repo/cli/main.go#Types#Cli§GetRegisteredPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GETREGISTEREDPOLICIES)
 func GetRegisteredPolicies() []PolicyDef {
 	return GetPolicies()
 }
@@ -28902,58 +30196,69 @@ func init() {
 }
 
 // #region 🔖Resolver Methods
+
+// [🔖semio-repo/cli/main.go#Resolver Methods](semiorepo://section/semio-repo/cli/main.go/RESOLVER-METHODS)
 // Resolver method implementations for GraphQL field resolution.
 
 // Bundles MUST return a non-nil error when the operation fails.
 // Bundles performs the bundles operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Bundles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/BUNDLES)
 func (r *Resolver) Bundles(ctx context.Context, repo *Repo) ([]*Bundle, error) {
 	return r.Ctx.GetBundles(), nil
 }
 
 // Folders MUST return a non-nil error when the operation fails.
 // Folders performs the folders operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Folders](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/FOLDERS)
 func (r *Resolver) Folders(ctx context.Context, repo *Repo) ([]*Folder, error) {
 	return r.Ctx.GetFolders(), nil
 }
 
 // Files MUST return a non-nil error when the operation fails.
 // Files performs the files operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Files](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/FILES)
 func (r *Resolver) Files(ctx context.Context, repo *Repo) ([]*File, error) {
 	return r.Ctx.GetFiles(), nil
 }
 
 // Sections MUST return a non-nil error when the operation fails.
 // Sections performs the sections operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Sections](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/SECTIONS)
 func (r *Resolver) Sections(ctx context.Context, repo *Repo) ([]*Section, error) {
 	return r.Ctx.GetSections(), nil
 }
 
 // Definitions MUST return a non-nil error when the operation fails.
 // Definitions performs the definitions operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Definitions](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/DEFINITIONS)
 func (r *Resolver) Definitions(ctx context.Context, repo *Repo) ([]*Definition, error) {
 	return r.Ctx.GetDefinitions(), nil
 }
 
 // Contributors MUST return a non-nil error when the operation fails.
 // Contributors performs the contributors operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Contributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/CONTRIBUTORS)
 func (r *Resolver) Contributors(ctx context.Context, repo *Repo) ([]*Contributor, error) {
 	return r.Ctx.GetContributors()
 }
 
 // Policies MUST return a non-nil error when the operation fails.
 // Policies performs the policies operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Policies](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/POLICIES)
 func (r *Resolver) Policies(ctx context.Context, repo *Repo) ([]*Policy, error) {
 	return r.Ctx.GetPolicies(), nil
 }
 
 // ViolationKinds MUST return a non-nil error when the operation fails.
 // ViolationKinds performs the violation kinds operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§ViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/VIOLATIONKINDS)
 func (r *Resolver) ViolationKinds(ctx context.Context, repo *Repo) ([]*ViolationKindMeta, error) {
 	return r.Ctx.GetViolationKinds(), nil
 }
 
 // Violations MUST return a non-nil error when the operation fails.
 // Violations performs the violations operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Violations](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/VIOLATIONS)
 func (r *Resolver) Violations(ctx context.Context, repo *Repo, scope *string) ([]*Violation, error) {
 	analysis, err := r.Ctx.Analyze(scope)
 	if err != nil {
@@ -28965,10 +30270,13 @@ func (r *Resolver) Violations(ctx context.Context, repo *Repo, scope *string) ([
 // #endregion 🔖Resolver Methods
 
 // #region 🔖Missing Tool Functions
+
+// [🔖semio-repo/cli/main.go#Missing Tool Functions](semiorepo://section/semio-repo/cli/main.go/MISSING-TOOL-FUNCTIONS)
 // Tool function stubs for unimplemented features.
 
 // ToolAnalyze MUST complete the operation successfully.
 // ToolAnalyze performs the tool analyze operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Tool Functions§ToolAnalyze](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-TOOL-FUNCTIONS/TOOLANALYZE)
 func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	scope := ParseScope(scopeRaw)
 	bundles := GetProjects()
@@ -29000,6 +30308,7 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 
 // ToolFix MUST complete the operation successfully.
 // ToolFix performs the tool fix operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Tool Functions§ToolFix](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-TOOL-FUNCTIONS/TOOLFIX)
 func ToolFix(scopeRaw string) ToolResult {
 	ctx := NewRepoContext(rootDir)
 	res, err := ctx.Fix(&scopeRaw)
@@ -29014,6 +30323,7 @@ func ToolFix(scopeRaw string) ToolResult {
 
 // ToolPolicyList MUST complete the operation successfully.
 // ToolPolicyList performs the tool policy list operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Tool Functions§ToolPolicyList](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-TOOL-FUNCTIONS/TOOLPOLICYLIST)
 func ToolPolicyList() ToolResult {
 	policies := GetRegisteredPolicies()
 	var events []Event
@@ -29026,6 +30336,7 @@ func ToolPolicyList() ToolResult {
 
 // ToolPolicyTree MUST complete the operation successfully.
 // ToolPolicyTree performs the tool policy tree operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Tool Functions§ToolPolicyTree](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-TOOL-FUNCTIONS/TOOLPOLICYTREE)
 func ToolPolicyTree() ToolResult {
 	allPolicies := GetRegisteredPolicies()
 	var sb strings.Builder
@@ -29045,12 +30356,14 @@ func ToolPolicyTree() ToolResult {
 
 // ToolPolicyCheck MUST complete the operation successfully.
 // ToolPolicyCheck performs the tool policy check operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Tool Functions§ToolPolicyCheck](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-TOOL-FUNCTIONS/TOOLPOLICYCHECK)
 func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 	return ToolAnalyze(scopeRaw, []string{policyID})
 }
 
 // ToolPolicyViolationList MUST complete the operation successfully.
 // ToolPolicyViolationList performs the tool policy violation list operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Tool Functions§ToolPolicyViolationList](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-TOOL-FUNCTIONS/TOOLPOLICYVIOLATIONLIST)
 func ToolPolicyViolationList(policyID string) ToolResult {
 
 	return ToolAnalyze("semio", []string{policyID})
@@ -29059,6 +30372,8 @@ func ToolPolicyViolationList(policyID string) ToolResult {
 // #endregion 🔖Missing Tool Functions
 
 // #region 🔖Benchmark Command
+
+// [🔖semio-repo/cli/main.go#Benchmark Command](semiorepo://section/semio-repo/cli/main.go/BENCHMARK-COMMAND)
 // Benchmark command implementation for performance measurement.
 
 var benchmarkCmd = &cobra.Command{
@@ -29070,6 +30385,7 @@ var benchmarkCmd = &cobra.Command{
 var benchmarkDryRun bool
 
 // BenchmarkResult holds the data fields for a benchmark result record.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Benchmark Command§BenchmarkResult](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/BENCHMARK-COMMAND/BENCHMARKRESULT)
 type BenchmarkResult struct {
 	Test string
 	Lang string
@@ -29253,6 +30569,8 @@ func writeBenchmarkReport(rootDir string, results []BenchmarkResult) error {
 // #endregion 🔖Benchmark Command
 
 // #region 🔖Preflight Command
+
+// [🔖semio-repo/cli/main.go#Preflight Command](semiorepo://section/semio-repo/cli/main.go/PREFLIGHT-COMMAND)
 // Preflight command implementation for pre-publish validation.
 
 var preflightCmd = &cobra.Command{
@@ -29335,6 +30653,8 @@ func runNx(target string, args ...string) error {
 // #endregion 🔖Preflight Command
 
 // #region 🔖Update Command
+
+// [🔖semio-repo/cli/main.go#Update Command](semiorepo://section/semio-repo/cli/main.go/UPDATE-COMMAND)
 // Update command implementation for dependency updates.
 
 var updateCmd = &cobra.Command{
@@ -29354,6 +30674,7 @@ func init() {
 }
 
 // DependabotConfig holds the data fields for a dependabot config record.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Update Command§DependabotConfig](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/UPDATE-COMMAND/DEPENDABOTCONFIG)
 type DependabotConfig struct {
 	Version int `yaml:"version"`
 	Updates []struct {
@@ -29374,6 +30695,7 @@ type DependabotConfig struct {
 }
 
 // UpdateConfig holds the data fields for a update config record.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Update Command§UpdateConfig](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/UPDATE-COMMAND/UPDATECONFIG)
 type UpdateConfig struct {
 	Exclude               map[string][]string
 	Constraints           map[string][]Constraint
@@ -29392,6 +30714,7 @@ type UpdateConfig struct {
 }
 
 // Constraint holds the data fields for a constraint record.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Update Command§Constraint](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/UPDATE-COMMAND/CONSTRAINT)
 type Constraint struct {
 	Dependency string
 	MaxMajor   int
@@ -29701,10 +31024,13 @@ func updateDotNet(rootDir string, config *UpdateConfig, dryRun bool) {
 // #endregion 🔖Update Command
 
 // #region 🔖File Utilities
+
+// [🔖semio-repo/cli/main.go#File Utilities](semiorepo://section/semio-repo/cli/main.go/FILE-UTILITIES)
 // File utility functions for reading, writing and path manipulation.
 
 // MoveFile MUST return a non-nil error when the operation fails.
 // MoveFile performs the move file operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#File Utilities§MoveFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/FILE-UTILITIES/MOVEFILE)
 func MoveFile(sourcePath, destPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -29731,6 +31057,7 @@ func MoveFile(sourcePath, destPath string) error {
 
 // CopyFile MUST return a non-nil error when the operation fails.
 // CopyFile performs the copy file operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#File Utilities§CopyFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/FILE-UTILITIES/COPYFILE)
 func CopyFile(sourcePath, destPath string) error {
 	inputFile, err := os.Open(sourcePath)
 	if err != nil {
@@ -29752,16 +31079,20 @@ func CopyFile(sourcePath, destPath string) error {
 // #endregion 🔖File Utilities
 
 // #region 🔖Goals
+
+// [🔖semio-repo/cli/main.go#Goals](semiorepo://section/semio-repo/cli/main.go/GOALS)
 // Goal management functions for planning and tracking.
 
 // GetRepoGoalsDir MUST retrieve the requested value or return an error.
 // GetRepoGoalsDir retrieves and returns the repo goals dir.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§GetRepoGoalsDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/GETREPOGOALSDIR)
 func GetRepoGoalsDir() string {
 	return filepath.Join(GetRepoMetaDir(), "goals")
 }
 
 // ListGoals MUST return all available goals entries.
 // ListGoals returns a list of goals entries.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§ListGoals](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/LISTGOALS)
 func ListGoals() ([]*Goal, error) {
 	dir := GetRepoGoalsDir()
 	var goals []*Goal
@@ -29800,6 +31131,7 @@ func ListGoals() ([]*Goal, error) {
 
 // ReadGoal MUST return the goal content or an error if unavailable.
 // ReadGoal reads and returns goal from the source.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§ReadGoal](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/READGOAL)
 func ReadGoal(id string) (*Goal, error) {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(id), "goal.json")
@@ -29821,6 +31153,7 @@ func ReadGoal(id string) (*Goal, error) {
 
 // StreamGoals MUST invoke the callback for each matching goals entry.
 // StreamGoals streams goals entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§StreamGoals](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/STREAMGOALS)
 func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -29852,6 +31185,7 @@ func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) e
 
 // StreamViolationKinds MUST invoke the callback for each matching violation kinds entry.
 // StreamViolationKinds streams violation kinds entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§StreamViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/STREAMVIOLATIONKINDS)
 func StreamViolationKinds(ctx context.Context, out chan<- ViolationKindMeta, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -29877,6 +31211,7 @@ func StreamViolationKinds(ctx context.Context, out chan<- ViolationKindMeta, opt
 
 // StreamCommits MUST invoke the callback for each matching commits entry.
 // StreamCommits streams commits entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§StreamCommits](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/STREAMCOMMITS)
 func StreamCommits(ctx context.Context, limit *int, out chan<- Commit, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
@@ -29903,6 +31238,7 @@ func StreamCommits(ctx context.Context, limit *int, out chan<- Commit, opts ...S
 
 // SaveGoal MUST persist the goal atomically to the data store.
 // SaveGoal persists goal to the data store.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§SaveGoal](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/SAVEGOAL)
 func SaveGoal(goal Goal) error {
 	dir := GetRepoGoalsDir()
 	path := filepath.Join(dir, filepath.FromSlash(goal.ID), "goal.json")
@@ -30150,6 +31486,7 @@ func ghDeleteIssue(issueURLOrNumber string) error {
 }
 // ResolveContributorContributions MUST return the resolved value or an error if unresolvable.
 // ResolveContributorContributions resolves and returns the contributor contributions.
+// [🛠️semio-repo/cli/main.go#Types#Cli§ResolveContributorContributions](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVECONTRIBUTORCONTRIBUTIONS)
 func ResolveContributorContributions(tickets []*Ticket) *ContributorContributionsTree {
 	commitsMap := map[string]*Commit{}
 
@@ -30380,10 +31717,13 @@ func ResolveContributorContributions(tickets []*Ticket) *ContributorContribution
 // #endregion 🔖Cli
 
 // #region 🔖Todos
+
+// [🔖semio-repo/cli/main.go#Todos](semiorepo://section/semio-repo/cli/main.go/TODOS)
 // Todo tracking functions for task management.
 
 // GetTodos MUST retrieve the requested value or return an error.
 // GetTodos retrieves and returns the todos.
+// [🛠️semio-repo/cli/main.go#Types#Todos§GetTodos](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/GETTODOS)
 func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
 	allTodos, err := ScanTodos(c.rootDir)
 	if err != nil {
@@ -30404,6 +31744,7 @@ func (c *repoContext) GetTodos(filter *FilterInput) ([]*Todo, error) {
 
 // ScanTodos MUST scan the input completely and collect all matches.
 // ScanTodos scans and collects todos from the input.
+// [🛠️semio-repo/cli/main.go#Types#Todos§ScanTodos](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/SCANTODOS)
 func ScanTodos(rootDir string) ([]*Todo, error) {
 	var todos []*Todo
 	err := filepath.WalkDir(rootDir, func(path string, d fs.DirEntry, err error) error {
@@ -30439,6 +31780,7 @@ func ScanTodos(rootDir string) ([]*Todo, error) {
 
 // ParseTodoMarkdown MUST return the parsed result or an error for invalid input.
 // ParseTodoMarkdown parses and returns the todo markdown from the input.
+// [🛠️semio-repo/cli/main.go#Types#Todos§ParseTodoMarkdown](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/PARSETODOMARKDOWN)
 func ParseTodoMarkdown(content string, parentPath string) []*Todo {
 	var todos []*Todo
 	lines := strings.Split(content, "\n")
@@ -30467,6 +31809,7 @@ func ParseTodoMarkdown(content string, parentPath string) []*Todo {
 
 // ParseTodoComments MUST return the parsed result or an error for invalid input.
 // ParseTodoComments parses and returns the todo comments from the input.
+// [🛠️semio-repo/cli/main.go#Types#Todos§ParseTodoComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/PARSETODOCOMMENTS)
 func ParseTodoComments(content string, filePath string) []*Todo {
 	var todos []*Todo
 	lines := strings.Split(content, "\n")
@@ -30492,6 +31835,7 @@ func ParseTodoComments(content string, filePath string) []*Todo {
 
 // TodoCreate MUST return a non-nil error when the operation fails.
 // TodoCreate performs the todo create operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Todos§TodoCreate](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/TODOCREATE)
 func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 
 	info, err := os.Stat(input.ParentID)
@@ -30544,12 +31888,14 @@ func (c *repoContext) TodoCreate(input TodoCreateInput) (*Todo, error) {
 
 // TodoChange MUST return a non-nil error when the operation fails.
 // TodoChange performs the todo change operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Todos§TodoChange](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/TODOCHANGE)
 func (c *repoContext) TodoChange(input TodoChangeInput) (*Todo, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
 // TodoDelete MUST return a non-nil error when the operation fails.
 // TodoDelete performs the todo delete operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Todos§TodoDelete](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/TODODELETE)
 func (c *repoContext) TodoDelete(id string) (bool, error) {
 	todos, err := ScanTodos(c.rootDir)
 	if err != nil {
@@ -30573,6 +31919,7 @@ func (c *repoContext) TodoDelete(id string) (bool, error) {
 
 // TodoToTicket MUST return a non-nil error when the operation fails.
 // TodoToTicket performs the todo to ticket operation on the repo context.
+// [🛠️semio-repo/cli/main.go#Types#Todos§TodoToTicket](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/TODOTOTICKET)
 func (c *repoContext) TodoToTicket(id string, input TicketOpenInput) (*Ticket, error) {
 	todos, _ := ScanTodos(c.rootDir)
 	var todo *Todo
@@ -30624,10 +31971,15 @@ func removeLineFromFile(path string, lineNum int) {
 
 // #region 🔖Entity Rendering
 
+// [🔖semio-repo/cli/main.go#Entity Rendering](semiorepo://section/semio-repo/cli/main.go/ENTITY-RENDERING)
+
 // #region 🔖Artifact ID
+
+// [🔖semio-repo/cli/main.go#Artifact ID](semiorepo://section/semio-repo/cli/main.go/ARTIFACT-ID)
 // Artifact ID parsing and resolution utilities.
 
 // SemanticId holds the data fields for a semantic id record.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§SemanticId](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/SEMANTICID)
 type SemanticId struct {
 	Emoji string
 	Value string
@@ -30651,6 +32003,7 @@ func emojiText(emoji string) string {
 
 // String MUST return a non-empty string representation.
 // String returns the string representation of the semantic id.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§String](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/STRING)
 func (s SemanticId) String() string {
 	if s.Value == "" {
 		return emojiText(s.Emoji)
@@ -30741,6 +32094,7 @@ func definitionKindEmoji(data map[string]interface{}) string {
 }
 
 // ArtifactRef holds the data fields for a artifact ref record.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ArtifactRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/ARTIFACTREF)
 type ArtifactRef struct {
 	Kind         string
 	Path         string
@@ -30749,6 +32103,7 @@ type ArtifactRef struct {
 
 // ParseArtifactRef MUST return the parsed result or an error for invalid input.
 // ParseArtifactRef parses and returns the artifact ref from the input.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ParseArtifactRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/PARSEARTIFACTREF)
 func ParseArtifactRef(ref string) ArtifactRef {
 	clean := strings.ReplaceAll(ref, "\uFE0E", "")
 	clean = strings.ReplaceAll(clean, "\uFE0F", "")
@@ -30813,6 +32168,7 @@ func ParseArtifactRef(ref string) ArtifactRef {
 
 // UnSlugify MUST complete the operation successfully.
 // UnSlugify performs the un slugify operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§UnSlugify](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/UNSLUGIFY)
 func UnSlugify(slug string) string {
 	parts := strings.Split(slug, "-")
 	for i, p := range parts {
@@ -30825,6 +32181,7 @@ func UnSlugify(slug string) string {
 
 // FindSectionBySlug MUST return the matching result or an error if not found.
 // FindSectionBySlug locates and returns the matching section by slug.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§FindSectionBySlug](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/FINDSECTIONBYSLUG)
 func FindSectionBySlug(sections []Section, slug string) *Section {
 	for i := range sections {
 		if Slugify(sections[i].Name) == slug {
@@ -30839,6 +32196,7 @@ func FindSectionBySlug(sections []Section, slug string) *Section {
 
 // ResolveSectionName MUST return the resolved value or an error if unresolvable.
 // ResolveSectionName resolves and returns the section name.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ResolveSectionName](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/RESOLVESECTIONNAME)
 func ResolveSectionName(filePath string, slug string) string {
 	absPath := filepath.Join(rootDir, filePath)
 	content, err := ReadTextFile(absPath)
@@ -30859,6 +32217,7 @@ func ResolveSectionName(filePath string, slug string) string {
 
 // SectionIdValueToUriPath MUST complete the operation successfully.
 // SectionIdValueToUriPath performs the section id value to uri path operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§SectionIdValueToUriPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/SECTIONIDVALUETOURIPATH)
 func SectionIdValueToUriPath(value string) string {
 	hashIdx := strings.Index(value, "#")
 	if hashIdx < 0 {
@@ -30876,6 +32235,7 @@ func SectionIdValueToUriPath(value string) string {
 
 // DefinitionIdValueToUriPath MUST complete the operation successfully.
 // DefinitionIdValueToUriPath performs the definition id value to uri path operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§DefinitionIdValueToUriPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/DEFINITIONIDVALUETOURIPATH)
 func DefinitionIdValueToUriPath(value string) string {
 	hashIdx := strings.Index(value, "#")
 	paragraphIdx := strings.Index(value, "§")
@@ -30902,6 +32262,7 @@ func DefinitionIdValueToUriPath(value string) string {
 
 // ParseSectionUriPath MUST return the parsed result or an error for invalid input.
 // ParseSectionUriPath parses and returns the section uri path from the input.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ParseSectionUriPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/PARSESECTIONURIPATH)
 func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string) {
 	parts := strings.Split(uriPath, "/")
 	fileEnd := -1
@@ -30922,6 +32283,7 @@ func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string
 
 // ViolationKindIdToUriPath MUST complete the operation successfully.
 // ViolationKindIdToUriPath performs the violation kind id to uri path operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ViolationKindIdToUriPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/VIOLATIONKINDIDTOURIPATH)
 func ViolationKindIdToUriPath(id string) string {
 	parts := strings.Split(id, "/")
 	for i, p := range parts {
@@ -30932,6 +32294,7 @@ func ViolationKindIdToUriPath(id string) string {
 
 // ViolationKindUriPathToId MUST complete the operation successfully.
 // ViolationKindUriPathToId performs the violation kind uri path to id operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ViolationKindUriPathToId](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/VIOLATIONKINDURIPATHTOID)
 func ViolationKindUriPathToId(uriPath string) string {
 	parts := strings.Split(uriPath, "/")
 	for i, p := range parts {
@@ -30942,6 +32305,7 @@ func ViolationKindUriPathToId(uriPath string) string {
 
 // GetArtifactID MUST retrieve the requested value or return an error.
 // GetArtifactID retrieves and returns the artifact i d.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§GetArtifactID](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/GETARTIFACTID)
 func GetArtifactID(kind string, data map[string]interface{}) string {
 	switch kind {
 	case "repo":
@@ -31080,6 +32444,7 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 
 // GetArtifactURI MUST retrieve the requested value or return an error.
 // GetArtifactURI retrieves and returns the artifact u r i.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§GetArtifactURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/GETARTIFACTURI)
 func GetArtifactURI(kind string, data map[string]interface{}) string {
 	switch kind {
 	case "repo":
@@ -31190,6 +32555,7 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 
 // IdToUri MUST complete the operation successfully.
 // IdToUri performs the id to uri operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§IdToUri](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/IDTOURI)
 func IdToUri(id string) string {
 	type emojiMapping struct {
 		emoji      string
@@ -31306,6 +32672,7 @@ func IdToUri(id string) string {
 
 // UriToId MUST complete the operation successfully.
 // UriToId performs the uri to id operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§UriToId](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/URITOID)
 func UriToId(uri string) string {
 	if !strings.HasPrefix(uri, "semiorepo://") {
 		return ""
@@ -31421,6 +32788,8 @@ func UriToId(uri string) string {
 // #endregion 🔖Artifact ID
 
 // #region 🔖Entity Rendering
+
+// [🔖semio-repo/cli/main.go#Entity Rendering](semiorepo://section/semio-repo/cli/main.go/ENTITY-RENDERING)
 // Entity rendering functions for formatted output generation.
 
 func extractCreatedStr(data map[string]interface{}) string {

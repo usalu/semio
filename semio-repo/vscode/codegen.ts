@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio-repo/vscode/codegen.ts#Configuration](semiorepo://section/semio-repo/vscode/codegen.ts/CONFIGURATION)
 // GraphQL code generation configuration for the VS Code extension.
 // Configuration MUST generate typed client code from the GraphQL schema.
 

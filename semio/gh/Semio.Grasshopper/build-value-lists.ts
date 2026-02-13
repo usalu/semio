@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Value List Generation
+
+// [🔖semio/gh/Semio.Grasshopper/build-value-lists.ts#Value List Generation](semiorepo://section/semio/gh/Semio.Grasshopper/build-value-lists.ts/VALUE-LIST-GENERATION)
 // Value list generation script. MUST convert CSV data into Grasshopper value list text files.
 
 import { parse } from "csv-parse/sync";

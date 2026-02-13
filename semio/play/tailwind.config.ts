@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio/play/tailwind.config.ts#Configuration](semiorepo://section/semio/play/tailwind.config.ts/CONFIGURATION)
 // Tailwind CSS configuration extending the shared semio preset for the play application.
 // Configuration MUST use the shared tailwindConfig preset from @semio/js.
 

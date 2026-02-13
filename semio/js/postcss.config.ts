@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio/js/postcss.config.ts#Configuration](semiorepo://section/semio/js/postcss.config.ts/CONFIGURATION)
 // PostCSS plugin configuration for the js library.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 

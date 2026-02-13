@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Exports
+
+// [🔖semio/js/index.ts#Exports](semiorepo://section/semio/js/index.ts/EXPORTS)
 // Public API surface re-exporting sketchpad components, semio domain, and shared configs.
 // MUST re-export all public types alongside their runtime counterparts.
 

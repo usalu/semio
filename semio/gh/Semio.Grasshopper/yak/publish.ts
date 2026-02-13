@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Publish
+
+// [🔖semio/gh/Semio.Grasshopper/yak/publish.ts#Publish](semiorepo://section/semio/gh/Semio.Grasshopper/yak/publish.ts/PUBLISH)
 // Yak publish script. MUST push the built package to the Yak server.
 
 import { execSync } from "child_process";

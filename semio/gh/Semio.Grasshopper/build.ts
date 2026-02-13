@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Build
+
+// [🔖semio/gh/Semio.Grasshopper/build.ts#Build](semiorepo://section/semio/gh/Semio.Grasshopper/build.ts/BUILD)
 // Grasshopper build script. MUST compile the solution and copy artifacts to the Yak distribution folder.
 
 import { execSync } from "child_process";

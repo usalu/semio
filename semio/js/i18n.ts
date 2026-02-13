@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖I18n
+
+// [🔖semio/js/i18n.ts#I18n](semiorepo://section/semio/js/i18n.ts/I18N)
 // Initializes i18next with language detection, React bindings and expertise-aware label hooks.
 // MUST fall back to English when the detected language is unavailable.
 
@@ -49,8 +51,13 @@ i18n
     },
   });
 
-// Expertise levels for label resolution.
-// MUST map to the key structure in locale JSON files.
+/**
+ * Expertise levels for label resolution.
+ *
+ * MUST map to the key structure in locale JSON files.
+ *
+ *  * [🛠️semio/js/i18n.ts#I18n§Expertise](semiorepo://definition/semio/js/i18n.ts/I18N/EXPERTISE)
+ **/
 export enum Expertise {
   BEGINNER = "beginner",
   NORMAL = "normal",
@@ -61,14 +68,24 @@ export enum Expertise {
 // MUST be set via setExpertiseProvider before expertise-dependent labels are resolved.
 let getExpertiseFunction: (() => Expertise) | undefined;
 
-// Registers a function that returns the current expertise level.
-// MUST be called once during app initialization.
+/**
+ * Registers a function that returns the current expertise level.
+ *
+ * MUST be called once during app initialization.
+ *
+ *  * [🛠️semio/js/i18n.ts#I18n§setExpertiseProvider](semiorepo://definition/semio/js/i18n.ts/I18N/SETEXPERTISEPROVIDER)
+ **/
 export function setExpertiseProvider(fn: () => Expertise) {
   getExpertiseFunction = fn;
 }
 
-// React hook that resolves a localized label by i18n key and expertise level.
-// MUST fall back to normal expertise when no provider is set.
+/**
+ * React hook that resolves a localized label by i18n key and expertise level.
+ *
+ * MUST fall back to normal expertise when no provider is set.
+ *
+ *  * [🪨semio/js/i18n.ts#I18n§useLabel](semiorepo://definition/semio/js/i18n.ts/I18N/USELABEL)
+ **/
 export function useLabel(id: string): string | undefined {
   const { t } = useI18nTranslation();
   const expertise = getExpertiseFunction ? getExpertiseFunction() : Expertise.NORMAL;
@@ -101,8 +118,13 @@ export function useLabel(id: string): string | undefined {
   return undefined;
 }
 
-// React hook that resolves a hotkey string by i18n key.
-// MUST return undefined when no hotkey is configured.
+/**
+ * React hook that resolves a hotkey string by i18n key.
+ *
+ * MUST return undefined when no hotkey is configured.
+ *
+ *  * [🪨semio/js/i18n.ts#I18n§useHotkey](semiorepo://definition/semio/js/i18n.ts/I18N/USEHOTKEY)
+ **/
 export function useHotkey(id: string): string | undefined {
   const { t } = useI18nTranslation();
   const value = t(id as any) as any;

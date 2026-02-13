@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Preload
+
+// [🔖semio/desktop/preload.ts#Preload](semiorepo://section/semio/desktop/preload.ts/PRELOAD)
 // Electron preload script exposing window controls and OS APIs to the renderer.
 // Preload MUST use contextBridge to safely expose IPC methods.
 

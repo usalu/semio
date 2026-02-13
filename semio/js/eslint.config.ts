@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio/js/eslint.config.ts#Configuration](semiorepo://section/semio/js/eslint.config.ts/CONFIGURATION)
 // ESLint flat configuration for the semio JS package.
 // Configuration MUST export a valid ESLint flat config array.
 

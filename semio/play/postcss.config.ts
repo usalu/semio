@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio/play/postcss.config.ts#Configuration](semiorepo://section/semio/play/postcss.config.ts/CONFIGURATION)
 // PostCSS plugin configuration for the play application.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 

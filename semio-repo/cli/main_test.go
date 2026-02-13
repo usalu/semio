@@ -3178,6 +3178,534 @@ func TestSectionDocLinesExemptsDocComments(t *testing.T) {
 	}
 }
 
+func TestSectionMissingIdentification(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		content string
+	}{
+		{
+			name:    "TypeScript section without identification",
+			file:    "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Go section without identification",
+			file:    "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/src/app.go/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Python section without identification",
+			file:    "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+		},
+		{
+			name:    "CSharp section without identification",
+			file:    "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/App.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Rust section without identification",
+			file:    "src/app.rs",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			oldRoot := rootDir
+			rootDir = tmpDir
+			defer func() { rootDir = oldRoot }()
+			dir := filepath.Dir(filepath.Join(tmpDir, tc.file))
+			os.MkdirAll(dir, 0o755)
+			if err := WriteTextFile(filepath.Join(tmpDir, tc.file), tc.content); err != nil {
+				t.Fatalf("failed to write: %v", err)
+			}
+			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
+			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
+			violations, err := CheckPoliciesWithContext(ctx, nil)
+			if err != nil {
+				t.Fatalf("policy check: %v", err)
+			}
+			found := false
+			for _, v := range violations {
+				if v.Kind == ViolationCodeSectionMissingIdentification {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Fatal("expected section missing identification violation")
+			}
+		})
+	}
+}
+
+func TestSectionWithIdentification(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		content string
+	}{
+		{
+			name:    "TypeScript section with identification",
+			file:    "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Go section with identification",
+			file:    "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/src/app.go/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Python section with identification",
+			file:    "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+		},
+		{
+			name:    "CSharp section with identification",
+			file:    "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/App.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/App.cs/FUNCTIONS)\n\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Rust section with identification",
+			file:    "src/app.rs",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/FUNCTIONS)\n\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			oldRoot := rootDir
+			rootDir = tmpDir
+			defer func() { rootDir = oldRoot }()
+			dir := filepath.Dir(filepath.Join(tmpDir, tc.file))
+			os.MkdirAll(dir, 0o755)
+			if err := WriteTextFile(filepath.Join(tmpDir, tc.file), tc.content); err != nil {
+				t.Fatalf("failed to write: %v", err)
+			}
+			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
+			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
+			violations, err := CheckPoliciesWithContext(ctx, nil)
+			if err != nil {
+				t.Fatalf("policy check: %v", err)
+			}
+			for _, v := range violations {
+				if v.Kind == ViolationCodeSectionMissingIdentification {
+					t.Fatalf("unexpected section missing identification violation for %s at line %d", tc.file, v.Line)
+				}
+			}
+		})
+	}
+}
+
+func TestDefinitionMissingIdentification(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		content string
+	}{
+		{
+			name:    "TypeScript definition without identification",
+			file:    "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Go definition without identification",
+			file:    "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Python definition without identification",
+			file:    "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+		},
+		{
+			name:    "CSharp definition without identification",
+			file:    "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/App.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/App.cs/FUNCTIONS)\n\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Rust definition without identification",
+			file:    "src/app.rs",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/FUNCTIONS)\n\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			oldRoot := rootDir
+			rootDir = tmpDir
+			defer func() { rootDir = oldRoot }()
+			dir := filepath.Dir(filepath.Join(tmpDir, tc.file))
+			os.MkdirAll(dir, 0o755)
+			if err := WriteTextFile(filepath.Join(tmpDir, tc.file), tc.content); err != nil {
+				t.Fatalf("failed to write: %v", err)
+			}
+			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
+			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
+			violations, err := CheckPoliciesWithContext(ctx, nil)
+			if err != nil {
+				t.Fatalf("policy check: %v", err)
+			}
+			found := false
+			for _, v := range violations {
+				if v.Kind == ViolationCodeDefMissingIdentification {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Fatal("expected definition missing identification violation")
+			}
+		})
+	}
+}
+
+func TestDefinitionWithIdentification(t *testing.T) {
+	tests := []struct {
+		name    string
+		file    string
+		content string
+	}{
+		{
+			name:    "TypeScript definition with identification",
+			file:    "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Go definition with identification",
+			file:    "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/src/app.go/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Python definition with identification",
+			file:    "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+		},
+		{
+			name:    "CSharp definition with identification",
+			file:    "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/App.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/App.cs/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork processes items.\n// [🛠️src/App.cs#Functions§DoWork](semiorepo://definition/src/App.cs/FUNCTIONS/DO-WORK)\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+		},
+		{
+			name:    "Rust definition with identification",
+			file:    "src/app.rs",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/FUNCTIONS)\n\n// Function declarations.\n\n// do_work processes items.\n// [🛠️src/app.rs#Functions§do_work](semiorepo://definition/src/app.rs/FUNCTIONS/DO-WORK)\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			oldRoot := rootDir
+			rootDir = tmpDir
+			defer func() { rootDir = oldRoot }()
+			dir := filepath.Dir(filepath.Join(tmpDir, tc.file))
+			os.MkdirAll(dir, 0o755)
+			if err := WriteTextFile(filepath.Join(tmpDir, tc.file), tc.content); err != nil {
+				t.Fatalf("failed to write: %v", err)
+			}
+			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
+			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
+			violations, err := CheckPoliciesWithContext(ctx, nil)
+			if err != nil {
+				t.Fatalf("policy check: %v", err)
+			}
+			for _, v := range violations {
+				if v.Kind == ViolationCodeDefMissingIdentification {
+					t.Fatalf("unexpected definition missing identification violation for %s at line %d", tc.file, v.Line)
+				}
+			}
+		})
+	}
+}
+
+func TestSectionIdentificationAutofix(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	scope := Scope{Kind: ScopeFile, FilePath: testFile}
+	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	sectionIdViolations := []Violation{}
+	for _, v := range violations {
+		if v.Kind == ViolationCodeSectionMissingIdentification {
+			sectionIdViolations = append(sectionIdViolations, v)
+		}
+	}
+	if len(sectionIdViolations) == 0 {
+		t.Fatal("expected section identification violations before autofix")
+	}
+	n, fixErr := applyAutofixes(testFile, sectionIdViolations)
+	if fixErr != nil {
+		t.Fatalf("autofix failed: %v", fixErr)
+	}
+	if n == 0 {
+		t.Fatal("expected at least one autofix applied")
+	}
+	fixedContent, _ := ReadTextFile(absPath)
+	if !strings.Contains(fixedContent, "semiorepo://section/") {
+		t.Fatal("expected section identification URI after autofix")
+	}
+}
+
+func TestDefinitionIdentificationAutofix(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	scope := Scope{Kind: ScopeFile, FilePath: testFile}
+	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	defIdViolations := []Violation{}
+	for _, v := range violations {
+		if v.Kind == ViolationCodeDefMissingIdentification {
+			defIdViolations = append(defIdViolations, v)
+		}
+	}
+	if len(defIdViolations) == 0 {
+		t.Fatal("expected definition identification violations before autofix")
+	}
+	n, fixErr := applyAutofixes(testFile, defIdViolations)
+	if fixErr != nil {
+		t.Fatalf("autofix failed: %v", fixErr)
+	}
+	if n == 0 {
+		t.Fatal("expected at least one autofix applied")
+	}
+	fixedContent, _ := ReadTextFile(absPath)
+	if !strings.Contains(fixedContent, "semiorepo://definition/") {
+		t.Fatal("expected definition identification URI after autofix")
+	}
+}
+
+func TestDefinitionNativeDocstring(t *testing.T) {
+	tests := []struct {
+		name            string
+		file            string
+		content         string
+		expectViolation bool
+	}{
+		{
+			name: "TypeScript // comments should flag violation",
+			file: "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+			expectViolation: true,
+		},
+		{
+			name: "TypeScript JSDoc should NOT flag violation",
+			file: "src/app.ts",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/FUNCTIONS)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n *\n *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/FUNCTIONS/DO-WORK)\n **/\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+			expectViolation: false,
+		},
+		{
+			name: "Go // comments should NOT flag violation (native format)",
+			file: "src/app.go",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/src/app.go/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+			expectViolation: false,
+		},
+		{
+			name: "Python # comments should NOT flag violation (native format)",
+			file: "src/app.py",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+			expectViolation: false,
+		},
+		{
+			name: "CSharp // comments should flag violation (should use ///)",
+			file: "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/App.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](semiorepo://section/src/App.cs/TYPES)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/App.cs#Types§AppState](semiorepo://definition/src/App.cs/TYPES/APP-STATE)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
+			expectViolation: true,
+		},
+		{
+			name: "CSharp /// comments should NOT flag violation",
+			file: "src/App.cs",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/App.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](semiorepo://section/src/App.cs/TYPES)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/App.cs#Types§AppState](semiorepo://definition/src/App.cs/TYPES/APP-STATE)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
+			expectViolation: false,
+		},
+		{
+			name: "Rust // comments should flag violation (should use ///)",
+			file: "src/lib.rs",
+			content: "// #region 🔖Header\n\n// [💻src/lib.rs](semiorepo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](semiorepo://section/src/lib.rs/TYPES)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/lib.rs#Types§AppState](semiorepo://definition/src/lib.rs/TYPES/APP-STATE)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
+			expectViolation: true,
+		},
+		{
+			name: "Rust /// comments should NOT flag violation",
+			file: "src/lib.rs",
+			content: "// #region 🔖Header\n\n// [💻src/lib.rs](semiorepo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](semiorepo://section/src/lib.rs/TYPES)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/lib.rs#Types§AppState](semiorepo://definition/src/lib.rs/TYPES/APP-STATE)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
+			expectViolation: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			tmpDir := t.TempDir()
+			oldRoot := rootDir
+			rootDir = tmpDir
+			defer func() { rootDir = oldRoot }()
+			dir := filepath.Dir(filepath.Join(tmpDir, tt.file))
+			os.MkdirAll(dir, 0o755)
+			absPath := filepath.Join(tmpDir, tt.file)
+			if err := WriteTextFile(absPath, tt.content); err != nil {
+				t.Fatalf("failed to write: %v", err)
+			}
+			scope := Scope{Kind: ScopeFile, FilePath: tt.file}
+			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tt.file})
+			violations, err := CheckPoliciesWithContext(ctx, nil)
+			if err != nil {
+				t.Fatalf("policy check: %v", err)
+			}
+			hasViolation := false
+			for _, v := range violations {
+				if v.Kind == ViolationCodeDefNotNativeDocstring {
+					hasViolation = true
+					break
+				}
+			}
+			if tt.expectViolation && !hasViolation {
+				t.Fatal("expected DefNotNativeDocstring violation but got none")
+			}
+			if !tt.expectViolation && hasViolation {
+				t.Fatal("unexpected DefNotNativeDocstring violation")
+			}
+		})
+	}
+}
+
+func TestDefinitionNativeDocstringAutofix(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	scope := Scope{Kind: ScopeFile, FilePath: testFile}
+	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	var docstringViolations []Violation
+	for _, v := range violations {
+		if v.Kind == ViolationCodeDefNotNativeDocstring {
+			docstringViolations = append(docstringViolations, v)
+		}
+	}
+	if len(docstringViolations) == 0 {
+		t.Fatal("expected DefNotNativeDocstring violation before autofix")
+	}
+	n, fixErr := applyAutofixes(testFile, docstringViolations)
+	if fixErr != nil {
+		t.Fatalf("autofix failed: %v", fixErr)
+	}
+	if n == 0 {
+		t.Fatal("expected at least one autofix applied")
+	}
+	fixedContent, _ := ReadTextFile(absPath)
+	if !strings.Contains(fixedContent, "/**") {
+		t.Fatal("expected JSDoc opening after autofix")
+	}
+	if !strings.Contains(fixedContent, "**/") {
+		t.Fatal("expected JSDoc closing after autofix")
+	}
+	if !strings.Contains(fixedContent, " * Does work.") {
+		t.Fatal("expected summary line in JSDoc after autofix")
+	}
+	if !strings.Contains(fixedContent, " * doWork MUST be idempotent.") {
+		t.Fatal("expected spec line in JSDoc after autofix")
+	}
+	if !strings.Contains(fixedContent, "semiorepo://definition/") {
+		t.Fatal("expected identification in JSDoc after autofix")
+	}
+}
+
+func TestDefinitionJSDocExemptFromCommentBan(t *testing.T) {
+	tmpDir := t.TempDir()
+	oldRoot := rootDir
+	rootDir = tmpDir
+	defer func() { rootDir = oldRoot }()
+	subDir := filepath.Join(tmpDir, "src")
+	os.MkdirAll(subDir, 0o755)
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/FUNCTIONS)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n *\n *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/FUNCTIONS/DO-WORK)\n **/\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	testFile := "src/app.ts"
+	absPath := filepath.Join(tmpDir, testFile)
+	if err := WriteTextFile(absPath, content); err != nil {
+		t.Fatalf("failed to write: %v", err)
+	}
+	scope := Scope{Kind: ScopeFile, FilePath: testFile}
+	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
+	violations, err := CheckPoliciesWithContext(ctx, nil)
+	if err != nil {
+		t.Fatalf("policy check: %v", err)
+	}
+	for _, v := range violations {
+		if v.Kind == ViolationCodeCommentJSDoc {
+			t.Fatalf("definition JSDoc should not be flagged as comment violation at line %d", v.Line)
+		}
+		if v.Kind == ViolationCodeCommentBlock {
+			t.Fatalf("definition JSDoc should not be flagged as block comment violation at line %d", v.Line)
+		}
+	}
+}
+
+func TestSectionHeaderIdAndUri(t *testing.T) {
+	id := SectionHeaderId("src/app.ts", "Functions")
+	if !strings.Contains(id, "src/app.ts#Functions") {
+		t.Fatalf("unexpected section header id: %s", id)
+	}
+	if !strings.HasPrefix(id, emojiText(EmojiSection)) {
+		t.Fatalf("section header id missing emoji: %s", id)
+	}
+	uri := SectionHeaderUri("src/app.ts", "Functions")
+	if !strings.HasPrefix(uri, "semiorepo://section/") {
+		t.Fatalf("unexpected section header uri: %s", uri)
+	}
+	if !strings.Contains(uri, "FUNCTIONS") {
+		t.Fatalf("section uri should contain slugified section name: %s", uri)
+	}
+}
+
+func TestDefinitionHeaderIdAndUri(t *testing.T) {
+	id := DefinitionHeaderId("src/app.ts", "Functions", "doWork", "implementation")
+	if !strings.Contains(id, "src/app.ts#Functions§doWork") {
+		t.Fatalf("unexpected definition header id: %s", id)
+	}
+	uri := DefinitionHeaderUri("src/app.ts", "Functions", "doWork")
+	if !strings.HasPrefix(uri, "semiorepo://definition/") {
+		t.Fatalf("unexpected definition header uri: %s", uri)
+	}
+	if !strings.Contains(uri, "DO-WORK") {
+		t.Fatalf("definition uri should contain slugified def name: %s", uri)
+	}
+}
+
 func TestSpecsViolation(t *testing.T) {
 	t.Run("isSpecText detects RFC 2119 keywords", func(t *testing.T) {
 		cases := []struct {
@@ -6502,8 +7030,8 @@ func TestSectionCommands(t *testing.T) {
 	}{
 		{"TypeScript", ".ts", "const x = 1;\n// #region 🔖%s\nconst y = 2;\n// #endregion 🔖%s\n", "Renamed"},
 		{"Go", ".go", "package main\n// #region 🔖%s\nvar y = 2\n// #endregion 🔖%s\n", "Renamed"},
-		{"Python", ".py", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
-		{"CSharp", ".cs", "#region 🔖%s\nvar y = 2;\n#endregion 🔖%s\n", "Renamed"},
+		{"Python", ".py", "# #region 🔖%s\ny = 2\n# #endregion 🔖%s\n", "Renamed"},
+		{"CSharp", ".cs", "// #region 🔖%s\nvar y = 2;\n// #endregion 🔖%s\n", "Renamed"},
 		{"Rust", ".rs", "// #region 🔖%s\nlet y = 2;\n// #endregion 🔖%s\n", "Renamed"},
 		{"Ruby", ".rb", "# region %s\ny = 2\n# endregion %s\n", "Renamed"},
 		{"Shell", ".sh", "# region %s\ny=2\n# endregion %s\n", "Renamed"},
@@ -7208,8 +7736,8 @@ func TestDefinitionIdValueToUriPath(t *testing.T) {
 		want  string
 	}{
 		{"no hash", "semio/js/src/file.ts", "semio/js/src/file.ts"},
-		{"with section and def", "semio/js/src/file.ts#Section§myFunc", "semio/js/src/file.ts/SECTION/MYFUNC"},
-		{"def only", "semio/js/src/file.ts§myFunc", "semio/js/src/file.ts/MYFUNC"},
+		{"with section and def", "semio/js/src/file.ts#Section§myFunc", "semio/js/src/file.ts/SECTION/MY-FUNC"},
+		{"def only", "semio/js/src/file.ts§myFunc", "semio/js/src/file.ts/MY-FUNC"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

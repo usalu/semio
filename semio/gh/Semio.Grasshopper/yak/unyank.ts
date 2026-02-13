@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Unyank
+
+// [🔖semio/gh/Semio.Grasshopper/yak/unyank.ts#Unyank](semiorepo://section/semio/gh/Semio.Grasshopper/yak/unyank.ts/UNYANK)
 // Yak unyank script. MUST restore a previously yanked package version.
 
 import { execSync } from "child_process";

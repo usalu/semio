@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio/desktop/postcss.config.ts#Configuration](semiorepo://section/semio/desktop/postcss.config.ts/CONFIGURATION)
 // PostCSS plugin configuration for the desktop application.
 // Configuration MUST use postcss-import and postcss-nesting plugins.
 

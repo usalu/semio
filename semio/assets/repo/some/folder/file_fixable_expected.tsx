@@ -12,18 +12,21 @@
 // #endregion 🔖Header
 
 // #region 🔖SectionOne
+// [🔖semio/assets/repo/some/folder/file_fixable.tsx#SectionOne](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/SECTION-ONE)
 
 const sectionOne = 1;
 
 // #endregion 🔖SectionOne
 
 // #region 🔖SectionTwo
+// [🔖semio/assets/repo/some/folder/file_fixable.tsx#SectionTwo](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/SECTION-TWO)
 
 const sectionTwo = 2;
 
 // #endregion 🔖SectionTwo
 
 // #region 🔖SectionThree
+// [🔖semio/assets/repo/some/folder/file_fixable.tsx#SectionThree](semiorepo://section/semio/assets/repo/some/folder/file_fixable.tsx/SECTION-THREE)
 
 const sectionThree = 3;
 

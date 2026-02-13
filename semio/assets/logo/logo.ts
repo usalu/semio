@@ -22,6 +22,8 @@
 // #endregion 🔖Header
 
 //#region 🔖Imports
+
+// [🔖semio/assets/logo/logo.ts#Imports](semiorepo://section/semio/assets/logo/logo.ts/IMPORTS)
 // MUST import Node.js file system, DOM parsing, and path resolution modules.
 import * as fs from "fs";
 import { JSDOM } from "jsdom";
@@ -29,6 +31,8 @@ import * as path from "path";
 //#endregion 🔖Imports
 
 //#region 🔖Types
+
+// [🔖semio/assets/logo/logo.ts#Types](semiorepo://section/semio/assets/logo/logo.ts/TYPES)
 // Type definitions for SVG transform, group, and keyframe data structures.
 interface TransformData {
   translate: { x: number; y: number };
@@ -53,6 +57,8 @@ interface KeyframeData {
 //#endregion 🔖Types
 
 //#region 🔖Logo Generation
+
+// [🔖semio/assets/logo/logo.ts#Logo Generation](semiorepo://section/semio/assets/logo/logo.ts/LOGO-GENERATION)
 // Functions for parsing SVG files and generating animated SVG logos.
 function transformToMatrix(translate: { x: number; y: number }, rotate: { angle: number; cx: number; cy: number }, scale: { x: number; y: number }): string {
   const tx = translate.x;
@@ -203,6 +209,8 @@ function parseTransform(transformStr: string): TransformData {
   }
 
   //#region 🔖Parse SVG
+
+// [🔖semio/assets/logo/logo.ts#Parse SVG](semiorepo://section/semio/assets/logo/logo.ts/PARSE-SVG)
   // MUST read SVG content and extract all group transforms and path attributes.
   // Parses an SVG file and returns keyframe data with group transforms and paths.
   function parseSVGFile(filePath: string): KeyframeData {
@@ -240,6 +248,8 @@ function parseTransform(transformStr: string): TransformData {
   //#endregion 🔖Parse SVG
 
   //#region 🔖Generate Keyframe Sequence
+
+// [🔖semio/assets/logo/logo.ts#Generate Keyframe Sequence](semiorepo://section/semio/assets/logo/logo.ts/GENERATE-KEYFRAME-SEQUENCE)
   // MUST produce forward and reverse sequence for smooth animation looping.
   // Generates a palindromic keyframe sequence with triple repetition per frame.
   function generateKeyframeSequence(keyframes: KeyframeData[]): KeyframeData[] {
@@ -264,6 +274,8 @@ function parseTransform(transformStr: string): TransformData {
   //#endregion 🔖Generate Keyframe Sequence
 
   //#region 🔖Create Animated SVG
+
+// [🔖semio/assets/logo/logo.ts#Create Animated SVG](semiorepo://section/semio/assets/logo/logo.ts/CREATE-ANIMATED-SVG)
   // MUST generate translate, rotate, scale, fill, stroke, and stroke-width animations.
   // Creates an animated SVG file with SMIL animations from keyframe data.
   function createAnimatedSVG(keyframes: KeyframeData[], outputPath: string): void {

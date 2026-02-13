@@ -20,18 +20,30 @@
 // #endregion 🔖Header
 
 // #region 🔖Port Color
+
+// [🔖semio/js/sketchpad/portColor.ts#Port Color](semiorepo://section/semio/js/sketchpad/portColor.ts/PORT-COLOR)
 // Assigns deterministic HSL color tones to ports based on compatibility groups.
 // MUST use a union-find structure to group compatible ports under a single color.
 
 import type { Connector, Port } from "../semio";
 import { arePortsCompatible } from "../semio";
 
-// Compatibility state of a port relative to the selected port.
-// MUST be one of none, selected, compatible, or incompatible.
+/**
+ * Compatibility state of a port relative to the selected port.
+ *
+ * MUST be one of none, selected, compatible, or incompatible.
+ *
+ *  * [🛠️semio/js/sketchpad/portColor.ts#Port Color§PortCompatibilityState](semiorepo://definition/semio/js/sketchpad/portColor.ts/PORT-COLOR/PORTCOMPATIBILITYSTATE)
+ **/
 export type PortCompatibilityState = "none" | "selected" | "compatible" | "incompatible";
 
-// HSL color tones for rendering a port in the UI.
-// MUST contain base, surface, surfaceStrong, border and text values.
+/**
+ * HSL color tones for rendering a port in the UI.
+ *
+ * MUST contain base, surface, surfaceStrong, border and text values.
+ *
+ *  * [🛠️semio/js/sketchpad/portColor.ts#Port Color§PortTone](semiorepo://definition/semio/js/sketchpad/portColor.ts/PORT-COLOR/PORTTONE)
+ **/
 export type PortTone = {
   base: string;
   surface: string;
@@ -148,16 +160,31 @@ const createPortGroupMap = (ports: Port[]): Map<string, string> => {
   return groups;
 };
 
-// Extracts a normalized port GUID from a string or port reference object.
-// MUST delegate to normalizePortRef for consistent handling.
+/**
+ * Extracts a normalized port GUID from a string or port reference object.
+ *
+ * MUST delegate to normalizePortRef for consistent handling.
+ *
+ *  * [🪨semio/js/sketchpad/portColor.ts#Port Color§getPortGuid](semiorepo://definition/semio/js/sketchpad/portColor.ts/PORT-COLOR/GETPORTGUID)
+ **/
 export const getPortGuid = (value: unknown): string | undefined => normalizePortRef(value);
 
-// Extracts the port GUID from a connector's port reference.
-// MUST return undefined when the connector or its port is missing.
+/**
+ * Extracts the port GUID from a connector's port reference.
+ *
+ * MUST return undefined when the connector or its port is missing.
+ *
+ *  * [🪨semio/js/sketchpad/portColor.ts#Port Color§getConnectorPortGuid](semiorepo://definition/semio/js/sketchpad/portColor.ts/PORT-COLOR/GETCONNECTORPORTGUID)
+ **/
 export const getConnectorPortGuid = (connector: Pick<Connector, "port"> | undefined | null): string | undefined => normalizePortRef(connector?.port);
 
-// Resolves the color tone for a port based on its compatibility group.
-// MUST return the default tone when the port GUID is missing.
+/**
+ * Resolves the color tone for a port based on its compatibility group.
+ *
+ * MUST return the default tone when the port GUID is missing.
+ *
+ *  * [🪨semio/js/sketchpad/portColor.ts#Port Color§getPortTone](semiorepo://definition/semio/js/sketchpad/portColor.ts/PORT-COLOR/GETPORTTONE)
+ **/
 export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTone => {
   const normalizedGuid = normalizeGuid(portGuid);
   if (!normalizedGuid) return getToneForKey(DEFAULT_PORT_GUID);
@@ -166,8 +193,13 @@ export const getPortTone = (portGuid: string | undefined, ports: Port[]): PortTo
   return getToneForKey(groupKey);
 };
 
-// Determines the compatibility state of a candidate port relative to a selected port.
-// MUST return none when no port is selected.
+/**
+ * Determines the compatibility state of a candidate port relative to a selected port.
+ *
+ * MUST return none when no port is selected.
+ *
+ *  * [🪨semio/js/sketchpad/portColor.ts#Port Color§getPortCompatibilityState](semiorepo://definition/semio/js/sketchpad/portColor.ts/PORT-COLOR/GETPORTCOMPATIBILITYSTATE)
+ **/
 export const getPortCompatibilityState = (candidatePortGuid: string | undefined, selectedPortGuid: string | undefined, ports: Port[]): PortCompatibilityState => {
   const normalizedCandidate = normalizeGuid(candidatePortGuid);
   const normalizedSelected = normalizeGuid(selectedPortGuid);

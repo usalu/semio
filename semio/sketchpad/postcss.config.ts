@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio/sketchpad/postcss.config.ts#Configuration](semiorepo://section/semio/sketchpad/postcss.config.ts/CONFIGURATION)
 // PostCSS plugin configuration for the sketchpad application.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 

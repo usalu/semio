@@ -22,11 +22,13 @@
 # endregion Header
 
 # region Functions
+# [🔖semio/assets/repo/some/folder/file_fixed.py#Functions](semiorepo://section/semio/assets/repo/some/folder/file_fixed.py/FUNCTIONS)
 # Utility functions for fixed values.
 # Functions MUST accept typed parameters.
 
 # Increments a value by one.
 # fixed_function MUST return value plus one.
+# [🛠️semio/assets/repo/some/folder/file_fixed.py#Functions§fixed_function](semiorepo://definition/semio/assets/repo/some/folder/file_fixed.py/FUNCTIONS/FIXED-FUNCTION)
 def fixed_function(value: int) -> int:
     return value + 1
 

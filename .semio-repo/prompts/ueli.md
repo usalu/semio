@@ -182,6 +182,92 @@ e.g. I get:
 
 Create a `generate docs` command that generates 
 
+You didnt get the format right. Extend policies to enforce the following:
+Only definitions have docstrings. Section have regular comments.
+The comments and docstrings MUST start immediately after the start marker. No blank lines between.
+Every definition or section must have exactly one blank line between.
+The first comment line of a section is the identification `[<SECTIONID>](<SECTIONURI>)`.
+The second comment line is the summary. It must not contain new lines.
+The next lines until `TODO:` are the specs.
+Every TODO has exactly two lines with `TODO: <TODONAME>`. The next line is the description.
+The remaining lines are the docs.
+e.g. in typescript:
+```
+// #region 🔖Constants
+
+/**
+ * [🔖semio/js/semio.ts#Constants](semiorepo://section/semio/js/semio.ts/CONSTANTS)
+ * Standard icon width in pixels.
+ *
+ * Global constants MUST define shared numeric parameters.
+ *
+ *  * [🪨semio/js/semio.ts#Constants§ICON_WIDTH](semiorepo://definition/semio/js/semio.ts/CONSTANTS/ICON-WIDTH)
+ **/
+export const ICON_WIDTH = CONSTANTS.icon.width;
+```
+should be:
+```
+// #region 🔖Constants
+// [🔖semio/js/semio.ts#Constants](semiorepo://section/semio/js/semio.ts/CONSTANTS)
+// Global constants of semio.
+// Constants MUST be shared and be synchronized between the different users that work on the same kit.
+// TODO: Add Quotas for all list entities.
+// All lists MUST have a quota for the maximum number of entities.
+// 
+ 
+/** Standard icon width (e.g. piece nodes diameter) in pixels as a base unit for drawings.
+ * Diagrams MUST use the icon width as the base unit for diagram coordinates.
+ * Avatars MUST use the icon width as the base unit for avatar dimensions.
+ * TODO: Generalize Icon Width to be not be pixel hardcoded
+ * Make it a global constant that can be used for all diagrams.
+ * TODO: Implement IconWidth
+ * [🪨semio/js/semio.ts#Constants§ICON_WIDTH](semiorepo://definition/semio/js/semio.ts/CONSTANTS/ICON-WIDTH)
+**/
+export const ICON_WIDTH = CONSTANTS.icon.width;
+```
+
+You MUST implement and you MUST test everything for every language. Once you are done setting up the mechanism, you MUST autofix with `./semio-repo/cli/cli fix` then check the violation report with `./semio-repo/cli/cli analyze` and solve every single violation until 0 remain.
+
+
+You didnt get the format right. Make sure to match the template exactly including every detail (line break, spacing, docstring format such as jsodoc, etc.)
+e.g.
+```ts
+// Yjs-backed kit store managing the complete kit data structure with all entities.
+// [🛠️semio/js/sketchpad/Sketchpad.tsx#Store#Kit§KitStore](semiorepo://definition/semio/js/sketchpad/Sketchpad.tsx/STORE/KIT/KITSTORE)
+export class KitStore {
+  …
+}
+```
+should be this:
+```ts
+/** 
+ * The kit store is used for CRUD operations on kits. It uses Y.js as backbone.
+ * 
+ * Kits MUST be shared and be synchronized between the different users that work on the same kit.
+ * A kit MUST be editable offline and synchronize with the server when online.
+ * 
+ * The KitStore is initialized with a Y.Doc that must be initialized and configured by the caller (different yjs hosts have different provider factories).
+ * For every compositional entity that is part of a kit there must be a corresponding substore that manages a Y.Map for the entity state and repexposes CRUD operations as methods for the entity.
+ * 
+ * TODO: Implement QualityStore
+ * The QualityStore should contain the quality data and maintain links to the types and designs. Links are not managed within yjs hence a manual garbage collection is needed to remove links to deleted entities.
+ * 
+ * TODO: Implement FileStore
+ * The FileStore works outside of yjs and uses e.g. S3 storage for file access. It needs a different provider factory and integration and only the metadata layer is managed within yjs.
+ * 
+ *  * [🛠️semio/js/sketchpad/Design.tsx#State Managment#Store§KitStore](semiorepo://definition/SEMIO/JS/SKETCHPAD/DESIGN.TSX#STATE-MANAGMENT#STORE#KIT-STORE)
+**/
+export class KitStore {
+  …
+}
+```
+
+Make sure that every single definition is using native docstring format. Add a new policy/violation kind group/violation kind to enforce this.
+
+Once the violations show up, you MUST fix all the files to match the new format.
+
+template:
+
 You MUST make sure that project, bundle, folder, file, section and definition have the right mechanism to have a summary, specs, todos and docs. Files additionally have id, contributors, license.
 
 Every file should look like this:
@@ -192,39 +278,40 @@ The information about a file in the header section.
 The information about a section is under the section start.
 The information about a definition is in the definition docstring. You MUST NOT use regular comments but you MUST use all language native docstring mechanism.
 
-You MUST implement and you MUST test everything for every language. Once you are done setting up the mechanism, check the violation report until all projects, bundles, folders, files, sections and definitions have the correct information.
+You MUST implement and you MUST test everything for every language. Once you are done setting up the mechanism, you MUST autofix with `./semio-repo/cli/cli fix` then check the violation report with `./semio-repo/cli/cli analyze` and solve every single violation until 0 remain.
 
 You MUST extended/implemented/refactored/changed the following policy/violation kind group/violation tree.
 You MAY leave existing policies, violation kind groups and violation kinds if they are not affected by the changes.
 - Code
   - File
     - Missing Header Region # Autofixable
-    - Wrong Header Region Format
-    - Missing Identification # Autofixable
     - Wrong Identification # Autofixable
+      - Format
+        - Header Region
       - Id # Autofixable
       - Uri # Autofixable
-    - Missing Contributors
-    - Missing Summary
-    - Missing License # Autofixable from the bundle license file
-    - Wrong License # Autofixable from the bundle license file
-    - Missing Specs
-    - Missing Docs
-  - Section
-    - Wrong Format
+      - License # Autofixable from the bundle license file
+    - Missing
+      - Identification # Autofixable
+      - Contributors
+      - License # Autofixable from the bundle license file
       - Summary
-        - Too Long Summary
       - Specs
-        - Split Block # Autofixable by removing the line breaks between the blocks
       - Docs
-    - Missing Summary
-    - Missing Specs
-    - Missing Docs
+  - Section
+    - Wrong
+      - Format
+        - Summary
+          - Too Long Summary # Autofixable by removing the line breaks between the blocks
+        - Specs
+          - Split Block # Autofixable by removing the line breaks between the blocks
+        - Docs
   - Definition
     - Wrong Format
-    - Missing Summary
-    - Missing Specs
-    - Missing Docs
+    - Missing
+      - Summary
+      - Specs
+      - Docs
 
 
 e.g. in README.md for bundles and folders:

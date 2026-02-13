@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Build
+
+// [🔖semio/net/Semio/build.ts#Build](semiorepo://section/semio/net/Semio/build.ts/BUILD)
 // .NET build script. MUST compile the Semio C# project via MSBuild.
 
 import { execSync } from "child_process";

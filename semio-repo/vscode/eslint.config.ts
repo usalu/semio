@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio-repo/vscode/eslint.config.ts#Configuration](semiorepo://section/semio-repo/vscode/eslint.config.ts/CONFIGURATION)
 // ESLint flat configuration for the VS Code extension package.
 // Configuration MUST export a valid ESLint flat config array.
 

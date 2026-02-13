@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Schema Export
+
+// [🔖semio/jsonschema/build.ts#Schema Export](semiorepo://section/semio/jsonschema/build.ts/SCHEMA-EXPORT)
 // JSON Schema export script. MUST unescape and write the kit schema file.
 
 import { readFileSync, writeFileSync } from "fs";

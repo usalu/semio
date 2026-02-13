@@ -20,6 +20,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Configuration
+
+// [🔖semio/sketchpad/vite.config.ts#Configuration](semiorepo://section/semio/sketchpad/vite.config.ts/CONFIGURATION)
 // Vite build configuration for the sketchpad application.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 

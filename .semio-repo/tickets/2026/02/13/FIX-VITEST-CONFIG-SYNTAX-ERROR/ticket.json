@@ -1,0 +1,74 @@
+{
+  "title": "Fix Vitest Config Syntax Error",
+  "status": "closed",
+  "prompt": "Fix syntax errors in root vitest.config.ts that prevent Vitest from starting: missing braces in import, typo in export, broken object literal syntax.",
+  "summary": "Fixed 3 syntax errors in root vitest.config.ts: missing curly braces in named import, typo eport→export, broken object literal syntax. Vitest extension can now load the config.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/550"
+  },
+  "goal": "AI-OPTIMIZED-REPO",
+  "started": "2026-02-13T08:30:52.403351985Z",
+  "finished": "2026-02-13T08:31:21.536630595Z",
+  "interactions": [
+    {
+      "dates": {
+        "started": "2026-02-13 08:30:52",
+        "finished": "2026-02-13 08:31:21"
+      },
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "b79240dad10e36cf21c8176694dec40e310d622a",
+      "prompt": "Fix syntax errors in root vitest.config.ts that prevent Vitest from starting: missing braces in import, typo in export, broken object literal syntax.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "⚙️vitest.config.ts",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "⚙️vitest.config.ts#Configuration",
+              "lines": {
+                "added": 11,
+                "removed": 11
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      }
+    }
+  ]
+}

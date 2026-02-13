@@ -21,6 +21,8 @@
 // #endregion 🔖Header
 
 // #region 🔖Yank
+
+// [🔖semio/gh/Semio.Grasshopper/yak/yank.ts#Yank](semiorepo://section/semio/gh/Semio.Grasshopper/yak/yank.ts/YANK)
 // Yak yank script. MUST remove a package version from the Yak server.
 
 import { execSync } from "child_process";
