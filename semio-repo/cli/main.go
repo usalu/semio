@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 💻semio-repo/cli/main.go
+// [💻semio-repo/cli/main.go](semiorepo://file/semio-repo/cli/main.go)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,22 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-
-// File headers MUST contain nested License and Specs subregions.
-// File header generation MUST programmatically build headers from file path, summary, contributors, license, and specs arguments.
-// Languages that support headers MUST declare support and inherit the header formatting behavior.
-// The header policy MUST validate that License and Specs subregions exist inside the Header region.
-// The section policy MUST exempt License and Specs children of the Header region from empty-section violations.
-// Autofixable violation kinds: file header artifact ID, empty section, missing end name, name mismatch, inline comment, block comment, JSDoc comment.
-// Spec comments after section starts that contain RFC 2119 keywords MUST be exempt from inline comment violations.
-// JSDoc and block comments containing RFC 2119 keywords MUST be exempt from comment violations.
-// Specs MUST be implementation-agnostic and MUST NOT contain backtick-wrapped code or function call syntax.
-// The specs policy MUST detect implementation-specific syntax in spec text within header Specs regions and section-start spec comments.
-
-// #endregion 🔖Specs
+// Monorepo CLI tool for repository management, analysis and code generation.
 
 // #endregion 🔖Header
 
@@ -13532,10 +13515,14 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 		}
 		commentPrefix := language.CommentPrefix()
 		hasSummary := false
+		seenLicense := false
 		licenseEnd := false
 		for _, line := range headerLines {
 			trimmed := strings.TrimSpace(line)
 			if trimmed == "" {
+				if seenLicense && !licenseEnd {
+					licenseEnd = true
+				}
 				continue
 			}
 			if strings.HasPrefix(trimmed, commentPrefix+" #region") || strings.HasPrefix(trimmed, commentPrefix+" #endregion") {
@@ -13546,6 +13533,9 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 			commentText := strings.TrimSpace(strings.TrimPrefix(trimmed, commentPrefix))
 			if commentText == "" {
+				if seenLicense && !licenseEnd {
+					licenseEnd = true
+				}
 				continue
 			}
 			if identificationRegex.MatchString(line) {
@@ -13554,13 +13544,18 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			if contributorPattern.MatchString(line) {
 				continue
 			}
+			isLicenseLine := false
 			for _, marker := range agplMarkers {
 				if strings.Contains(line, marker) {
-					licenseEnd = false
-					goto nextLine
+					seenLicense = true
+					isLicenseLine = true
+					break
 				}
 			}
-			if !licenseEnd && (strings.Contains(commentText, "without") || strings.Contains(commentText, "program") || strings.Contains(commentText, "License") || strings.Contains(commentText, "http") || strings.Contains(commentText, "version") || strings.Contains(commentText, "terms") || strings.Contains(commentText, "WARRANTY") || strings.Contains(commentText, "PURPOSE") || strings.Contains(commentText, "General Public") || strings.Contains(commentText, "redistribute") || strings.Contains(commentText, "published") || strings.Contains(commentText, "Foundation") || strings.Contains(commentText, "received")) {
+			if isLicenseLine {
+				continue
+			}
+			if !licenseEnd && seenLicense && (strings.Contains(commentText, "without") || strings.Contains(commentText, "program") || strings.Contains(commentText, "License") || strings.Contains(commentText, "http") || strings.Contains(commentText, "version") || strings.Contains(commentText, "terms") || strings.Contains(commentText, "WARRANTY") || strings.Contains(commentText, "PURPOSE") || strings.Contains(commentText, "General Public") || strings.Contains(commentText, "redistribute") || strings.Contains(commentText, "published") || strings.Contains(commentText, "Foundation") || strings.Contains(commentText, "received")) {
 				continue
 			}
 			if isSpecText(commentText) {
@@ -13571,7 +13566,6 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 			hasSummary = true
 			break
-		nextLine:
 		}
 		if !hasSummary && !isTestOrBenchmarkFile(file) {
 			violations = append(violations, ctx.CreateViolation(
@@ -18817,7 +18811,6 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.`
 }
-
 
 // FileHeaderUri MUST return the semiorepo URI for a file path.
 // FileHeaderUri returns the artifact URI for the given file path.

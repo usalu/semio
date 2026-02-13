@@ -1,28 +1,23 @@
 // #region 🔖Header
 
-// 💻semio/js/sketchpad/Kit.tsx
-
-// SPDX-License-Identifier: LGPL-3.0-or-later
+// [💻semio/js/sketchpad/Kit.tsx](semiorepo://file/semio/js/sketchpad/Kit.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
-// #region 🔖License
-
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖License
+// SPDX-License-Identifier: LGPL-3.0-or-later
 
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Kit editor app for managing types, designs and qualities.
 
 // #endregion 🔖Header
 

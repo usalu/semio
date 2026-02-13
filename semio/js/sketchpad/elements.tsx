@@ -1,27 +1,21 @@
 // #region 🔖Header
 
-// 💻semio/js/sketchpad/elements.tsx
+// [💻semio/js/sketchpad/elements.tsx](semiorepo://file/semio/js/sketchpad/elements.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
-// #region 🔖License
-
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Shared UI elements and primitive components for sketchpad apps.
 
 // #endregion 🔖Header
 
@@ -407,7 +401,6 @@ function CommandItem({ className, ...props }: React.ComponentProps<typeof Comman
 function CommandShortcut({ className, ...props }: React.ComponentProps<"span">) {
   return <span data-slot="command-shortcut" className={cn("text-muted-foreground ml-auto text-xs tracking-widest", className)} {...props} />;
 }
-
 
 export { Command, CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList, CommandShortcut };
 // #endregion 🔖Command
@@ -5356,12 +5349,10 @@ const DiagramInner: React.FC<DiagramProps> = ({
       .force("y", forceY(0).strength(forceConfig.centerStrength ?? 0.1))
       .stop();
 
-
     const numTicks = Math.ceil(Math.log(simulation.alphaMin()) / Math.log(1 - simulation.alphaDecay()));
     for (let i = 0; i < numTicks; i++) {
       simulation.tick();
     }
-
 
     const positionedNodes = finalNodes.map((node) => {
       const simNode = simulation.nodes().find((n) => n.id === node.id);

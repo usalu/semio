@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 💻semio/assets/index.ts
+// [💻semio/assets/index.ts](semiorepo://file/semio/assets/index.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,11 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Barrel export for all asset modules including icons, fonts, models and images.
 
 // #endregion 🔖Header
 

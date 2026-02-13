@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 💻semio-repo/vscode/codegen.ts
+// [💻semio-repo/vscode/codegen.ts](semiorepo://file/semio-repo/vscode/codegen.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,11 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Code generation script for VS Code extension GraphQL types.
 
 // #endregion 🔖Header
 

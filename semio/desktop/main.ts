@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 💻semio/desktop/main.ts
+// [💻semio/desktop/main.ts](semiorepo://file/semio/desktop/main.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,11 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Entry point for the Electron main process managing windows and lifecycle.
 
 // #endregion 🔖Header
 
@@ -60,7 +54,6 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
-
 
 };
 

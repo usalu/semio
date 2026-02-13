@@ -1,11 +1,8 @@
 // #region 🔖Header
-#!/usr/bin/env node
 
-// 💻semio/assets/logo/logo.ts
+// [💻semio/assets/logo/logo.ts](semiorepo://file/semio/assets/logo/logo.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -18,11 +15,9 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+#!/usr/bin/env node
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Generates animated SVG logo from static SVG input with keyframe sequences.
 
 // #endregion 🔖Header
 

@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 💻semio/desktop/renderer.tsx
+// [💻semio/desktop/renderer.tsx](semiorepo://file/semio/desktop/renderer.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,11 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Entry point for the Electron renderer process mounting the React app.
 
 // #endregion 🔖Header
 

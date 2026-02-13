@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 💻semio/sketchpad/index.tsx
+// [💻semio/sketchpad/index.tsx](semiorepo://file/semio/sketchpad/index.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,11 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// Entry point for the standalone sketchpad web application.
 
 // #endregion 🔖Header
 

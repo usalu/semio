@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 🧪semio-repo/vscode/extension.test.ts
+// [🧪semio-repo/vscode/extension.test.ts](semiorepo://file/semio-repo/vscode/extension.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -16,12 +14,6 @@
 // GNU Affero General Public License for more details.
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -931,17 +923,14 @@ suite("Violation Kind Hierarchy Test Suite", () => {
       Children: [categoryNode]
     };
 
-
     const policyItem = treeNodeToItem(policyNode);
     assert.strictEqual(policyItem.label, "🛡️/code");
     assert.strictEqual(policyItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
-
 
     const categoryItem = treeNodeToItem(categoryNode);
     assert.strictEqual(categoryItem.label, "header");
     assert.strictEqual(categoryItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
     assert.strictEqual(categoryItem.contextValue, "category");
-
 
     const violationItem = treeNodeToItem(violationNode);
     assert.strictEqual(violationItem.label, "🚫Code#Header#Missing Region");

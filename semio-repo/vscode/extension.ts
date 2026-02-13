@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 💻semio-repo/vscode/extension.ts
+// [💻semio-repo/vscode/extension.ts](semiorepo://file/semio-repo/vscode/extension.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -17,10 +15,7 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
+// VS Code extension providing monorepo navigation, analysis and commands.
 
 // #endregion 🔖Header
 
@@ -847,7 +842,6 @@ async function navigateToUri(uri: string): Promise<void> {
     }
   }
 }
-
 
 function findSectionByPath(section: any, sectionPath: string): any | null {
   const parts = sectionPath.split("/");

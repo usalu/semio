@@ -1,27 +1,19 @@
 // #region 🔖Header
 
-// 🧪semio/js/sketchpad.test.ts
+// [🧪semio/js/sketchpad.test.ts](semiorepo://file/semio/js/sketchpad.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
-// #region 🔖License
-
 // This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU Lesser General Public License as
+// it under the terms of the GNU Affero General Public License as
 // published by the Free Software Foundation, either version 3 of the
 // License, or (at your option) any later version.
 // This program is distributed in the hope that it will be useful,
 // but WITHOUT ANY WARRANTY; without even the implied warranty of
 // MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU Lesser General Public License for more details.
-// You should have received a copy of the GNU Lesser General Public License
+// GNU Affero General Public License for more details.
+// You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-// #endregion 🔖Specs
 
 // #endregion 🔖Header
 
@@ -456,9 +448,7 @@ async function initDesign(page: Page) {
 
   console.log(`[initDesign] Current URL: ${page.url()}`);
 
-
   await page.waitForTimeout(2000);
-
 
   const allRowIds = await page.evaluate(() => {
     return Array.from(document.querySelectorAll("[data-row-id]"))
@@ -466,7 +456,6 @@ async function initDesign(page: Page) {
       .slice(0, 20);
   });
   console.log(`[initDesign] Available row IDs: ${JSON.stringify(allRowIds)}`);
-
 
   const designRowIds = allRowIds.filter((id) => id?.startsWith("design-"));
   console.log(`[initDesign] Design row IDs: ${JSON.stringify(designRowIds)}`);
@@ -499,7 +488,6 @@ async function initDesign(page: Page) {
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(5000);
 
-
   const finalUrl = page.url();
   console.log(`[initDesign] Final URL: ${finalUrl}`);
 
@@ -512,7 +500,6 @@ async function initType(page: Page) {
 
   console.log(`[initType] Current URL: ${page.url()}`);
 
-
   const typesToggle = page.locator('button[id="semio.sketchpad.app.kit.kitApp.showTypes"]');
   const hasTypesToggle = await typesToggle.isVisible({ timeout: 5000 }).catch(() => false);
   console.log(`[initType] Types toggle visible: ${hasTypesToggle}`);
@@ -522,9 +509,7 @@ async function initType(page: Page) {
     await page.waitForTimeout(3000);
   }
 
-
   await page.waitForTimeout(2000);
-
 
   const allRowIds = await page.evaluate(() => {
     return Array.from(document.querySelectorAll("[data-row-id]"))
@@ -532,7 +517,6 @@ async function initType(page: Page) {
       .slice(0, 20);
   });
   console.log(`[initType] Available row IDs: ${JSON.stringify(allRowIds)}`);
-
 
   const typeRowIds = allRowIds.filter((id) => id?.startsWith("type-"));
   console.log(`[initType] Type row IDs: ${JSON.stringify(typeRowIds)}`);
@@ -564,7 +548,6 @@ async function initType(page: Page) {
 
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(5000);
-
 
   const finalUrl = page.url();
   console.log(`[initType] Final URL: ${finalUrl}`);
@@ -1109,11 +1092,9 @@ test.describe("sketchpad", () => {
         // #region 🔖Diagram Node Click Selection
         console.log("[Kit] Verifying clicking diagram node updates selection");
 
-
         const diagramContainerForClick = page.locator(".react-flow").first();
         const isDiagramVisibleForClick = await diagramContainerForClick.isVisible().catch(() => false);
         console.log(`[Kit] Diagram container visible for click test: ${isDiagramVisibleForClick}`);
-
 
         if (!isDiagramVisibleForClick) {
           console.log("[Kit] Diagram not visible, checking for golden layout windows...");
@@ -1592,7 +1573,6 @@ test.describe("sketchpad", () => {
         await page.mouse.up();
         const pan2Duration = Date.now() - pan2Start;
         console.log(`[Design Test] Pan 2 took ${pan2Duration}ms`);
-
 
         expect(pan1Duration).toBeLessThan(1500);
         expect(pan2Duration).toBeLessThan(1500);

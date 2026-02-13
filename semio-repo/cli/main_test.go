@@ -1,10 +1,8 @@
 // #region 🔖Header
 
-// 🧪semio-repo/cli/main_test.go
+// [🧪semio-repo/cli/main_test.go](semiorepo://file/semio-repo/cli/main_test.go)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-// #region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -16,17 +14,6 @@
 // GNU Affero General Public License for more details.
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-// #endregion 🔖License
-
-// #region 🔖Specs
-
-// TestFormatHeaderStructure MUST validate all header components (ID, summary, contributors, license, specs).
-// TestFormatHeaderAllLanguages MUST verify FormatHeader for all languages that support headers and reject those that don't.
-// TestHeaderPolicyMissingSubregions MUST verify wrong-header-format and wrong-license violations.
-// TestFixtureViolationsByLanguage clean files MUST produce zero violations.
-
-// #endregion 🔖Specs
 
 // #endregion 🔖Header
 

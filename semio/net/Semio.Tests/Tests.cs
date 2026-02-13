@@ -1,10 +1,8 @@
 #region 🔖Header
 
-// 💻semio/net/Semio.Tests/Tests.cs
+// [💻semio/net/Semio.Tests/Tests.cs](semiorepo://file/semio/net/Semio.Tests/Tests.cs)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
-
-#region 🔖License
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU Affero General Public License as
@@ -16,12 +14,6 @@
 // GNU Affero General Public License for more details.
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-
-#endregion 🔖License
-
-#region 🔖Specs
-#endregion 🔖Specs
 
 #endregion 🔖Header
 
@@ -77,8 +69,6 @@ public class Tests
         return Math.Abs(c1.U - c2.U) < Tolerance && Math.Abs(c1.V - c2.V) < Tolerance;
     }
 
-
-
     public class Roundtrip
     {
         public class Json
@@ -121,10 +111,6 @@ public class Tests
             }
         }
     }
-
-
-
-
 
     public class Flatten
     {
@@ -201,10 +187,6 @@ public class Tests
         }
     }
 
-
-
-
-
     public class Diff
     {
         [Fact]
@@ -231,10 +213,6 @@ public class Tests
         }
     }
 
-
-
-
-
     public class Validation
     {
         [Fact]
@@ -257,6 +235,5 @@ public class Tests
             Assert.True(ValidationResult.AreEqual(expected, result), $"Expected {expected.Issues.Count} issues, got {result.Issues.Count}. Expected:\n{expected.Serialize()}\nActual:\n{result.Serialize()}");
         }
     }
-
 
 }
