@@ -1,0 +1,325 @@
+{
+  "title": "Fix TypeScript Build Script File Breachs",
+  "status": "closed",
+  "prompt": "Fix code policy breachs in TypeScript build/script files. Add proper section regions to wrap orphan definitions, and summary+spec comments.",
+  "summary": "Added section regions around orphan code and summary+spec comments for definitions in 5 engine TypeScript files: build.ts (Build section, cwd/args defs), generate-schemas.ts (Schema Generation section), test.ts (Test Runner section), sqliteschema.ts (Schema Export section, dbPath/outputPath defs), post-build.ts (Post Build section, 6 path constant defs)",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/515"
+  },
+  "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
+  "interactions": [
+    {
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix code policy breachs in TypeScript build/script files. Add proper section regions to wrap orphan definitions, and summary+spec comments.",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/engine",
+              "lines": {
+                "added": 40,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "💻semio/engine/build.ts",
+              "lines": {
+                "added": 83,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/generate-schemas.ts",
+              "lines": {
+                "added": 41,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts",
+              "lines": {
+                "added": 66,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/sqliteschema.ts",
+              "lines": {
+                "added": 49,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/engine/test.ts",
+              "lines": {
+                "added": 41,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/engine/build.ts#Build",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/generate-schemas.ts#Schema Generation",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build",
+              "lines": {
+                "added": 16,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/sqliteschema.ts#Schema Export",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio/engine/test.ts#Test Runner",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "semio/engine/build.ts#Build",
+              "lines": {
+                "added": 54,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/engine/generate-schemas.ts#Schema Generation",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/engine/post-build.ts#Post Build",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/engine/sqliteschema.ts#Schema Export",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio/engine/test.ts#Test Runner",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": [
+            {
+              "path": "💻semio/engine/post-build.ts§cwd",
+              "lines": {
+                "added": 0,
+                "removed": 10
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts§exePath",
+              "lines": {
+                "added": 0,
+                "removed": 9
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts§grasshopperBinPath",
+              "lines": {
+                "added": 0,
+                "removed": 7
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts§grasshopperExePath",
+              "lines": {
+                "added": 0,
+                "removed": 6
+              }
+            },
+            {
+              "path": "💻semio/engine/sqliteschema.ts§dbPath",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            }
+          ],
+          "renamed": [
+            {
+              "from": "💻semio/engine/build.ts§args",
+              "to": "💻semio/engine/build.ts#Build§args",
+              "lines": {
+                "added": 21,
+                "removed": 21
+              }
+            },
+            {
+              "from": "💻semio/engine/build.ts§cwd",
+              "to": "💻semio/engine/build.ts#Build§cwd",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "from": "💻semio/engine/post-build.ts§internalPath",
+              "to": "💻semio/engine/post-build.ts#Post Build§grasshopperExePath",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            },
+            {
+              "from": "💻semio/engine/post-build.ts§grasshopperInternalPath",
+              "to": "💻semio/engine/post-build.ts#Post Build§grasshopperInternalPath",
+              "lines": {
+                "added": 5,
+                "removed": 5
+              }
+            },
+            {
+              "from": "💻semio/engine/sqliteschema.ts§outputPath",
+              "to": "💻semio/engine/sqliteschema.ts#Schema Export§outputPath",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            }
+          ],
+          "modified": [
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§cwd",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§exePath",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§grasshopperBinPath",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§grasshopperExePath",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§internalPath",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/sqliteschema.ts#Schema Export§dbPath",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§cwd",
+              "lines": {
+                "added": 20,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§exePath",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§grasshopperBinPath",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/post-build.ts#Post Build§internalPath",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/engine/sqliteschema.ts#Schema Export§dbPath",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      },
+      "date": "2026-02-11 21:28:06"
+    }
+  ]
+}

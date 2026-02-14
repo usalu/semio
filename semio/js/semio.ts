@@ -23,10 +23,10 @@
 
 // [🔖semio/js/semio.ts#Imports](semiorepo://section/semio/js/semio.ts/IMPORTS)
 // External dependency imports MUST be declared here.
-import { ClassValue, clsx } from "clsx";
-import cytoscape from "cytoscape";
 import { default as adjectives } from "@semio/assets/lists/adjectives.json";
 import { default as animals } from "@semio/assets/lists/animals.json";
+import { ClassValue, clsx } from "clsx";
+import cytoscape from "cytoscape";
 import { twMerge } from "tailwind-merge";
 import * as THREE from "three";
 import { v7 as uuidv7 } from "uuid";
@@ -10851,7 +10851,7 @@ export const buildValidationContext = (kit: Kit): ValidationContext => {
 /**
  * Type alias for Constraint.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🛠️semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/VALIDATION-CONTEXT-ENGINE/CONSTRAINT)
  **/
@@ -10953,7 +10953,7 @@ const updateGuidEverywhere = (kit: Kit, oldGuid: Guid, newGuid: Guid): void => {
 /**
  * Constraint validating GuidUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: GUID uniqueness§semioGuidUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-GUID-UNIQUENESS/SEMIOGUIDUNIQUENESSCONSTRAINT)
  **/
@@ -11005,7 +11005,7 @@ export const semioGuidUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating TypeNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Type name uniqueness§semioTypeNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-TYPE-NAME-UNIQUENESS/SEMIOTYPENAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11058,7 +11058,7 @@ export const semioTypeNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating DesignNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Design name uniqueness§semioDesignNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-DESIGN-NAME-UNIQUENESS/SEMIODESIGNNAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11111,7 +11111,7 @@ export const semioDesignNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating PieceNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Piece name uniqueness§semioPieceNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-PIECE-NAME-UNIQUENESS/SEMIOPIECENAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11162,7 +11162,7 @@ export const semioPieceNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating QualityNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Quality name uniqueness§semioQualityNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-QUALITY-NAME-UNIQUENESS/SEMIOQUALITYNAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11207,7 +11207,7 @@ export const semioQualityNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating PortNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Port name uniqueness§semioPortNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-PORT-NAME-UNIQUENESS/SEMIOPORTNAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11252,7 +11252,7 @@ export const semioPortNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating FileNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: File name uniqueness§semioFileNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-FILE-NAME-UNIQUENESS/SEMIOFILENAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11297,7 +11297,7 @@ export const semioFileNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating FolderNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Folder name uniqueness§semioFolderNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-FOLDER-NAME-UNIQUENESS/SEMIOFOLDERNAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11350,7 +11350,7 @@ export const semioFolderNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating ConnectorNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Connector name uniqueness within type§semioConnectorNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-CONNECTOR-NAME-UNIQUENESS-WITHIN-TYPE/SEMIOCONNECTORNAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11401,7 +11401,7 @@ export const semioConnectorNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating ModelNameUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Model name uniqueness within type§semioModelNameUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-MODEL-NAME-UNIQUENESS-WITHIN-TYPE/SEMIOMODELNAMEUNIQUENESSCONSTRAINT)
  **/
@@ -11452,7 +11452,7 @@ export const semioModelNameUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating LayerPathUniqueness rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Layer path uniqueness within design§semioLayerPathUniquenessConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-LAYER-PATH-UNIQUENESS-WITHIN-DESIGN/SEMIOLAYERPATHUNIQUENESSCONSTRAINT)
  **/
@@ -11502,7 +11502,7 @@ export const semioLayerPathUniquenessConstraint: Constraint = (ctx) => {
 /**
  * Constraint validating DesignPieceSameFamily rules.
  *
- * MUST detect and report constraint violations.
+ * MUST detect and report constraint breachs.
  *
  *  * [🪨semio/js/semio.ts#Kit#Validation#Constraint: Design piece same family constraint§semioDesignPieceSameFamilyConstraint](semiorepo://definition/semio/js/semio.ts/KIT/VALIDATION/CONSTRAINT-DESIGN-PIECE-SAME-FAMILY-CONSTRAINT/SEMIODESIGNPIECESAMEFAMILYCONSTRAINT)
  **/

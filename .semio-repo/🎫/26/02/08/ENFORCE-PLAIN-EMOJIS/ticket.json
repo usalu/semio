@@ -1,0 +1,20 @@
+{
+  "title": "Enforce Plain Emojis",
+  "status": "open",
+  "prompt": "The emoji system is not consistent. Use plain emojis everywhere. Add a statute to code policy and autofix it by replacing the unicode string with actual plain emojis. Strip things like variation selector (e.g. VS15 / text presentation). Fix the codebase.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/444"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
+  "interactions": [
+    {
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
+      "prompt": "The emoji system is not consistent. Use plain emojis everywhere. Add a statute to code policy and autofix it by replacing the unicode string with actual plain emojis. Strip things like variation selector (e.g. VS15 / text presentation). Fix the codebase.",
+      "llm": "gemini-3-pro",
+      "date": "2026-02-08 01:22:07"
+    }
+  ]
+}

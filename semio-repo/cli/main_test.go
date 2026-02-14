@@ -403,23 +403,23 @@ func TestPoliciesNonEmpty(t *testing.T) {
 	}
 }
 
-func TestViolationKindsNonEmpty(t *testing.T) {
+func TestStatutesNonEmpty(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
-	result, err := executor.ExecuteJSON(ctx, "{ violationKinds { id } }", nil)
+	result, err := executor.ExecuteJSON(ctx, "{ statutes { id } }", nil)
 	if err != nil {
 		t.Fatalf("query failed: %v", err)
 	}
 	var resp struct {
-		ViolationKinds []struct {
+		Statutes []struct {
 			ID string `json:"id"`
-		} `json:"violationKinds"`
+		} `json:"statutes"`
 	}
 	if err := json.Unmarshal([]byte(result), &resp); err != nil {
 		t.Fatalf("failed to parse response: %v", err)
 	}
-	if len(resp.ViolationKinds) == 0 {
-		t.Error("violationKinds collection should not be empty")
+	if len(resp.Statutes) == 0 {
+		t.Error("statutes collection should not be empty")
 	}
 }
 
@@ -463,23 +463,23 @@ func TestFilesNonEmpty(t *testing.T) {
 	}
 }
 
-func TestViolationsNonEmpty(t *testing.T) {
+func TestBreachsNonEmpty(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
-	result, err := executor.ExecuteJSON(ctx, "{ violations { id } }", nil)
+	result, err := executor.ExecuteJSON(ctx, "{ breachs { id } }", nil)
 	if err != nil {
 		t.Fatalf("query failed: %v", err)
 	}
 	var resp struct {
-		Violations []struct {
+		Breachs []struct {
 			ID string `json:"id"`
-		} `json:"violations"`
+		} `json:"breachs"`
 	}
 	if err := json.Unmarshal([]byte(result), &resp); err != nil {
 		t.Fatalf("failed to parse response: %v", err)
 	}
-	if resp.Violations == nil {
-		t.Error("violations collection should not be nil")
+	if resp.Breachs == nil {
+		t.Error("breachs collection should not be nil")
 	}
 }
 
@@ -585,9 +585,9 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 		policies {
 			id
 			name
-			violationKinds { id }
+			statutes { id }
 		}
-		violationKinds {
+		statutes {
 			id
 		}
 		folders {
@@ -603,7 +603,7 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 			sections { id name }
 			definitions { id name kind }
 		}
-		violations {
+		breachs {
 			id
 			file { id }
 			folder { id }
@@ -623,13 +623,13 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 		Policies []struct {
 			ID             string `json:"id"`
 			Name           string `json:"name"`
-			ViolationKinds []struct {
+			Statutes []struct {
 				ID string `json:"id"`
-			} `json:"violationKinds"`
+			} `json:"statutes"`
 		} `json:"policies"`
-		ViolationKinds []struct {
+		Statutes []struct {
 			ID string `json:"id"`
-		} `json:"violationKinds"`
+		} `json:"statutes"`
 		Folders []struct {
 			ID     string `json:"id"`
 			Path   string `json:"path"`
@@ -654,7 +654,7 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 				Kind string `json:"kind"`
 			} `json:"definitions"`
 		} `json:"files"`
-		Violations []struct {
+		Breachs []struct {
 			ID   string `json:"id"`
 			File *struct {
 				ID string `json:"id"`
@@ -662,7 +662,7 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 			Folder *struct {
 				ID string `json:"id"`
 			} `json:"folder"`
-		} `json:"violations"`
+		} `json:"breachs"`
 	}
 
 	if err := json.Unmarshal([]byte(result), &resp); err != nil {
@@ -675,8 +675,8 @@ func TestNodesAndEdgesQuick(t *testing.T) {
 	if len(resp.Policies) == 0 {
 		t.Error("policies should not be empty")
 	}
-	if len(resp.ViolationKinds) == 0 {
-		t.Error("violationKinds should not be empty")
+	if len(resp.Statutes) == 0 {
+		t.Error("statutes should not be empty")
 	}
 	if len(resp.Folders) == 0 {
 		t.Error("folders should not be empty")
@@ -703,7 +703,7 @@ func TestNodesAndEdges(t *testing.T) {
 			name
 			folders { id path }
 			files { id path }
-			violations { id }
+			breachs { id }
 		}
 		folders {
 			id
@@ -712,7 +712,7 @@ func TestNodesAndEdges(t *testing.T) {
 			children { id }
 			files { id }
 			bundle { id }
-			violations { id }
+			breachs { id }
 		}
 		files {
 			id
@@ -721,7 +721,7 @@ func TestNodesAndEdges(t *testing.T) {
 			bundle { id }
 			sections { id name }
 			definitions { id name kind }
-			violations { id }
+			breachs { id }
 		}
 		tickets {
 			id
@@ -730,12 +730,12 @@ func TestNodesAndEdges(t *testing.T) {
 		policies {
 			id
 			name
-			violationKinds { id }
+			statutes { id }
 		}
-		violationKinds {
+		statutes {
 			id
 		}
-		violations {
+		breachs {
 			id
 			file { id }
 			folder { id }
@@ -757,9 +757,9 @@ func TestNodesAndEdges(t *testing.T) {
 			Files []struct {
 				ID string `json:"id"`
 			} `json:"files"`
-			Violations []struct {
+			Breachs []struct {
 				ID string `json:"id"`
-			} `json:"violations"`
+			} `json:"breachs"`
 		} `json:"bundles"`
 		Folders []struct {
 			ID     string `json:"id"`
@@ -776,9 +776,9 @@ func TestNodesAndEdges(t *testing.T) {
 			Bundle *struct {
 				ID string `json:"id"`
 			} `json:"bundle"`
-			Violations []struct {
+			Breachs []struct {
 				ID string `json:"id"`
-			} `json:"violations"`
+			} `json:"breachs"`
 		} `json:"folders"`
 		Files []struct {
 			ID     string `json:"id"`
@@ -796,9 +796,9 @@ func TestNodesAndEdges(t *testing.T) {
 				ID   string `json:"id"`
 				Kind string `json:"kind"`
 			} `json:"definitions"`
-			Violations []struct {
+			Breachs []struct {
 				ID string `json:"id"`
-			} `json:"violations"`
+			} `json:"breachs"`
 		} `json:"files"`
 		Tickets []struct {
 			ID   string `json:"id"`
@@ -807,14 +807,14 @@ func TestNodesAndEdges(t *testing.T) {
 		Policies []struct {
 			ID             string `json:"id"`
 			Name           string `json:"name"`
-			ViolationKinds []struct {
+			Statutes []struct {
 				ID string `json:"id"`
-			} `json:"violationKinds"`
+			} `json:"statutes"`
 		} `json:"policies"`
-		ViolationKinds []struct {
+		Statutes []struct {
 			ID string `json:"id"`
-		} `json:"violationKinds"`
-		Violations []struct {
+		} `json:"statutes"`
+		Breachs []struct {
 			ID   string `json:"id"`
 			File *struct {
 				ID string `json:"id"`
@@ -822,7 +822,7 @@ func TestNodesAndEdges(t *testing.T) {
 			Folder *struct {
 				ID string `json:"id"`
 			} `json:"folder"`
-		} `json:"violations"`
+		} `json:"breachs"`
 	}
 
 	if err := json.Unmarshal([]byte(result), &resp); err != nil {
@@ -844,11 +844,11 @@ func TestNodesAndEdges(t *testing.T) {
 	if len(resp.Policies) == 0 {
 		t.Error("policies should not be empty")
 	}
-	if len(resp.ViolationKinds) == 0 {
-		t.Error("violationKinds should not be empty")
+	if len(resp.Statutes) == 0 {
+		t.Error("statutes should not be empty")
 	}
-	if resp.Violations == nil {
-		t.Error("violations should not be nil")
+	if resp.Breachs == nil {
+		t.Error("breachs should not be nil")
 	}
 
 	for _, bundle := range resp.Bundles {
@@ -876,14 +876,14 @@ func TestNodesAndEdges(t *testing.T) {
 			t.Errorf("policy %s has empty id", policy.Name)
 		}
 	}
-	for _, vk := range resp.ViolationKinds {
+	for _, vk := range resp.Statutes {
 		if vk.ID == "" {
-			t.Error("violationKind has empty id")
+			t.Error("statute has empty id")
 		}
 	}
-	for _, v := range resp.Violations {
+	for _, v := range resp.Breachs {
 		if v.ID == "" {
-			t.Errorf("violation has empty id: %+v", v)
+			t.Errorf("breach has empty id: %+v", v)
 		}
 	}
 }
@@ -947,7 +947,7 @@ func TestSectionsEdges(t *testing.T) {
 				parent { id }
 				children { id }
 				definitions { id name }
-				violations { id }
+				breachs { id }
 				range { start end }
 			}
 		}
@@ -979,9 +979,9 @@ func TestSectionsEdges(t *testing.T) {
 					ID   string `json:"id"`
 					Name string `json:"name"`
 				} `json:"definitions"`
-				Violations []struct {
+				Breachs []struct {
 					ID string `json:"id"`
-				} `json:"violations"`
+				} `json:"breachs"`
 				Range struct {
 					Start int `json:"start"`
 					End   int `json:"end"`
@@ -1028,7 +1028,7 @@ func TestDefinitionsEdges(t *testing.T) {
 				kind
 				file { id }
 				section { id name }
-				violations { id }
+				breachs { id }
 				range { start end }
 			}
 		}
@@ -1054,9 +1054,9 @@ func TestDefinitionsEdges(t *testing.T) {
 					ID   string `json:"id"`
 					Name string `json:"name"`
 				} `json:"section"`
-				Violations []struct {
+				Breachs []struct {
 					ID string `json:"id"`
-				} `json:"violations"`
+				} `json:"breachs"`
 				Range struct {
 					Start int `json:"start"`
 					End   int `json:"end"`
@@ -1247,8 +1247,8 @@ func TestFixCommand(t *testing.T) {
 	if res.Remaining < 0 {
 		t.Error("remaining count should not be negative")
 	}
-	if len(res.Violations) != res.Remaining {
-		t.Errorf("violations length %d != remaining %d", len(res.Violations), res.Remaining)
+	if len(res.Breachs) != res.Remaining {
+		t.Errorf("breachs length %d != remaining %d", len(res.Breachs), res.Remaining)
 	}
 }
 
@@ -1438,13 +1438,13 @@ func TestFixHeaderWrongFileId(t *testing.T) {
 
 	expectedId := FileHeaderId(filePath)
 	expectedUri := FileHeaderUri(filePath)
-	violations := []Violation{{
-		Kind:    ViolationCodeFileWrongIdentificationId,
+	breachs := []Breach{{
+		Kind:    BreachCodeFileWrongIdentificationId,
 		Scope:   filePath + "#Header",
 		Line:    3,
 		Excerpt: expectedId,
 	}}
-	fixed, err := applyAutofixes(filePath, violations)
+	fixed, err := applyAutofixes(filePath, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1478,15 +1478,15 @@ func TestFixHeaderWrongFileIdIdempotent(t *testing.T) {
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: filePath}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
-	for _, v := range violations {
-		if v.Kind == ViolationCodeFileWrongIdentificationId {
+	for _, v := range breachs {
+		if v.Kind == BreachCodeFileWrongIdentificationId {
 			t.Errorf("should not detect wrong file ID when correct ID is present, got: %s", v.Summary)
 		}
-		if v.Kind == ViolationCodeFileWrongIdentificationUri {
+		if v.Kind == BreachCodeFileWrongIdentificationUri {
 			t.Errorf("should not detect wrong file URI when correct URI is present, got: %s", v.Summary)
 		}
 	}
@@ -1507,31 +1507,31 @@ func TestFixHeaderWrongFileIdDetection(t *testing.T) {
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: filePath}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
 	foundId := false
 	foundUri := false
-	for _, v := range violations {
-		if v.Kind == ViolationCodeFileWrongIdentificationId {
+	for _, v := range breachs {
+		if v.Kind == BreachCodeFileWrongIdentificationId {
 			foundId = true
 			if !v.Autofixable() {
-				t.Error("ViolationCodeFileWrongIdentificationId should be autofixable")
+				t.Error("BreachCodeFileWrongIdentificationId should be autofixable")
 			}
 			if v.Excerpt != FileHeaderId(filePath) {
 				t.Errorf("excerpt should be expected file ID, got %q", v.Excerpt)
 			}
 		}
-		if v.Kind == ViolationCodeFileWrongIdentificationUri {
+		if v.Kind == BreachCodeFileWrongIdentificationUri {
 			foundUri = true
 		}
 	}
 	if !foundId {
-		t.Error("expected ViolationCodeFileWrongIdentificationId violation")
+		t.Error("expected BreachCodeFileWrongIdentificationId breach")
 	}
 	if !foundUri {
-		t.Error("expected ViolationCodeFileWrongIdentificationUri violation")
+		t.Error("expected BreachCodeFileWrongIdentificationUri breach")
 	}
 }
 
@@ -1550,13 +1550,13 @@ func TestFixHeaderWrongFileIdEndToEnd(t *testing.T) {
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: filePath}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
 
-	var autofixable []Violation
-	for _, v := range violations {
+	var autofixable []Breach
+	for _, v := range breachs {
 		if v.Autofixable() {
 			autofixable = append(autofixable, v)
 		}
@@ -1578,12 +1578,12 @@ func TestFixHeaderWrongFileIdEndToEnd(t *testing.T) {
 	}
 
 	ctx2 := NewPolicyContextWithFiles(scope, bundles, []string{filePath})
-	violations2, _ := CheckPoliciesWithContext(ctx2, nil)
-	for _, v := range violations2 {
-		if v.Kind == ViolationCodeFileWrongIdentificationId {
+	breachs2, _ := CheckPoliciesWithContext(ctx2, nil)
+	for _, v := range breachs2 {
+		if v.Kind == BreachCodeFileWrongIdentificationId {
 			t.Error("after fix, should not detect wrong file ID")
 		}
-		if v.Kind == ViolationCodeFileWrongIdentificationUri {
+		if v.Kind == BreachCodeFileWrongIdentificationUri {
 			t.Error("after fix, should not detect wrong file URI")
 		}
 	}
@@ -1615,23 +1615,23 @@ func TestFixApplyAutofixes(t *testing.T) {
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: fixtureSrc}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{fixtureSrc})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
 
 	autofixableCount := 0
-	for _, v := range violations {
+	for _, v := range breachs {
 		if v.Autofixable() {
 			autofixableCount++
 		}
 	}
 	if autofixableCount == 0 {
-		t.Fatal("expected autofixable violations in fixture")
+		t.Fatal("expected autofixable breachs in fixture")
 	}
 
-	var autofixable []Violation
-	for _, v := range violations {
+	var autofixable []Breach
+	for _, v := range breachs {
 		if v.Autofixable() {
 			autofixable = append(autofixable, v)
 		}
@@ -1670,11 +1670,11 @@ func TestFixSectionMissingEndName(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{
-		{Kind: ViolationCodeSectionMissingEndName, Scope: testFile, Line: 5},
+	breachs := []Breach{
+		{Kind: BreachCodeSectionMissingEndName, Scope: testFile, Line: 5},
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1703,11 +1703,11 @@ func TestFixSectionNameMismatch(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{
-		{Kind: ViolationCodeSectionNameMismatch, Scope: testFile, Line: 5},
+	breachs := []Breach{
+		{Kind: BreachCodeSectionNameMismatch, Scope: testFile, Line: 5},
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1736,11 +1736,11 @@ func TestFixSectionEmpty(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{
-		{Kind: ViolationCodeSectionEmpty, Scope: testFile + "#Empty", Line: 7},
+	breachs := []Breach{
+		{Kind: BreachCodeSectionEmpty, Scope: testFile + "#Empty", Line: 7},
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1769,11 +1769,11 @@ func TestFixInlineComment(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{
-		{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 3},
+	breachs := []Breach{
+		{Kind: BreachCodeCommentInline, Scope: testFile, Line: 3},
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1802,11 +1802,11 @@ func TestFixBlockComment(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{
-		{Kind: ViolationCodeCommentBlock, Scope: testFile, Line: 3},
+	breachs := []Breach{
+		{Kind: BreachCodeCommentBlock, Scope: testFile, Line: 3},
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1835,11 +1835,11 @@ func TestFixJSDocComment(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{
-		{Kind: ViolationCodeCommentJSDoc, Scope: testFile, Line: 3},
+	breachs := []Breach{
+		{Kind: BreachCodeCommentJSDoc, Scope: testFile, Line: 3},
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1853,7 +1853,7 @@ func TestFixJSDocComment(t *testing.T) {
 	}
 }
 
-func TestFixMultipleViolationsSameFile(t *testing.T) {
+func TestFixMultipleBreachsSameFile(t *testing.T) {
 	tmpDir := t.TempDir()
 	oldRoot := rootDir
 	rootDir = tmpDir
@@ -1866,14 +1866,14 @@ func TestFixMultipleViolationsSameFile(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{
-		{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 3},
-		{Kind: ViolationCodeSectionMissingEndName, Scope: testFile, Line: 7},
-		{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 11},
-		{Kind: ViolationCodeSectionNameMismatch, Scope: testFile, Line: 15},
+	breachs := []Breach{
+		{Kind: BreachCodeCommentInline, Scope: testFile, Line: 3},
+		{Kind: BreachCodeSectionMissingEndName, Scope: testFile, Line: 7},
+		{Kind: BreachCodeCommentInline, Scope: testFile, Line: 11},
+		{Kind: BreachCodeSectionNameMismatch, Scope: testFile, Line: 15},
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1921,17 +1921,17 @@ const y = 2; // normal trailing
 
 	ctx := &PolicyContext{}
 	lang := NewTypeScriptLanguage()
-	violations := lang.ScanComments(ctx, testFile, content, strings.Split(content, "\n"))
+	breachs := lang.ScanComments(ctx, testFile, content, strings.Split(content, "\n"))
 
-	expectedViolations := 3
-	if len(violations) != expectedViolations {
-		t.Errorf("expected %d violations, got %d", expectedViolations, len(violations))
-		for i, v := range violations {
-			t.Logf("Violation %d: %s at %d:%d", i, v.Kind, v.Line, v.Column)
+	expectedBreachs := 3
+	if len(breachs) != expectedBreachs {
+		t.Errorf("expected %d breachs, got %d", expectedBreachs, len(breachs))
+		for i, v := range breachs {
+			t.Logf("Breach %d: %s at %d:%d", i, v.Kind, v.Line, v.Column)
 		}
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -1994,10 +1994,10 @@ func TestFixConfigIgnored(t *testing.T) {
 
 	ctx := &PolicyContext{}
 	lang := NewTypeScriptLanguage()
-	violations := lang.ScanComments(ctx, testFile, content, strings.Split(content, "\n"))
+	breachs := lang.ScanComments(ctx, testFile, content, strings.Split(content, "\n"))
 
-	if len(violations) != 0 {
-		t.Errorf("expected 0 violations for config file, got %d", len(violations))
+	if len(breachs) != 0 {
+		t.Errorf("expected 0 breachs for config file, got %d", len(breachs))
 	}
 }
 
@@ -2007,103 +2007,103 @@ func TestScanCommentsGo(t *testing.T) {
 
 	t.Run("inline comment", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n// this is a comment\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentInline {
-			t.Errorf("expected inline comment violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentInline {
+			t.Errorf("expected inline comment breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("block comment", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n/* block */\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentBlock {
-			t.Errorf("expected block comment violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentBlock {
+			t.Errorf("expected block comment breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("TODO skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n// TODO: fix later\n// continuation of todo\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for TODO, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for TODO, got %d", len(breachs))
 		}
 	})
 
 	t.Run("block TODO skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n/* TODO: fix later */\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for block TODO, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for block TODO, got %d", len(breachs))
 		}
 	})
 
 	t.Run("nolint skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n// nolint:errcheck\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for nolint, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for nolint, got %d", len(breachs))
 		}
 	})
 
 	t.Run("raw backtick string skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\nvar s = `// not a comment`\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in raw string, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in raw string, got %d", len(breachs))
 		}
 	})
 
 	t.Run("multi-line raw backtick string skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\nvar s = `line1\n// not a comment\nline3`\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in multi-line raw string, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in multi-line raw string, got %d", len(breachs))
 		}
 	})
 
 	t.Run("header section excluded", func(t *testing.T) {
 		content := "// #region 🔖Header\n\n// header comment\n\n// #endregion 🔖Header\n\n// #region 🔖Section\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for header section, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for header section, got %d", len(breachs))
 		}
 	})
 
 	t.Run("region markers not flagged", func(t *testing.T) {
 		content := "// #region 🔖Section\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for region markers, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for region markers, got %d", len(breachs))
 		}
 	})
 
 	t.Run("debug marker skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\nfmt.Println(\"[DEBUG] test\")\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for debug marker, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for debug marker, got %d", len(breachs))
 		}
 	})
 
 	t.Run("url scheme not flagged", func(t *testing.T) {
 		content := "// #region 🔖Section\n\nvar url = \"https://example.com\"\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for URL scheme, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for URL scheme, got %d", len(breachs))
 		}
 	})
 
 	t.Run("grouped inline comments", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n// comment one\n\n// comment two\n\nfunc main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
-		if len(violations) != 2 {
-			t.Errorf("expected 2 violations for separate comment blocks, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.go", content, strings.Split(content, "\n"))
+		if len(breachs) != 2 {
+			t.Errorf("expected 2 breachs for separate comment blocks, got %d", len(breachs))
 		}
 	})
 }
@@ -2114,95 +2114,95 @@ func TestScanCommentsPython(t *testing.T) {
 
 	t.Run("inline comment", func(t *testing.T) {
 		content := "# region Section\n\n# this is a comment\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentInline {
-			t.Errorf("expected inline comment violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentInline {
+			t.Errorf("expected inline comment breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("TODO skipped", func(t *testing.T) {
 		content := "# region Section\n\n# TODO: fix later\n# continuation of todo\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for TODO, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for TODO, got %d", len(breachs))
 		}
 	})
 
 	t.Run("noqa skipped", func(t *testing.T) {
 		content := "# region Section\n\n# noqa: E501\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for noqa, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for noqa, got %d", len(breachs))
 		}
 	})
 
 	t.Run("type ignore skipped", func(t *testing.T) {
 		content := "# region Section\n\n# type: ignore[assignment]\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for type: ignore, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for type: ignore, got %d", len(breachs))
 		}
 	})
 
 	t.Run("triple double quote string skipped", func(t *testing.T) {
 		content := "# region Section\n\ns = \"\"\"# not a comment\"\"\"\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in triple-quoted string, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in triple-quoted string, got %d", len(breachs))
 		}
 	})
 
 	t.Run("triple single quote string skipped", func(t *testing.T) {
 		content := "# region Section\n\ns = '''# not a comment'''\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in triple-single-quoted string, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in triple-single-quoted string, got %d", len(breachs))
 		}
 	})
 
 	t.Run("multi-line triple quote string skipped", func(t *testing.T) {
 		content := "# region Section\n\ns = \"\"\"\n# not a comment\n\"\"\"\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in multi-line triple-quoted string, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in multi-line triple-quoted string, got %d", len(breachs))
 		}
 	})
 
 	t.Run("header section excluded", func(t *testing.T) {
 		content := "# region Header\n#\n# header comment\n#\n# endregion Header\n\n# region Section\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for header section, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for header section, got %d", len(breachs))
 		}
 	})
 
 	t.Run("region markers not flagged", func(t *testing.T) {
 		content := "# region Section\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for region markers, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for region markers, got %d", len(breachs))
 		}
 	})
 
 	t.Run("comment in regular string skipped", func(t *testing.T) {
 		content := "# region Section\n\ns = \"# not a comment\"\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in string, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in string, got %d", len(breachs))
 		}
 	})
 
 	t.Run("trailing comment", func(t *testing.T) {
 		content := "# region Section\n\nx = 1  # trailing comment\n\ndef main(): pass\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation for trailing comment, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.py", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach for trailing comment, got %d", len(breachs))
 		}
-		if violations[0].Column <= 1 {
-			t.Errorf("expected column > 1 for trailing comment, got %d", violations[0].Column)
+		if breachs[0].Column <= 1 {
+			t.Errorf("expected column > 1 for trailing comment, got %d", breachs[0].Column)
 		}
 	})
 }
@@ -2213,74 +2213,74 @@ func TestScanCommentsCSharp(t *testing.T) {
 
 	t.Run("inline comment", func(t *testing.T) {
 		content := "#region 🔖Section\n\n// this is a comment\n\npublic class C {}\n\n#endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentInline {
-			t.Errorf("expected inline comment violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentInline {
+			t.Errorf("expected inline comment breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("block comment", func(t *testing.T) {
 		content := "#region 🔖Section\n\n/* block */\n\npublic class C {}\n\n#endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentBlock {
-			t.Errorf("expected block comment violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentBlock {
+			t.Errorf("expected block comment breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("TODO skipped", func(t *testing.T) {
 		content := "#region 🔖Section\n\n// TODO: fix later\n\npublic class C {}\n\n#endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for TODO, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for TODO, got %d", len(breachs))
 		}
 	})
 
 	t.Run("pragma skipped", func(t *testing.T) {
 		content := "#region 🔖Section\n\n// pragma warning disable\n\npublic class C {}\n\n#endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for pragma, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for pragma, got %d", len(breachs))
 		}
 	})
 
 	t.Run("verbatim string skipped", func(t *testing.T) {
 		content := "#region 🔖Section\n\nvar s = @\"// not a comment\";\n\npublic class C {}\n\n#endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in verbatim string, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in verbatim string, got %d", len(breachs))
 		}
 	})
 
 	t.Run("region markers not flagged", func(t *testing.T) {
 		content := "#region 🔖Section\n\npublic class C {}\n\n#endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for region markers, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for region markers, got %d", len(breachs))
 		}
 	})
 
 	t.Run("header section excluded", func(t *testing.T) {
 		content := "#region 🔖Header\n// header comment\n#endregion 🔖Header\n\n#region 🔖Section\n\npublic class C {}\n\n#endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for header section, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for header section, got %d", len(breachs))
 		}
 	})
 
 	t.Run("no JSDoc for csharp", func(t *testing.T) {
 		content := "#region 🔖Section\n\n/** not jsdoc in csharp */\n\npublic class C {}\n\n#endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.cs", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentBlock {
-			t.Errorf("expected block comment (not JSDoc) for C#, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentBlock {
+			t.Errorf("expected block comment (not JSDoc) for C#, got %s", breachs[0].Kind)
 		}
 	})
 }
@@ -2291,60 +2291,60 @@ func TestScanCommentsTypeScript(t *testing.T) {
 
 	t.Run("JSDoc detected", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n/** jsdoc */\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentJSDoc {
-			t.Errorf("expected JSDoc violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentJSDoc {
+			t.Errorf("expected JSDoc breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("template literal skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\nconst s = `// not a comment`;\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in template literal, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in template literal, got %d", len(breachs))
 		}
 	})
 
 	t.Run("template expression not skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\nconst s = `${x} // comment`;\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for template expression context, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for template expression context, got %d", len(breachs))
 		}
 	})
 
 	t.Run("eslint directive skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n// eslint-disable-next-line\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for eslint directive, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for eslint directive, got %d", len(breachs))
 		}
 	})
 
 	t.Run("@ts directive skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n// @ts-ignore\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for @ts directive, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for @ts directive, got %d", len(breachs))
 		}
 	})
 
 	t.Run("string literals skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\nconst a = '// not a comment';\nconst b = \"// not a comment\";\n\nconst x = 1;\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in strings, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.ts", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in strings, got %d", len(breachs))
 		}
 	})
 
 	t.Run("config file skipped", func(t *testing.T) {
 		content := "// inline comment\nconst x = 1;\n"
-		violations := lang.ScanComments(ctx, "tsconfig.json", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for config file, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "tsconfig.json", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for config file, got %d", len(breachs))
 		}
 	})
 }
@@ -2355,28 +2355,28 @@ func TestScanCommentsShell(t *testing.T) {
 
 	t.Run("inline comment", func(t *testing.T) {
 		content := "# region Section\n\n# this is a comment\n\necho hello\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.sh", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.sh", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentInline {
-			t.Errorf("expected inline comment violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentInline {
+			t.Errorf("expected inline comment breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("comment in string skipped", func(t *testing.T) {
 		content := "# region Section\n\necho \"# not a comment\"\n\necho hello\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.sh", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for comment in string, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.sh", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for comment in string, got %d", len(breachs))
 		}
 	})
 
 	t.Run("region markers not flagged", func(t *testing.T) {
 		content := "# region Section\n\necho hello\n\n# endregion Section\n"
-		violations := lang.ScanComments(ctx, "test.sh", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for region markers, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.sh", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for region markers, got %d", len(breachs))
 		}
 	})
 }
@@ -2387,31 +2387,31 @@ func TestScanCommentsRust(t *testing.T) {
 
 	t.Run("inline comment", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n// this is a comment\n\nfn main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.rs", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.rs", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentInline {
-			t.Errorf("expected inline comment violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentInline {
+			t.Errorf("expected inline comment breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("block comment", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n/* block comment */\n\nfn main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.rs", content, strings.Split(content, "\n"))
-		if len(violations) != 1 {
-			t.Fatalf("expected 1 violation, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.rs", content, strings.Split(content, "\n"))
+		if len(breachs) != 1 {
+			t.Fatalf("expected 1 breach, got %d", len(breachs))
 		}
-		if violations[0].Kind != ViolationCodeCommentBlock {
-			t.Errorf("expected block comment violation, got %s", violations[0].Kind)
+		if breachs[0].Kind != BreachCodeCommentBlock {
+			t.Errorf("expected block comment breach, got %s", breachs[0].Kind)
 		}
 	})
 
 	t.Run("TODO skipped", func(t *testing.T) {
 		content := "// #region 🔖Section\n\n// TODO: fix later\n\nfn main() {}\n\n// #endregion 🔖Section\n"
-		violations := lang.ScanComments(ctx, "test.rs", content, strings.Split(content, "\n"))
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations for TODO, got %d", len(violations))
+		breachs := lang.ScanComments(ctx, "test.rs", content, strings.Split(content, "\n"))
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs for TODO, got %d", len(breachs))
 		}
 	})
 }
@@ -2429,10 +2429,10 @@ func TestScanCommentsAutofix(t *testing.T) {
 		absPath := filepath.Join(tmpDir, testFile)
 		WriteTextFile(absPath, content)
 
-		violations := []Violation{
-			{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 3},
+		breachs := []Breach{
+			{Kind: BreachCodeCommentInline, Scope: testFile, Line: 3},
 		}
-		fixed, err := applyAutofixes(testFile, violations)
+		fixed, err := applyAutofixes(testFile, breachs)
 		if err != nil {
 			t.Fatalf("applyAutofixes failed: %v", err)
 		}
@@ -2456,10 +2456,10 @@ func TestScanCommentsAutofix(t *testing.T) {
 		absPath := filepath.Join(tmpDir, testFile)
 		WriteTextFile(absPath, content)
 
-		violations := []Violation{
-			{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 3, Column: 7},
+		breachs := []Breach{
+			{Kind: BreachCodeCommentInline, Scope: testFile, Line: 3, Column: 7},
 		}
-		fixed, err := applyAutofixes(testFile, violations)
+		fixed, err := applyAutofixes(testFile, breachs)
 		if err != nil {
 			t.Fatalf("applyAutofixes failed: %v", err)
 		}
@@ -2487,10 +2487,10 @@ func TestScanCommentsAutofix(t *testing.T) {
 		absPath := filepath.Join(tmpDir, testFile)
 		WriteTextFile(absPath, content)
 
-		violations := []Violation{
-			{Kind: ViolationCodeCommentBlock, Scope: testFile, Line: 3},
+		breachs := []Breach{
+			{Kind: BreachCodeCommentBlock, Scope: testFile, Line: 3},
 		}
-		fixed, err := applyAutofixes(testFile, violations)
+		fixed, err := applyAutofixes(testFile, breachs)
 		if err != nil {
 			t.Fatalf("applyAutofixes failed: %v", err)
 		}
@@ -2515,10 +2515,10 @@ func TestScanCommentsAutofix(t *testing.T) {
 		absPath := filepath.Join(tmpDir, testFile)
 		WriteTextFile(absPath, content)
 
-		violations := []Violation{
-			{Kind: ViolationCodeCommentInline, Scope: testFile, Line: 3},
+		breachs := []Breach{
+			{Kind: BreachCodeCommentInline, Scope: testFile, Line: 3},
 		}
-		fixed, err := applyAutofixes(testFile, violations)
+		fixed, err := applyAutofixes(testFile, breachs)
 		if err != nil {
 			t.Fatalf("applyAutofixes failed: %v", err)
 		}
@@ -2545,12 +2545,12 @@ func TestEmojiVariationAutofix(t *testing.T) {
 		absPath := filepath.Join(tmpDir, testFile)
 		WriteTextFile(absPath, content)
 
-		violations := []Violation{
-			{Kind: ViolationCodeUnicodeEmojiVariation, Scope: testFile, Line: 1},
-			{Kind: ViolationCodeUnicodeEmojiVariation, Scope: testFile, Line: 2},
-			{Kind: ViolationCodeUnicodeEmojiVariation, Scope: testFile, Line: 3},
+		breachs := []Breach{
+			{Kind: BreachCodeUnicodeEmojiVariation, Scope: testFile, Line: 1},
+			{Kind: BreachCodeUnicodeEmojiVariation, Scope: testFile, Line: 2},
+			{Kind: BreachCodeUnicodeEmojiVariation, Scope: testFile, Line: 3},
 		}
-		fixed, err := applyAutofixes(testFile, violations)
+		fixed, err := applyAutofixes(testFile, breachs)
 		if err != nil {
 			t.Fatalf("applyAutofixes failed: %v", err)
 		}
@@ -2631,9 +2631,9 @@ func TestEmojiVariationAutofix(t *testing.T) {
 		bundles := LoadBundles()
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		violations, _ := CheckPoliciesWithContext(ctx, nil)
-		for _, v := range violations {
-			if v.Kind == ViolationCodeCommentInline {
+		breachs, _ := CheckPoliciesWithContext(ctx, nil)
+		for _, v := range breachs {
+			if v.Kind == BreachCodeCommentInline {
 				t.Errorf("section marker flagged as inline comment at line %d: %s", v.Line, v.Excerpt)
 			}
 		}
@@ -2650,45 +2650,45 @@ func TestFixNonAutofixableNotFixed(t *testing.T) {
 	path := "semio/assets/repo/some/folder/file_invalid.tsx"
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
 
-	for _, v := range violations {
+	for _, v := range breachs {
 		info := v.Kind.Info()
 		if v.Autofixable() != info.Autofixable {
-			t.Errorf("violation %s: Autofixable() = %v, Info().Autofixable = %v", v.Kind, v.Autofixable(), info.Autofixable)
+			t.Errorf("breach %s: Autofixable() = %v, Info().Autofixable = %v", v.Kind, v.Autofixable(), info.Autofixable)
 		}
 	}
 
-	autofixableKinds := []ViolationKind{
-		ViolationCodeFileMissingIdentification,
-		ViolationCodeFileWrongLicense,
+	autofixableKinds := []Statute{
+		BreachCodeFileMissingIdentification,
+		BreachCodeFileWrongLicense,
 	}
-	counts := map[ViolationKind]int{}
-	for _, v := range violations {
+	counts := map[Statute]int{}
+	for _, v := range breachs {
 		counts[v.Kind]++
 	}
 	for _, kind := range autofixableKinds {
 		if counts[kind] == 0 {
-			t.Errorf("expected autofixable violation kind %s to be detected", kind)
+			t.Errorf("expected autofixable statute %s to be detected", kind)
 		}
 		if !kind.Info().Autofixable {
-			t.Errorf("violation kind %s should be autofixable", kind)
+			t.Errorf("statute %s should be autofixable", kind)
 		}
 	}
-	nonAutofixableKinds := []ViolationKind{
-		ViolationCodeFileMissingContributors,
-		ViolationCodeSectionMissingStartName,
-		ViolationCodeSectionOrphanDefinition,
+	nonAutofixableKinds := []Statute{
+		BreachCodeFileMissingContributors,
+		BreachCodeSectionMissingStartName,
+		BreachCodeSectionOrphanDefinition,
 	}
 	for _, kind := range nonAutofixableKinds {
 		if counts[kind] == 0 {
-			t.Errorf("expected non-autofixable violation kind %s to be detected", kind)
+			t.Errorf("expected non-autofixable statute %s to be detected", kind)
 		}
 		if kind.Info().Autofixable {
-			t.Errorf("violation kind %s should not be autofixable", kind)
+			t.Errorf("statute %s should not be autofixable", kind)
 		}
 	}
 }
@@ -2697,7 +2697,7 @@ func TestFixViaGraphQL(t *testing.T) {
 	executor := getTestExecutor(t)
 	ctx := context.Background()
 
-	result, err := executor.ExecuteJSON(ctx, `mutation { fix(scope: "semio-repo/go/main_test.go") { fixed remaining violations { id summary } } }`, nil)
+	result, err := executor.ExecuteJSON(ctx, `mutation { fix(scope: "semio-repo/go/main_test.go") { fixed remaining breachs { id summary } } }`, nil)
 	if err != nil {
 		t.Fatalf("fix mutation failed: %v", err)
 	}
@@ -2706,10 +2706,10 @@ func TestFixViaGraphQL(t *testing.T) {
 		Fix struct {
 			Fixed      int `json:"fixed"`
 			Remaining  int `json:"remaining"`
-			Violations []struct {
+			Breachs []struct {
 				ID      string `json:"id"`
 				Summary string `json:"summary"`
-			} `json:"violations"`
+			} `json:"breachs"`
 		} `json:"fix"`
 	}
 	if err := json.Unmarshal([]byte(result), &resp); err != nil {
@@ -2718,8 +2718,8 @@ func TestFixViaGraphQL(t *testing.T) {
 	if resp.Fix.Remaining < 0 {
 		t.Error("remaining should not be negative")
 	}
-	if len(resp.Fix.Violations) != resp.Fix.Remaining {
-		t.Errorf("violations length %d != remaining %d", len(resp.Fix.Violations), resp.Fix.Remaining)
+	if len(resp.Fix.Breachs) != resp.Fix.Remaining {
+		t.Errorf("breachs length %d != remaining %d", len(resp.Fix.Breachs), resp.Fix.Remaining)
 	}
 }
 
@@ -2738,11 +2738,11 @@ func TestFixViaRepoContext(t *testing.T) {
 	if res == nil {
 		t.Fatal("Fix returned nil result")
 	}
-	if res.Violations == nil {
-		t.Error("Violations should not be nil")
+	if res.Breachs == nil {
+		t.Error("Breachs should not be nil")
 	}
-	if res.Remaining != len(res.Violations) {
-		t.Errorf("remaining %d != violations length %d", res.Remaining, len(res.Violations))
+	if res.Remaining != len(res.Breachs) {
+		t.Errorf("remaining %d != breachs length %d", res.Remaining, len(res.Breachs))
 	}
 }
 
@@ -2759,8 +2759,8 @@ func TestFixIdempotent(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{}
-	fixed, err := applyAutofixes(testFile, violations)
+	breachs := []Breach{}
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -2787,12 +2787,12 @@ func TestFixNestedSections(t *testing.T) {
 		t.Fatalf("failed to write test file: %v", err)
 	}
 
-	violations := []Violation{
-		{Kind: ViolationCodeSectionMissingEndName, Scope: testFile, Line: 7},
-		{Kind: ViolationCodeSectionMissingEndName, Scope: testFile, Line: 11},
+	breachs := []Breach{
+		{Kind: BreachCodeSectionMissingEndName, Scope: testFile, Line: 7},
+		{Kind: BreachCodeSectionMissingEndName, Scope: testFile, Line: 11},
 	}
 
-	fixed, err := applyAutofixes(testFile, violations)
+	fixed, err := applyAutofixes(testFile, breachs)
 	if err != nil {
 		t.Fatalf("applyAutofixes failed: %v", err)
 	}
@@ -2828,42 +2828,42 @@ func TestFixExtractFileFromScope(t *testing.T) {
 	}
 }
 
-func TestFixViolationKindMeta(t *testing.T) {
-	autofixableKinds := []ViolationKind{
-		ViolationCodeFileMissingHeaderRegion,
-		ViolationCodeFileMissingIdentification,
-		ViolationCodeFileWrongIdentificationId,
-		ViolationCodeFileMissingLicense,
-		ViolationCodeFileWrongLicense,
-		ViolationCodeSectionEmpty,
-		ViolationCodeSectionMissingEndName,
-		ViolationCodeSectionNameMismatch,
-		ViolationCodeCommentInline,
-		ViolationCodeCommentBlock,
-		ViolationCodeCommentJSDoc,
+func TestFixStatuteMeta(t *testing.T) {
+	autofixableKinds := []Statute{
+		BreachCodeFileMissingHeaderRegion,
+		BreachCodeFileMissingIdentification,
+		BreachCodeFileWrongIdentificationId,
+		BreachCodeFileMissingLicense,
+		BreachCodeFileWrongLicense,
+		BreachCodeSectionEmpty,
+		BreachCodeSectionMissingEndName,
+		BreachCodeSectionNameMismatch,
+		BreachCodeCommentInline,
+		BreachCodeCommentBlock,
+		BreachCodeCommentJSDoc,
 	}
 	for _, kind := range autofixableKinds {
 		info := kind.Info()
 		if !info.Autofixable {
-			t.Errorf("violation kind %s should be autofixable", kind)
+			t.Errorf("statute %s should be autofixable", kind)
 		}
 		if info.Reason == "" {
-			t.Errorf("violation kind %s has empty reason", kind)
+			t.Errorf("statute %s has empty reason", kind)
 		}
 		if info.Solution == "" {
-			t.Errorf("violation kind %s has empty solution", kind)
+			t.Errorf("statute %s has empty solution", kind)
 		}
 	}
 
-	nonAutofixableKinds := []ViolationKind{
-		ViolationCodeFileMissingContributors,
-		ViolationCodeSectionMissingStartName,
-		ViolationCodeSectionOrphanDefinition,
+	nonAutofixableKinds := []Statute{
+		BreachCodeFileMissingContributors,
+		BreachCodeSectionMissingStartName,
+		BreachCodeSectionOrphanDefinition,
 	}
 	for _, kind := range nonAutofixableKinds {
 		info := kind.Info()
 		if info.Autofixable {
-			t.Errorf("violation kind %s should NOT be autofixable", kind)
+			t.Errorf("statute %s should NOT be autofixable", kind)
 		}
 	}
 }
@@ -2944,7 +2944,7 @@ func TestPolicyTreeCommand(t *testing.T) {
 		t.Error("Expected policy tree output to contain 'code' policy")
 	}
 	if !strings.Contains(text, "Code#File#Missing Header") {
-		t.Error("Expected policy tree output to contain violation kind 'Code#File#Missing Header'")
+		t.Error("Expected policy tree output to contain statute 'Code#File#Missing Header'")
 	}
 }
 
@@ -2955,76 +2955,76 @@ func TestPolicyCheckCommand(t *testing.T) {
 	}
 }
 
-func TestPolicyViolationListCommand(t *testing.T) {
-	result := ToolPolicyViolationList("code")
+func TestPolicyBreachListCommand(t *testing.T) {
+	result := ToolPolicyBreachList("code")
 	if result.Error != "" {
-		t.Errorf("ToolPolicyViolationList returned error: %s", result.Error)
+		t.Errorf("ToolPolicyBreachList returned error: %s", result.Error)
 	}
 }
 
-func TestFixtureViolationsGroupedInline(t *testing.T) {
+func TestFixtureBreachsGroupedInline(t *testing.T) {
 	path := "semio/assets/repo/some/folder/file_invalid.tsx"
 	bundles := LoadBundles()
 	scope := Scope{Kind: ScopeFile, FilePath: path}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("fixture policy check failed: %v", err)
 	}
-	if len(violations) == 0 {
-		t.Fatal("expected fixture violations")
+	if len(breachs) == 0 {
+		t.Fatal("expected fixture breachs")
 	}
-	counts := map[ViolationKind]int{}
-	for _, v := range violations {
+	counts := map[Statute]int{}
+	for _, v := range breachs {
 		counts[v.Kind]++
 	}
-	required := []ViolationKind{
-		ViolationCodeSectionMissingSummary,
-		ViolationCodeSectionOrphanDefinition,
+	required := []Statute{
+		BreachCodeSectionMissingSummary,
+		BreachCodeSectionOrphanDefinition,
 	}
 	for _, kind := range required {
 		if counts[kind] == 0 {
-			t.Fatalf("expected violation kind %s", kind)
+			t.Fatalf("expected statute %s", kind)
 		}
 	}
 }
 
-func TestFixtureViolationsByLanguage(t *testing.T) {
+func TestFixtureBreachsByLanguage(t *testing.T) {
 	bundles := LoadBundles()
 	fixtures := []struct {
 		path          string
-		requiredKinds []ViolationKind
+		requiredKinds []Statute
 	}{
 		{
 			path:          "semio/assets/repo/some/folder/file_invalid.py",
-			requiredKinds: []ViolationKind{ViolationCodeDefMissingSummary},
+			requiredKinds: []Statute{BreachCodeDefMissingSummary},
 		},
 		{
 			path:          "semio/assets/repo/some/folder/file_invalid.cs",
-			requiredKinds: []ViolationKind{ViolationCodeSectionMissingSummary},
+			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 		{
 			path:          "semio/assets/repo/some/folder/file_invalid.go",
-			requiredKinds: []ViolationKind{ViolationCodeSectionMissingSummary},
+			requiredKinds: []Statute{BreachCodeSectionMissingSummary},
 		},
 	}
 	for _, fixture := range fixtures {
 		scope := Scope{Kind: ScopeFile, FilePath: fixture.path}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{fixture.path})
-		violations, err := CheckPoliciesWithContext(ctx, nil)
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
 		if err != nil {
 			t.Fatalf("fixture policy check failed for %s: %v", fixture.path, err)
 		}
-		if len(violations) == 0 {
-			t.Fatalf("expected fixture violations for %s", fixture.path)
+		if len(breachs) == 0 {
+			t.Fatalf("expected fixture breachs for %s", fixture.path)
 		}
-		counts := map[ViolationKind]int{}
-		for _, v := range violations {
+		counts := map[Statute]int{}
+		for _, v := range breachs {
 			counts[v.Kind]++
 		}
 		for _, kind := range fixture.requiredKinds {
 			if counts[kind] == 0 {
-				t.Fatalf("expected violation kind %s in %s", kind, fixture.path)
+				t.Fatalf("expected statute %s in %s", kind, fixture.path)
 			}
 		}
 	}
@@ -3037,15 +3037,15 @@ func TestFixtureViolationsByLanguage(t *testing.T) {
 	for _, path := range clean {
 		scope := Scope{Kind: ScopeFile, FilePath: path}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{path})
-		violations, err := CheckPoliciesWithContext(ctx, nil)
+		breachs, err := CheckPoliciesWithContext(ctx, nil)
 		if err != nil {
 			t.Fatalf("fixture policy check failed for %s: %v", path, err)
 		}
-		if len(violations) != 0 {
-			for _, v := range violations {
-				t.Logf("[DEBUG] violation in %s: kind=%s scope=%s line=%d summary=%s", path, v.Kind, v.Scope, v.Line, v.Summary)
+		if len(breachs) != 0 {
+			for _, v := range breachs {
+				t.Logf("[DEBUG] breach in %s: kind=%s scope=%s line=%d summary=%s", path, v.Kind, v.Scope, v.Line, v.Summary)
 			}
-			t.Fatalf("expected no violations for %s, got %d", path, len(violations))
+			t.Fatalf("expected no breachs for %s, got %d", path, len(breachs))
 		}
 	}
 }
@@ -3066,16 +3066,16 @@ func TestSectionMissingSummaryAndSpecs(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
-	counts := map[ViolationKind]int{}
-	for _, v := range violations {
+	counts := map[Statute]int{}
+	for _, v := range breachs {
 		counts[v.Kind]++
 	}
-	if counts[ViolationCodeSectionMissingSummary] == 0 {
-		t.Fatal("expected section missing summary violation")
+	if counts[BreachCodeSectionMissingSummary] == 0 {
+		t.Fatal("expected section missing summary breach")
 	}
 }
 
@@ -3095,13 +3095,13 @@ func TestSectionWithSummaryAndSpecs(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
-	for _, v := range violations {
-		if v.Kind == ViolationCodeSectionMissingSummary {
-			t.Fatalf("unexpected violation: %s", v.Kind)
+	for _, v := range breachs {
+		if v.Kind == BreachCodeSectionMissingSummary {
+			t.Fatalf("unexpected breach: %s", v.Kind)
 		}
 	}
 }
@@ -3122,16 +3122,16 @@ func TestDefinitionMissingSummaryAndSpecs(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
-	counts := map[ViolationKind]int{}
-	for _, v := range violations {
+	counts := map[Statute]int{}
+	for _, v := range breachs {
 		counts[v.Kind]++
 	}
-	if counts[ViolationCodeDefMissingSummary] == 0 {
-		t.Fatal("expected definition missing summary violation")
+	if counts[BreachCodeDefMissingSummary] == 0 {
+		t.Fatal("expected definition missing summary breach")
 	}
 }
 
@@ -3151,13 +3151,13 @@ func TestDefinitionWithSummaryAndSpecs(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
-	for _, v := range violations {
-		if v.Kind == ViolationCodeDefMissingSummary || v.Kind == ViolationCodeDefMissingSpecs {
-			t.Fatalf("unexpected violation: %s", v.Kind)
+	for _, v := range breachs {
+		if v.Kind == BreachCodeDefMissingSummary || v.Kind == BreachCodeDefMissingSpecs {
+			t.Fatalf("unexpected breach: %s", v.Kind)
 		}
 	}
 }
@@ -3178,12 +3178,12 @@ func TestSectionDocLinesExemptsDocComments(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
-	for _, v := range violations {
-		if v.Kind == ViolationCodeCommentInline {
+	for _, v := range breachs {
+		if v.Kind == BreachCodeCommentInline {
 			t.Fatalf("section doc comment wrongly flagged as inline at line %d", v.Line)
 		}
 	}
@@ -3234,19 +3234,19 @@ func TestSectionMissingIdentification(t *testing.T) {
 			}
 			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
 			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
-			violations, err := CheckPoliciesWithContext(ctx, nil)
+			breachs, err := CheckPoliciesWithContext(ctx, nil)
 			if err != nil {
 				t.Fatalf("policy check: %v", err)
 			}
 			found := false
-			for _, v := range violations {
-				if v.Kind == ViolationCodeSectionMissingIdentification {
+			for _, v := range breachs {
+				if v.Kind == BreachCodeSectionMissingIdentification {
 					found = true
 					break
 				}
 			}
 			if !found {
-				t.Fatal("expected section missing identification violation")
+				t.Fatal("expected section missing identification breach")
 			}
 		})
 	}
@@ -3297,13 +3297,13 @@ func TestSectionWithIdentification(t *testing.T) {
 			}
 			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
 			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
-			violations, err := CheckPoliciesWithContext(ctx, nil)
+			breachs, err := CheckPoliciesWithContext(ctx, nil)
 			if err != nil {
 				t.Fatalf("policy check: %v", err)
 			}
-			for _, v := range violations {
-				if v.Kind == ViolationCodeSectionMissingIdentification {
-					t.Fatalf("unexpected section missing identification violation for %s at line %d", tc.file, v.Line)
+			for _, v := range breachs {
+				if v.Kind == BreachCodeSectionMissingIdentification {
+					t.Fatalf("unexpected section missing identification breach for %s at line %d", tc.file, v.Line)
 				}
 			}
 		})
@@ -3355,19 +3355,19 @@ func TestDefinitionMissingIdentification(t *testing.T) {
 			}
 			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
 			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
-			violations, err := CheckPoliciesWithContext(ctx, nil)
+			breachs, err := CheckPoliciesWithContext(ctx, nil)
 			if err != nil {
 				t.Fatalf("policy check: %v", err)
 			}
 			found := false
-			for _, v := range violations {
-				if v.Kind == ViolationCodeDefMissingIdentification {
+			for _, v := range breachs {
+				if v.Kind == BreachCodeDefMissingIdentification {
 					found = true
 					break
 				}
 			}
 			if !found {
-				t.Fatal("expected definition missing identification violation")
+				t.Fatal("expected definition missing identification breach")
 			}
 		})
 	}
@@ -3418,13 +3418,13 @@ func TestDefinitionWithIdentification(t *testing.T) {
 			}
 			scope := Scope{Kind: ScopeFile, FilePath: tc.file}
 			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tc.file})
-			violations, err := CheckPoliciesWithContext(ctx, nil)
+			breachs, err := CheckPoliciesWithContext(ctx, nil)
 			if err != nil {
 				t.Fatalf("policy check: %v", err)
 			}
-			for _, v := range violations {
-				if v.Kind == ViolationCodeDefMissingIdentification {
-					t.Fatalf("unexpected definition missing identification violation for %s at line %d", tc.file, v.Line)
+			for _, v := range breachs {
+				if v.Kind == BreachCodeDefMissingIdentification {
+					t.Fatalf("unexpected definition missing identification breach for %s at line %d", tc.file, v.Line)
 				}
 			}
 		})
@@ -3446,20 +3446,20 @@ func TestSectionIdentificationAutofix(t *testing.T) {
 	}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check: %v", err)
 	}
-	sectionIdViolations := []Violation{}
-	for _, v := range violations {
-		if v.Kind == ViolationCodeSectionMissingIdentification {
-			sectionIdViolations = append(sectionIdViolations, v)
+	sectionIdBreachs := []Breach{}
+	for _, v := range breachs {
+		if v.Kind == BreachCodeSectionMissingIdentification {
+			sectionIdBreachs = append(sectionIdBreachs, v)
 		}
 	}
-	if len(sectionIdViolations) == 0 {
-		t.Fatal("expected section identification violations before autofix")
+	if len(sectionIdBreachs) == 0 {
+		t.Fatal("expected section identification breachs before autofix")
 	}
-	n, fixErr := applyAutofixes(testFile, sectionIdViolations)
+	n, fixErr := applyAutofixes(testFile, sectionIdBreachs)
 	if fixErr != nil {
 		t.Fatalf("autofix failed: %v", fixErr)
 	}
@@ -3487,20 +3487,20 @@ func TestDefinitionIdentificationAutofix(t *testing.T) {
 	}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check: %v", err)
 	}
-	defIdViolations := []Violation{}
-	for _, v := range violations {
-		if v.Kind == ViolationCodeDefMissingIdentification {
-			defIdViolations = append(defIdViolations, v)
+	defIdBreachs := []Breach{}
+	for _, v := range breachs {
+		if v.Kind == BreachCodeDefMissingIdentification {
+			defIdBreachs = append(defIdBreachs, v)
 		}
 	}
-	if len(defIdViolations) == 0 {
-		t.Fatal("expected definition identification violations before autofix")
+	if len(defIdBreachs) == 0 {
+		t.Fatal("expected definition identification breachs before autofix")
 	}
-	n, fixErr := applyAutofixes(testFile, defIdViolations)
+	n, fixErr := applyAutofixes(testFile, defIdBreachs)
 	if fixErr != nil {
 		t.Fatalf("autofix failed: %v", fixErr)
 	}
@@ -3518,61 +3518,61 @@ func TestDefinitionNativeDocstring(t *testing.T) {
 		name            string
 		file            string
 		content         string
-		expectViolation bool
+		expectBreach bool
 	}{
 		{
-			name:            "TypeScript // comments should flag violation",
+			name:            "TypeScript // comments should flag breach",
 			file:            "src/app.ts",
 			content:         "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
-			expectViolation: true,
+			expectBreach: true,
 		},
 		{
-			name:            "TypeScript JSDoc should NOT flag violation",
+			name:            "TypeScript JSDoc should NOT flag breach",
 			file:            "src/app.ts",
 			content:         "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n *\n *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\n **/\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
-			expectViolation: false,
+			expectBreach: false,
 		},
 		{
-			name:            "Go // comments should NOT flag violation (native format)",
+			name:            "Go // comments should NOT flag breach (native format)",
 			file:            "src/app.go",
 			content:         "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/SRC/APP.GO/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/SRC/APP.GO/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
-			expectViolation: false,
+			expectBreach: false,
 		},
 		{
-			name:            "Python # comments should flag violation (should use triple-quote docstring)",
+			name:            "Python # comments should flag breach (should use triple-quote docstring)",
 			file:            "src/app.py",
 			content:         "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
-			expectViolation: true,
+			expectBreach: true,
 		},
 		{
-			name:            "Python triple-quote docstring should NOT flag violation",
+			name:            "Python triple-quote docstring should NOT flag breach",
 			file:            "src/app.py",
 			content:         "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\ndef do_work():\n    \"\"\"Does work.\n    do_work MUST be idempotent.\n    [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\n    \"\"\"\n    pass\n\n# #endregion 🔖Functions\n",
-			expectViolation: false,
+			expectBreach: false,
 		},
 		{
-			name:            "CSharp // comments should flag violation (should use ///)",
+			name:            "CSharp // comments should flag breach (should use ///)",
 			file:            "src/App.cs",
 			content:         "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/SRC/APP.CS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](semiorepo://section/src/App.cs/TYPES)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/App.cs#Types§AppState](semiorepo://definition/src/App.cs/TYPES/APP-STATE)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
-			expectViolation: true,
+			expectBreach: true,
 		},
 		{
-			name:            "CSharp /// comments should NOT flag violation",
+			name:            "CSharp /// comments should NOT flag breach",
 			file:            "src/App.cs",
 			content:         "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/SRC/APP.CS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](semiorepo://section/src/App.cs/TYPES)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/App.cs#Types§AppState](semiorepo://definition/src/App.cs/TYPES/APP-STATE)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
-			expectViolation: false,
+			expectBreach: false,
 		},
 		{
-			name:            "Rust // comments should flag violation (should use ///)",
+			name:            "Rust // comments should flag breach (should use ///)",
 			file:            "src/lib.rs",
 			content:         "// #region 🔖Header\n\n// [💻src/lib.rs](semiorepo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](semiorepo://section/src/lib.rs/TYPES)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/lib.rs#Types§AppState](semiorepo://definition/src/lib.rs/TYPES/APP-STATE)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
-			expectViolation: true,
+			expectBreach: true,
 		},
 		{
-			name:            "Rust /// comments should NOT flag violation",
+			name:            "Rust /// comments should NOT flag breach",
 			file:            "src/lib.rs",
 			content:         "// #region 🔖Header\n\n// [💻src/lib.rs](semiorepo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](semiorepo://section/src/lib.rs/TYPES)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/lib.rs#Types§AppState](semiorepo://definition/src/lib.rs/TYPES/APP-STATE)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
-			expectViolation: false,
+			expectBreach: false,
 		},
 	}
 	for _, tt := range tests {
@@ -3589,22 +3589,22 @@ func TestDefinitionNativeDocstring(t *testing.T) {
 			}
 			scope := Scope{Kind: ScopeFile, FilePath: tt.file}
 			ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{tt.file})
-			violations, err := CheckPoliciesWithContext(ctx, nil)
+			breachs, err := CheckPoliciesWithContext(ctx, nil)
 			if err != nil {
 				t.Fatalf("policy check: %v", err)
 			}
-			hasViolation := false
-			for _, v := range violations {
-				if v.Kind == ViolationCodeDefNotNativeDocstring {
-					hasViolation = true
+			hasBreach := false
+			for _, v := range breachs {
+				if v.Kind == BreachCodeDefNotNativeDocstring {
+					hasBreach = true
 					break
 				}
 			}
-			if tt.expectViolation && !hasViolation {
-				t.Fatal("expected DefNotNativeDocstring violation but got none")
+			if tt.expectBreach && !hasBreach {
+				t.Fatal("expected DefNotNativeDocstring breach but got none")
 			}
-			if !tt.expectViolation && hasViolation {
-				t.Fatal("unexpected DefNotNativeDocstring violation")
+			if !tt.expectBreach && hasBreach {
+				t.Fatal("unexpected DefNotNativeDocstring breach")
 			}
 		})
 	}
@@ -3625,20 +3625,20 @@ func TestDefinitionNativeDocstringAutofix(t *testing.T) {
 	}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check: %v", err)
 	}
-	var docstringViolations []Violation
-	for _, v := range violations {
-		if v.Kind == ViolationCodeDefNotNativeDocstring {
-			docstringViolations = append(docstringViolations, v)
+	var docstringBreachs []Breach
+	for _, v := range breachs {
+		if v.Kind == BreachCodeDefNotNativeDocstring {
+			docstringBreachs = append(docstringBreachs, v)
 		}
 	}
-	if len(docstringViolations) == 0 {
-		t.Fatal("expected DefNotNativeDocstring violation before autofix")
+	if len(docstringBreachs) == 0 {
+		t.Fatal("expected DefNotNativeDocstring breach before autofix")
 	}
-	n, fixErr := applyAutofixes(testFile, docstringViolations)
+	n, fixErr := applyAutofixes(testFile, docstringBreachs)
 	if fixErr != nil {
 		t.Fatalf("autofix failed: %v", fixErr)
 	}
@@ -3678,20 +3678,20 @@ func TestPythonTripleQuoteDocstringAutofix(t *testing.T) {
 	}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check: %v", err)
 	}
-	var docstringViolations []Violation
-	for _, v := range violations {
-		if v.Kind == ViolationCodeDefNotNativeDocstring {
-			docstringViolations = append(docstringViolations, v)
+	var docstringBreachs []Breach
+	for _, v := range breachs {
+		if v.Kind == BreachCodeDefNotNativeDocstring {
+			docstringBreachs = append(docstringBreachs, v)
 		}
 	}
-	if len(docstringViolations) == 0 {
-		t.Fatal("expected DefNotNativeDocstring violation before autofix")
+	if len(docstringBreachs) == 0 {
+		t.Fatal("expected DefNotNativeDocstring breach before autofix")
 	}
-	n, fixErr := applyAutofixes(testFile, docstringViolations)
+	n, fixErr := applyAutofixes(testFile, docstringBreachs)
 	if fixErr != nil {
 		t.Fatalf("autofix failed: %v", fixErr)
 	}
@@ -3731,20 +3731,20 @@ func TestPythonTripleQuoteDocstringMerge(t *testing.T) {
 	}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check: %v", err)
 	}
-	var docstringViolations []Violation
-	for _, v := range violations {
-		if v.Kind == ViolationCodeDefNotNativeDocstring {
-			docstringViolations = append(docstringViolations, v)
+	var docstringBreachs []Breach
+	for _, v := range breachs {
+		if v.Kind == BreachCodeDefNotNativeDocstring {
+			docstringBreachs = append(docstringBreachs, v)
 		}
 	}
-	if len(docstringViolations) == 0 {
-		t.Fatal("expected DefNotNativeDocstring violation for # comments above existing docstring")
+	if len(docstringBreachs) == 0 {
+		t.Fatal("expected DefNotNativeDocstring breach for # comments above existing docstring")
 	}
-	n, fixErr := applyAutofixes(testFile, docstringViolations)
+	n, fixErr := applyAutofixes(testFile, docstringBreachs)
 	if fixErr != nil {
 		t.Fatalf("autofix failed: %v", fixErr)
 	}
@@ -3781,15 +3781,15 @@ func TestPythonTripleQuoteDocstringExemptFromCommentBan(t *testing.T) {
 	}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check: %v", err)
 	}
-	for _, v := range violations {
-		if v.Kind == ViolationCodeCommentBlock {
+	for _, v := range breachs {
+		if v.Kind == BreachCodeCommentBlock {
 			t.Fatalf("Python triple-quote docstring should not be flagged as block comment at line %d", v.Line)
 		}
-		if v.Kind == ViolationCodeDefNotNativeDocstring {
+		if v.Kind == BreachCodeDefNotNativeDocstring {
 			t.Fatalf("Python triple-quote docstring should not flag DefNotNativeDocstring at line %d", v.Line)
 		}
 	}
@@ -3810,16 +3810,16 @@ func TestDefinitionJSDocExemptFromCommentBan(t *testing.T) {
 	}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, []Bundle{}, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check: %v", err)
 	}
-	for _, v := range violations {
-		if v.Kind == ViolationCodeCommentJSDoc {
-			t.Fatalf("definition JSDoc should not be flagged as comment violation at line %d", v.Line)
+	for _, v := range breachs {
+		if v.Kind == BreachCodeCommentJSDoc {
+			t.Fatalf("definition JSDoc should not be flagged as comment breach at line %d", v.Line)
 		}
-		if v.Kind == ViolationCodeCommentBlock {
-			t.Fatalf("definition JSDoc should not be flagged as block comment violation at line %d", v.Line)
+		if v.Kind == BreachCodeCommentBlock {
+			t.Fatalf("definition JSDoc should not be flagged as block comment breach at line %d", v.Line)
 		}
 	}
 }
@@ -3855,7 +3855,7 @@ func TestDefinitionHeaderIdAndUri(t *testing.T) {
 	}
 }
 
-func TestSpecsViolation(t *testing.T) {
+func TestSpecsBreach(t *testing.T) {
 	t.Run("isSpecText detects RFC 2119 keywords", func(t *testing.T) {
 		cases := []struct {
 			text   string
@@ -3933,21 +3933,21 @@ func TestSpecsViolation(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		violations := specsPolicy(ctx)
+		breachs := specsPolicy(ctx)
 
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationCodeSpecsSyntax {
+		for _, v := range breachs {
+			if v.Kind == BreachCodeSpecsSyntax {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Error("expected ViolationCodeSpecsSyntax for backtick-wrapped code in header Specs")
+			t.Error("expected BreachCodeSpecsSyntax for backtick-wrapped code in header Specs")
 		}
 	})
 
-	t.Run("specsPolicy clean specs no violation", func(t *testing.T) {
+	t.Run("specsPolicy clean specs no breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
@@ -3963,11 +3963,11 @@ func TestSpecsViolation(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		violations := specsPolicy(ctx)
+		breachs := specsPolicy(ctx)
 
-		for _, v := range violations {
-			if v.Kind == ViolationCodeSpecsSyntax {
-				t.Errorf("unexpected ViolationCodeSpecsSyntax for clean spec: %s", v.Summary)
+		for _, v := range breachs {
+			if v.Kind == BreachCodeSpecsSyntax {
+				t.Errorf("unexpected BreachCodeSpecsSyntax for clean spec: %s", v.Summary)
 			}
 		}
 	})
@@ -3988,21 +3988,21 @@ func TestSpecsViolation(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		violations := specsPolicy(ctx)
+		breachs := specsPolicy(ctx)
 
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationCodeSpecsSyntax {
+		for _, v := range breachs {
+			if v.Kind == BreachCodeSpecsSyntax {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Error("expected ViolationCodeSpecsSyntax for backtick in section spec")
+			t.Error("expected BreachCodeSpecsSyntax for backtick in section spec")
 		}
 	})
 
-	t.Run("section spec comments exempt from inline violation", func(t *testing.T) {
+	t.Run("section spec comments exempt from inline breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
@@ -4018,16 +4018,16 @@ func TestSpecsViolation(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		violations := commentPolicy(ctx)
+		breachs := commentPolicy(ctx)
 
-		for _, v := range violations {
-			if v.Kind == ViolationCodeCommentInline {
-				t.Errorf("spec comment should be exempt from inline violation: line %d %s", v.Line, v.Excerpt)
+		for _, v := range breachs {
+			if v.Kind == BreachCodeCommentInline {
+				t.Errorf("spec comment should be exempt from inline breach: line %d %s", v.Line, v.Excerpt)
 			}
 		}
 	})
 
-	t.Run("JSDoc spec comments exempt from JSDoc violation", func(t *testing.T) {
+	t.Run("JSDoc spec comments exempt from JSDoc breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
@@ -4043,11 +4043,11 @@ func TestSpecsViolation(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		violations := commentPolicy(ctx)
+		breachs := commentPolicy(ctx)
 
-		for _, v := range violations {
-			if v.Kind == ViolationCodeCommentJSDoc {
-				t.Errorf("JSDoc spec comment should be exempt from JSDoc violation: line %d", v.Line)
+		for _, v := range breachs {
+			if v.Kind == BreachCodeCommentJSDoc {
+				t.Errorf("JSDoc spec comment should be exempt from JSDoc breach: line %d", v.Line)
 			}
 		}
 	})
@@ -4068,11 +4068,11 @@ func TestSpecsViolation(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		violations := commentPolicy(ctx)
+		breachs := commentPolicy(ctx)
 
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationCodeCommentJSDoc {
+		for _, v := range breachs {
+			if v.Kind == BreachCodeCommentJSDoc {
 				found = true
 				break
 			}
@@ -4098,11 +4098,11 @@ func TestSpecsViolation(t *testing.T) {
 		bundles := []Bundle{}
 		scope := Scope{Kind: ScopeFile, FilePath: testFile}
 		ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-		violations := commentPolicy(ctx)
+		breachs := commentPolicy(ctx)
 
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationCodeCommentInline {
+		for _, v := range breachs {
+			if v.Kind == BreachCodeCommentInline {
 				found = true
 				break
 			}
@@ -4112,18 +4112,18 @@ func TestSpecsViolation(t *testing.T) {
 		}
 	})
 
-	t.Run("ViolationCodeSpecsSyntax in violation info table", func(t *testing.T) {
-		info := ViolationCodeSpecsSyntax.Info()
-		if info.Kind != ViolationCodeSpecsSyntax {
-			t.Errorf("expected kind %s, got %s", ViolationCodeSpecsSyntax, info.Kind)
+	t.Run("BreachCodeSpecsSyntax in breach info table", func(t *testing.T) {
+		info := BreachCodeSpecsSyntax.Info()
+		if info.Kind != BreachCodeSpecsSyntax {
+			t.Errorf("expected kind %s, got %s", BreachCodeSpecsSyntax, info.Kind)
 		}
 		if info.Autofixable {
-			t.Error("specs syntax violation should not be autofixable")
+			t.Error("specs syntax breach should not be autofixable")
 		}
 	})
 }
 
-func TestDocsViolation(t *testing.T) {
+func TestDocsBreach(t *testing.T) {
 	t.Run("docsPolicy detects missing README.md", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
@@ -4136,16 +4136,16 @@ func TestDocsViolation(t *testing.T) {
 		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContext(scope, bundles)
-		violations := docsPolicy(ctx)
+		breachs := docsPolicy(ctx)
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationCodeDocsMissingReadme {
+		for _, v := range breachs {
+			if v.Kind == BreachCodeDocsMissingReadme {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Error("expected ViolationCodeDocsMissingReadme for missing README.md")
+			t.Error("expected BreachCodeDocsMissingReadme for missing README.md")
 		}
 	})
 	t.Run("docsPolicy detects missing Summary section", func(t *testing.T) {
@@ -4164,16 +4164,16 @@ func TestDocsViolation(t *testing.T) {
 		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContext(scope, bundles)
-		violations := docsPolicy(ctx)
+		breachs := docsPolicy(ctx)
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationCodeDocsMissingReadme && strings.Contains(v.Summary, "Summary") {
+		for _, v := range breachs {
+			if v.Kind == BreachCodeDocsMissingReadme && strings.Contains(v.Summary, "Summary") {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Error("expected ViolationCodeDocsMissingReadme for missing # Summary section")
+			t.Error("expected BreachCodeDocsMissingReadme for missing # Summary section")
 		}
 	})
 	t.Run("docsPolicy detects missing Specs section", func(t *testing.T) {
@@ -4192,19 +4192,19 @@ func TestDocsViolation(t *testing.T) {
 		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContext(scope, bundles)
-		violations := docsPolicy(ctx)
+		breachs := docsPolicy(ctx)
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationCodeDocsMissingReadme && strings.Contains(v.Summary, "Specs") {
+		for _, v := range breachs {
+			if v.Kind == BreachCodeDocsMissingReadme && strings.Contains(v.Summary, "Specs") {
 				found = true
 				break
 			}
 		}
 		if !found {
-			t.Error("expected ViolationCodeDocsMissingReadme for missing # Specs section")
+			t.Error("expected BreachCodeDocsMissingReadme for missing # Specs section")
 		}
 	})
-	t.Run("docsPolicy clean README no violation", func(t *testing.T) {
+	t.Run("docsPolicy clean README no breach", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
@@ -4220,10 +4220,10 @@ func TestDocsViolation(t *testing.T) {
 		bundles := []Bundle{{Name: "test-bundle", Root: bundleRoot}}
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContext(scope, bundles)
-		violations := docsPolicy(ctx)
-		for _, v := range violations {
-			if v.Kind == ViolationCodeDocsMissingReadme {
-				t.Errorf("unexpected ViolationCodeDocsMissingReadme: %s", v.Summary)
+		breachs := docsPolicy(ctx)
+		for _, v := range breachs {
+			if v.Kind == BreachCodeDocsMissingReadme {
+				t.Errorf("unexpected BreachCodeDocsMissingReadme: %s", v.Summary)
 			}
 		}
 	})
@@ -4242,15 +4242,15 @@ func TestDocsViolation(t *testing.T) {
 		}
 		scope := Scope{Kind: ScopeRepo}
 		ctx := NewPolicyContext(scope, bundles)
-		violations := docsPolicy(ctx)
+		breachs := docsPolicy(ctx)
 		count := 0
-		for _, v := range violations {
-			if v.Kind == ViolationCodeDocsMissingReadme {
+		for _, v := range breachs {
+			if v.Kind == BreachCodeDocsMissingReadme {
 				count++
 			}
 		}
 		if count != 1 {
-			t.Errorf("expected 1 violation for deduplicated root, got %d", count)
+			t.Errorf("expected 1 breach for deduplicated root, got %d", count)
 		}
 	})
 }
@@ -4342,55 +4342,55 @@ func TestHeaderPolicyOldFormatId(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeFile, FilePath: testFile}
 	ctx := NewPolicyContextWithFiles(scope, bundles, []string{testFile})
-	violations, err := CheckPoliciesWithContext(ctx, nil)
+	breachs, err := CheckPoliciesWithContext(ctx, nil)
 	if err != nil {
 		t.Fatalf("policy check failed: %v", err)
 	}
-	counts := map[ViolationKind]int{}
-	for _, v := range violations {
+	counts := map[Statute]int{}
+	for _, v := range breachs {
 		counts[v.Kind]++
 	}
-	if counts[ViolationCodeFileWrongHeaderRegionFormat] == 0 {
-		t.Error("expected wrong-header-format violation for old-format ID without [ID](URI)")
+	if counts[BreachCodeFileWrongHeaderRegionFormat] == 0 {
+		t.Error("expected wrong-header-format breach for old-format ID without [ID](URI)")
 	}
 }
 
-func TestViolationKindGroup(t *testing.T) {
+func TestTerritory(t *testing.T) {
 	t.Run("AllKinds flat", func(t *testing.T) {
-		g := ViolationKindGroup{
+		g := Territory{
 			Name:        "File",
-			Description: "File-level violations",
+			Description: "File-level breachs",
 			Scopes:      []string{"**/*.ts"},
-			Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion, ViolationCodeFileMissingIdentification},
+			Kinds:       []Statute{BreachCodeFileMissingHeaderRegion, BreachCodeFileMissingIdentification},
 		}
 		kinds := g.AllKinds()
 		if len(kinds) != 2 {
 			t.Fatalf("expected 2 kinds, got %d", len(kinds))
 		}
-		if kinds[0] != ViolationCodeFileMissingHeaderRegion {
-			t.Errorf("expected %s, got %s", ViolationCodeFileMissingHeaderRegion, kinds[0])
+		if kinds[0] != BreachCodeFileMissingHeaderRegion {
+			t.Errorf("expected %s, got %s", BreachCodeFileMissingHeaderRegion, kinds[0])
 		}
-		if kinds[1] != ViolationCodeFileMissingIdentification {
-			t.Errorf("expected %s, got %s", ViolationCodeFileMissingIdentification, kinds[1])
+		if kinds[1] != BreachCodeFileMissingIdentification {
+			t.Errorf("expected %s, got %s", BreachCodeFileMissingIdentification, kinds[1])
 		}
 	})
 	t.Run("AllKinds nested groups", func(t *testing.T) {
-		g := ViolationKindGroup{
+		g := Territory{
 			Name:        "Code",
-			Description: "Code violations",
+			Description: "Code breachs",
 			Scopes:      []string{"**/*.{ts,tsx}"},
-			Groups: []ViolationKindGroup{
+			Territories: []Territory{
 				{
 					Name:        "File",
-					Description: "File-level violations",
+					Description: "File-level breachs",
 					Scopes:      []string{"**/*.ts"},
-					Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+					Kinds:       []Statute{BreachCodeFileMissingHeaderRegion},
 				},
 				{
 					Name:        "Section",
-					Description: "Section-level violations",
+					Description: "Section-level breachs",
 					Scopes:      []string{"**/*.ts"},
-					Kinds:       []ViolationKind{ViolationCodeSectionEmpty},
+					Kinds:       []Statute{BreachCodeSectionEmpty},
 				},
 			},
 		}
@@ -4400,17 +4400,17 @@ func TestViolationKindGroup(t *testing.T) {
 		}
 	})
 	t.Run("AllKinds mixed kinds and groups", func(t *testing.T) {
-		g := ViolationKindGroup{
+		g := Territory{
 			Name:        "Code",
-			Description: "Code violations",
+			Description: "Code breachs",
 			Scopes:      []string{"**/*.{ts,tsx}"},
-			Kinds:       []ViolationKind{ViolationCodeCommentInline},
-			Groups: []ViolationKindGroup{
+			Kinds:       []Statute{BreachCodeCommentInline},
+			Territories: []Territory{
 				{
 					Name:        "File",
-					Description: "File-level violations",
+					Description: "File-level breachs",
 					Scopes:      []string{"**/*.ts"},
-					Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+					Kinds:       []Statute{BreachCodeFileMissingHeaderRegion},
 				},
 			},
 		}
@@ -4418,26 +4418,26 @@ func TestViolationKindGroup(t *testing.T) {
 		if len(kinds) != 2 {
 			t.Fatalf("expected 2 kinds, got %d", len(kinds))
 		}
-		if kinds[0] != ViolationCodeCommentInline {
-			t.Errorf("expected %s first, got %s", ViolationCodeCommentInline, kinds[0])
+		if kinds[0] != BreachCodeCommentInline {
+			t.Errorf("expected %s first, got %s", BreachCodeCommentInline, kinds[0])
 		}
-		if kinds[1] != ViolationCodeFileMissingHeaderRegion {
-			t.Errorf("expected %s second, got %s", ViolationCodeFileMissingHeaderRegion, kinds[1])
+		if kinds[1] != BreachCodeFileMissingHeaderRegion {
+			t.Errorf("expected %s second, got %s", BreachCodeFileMissingHeaderRegion, kinds[1])
 		}
 	})
 	t.Run("AllKinds deeply nested", func(t *testing.T) {
-		g := ViolationKindGroup{
+		g := Territory{
 			Name:   "Root",
 			Scopes: []string{"**/*"},
-			Groups: []ViolationKindGroup{
+			Territories: []Territory{
 				{
 					Name:   "Level1",
 					Scopes: []string{"**/*"},
-					Groups: []ViolationKindGroup{
+					Territories: []Territory{
 						{
 							Name:   "Level2",
 							Scopes: []string{"**/*"},
-							Kinds:  []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+							Kinds:  []Statute{BreachCodeFileMissingHeaderRegion},
 						},
 					},
 				},
@@ -4447,12 +4447,12 @@ func TestViolationKindGroup(t *testing.T) {
 		if len(kinds) != 1 {
 			t.Fatalf("expected 1 kind, got %d", len(kinds))
 		}
-		if kinds[0] != ViolationCodeFileMissingHeaderRegion {
-			t.Errorf("expected %s, got %s", ViolationCodeFileMissingHeaderRegion, kinds[0])
+		if kinds[0] != BreachCodeFileMissingHeaderRegion {
+			t.Errorf("expected %s, got %s", BreachCodeFileMissingHeaderRegion, kinds[0])
 		}
 	})
 	t.Run("AllKinds empty group", func(t *testing.T) {
-		g := ViolationKindGroup{
+		g := Territory{
 			Name:   "Empty",
 			Scopes: []string{"**/*"},
 		}
@@ -4462,9 +4462,9 @@ func TestViolationKindGroup(t *testing.T) {
 		}
 	})
 	t.Run("GetID and GetURI", func(t *testing.T) {
-		g := ViolationKindGroup{
+		g := Territory{
 			Name:        "File",
-			Description: "File-level violations",
+			Description: "File-level breachs",
 			Scopes:      []string{"**/*.ts"},
 		}
 		id := g.GetID()
@@ -4478,8 +4478,8 @@ func TestViolationKindGroup(t *testing.T) {
 		if uri == "" {
 			t.Error("expected non-empty URI")
 		}
-		if !strings.HasPrefix(uri, "semiorepo://violationKindGroup/") {
-			t.Errorf("expected URI to start with 'semiorepo://violationKindGroup/', got %s", uri)
+		if !strings.HasPrefix(uri, "semiorepo://territory/") {
+			t.Errorf("expected URI to start with 'semiorepo://territory/', got %s", uri)
 		}
 	})
 }
@@ -4491,19 +4491,19 @@ func TestPolicyDefAllKinds(t *testing.T) {
 			Name:        "Test",
 			Description: "Test policy",
 			Scopes:      []string{"**/*"},
-			Groups: []ViolationKindGroup{
+			Territories: []Territory{
 				{
 					Name:   "File",
 					Scopes: []string{"**/*.ts"},
-					Kinds:  []ViolationKind{ViolationCodeFileMissingHeaderRegion, ViolationCodeFileMissingIdentification},
+					Kinds:  []Statute{BreachCodeFileMissingHeaderRegion, BreachCodeFileMissingIdentification},
 				},
 				{
 					Name:   "Section",
 					Scopes: []string{"**/*.ts"},
-					Kinds:  []ViolationKind{ViolationCodeSectionEmpty},
+					Kinds:  []Statute{BreachCodeSectionEmpty},
 				},
 			},
-			Run: func(ctx *PolicyContext) []Violation { return nil },
+			Run: func(ctx *PolicyContext) []Breach { return nil },
 		}
 		kinds := p.AllKinds()
 		if len(kinds) != 3 {
@@ -4515,7 +4515,7 @@ func TestPolicyDefAllKinds(t *testing.T) {
 			ID:     "empty",
 			Name:   "Empty",
 			Scopes: []string{"**/*"},
-			Run:    func(ctx *PolicyContext) []Violation { return nil },
+			Run:    func(ctx *PolicyContext) []Breach { return nil },
 		}
 		kinds := p.AllKinds()
 		if len(kinds) != 0 {
@@ -4533,15 +4533,15 @@ func TestSystemPolicy(t *testing.T) {
 		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.fontSize": 14}`)
 		ctx := NewPolicyContext(Scope{Kind: ScopeRepo}, []Bundle{})
-		violations := systemPolicy(ctx)
+		breachs := systemPolicy(ctx)
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationSystemDevcontainerVscodeSettingsOutside {
+		for _, v := range breachs {
+			if v.Kind == BreachSystemDevcontainerVscodeSettingsOutside {
 				found = true
 			}
 		}
 		if !found {
-			t.Error("expected settings-outside-devcontainer violation")
+			t.Error("expected settings-outside-devcontainer breach")
 		}
 	})
 	t.Run("detects extensions.json outside devcontainer", func(t *testing.T) {
@@ -4552,26 +4552,26 @@ func TestSystemPolicy(t *testing.T) {
 		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python"]}`)
 		ctx := NewPolicyContext(Scope{Kind: ScopeRepo}, []Bundle{})
-		violations := systemPolicy(ctx)
+		breachs := systemPolicy(ctx)
 		found := false
-		for _, v := range violations {
-			if v.Kind == ViolationSystemDevcontainerVscodeExtensionsOutside {
+		for _, v := range breachs {
+			if v.Kind == BreachSystemDevcontainerVscodeExtensionsOutside {
 				found = true
 			}
 		}
 		if !found {
-			t.Error("expected extensions-outside-devcontainer violation")
+			t.Error("expected extensions-outside-devcontainer breach")
 		}
 	})
-	t.Run("no violations when .vscode files absent", func(t *testing.T) {
+	t.Run("no breachs when .vscode files absent", func(t *testing.T) {
 		tmpDir := t.TempDir()
 		oldRoot := rootDir
 		rootDir = tmpDir
 		defer func() { rootDir = oldRoot }()
 		ctx := NewPolicyContext(Scope{Kind: ScopeRepo}, []Bundle{})
-		violations := systemPolicy(ctx)
-		if len(violations) != 0 {
-			t.Errorf("expected 0 violations, got %d", len(violations))
+		breachs := systemPolicy(ctx)
+		if len(breachs) != 0 {
+			t.Errorf("expected 0 breachs, got %d", len(breachs))
 		}
 	})
 	t.Run("autofix moves settings.json into devcontainer.json", func(t *testing.T) {
@@ -4581,10 +4581,10 @@ func TestSystemPolicy(t *testing.T) {
 		defer func() { rootDir = oldRoot }()
 		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.fontSize": 14}`)
-		violations := []Violation{
-			{Kind: ViolationSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
+		breachs := []Breach{
+			{Kind: BreachSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
 		}
-		fixed, err := applySystemAutofixes(violations)
+		fixed, err := applySystemAutofixes(breachs)
 		if err != nil {
 			t.Fatalf("autofix error: %v", err)
 		}
@@ -4626,10 +4626,10 @@ func TestSystemPolicy(t *testing.T) {
 		defer func() { rootDir = oldRoot }()
 		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python", "golang.go"]}`)
-		violations := []Violation{
-			{Kind: ViolationSystemDevcontainerVscodeExtensionsOutside, Scope: ".vscode/extensions.json", Line: 1},
+		breachs := []Breach{
+			{Kind: BreachSystemDevcontainerVscodeExtensionsOutside, Scope: ".vscode/extensions.json", Line: 1},
 		}
-		fixed, err := applySystemAutofixes(violations)
+		fixed, err := applySystemAutofixes(breachs)
 		if err != nil {
 			t.Fatalf("autofix error: %v", err)
 		}
@@ -4670,10 +4670,10 @@ func TestSystemPolicy(t *testing.T) {
 		os.MkdirAll(filepath.Join(tmpDir, ".devcontainer"), 0o755)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.tabSize": 2}`)
 		WriteTextFile(filepath.Join(tmpDir, ".devcontainer", "devcontainer.json"), `{"name": "test", "image": "ubuntu"}`)
-		violations := []Violation{
-			{Kind: ViolationSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
+		breachs := []Breach{
+			{Kind: BreachSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
 		}
-		fixed, err := applySystemAutofixes(violations)
+		fixed, err := applySystemAutofixes(breachs)
 		if err != nil {
 			t.Fatalf("autofix error: %v", err)
 		}
@@ -4704,11 +4704,11 @@ func TestSystemPolicy(t *testing.T) {
 		os.MkdirAll(filepath.Join(tmpDir, ".vscode"), 0o755)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "settings.json"), `{"editor.fontSize": 14}`)
 		WriteTextFile(filepath.Join(tmpDir, ".vscode", "extensions.json"), `{"recommendations": ["ms-python.python"]}`)
-		violations := []Violation{
-			{Kind: ViolationSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
-			{Kind: ViolationSystemDevcontainerVscodeExtensionsOutside, Scope: ".vscode/extensions.json", Line: 1},
+		breachs := []Breach{
+			{Kind: BreachSystemDevcontainerVscodeSettingsOutside, Scope: ".vscode/settings.json", Line: 1},
+			{Kind: BreachSystemDevcontainerVscodeExtensionsOutside, Scope: ".vscode/extensions.json", Line: 1},
 		}
-		fixed, err := applySystemAutofixes(violations)
+		fixed, err := applySystemAutofixes(breachs)
 		if err != nil {
 			t.Fatalf("autofix error: %v", err)
 		}
@@ -4737,48 +4737,48 @@ func TestSystemPolicy(t *testing.T) {
 		}
 		kinds := p.AllKinds()
 		if len(kinds) != 2 {
-			t.Fatalf("expected 2 violation kinds, got %d", len(kinds))
+			t.Fatalf("expected 2 statutes, got %d", len(kinds))
 		}
-		kindSet := map[ViolationKind]bool{}
+		kindSet := map[Statute]bool{}
 		for _, k := range kinds {
 			kindSet[k] = true
 		}
-		if !kindSet[ViolationSystemDevcontainerVscodeSettingsOutside] {
+		if !kindSet[BreachSystemDevcontainerVscodeSettingsOutside] {
 			t.Error("expected settings-outside-devcontainer kind")
 		}
-		if !kindSet[ViolationSystemDevcontainerVscodeExtensionsOutside] {
+		if !kindSet[BreachSystemDevcontainerVscodeExtensionsOutside] {
 			t.Error("expected extensions-outside-devcontainer kind")
 		}
 	})
-	t.Run("violation kind meta is correct", func(t *testing.T) {
-		settingsMeta := ViolationSystemDevcontainerVscodeSettingsOutside.Info()
+	t.Run("statute meta is correct", func(t *testing.T) {
+		settingsMeta := BreachSystemDevcontainerVscodeSettingsOutside.Info()
 		if !settingsMeta.Autofixable {
-			t.Error("expected settings violation to be autofixable")
+			t.Error("expected settings breach to be autofixable")
 		}
-		if settingsMeta.Priority != ViolationPriorityHigh {
-			t.Error("expected settings violation to be high priority")
+		if settingsMeta.Priority != BreachPriorityHigh {
+			t.Error("expected settings breach to be high priority")
 		}
-		extMeta := ViolationSystemDevcontainerVscodeExtensionsOutside.Info()
+		extMeta := BreachSystemDevcontainerVscodeExtensionsOutside.Info()
 		if !extMeta.Autofixable {
-			t.Error("expected extensions violation to be autofixable")
+			t.Error("expected extensions breach to be autofixable")
 		}
-		if extMeta.Priority != ViolationPriorityHigh {
-			t.Error("expected extensions violation to be high priority")
+		if extMeta.Priority != BreachPriorityHigh {
+			t.Error("expected extensions breach to be high priority")
 		}
 	})
 }
 
-func TestBuildViolationKindGroupTree(t *testing.T) {
+func TestBuildTerritoryTree(t *testing.T) {
 	t.Run("single group with kinds", func(t *testing.T) {
-		groups := []ViolationKindGroup{
+		groups := []Territory{
 			{
 				Name:        "File",
-				Description: "File violations",
+				Description: "File breachs",
 				Scopes:      []string{"**/*.ts"},
-				Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion, ViolationCodeFileMissingIdentification},
+				Kinds:       []Statute{BreachCodeFileMissingHeaderRegion, BreachCodeFileMissingIdentification},
 			},
 		}
-		nodes := buildViolationKindGroupTree(groups)
+		nodes := buildTerritoryTree(groups)
 		if len(nodes) != 1 {
 			t.Fatalf("expected 1 node, got %d", len(nodes))
 		}
@@ -4792,31 +4792,31 @@ func TestBuildViolationKindGroupTree(t *testing.T) {
 			t.Fatalf("expected 2 children, got %d", len(nodes[0].Children))
 		}
 		for _, child := range nodes[0].Children {
-			if child.Kind != TreeNodeViolationKindNode {
-				t.Errorf("expected violation kind node, got %s", child.Kind)
+			if child.Kind != TreeNodeStatuteNode {
+				t.Errorf("expected statute node, got %s", child.Kind)
 			}
 		}
 	})
 	t.Run("nested groups", func(t *testing.T) {
-		groups := []ViolationKindGroup{
+		groups := []Territory{
 			{
 				Name:   "Code",
 				Scopes: []string{"**/*.ts"},
-				Groups: []ViolationKindGroup{
+				Territories: []Territory{
 					{
 						Name:   "File",
 						Scopes: []string{"**/*.ts"},
-						Kinds:  []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+						Kinds:  []Statute{BreachCodeFileMissingHeaderRegion},
 					},
 					{
 						Name:   "Section",
 						Scopes: []string{"**/*.ts"},
-						Kinds:  []ViolationKind{ViolationCodeSectionEmpty},
+						Kinds:  []Statute{BreachCodeSectionEmpty},
 					},
 				},
 			},
 		}
-		nodes := buildViolationKindGroupTree(groups)
+		nodes := buildTerritoryTree(groups)
 		if len(nodes) != 1 {
 			t.Fatalf("expected 1 root node, got %d", len(nodes))
 		}
@@ -4832,21 +4832,21 @@ func TestBuildViolationKindGroupTree(t *testing.T) {
 		}
 	})
 	t.Run("empty groups", func(t *testing.T) {
-		nodes := buildViolationKindGroupTree(nil)
+		nodes := buildTerritoryTree(nil)
 		if len(nodes) != 0 {
 			t.Fatalf("expected 0 nodes, got %d", len(nodes))
 		}
 	})
 	t.Run("group node data contains scopes", func(t *testing.T) {
-		groups := []ViolationKindGroup{
+		groups := []Territory{
 			{
 				Name:        "Sketchpad",
-				Description: "Sketchpad violations",
+				Description: "Sketchpad breachs",
 				Scopes:      []string{"js/sketchpad/**/*.ts", "js/sketchpad/**/*.tsx"},
-				Kinds:       []ViolationKind{ViolationCodeFileMissingHeaderRegion},
+				Kinds:       []Statute{BreachCodeFileMissingHeaderRegion},
 			},
 		}
-		nodes := buildViolationKindGroupTree(groups)
+		nodes := buildTerritoryTree(groups)
 		data := nodes[0].Data
 		if data == nil {
 			t.Fatal("expected non-nil data")
@@ -4869,7 +4869,7 @@ func TestRegisteredPoliciesHaveGroups(t *testing.T) {
 		}
 		kinds := p.AllKinds()
 		if len(kinds) == 0 {
-			t.Errorf("policy %s has no violation kinds", p.ID)
+			t.Errorf("policy %s has no statutes", p.ID)
 		}
 	}
 }
@@ -6447,7 +6447,7 @@ func TestFormatResult_Additional(t *testing.T) {
 		if strings.TrimSpace(output) == "" || strings.Contains(output, "\"fix\":") {
 			t.Errorf("expected formatted fix, got: %s", output)
 		}
-		if !strings.Contains(output, "fixed 5 violations") {
+		if !strings.Contains(output, "fixed 5 breachs") {
 			t.Error("output missing fixed count")
 		}
 	})
@@ -6657,8 +6657,8 @@ func TestFormatMarkdownResult_Lists(t *testing.T) {
 		{"projects", "projects", "project", map[string]interface{}{
 			"id": "proj", "description": "Project",
 		}},
-		{"violationKinds", "violationKinds", "violationKind", map[string]interface{}{
-			"id": "vk1", "description": "Violation kind",
+		{"statutes", "statutes", "statute", map[string]interface{}{
+			"id": "vk1", "description": "Statute",
 		}},
 	}
 
@@ -6761,7 +6761,7 @@ func TestFormatMarkdownResult_Analyze(t *testing.T) {
 				"total":       float64(3),
 				"autofixable": float64(1),
 			},
-			"violations": []interface{}{
+			"breachs": []interface{}{
 				map[string]interface{}{
 					"kind":    map[string]interface{}{"id": "inline-comment"},
 					"scope":   "file.ts",
@@ -6773,11 +6773,11 @@ func TestFormatMarkdownResult_Analyze(t *testing.T) {
 	}
 	jsonBytes, _ := json.Marshal(payload)
 	output := formatMarkdownResult("analyze", json.RawMessage(jsonBytes))
-	if !strings.Contains(output, "Total Violations") {
-		t.Error("analyze output missing 'Total Violations'")
+	if !strings.Contains(output, "Total Breachs") {
+		t.Error("analyze output missing 'Total Breachs'")
 	}
 	if !strings.Contains(output, "inline-comment") {
-		t.Error("analyze output missing violation kind")
+		t.Error("analyze output missing statute")
 	}
 }
 
@@ -6955,7 +6955,7 @@ func TestRenderEntityMarkdownLink_AllKinds(t *testing.T) {
 		{"policy", map[string]interface{}{
 			"id": "code", "description": "Code policy",
 		}},
-		{"violationKind", map[string]interface{}{
+		{"statute", map[string]interface{}{
 			"id": "vk1", "description": "Desc",
 		}},
 		{"project", map[string]interface{}{
@@ -7326,8 +7326,8 @@ func TestListCommands(t *testing.T) {
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
-			name:  "violationKind list",
-			args:  []string{"violationKind", "list"},
+			name:  "statute list",
+			args:  []string{"statute", "list"},
 			modes: []string{"", "json", "md", "text"},
 		},
 		{
@@ -7733,21 +7733,21 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "project user",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio", "kind": "user"},
-			wantID:  fmt.Sprintf("%s@semio", emojiText(EmojiProjectUser)),
+			wantID:  fmt.Sprintf("%s%ssemio", emojiText(EmojiProjects), emojiText(EmojiProjectUser)),
 			wantURI: "semiorepo://project/@SEMIO",
 		},
 		{
 			name:    "project infrastructure",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"},
-			wantID:  fmt.Sprintf("%s@semio-repo", emojiText(EmojiProjectInfra)),
+			wantID:  fmt.Sprintf("%s%ssemio-repo", emojiText(EmojiProjects), emojiText(EmojiProjectInfra)),
 			wantURI: "semiorepo://project/@SEMIO-REPO",
 		},
 		{
 			name:    "project research",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "coda", "kind": "research"},
-			wantID:  fmt.Sprintf("%s@coda", emojiText(EmojiProjectResearch)),
+			wantID:  fmt.Sprintf("%s%scoda", emojiText(EmojiProjects), emojiText(EmojiProjectResearch)),
 			wantURI: "semiorepo://project/@CODA",
 		},
 		{
@@ -7761,21 +7761,21 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "bundle library",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/js", "kind": "library"},
-			wantID:  fmt.Sprintf("%ssemio/js", emojiText(EmojiBundleLibrary)),
+			wantID:  fmt.Sprintf("%s%ssemio/js", emojiText(EmojiBundles), emojiText(EmojiBundleLibrary)),
 			wantURI: "semiorepo://bundle/SEMIO/JS",
 		},
 		{
 			name:    "bundle example",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "coda/examples", "kind": "library"},
-			wantID:  fmt.Sprintf("%scoda/examples", emojiText(EmojiBundleLibrary)),
+			wantID:  fmt.Sprintf("%s%scoda/examples", emojiText(EmojiBundles), emojiText(EmojiBundleLibrary)),
 			wantURI: "semiorepo://bundle/CODA/EXAMPLES",
 		},
 		{
 			name:    "bundle ui",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/desktop", "kind": "ui"},
-			wantID:  fmt.Sprintf("%ssemio/desktop", emojiText(EmojiBundleUI)),
+			wantID:  fmt.Sprintf("%s%ssemio/desktop", emojiText(EmojiBundles), emojiText(EmojiBundleUI)),
 			wantURI: "semiorepo://bundle/SEMIO/DESKTOP",
 		},
 		{
@@ -7796,14 +7796,14 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "folder required",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/src", "kind": "required"},
-			wantID:  fmt.Sprintf("%ssemio/js/src", emojiText(EmojiFolderRequired)),
+			wantID:  fmt.Sprintf("%s%ssemio/js/src", emojiText(EmojiFolders), emojiText(EmojiFolderRequired)),
 			wantURI: "semiorepo://folder/SEMIO/JS/SRC",
 		},
 		{
 			name:    "folder organization",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/utils", "kind": "organization"},
-			wantID:  fmt.Sprintf("%ssemio/js/utils", emojiText(EmojiFolderOrg)),
+			wantID:  fmt.Sprintf("%s%ssemio/js/utils", emojiText(EmojiFolders), emojiText(EmojiFolderOrg)),
 			wantURI: "semiorepo://folder/SEMIO/JS/UTILS",
 		},
 		{
@@ -7817,49 +7817,49 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "file docs",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
-			wantID:  fmt.Sprintf("%stest.txt", emojiText(EmojiFileDocs)),
+			wantID:  fmt.Sprintf("%s%stest.txt", emojiText(EmojiFiles), emojiText(EmojiFileDocs)),
 			wantURI: "semiorepo://file/TEST.TXT",
 		},
 		{
 			name:    "file code",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "main.go", "kind": "code"},
-			wantID:  fmt.Sprintf("%smain.go", emojiText(EmojiFileCode)),
+			wantID:  fmt.Sprintf("%s%smain.go", emojiText(EmojiFiles), emojiText(EmojiFileCode)),
 			wantURI: "semiorepo://file/MAIN.GO",
 		},
 		{
 			name:    "file test",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"},
-			wantID:  fmt.Sprintf("%ssemio/js/src/index.test.ts", emojiText(EmojiFileTest)),
+			wantID:  fmt.Sprintf("%s%ssemio/js/src/index.test.ts", emojiText(EmojiFiles), emojiText(EmojiFileTest)),
 			wantURI: "semiorepo://file/SEMIO/JS/SRC/INDEX.TEST.TS",
 		},
 		{
 			name:    "file config",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
-			wantID:  fmt.Sprintf("%stsconfig.json", emojiText(EmojiFileConfig)),
+			wantID:  fmt.Sprintf("%s%stsconfig.json", emojiText(EmojiFiles), emojiText(EmojiFileConfig)),
 			wantURI: "semiorepo://file/TSCONFIG.JSON",
 		},
 		{
 			name:    "file script",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "build.sh", "kind": "script"},
-			wantID:  fmt.Sprintf("%sbuild.sh", emojiText(EmojiFileScript)),
+			wantID:  fmt.Sprintf("%s%sbuild.sh", emojiText(EmojiFiles), emojiText(EmojiFileScript)),
 			wantURI: "semiorepo://file/BUILD.SH",
 		},
 		{
 			name:    "file resource",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
-			wantID:  fmt.Sprintf("%slogo.png", emojiText(EmojiFileResource)),
+			wantID:  fmt.Sprintf("%s%slogo.png", emojiText(EmojiFiles), emojiText(EmojiFileResource)),
 			wantURI: "semiorepo://file/LOGO.PNG",
 		},
 		{
 			name:    "file license",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "LICENSE.md", "kind": "license"},
-			wantID:  fmt.Sprintf("%sLICENSE.md", emojiText(EmojiFileLicense)),
+			wantID:  fmt.Sprintf("%s%sLICENSE.md", emojiText(EmojiFiles), emojiText(EmojiFileLicense)),
 			wantURI: "semiorepo://file/LICENSE.MD",
 		},
 		{
@@ -7894,21 +7894,21 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "definition with id",
 			kind:    "definition",
 			data:    map[string]interface{}{"id": "semio/js/src/index.ts#MyClass", "kind": "implementation"},
-			wantID:  fmt.Sprintf("%ssemio/js/src/index.ts#MyClass", emojiText(EmojiDefinitionImpl)),
+			wantID:  fmt.Sprintf("%s%ssemio/js/src/index.ts#MyClass", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl)),
 			wantURI: "semiorepo://definition/SEMIO/JS/SRC/INDEX.TS/MY-CLASS",
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
-			wantID:  fmt.Sprintf("%ssemio/js/src/file.ts#Types§MyInterface", emojiText(EmojiDefinitionInterface)),
-			wantURI: "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/TYPES/MYINTERFACE",
+			wantID:  fmt.Sprintf("%s%ssemio/js/src/file.ts#Types§MyInterface", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionInterface)),
+			wantURI: "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/TYPES/MY-INTERFACE",
 		},
 		{
 			name:    "definition constant",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
-			wantID:  fmt.Sprintf("%ssemio/js/src/file.ts§MAX_SIZE", emojiText(EmojiDefinitionConstant)),
+			wantID:  fmt.Sprintf("%s%ssemio/js/src/file.ts§MAX_SIZE", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionConstant)),
 			wantURI: "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/MAX-SIZE",
 		},
 		{
@@ -7927,7 +7927,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"day":   float64(4),
 				"slug":  "test-ticket",
 			},
-			wantID:  fmt.Sprintf("%s2025/02/04/test-ticket", emojiText(EmojiTicket)),
+			wantID:  fmt.Sprintf("%s20250204test-ticket", emojiText(EmojiTicket)),
 			wantURI: "semiorepo://ticket/2025/02/04/TEST-TICKET",
 		},
 		{
@@ -7940,7 +7940,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"slug":   "test-ticket",
 				"status": "open",
 			},
-			wantID:  fmt.Sprintf("%s2025/02/04/test-ticket?open", emojiText(EmojiTicket)),
+			wantID:  fmt.Sprintf("%s20250204test-ticket", emojiText(EmojiTicket)),
 			wantURI: "semiorepo://ticket/2025/02/04/TEST-TICKET",
 		},
 		{
@@ -7996,22 +7996,22 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "policy",
 			kind:    "policy",
 			data:    map[string]interface{}{"id": "/code-hygiene"},
-			wantID:  fmt.Sprintf("%s/code-hygiene", emojiText(EmojiPolicy)),
+			wantID:  fmt.Sprintf("%scode-hygiene", emojiText(EmojiPolicy)),
 			wantURI: "semiorepo://policy/CODE-HYGIENE",
 		},
 		{
-			name:    "violationKinds collection",
-			kind:    "violationKinds",
+			name:    "statutes collection",
+			kind:    "statutes",
 			data:    map[string]interface{}{},
-			wantID:  emojiText(EmojiViolationKinds),
-			wantURI: "semiorepo://violationKinds",
+			wantID:  emojiText(EmojiStatutes),
+			wantURI: "semiorepo://statutes",
 		},
 		{
-			name:    "violationKind",
-			kind:    "violationKind",
+			name:    "statute",
+			kind:    "statute",
 			data:    map[string]interface{}{"id": "code/inline-comment"},
-			wantID:  fmt.Sprintf("%sCode#Inline Comment", emojiText(EmojiViolationKind)),
-			wantURI: "semiorepo://violationKind/CODE/INLINE-COMMENT",
+			wantID:  fmt.Sprintf("%sCode#Inline Comment", emojiText(EmojiStatute)),
+			wantURI: "semiorepo://statute/CODE/INLINE-COMMENT",
 		},
 		{
 			name:    "contributors collection",
@@ -8041,6 +8041,27 @@ func TestArtifactIDAndURI(t *testing.T) {
 			wantID:  fmt.Sprintf("%sabc123", emojiText(EmojiCommit)),
 			wantURI: "semiorepo://commit/ABC123",
 		},
+		{
+			name:    "interactions collection",
+			kind:    "interactions",
+			data:    map[string]interface{}{},
+			wantID:  emojiText(EmojiInteractions),
+			wantURI: "semiorepo://interactions",
+		},
+		{
+			name:    "interaction started ticket",
+			kind:    "interaction",
+			data:    map[string]interface{}{"kind": "started", "entityId": fmt.Sprintf("%s20260214INTRODUCE-INTERACTION-MECHANISM", emojiText(EmojiTicket))},
+			wantID:  fmt.Sprintf("%s%s%s20260214INTRODUCE-INTERACTION-MECHANISM", emojiText(EmojiInteractions), emojiText(EmojiInteractionStarted), emojiText(EmojiTicket)),
+			wantURI: "semiorepo://interaction/ticket/2026/02/14/INTRODUCE-INTERACTION-MECHANISM",
+		},
+		{
+			name:    "interaction finished goal",
+			kind:    "interaction",
+			data:    map[string]interface{}{"kind": "finished", "entityId": fmt.Sprintf("%sR26-02", emojiText(EmojiGoal))},
+			wantID:  fmt.Sprintf("%s%s%sR26-02", emojiText(EmojiInteractions), emojiText(EmojiInteractionFinished), emojiText(EmojiGoal)),
+			wantURI: "semiorepo://interaction/goal/R26-02",
+		},
 	}
 
 	for _, tt := range tests {
@@ -8063,27 +8084,45 @@ func TestIdToUri(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"repo", "🌍", "semiorepo://repo"},
-		{"projects", "🏗️", "semiorepo://projects"},
-		{"project user", "👤@semio", "semiorepo://project/@SEMIO"},
-		{"project infra", "🧰@semio-repo", "semiorepo://project/@SEMIO-REPO"},
-		{"bundle", "📚semio/js", "semiorepo://bundle/SEMIO/JS"},
-		{"folder", "📁semio/js/src", "semiorepo://folder/SEMIO/JS/SRC"},
-		{"file", "📃test.txt", "semiorepo://file/TEST.TXT"},
-		{"section", "🔖semio/js/src/Design.tsx#State Management#Design Store", "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE"},
-		{"definition", "🛠️semio/js/src/file.ts#Section§myFunc", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/SECTION/MY-FUNC"},
-		{"ticket", "🎫2025/02/04/test-ticket", "semiorepo://ticket/2025/02/04/TEST-TICKET"},
-		{"ticket with status", "🎫2025/02/04/test-ticket?open", "semiorepo://ticket/2025/02/04/TEST-TICKET"},
-		{"goal", "🎯R26-02/RUNNING-SKETCHPAD", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD"},
-		{"draft", "✍my-draft", "semiorepo://draft/MY-DRAFT"},
-		{"todo", "📝my-todo", "semiorepo://todo/MY-TODO"},
-		{"policy", "🛡️/code-hygiene", "semiorepo://policy/CODE-HYGIENE"},
-		{"violationKind two segments", "🚫Code#Inline Comment", "semiorepo://violationKind/CODE/INLINE-COMMENT"},
-		{"violationKind three segments", "🚫Code#File#Missing Header", "semiorepo://violationKind/CODE/FILE/MISSING-HEADER"},
-		{"contributor", "👤usalu", "semiorepo://contributor/USALU"},
-		{"commit", "🔀abc123", "semiorepo://commit/ABC123"},
-		{"tickets collection", "🎫", "semiorepo://tickets"},
-		{"goals collection", "🎯", "semiorepo://goals"},
+		{"repo", emojiText(EmojiRepo), "semiorepo://repo"},
+		{"projects", emojiText(EmojiProjects), "semiorepo://projects"},
+		{"project user", fmt.Sprintf("%s%ssemio", emojiText(EmojiProjects), emojiText(EmojiProjectUser)), "semiorepo://project/@SEMIO"},
+		{"project infra", fmt.Sprintf("%s%ssemio-repo", emojiText(EmojiProjects), emojiText(EmojiProjectInfra)), "semiorepo://project/@SEMIO-REPO"},
+		{"bundles", emojiText(EmojiBundles), "semiorepo://bundles"},
+		{"bundle", fmt.Sprintf("%s%ssemio/js", emojiText(EmojiBundles), emojiText(EmojiBundleLibrary)), "semiorepo://bundle/SEMIO/JS"},
+		{"folders", emojiText(EmojiFolders), "semiorepo://folders"},
+		{"folders with parent", fmt.Sprintf("%ssemio/js/src", emojiText(EmojiFolders)), "semiorepo://folders/SEMIO/JS/SRC"},
+		{"folder required", fmt.Sprintf("%s%ssemio/js/src", emojiText(EmojiFolders), emojiText(EmojiFolderRequired)), "semiorepo://folder/SEMIO/JS/SRC"},
+		{"folder org", fmt.Sprintf("%s%ssemio/js/utils", emojiText(EmojiFolders), emojiText(EmojiFolderOrg)), "semiorepo://folder/SEMIO/JS/UTILS"},
+		{"files", emojiText(EmojiFiles), "semiorepo://files"},
+		{"file docs", fmt.Sprintf("%s%stest.txt", emojiText(EmojiFiles), emojiText(EmojiFileDocs)), "semiorepo://file/TEST.TXT"},
+		{"file code", fmt.Sprintf("%s%smain.go", emojiText(EmojiFiles), emojiText(EmojiFileCode)), "semiorepo://file/MAIN.GO"},
+		{"sections", emojiText(EmojiSections), "semiorepo://sections"},
+		{"section", fmt.Sprintf("%ssemio/js/src/Design.tsx#State Management#Design Store", emojiText(EmojiSection)), "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE"},
+		{"definitions", emojiText(EmojiDefinitions), "semiorepo://definitions"},
+		{"definitions with file", fmt.Sprintf("%ssemio/js/src/index.ts", emojiText(EmojiDefinitions)), "semiorepo://definitions/SEMIO/JS/SRC/INDEX.TS"},
+		{"definition impl", fmt.Sprintf("%s%ssemio/js/src/file.ts#Section§myFunc", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl)), "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/SECTION/MY-FUNC"},
+		{"tickets", emojiText(EmojiTickets), "semiorepo://tickets"},
+		{"ticket", fmt.Sprintf("%s20250204test-ticket", emojiText(EmojiTicket)), "semiorepo://ticket/2025/02/04/TEST-TICKET"},
+		{"ticket with status", fmt.Sprintf("%s20250204test-ticket", emojiText(EmojiTicket)), "semiorepo://ticket/2025/02/04/TEST-TICKET"},
+		{"goals", emojiText(EmojiGoals), "semiorepo://goals"},
+		{"goal", fmt.Sprintf("%sR26-02/RUNNING-SKETCHPAD", emojiText(EmojiGoal)), "semiorepo://goal/R26-02/RUNNING-SKETCHPAD"},
+		{"drafts", emojiText(EmojiDrafts), "semiorepo://drafts"},
+		{"draft", fmt.Sprintf("%smy-draft", emojiText(EmojiDraft)), "semiorepo://draft/MY-DRAFT"},
+		{"todos", emojiText(EmojiTodos), "semiorepo://todos"},
+		{"todo", fmt.Sprintf("%smy-todo", emojiText(EmojiTodo)), "semiorepo://todo/MY-TODO"},
+		{"policies", emojiText(EmojiPolicies), "semiorepo://policies"},
+		{"policy", fmt.Sprintf("%scode-hygiene", emojiText(EmojiPolicy)), "semiorepo://policy/CODE-HYGIENE"},
+		{"statutes", emojiText(EmojiStatutes), "semiorepo://statutes"},
+		{"statute two segments", fmt.Sprintf("%sCode#Inline Comment", emojiText(EmojiStatute)), "semiorepo://statute/CODE/INLINE-COMMENT"},
+		{"statute three segments", fmt.Sprintf("%sCode#File#Missing Header", emojiText(EmojiStatute)), "semiorepo://statute/CODE/FILE/MISSING-HEADER"},
+		{"contributors", emojiText(EmojiContributors), "semiorepo://contributors"},
+		{"contributor", fmt.Sprintf("%susalu", emojiText(EmojiContributor)), "semiorepo://contributor/USALU"},
+		{"commits", emojiText(EmojiCommits), "semiorepo://commits"},
+		{"commit", fmt.Sprintf("%sabc123", emojiText(EmojiCommit)), "semiorepo://commit/ABC123"},
+		{"interactions", emojiText(EmojiInteractions), "semiorepo://interactions"},
+		{"interaction started ticket", fmt.Sprintf("%s%s%s20260214TEST-TICKET", emojiText(EmojiInteractions), emojiText(EmojiInteractionStarted), emojiText(EmojiTicket)), "semiorepo://interaction/ticket/2026/02/14/TEST-TICKET"},
+		{"interaction finished goal", fmt.Sprintf("%s%s%sR26-02", emojiText(EmojiInteractions), emojiText(EmojiInteractionFinished), emojiText(EmojiGoal)), "semiorepo://interaction/goal/R26-02"},
 		{"empty string", "", ""},
 	}
 	for _, tt := range tests {
@@ -8102,35 +8141,41 @@ func TestUriToId(t *testing.T) {
 		uri  string
 		want string
 	}{
-		{"repo", "semiorepo://repo", "🌍"},
-		{"projects", "semiorepo://projects", emojiText("🏗️")},
-		{"project", "semiorepo://project/@SEMIO", "👤@semio"},
-		{"bundles", "semiorepo://bundles", "📦"},
-		{"bundle", "semiorepo://bundle/SEMIO/JS", "📚semio/js"},
-		{"folders", "semiorepo://folders", "📁"},
-		{"folder", "semiorepo://folder/SEMIO/JS/SRC", "📁semio/js/src"},
-		{"files", "semiorepo://files", "📄"},
-		{"file", "semiorepo://file/TEST.TXT", "📄test.txt"},
-		{"section", "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE", "🔖semio/js/src/design.tsx#STATE-MANAGEMENT#DESIGN-STORE"},
-		{"definition single", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/MY-FUNC", emojiText("🛠️") + "semio/js/src/file.ts§MY-FUNC"},
-		{"definition with section", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/SECTION/MY-FUNC", emojiText("🛠️") + "semio/js/src/file.ts#SECTION§MY-FUNC"},
-		{"tickets", "semiorepo://tickets", "🎫"},
-		{"ticket", "semiorepo://ticket/2025/02/04/TEST-TICKET", "🎫2025/02/04/TEST-TICKET"},
-		{"goals", "semiorepo://goals", "🎯"},
-		{"goal", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", "🎯R26-02/RUNNING-SKETCHPAD"},
-		{"drafts", "semiorepo://drafts", "✍"},
-		{"draft", "semiorepo://draft/MY-DRAFT", "✍my-draft"},
-		{"todos", "semiorepo://todos", "📝"},
-		{"todo", "semiorepo://todo/MY-TODO", "📝my-todo"},
-		{"policies", "semiorepo://policies", emojiText("🛡️")},
-		{"policy", "semiorepo://policy/CODE-HYGIENE", emojiText("🛡️") + "/code-hygiene"},
-		{"violationKinds", "semiorepo://violationKinds", "🚫"},
-		{"violationKind two segments", "semiorepo://violationKind/CODE/INLINE-COMMENT", "🚫Code#Inline Comment"},
-		{"violationKind three segments", "semiorepo://violationKind/CODE/FILE/MISSING-HEADER", "🚫Code#File#Missing Header"},
-		{"contributors", "semiorepo://contributors", "👤"},
-		{"contributor", "semiorepo://contributor/USALU", "👤usalu"},
-		{"commits", "semiorepo://commits", "🔀"},
-		{"commit", "semiorepo://commit/ABC123", "🔀abc123"},
+		{"repo", "semiorepo://repo", emojiText(EmojiRepo)},
+		{"projects", "semiorepo://projects", emojiText(EmojiProjects)},
+		{"project", "semiorepo://project/@SEMIO", fmt.Sprintf("%s%ssemio", emojiText(EmojiProjects), emojiText(EmojiProjectUser))},
+		{"bundles", "semiorepo://bundles", emojiText(EmojiBundles)},
+		{"bundle", "semiorepo://bundle/SEMIO/JS", fmt.Sprintf("%s%ssemio/js", emojiText(EmojiBundles), emojiText(EmojiBundleLibrary))},
+		{"folders", "semiorepo://folders", emojiText(EmojiFolders)},
+		{"folders with parent", "semiorepo://folders/SEMIO/JS/SRC", fmt.Sprintf("%ssemio/js/src", emojiText(EmojiFolders))},
+		{"folder", "semiorepo://folder/SEMIO/JS/SRC", fmt.Sprintf("%s%ssemio/js/src", emojiText(EmojiFolders), emojiText(EmojiFolderOrg))},
+		{"files", "semiorepo://files", emojiText(EmojiFiles)},
+		{"file", "semiorepo://file/TEST.TXT", fmt.Sprintf("%s%stest.txt", emojiText(EmojiFiles), emojiText(EmojiFileCode))},
+		{"sections", "semiorepo://sections", emojiText(EmojiSections)},
+		{"section", "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE", fmt.Sprintf("%ssemio/js/src/design.tsx#STATE-MANAGEMENT#DESIGN-STORE", emojiText(EmojiSection))},
+		{"definitions", "semiorepo://definitions", emojiText(EmojiDefinitions)},
+		{"definition single", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/MY-FUNC", fmt.Sprintf("%s%ssemio/js/src/file.ts§MY-FUNC", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl))},
+		{"definition with section", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/SECTION/MY-FUNC", fmt.Sprintf("%s%ssemio/js/src/file.ts#SECTION§MY-FUNC", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl))},
+		{"tickets", "semiorepo://tickets", emojiText(EmojiTickets)},
+		{"ticket", "semiorepo://ticket/2025/02/04/TEST-TICKET", fmt.Sprintf("%s20250204TEST-TICKET", emojiText(EmojiTicket))},
+		{"goals", "semiorepo://goals", emojiText(EmojiGoals)},
+		{"goal", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", fmt.Sprintf("%sR26-02/RUNNING-SKETCHPAD", emojiText(EmojiGoal))},
+		{"drafts", "semiorepo://drafts", emojiText(EmojiDrafts)},
+		{"draft", "semiorepo://draft/MY-DRAFT", fmt.Sprintf("%smy-draft", emojiText(EmojiDraft))},
+		{"todos", "semiorepo://todos", emojiText(EmojiTodos)},
+		{"todo", "semiorepo://todo/MY-TODO", fmt.Sprintf("%smy-todo", emojiText(EmojiTodo))},
+		{"policies", "semiorepo://policies", emojiText(EmojiPolicies)},
+		{"policy", "semiorepo://policy/CODE-HYGIENE", fmt.Sprintf("%scode-hygiene", emojiText(EmojiPolicies))},
+		{"statutes", "semiorepo://statutes", emojiText(EmojiStatutes)},
+		{"statute two segments", "semiorepo://statute/CODE/INLINE-COMMENT", fmt.Sprintf("%sCode#Inline Comment", emojiText(EmojiStatutes))},
+		{"statute three segments", "semiorepo://statute/CODE/FILE/MISSING-HEADER", fmt.Sprintf("%sCode#File#Missing Header", emojiText(EmojiStatutes))},
+		{"contributors", "semiorepo://contributors", emojiText(EmojiContributors)},
+		{"contributor", "semiorepo://contributor/USALU", fmt.Sprintf("%susalu", emojiText(EmojiContributors))},
+		{"commits", "semiorepo://commits", emojiText(EmojiCommits)},
+		{"commit", "semiorepo://commit/ABC123", fmt.Sprintf("%sabc123", emojiText(EmojiCommits))},
+		{"interactions", "semiorepo://interactions", emojiText(EmojiInteractions)},
+		{"interaction started ticket", "semiorepo://interaction/ticket/2026/02/14/TEST-TICKET", fmt.Sprintf("%s%s%s20260214TEST-TICKET", emojiText(EmojiInteractions), emojiText(EmojiInteractionStarted), emojiText(EmojiTicket))},
+		{"interaction goal", "semiorepo://interaction/goal/R26-02", fmt.Sprintf("%s%s%sR26-02", emojiText(EmojiInteractions), emojiText(EmojiInteractionStarted), emojiText(EmojiGoal))},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -8250,7 +8295,7 @@ func TestParseSectionUriPath(t *testing.T) {
 	}
 }
 
-func TestViolationKindIdToUriPath(t *testing.T) {
+func TestStatuteIdToUriPath(t *testing.T) {
 	tests := []struct {
 		name string
 		id   string
@@ -8262,15 +8307,15 @@ func TestViolationKindIdToUriPath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ViolationKindIdToUriPath(tt.id)
+			got := StatuteIdToUriPath(tt.id)
 			if got != tt.want {
-				t.Errorf("ViolationKindIdToUriPath(%q) = %q, want %q", tt.id, got, tt.want)
+				t.Errorf("StatuteIdToUriPath(%q) = %q, want %q", tt.id, got, tt.want)
 			}
 		})
 	}
 }
 
-func TestViolationKindUriPathToId(t *testing.T) {
+func TestStatuteUriPathToId(t *testing.T) {
 	tests := []struct {
 		name    string
 		uriPath string
@@ -8282,9 +8327,9 @@ func TestViolationKindUriPathToId(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ViolationKindUriPathToId(tt.uriPath)
+			got := StatuteUriPathToId(tt.uriPath)
 			if got != tt.want {
-				t.Errorf("ViolationKindUriPathToId(%q) = %q, want %q", tt.uriPath, got, tt.want)
+				t.Errorf("StatuteUriPathToId(%q) = %q, want %q", tt.uriPath, got, tt.want)
 			}
 		})
 	}
@@ -8314,7 +8359,7 @@ func TestTitleizeSlug(t *testing.T) {
 	}
 }
 
-func TestViolationKindPathToIdValue(t *testing.T) {
+func TestStatutePathToIdValue(t *testing.T) {
 	tests := []struct {
 		name string
 		path string
@@ -8327,15 +8372,15 @@ func TestViolationKindPathToIdValue(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ViolationKindPathToIdValue(tt.path)
+			got := StatutePathToIdValue(tt.path)
 			if got != tt.want {
-				t.Errorf("ViolationKindPathToIdValue(%q) = %q, want %q", tt.path, got, tt.want)
+				t.Errorf("StatutePathToIdValue(%q) = %q, want %q", tt.path, got, tt.want)
 			}
 		})
 	}
 }
 
-func TestViolationKindIdValueToPath(t *testing.T) {
+func TestStatuteIdValueToPath(t *testing.T) {
 	tests := []struct {
 		name  string
 		value string
@@ -8348,15 +8393,15 @@ func TestViolationKindIdValueToPath(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ViolationKindIdValueToPath(tt.value)
+			got := StatuteIdValueToPath(tt.value)
 			if got != tt.want {
-				t.Errorf("ViolationKindIdValueToPath(%q) = %q, want %q", tt.value, got, tt.want)
+				t.Errorf("StatuteIdValueToPath(%q) = %q, want %q", tt.value, got, tt.want)
 			}
 		})
 	}
 }
 
-func TestViolationKindPathIdValueRoundTrip(t *testing.T) {
+func TestStatutePathIdValueRoundTrip(t *testing.T) {
 	tests := []struct {
 		name string
 		path string
@@ -8367,8 +8412,8 @@ func TestViolationKindPathIdValueRoundTrip(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			idValue := ViolationKindPathToIdValue(tt.path)
-			gotPath := ViolationKindIdValueToPath(idValue)
+			idValue := StatutePathToIdValue(tt.path)
+			gotPath := StatuteIdValueToPath(idValue)
 			if gotPath != tt.path {
 				t.Errorf("round trip failed: path %q -> idValue %q -> path %q", tt.path, idValue, gotPath)
 			}
@@ -8382,15 +8427,16 @@ func TestIdUriRoundTrip(t *testing.T) {
 		id   string
 		uri  string
 	}{
-		{"policy", fmt.Sprintf("%s/code", emojiText(EmojiPolicy)), "semiorepo://policy/CODE"},
-		{"violationKind", fmt.Sprintf("%sCode#File#Missing Header Region", emojiText(EmojiViolationKind)), "semiorepo://violationKind/CODE/FILE/MISSING-HEADER-REGION"},
+		{"policy", fmt.Sprintf("%scode", emojiText(EmojiPolicy)), "semiorepo://policy/CODE"},
+		{"statute", fmt.Sprintf("%sCode#File#Missing Header Region", emojiText(EmojiStatute)), "semiorepo://statute/CODE/FILE/MISSING-HEADER-REGION"},
 		{"contributor", fmt.Sprintf("%susalu", emojiText(EmojiContributor)), "semiorepo://contributor/USALU"},
 		{"commit", fmt.Sprintf("%sabc123", emojiText(EmojiCommit)), "semiorepo://commit/ABC123"},
 		{"draft", fmt.Sprintf("%sMY-DRAFT", emojiText(EmojiDraft)), "semiorepo://draft/MY-DRAFT"},
 		{"section", fmt.Sprintf("%ssemio/js/src/file.ts#Section", emojiText(EmojiSection)), "semiorepo://section/SEMIO/JS/SRC/FILE.TS/SECTION"},
-		{"file", fmt.Sprintf("%ssemio/js/index.ts", emojiText(EmojiFileCode)), "semiorepo://file/SEMIO/JS/INDEX.TS"},
-		{"ticket", fmt.Sprintf("%s2026/01/15/SOME-TICKET", emojiText(EmojiTicket)), "semiorepo://ticket/2026/01/15/SOME-TICKET"},
+		{"file", fmt.Sprintf("%s%ssemio/js/index.ts", emojiText(EmojiFiles), emojiText(EmojiFileCode)), "semiorepo://file/SEMIO/JS/INDEX.TS"},
+		{"ticket", fmt.Sprintf("%s20260115SOME-TICKET", emojiText(EmojiTicket)), "semiorepo://ticket/2026/01/15/SOME-TICKET"},
 		{"goal", fmt.Sprintf("%sR26-02/RUNNING", emojiText(EmojiGoal)), "semiorepo://goal/R26-02/RUNNING"},
+		{"interaction goal", fmt.Sprintf("%s%s%sR26-02", emojiText(EmojiInteractions), emojiText(EmojiInteractionStarted), emojiText(EmojiGoal)), "semiorepo://interaction/goal/R26-02"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name+"_IdToUri", func(t *testing.T) {
@@ -8600,20 +8646,20 @@ func TestQueryFlag(t *testing.T) {
 			expectMatch: "header",
 		},
 		{
-			name:        "violationKind list --query matches",
-			args:        []string{"violationKind", "list", "--query", "header", "--json"},
+			name:        "statute list --query matches",
+			args:        []string{"statute", "list", "--query", "header", "--json"},
 			query:       "",
 			expectMatch: "header",
 		},
 		{
-			name:          "violationKind list --query excludes unrelated",
-			args:          []string{"violationKind", "list", "--query", "zzz_nonexistent_xyz", "--json"},
+			name:          "statute list --query excludes unrelated",
+			args:          []string{"statute", "list", "--query", "zzz_nonexistent_xyz", "--json"},
 			query:         "",
 			expectMissing: "header",
 		},
 		{
-			name:        "violationKind tree --query matches",
-			args:        []string{"violationKind", "tree", "--query", "header", "--text"},
+			name:        "statute tree --query matches",
+			args:        []string{"statute", "tree", "--query", "header", "--text"},
 			query:       "",
 			expectMatch: "header",
 		},
@@ -8679,8 +8725,8 @@ func TestQueryFuzzyMatch(t *testing.T) {
 		}
 	})
 
-	t.Run("violationKind list fuzzy match with misspelling", func(t *testing.T) {
-		output, err := executeTreeCommand("violationKind", "list", "--query", "licenss", "--json")
+	t.Run("statute list fuzzy match with misspelling", func(t *testing.T) {
+		output, err := executeTreeCommand("statute", "list", "--query", "licenss", "--json")
 		if err != nil {
 			t.Fatalf("command failed: %v\nOutput: %s", err, output)
 		}
@@ -8816,7 +8862,7 @@ func TestQueryEmptyReturnsAll(t *testing.T) {
 		args []string
 	}{
 		{"policy list no query", []string{"policy", "list", "--json"}},
-		{"violationKind list no query", []string{"violationKind", "list", "--json"}},
+		{"statute list no query", []string{"statute", "list", "--json"}},
 		{"contributor list no query", []string{"contributor", "list", "--json"}},
 		{"bundle list no query", []string{"bundle", "list", "--json"}},
 		{"goal list no query", []string{"goal", "list", "--json"}},
@@ -8836,49 +8882,49 @@ func TestQueryEmptyReturnsAll(t *testing.T) {
 	}
 }
 
-func TestViolationKindCommands(t *testing.T) {
+func TestStatuteCommands(t *testing.T) {
 	cwd, _ := os.Getwd()
 	repoRoot := findTestRepoRoot(cwd)
 	SetRootDir(repoRoot)
 
-	t.Run("violationKind list returns results", func(t *testing.T) {
-		output, err := executeTreeCommand("violationKind", "list", "--json")
+	t.Run("statute list returns results", func(t *testing.T) {
+		output, err := executeTreeCommand("statute", "list", "--json")
 		if err != nil {
-			t.Fatalf("violationKind list failed: %v", err)
+			t.Fatalf("statute list failed: %v", err)
 		}
-		if !strings.Contains(output, "violationKind") {
-			t.Errorf("expected violationKind JSON key in output")
+		if !strings.Contains(output, "statute") {
+			t.Errorf("expected statute JSON key in output")
 		}
 		lines := strings.Split(strings.TrimSpace(output), "\n")
 		if len(lines) < 5 {
-			t.Errorf("expected multiple violation kinds, got %d lines", len(lines))
+			t.Errorf("expected multiple statutes, got %d lines", len(lines))
 		}
 	})
 
-	t.Run("violationKind tree returns results", func(t *testing.T) {
-		output, err := executeTreeCommand("violationKind", "tree", "--text")
+	t.Run("statute tree returns results", func(t *testing.T) {
+		output, err := executeTreeCommand("statute", "tree", "--text")
 		if err != nil {
-			t.Fatalf("violationKind tree failed: %v", err)
+			t.Fatalf("statute tree failed: %v", err)
 		}
 		if !strings.Contains(output, "header") {
-			t.Errorf("expected violation kind tree categories in output")
+			t.Errorf("expected statute tree categories in output")
 		}
 	})
 
-	t.Run("violationKind list markdown", func(t *testing.T) {
-		output, err := executeTreeCommand("violationKind", "list", "--md")
+	t.Run("statute list markdown", func(t *testing.T) {
+		output, err := executeTreeCommand("statute", "list", "--md")
 		if err != nil {
-			t.Fatalf("violationKind list md failed: %v", err)
+			t.Fatalf("statute list md failed: %v", err)
 		}
 		if output == "" {
 			t.Error("expected non-empty markdown output")
 		}
 	})
 
-	t.Run("violationKind tree markdown", func(t *testing.T) {
-		output, err := executeTreeCommand("violationKind", "tree", "--md")
+	t.Run("statute tree markdown", func(t *testing.T) {
+		output, err := executeTreeCommand("statute", "tree", "--md")
 		if err != nil {
-			t.Fatalf("violationKind tree md failed: %v", err)
+			t.Fatalf("statute tree md failed: %v", err)
 		}
 		if output == "" {
 			t.Error("expected non-empty markdown output")
@@ -9477,7 +9523,7 @@ func TestTreeNodeKindConstants(t *testing.T) {
 		kinds := []TreeNodeKind{
 			TreeNodeProject, TreeNodeBundle, TreeNodeFolder, TreeNodeFile,
 			TreeNodeSection, TreeNodeDefinition, TreeNodeGoal, TreeNodeTicket,
-			TreeNodeDraft, TreeNodePolicy, TreeNodeViolationKindNode,
+			TreeNodeDraft, TreeNodePolicy, TreeNodeStatuteNode,
 			TreeNodeContributor, TreeNodeCommit, TreeNodeCategory,
 		}
 		seen := make(map[TreeNodeKind]bool)
@@ -9493,7 +9539,7 @@ func TestTreeNodeKindConstants(t *testing.T) {
 		kinds := []TreeNodeKind{
 			TreeNodeProject, TreeNodeBundle, TreeNodeFolder, TreeNodeFile,
 			TreeNodeSection, TreeNodeDefinition, TreeNodeGoal, TreeNodeTicket,
-			TreeNodeDraft, TreeNodePolicy, TreeNodeViolationKindNode,
+			TreeNodeDraft, TreeNodePolicy, TreeNodeStatuteNode,
 			TreeNodeContributor, TreeNodeCommit, TreeNodeCategory,
 		}
 		for _, k := range kinds {
@@ -10331,7 +10377,7 @@ func TestTreeNodeKindToEntityKindCoversAll(t *testing.T) {
 		{TreeNodeTicket, "ticket"},
 		{TreeNodeDraft, "draft"},
 		{TreeNodePolicy, "policy"},
-		{TreeNodeViolationKindNode, "violationKind"},
+		{TreeNodeStatuteNode, "statute"},
 		{TreeNodeContributor, "contributor"},
 		{TreeNodeCommit, "commit"},
 		{TreeNodeCategory, "category"},
@@ -10725,7 +10771,7 @@ func TestUnifiedRenderingAllKindIdentity(t *testing.T) {
 		{"policy", TreeNodePolicy, map[string]interface{}{
 			"id": "code-hygiene", "name": "Code Hygiene", "description": "Clean code policy",
 		}},
-		{"violationKind", TreeNodeViolationKindNode, map[string]interface{}{
+		{"statute", TreeNodeStatuteNode, map[string]interface{}{
 			"id": "inline-comment", "description": "No inline comments",
 		}},
 		{"draft", TreeNodeDraft, map[string]interface{}{
@@ -11411,15 +11457,15 @@ func TestFixHeaderWithShebang(t *testing.T) {
 	os.WriteFile(absPath, []byte(content), 0644)
 
 	bundles := LoadBundles()
-	violations, err := CheckPolicies(ParseScope(filePath), bundles, nil)
+	breachs, err := CheckPolicies(ParseScope(filePath), bundles, nil)
 	if err != nil {
 		t.Fatalf("CheckPolicies failed: %v", err)
 	}
-	for _, v := range violations {
+	for _, v := range breachs {
 		if v.Autofixable() {
-			t.Logf("Detected Autofixable Violation: %s at line %d", v.Kind, v.Line)
+			t.Logf("Detected Autofixable Breach: %s at line %d", v.Kind, v.Line)
 		} else {
-			t.Logf("Detected Non-Autofixable Violation: %s at line %d", v.Kind, v.Line)
+			t.Logf("Detected Non-Autofixable Breach: %s at line %d", v.Kind, v.Line)
 		}
 	}
 
@@ -11431,8 +11477,8 @@ func TestFixHeaderWithShebang(t *testing.T) {
 	}
 
 	t.Logf("Fixed: %d", res.Fixed)
-	for _, v := range res.Violations {
-		t.Logf("Remaining Violation: %s at line %d", v.Kind, v.Line)
+	for _, v := range res.Breachs {
+		t.Logf("Remaining Breach: %s at line %d", v.Kind, v.Line)
 	}
 
 	if res.Fixed == 0 {
@@ -11463,22 +11509,22 @@ func TestFolderPolicyEmptyFolder(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeRepo}
 	ctx := NewPolicyContext(scope, bundles)
-	violations := folderPolicy(ctx)
+	breachs := folderPolicy(ctx)
 	foundEmpty := false
-	for _, v := range violations {
-		if v.Kind == ViolationFolderIllegalEmpty && v.Excerpt == "some/empty" {
+	for _, v := range breachs {
+		if v.Kind == BreachFolderIllegalEmpty && v.Excerpt == "some/empty" {
 			foundEmpty = true
 			if !v.Autofixable() {
-				t.Error("ViolationFolderIllegalEmpty should be autofixable")
+				t.Error("BreachFolderIllegalEmpty should be autofixable")
 			}
 		}
 	}
 	if !foundEmpty {
-		t.Error("expected ViolationFolderIllegalEmpty for some/empty")
+		t.Error("expected BreachFolderIllegalEmpty for some/empty")
 	}
-	for _, v := range violations {
-		if v.Kind == ViolationFolderIllegalEmpty && v.Excerpt == "some/nonempty" {
-			t.Error("should not report ViolationFolderIllegalEmpty for non-empty folder")
+	for _, v := range breachs {
+		if v.Kind == BreachFolderIllegalEmpty && v.Excerpt == "some/nonempty" {
+			t.Error("should not report BreachFolderIllegalEmpty for non-empty folder")
 		}
 	}
 }
@@ -11490,12 +11536,12 @@ func TestFolderPolicyEmptyFolderAutofix(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	emptyDir := filepath.Join(tmpDir, "remove", "me")
 	os.MkdirAll(emptyDir, 0755)
-	violations := []Violation{{
-		Kind:    ViolationFolderIllegalEmpty,
+	breachs := []Breach{{
+		Kind:    BreachFolderIllegalEmpty,
 		Scope:   "remove/me/",
 		Excerpt: "remove/me",
 	}}
-	fixed, err := applySystemAutofixes(violations)
+	fixed, err := applySystemAutofixes(breachs)
 	if err != nil {
 		t.Fatalf("applySystemAutofixes failed: %v", err)
 	}
@@ -11518,11 +11564,11 @@ func TestFolderPolicySkipsExcludedDirs(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeRepo}
 	ctx := NewPolicyContext(scope, bundles)
-	violations := folderPolicy(ctx)
-	for _, v := range violations {
-		if v.Kind == ViolationFolderIllegalEmpty {
+	breachs := folderPolicy(ctx)
+	for _, v := range breachs {
+		if v.Kind == BreachFolderIllegalEmpty {
 			if strings.HasPrefix(v.Excerpt, ".git") || strings.HasPrefix(v.Excerpt, ".semio-repo") || strings.HasPrefix(v.Excerpt, "node_modules") {
-				t.Errorf("should skip excluded dir, got violation for %s", v.Excerpt)
+				t.Errorf("should skip excluded dir, got breach for %s", v.Excerpt)
 			}
 		}
 	}
@@ -11545,19 +11591,19 @@ func TestFilePolicyGodfile(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeRepo}
 	ctx := NewPolicyContext(scope, bundles)
-	violations := filePolicy(ctx)
+	breachs := filePolicy(ctx)
 	foundUnlisted := false
-	for _, v := range violations {
-		if v.Kind == ViolationFileIllegalUseGodfile && v.Excerpt == "unlisted.txt" {
+	for _, v := range breachs {
+		if v.Kind == BreachFileIllegalUseGodfile && v.Excerpt == "unlisted.txt" {
 			foundUnlisted = true
 		}
 	}
 	if !foundUnlisted {
-		t.Error("expected ViolationFileIllegalUseGodfile for unlisted.txt")
+		t.Error("expected BreachFileIllegalUseGodfile for unlisted.txt")
 	}
-	for _, v := range violations {
-		if v.Kind == ViolationFileIllegalUseGodfile && (v.Excerpt == "allowed.txt" || v.Excerpt == "src/main.ts") {
-			t.Errorf("should not report violation for allowed file %s", v.Excerpt)
+	for _, v := range breachs {
+		if v.Kind == BreachFileIllegalUseGodfile && (v.Excerpt == "allowed.txt" || v.Excerpt == "src/main.ts") {
+			t.Errorf("should not report breach for allowed file %s", v.Excerpt)
 		}
 	}
 }
@@ -11574,10 +11620,10 @@ func TestFilePolicyGodfileSkipsSemioRepo(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeRepo}
 	ctx := NewPolicyContext(scope, bundles)
-	violations := filePolicy(ctx)
-	for _, v := range violations {
-		if v.Kind == ViolationFileIllegalUseGodfile && strings.HasPrefix(v.Excerpt, ".semio-repo") {
-			t.Errorf("should skip .semio-repo files, got violation for %s", v.Excerpt)
+	breachs := filePolicy(ctx)
+	for _, v := range breachs {
+		if v.Kind == BreachFileIllegalUseGodfile && strings.HasPrefix(v.Excerpt, ".semio-repo") {
+			t.Errorf("should skip .semio-repo files, got breach for %s", v.Excerpt)
 		}
 	}
 }
@@ -11591,9 +11637,9 @@ func TestFilePolicyNoGodfile(t *testing.T) {
 	bundles := []Bundle{}
 	scope := Scope{Kind: ScopeRepo}
 	ctx := NewPolicyContext(scope, bundles)
-	violations := filePolicy(ctx)
-	if len(violations) != 0 {
-		t.Errorf("expected no violations when godfile is missing, got %d", len(violations))
+	breachs := filePolicy(ctx)
+	if len(breachs) != 0 {
+		t.Errorf("expected no breachs when godfile is missing, got %d", len(breachs))
 	}
 }
 
@@ -11608,12 +11654,12 @@ func TestFolderPolicyRegistered(t *testing.T) {
 	allKinds := policy.AllKinds()
 	foundKind := false
 	for _, k := range allKinds {
-		if k == ViolationFolderIllegalEmpty {
+		if k == BreachFolderIllegalEmpty {
 			foundKind = true
 		}
 	}
 	if !foundKind {
-		t.Error("folder policy should contain ViolationFolderIllegalEmpty kind")
+		t.Error("folder policy should contain BreachFolderIllegalEmpty kind")
 	}
 }
 
@@ -11628,11 +11674,11 @@ func TestFilePolicyRegistered(t *testing.T) {
 	allKinds := policy.AllKinds()
 	foundKind := false
 	for _, k := range allKinds {
-		if k == ViolationFileIllegalUseGodfile {
+		if k == BreachFileIllegalUseGodfile {
 			foundKind = true
 		}
 	}
 	if !foundKind {
-		t.Error("file policy should contain ViolationFileIllegalUseGodfile kind")
+		t.Error("file policy should contain BreachFileIllegalUseGodfile kind")
 	}
 }

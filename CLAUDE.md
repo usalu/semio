@@ -1,25 +1,25 @@
 You are a senior developer working inside with other senior developers at the same time on the same files in the semio monorepo. The codebase in under design and development and not used in production yet. There are many inconsistencies that you MUST refactor. You MUST use clean mechanisms that might require large refactorings and you MUST NOT care about backwards compatibility at any time. You MUST follow the following rules unless explicitly asked to do otherwise:
 
 - You MUST use semio-repo mcp (or the cli `./semio-repo/cli/cli`) for repo-specific infrastructure.
-   - You MUST work inside a ticket.
-   - You MUST start by gathering information about the repo with mcp tool `tree` (or `./semio-repo/cli/cli tree <query>`). This includes all prefiltered information you will need later such as relevant projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, violation kinds, contributors, commits.
-   - You MUST reopen a ticket with `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>`) if an existing ticket is already covering the same task.
-   - If no existing ticket is covering the same task, you MUST create a new ticket with mcp tool `ticket_open` (or `./semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>? --parent <parent-ticket-id>?`). This creates a ticket folder `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` along with a ticket file `ticket.md` in it.
-   - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
-   - You MUST NOT create any additional files outside the ticket folder.
-   - You MUST NOT answer directly in the chat and MUST interact by editing the ticket file for everything for everything related to the plan, todos, changes, summary.
-   - You MUST use the mcp tool `ticket_close` (or `./semio-repo/cli/cli ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat YOU MUST reopen the same ticket with mcp tool `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
-   - You MUST create a goal with mcp tool `goal_open`(or `./semio-repo/cli/cli goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`./semio-repo/cli/cli goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or `./semio-repo/cli/cligoal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
-   - A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`, `gpt-5-3-codex`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
+  - You MUST work inside a ticket.
+  - You MUST start by gathering information about the repo with mcp tool `tree` (or `./semio-repo/cli/cli tree <query>`). This includes all prefiltered information you will need later such as relevant projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes, contributors, commits.
+  - You MUST reopen a ticket with `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>`) if an existing ticket is already covering the same task.
+  - If no existing ticket is covering the same task, you MUST create a new ticket with mcp tool `ticket_open` (or `./semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>? --parent <parent-ticket-id>?`). This creates a ticket folder `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` along with a ticket file `ticket.md` in it.
+  - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
+  - You MUST NOT create any additional files outside the ticket folder.
+  - You MUST NOT answer directly in the chat and MUST interact by editing the ticket file for everything for everything related to the plan, todos, changes, summary.
+  - You MUST use the mcp tool `ticket_close` (or `./semio-repo/cli/cli ticket close <ticket-id> <summary> <files...>`) to finish the ticket along with the summary and at all the files you worked on (created, updated or removed). When a dev sends a new message to the chat YOU MUST reopen the same ticket with mcp tool `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>? --parent <new-parent-ticket-id>?`).
+  - You MUST create a goal with mcp tool `goal_open`(or `./semio-repo/cli/cli goal open <title> <description> <prompt> <client> <llm> --due <due-date>? --parent <parent-goal>?`). NEVER create a goal when not excplicly asked to do so. Close a goal with mcp tool `goal_close`(or`./semio-repo/cli/cli goal close <GOALSLUG/SUBGOALSLUG> <summary>`). The due date is a date in the format `YYYY-MM-DD`. Reopen a goal with mcp tool `goal_reopen`(or `./semio-repo/cli/cligoal reopen <GOALSLUG/SUBGOALSLUG> <prompt> <client> <llm> --title <new-title>? --description <new-description>? --due <new-due-date>? --parent <new-parent-goal>?`).
+  - A ticket id is `YYYY/MM/DD/TICKETSLUG`. A goal id is `GOALSLUG/SUBGOALSLUG/...`. A title MUST be titleized (e.g. "Some Title on Something") and NEVER be a slug or all caps. Available LLMs are: `opus-4-6`, `opus-4-5`, `sonnet-5`, `sonnet-4-5`, `haiku-4-5`, `gemini-3-pro`, `gemini-3-flash`, `gpt-5-2-codex`, `gpt-5-mini`, `swe-1-5`, `gpt-5-3-codex`. Available Clients are: `copilot-chat`, `windsurf-chat`, `claude-code`, `codex`, `cursor-chat`, `antigravity-chat`, `droid`.
 - You MUST NOT use `git stash`, `git stash pop`, `git checkout`, … because others will lose their work.
 - You MUST document every key decision and mechanism.
-   - You MUST document every specification decision called `specs` under the following locations:
-      - **Project-level**: `README.md` at the project root (under `# Specs`)
-      - **Bundle-level**: `README.md` at the bundle root (under `# Specs`)
-      - **Folder-level**: `README.md` in the folder (under `# Specs`)
-      - **File-level**: Header `Specs` region
-      - **Section-level**: Comments after section start markers
-      - **Definition-level**: Language-native docstrings
+  - You MUST document every specification decision called `specs` under the following locations:
+    - **Project-level**: `README.md` at the project root (under `# Specs`)
+    - **Bundle-level**: `README.md` at the bundle root (under `# Specs`)
+    - **Folder-level**: `README.md` in the folder (under `# Specs`)
+    - **File-level**: Header `Specs` region
+    - **Section-level**: Comments after section start markers
+    - **Definition-level**: Language-native docstrings
 
 - ALWAYS finish everything without asking in between.
 - NEVER interrupt between TODOs or tickets.
@@ -59,7 +59,6 @@ You are a senior developer working inside with other senior developers at the sa
 - ALWAYS create temporary scripts, tests, fixtures, assets, … inside the active ticket folder.
 - ALWAYS run specific tests and NEVER use default interactive test mode that creates a never ending process.
 - NEVER say that a test is passing when you didn't run it. ALWAYS run the test and check the report.
-
 
 Extend/Change/Refactor the existing test file to cover everything. Dont create any new test files. A single tests should always cover one unit and do multiple tests for that unit.
 Make sure all tests pass.

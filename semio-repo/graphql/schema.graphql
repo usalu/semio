@@ -52,9 +52,10 @@ type Query {
   todos(filter: FilterInput): [Todo!]!
   tickets(year: Int, month: Int, day: Int, status: TicketStatus, filter: FilterInput): [Ticket!]!
   goals(filter: FilterInput): [Goal!]!
+  interactions: [InteractionResource!]!
   policies(filter: FilterInput): [Policy!]!
-  violationKinds: [ViolationKind!]!
-  violations(scope: String): [Violation!]!
+  statutes: [Statute!]!
+  breachs(scope: String): [Breach!]!
   bundle(name: String!): Bundle
   folder(path: String!): Folder
   file(path: String!): File
@@ -65,7 +66,7 @@ type Query {
   contributor(id: String!): Contributor
   ticket(year: Int!, month: Int!, day: Int!, slug: String!): Ticket
   policy(id: String!): Policy
-  violationKind(id: String!): ViolationKind
+  statute(id: String!): Statute
   analyze(scope: String): AnalyzeResult!
 }
 
@@ -207,8 +208,8 @@ input FilterInput {
   includeContributors: [String!]
   excludePolicies: [String!]
   includePolicies: [String!]
-  excludeViolations: [String!]
-  includeViolations: [String!]
+  excludeBreachs: [String!]
+  includeBreachs: [String!]
 }
 
 enum FileKind {
@@ -275,8 +276,8 @@ type Repo implements Node {
   goals(filter: FilterInput): [Goal!]!
   tickets(year: Int, month: Int, day: Int, status: TicketStatus, filter: FilterInput): [Ticket!]!
   policies(filter: FilterInput): [Policy!]!
-  violationKinds: [ViolationKind!]!
-  violations(scope: String): [Violation!]!
+  statutes: [Statute!]!
+  breachs(scope: String): [Breach!]!
 }
 
 type Project implements Node {
@@ -306,7 +307,7 @@ type Bundle implements Node {
   files: [File!]!
   contributors: [Contributor!]!
   tickets: [Ticket!]!
-  violations: [Violation!]!
+  breachs: [Breach!]!
 }
 
 type Folder implements Node {
@@ -319,7 +320,7 @@ type Folder implements Node {
   children: [Folder!]!
   files: [File!]!
   bundle: Bundle
-  violations: [Violation!]!
+  breachs: [Breach!]!
 }
 
 type File implements Node {
@@ -332,7 +333,7 @@ type File implements Node {
   bundle: Bundle
   sections: [Section!]!
   definitions: [Definition!]!
-  violations: [Violation!]!
+  breachs: [Breach!]!
   contributors: [Contributor!]!
   content: String
 }
@@ -345,7 +346,7 @@ type Section implements Node {
   parent: Section
   children: [Section!]!
   definitions: [Definition!]!
-  violations: [Violation!]!
+  breachs: [Breach!]!
   range: Range!
 }
 
@@ -355,7 +356,7 @@ type Definition implements Node {
   kind: DefinitionKind!
   file: File!
   section: Section
-  violations: [Violation!]!
+  breachs: [Breach!]!
   range: Range!
 }
 
@@ -466,6 +467,7 @@ type Goal implements Node {
   issue: String
   status: String!
   parent: String
+  interactions: [Interaction!]!
 }
 
 type Ticket implements Node {
@@ -500,6 +502,20 @@ type Interaction {
   prompt: String!
   author: String!
   commit: String
+}
+
+type InteractionResource {
+  kind: String!
+  date: String!
+  system: String!
+  client: String!
+  prompt: String!
+  author: String!
+  commit: String
+  sourceKind: String!
+  sourceId: String!
+  goalId: String
+  ticketId: String
 }
 
 enum TicketStatus {
@@ -542,37 +558,37 @@ type Policy implements Node {
   name: String!
   description: String
   scopes: [String!]!
-  groups: [ViolationKindGroup!]!
-  violationKinds: [ViolationKind!]!
+  groups: [Territory!]!
+  statutes: [Statute!]!
 }
 
-type ViolationKindGroup {
+type Territory {
   name: String!
   description: String!
   scopes: [String!]!
-  groups: [ViolationKindGroup!]!
-  kinds: [ViolationKind!]!
+  groups: [Territory!]!
+  kinds: [Statute!]!
 }
 
-type ViolationKind implements Node {
+type Statute implements Node {
   id: ID!
   policy: Policy!
-  priority: ViolationPriority!
+  priority: BreachPriority!
   autofixable: Boolean!
   reason: String!
   solution: String!
-  violations(scope: String): [Violation!]!
+  breachs(scope: String): [Breach!]!
 }
 
-enum ViolationPriority {
+enum BreachPriority {
   HIGH
   MEDIUM
   LOW
 }
 
-type Violation implements Node {
+type Breach implements Node {
   id: ID!
-  kind: ViolationKind!
+  kind: Statute!
   scope: String!
   file: File
   folder: Folder
@@ -580,12 +596,12 @@ type Violation implements Node {
   column: Int
   excerpt: String
   summary: String!
-  priority: ViolationPriority!
+  priority: BreachPriority!
   autofixable: Boolean!
 }
 
 type AnalyzeResult {
-  violations: [Violation!]!
+  breachs: [Breach!]!
   metrics: AnalyzeMetrics!
 }
 
@@ -604,7 +620,7 @@ type PriorityCount {
 type FixResult {
   fixed: Int!
   remaining: Int!
-  violations: [Violation!]!
+  breachs: [Breach!]!
 }
 
 # #endregion 🔖Types

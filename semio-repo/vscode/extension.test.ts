@@ -48,7 +48,7 @@ import {
 
 // #region 🔖Constants
 
-const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixViolation", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem", "semio.navigate", "semio.navigateTo"];
+const EXPECTED_COMMANDS = ["semio.analyze", "semio.analyzeFile", "semio.fix", "semio.fixFile", "semio.policyList", "semio.ticketOpen", "semio.ticketList", "semio.ticketClose", "semio.ticketRead", "semio.ticketOpen", "semio.projectList", "semio.contributorAdd", "semio.contributorList", "semio.contributorRemove", "semio.sectionTree", "semio.definitionList", "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList", "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree", "semio.sectionCreate", "semio.sectionMove", "semio.sectionDelete", "semio.sectionIntegrate", "semio.sectionList", "semio.definitionTree", "semio.projectTree", "semio.policyCheck", "semio.refreshDiagnostics", "semio.fixBreach", "semio.copyId", "semio.mailto", "semio.openLink", "semio.refreshMonorepo", "semio.refreshCodebase", "semio.copyCommitSha", "semio.openCommitInGitHub", "semio.ticketReopen", "semio.refreshItem", "semio.navigate", "semio.navigateTo"];
 const EXPECTED_CONSTRAINTS = ["guid-unique", "type-name-unique", "design-name-unique", "piece-name-unique", "quality-name-unique", "port-name-unique", "file-name-unique", "folder-name-unique", "connector-name-unique", "model-name-unique", "layer-path-unique"];
 const EXPECTED_VIEWS = ["semio.monorepo", "semio.filter"];
 
@@ -95,50 +95,50 @@ suiteSetup(async function () {
 
 suite("RepoEvent Parsing Test Suite", () => {
   test("parseRepoEvents handles result field correctly", () => {
-    const output = '{"kind":"result","result":{"data":{"violations":[{"id":"v1"}]}}}';
+    const output = '{"kind":"result","result":{"data":{"breachs":[{"id":"v1"}]}}}';
     const events = parseRepoEvents(output);
     assert.strictEqual(events.length, 1);
     assert.strictEqual(events[0].kind, "result");
     assert.ok(events[0].result);
     const result = events[0].result as any;
     assert.ok(result.data);
-    assert.ok(result.data.violations);
-    assert.strictEqual(result.data.violations.length, 1);
+    assert.ok(result.data.breachs);
+    assert.strictEqual(result.data.breachs.length, 1);
   });
 
   test("extractRepoResult extracts data from result field", () => {
     const events: RepoEvent[] = [
-      { kind: "result", result: { data: { violations: [{ id: "v1" }] } } }
+      { kind: "result", result: { data: { breachs: [{ id: "v1" }] } } }
     ];
     const extracted = extractRepoResult(events);
     assert.ok(extracted.data);
     const data = extracted.data as any;
-    assert.ok(data.violations);
-    assert.strictEqual(data.violations.length, 1);
-    assert.strictEqual(data.violations[0].id, "v1");
+    assert.ok(data.breachs);
+    assert.strictEqual(data.breachs.length, 1);
+    assert.strictEqual(data.breachs[0].id, "v1");
   });
 
   test("extractRepoResult falls back to data field if result is missing", () => {
     const events: RepoEvent[] = [
-      { kind: "result", data: { violations: [{ id: "v2" }] } }
+      { kind: "result", data: { breachs: [{ id: "v2" }] } }
     ];
     const extracted = extractRepoResult(events);
     assert.ok(extracted.data);
     const data = extracted.data as any;
-    assert.ok(data.violations);
-    assert.strictEqual(data.violations.length, 1);
-    assert.strictEqual(data.violations[0].id, "v2");
+    assert.ok(data.breachs);
+    assert.strictEqual(data.breachs.length, 1);
+    assert.strictEqual(data.breachs[0].id, "v2");
   });
 
   test("extractRepoResult prefers result over data field", () => {
     const events: RepoEvent[] = [
-      { kind: "result", result: { data: { violations: [{ id: "from-result" }] } }, data: { violations: [{ id: "from-data" }] } }
+      { kind: "result", result: { data: { breachs: [{ id: "from-result" }] } }, data: { breachs: [{ id: "from-data" }] } }
     ];
     const extracted = extractRepoResult(events);
     assert.ok(extracted.data);
     const data = extracted.data as any;
-    assert.ok(data.violations);
-    assert.strictEqual(data.violations[0].id, "from-result");
+    assert.ok(data.breachs);
+    assert.strictEqual(data.breachs[0].id, "from-result");
   });
 
   test("extractRepoResult handles fatal errors", () => {
@@ -151,7 +151,7 @@ suite("RepoEvent Parsing Test Suite", () => {
   test("extractRepoResult ignores non-fatal errors", () => {
     const events: RepoEvent[] = [
       { kind: "error", error: { message: "Non-fatal warning", fatal: false } },
-      { kind: "result", result: { data: { violations: [] } } }
+      { kind: "result", result: { data: { breachs: [] } } }
     ];
     const extracted = extractRepoResult(events);
     assert.ok(extracted.data);
@@ -159,12 +159,12 @@ suite("RepoEvent Parsing Test Suite", () => {
 
   test("extractRepoResult uses last result when multiple result events", () => {
     const events: RepoEvent[] = [
-      { kind: "result", result: { data: { violations: [{ id: "first" }] } } },
-      { kind: "result", result: { data: { violations: [{ id: "last" }] } } }
+      { kind: "result", result: { data: { breachs: [{ id: "first" }] } } },
+      { kind: "result", result: { data: { breachs: [{ id: "last" }] } } }
     ];
     const extracted = extractRepoResult(events);
     const data = extracted.data as any;
-    assert.strictEqual(data.violations[0].id, "last");
+    assert.strictEqual(data.breachs[0].id, "last");
   });
 });
 
@@ -198,7 +198,7 @@ suite("Kit Validation Test Suite", function () {
     assert.strictEqual(diagnostics.length, 0, "Valid kit should have no validation errors");
   });
 
-  test("Invalid kit file triggers all expected constraint violations", async function () {
+  test("Invalid kit file triggers all expected constraint breachs", async function () {
     const document = await openFixture("semio/kit_invalid.json");
     const diagnostics = await waitForDiagnostics(document.uri);
     if (diagnostics.length === 0) {
@@ -214,7 +214,7 @@ suite("Kit Validation Test Suite", function () {
       }
     });
     const missing = EXPECTED_CONSTRAINTS.filter((c) => !constraintIds.has(c));
-    assert.strictEqual(missing.length, 0, `Missing constraint violations: ${missing.join(", ")}`);
+    assert.strictEqual(missing.length, 0, `Missing constraint breachs: ${missing.join(", ")}`);
   });
 
   test("Diagnostics have correct source and severity", async function () {
@@ -282,17 +282,17 @@ suite("Repo Diagnostics Test Suite", function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      console.log("Skipping: no violations found (analyze returned 0)");
+      console.log("Skipping: no breachs found (analyze returned 0)");
       return;
     }
     assert.ok(diagnostics.length > 0, "Invalid repo file should have diagnostics");
   });
 
-  test("Repo diagnostics show violation name as message", async function () {
+  test("Repo diagnostics show breach name as message", async function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      console.log("Skipping: no violations found");
+      console.log("Skipping: no breachs found");
       return;
     }
     diagnostics.forEach((diag) => {
@@ -305,7 +305,7 @@ suite("Repo Diagnostics Test Suite", function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      console.log("Skipping: no violations found");
+      console.log("Skipping: no breachs found");
       return;
     }
     const diagWithLink = diagnostics.find((d) => typeof d.code === "object" && d.code !== null);
@@ -315,7 +315,7 @@ suite("Repo Diagnostics Test Suite", function () {
     }
     const codeObj = diagWithLink.code as { value: string; target: vscode.Uri };
     assert.ok(codeObj.value, "Code should have policy ID");
-    assert.ok(!codeObj.value.includes(":"), "Code should be policy ID without violation suffix");
+    assert.ok(!codeObj.value.includes(":"), "Code should be policy ID without breach suffix");
     assert.ok(codeObj.target, "Code should have target URI");
     assert.ok(codeObj.target.fsPath.includes("repo.tsx"), "Target should point to repo.tsx");
     assert.ok(codeObj.target.fragment.startsWith("L"), "Target should have line number fragment");
@@ -327,11 +327,11 @@ suite("Repo Diagnostics Test Suite", function () {
     assert.strictEqual(diagnostics.length, 0, "Valid repo file should have no diagnostics");
   });
 
-  test("Repo diagnostics have code actions for autofixable violations", async function () {
+  test("Repo diagnostics have code actions for autofixable breachs", async function () {
     const document = await openFixture("repo/some/folder/file_invalid.tsx");
     const diagnostics = await waitForDiagnostics(document.uri, 10000);
     if (diagnostics.length === 0) {
-      console.log("Skipping: no violations found");
+      console.log("Skipping: no breachs found");
       return;
     }
     const codeActions = await vscode.commands.executeCommand<vscode.CodeAction[]>("vscode.executeCodeActionProvider", document.uri, diagnostics[0].range);
@@ -846,8 +846,8 @@ suite("treeNodeDisplayLabel Test Suite", () => {
   });
 
   test("File node uses emoji prefix plus Label", () => {
-    const node: TreeNodeData = { Kind: "file", ID: "💻semio/go/semio.go", Label: "semio.go", URI: "" };
-    assert.strictEqual(treeNodeDisplayLabel(node), "💻semio.go");
+    const node: TreeNodeData = { Kind: "file", ID: "�💻semio/go/semio.go", Label: "semio.go", URI: "" };
+    assert.strictEqual(treeNodeDisplayLabel(node), "📄semio.go");
   });
 
   test("Goal node includes status icon", () => {
@@ -895,15 +895,15 @@ suite("treeNodeContextValue Test Suite", () => {
   });
 });
 
-suite("Violation Kind Hierarchy Test Suite", () => {
-  test("Renders nested violation kind tree structure correctly", () => {
+suite("Breach Kind Hierarchy Test Suite", () => {
+  test("Renders nested statute tree structure correctly", () => {
 
-    const violationNode: TreeNodeData = {
-      Kind: "violationKind",
+    const breachNode: TreeNodeData = {
+      Kind: "statute",
       ID: "🚫Code#Header#Missing Region",
       Label: "🚫Code#Header#Missing Region",
       Description: "Header required",
-      URI: "semiorepo://violationKind/CODE/HEADER/MISSING-REGION",
+      URI: "semiorepo://statute/CODE/HEADER/MISSING-REGION",
       Data: { autofixable: true }
     };
 
@@ -912,19 +912,19 @@ suite("Violation Kind Hierarchy Test Suite", () => {
       ID: "header",
       Label: "header",
       URI: "",
-      Children: [violationNode]
+      Children: [breachNode]
     };
 
     const policyNode: TreeNodeData = {
       Kind: "policy",
-      ID: "🛡️/code",
-      Label: "🛡️/code",
+      ID: "🛡️code",
+      Label: "🛡️code",
       URI: "semiorepo://policy/CODE",
       Children: [categoryNode]
     };
 
     const policyItem = treeNodeToItem(policyNode);
-    assert.strictEqual(policyItem.label, "🛡️/code");
+    assert.strictEqual(policyItem.label, "🛡️code");
     assert.strictEqual(policyItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
 
     const categoryItem = treeNodeToItem(categoryNode);
@@ -932,11 +932,11 @@ suite("Violation Kind Hierarchy Test Suite", () => {
     assert.strictEqual(categoryItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
     assert.strictEqual(categoryItem.contextValue, "category");
 
-    const violationItem = treeNodeToItem(violationNode);
-    assert.strictEqual(violationItem.label, "🚫Code#Header#Missing Region");
-    assert.strictEqual(violationItem.description, "🔧");
-    assert.strictEqual(violationItem.tooltip, "Header required");
-    assert.strictEqual(violationItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
+    const breachItem = treeNodeToItem(breachNode);
+    assert.strictEqual(breachItem.label, "🚫Code#Header#Missing Region");
+    assert.strictEqual(breachItem.description, "🔧");
+    assert.strictEqual(breachItem.tooltip, "Header required");
+    assert.strictEqual(breachItem.collapsibleState, vscode.TreeItemCollapsibleState.None);
   });
 });
 
@@ -1224,17 +1224,17 @@ suite("parseUri Test Suite", () => {
     assert.strictEqual(result!.path, "code");
   });
 
-  test("Parses violationKinds collection URI (no path)", () => {
-    const result = parseUri("semiorepo://violationKinds");
+  test("Parses statutes collection URI (no path)", () => {
+    const result = parseUri("semiorepo://statutes");
     assert.ok(result);
-    assert.strictEqual(result!.type, "violationKinds");
+    assert.strictEqual(result!.type, "statutes");
     assert.strictEqual(result!.path, "");
   });
 
-  test("Parses violationKind URI with path", () => {
-    const result = parseUri("semiorepo://violationKind/CODE/HEADER/MISSING-REGION");
+  test("Parses statute URI with path", () => {
+    const result = parseUri("semiorepo://statute/CODE/HEADER/MISSING-REGION");
     assert.ok(result);
-    assert.strictEqual(result!.type, "violationKind");
+    assert.strictEqual(result!.type, "statute");
     assert.strictEqual(result!.path, "CODE/HEADER/MISSING-REGION");
   });
 
@@ -1316,7 +1316,7 @@ suite("Navigation Commands Test Suite", function () {
   });
 
   test("semio.navigate handles collection URIs gracefully", async function () {
-    const collections = ["projects", "bundles", "folders", "files", "sections", "definitions", "tickets", "goals", "drafts", "todos", "policies", "violationKinds", "contributors", "commits"];
+    const collections = ["projects", "bundles", "folders", "files", "sections", "definitions", "tickets", "goals", "drafts", "todos", "policies", "statutes", "contributors", "commits"];
     for (const collection of collections) {
       await vscode.commands.executeCommand("semio.navigate", `semiorepo://${collection}`);
     }
@@ -1368,9 +1368,9 @@ suite("Navigation Commands Test Suite", function () {
     assert.ok(true, "Should not throw on policy URI");
   });
 
-  test("semio.navigate handles violationKind URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://violationKind/CODE/HEADER/MISSING-REGION");
-    assert.ok(true, "Should not throw on violationKind URI");
+  test("semio.navigate handles statute URI gracefully", async function () {
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://statute/CODE/HEADER/MISSING-REGION");
+    assert.ok(true, "Should not throw on statute URI");
   });
 
   test("semio.navigate handles contributor URI gracefully", async function () {

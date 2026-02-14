@@ -282,7 +282,7 @@ interface AutoFix {
   edits: Record<string, TextEdit[]>;
 }
 
-interface Violation {
+interface Breach {
   id: string;
   summary: string;
   kind: { id: string };
@@ -296,7 +296,7 @@ interface Violation {
 interface AnalyzeReport {
   timestamp: string;
   scope: string;
-  violations: Violation[];
+  breachs: Breach[];
 }
 
 interface SectionInfo {
@@ -340,7 +340,7 @@ interface GraphqlSection {
 let outputChannel: vscode.OutputChannel;
 let repoDiagnosticCollection: vscode.DiagnosticCollection;
 let kitDiagnosticCollection: vscode.DiagnosticCollection;
-const fileViolationsMap = new Map<string, Violation[]>();
+const fileBreachsMap = new Map<string, Breach[]>();
 interface BundleInfo { id: string; root: string; }
 let bundleCache: BundleInfo[] = [];
 let cachedRepoBaseUrl: string | undefined = undefined;
@@ -584,7 +584,7 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
   if (node.Status === "open") statusIcon = "🔵";
   else if (node.Status === "closed") statusIcon = "🟢";
   const fallbackEmojis: Record<string, string> = {
-    contributor: "👤", commit: "🔀", policy: "🛡️", violationKind: "⚠",
+    contributor: "👤", commit: "🔀", policy: "🛡️", statute: "⚠",
   };
   const prefix = emoji || fallbackEmojis[node.Kind] || "";
   let label = node.Label;
@@ -791,7 +791,7 @@ async function navigateToUri(uri: string): Promise<void> {
     case "drafts":
     case "todos":
     case "policies":
-    case "violationKinds":
+    case "statutes":
     case "contributors":
     case "commits":
     case "folders":
@@ -960,13 +960,13 @@ async function navigateToUri(uri: string): Promise<void> {
       }
       break;
     }
-    case "violationKind": {
+    case "statute": {
       const cache = await getTreeNodeCache();
       const node = cache.get(uri);
       if (node) {
-        vscode.window.showInformationMessage(`Violation Kind: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
+        vscode.window.showInformationMessage(`Breach Kind: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
       } else {
-        vscode.window.showInformationMessage(`Violation Kind: ${parsed.path}`);
+        vscode.window.showInformationMessage(`Breach Kind: ${parsed.path}`);
       }
       break;
     }
@@ -995,8 +995,8 @@ function findSectionByPath(section: any, sectionPath: string): any | null {
 
 function extractFilePathFromScope(scope: string): string | undefined {
   let cleanScope = scope;
-  if (cleanScope.startsWith("@semio/violations/")) {
-    cleanScope = cleanScope.replace("@semio/violations/", "");
+  if (cleanScope.startsWith("@semio/breachs/")) {
+    cleanScope = cleanScope.replace("@semio/breachs/", "");
   }
 
   let bestBundle: BundleInfo | undefined;
@@ -1068,7 +1068,7 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
 // #region 🔖File Analysis & Diagnostics
 
 // [🔖semio-repo/vscode/extension.ts#File Analysis & Diagnostics](semiorepo://section/semio-repo/vscode/extension.ts/FILE-ANALYSIS-DIAGNOSTICS)
-// File Analysis & Diagnostics MUST handle analysis, violation diagnostics, bundle caching, and kit validation.
+// File Analysis & Diagnostics MUST handle analysis, breach diagnostics, bundle caching, and kit validation.
 
 async function updateBundleCache() {
   const root = await getTreeRoot();
@@ -1131,12 +1131,12 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
     const result = await runRepoCommandJson<ToolResult<{ analyze: AnalyzeReport }>>(`analyze "${relativePath}"`);
     if (controller.signal.aborted) return;
 
-    const violations = result?.data?.analyze?.violations;
-    if (violations && violations.length > 0) {
-      fileViolationsMap.set(fileUri.toString(), violations);
-      updateFileDiagnostics(document, violations);
+    const breachs = result?.data?.analyze?.breachs;
+    if (breachs && breachs.length > 0) {
+      fileBreachsMap.set(fileUri.toString(), breachs);
+      updateFileDiagnostics(document, breachs);
     } else {
-      fileViolationsMap.delete(fileUri.toString());
+      fileBreachsMap.delete(fileUri.toString());
       repoDiagnosticCollection.delete(fileUri);
     }
   } catch (error) {
@@ -1148,15 +1148,15 @@ async function analyzeFile(document: vscode.TextDocument): Promise<void> {
   }
 }
 
-function updateFileDiagnostics(document: vscode.TextDocument, violations: Violation[]): void {
+function updateFileDiagnostics(document: vscode.TextDocument, breachs: Breach[]): void {
   const root = getWorkspaceRoot();
   if (!root) return;
   const diagnosticsByUri = new Map<string, { uri: vscode.Uri; diagnostics: vscode.Diagnostic[] }>();
 
   diagnosticsByUri.set(document.uri.toString(), { uri: document.uri, diagnostics: [] });
 
-  for (const violation of violations) {
-    const filePath = extractFilePathFromScope(violation.scope);
+  for (const breach of breachs) {
+    const filePath = extractFilePathFromScope(breach.scope);
     if (!filePath) continue;
     const absPath = path.join(root, filePath);
     const fileUri = vscode.Uri.file(absPath);
@@ -1164,16 +1164,16 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
     if (!diagnosticsByUri.has(uriKey)) {
       diagnosticsByUri.set(uriKey, { uri: fileUri, diagnostics: [] });
     }
-    const line = Math.max(0, (violation.line ?? 1) - 1);
-    const column = Math.max(0, (violation.column ?? 1) - 1);
-    const endColumn = violation.excerpt ? column + violation.excerpt.length : column + 1;
+    const line = Math.max(0, (breach.line ?? 1) - 1);
+    const column = Math.max(0, (breach.column ?? 1) - 1);
+    const endColumn = breach.excerpt ? column + breach.excerpt.length : column + 1;
     const range = new vscode.Range(line, column, line, endColumn);
     const severity = vscode.DiagnosticSeverity.Warning;
-    let kindId = violation.kind.id;
-    if (kindId.startsWith("@semio/policies//violations/")) {
-      kindId = kindId.replace("@semio/policies//violations/", "");
+    let kindId = breach.kind.id;
+    if (kindId.startsWith("@semio/policies//breachs/")) {
+      kindId = kindId.replace("@semio/policies//breachs/", "");
     }
-    const diagnostic = new vscode.Diagnostic(range, violation.summary, severity);
+    const diagnostic = new vscode.Diagnostic(range, breach.summary, severity);
     diagnostic.source = DIAGNOSTIC_SOURCE;
     diagnostic.code = { value: kindId, target: fileUri.with({ fragment: `L${line + 1}` }) };
     diagnosticsByUri.get(uriKey)!.diagnostics.push(diagnostic);
@@ -1183,7 +1183,7 @@ function updateFileDiagnostics(document: vscode.TextDocument, violations: Violat
   }
 }
 
-async function fixViolation(relativePath: string): Promise<void> {
+async function fixBreach(relativePath: string): Promise<void> {
   const root = getWorkspaceRoot();
   if (!root) return;
   if (!hasRepoAccess()) {
@@ -1192,7 +1192,7 @@ async function fixViolation(relativePath: string): Promise<void> {
   }
   const command = getRepoCommand();
   try {
-    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fixing violation..." }, async () => {
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: "Fixing breach..." }, async () => {
       const { stderr } = await execAsync(`"${command}" fix "${relativePath}"`, { cwd: root, timeout: 30000 });
       if (stderr) log("Fix stderr:", stderr);
       const absPath = path.join(root, relativePath);
@@ -1210,7 +1210,7 @@ async function fixViolation(relativePath: string): Promise<void> {
     vscode.window.showInformationMessage(`Fixed: ${relativePath}`);
   } catch (error) {
     logError("Failed to run fix:", error);
-    vscode.window.showErrorMessage(`Failed to fix violation: ${error}`);
+    vscode.window.showErrorMessage(`Failed to fix breach: ${error}`);
   }
 }
 
@@ -1508,7 +1508,7 @@ export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
   item.command = treeNodeCommand(node);
   if (node.Description) item.tooltip = node.Description;
   if (node.Kind === "commit" && node.Data?.sha) item.description = node.Data.sha.substring(0, 7);
-  if (node.Kind === "violationKind") {
+  if (node.Kind === "statute") {
     item.description = node.Data?.autofixable ? "🔧" : "";
     if (node.Description) item.tooltip = node.Description;
   }
@@ -1948,7 +1948,7 @@ function registerCommands(context: vscode.ExtensionContext): void {
     "semio.definitionList", "semio.definitionTree",
     "semio.folderTree", "semio.folderCreate", "semio.folderMove", "semio.folderDelete", "semio.folderList",
     "semio.fileCreate", "semio.fileMove", "semio.fileDelete", "semio.fileList", "semio.fileTree",
-    "semio.refreshDiagnostics", "semio.fixViolation",
+    "semio.refreshDiagnostics", "semio.fixBreach",
     "semio.navigateToRepo", "semio.navigateTo", "semio.goalOpen", "semio.goalList",
   ];
 
@@ -1966,7 +1966,7 @@ async function loadAvailableFilterValues(): Promise<void> {
   const days = new Set<number>();
   const contributors = new Set<string>();
   const policies = new Set<string>();
-  const violations = new Set<string>();
+  const breachs = new Set<string>();
 
   const tree = await getTreeRoot();
   if (tree?.Children) {
@@ -1979,7 +1979,7 @@ async function loadAvailableFilterValues(): Promise<void> {
         }
         if (n.Kind === "contributor") contributors.add(n.Label || "");
         if (n.Kind === "policy") policies.add(n.Data?.id || n.Label || "");
-        if (n.Kind === "violationKind") violations.add(n.Data?.id || n.ID || "");
+        if (n.Kind === "statute") breachs.add(n.Data?.id || n.ID || "");
         if (n.Children) walk(n.Children);
       }
     };

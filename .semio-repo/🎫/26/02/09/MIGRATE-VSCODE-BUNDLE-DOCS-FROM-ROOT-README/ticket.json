@@ -1,0 +1,224 @@
+{
+  "title": "Migrate Vscode Bundle Docs From Root Readme",
+  "status": "closed",
+  "prompt": "Migrate Command Tree, Sections Explorer, and semio/vscode subsections from root README.md into the semio-repo/vscode/README.md Docs section",
+  "summary": "Appended six doc subsections (Command Tree, Sections Explorer, Breach Diagnostics, Kit Validation, Sidebar, Tickets) from root README.md to semio-repo/vscode/README.md Docs section before Specs",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/475"
+  },
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-DEV-DOCS",
+  "interactions": [
+    {
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "b1987ea34f8f59a67c0705be81bd045bac8090a1",
+      "prompt": "Migrate Command Tree, Sections Explorer, and semio/vscode subsections from root README.md into the semio-repo/vscode/README.md Docs section",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/vscode",
+              "lines": {
+                "added": 130,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "📃semio-repo/vscode/README.md",
+              "lines": {
+                "added": 130,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": [
+            {
+              "path": "semio-repo/vscode/README.md#Docs",
+              "lines": {
+                "added": 64,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#.vscode-test.mjs",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#Command Tree",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#Kit Validation",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#Sections Explorer",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#Sidebar",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#Tickets",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#Breach Diagnostics",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#extension.test.ts",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#extension.ts",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#generated/",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#generated/graphql.ts",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Docs#package.json",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Specs",
+              "lines": {
+                "added": 62,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Specs#Commands",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Specs#Contributors",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Specs#Diagnostics",
+              "lines": {
+                "added": 6,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Specs#General",
+              "lines": {
+                "added": 10,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Specs#Sections View",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Specs#Sidebar",
+              "lines": {
+                "added": 12,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Specs#Tickets",
+              "lines": {
+                "added": 14,
+                "removed": 0
+              }
+            },
+            {
+              "path": "semio-repo/vscode/README.md#Summary",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            }
+          ]
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      },
+      "date": "2026-02-09 23:30:42"
+    }
+  ]
+}

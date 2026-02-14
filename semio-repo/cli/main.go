@@ -401,9 +401,10 @@ func NewRootWithConfig(factory EngineFactory) (*cobra.Command, *Config) {
 	root.AddCommand(ticketCommand(factory, &config))
 	root.AddCommand(todoCommand(factory, &config))
 	root.AddCommand(goalCommand(factory, &config))
+	root.AddCommand(interactionCommand(factory, &config))
 	root.AddCommand(projectCommand(factory, &config))
 	root.AddCommand(contributorCommand(factory, &config))
-	root.AddCommand(violationKindCommand(factory, &config))
+	root.AddCommand(statuteCommand(factory, &config))
 	root.AddCommand(commitCommand(factory, &config))
 	root.AddCommand(bundleCommand(factory, &config))
 	root.AddCommand(folderCommand(factory, &config))
@@ -554,7 +555,7 @@ func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var scope string
 	cmd := &cobra.Command{
 		Use:   "analyze",
-		Short: "Analyze codebase for policy violations",
+		Short: "Analyze codebase for policy breachs",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if scope == "" && len(args) > 0 {
@@ -566,7 +567,7 @@ func analyzeCommand(factory EngineFactory, config *Config) *cobra.Command {
 			}
 			query := `query Analyze($scope: String) {
 				analyze(scope: $scope) {
-					violations {
+					breachs {
 						id
 						summary
 						scope
@@ -589,7 +590,7 @@ func fixCommand(factory EngineFactory, config *Config) *cobra.Command {
 	var scope string
 	cmd := &cobra.Command{
 		Use:   "fix",
-		Short: "Apply autofixes for violations",
+		Short: "Apply autofixes for breachs",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if scope == "" && len(args) > 0 {
@@ -603,7 +604,7 @@ func fixCommand(factory EngineFactory, config *Config) *cobra.Command {
 				fix(scope: $scope) {
 					fixed
 					remaining
-					violations { id summary scope excerpt line }
+					breachs { id summary scope excerpt line }
 				}
 			}`
 			return runGraphQL(cmd, factory, config, query, variables)
@@ -874,7 +875,7 @@ func exportCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return &cobra.Command{
 		Use:   "export [output]",
 		Short: "Export repo data to SQLite database",
-		Long:  `Export all repo data (bundles, folders, files, sections, contributors, tickets, policies, violations) to a SQLite database file.`,
+		Long:  `Export all repo data (bundles, folders, files, sections, contributors, tickets, policies, breachs) to a SQLite database file.`,
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			outputPath := ""
@@ -962,9 +963,9 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 					name
 					description
 					scopes
-					violationKinds { id priority autofixable reason solution }
+					statutes { id priority autofixable reason solution }
 				}
-				violations(scope: $scope) {
+				breachs(scope: $scope) {
 					id
 					summary
 					scope
@@ -1004,13 +1005,13 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 					for _, p := range pols {
 						pData := map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description}
 						sb.WriteString(renderEntityMarkdown("policy", pData) + "\n")
-						vkTree := buildViolationKindGroupTree(p.Groups)
+						vkTree := buildTerritoryTree(p.Groups)
 						var renderVkTree func(nodes []*TreeNode, indent string)
 						renderVkTree = func(nodes []*TreeNode, indent string) {
 							for _, n := range nodes {
 								if n.Data != nil {
 									vkData := map[string]interface{}{"id": n.Data["id"], "description": n.Data["reason"]}
-									sb.WriteString(indent + renderEntityMarkdown("violationKind", vkData) + "\n")
+									sb.WriteString(indent + renderEntityMarkdown("statute", vkData) + "\n")
 								} else {
 									sb.WriteString(indent + "- " + n.Label + "\n")
 								}
@@ -1030,7 +1031,7 @@ func policyCommand(factory EngineFactory, config *Config) *cobra.Command {
 							pChildPrefix = "    "
 						}
 						stream <- Event{Kind: KindLog, Level: "info", Command: "policy tree", Message: pConn + p.Name + " - " + p.Description}
-						vkTree := buildViolationKindGroupTree(p.Groups)
+						vkTree := buildTerritoryTree(p.Groups)
 						var renderVkText func(nodes []*TreeNode, prefix string)
 						renderVkText = func(nodes []*TreeNode, prefix string) {
 							for j, n := range nodes {
@@ -1839,14 +1840,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 							} else {
 								parts := strings.Split(child.path, "/")
 								id := "🎫" + child.path
-								query := "year=" + parts[0]
-								if len(parts) >= 2 {
-									query += "&month=" + parts[1]
-								}
-								if len(parts) >= 3 {
-									query += "&day=" + parts[2]
-								}
-								uri := "semiorepo://tickets?" + query
+								uri := "semiorepo://tickets/" + strings.Join(parts, "/")
 								sb.WriteString(fmt.Sprintf("%s- [%s](%s)\n", indent, id, uri))
 							}
 							printMarkdown(child, depth+1)
@@ -2433,27 +2427,147 @@ func goalCommand(factory EngineFactory, config *Config) *cobra.Command {
 	return root
 }
 
-func violationKindCommand(factory EngineFactory, config *Config) *cobra.Command {
-	root := &cobra.Command{Use: "violationKind", Short: "Violation kind management commands"}
+func interactionCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "interaction", Short: "Interaction management commands"}
 	listCmd := &cobra.Command{
 		Use:   "list",
-		Short: "List violation kinds",
+		Short: "List all interactions",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			sorted, _ := cmd.Flags().GetBool("sorted")
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "interaction list"}
+				if sorted {
+					interactions, _ := ListInteractions()
+					sort.Slice(interactions, func(i, j int) bool {
+						return interactions[i].Date < interactions[j].Date
+					})
+					for _, ix := range interactions {
+						data, err := json.Marshal(map[string]interface{}{"interaction": ix})
+						if err != nil {
+							continue
+						}
+						stream <- Event{Kind: KindResult, Command: "interaction list", Data: data}
+					}
+				} else {
+					ch := make(chan InteractionResource)
+					go func() {
+						StreamInteractions(context.Background(), ch)
+					}()
+					for ix := range ch {
+						data, err := json.Marshal(map[string]interface{}{"interaction": ix})
+						if err != nil {
+							continue
+						}
+						stream <- Event{Kind: KindResult, Command: "interaction list", Data: data}
+					}
+				}
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
+		},
+	}
+	listCmd.Flags().Bool("sorted", false, "Sort interactions by date instead of streaming")
+	bindStreamFlags(listCmd)
+	treeCmd := &cobra.Command{
+		Use:   "tree",
+		Short: "Show interactions within goal/ticket tree",
+		RunE: func(cmd *cobra.Command, args []string) error {
+			stream := make(chan Event)
+			go func() {
+				defer close(stream)
+				stream <- Event{Kind: KindStart, Command: "interaction tree"}
+				goals, _ := ListGoals()
+				tickets, _ := ListTickets(nil, nil, nil)
+				sort.Slice(goals, func(i, j int) bool { return goals[i].ID < goals[j].ID })
+				sort.Slice(tickets, func(i, j int) bool { return tickets[i].GetID() < tickets[j].GetID() })
+				type treeItem struct {
+					id       string
+					label    string
+					parent   string
+					children []*treeItem
+				}
+				itemMap := make(map[string]*treeItem)
+				var roots []*treeItem
+				for _, g := range goals {
+					item := &treeItem{id: g.ID, label: g.GetID() + " - " + g.Title + " - " + g.Status, parent: g.Parent}
+					for _, ix := range g.Interactions {
+						ixLabel := fmt.Sprintf("🔄 %s [%s] %s @%s", ix.Kind, ix.Date, ix.Client, ix.Author)
+						item.children = append(item.children, &treeItem{id: g.ID + "/" + ix.Kind + "/" + ix.Date, label: ixLabel})
+					}
+					itemMap[g.ID] = item
+				}
+				for _, t := range tickets {
+					tid := t.GetID()
+					item := &treeItem{id: tid, label: tid + " - " + t.Title + " - " + string(t.Status)}
+					for _, ix := range t.Interactions {
+						ixLabel := fmt.Sprintf("🔄 %s [%s] %s @%s", ix.Kind, ix.Date, ix.Client, ix.Author)
+						item.children = append(item.children, &treeItem{id: tid + "/" + ix.Kind + "/" + ix.Date, label: ixLabel})
+					}
+					goalID := t.Goal
+					if goalID != "" {
+						item.parent = goalID
+					}
+					itemMap[tid] = item
+				}
+				for _, item := range itemMap {
+					if item.parent != "" {
+						if p, ok := itemMap[item.parent]; ok {
+							p.children = append(p.children, item)
+							continue
+						}
+					}
+					roots = append(roots, item)
+				}
+				sort.Slice(roots, func(i, j int) bool { return roots[i].id < roots[j].id })
+				var renderTree func(items []*treeItem, prefix string)
+				renderTree = func(items []*treeItem, prefix string) {
+					for i, item := range items {
+						connector := prefix + "├── "
+						childPrefix := prefix + "│   "
+						if i == len(items)-1 {
+							connector = prefix + "└── "
+							childPrefix = prefix + "    "
+						}
+						stream <- Event{Kind: KindLog, Level: "info", Command: "interaction tree", Message: connector + item.label}
+						sort.Slice(item.children, func(a, b int) bool { return item.children[a].id < item.children[b].id })
+						renderTree(item.children, childPrefix)
+					}
+				}
+				renderTree(roots, "")
+				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
+			}()
+			return renderStream(cmd, config, stream)
+		},
+	}
+	bindStreamFlags(treeCmd)
+	root.AddCommand(listCmd)
+	root.AddCommand(treeCmd)
+	return root
+}
+
+func statuteCommand(factory EngineFactory, config *Config) *cobra.Command {
+	root := &cobra.Command{Use: "statute", Short: "Statute management commands"}
+	listCmd := &cobra.Command{
+		Use:   "list",
+		Short: "List statutes",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
-				stream <- Event{Kind: KindStart, Command: "violationKind list"}
-				vkChan := make(chan ViolationKindMeta)
+				stream <- Event{Kind: KindStart, Command: "statute list"}
+				vkChan := make(chan StatuteMeta)
 				go func() {
-					StreamViolationKinds(context.Background(), vkChan, opts)
+					StreamStatutes(context.Background(), vkChan, opts)
 				}()
 				for vk := range vkChan {
-					data, err := json.Marshal(map[string]interface{}{"violationKind": vk})
+					data, err := json.Marshal(map[string]interface{}{"statute": vk})
 					if err != nil {
 						continue
 					}
-					stream <- Event{Kind: KindResult, Command: "violationKind list", Data: data}
+					stream <- Event{Kind: KindResult, Command: "statute list", Data: data}
 				}
 				stream <- Event{Kind: KindDone, Done: &DonePayload{ExitCode: 0, Status: "ok"}}
 			}()
@@ -2463,35 +2577,35 @@ func violationKindCommand(factory EngineFactory, config *Config) *cobra.Command 
 	bindStreamFlags(listCmd)
 	treeCmd := &cobra.Command{
 		Use:   "tree",
-		Short: "Show violation kind tree",
+		Short: "Show statute tree",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			opts := getStreamOptions(cmd)
 			stream := make(chan Event)
 			go func() {
 				defer close(stream)
-				stream <- Event{Kind: KindStart, Command: "violationKind tree"}
-				vkChan := make(chan ViolationKindMeta)
+				stream <- Event{Kind: KindStart, Command: "statute tree"}
+				vkChan := make(chan StatuteMeta)
 				go func() {
-					StreamViolationKinds(context.Background(), vkChan, opts)
+					StreamStatutes(context.Background(), vkChan, opts)
 				}()
-				var vks []ViolationKindMeta
+				var vks []StatuteMeta
 				for vk := range vkChan {
 					vks = append(vks, vk)
 				}
 				sort.Slice(vks, func(i, j int) bool { return string(vks[i].Kind) < string(vks[j].Kind) })
 				if config.IsMarkdown() {
 					var sb strings.Builder
-					var kinds []ViolationKind
+					var kinds []Statute
 					for _, vk := range vks {
 						kinds = append(kinds, vk.Kind)
 					}
-					vkTree := buildViolationKindTree(kinds)
+					vkTree := buildStatuteTree(kinds)
 					var renderVkTree func(nodes []*TreeNode, indent string)
 					renderVkTree = func(nodes []*TreeNode, indent string) {
 						for _, n := range nodes {
 							if n.Data != nil {
 								vkData := map[string]interface{}{"id": n.Data["id"], "description": n.Data["reason"]}
-								sb.WriteString(indent + renderEntityMarkdown("violationKind", vkData) + "\n")
+								sb.WriteString(indent + renderEntityMarkdown("statute", vkData) + "\n")
 							} else {
 								sb.WriteString(indent + "- " + n.Label + "\n")
 							}
@@ -2500,13 +2614,13 @@ func violationKindCommand(factory EngineFactory, config *Config) *cobra.Command 
 					}
 					renderVkTree(vkTree, "")
 					data, _ := json.Marshal(map[string]string{"markdown": sb.String()})
-					stream <- Event{Kind: KindResult, Command: "violationKind tree", Data: data}
+					stream <- Event{Kind: KindResult, Command: "statute tree", Data: data}
 				} else {
-					var kinds []ViolationKind
+					var kinds []Statute
 					for _, vk := range vks {
 						kinds = append(kinds, vk.Kind)
 					}
-					vkTree := buildViolationKindTree(kinds)
+					vkTree := buildStatuteTree(kinds)
 					var renderVkText func(nodes []*TreeNode, prefix string)
 					renderVkText = func(nodes []*TreeNode, prefix string) {
 						for j, n := range nodes {
@@ -2520,7 +2634,7 @@ func violationKindCommand(factory EngineFactory, config *Config) *cobra.Command 
 							if n.Description != "" {
 								label += " - " + n.Description
 							}
-							stream <- Event{Kind: KindLog, Level: "info", Command: "violationKind tree", Message: conn + label}
+							stream <- Event{Kind: KindLog, Level: "info", Command: "statute tree", Message: conn + label}
 							renderVkText(n.Children, childPrefix)
 						}
 					}
@@ -3089,8 +3203,8 @@ func bindStreamFlags(cmd *cobra.Command) {
 	cmd.Flags().StringSlice("only-contributor", nil, "Only show contributors")
 	cmd.Flags().StringSlice("no-policy", nil, "Exclude policies")
 	cmd.Flags().StringSlice("only-policy", nil, "Only show policies")
-	cmd.Flags().StringSlice("no-violation", nil, "Exclude violation kinds")
-	cmd.Flags().StringSlice("only-violation", nil, "Only show violation kinds")
+	cmd.Flags().StringSlice("no-breach", nil, "Exclude statutes")
+	cmd.Flags().StringSlice("only-breach", nil, "Only show statutes")
 
 	cmd.Flags().String("filter", "", "Filter string")
 	cmd.Flags().String("query", "", "Bleve full-text search query")
@@ -3312,8 +3426,8 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 	includeContributors, _ := cmd.Flags().GetStringSlice("only-contributor")
 	excludePolicies, _ := cmd.Flags().GetStringSlice("no-policy")
 	includePolicies, _ := cmd.Flags().GetStringSlice("only-policy")
-	excludeViolations, _ := cmd.Flags().GetStringSlice("no-violation")
-	includeViolations, _ := cmd.Flags().GetStringSlice("only-violation")
+	excludeBreachs, _ := cmd.Flags().GetStringSlice("no-breach")
+	includeBreachs, _ := cmd.Flags().GetStringSlice("only-breach")
 
 	filter, _ := cmd.Flags().GetString("filter")
 	query, _ := cmd.Flags().GetString("query")
@@ -3342,8 +3456,8 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 		IncludeContributors:    includeContributors,
 		ExcludePolicies:        excludePolicies,
 		IncludePolicies:        includePolicies,
-		ExcludeViolations:      excludeViolations,
-		IncludeViolations:      includeViolations,
+		ExcludeBreachs:      excludeBreachs,
+		IncludeBreachs:      includeBreachs,
 		Filter:                 filter,
 		Query:                  query,
 		Regex:                  regex,
@@ -4188,7 +4302,7 @@ const (
 	TreeNodeTicket            TreeNodeKind = "ticket"
 	TreeNodeDraft             TreeNodeKind = "draft"
 	TreeNodePolicy            TreeNodeKind = "policy"
-	TreeNodeViolationKindNode TreeNodeKind = "violationKind"
+	TreeNodeStatuteNode TreeNodeKind = "statute"
 	TreeNodeContributor       TreeNodeKind = "contributor"
 	TreeNodeCommit            TreeNodeKind = "commit"
 	TreeNodeCategory          TreeNodeKind = "category"
@@ -5045,7 +5159,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Description: p.Description,
 			Data:        map[string]interface{}{"id": p.ID, "name": p.Name, "description": p.Description},
 		}
-		pNode.Children = buildViolationKindGroupTree(p.Groups)
+		pNode.Children = buildTerritoryTree(p.Groups)
 		policiesNode.Children = append(policiesNode.Children, pNode)
 	}
 	root.Children = append(root.Children, policiesNode)
@@ -5116,7 +5230,7 @@ func buildSectionTreeNode(s *Section) *TreeNode {
 	return sNode
 }
 
-func buildViolationKindTree(kinds []ViolationKind) []*TreeNode {
+func buildStatuteTree(kinds []Statute) []*TreeNode {
 	type treeEntry struct {
 		node     *TreeNode
 		children map[string]*treeEntry
@@ -5132,18 +5246,18 @@ func buildViolationKindTree(kinds []ViolationKind) []*TreeNode {
 			if _, ok := current[part]; !ok {
 				isLeaf := i == len(parts)-1
 				n := &TreeNode{
-					Kind:  TreeNodeViolationKindNode,
+					Kind:  TreeNodeStatuteNode,
 					ID:    string(k),
 					Label: part,
-					URI:   "semiorepo://violationKind/" + ViolationKindIdToUriPath(string(k)),
+					URI:   "semiorepo://statute/" + StatuteIdToUriPath(string(k)),
 				}
 				if isLeaf {
 					meta := k.Info()
 					n.Description = meta.Reason
 					priorityIcon := "🟢"
-					if meta.Priority == ViolationPriorityHigh {
+					if meta.Priority == BreachPriorityHigh {
 						priorityIcon = "🔴"
-					} else if meta.Priority == ViolationPriorityMedium {
+					} else if meta.Priority == BreachPriorityMedium {
 						priorityIcon = "🟡"
 					}
 					n.Label = priorityIcon + part
@@ -5159,8 +5273,8 @@ func buildViolationKindTree(kinds []ViolationKind) []*TreeNode {
 					}
 				} else {
 					prefix := strings.Join(parts[:i+1], "/")
-					n.ID = "violationCategory:" + prefix
-					n.URI = "semiorepo://violationKind/" + ViolationKindIdToUriPath(prefix)
+					n.ID = "breachCategory:" + prefix
+					n.URI = "semiorepo://statute/" + StatuteIdToUriPath(prefix)
 					n.Kind = TreeNodeCategory
 				}
 				current[part] = &treeEntry{node: n, children: make(map[string]*treeEntry)}
@@ -5200,16 +5314,16 @@ func buildViolationKindTree(kinds []ViolationKind) []*TreeNode {
 	return buildNodes(rootEntries, orderedRootKeys)
 }
 
-func buildViolationKindGroupTree(groups []ViolationKindGroup) []*TreeNode {
+func buildTerritoryTree(groups []Territory) []*TreeNode {
 	var result []*TreeNode
 	for _, g := range groups {
 		groupNode := &TreeNode{
 			Kind:        TreeNodeCategory,
-			ID:          fmt.Sprintf("%s%s", emojiText(EmojiViolationKindGroup), g.Name),
+			ID:          fmt.Sprintf("%s%s", emojiText(EmojiTerritory), g.Name),
 			Label:       g.Name,
-			URI:         "semiorepo://violationKindGroup/" + strings.ToUpper(Slugify(g.Name)),
+			URI:         "semiorepo://territory/" + strings.ToUpper(Slugify(g.Name)),
 			Description: g.Description,
-			SubKind:     "violationKindGroup",
+			SubKind:     "territory",
 			Data: map[string]interface{}{
 				"name":        g.Name,
 				"description": g.Description,
@@ -5219,14 +5333,14 @@ func buildViolationKindGroupTree(groups []ViolationKindGroup) []*TreeNode {
 		for _, k := range g.Kinds {
 			meta := k.Info()
 			priorityIcon := "🟢"
-			if meta.Priority == ViolationPriorityHigh {
+			if meta.Priority == BreachPriorityHigh {
 				priorityIcon = "🔴"
-			} else if meta.Priority == ViolationPriorityMedium {
+			} else if meta.Priority == BreachPriorityMedium {
 				priorityIcon = "🟡"
 			}
-			label := priorityIcon + ViolationKindPathToIdValue(string(k))
+			label := priorityIcon + StatutePathToIdValue(string(k))
 			vkNode := &TreeNode{
-				Kind:        TreeNodeViolationKindNode,
+				Kind:        TreeNodeStatuteNode,
 				ID:          meta.GetID(),
 				Label:       label,
 				URI:         meta.GetURI(),
@@ -5244,7 +5358,7 @@ func buildViolationKindGroupTree(groups []ViolationKindGroup) []*TreeNode {
 			}
 			groupNode.Children = append(groupNode.Children, vkNode)
 		}
-		groupNode.Children = append(groupNode.Children, buildViolationKindGroupTree(g.Groups)...)
+		groupNode.Children = append(groupNode.Children, buildTerritoryTree(g.Groups)...)
 		result = append(result, groupNode)
 	}
 	return result
@@ -5513,8 +5627,8 @@ func treeNodeKindToEntityKind(k TreeNodeKind) string {
 		return "draft"
 	case TreeNodePolicy:
 		return "policy"
-	case TreeNodeViolationKindNode:
-		return "violationKind"
+	case TreeNodeStatuteNode:
+		return "statute"
 	case TreeNodeContributor:
 		return "contributor"
 	case TreeNodeCommit:
@@ -6159,14 +6273,14 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		if metrics, ok := analyze["metrics"].(map[string]interface{}); ok {
 			total := metrics["total"]
 			autofixable := metrics["autofixable"]
-			summaryText := fmt.Sprintf("found %v violations", total)
+			summaryText := fmt.Sprintf("found %v breachs", total)
 			if autofixable != nil {
 				summaryText += fmt.Sprintf(" (%v autofixable)", autofixable)
 			}
 			sb.WriteString(fmt.Sprintf("%s %s\n", prefix, summaryText))
 		}
-		if violations, ok := analyze["violations"].([]interface{}); ok {
-			for _, v := range violations {
+		if breachs, ok := analyze["breachs"].([]interface{}); ok {
+			for _, v := range breachs {
 				if vio, ok := v.(map[string]interface{}); ok {
 					kind := ""
 					if k, ok := vio["kind"].(map[string]interface{}); ok {
@@ -6179,7 +6293,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 					summary := fmt.Sprintf("%v", vio["summary"])
 					loc := fmt.Sprintf("%s:%s", scope, line)
 					lineStr := fmt.Sprintf("  %s %s %s %s\n",
-						colorize("violation", ColorRed, isTTY),
+						colorize("breach", ColorRed, isTTY),
 						kind,
 						colorize(loc, ColorDim, isTTY),
 						summary)
@@ -6195,7 +6309,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 	if fix, ok := payload["fix"].(map[string]interface{}); ok {
 		fixed := fix["fixed"]
 		remaining := fix["remaining"]
-		sb.WriteString(fmt.Sprintf("%s fixed %v violations (%v remaining)\n", prefix, fixed, remaining))
+		sb.WriteString(fmt.Sprintf("%s fixed %v breachs (%v remaining)\n", prefix, fixed, remaining))
 		return sb.String()
 	}
 
@@ -6243,7 +6357,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 			{"files", "file"},
 			{"contributors", "contributor"},
 			{"policies", "policy"},
-			{"violationKinds", "violationKind"},
+			{"statutes", "statute"},
 		}
 		for _, lk := range listKindPairs {
 			if items, ok := repo[lk.key].([]interface{}); ok {
@@ -6397,13 +6511,13 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		if metrics, ok := analyze["metrics"].(map[string]interface{}); ok {
 			total := metrics["total"]
 			autofixable := metrics["autofixable"]
-			sb.WriteString(fmt.Sprintf("- **Total Violations**: %v\n", total))
+			sb.WriteString(fmt.Sprintf("- **Total Breachs**: %v\n", total))
 			if autofixable != nil {
 				sb.WriteString(fmt.Sprintf("- **Autofixable**: %v\n", autofixable))
 			}
 		}
-		if violations, ok := analyze["violations"].([]interface{}); ok {
-			for _, v := range violations {
+		if breachs, ok := analyze["breachs"].([]interface{}); ok {
+			for _, v := range breachs {
 				if vio, ok := v.(map[string]interface{}); ok {
 					kind := ""
 					if k, ok := vio["kind"].(map[string]interface{}); ok {
@@ -6414,7 +6528,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 					scope := fmt.Sprintf("%v", vio["scope"])
 					line := fmt.Sprintf("%v", vio["line"])
 					summary := fmt.Sprintf("%v", vio["summary"])
-					sb.WriteString(fmt.Sprintf("- [%s](semiorepo://violationKind/%s) - %s:%s - %s\n", kind, Slugify(kind), scope, line, summary))
+					sb.WriteString(fmt.Sprintf("- [%s](semiorepo://statute/%s) - %s:%s - %s\n", kind, Slugify(kind), scope, line, summary))
 				}
 			}
 		}
@@ -6442,7 +6556,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		{"repo", "files", "file"},
 		{"repo", "contributors", "contributor"},
 		{"repo", "policies", "policy"},
-		{"repo", "violationKinds", "violationKind"},
+		{"repo", "statutes", "statute"},
 		{"", "todos", "todo"},
 		{"", "sections", "section"},
 		{"", "definitions", "definition"},
@@ -6730,31 +6844,31 @@ func (e TicketStatus) String() string {
 	return string(e)
 }
 
-// ViolationPriority represents a violation priority value.
-// [🪨semio-repo/cli/main.go#GraphQL Types§ViolationPriority](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/VIOLATIONPRIORITY)
-type ViolationPriority string
+// BreachPriority represents a breach priority value.
+// [🪨semio-repo/cli/main.go#GraphQL Types§BreachPriority](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/VIOLATIONPRIORITY)
+type BreachPriority string
 
 const (
-	ViolationPriorityHigh   ViolationPriority = "high"
-	ViolationPriorityMedium ViolationPriority = "medium"
-	ViolationPriorityLow    ViolationPriority = "low"
+	BreachPriorityHigh   BreachPriority = "high"
+	BreachPriorityMedium BreachPriority = "medium"
+	BreachPriorityLow    BreachPriority = "low"
 )
 
 // IsValid MUST return true only when the condition is met.
-// IsValid reports whether the ViolationPriority is valid.
+// IsValid reports whether the BreachPriority is valid.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§IsValid](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISVALID)
-func (e ViolationPriority) IsValid() bool {
+func (e BreachPriority) IsValid() bool {
 	switch e {
-	case ViolationPriorityHigh, ViolationPriorityMedium, ViolationPriorityLow:
+	case BreachPriorityHigh, BreachPriorityMedium, BreachPriorityLow:
 		return true
 	}
 	return false
 }
 
 // String MUST return the canonical string value.
-// String returns the string representation of the ViolationPriority.
+// String returns the string representation of the BreachPriority.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§String](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/STRING)
-func (e ViolationPriority) String() string {
+func (e BreachPriority) String() string {
 	return string(e)
 }
 
@@ -7080,7 +7194,7 @@ func (p *Project) GetID() string {
 			emoji = EmojiProjectResearch
 		}
 	}
-	return fmt.Sprintf("%s@%s", emojiText(emoji), p.Name)
+	return fmt.Sprintf("%s%s%s", emojiText(EmojiProjects), emojiText(emoji), p.Name)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7137,7 +7251,7 @@ func (b *Bundle) GetID() string {
 	case "example":
 		emoji = EmojiBundleExample
 	}
-	return fmt.Sprintf("%s%s", emojiText(emoji), b.Name)
+	return fmt.Sprintf("%s%s%s", emojiText(EmojiBundles), emojiText(emoji), b.Name)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7274,7 +7388,7 @@ func (f *Folder) GetID() string {
 	if f.Kind == FolderKindOrganization {
 		emoji = EmojiFolderOrg
 	}
-	return fmt.Sprintf("%s%s", emojiText(emoji), f.Path)
+	return fmt.Sprintf("%s%s%s", emojiText(EmojiFolders), emojiText(emoji), f.Path)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7308,55 +7422,60 @@ const (
 )
 
 const (
-	EmojiRepo                = "🌍"
-	EmojiProjects            = "🏗️"
-	EmojiProjectUser         = "👤"
-	EmojiProjectInfra        = "🧰"
-	EmojiProjectResearch     = "🔬"
-	EmojiBundles             = "📦"
-	EmojiBundleLibrary       = "📚"
-	EmojiBundleSchema        = "🛂"
-	EmojiBundleBinary        = "⌨️"
-	EmojiBundleUI            = "🖱️"
-	EmojiBundleExample       = "📔"
-	EmojiBundleSite          = "🌐"
-	EmojiBundleAssets        = "🏪"
-	EmojiFolders             = "📁"
-	EmojiFolderOrg           = "🗃️"
-	EmojiFolderRequired      = "📁"
-	EmojiFiles               = "📄"
-	EmojiFileCode            = "💻"
-	EmojiFileTest            = "🧪"
-	EmojiFileScript          = "📜"
-	EmojiFileDocs            = "📃"
-	EmojiFileConfig          = "⚙️"
-	EmojiFileResource        = "💾"
-	EmojiFileLicense         = "⚖️"
-	EmojiSections            = "🔖"
-	EmojiSection             = "🔖"
-	EmojiDefinitions         = "🏷️"
-	EmojiDefinitionImpl      = "🛠️"
-	EmojiDefinitionInterface = "✂️"
-	EmojiDefinitionConstant  = "🪨"
-	EmojiTickets             = "🎫"
-	EmojiTicket              = "🎫"
-	EmojiGoals               = "🎯"
-	EmojiGoal                = "🎯"
-	EmojiDrafts              = "✍"
-	EmojiDraft               = "✍"
-	EmojiTodos               = "📝"
-	EmojiTodo                = "📝"
-	EmojiPolicies            = "🛡️"
-	EmojiPolicy              = "🛡️"
-	EmojiViolationKindGroups = "🗄️"
-	EmojiViolationKindGroup  = "🗄️"
-	EmojiViolationKinds      = "🚫"
-	EmojiViolationKind       = "🚫"
-	EmojiViolation           = "🚫"
-	EmojiContributors        = "👤"
-	EmojiContributor         = "👤"
-	EmojiCommits             = "🔀"
-	EmojiCommit              = "🔀"
+	EmojiRepo                  = "🌍"
+	EmojiProjects              = "🏗️"
+	EmojiProjectUser           = "👤"
+	EmojiProjectInfra          = "🧰"
+	EmojiProjectResearch       = "🔬"
+	EmojiBundles               = "📦"
+	EmojiBundleLibrary         = "📚"
+	EmojiBundleSchema          = "🛂"
+	EmojiBundleBinary          = "⌨️"
+	EmojiBundleUI              = "🖱️"
+	EmojiBundleExample         = "📔"
+	EmojiBundleSite            = "🌐"
+	EmojiBundleAssets          = "🏪"
+	EmojiFolders               = "📁"
+	EmojiFolderOrg             = "🗃️"
+	EmojiFolderRequired        = "🛅"
+	EmojiFiles                 = "📄"
+	EmojiFileCode              = "💻"
+	EmojiFileTest              = "🧪"
+	EmojiFileScript            = "📜"
+	EmojiFileDocs              = "📃"
+	EmojiFileConfig            = "⚙️"
+	EmojiFileResource          = "💾"
+	EmojiFileLicense           = "⚖️"
+	EmojiSections              = "🔖"
+	EmojiSection               = "🔖"
+	EmojiDefinitions           = "🏷️"
+	EmojiDefinitionImpl        = "🛠️"
+	EmojiDefinitionInterface   = "✂️"
+	EmojiDefinitionConstant    = "🪨"
+	EmojiTickets               = "🎫"
+	EmojiTicket                = "🎫"
+	EmojiGoals                 = "🎯"
+	EmojiGoal                  = "🎯"
+	EmojiDrafts                = "✍"
+	EmojiDraft                 = "✍"
+	EmojiTodos                 = "📝"
+	EmojiTodo                  = "📝"
+	EmojiPolicies              = "🛡️"
+	EmojiPolicy                = "🛡️"
+	EmojiTerritorys   = "🗄️"
+	EmojiTerritory    = "🗄️"
+	EmojiStatutes        = "🚫"
+	EmojiStatute         = "🚫"
+	EmojiBreach             = "🚫"
+	EmojiContributors          = "👤"
+	EmojiContributor           = "👤"
+	EmojiCommits               = "🔀"
+	EmojiCommit                = "🔀"
+	EmojiInteractions          = "⚡"
+	EmojiInteractionStarted    = "🌱"
+	EmojiInteractionFinished   = "✅"
+	EmojiInteractionRestarted  = "🔁"
+	EmojiInteractionDeleted    = "🗑️"
 )
 
 // DeriveFileKind MUST return a valid value for any recognized input.
@@ -7514,7 +7633,7 @@ func (f *File) GetID() string {
 	case "license":
 		emoji = EmojiFileLicense
 	}
-	return fmt.Sprintf("%s%s", emojiText(emoji), f.Path)
+	return fmt.Sprintf("%s%s%s", emojiText(EmojiFiles), emojiText(emoji), f.Path)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7601,14 +7720,12 @@ func (d *Definition) GetID() string {
 	case "constant":
 		emoji = EmojiDefinitionConstant
 	}
-
 	if d.ID != "" {
-		if strings.HasPrefix(d.ID, emojiText(emoji)) {
+		if strings.HasPrefix(d.ID, emojiText(EmojiDefinitions)) {
 			return d.ID
 		}
-
 		cleanID := strings.TrimPrefix(d.ID, "definition:")
-		return fmt.Sprintf("%s%s", emojiText(emoji), cleanID)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), emojiText(emoji), cleanID)
 	}
 	val := d.Name
 	if d.FilePath != "" {
@@ -7618,7 +7735,7 @@ func (d *Definition) GetID() string {
 		}
 		val += "§" + d.Name
 	}
-	return fmt.Sprintf("%s%s", emojiText(emoji), val)
+	return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), emojiText(emoji), val)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7869,18 +7986,14 @@ func (t *Ticket) IsNode() {}
 // GetID returns the i d of the Ticket.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (t *Ticket) GetID() string {
-	id := fmt.Sprintf("%s%04d/%02d/%02d/%s", emojiText(EmojiTicket), t.Year, t.Month, t.Day, t.Slug)
-	if t.Status != "" {
-		id += "?" + string(t.Status)
-	}
-	return id
+	return fmt.Sprintf("%s%04d%02d%02d%s", emojiText(EmojiTicket), t.Year, t.Month, t.Day, t.Slug)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Ticket.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (t *Ticket) GetURI() string {
-	return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", t.Year, t.Month, t.Day, Slugify(t.Slug))
+	return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", t.Year, t.Month, t.Day, strings.ToUpper(Slugify(t.Slug)))
 }
 
 // GetTitle MUST return the stored value without modification.
@@ -8068,8 +8181,8 @@ type Policy struct {
 	Name           string               `json:"name"`
 	Description    *string              `json:"description,omitempty"`
 	Scopes         []string             `json:"scopes"`
-	Groups         []ViolationKindGroup `json:"groups"`
-	ViolationKinds []*ViolationKindMeta `json:"violationKinds"`
+	Groups         []Territory `json:"groups"`
+	Statutes []*StatuteMeta `json:"statutes"`
 }
 
 // IsNode MUST return true only when the condition is met.
@@ -8081,10 +8194,7 @@ func (p *Policy) IsNode() {}
 // GetID returns the i d of the Policy.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (p *Policy) GetID() string {
-	slug := p.ID
-	if !strings.HasPrefix(slug, "/") {
-		slug = "/" + slug
-	}
+	slug := strings.TrimPrefix(p.ID, "/")
 	return fmt.Sprintf("%s%s", emojiText(EmojiPolicy), slug)
 }
 
@@ -8095,40 +8205,40 @@ func (p *Policy) GetURI() string {
 	return "semiorepo://policy/" + strings.ToUpper(Slugify(p.ID))
 }
 
-// ViolationKindMeta holds the data fields for a violation kind meta record.
-// [🛠️semio-repo/cli/main.go#GraphQL Types§ViolationKindMeta](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/VIOLATIONKINDMETA)
-type ViolationKindMeta struct {
-	Kind        ViolationKind     `json:"kind"`
+// StatuteMeta holds the data fields for a statute meta record.
+// [🛠️semio-repo/cli/main.go#GraphQL Types§StatuteMeta](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/VIOLATIONKINDMETA)
+type StatuteMeta struct {
+	Kind        Statute     `json:"kind"`
 	PolicyID    string            `json:"policyId"`
-	Priority    ViolationPriority `json:"priority"`
+	Priority    BreachPriority `json:"priority"`
 	Reason      string            `json:"reason"`
 	Solution    string            `json:"solution"`
 	Autofixable bool              `json:"autofixable"`
 }
 
 // IsNode MUST return true only when the condition is met.
-// IsNode reports whether the ViolationKindMeta is node.
+// IsNode reports whether the StatuteMeta is node.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ISNODE)
-func (v *ViolationKindMeta) IsNode() {}
+func (v *StatuteMeta) IsNode() {}
 
 // GetID MUST return the stored value without modification.
-// GetID returns the i d of the ViolationKindMeta.
+// GetID returns the i d of the StatuteMeta.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
-func (v *ViolationKindMeta) GetID() string {
-	return fmt.Sprintf("%s%s", emojiText(EmojiViolationKind), ViolationKindPathToIdValue(string(v.Kind)))
+func (v *StatuteMeta) GetID() string {
+	return fmt.Sprintf("%s%s", emojiText(EmojiStatute), StatutePathToIdValue(string(v.Kind)))
 }
 
 // GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the ViolationKindMeta.
+// GetURI returns the u r i of the StatuteMeta.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
-func (v *ViolationKindMeta) GetURI() string {
-	return "semiorepo://violationKind/" + ViolationKindIdToUriPath(string(v.Kind))
+func (v *StatuteMeta) GetURI() string {
+	return "semiorepo://statute/" + StatuteIdToUriPath(string(v.Kind))
 }
 
 // AnalyzeResult holds the data fields for a analyze result record.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§AnalyzeResult](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ANALYZERESULT)
 type AnalyzeResult struct {
-	Violations []*Violation    `json:"violations"`
+	Breachs []*Breach    `json:"breachs"`
 	Metrics    *AnalyzeMetrics `json:"metrics"`
 }
 
@@ -8137,7 +8247,7 @@ type AnalyzeResult struct {
 type FixResult struct {
 	Fixed      int          `json:"fixed"`
 	Remaining  int          `json:"remaining"`
-	Violations []*Violation `json:"violations"`
+	Breachs []*Breach `json:"breachs"`
 }
 
 // ContributorContributions holds the data fields for a contributor contributions record.
@@ -8903,7 +9013,7 @@ func (f *FilterInput) ToStreamOptions() StreamOptions {
 // #region 🔖Types
 
 // [🔖semio-repo/cli/main.go#Types](semiorepo://section/semio-repo/cli/main.go/TYPES)
-// Scope, todo, violation, and ticket metric types for the repository model.
+// Scope, todo, breach, and ticket metric types for the repository model.
 
 // ScopeKind represents a scope kind value.
 // [🪨semio-repo/cli/main.go#Types§ScopeKind](semiorepo://definition/semio-repo/cli/main.go/TYPES/SCOPEKIND)
@@ -8978,12 +9088,12 @@ type Location struct {
 	Column   int    `json:"column"`
 }
 
-// Violation holds the data fields for a violation record.
-// [🛠️semio-repo/cli/main.go#Types§Violation](semiorepo://definition/semio-repo/cli/main.go/TYPES/VIOLATION)
-type Violation struct {
+// Breach holds the data fields for a breach record.
+// [🛠️semio-repo/cli/main.go#Types§Breach](semiorepo://definition/semio-repo/cli/main.go/TYPES/VIOLATION)
+type Breach struct {
 	ID      string        `json:"id"`
 	Summary string        `json:"summary"`
-	Kind    ViolationKind `json:"kind"`
+	Kind    Statute `json:"kind"`
 	Scope   string        `json:"scope"`
 	Line    int           `json:"line,omitempty"`
 	Column  int           `json:"column,omitempty"`
@@ -8991,31 +9101,31 @@ type Violation struct {
 }
 
 // IsNode MUST return true only when the condition is met.
-// IsNode reports whether the Violation is node.
+// IsNode reports whether the Breach is node.
 // [🛠️semio-repo/cli/main.go#Types§IsNode](semiorepo://definition/semio-repo/cli/main.go/TYPES/ISNODE)
-func (v *Violation) IsNode() {}
+func (v *Breach) IsNode() {}
 
 // GetID MUST return the stored value without modification.
-// GetID returns the i d of the Violation.
+// GetID returns the i d of the Breach.
 // [🛠️semio-repo/cli/main.go#Types§GetID](semiorepo://definition/semio-repo/cli/main.go/TYPES/GETID)
-func (v *Violation) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiViolation), v.ID) }
+func (v *Breach) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiBreach), v.ID) }
 
 // GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the Violation.
+// GetURI returns the u r i of the Breach.
 // [🛠️semio-repo/cli/main.go#Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/GETURI)
-func (v *Violation) GetURI() string { return "semiorepo://violation/" + strings.ToUpper(Slugify(v.ID)) }
+func (v *Breach) GetURI() string { return "semiorepo://breach/" + strings.ToUpper(Slugify(v.ID)) }
 
-// Priority MUST derive the value from the violation kind metadata.
-// Priority returns the priority of the violation from its kind metadata.
+// Priority MUST derive the value from the statute metadata.
+// Priority returns the priority of the breach from its kind metadata.
 // [🛠️semio-repo/cli/main.go#Types§Priority](semiorepo://definition/semio-repo/cli/main.go/TYPES/PRIORITY)
-func (v *Violation) Priority() ViolationPriority {
+func (v *Breach) Priority() BreachPriority {
 	return v.Kind.Info().Priority
 }
 
-// Autofixable MUST return true only for violation kinds that support auto-fix.
-// Autofixable reports whether the violation kind supports automatic fixing.
+// Autofixable MUST return true only for statutes that support auto-fix.
+// Autofixable reports whether the statute supports automatic fixing.
 // [🛠️semio-repo/cli/main.go#Types§Autofixable](semiorepo://definition/semio-repo/cli/main.go/TYPES/AUTOFIXABLE)
-func (v *Violation) Autofixable() bool {
+func (v *Breach) Autofixable() bool {
 	return v.Kind.Info().Autofixable
 }
 
@@ -9063,7 +9173,7 @@ type LanguagePlugin interface {
 	PolicySectionStartMatch(line string) (matched bool, name string)
 	PolicySectionEndMatch(line string) (matched bool, name string)
 	ExtraOrphanDefinitions(lines []string) []DefinitionRange
-	ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation
+	ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach
 	SkipDirectives() []string
 	ExtractImports(content string) ([]string, string)
 	FormatImports(imports []string) string
@@ -9531,14 +9641,14 @@ func (l *BaseLanguage) SkipDirectives() []string {
 // ScanComments MUST operate on the BaseLanguage receiver and return consistent results.
 // ScanComments performs the scan comments operation on the BaseLanguage.
 // [🛠️semio-repo/cli/main.go#Types#Languages§ScanComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/SCANCOMMENTS)
-func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation {
+func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
 	if l.commentPrefix == "" {
 		return nil
 	}
 	if DeriveFileKind(file) == FileKindConfig {
 		return nil
 	}
-	var violations []Violation
+	var breachs []Breach
 	sections := l.ParseSections(content)
 	var headerSection *Section
 	for i := range sections {
@@ -9572,9 +9682,9 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 			trimmed := strings.TrimSpace(line)
 			if trimmed == blockEnd {
 				if !scanState.BlockCommentHasTodo && !ctx.IsSpecBlock(file, scanState.BlockCommentStartLine, lineNum, lines) {
-					violations = append(violations, ctx.CreateViolation(
+					breachs = append(breachs, ctx.CreateBreach(
 						fmt.Sprintf("Block comment in %s:%d", file, scanState.BlockCommentStartLine),
-						ViolationCodeCommentBlock,
+						BreachCodeCommentBlock,
 						file, scanState.BlockCommentStartLine, scanState.BlockCommentStartColumn, ""))
 				}
 				scanState.InBlockComment = false
@@ -9610,14 +9720,14 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 				if j+1 < len(line) && line[j] == '*' && line[j+1] == '/' {
 					if !scanState.BlockCommentHasTodo && !ctx.IsSpecBlock(file, scanState.BlockCommentStartLine, lineNum, lines) {
 						if l.hasJSDoc && scanState.BlockCommentIsJsDoc {
-							violations = append(violations, ctx.CreateViolation(
+							breachs = append(breachs, ctx.CreateBreach(
 								fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
-								ViolationCodeCommentJSDoc,
+								BreachCodeCommentJSDoc,
 								file, scanState.BlockCommentStartLine, scanState.BlockCommentStartColumn, ""))
 						} else {
-							violations = append(violations, ctx.CreateViolation(
+							breachs = append(breachs, ctx.CreateBreach(
 								fmt.Sprintf("Block comment in %s:%d", file, scanState.BlockCommentStartLine),
-								ViolationCodeCommentBlock,
+								BreachCodeCommentBlock,
 								file, scanState.BlockCommentStartLine, scanState.BlockCommentStartColumn, ""))
 						}
 					}
@@ -9828,9 +9938,9 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 				if !debugMarker {
 					foundInline = true
 					if !inlineCommentActive {
-						violations = append(violations, ctx.CreateViolation(
+						breachs = append(breachs, ctx.CreateBreach(
 							fmt.Sprintf("Inline comment in %s:%d", file, lineNum),
-							ViolationCodeCommentInline,
+							BreachCodeCommentInline,
 							file, lineNum, j+1, strings.TrimSpace(line[j:])))
 						inlineCommentActive = true
 					}
@@ -9845,7 +9955,7 @@ func (l *BaseLanguage) ScanComments(ctx *PolicyContext, file, content string, li
 		}
 		charIndex += len(line) + 1
 	}
-	return violations
+	return breachs
 }
 
 // ExtractImports MUST return the extracted value without side effects.
@@ -9908,11 +10018,11 @@ func NewTypeScriptLanguage() *TypeScriptLanguage {
 // ScanComments MUST operate on the TypeScriptLanguage receiver and return consistent results.
 // ScanComments performs the scan comments operation on the TypeScriptLanguage.
 // [🛠️semio-repo/cli/main.go#Types#Languages#TypeScript§ScanComments](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TYPESCRIPT/SCANCOMMENTS)
-func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Violation {
+func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content string, lines []string) []Breach {
 	if DeriveFileKind(file) == FileKindConfig {
 		return nil
 	}
-	var violations []Violation
+	var breachs []Breach
 
 	sections := l.ParseSections(content)
 	var headerSection *Section
@@ -9966,14 +10076,14 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 					}
 					if !isDefDocstring && !scanState.BlockCommentHasTodo && !ctx.IsSpecBlock(file, scanState.BlockCommentStartLine, lineNum, lines) {
 						if scanState.BlockCommentIsJsDoc {
-							violations = append(violations, ctx.CreateViolation(
+							breachs = append(breachs, ctx.CreateBreach(
 								fmt.Sprintf("JSDoc comment in %s:%d", file, scanState.BlockCommentStartLine),
-								ViolationCodeCommentJSDoc,
+								BreachCodeCommentJSDoc,
 								file, scanState.BlockCommentStartLine, scanState.BlockCommentStartColumn, ""))
 						} else {
-							violations = append(violations, ctx.CreateViolation(
+							breachs = append(breachs, ctx.CreateBreach(
 								fmt.Sprintf("Block comment in %s:%d", file, scanState.BlockCommentStartLine),
-								ViolationCodeCommentBlock,
+								BreachCodeCommentBlock,
 								file, scanState.BlockCommentStartLine, scanState.BlockCommentStartColumn, ""))
 						}
 					}
@@ -10112,9 +10222,9 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 				if !debugMarker {
 					foundInline = true
 					if !inlineCommentActive {
-						violations = append(violations, ctx.CreateViolation(
+						breachs = append(breachs, ctx.CreateBreach(
 							fmt.Sprintf("Inline comment in %s:%d", file, lineNum),
-							ViolationCodeCommentInline,
+							BreachCodeCommentInline,
 							file, lineNum, j+1, strings.TrimSpace(line[j:])))
 						inlineCommentActive = true
 					}
@@ -10129,7 +10239,7 @@ func (l *TypeScriptLanguage) ScanComments(ctx *PolicyContext, file, content stri
 		}
 		charIndex += len(line) + 1
 	}
-	return violations
+	return breachs
 }
 
 // ExtractImports MUST return the extracted value without side effects.
@@ -11253,6 +11363,91 @@ func resolveAuthorToGithub(name, email string) string {
 	return ""
 }
 
+// InteractionResource holds a flat interaction enriched with its source context.
+// [🛠️semio-repo/cli/main.go#Types#Languages§InteractionResource](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/INTERACTIONRESOURCE)
+type InteractionResource struct {
+	Interaction
+	SourceKind string `json:"sourceKind"`
+	SourceID   string `json:"sourceId"`
+	GoalID     string `json:"goalId,omitempty"`
+	TicketID   string `json:"ticketId,omitempty"`
+}
+
+// ListInteractions aggregates interactions from all tickets and goals.
+// [🛠️semio-repo/cli/main.go#Types#Languages§ListInteractions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/LISTINTERACTIONS)
+func ListInteractions() ([]InteractionResource, error) {
+	var result []InteractionResource
+	tickets, err := ListTickets(nil, nil, nil)
+	if err == nil {
+		for _, t := range tickets {
+			tid := t.GetID()
+			for _, ix := range t.Interactions {
+				result = append(result, InteractionResource{
+					Interaction: ix,
+					SourceKind:  "ticket",
+					SourceID:    tid,
+					GoalID:      t.Goal,
+					TicketID:    tid,
+				})
+			}
+		}
+	}
+	goals, err := ListGoals()
+	if err == nil {
+		for _, g := range goals {
+			gid := g.GetID()
+			for _, ix := range g.Interactions {
+				result = append(result, InteractionResource{
+					Interaction: ix,
+					SourceKind:  "goal",
+					SourceID:    gid,
+					GoalID:      gid,
+				})
+			}
+		}
+	}
+	return result, nil
+}
+
+// StreamInteractions streams interactions from all tickets and goals.
+// [🛠️semio-repo/cli/main.go#Types#Languages§StreamInteractions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/STREAMINTERACTIONS)
+func StreamInteractions(ctx context.Context, out chan<- InteractionResource) {
+	defer close(out)
+	tickets, _ := ListTickets(nil, nil, nil)
+	for _, t := range tickets {
+		tid := t.GetID()
+		for _, ix := range t.Interactions {
+			select {
+			case <-ctx.Done():
+				return
+			case out <- InteractionResource{
+				Interaction: ix,
+				SourceKind:  "ticket",
+				SourceID:    tid,
+				GoalID:      t.Goal,
+				TicketID:    tid,
+			}:
+			}
+		}
+	}
+	goals, _ := ListGoals()
+	for _, g := range goals {
+		gid := g.GetID()
+		for _, ix := range g.Interactions {
+			select {
+			case <-ctx.Done():
+				return
+			case out <- InteractionResource{
+				Interaction: ix,
+				SourceKind:  "goal",
+				SourceID:    gid,
+				GoalID:      gid,
+			}:
+			}
+		}
+	}
+}
+
 // TicketSection holds the data fields for a ticket section record.
 // [🛠️semio-repo/cli/main.go#Types#Languages§TicketSection](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/TICKETSECTION)
 type TicketSection struct {
@@ -11362,519 +11557,519 @@ type GoalGithubData struct {
 	Issue     string `json:"issue,omitempty"`
 }
 
-// ViolationKind represents a violation kind value.
-// [🪨semio-repo/cli/main.go#Types#Languages§ViolationKind](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/VIOLATIONKIND)
-type ViolationKind string
+// Statute represents a statute value.
+// [🪨semio-repo/cli/main.go#Types#Languages§Statute](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/VIOLATIONKIND)
+type Statute string
 
 const (
-	ViolationCodeFileMissingHeaderRegion               ViolationKind = "code/file/missing-header-region"
-	ViolationCodeFileWrongHeaderRegionFormat           ViolationKind = "code/file/wrong-header-region-format"
-	ViolationCodeFileMissingIdentification             ViolationKind = "code/file/missing-identification"
-	ViolationCodeFileWrongIdentificationId             ViolationKind = "code/file/wrong-identification/id"
-	ViolationCodeFileWrongIdentificationUri            ViolationKind = "code/file/wrong-identification/uri"
-	ViolationCodeFileMissingContributors               ViolationKind = "code/file/missing-contributors"
-	ViolationCodeFileMissingSummary                    ViolationKind = "code/file/missing-summary"
-	ViolationCodeFileMissingLicense                    ViolationKind = "code/file/missing-license"
-	ViolationCodeFileWrongLicense                      ViolationKind = "code/file/wrong-license"
-	ViolationCodeFileMissingSpecs                      ViolationKind = "code/file/missing-specs"
-	ViolationCodeFileMissingDocs                       ViolationKind = "code/file/missing-docs"
-	ViolationCodeSectionEmpty                          ViolationKind = "code/section/empty"
-	ViolationCodeSectionOrphanDefinition               ViolationKind = "code/section/orphan-definition"
-	ViolationCodeSectionMissingStartName               ViolationKind = "code/section/missing-start-name"
-	ViolationCodeSectionMissingEndName                 ViolationKind = "code/section/missing-end-name"
-	ViolationCodeSectionNameMismatch                   ViolationKind = "code/section/name-mismatch"
-	ViolationCodeSectionMissingIdentification          ViolationKind = "code/section/missing-identification"
-	ViolationCodeSectionWrongFormat                    ViolationKind = "code/section/wrong-format"
-	ViolationCodeSectionWrongFormatSummaryTooLong      ViolationKind = "code/section/wrong-format/summary/too-long-summary"
-	ViolationCodeSectionWrongFormatSpecsSplitBlock     ViolationKind = "code/section/wrong-format/specs/split-block"
-	ViolationCodeSectionWrongFormatDocs                ViolationKind = "code/section/wrong-format/docs"
-	ViolationCodeSectionMissingSummary                 ViolationKind = "code/section/missing-summary"
-	ViolationCodeSectionMissingSpecs                   ViolationKind = "code/section/missing-specs"
-	ViolationCodeSectionMissingDocs                    ViolationKind = "code/section/missing-docs"
-	ViolationCodeDefMissingIdentification              ViolationKind = "code/definition/missing-identification"
-	ViolationCodeDefWrongFormat                        ViolationKind = "code/definition/wrong-format"
-	ViolationCodeDefNotNativeDocstring                 ViolationKind = "code/definition/wrong-format/not-native-docstring"
-	ViolationCodeDefMissingSummary                     ViolationKind = "code/definition/missing-summary"
-	ViolationCodeDefMissingSpecs                       ViolationKind = "code/definition/missing-specs"
-	ViolationCodeDefMissingDocs                        ViolationKind = "code/definition/missing-docs"
-	ViolationCodeCommentInline                         ViolationKind = "code/comment/inline"
-	ViolationCodeCommentBlock                          ViolationKind = "code/comment/block"
-	ViolationCodeCommentJSDoc                          ViolationKind = "code/comment/jsdoc"
-	ViolationCodeSpecsSyntax                           ViolationKind = "code/specs/implementation-syntax"
-	ViolationCodeDocsMissingReadme                     ViolationKind = "code/docs/missing-readme"
-	ViolationDevDocsMissingFile                        ViolationKind = "dev-docs/missing-file"
-	ViolationDevDocsMissingFolder                      ViolationKind = "dev-docs/missing-folder"
-	ViolationDevDocsWrongFilePath                      ViolationKind = "dev-docs/wrong-file-path"
-	ViolationDevDocsWrongFolderPath                    ViolationKind = "dev-docs/wrong-folder-path"
-	ViolationDevDocsWrongFileName                      ViolationKind = "dev-docs/wrong-file-name"
-	ViolationDevDocsWrongFolderName                    ViolationKind = "dev-docs/wrong-folder-name"
-	ViolationDevDocsWrongFileOrder                     ViolationKind = "dev-docs/wrong-file-order"
-	ViolationDevDocsWrongFolderOrder                   ViolationKind = "dev-docs/wrong-folder-order"
-	ViolationDevDocsMissingComponent                   ViolationKind = "dev-docs/missing-component"
-	ViolationDevDocsWrongComponentName                 ViolationKind = "dev-docs/wrong-component-name"
-	ViolationDevDocsWrongComponentOrder                ViolationKind = "dev-docs/wrong-component-order"
-	ViolationSketchpadImportThirdParty                 ViolationKind = "sketchpad/import/third-party-outside-elements"
-	ViolationSketchpadStateMultipleMachines            ViolationKind = "sketchpad/state/multiple-machines"
-	ViolationSketchpadStateCreateActor                 ViolationKind = "sketchpad/state/create-actor-usage"
-	ViolationSketchpadStateYjsAppState                 ViolationKind = "sketchpad/state/yjs-app-state"
-	ViolationSketchpadStateForbiddenStore              ViolationKind = "sketchpad/state/forbidden-store"
-	ViolationSketchpadHooksNonTriadic                  ViolationKind = "sketchpad/hooks/non-triadic"
-	ViolationCodeUnicodeEmojiVariation                 ViolationKind = "code/unicode/emoji-variation"
-	ViolationRepoMissingCommand                        ViolationKind = "repo/missing-command"
-	ViolationRepoMissingTicketTracking                 ViolationKind = "repo/missing-ticket-tracking"
-	ViolationSystemDevcontainerVscodeSettingsOutside   ViolationKind = "system/devcontainer/vscode/settings-outside-devcontainer"
-	ViolationSystemDevcontainerVscodeExtensionsOutside ViolationKind = "system/devcontainer/vscode/extensions-outside-devcontainer"
-	ViolationFolderIllegalEmpty                        ViolationKind = "folder/illegal/empty"
-	ViolationFileIllegalUseGodfile                     ViolationKind = "file/illegal/use-godfile"
+	BreachCodeFileMissingHeaderRegion               Statute = "code/file/missing-header-region"
+	BreachCodeFileWrongHeaderRegionFormat           Statute = "code/file/wrong-header-region-format"
+	BreachCodeFileMissingIdentification             Statute = "code/file/missing-identification"
+	BreachCodeFileWrongIdentificationId             Statute = "code/file/wrong-identification/id"
+	BreachCodeFileWrongIdentificationUri            Statute = "code/file/wrong-identification/uri"
+	BreachCodeFileMissingContributors               Statute = "code/file/missing-contributors"
+	BreachCodeFileMissingSummary                    Statute = "code/file/missing-summary"
+	BreachCodeFileMissingLicense                    Statute = "code/file/missing-license"
+	BreachCodeFileWrongLicense                      Statute = "code/file/wrong-license"
+	BreachCodeFileMissingSpecs                      Statute = "code/file/missing-specs"
+	BreachCodeFileMissingDocs                       Statute = "code/file/missing-docs"
+	BreachCodeSectionEmpty                          Statute = "code/section/empty"
+	BreachCodeSectionOrphanDefinition               Statute = "code/section/orphan-definition"
+	BreachCodeSectionMissingStartName               Statute = "code/section/missing-start-name"
+	BreachCodeSectionMissingEndName                 Statute = "code/section/missing-end-name"
+	BreachCodeSectionNameMismatch                   Statute = "code/section/name-mismatch"
+	BreachCodeSectionMissingIdentification          Statute = "code/section/missing-identification"
+	BreachCodeSectionWrongFormat                    Statute = "code/section/wrong-format"
+	BreachCodeSectionWrongFormatSummaryTooLong      Statute = "code/section/wrong-format/summary/too-long-summary"
+	BreachCodeSectionWrongFormatSpecsSplitBlock     Statute = "code/section/wrong-format/specs/split-block"
+	BreachCodeSectionWrongFormatDocs                Statute = "code/section/wrong-format/docs"
+	BreachCodeSectionMissingSummary                 Statute = "code/section/missing-summary"
+	BreachCodeSectionMissingSpecs                   Statute = "code/section/missing-specs"
+	BreachCodeSectionMissingDocs                    Statute = "code/section/missing-docs"
+	BreachCodeDefMissingIdentification              Statute = "code/definition/missing-identification"
+	BreachCodeDefWrongFormat                        Statute = "code/definition/wrong-format"
+	BreachCodeDefNotNativeDocstring                 Statute = "code/definition/wrong-format/not-native-docstring"
+	BreachCodeDefMissingSummary                     Statute = "code/definition/missing-summary"
+	BreachCodeDefMissingSpecs                       Statute = "code/definition/missing-specs"
+	BreachCodeDefMissingDocs                        Statute = "code/definition/missing-docs"
+	BreachCodeCommentInline                         Statute = "code/comment/inline"
+	BreachCodeCommentBlock                          Statute = "code/comment/block"
+	BreachCodeCommentJSDoc                          Statute = "code/comment/jsdoc"
+	BreachCodeSpecsSyntax                           Statute = "code/specs/implementation-syntax"
+	BreachCodeDocsMissingReadme                     Statute = "code/docs/missing-readme"
+	BreachDevDocsMissingFile                        Statute = "dev-docs/missing-file"
+	BreachDevDocsMissingFolder                      Statute = "dev-docs/missing-folder"
+	BreachDevDocsWrongFilePath                      Statute = "dev-docs/wrong-file-path"
+	BreachDevDocsWrongFolderPath                    Statute = "dev-docs/wrong-folder-path"
+	BreachDevDocsWrongFileName                      Statute = "dev-docs/wrong-file-name"
+	BreachDevDocsWrongFolderName                    Statute = "dev-docs/wrong-folder-name"
+	BreachDevDocsWrongFileOrder                     Statute = "dev-docs/wrong-file-order"
+	BreachDevDocsWrongFolderOrder                   Statute = "dev-docs/wrong-folder-order"
+	BreachDevDocsMissingComponent                   Statute = "dev-docs/missing-component"
+	BreachDevDocsWrongComponentName                 Statute = "dev-docs/wrong-component-name"
+	BreachDevDocsWrongComponentOrder                Statute = "dev-docs/wrong-component-order"
+	BreachSketchpadImportThirdParty                 Statute = "sketchpad/import/third-party-outside-elements"
+	BreachSketchpadStateMultipleMachines            Statute = "sketchpad/state/multiple-machines"
+	BreachSketchpadStateCreateActor                 Statute = "sketchpad/state/create-actor-usage"
+	BreachSketchpadStateYjsAppState                 Statute = "sketchpad/state/yjs-app-state"
+	BreachSketchpadStateForbiddenStore              Statute = "sketchpad/state/forbidden-store"
+	BreachSketchpadHooksNonTriadic                  Statute = "sketchpad/hooks/non-triadic"
+	BreachCodeUnicodeEmojiVariation                 Statute = "code/unicode/emoji-variation"
+	BreachRepoMissingCommand                        Statute = "repo/missing-command"
+	BreachRepoMissingTicketTracking                 Statute = "repo/missing-ticket-tracking"
+	BreachSystemDevcontainerVscodeSettingsOutside   Statute = "system/devcontainer/vscode/settings-outside-devcontainer"
+	BreachSystemDevcontainerVscodeExtensionsOutside Statute = "system/devcontainer/vscode/extensions-outside-devcontainer"
+	BreachFolderIllegalEmpty                        Statute = "folder/illegal/empty"
+	BreachFileIllegalUseGodfile                     Statute = "file/illegal/use-godfile"
 )
 
-var violationKindInfoTable = map[ViolationKind]ViolationKindMeta{
-	ViolationRepoMissingCommand: {
-		Kind:        ViolationRepoMissingCommand,
-		Priority:    ViolationPriorityHigh,
+var statuteInfoTable = map[Statute]StatuteMeta{
+	BreachRepoMissingCommand: {
+		Kind:        BreachRepoMissingCommand,
+		Priority:    BreachPriorityHigh,
 		Reason:      "Command is missing from parity implementation (CLI, MCP, VS Code)",
 		Solution:    "Implement the command in the missing platform",
 		Autofixable: false,
 	},
-	ViolationRepoMissingTicketTracking: {
-		Kind:        ViolationRepoMissingTicketTracking,
-		Priority:    ViolationPriorityHigh,
+	BreachRepoMissingTicketTracking: {
+		Kind:        BreachRepoMissingTicketTracking,
+		Priority:    BreachPriorityHigh,
 		Reason:      "Ticket tracking code is missing or incomplete",
 		Solution:    "Implement strict ticket tracking (open/close/log)",
 		Autofixable: false,
 	},
-	ViolationCodeFileMissingHeaderRegion: {
-		Kind:        ViolationCodeFileMissingHeaderRegion,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileMissingHeaderRegion: {
+		Kind:        BreachCodeFileMissingHeaderRegion,
+		Priority:    BreachPriorityLow,
 		Reason:      "Header region with license, filename, and contributors is required",
 		Solution:    "Add header region with SPDX license, filename, and contributors",
 		Autofixable: true,
 	},
-	ViolationCodeFileWrongHeaderRegionFormat: {
-		Kind:        ViolationCodeFileWrongHeaderRegionFormat,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileWrongHeaderRegionFormat: {
+		Kind:        BreachCodeFileWrongHeaderRegionFormat,
+		Priority:    BreachPriorityLow,
 		Reason:      "Header region format is incorrect (missing License or Specs subregion)",
 		Solution:    "Add License and Specs subregions inside Header",
 		Autofixable: false,
 	},
-	ViolationCodeFileMissingIdentification: {
-		Kind:        ViolationCodeFileMissingIdentification,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileMissingIdentification: {
+		Kind:        BreachCodeFileMissingIdentification,
+		Priority:    BreachPriorityLow,
 		Reason:      "File header must contain an artifact ID",
 		Solution:    "Add file artifact ID line in header",
 		Autofixable: true,
 	},
-	ViolationCodeFileWrongIdentificationId: {
-		Kind:        ViolationCodeFileWrongIdentificationId,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileWrongIdentificationId: {
+		Kind:        BreachCodeFileWrongIdentificationId,
+		Priority:    BreachPriorityLow,
 		Reason:      "File header must contain the correct artifact ID",
 		Solution:    "Replace file identifier line with the correct artifact ID",
 		Autofixable: true,
 	},
-	ViolationCodeFileWrongIdentificationUri: {
-		Kind:        ViolationCodeFileWrongIdentificationUri,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileWrongIdentificationUri: {
+		Kind:        BreachCodeFileWrongIdentificationUri,
+		Priority:    BreachPriorityLow,
 		Reason:      "File header must contain the correct artifact URI",
 		Solution:    "Replace URI in identification line with the correct artifact URI",
 		Autofixable: true,
 	},
-	ViolationCodeFileMissingContributors: {
-		Kind:        ViolationCodeFileMissingContributors,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileMissingContributors: {
+		Kind:        BreachCodeFileMissingContributors,
+		Priority:    BreachPriorityLow,
 		Reason:      "Contributors must be documented in header",
 		Solution:    "Add contributor line in header region",
 		Autofixable: false,
 	},
-	ViolationCodeFileMissingSummary: {
-		Kind:        ViolationCodeFileMissingSummary,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileMissingSummary: {
+		Kind:        BreachCodeFileMissingSummary,
+		Priority:    BreachPriorityLow,
 		Reason:      "Summary must be documented in header",
 		Solution:    "Add summary line in header region after the file ID",
 		Autofixable: false,
 	},
-	ViolationCodeFileMissingLicense: {
-		Kind:        ViolationCodeFileMissingLicense,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileMissingLicense: {
+		Kind:        BreachCodeFileMissingLicense,
+		Priority:    BreachPriorityLow,
 		Reason:      "License text is required in header License subregion",
 		Solution:    "Add AGPL license text in License subregion",
 		Autofixable: true,
 	},
-	ViolationCodeFileWrongLicense: {
-		Kind:        ViolationCodeFileWrongLicense,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileWrongLicense: {
+		Kind:        BreachCodeFileWrongLicense,
+		Priority:    BreachPriorityLow,
 		Reason:      "License must be AGPL-3.0-or-later",
 		Solution:    "Replace license with AGPL-3.0-or-later",
 		Autofixable: true,
 	},
-	ViolationCodeFileMissingSpecs: {
-		Kind:        ViolationCodeFileMissingSpecs,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileMissingSpecs: {
+		Kind:        BreachCodeFileMissingSpecs,
+		Priority:    BreachPriorityLow,
 		Reason:      "Specs subregion is required inside Header",
 		Solution:    "Add Specs subregion inside Header",
 		Autofixable: false,
 	},
-	ViolationCodeFileMissingDocs: {
-		Kind:        ViolationCodeFileMissingDocs,
-		Priority:    ViolationPriorityLow,
+	BreachCodeFileMissingDocs: {
+		Kind:        BreachCodeFileMissingDocs,
+		Priority:    BreachPriorityLow,
 		Reason:      "File must be documented in bundle README.md Docs section",
 		Solution:    "Add file documentation to bundle README.md",
 		Autofixable: false,
 	},
-	ViolationCodeSectionEmpty: {
-		Kind:        ViolationCodeSectionEmpty,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionEmpty: {
+		Kind:        BreachCodeSectionEmpty,
+		Priority:    BreachPriorityLow,
 		Reason:      "Empty sections should be removed",
 		Solution:    "Remove empty section or add content",
 		Autofixable: true,
 	},
-	ViolationCodeSectionOrphanDefinition: {
-		Kind:        ViolationCodeSectionOrphanDefinition,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionOrphanDefinition: {
+		Kind:        BreachCodeSectionOrphanDefinition,
+		Priority:    BreachPriorityLow,
 		Reason:      "All code must be inside named sections",
 		Solution:    "Move code into an existing section or add a new section",
 		Autofixable: false,
 	},
-	ViolationCodeSectionMissingStartName: {
-		Kind:        ViolationCodeSectionMissingStartName,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionMissingStartName: {
+		Kind:        BreachCodeSectionMissingStartName,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section start marker must have a name",
 		Solution:    "Add name to section start marker",
 		Autofixable: false,
 	},
-	ViolationCodeSectionMissingEndName: {
-		Kind:        ViolationCodeSectionMissingEndName,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionMissingEndName: {
+		Kind:        BreachCodeSectionMissingEndName,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section end marker should have matching name",
 		Solution:    "Add matching name to section end marker",
 		Autofixable: true,
 	},
-	ViolationCodeSectionNameMismatch: {
-		Kind:        ViolationCodeSectionNameMismatch,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionNameMismatch: {
+		Kind:        BreachCodeSectionNameMismatch,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section start and end names must match",
 		Solution:    "Fix section end name to match start name",
 		Autofixable: true,
 	},
-	ViolationCodeSectionWrongFormat: {
-		Kind:        ViolationCodeSectionWrongFormat,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionWrongFormat: {
+		Kind:        BreachCodeSectionWrongFormat,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section region marker format is incorrect",
 		Solution:    "Use correct region marker format with emoji bookmark",
 		Autofixable: false,
 	},
-	ViolationCodeSectionWrongFormatSummaryTooLong: {
-		Kind:        ViolationCodeSectionWrongFormatSummaryTooLong,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionWrongFormatSummaryTooLong: {
+		Kind:        BreachCodeSectionWrongFormatSummaryTooLong,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section summary must not exceed 256 characters",
 		Solution:    "Shorten the section summary to 256 characters or less",
 		Autofixable: false,
 	},
-	ViolationCodeSectionWrongFormatSpecsSplitBlock: {
-		Kind:        ViolationCodeSectionWrongFormatSpecsSplitBlock,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionWrongFormatSpecsSplitBlock: {
+		Kind:        BreachCodeSectionWrongFormatSpecsSplitBlock,
+		Priority:    BreachPriorityLow,
 		Reason:      "Spec comment block must be contiguous without blank lines",
 		Solution:    "Remove blank lines between spec comment lines",
 		Autofixable: true,
 	},
-	ViolationCodeSectionWrongFormatDocs: {
-		Kind:        ViolationCodeSectionWrongFormatDocs,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionWrongFormatDocs: {
+		Kind:        BreachCodeSectionWrongFormatDocs,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section docs format is incorrect",
 		Solution:    "Fix the section docs format",
 		Autofixable: false,
 	},
-	ViolationCodeSectionMissingIdentification: {
-		Kind:        ViolationCodeSectionMissingIdentification,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionMissingIdentification: {
+		Kind:        BreachCodeSectionMissingIdentification,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section must have an identification comment after the region start",
 		Solution:    "Add [sectionId](sectionUri) comment after section region start marker",
 		Autofixable: true,
 	},
-	ViolationCodeSectionMissingSummary: {
-		Kind:        ViolationCodeSectionMissingSummary,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionMissingSummary: {
+		Kind:        BreachCodeSectionMissingSummary,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section must have a summary comment after the region start",
 		Solution:    "Add summary comment after section region start marker",
 		Autofixable: true,
 	},
-	ViolationCodeSectionMissingSpecs: {
-		Kind:        ViolationCodeSectionMissingSpecs,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionMissingSpecs: {
+		Kind:        BreachCodeSectionMissingSpecs,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section must have specs comments after the summary",
 		Solution:    "Add specs comments after section summary",
 		Autofixable: false,
 	},
-	ViolationCodeSectionMissingDocs: {
-		Kind:        ViolationCodeSectionMissingDocs,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSectionMissingDocs: {
+		Kind:        BreachCodeSectionMissingDocs,
+		Priority:    BreachPriorityLow,
 		Reason:      "Section must be documented in bundle README.md Docs section",
 		Solution:    "Add section documentation to bundle README.md",
 		Autofixable: false,
 	},
-	ViolationCodeDefMissingIdentification: {
-		Kind:        ViolationCodeDefMissingIdentification,
-		Priority:    ViolationPriorityLow,
+	BreachCodeDefMissingIdentification: {
+		Kind:        BreachCodeDefMissingIdentification,
+		Priority:    BreachPriorityLow,
 		Reason:      "Definition must have an identification comment as the last line before the definition",
 		Solution:    "Add [definitionId](definitionUri) as the last line in the docstring",
 		Autofixable: true,
 	},
-	ViolationCodeDefWrongFormat: {
-		Kind:        ViolationCodeDefWrongFormat,
-		Priority:    ViolationPriorityLow,
+	BreachCodeDefWrongFormat: {
+		Kind:        BreachCodeDefWrongFormat,
+		Priority:    BreachPriorityLow,
 		Reason:      "Definition does not have a proper docstring",
 		Solution:    "Add language-native docstring to definition",
 		Autofixable: false,
 	},
-	ViolationCodeDefNotNativeDocstring: {
-		Kind:        ViolationCodeDefNotNativeDocstring,
-		Priority:    ViolationPriorityLow,
+	BreachCodeDefNotNativeDocstring: {
+		Kind:        BreachCodeDefNotNativeDocstring,
+		Priority:    BreachPriorityLow,
 		Reason:      "Definition must use language-native docstring format (JSDoc for TS/JS, /// for C#/Rust)",
 		Solution:    "Convert line comments to language-native docstring format",
 		Autofixable: true,
 	},
-	ViolationCodeDefMissingSummary: {
-		Kind:        ViolationCodeDefMissingSummary,
-		Priority:    ViolationPriorityLow,
+	BreachCodeDefMissingSummary: {
+		Kind:        BreachCodeDefMissingSummary,
+		Priority:    BreachPriorityLow,
 		Reason:      "Definition must have a summary in its docstring",
 		Solution:    "Add summary line to definition docstring",
 		Autofixable: true,
 	},
-	ViolationCodeDefMissingSpecs: {
-		Kind:        ViolationCodeDefMissingSpecs,
-		Priority:    ViolationPriorityLow,
+	BreachCodeDefMissingSpecs: {
+		Kind:        BreachCodeDefMissingSpecs,
+		Priority:    BreachPriorityLow,
 		Reason:      "Definition must have specs in its docstring",
 		Solution:    "Add specs to definition docstring",
 		Autofixable: true,
 	},
-	ViolationCodeDefMissingDocs: {
-		Kind:        ViolationCodeDefMissingDocs,
-		Priority:    ViolationPriorityLow,
+	BreachCodeDefMissingDocs: {
+		Kind:        BreachCodeDefMissingDocs,
+		Priority:    BreachPriorityLow,
 		Reason:      "Definition must be documented in bundle README.md Docs section",
 		Solution:    "Add definition documentation to bundle README.md",
 		Autofixable: false,
 	},
-	ViolationCodeCommentInline: {
-		Kind:        ViolationCodeCommentInline,
-		Priority:    ViolationPriorityLow,
+	BreachCodeCommentInline: {
+		Kind:        BreachCodeCommentInline,
+		Priority:    BreachPriorityLow,
 		Reason:      "Inline comments are forbidden",
 		Solution:    "Remove inline comment",
 		Autofixable: true,
 	},
-	ViolationCodeCommentBlock: {
-		Kind:        ViolationCodeCommentBlock,
-		Priority:    ViolationPriorityLow,
+	BreachCodeCommentBlock: {
+		Kind:        BreachCodeCommentBlock,
+		Priority:    BreachPriorityLow,
 		Reason:      "Block comments are forbidden",
 		Solution:    "Remove block comment",
 		Autofixable: true,
 	},
-	ViolationCodeCommentJSDoc: {
-		Kind:        ViolationCodeCommentJSDoc,
-		Priority:    ViolationPriorityLow,
+	BreachCodeCommentJSDoc: {
+		Kind:        BreachCodeCommentJSDoc,
+		Priority:    BreachPriorityLow,
 		Reason:      "JSDoc comments are forbidden",
 		Solution:    "Remove JSDoc comment",
 		Autofixable: true,
 	},
-	ViolationCodeSpecsSyntax: {
-		Kind:        ViolationCodeSpecsSyntax,
-		Priority:    ViolationPriorityLow,
+	BreachCodeSpecsSyntax: {
+		Kind:        BreachCodeSpecsSyntax,
+		Priority:    BreachPriorityLow,
 		Reason:      "Specs must be implementation-agnostic and must not contain code syntax",
 		Solution:    "Remove backticks, function calls, and other code syntax from spec text",
 		Autofixable: false,
 	},
-	ViolationCodeDocsMissingReadme: {
-		Kind:        ViolationCodeDocsMissingReadme,
-		Priority:    ViolationPriorityLow,
+	BreachCodeDocsMissingReadme: {
+		Kind:        BreachCodeDocsMissingReadme,
+		Priority:    BreachPriorityLow,
 		Reason:      "Bundle or folder is missing a README.md with summary and specs",
 		Solution:    "Add a README.md with # Summary and # Specs sections",
 		Autofixable: false,
 	},
-	ViolationCodeUnicodeEmojiVariation: {
-		Kind:        ViolationCodeUnicodeEmojiVariation,
-		Priority:    ViolationPriorityLow,
+	BreachCodeUnicodeEmojiVariation: {
+		Kind:        BreachCodeUnicodeEmojiVariation,
+		Priority:    BreachPriorityLow,
 		Reason:      "Emoji variation selectors (VS15/VS16) are forbidden",
 		Solution:    "Strip variation selectors from emoji",
 		Autofixable: true,
 	},
-	ViolationDevDocsMissingFile: {
-		Kind:        ViolationDevDocsMissingFile,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsMissingFile: {
+		Kind:        BreachDevDocsMissingFile,
+		Priority:    BreachPriorityLow,
 		Reason:      "File exists but has no section in AGENTS.md Codebase",
 		Solution:    "Add ## 📄PATH section in AGENTS.md",
 		Autofixable: true,
 	},
-	ViolationDevDocsMissingFolder: {
-		Kind:        ViolationDevDocsMissingFolder,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsMissingFolder: {
+		Kind:        BreachDevDocsMissingFolder,
+		Priority:    BreachPriorityLow,
 		Reason:      "Folder exists but has no section in AGENTS.md Codebase",
 		Solution:    "Add ## 📁PATH section in AGENTS.md",
 		Autofixable: true,
 	},
-	ViolationDevDocsWrongFilePath: {
-		Kind:        ViolationDevDocsWrongFilePath,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsWrongFilePath: {
+		Kind:        BreachDevDocsWrongFilePath,
+		Priority:    BreachPriorityLow,
 		Reason:      "File section path does not match actual file path",
 		Solution:    "Update file section path to match actual path",
 		Autofixable: true,
 	},
-	ViolationDevDocsWrongFolderPath: {
-		Kind:        ViolationDevDocsWrongFolderPath,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsWrongFolderPath: {
+		Kind:        BreachDevDocsWrongFolderPath,
+		Priority:    BreachPriorityLow,
 		Reason:      "Folder section path does not match actual folder path",
 		Solution:    "Update folder section path to match actual path",
 		Autofixable: true,
 	},
-	ViolationDevDocsWrongFileName: {
-		Kind:        ViolationDevDocsWrongFileName,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsWrongFileName: {
+		Kind:        BreachDevDocsWrongFileName,
+		Priority:    BreachPriorityLow,
 		Reason:      "File section name format is incorrect (should be ## 📄PATH)",
 		Solution:    "Rename section to ## 📄PATH",
 		Autofixable: true,
 	},
-	ViolationDevDocsWrongFolderName: {
-		Kind:        ViolationDevDocsWrongFolderName,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsWrongFolderName: {
+		Kind:        BreachDevDocsWrongFolderName,
+		Priority:    BreachPriorityLow,
 		Reason:      "Folder section name format is incorrect (should be ## 📁PATH/)",
 		Solution:    "Rename section to ## 📁PATH/",
 		Autofixable: true,
 	},
-	ViolationDevDocsWrongFileOrder: {
-		Kind:        ViolationDevDocsWrongFileOrder,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsWrongFileOrder: {
+		Kind:        BreachDevDocsWrongFileOrder,
+		Priority:    BreachPriorityLow,
 		Reason:      "File sections are not in alphabetical order",
 		Solution:    "Reorder file sections alphabetically",
 		Autofixable: true,
 	},
-	ViolationDevDocsWrongFolderOrder: {
-		Kind:        ViolationDevDocsWrongFolderOrder,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsWrongFolderOrder: {
+		Kind:        BreachDevDocsWrongFolderOrder,
+		Priority:    BreachPriorityLow,
 		Reason:      "Folder sections are not in alphabetical order",
 		Solution:    "Reorder folder sections alphabetically",
 		Autofixable: true,
 	},
-	ViolationDevDocsMissingComponent: {
-		Kind:        ViolationDevDocsMissingComponent,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsMissingComponent: {
+		Kind:        BreachDevDocsMissingComponent,
+		Priority:    BreachPriorityLow,
 		Reason:      "Package.json workspace has no corresponding component in README.md",
 		Solution:    "Add component section in README.md Components",
 		Autofixable: true,
 	},
-	ViolationDevDocsWrongComponentName: {
-		Kind:        ViolationDevDocsWrongComponentName,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsWrongComponentName: {
+		Kind:        BreachDevDocsWrongComponentName,
+		Priority:    BreachPriorityLow,
 		Reason:      "Component section name does not match workspace name",
 		Solution:    "Rename component section to match workspace",
 		Autofixable: true,
 	},
-	ViolationDevDocsWrongComponentOrder: {
-		Kind:        ViolationDevDocsWrongComponentOrder,
-		Priority:    ViolationPriorityLow,
+	BreachDevDocsWrongComponentOrder: {
+		Kind:        BreachDevDocsWrongComponentOrder,
+		Priority:    BreachPriorityLow,
 		Reason:      "Component sections are not in package.json workspaces order",
 		Solution:    "Reorder components to match package.json workspaces",
 		Autofixable: true,
 	},
-	ViolationSketchpadImportThirdParty: {
-		Kind:        ViolationSketchpadImportThirdParty,
-		Priority:    ViolationPriorityHigh,
+	BreachSketchpadImportThirdParty: {
+		Kind:        BreachSketchpadImportThirdParty,
+		Priority:    BreachPriorityHigh,
 		Reason:      "Third party imports must only be in elements.tsx",
 		Solution:    "Move third party import to elements.tsx and re-export from there",
 		Autofixable: false,
 	},
-	ViolationSketchpadStateMultipleMachines: {
-		Kind:        ViolationSketchpadStateMultipleMachines,
-		Priority:    ViolationPriorityHigh,
+	BreachSketchpadStateMultipleMachines: {
+		Kind:        BreachSketchpadStateMultipleMachines,
+		Priority:    BreachPriorityHigh,
 		Reason:      "Only one state machine is allowed (createMachine can only be used once)",
 		Solution:    "Consolidate state management into a single state machine",
 		Autofixable: false,
 	},
-	ViolationSketchpadStateCreateActor: {
-		Kind:        ViolationSketchpadStateCreateActor,
-		Priority:    ViolationPriorityHigh,
+	BreachSketchpadStateCreateActor: {
+		Kind:        BreachSketchpadStateCreateActor,
+		Priority:    BreachPriorityHigh,
 		Reason:      "createActor is forbidden in sketchpad",
 		Solution:    "Remove createActor usage and use the single state machine instead",
 		Autofixable: false,
 	},
-	ViolationSketchpadStateYjsAppState: {
-		Kind:        ViolationSketchpadStateYjsAppState,
-		Priority:    ViolationPriorityHigh,
+	BreachSketchpadStateYjsAppState: {
+		Kind:        BreachSketchpadStateYjsAppState,
+		Priority:    BreachPriorityHigh,
 		Reason:      "Yjs should only be used for kit data synchronization, not app state",
 		Solution:    "Move app state to the state machine and use Yjs only for kit data sync",
 		Autofixable: false,
 	},
-	ViolationSketchpadStateForbiddenStore: {
-		Kind:        ViolationSketchpadStateForbiddenStore,
-		Priority:    ViolationPriorityHigh,
+	BreachSketchpadStateForbiddenStore: {
+		Kind:        BreachSketchpadStateForbiddenStore,
+		Priority:    BreachPriorityHigh,
 		Reason:      "Stores outside of State Management sections are forbidden",
 		Solution:    "Move store to a State Management section or remove it",
 		Autofixable: false,
 	},
-	ViolationSketchpadHooksNonTriadic: {
-		Kind:        ViolationSketchpadHooksNonTriadic,
-		Priority:    ViolationPriorityHigh,
+	BreachSketchpadHooksNonTriadic: {
+		Kind:        BreachSketchpadHooksNonTriadic,
+		Priority:    BreachPriorityHigh,
 		Reason:      "Client elements must use triadic hooks pattern [state, setState, canSetState]=useSELECTOR()",
 		Solution:    "Refactor to use triadic hook pattern with useSELECTOR",
 		Autofixable: false,
 	},
-	ViolationSystemDevcontainerVscodeSettingsOutside: {
-		Kind:        ViolationSystemDevcontainerVscodeSettingsOutside,
-		Priority:    ViolationPriorityHigh,
+	BreachSystemDevcontainerVscodeSettingsOutside: {
+		Kind:        BreachSystemDevcontainerVscodeSettingsOutside,
+		Priority:    BreachPriorityHigh,
 		Reason:      "VSCode settings must be inside devcontainer.json customizations, not in .vscode/settings.json",
 		Solution:    "Move .vscode/settings.json to customizations.vscode.settings inside .devcontainer/devcontainer.json",
 		Autofixable: true,
 	},
-	ViolationSystemDevcontainerVscodeExtensionsOutside: {
-		Kind:        ViolationSystemDevcontainerVscodeExtensionsOutside,
-		Priority:    ViolationPriorityHigh,
+	BreachSystemDevcontainerVscodeExtensionsOutside: {
+		Kind:        BreachSystemDevcontainerVscodeExtensionsOutside,
+		Priority:    BreachPriorityHigh,
 		Reason:      "VSCode recommended extensions must be inside devcontainer.json customizations, not in .vscode/extensions.json",
 		Solution:    "Move .vscode/extensions.json to customizations.vscode.extensions inside .devcontainer/devcontainer.json",
 		Autofixable: true,
 	},
-	ViolationFolderIllegalEmpty: {
-		Kind:        ViolationFolderIllegalEmpty,
-		Priority:    ViolationPriorityLow,
+	BreachFolderIllegalEmpty: {
+		Kind:        BreachFolderIllegalEmpty,
+		Priority:    BreachPriorityLow,
 		Reason:      "Empty folders are not allowed",
 		Solution:    "Remove the empty folder",
 		Autofixable: true,
 	},
-	ViolationFileIllegalUseGodfile: {
-		Kind:        ViolationFileIllegalUseGodfile,
-		Priority:    ViolationPriorityHigh,
+	BreachFileIllegalUseGodfile: {
+		Kind:        BreachFileIllegalUseGodfile,
+		Priority:    BreachPriorityHigh,
 		Reason:      "File is not listed in .semio-repo/files.json godfile",
 		Solution:    "Add the file to .semio-repo/files.json or remove it",
 		Autofixable: false,
 	},
 }
 
-// Info MUST return the metadata entry for the violation kind.
-// Info returns the metadata for the violation kind.
+// Info MUST return the metadata entry for the statute.
+// Info returns the metadata for the statute.
 // [🛠️semio-repo/cli/main.go#Types#Languages§Info](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/INFO)
-func (k ViolationKind) Info() ViolationKindMeta {
-	if info, ok := violationKindInfoTable[k]; ok {
+func (k Statute) Info() StatuteMeta {
+	if info, ok := statuteInfoTable[k]; ok {
 		return info
 	}
-	return ViolationKindMeta{
+	return StatuteMeta{
 		Kind:        k,
-		Priority:    ViolationPriorityLow,
-		Reason:      "Unknown violation",
-		Solution:    "Fix the violation",
+		Priority:    BreachPriorityLow,
+		Reason:      "Unknown breach",
+		Solution:    "Fix the breach",
 		Autofixable: false,
 	}
 }
 
-// ViolationKindGroup holds the data fields for a violation kind group record.
-// [🛠️semio-repo/cli/main.go#Types#Languages§ViolationKindGroup](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/VIOLATIONKINDGROUP)
-type ViolationKindGroup struct {
+// Territory holds the data fields for a statute group record.
+// [🛠️semio-repo/cli/main.go#Types#Languages§Territory](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/VIOLATIONKINDGROUP)
+type Territory struct {
 	Name        string               `json:"name"`
 	Description string               `json:"description"`
 	Scopes      []string             `json:"scopes,omitempty"`
-	Groups      []ViolationKindGroup `json:"groups,omitempty"`
-	Kinds       []ViolationKind      `json:"kinds,omitempty"`
+	Groups      []Territory `json:"groups,omitempty"`
+	Kinds       []Statute      `json:"kinds,omitempty"`
 }
 
-// AllKinds MUST include all violation kinds from the group and its children.
-// AllKinds returns all violation kinds associated with the group.
+// AllKinds MUST include all statutes from the group and its children.
+// AllKinds returns all statutes associated with the group.
 // [🛠️semio-repo/cli/main.go#Types#Languages§AllKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/ALLKINDS)
-func (g *ViolationKindGroup) AllKinds() []ViolationKind {
-	var result []ViolationKind
+func (g *Territory) AllKinds() []Statute {
+	var result []Statute
 	result = append(result, g.Kinds...)
 	for _, child := range g.Groups {
 		result = append(result, child.AllKinds()...)
@@ -11883,17 +12078,17 @@ func (g *ViolationKindGroup) AllKinds() []ViolationKind {
 }
 
 // GetID MUST return the stored value without modification.
-// GetID returns the i d of the ViolationKindGroup.
+// GetID returns the i d of the Territory.
 // [🛠️semio-repo/cli/main.go#Types#Languages§GetID](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GETID)
-func (g *ViolationKindGroup) GetID() string {
-	return fmt.Sprintf("%s%s", emojiText(EmojiViolationKindGroup), g.Name)
+func (g *Territory) GetID() string {
+	return fmt.Sprintf("%s%s", emojiText(EmojiTerritory), g.Name)
 }
 
 // GetURI MUST return the stored value without modification.
-// GetURI returns the u r i of the ViolationKindGroup.
+// GetURI returns the u r i of the Territory.
 // [🛠️semio-repo/cli/main.go#Types#Languages§GetURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GETURI)
-func (g *ViolationKindGroup) GetURI() string {
-	return "semiorepo://violationKindGroup/" + strings.ToUpper(Slugify(g.Name))
+func (g *Territory) GetURI() string {
+	return "semiorepo://territory/" + strings.ToUpper(Slugify(g.Name))
 }
 
 // PolicyDef holds the data fields for a policy def record.
@@ -11903,16 +12098,16 @@ type PolicyDef struct {
 	Name        string               `json:"name"`
 	Description string               `json:"description"`
 	Scopes      []string             `json:"scopes"`
-	Priority    ViolationPriority    `json:"priority"`
-	Groups      []ViolationKindGroup `json:"groups"`
+	Priority    BreachPriority    `json:"priority"`
+	Groups      []Territory `json:"groups"`
 	Run         PolicyFunc           `json:"-"`
 }
 
-// AllKinds MUST include all violation kinds from the group and its children.
-// AllKinds returns all violation kinds associated with the group.
+// AllKinds MUST include all statutes from the group and its children.
+// AllKinds returns all statutes associated with the group.
 // [🛠️semio-repo/cli/main.go#Types#Languages§AllKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/ALLKINDS)
-func (p *PolicyDef) AllKinds() []ViolationKind {
-	var result []ViolationKind
+func (p *PolicyDef) AllKinds() []Statute {
+	var result []Statute
 	for _, g := range p.Groups {
 		result = append(result, g.AllKinds()...)
 	}
@@ -11926,7 +12121,7 @@ type AnalyzeReport struct {
 	Status     string      `json:"status"`
 	Scope      string      `json:"scope"`
 	Summary    Summary     `json:"summary"`
-	Violations []Violation `json:"violations"`
+	Breachs []Breach `json:"breachs"`
 }
 
 // Summary holds the data fields for a summary record.
@@ -11943,7 +12138,7 @@ type FileCache struct {
 	FilePath   string      `json:"filePath"`
 	Hash       string      `json:"hash"`
 	Timestamp  string      `json:"timestamp"`
-	Violations []Violation `json:"violations"`
+	Breachs []Breach `json:"breachs"`
 }
 
 // OutputType represents a output type value.
@@ -12014,7 +12209,7 @@ type ContributorContributionsStorage struct {
 // #region 🔖Codebase Types
 
 // [🔖semio-repo/cli/main.go#Codebase Types](semiorepo://section/semio-repo/cli/main.go/CODEBASE-TYPES)
-// Internal metric, contributor, ticket, policy, violation, and tree node types for codebase analysis.
+// Internal metric, contributor, ticket, policy, breach, and tree node types for codebase analysis.
 
 // BundleMetricsInternal holds the data fields for a bundle metrics internal record.
 // [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§BundleMetricsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/BUNDLEMETRICSINTERNAL)
@@ -12024,7 +12219,7 @@ type BundleMetricsInternal struct {
 	Sections    int `json:"sections"`
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
-	Violations  int `json:"violations"`
+	Breachs  int `json:"breachs"`
 }
 
 // FolderMetricsInternal holds the data fields for a folder metrics internal record.
@@ -12032,7 +12227,7 @@ type BundleMetricsInternal struct {
 type FolderMetricsInternal struct {
 	Files      int `json:"files"`
 	Lines      int `json:"lines"`
-	Violations int `json:"violations"`
+	Breachs int `json:"breachs"`
 }
 
 // FileMetricsInternal holds the data fields for a file metrics internal record.
@@ -12048,7 +12243,7 @@ type FileMetricsInternal struct {
 type SectionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
-	Violations  int `json:"violations"`
+	Breachs  int `json:"breachs"`
 }
 
 // DefinitionMetricsInternal holds the data fields for a definition metrics internal record.
@@ -12056,7 +12251,7 @@ type SectionMetricsInternal struct {
 type DefinitionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
-	Violations  int `json:"violations"`
+	Breachs  int `json:"breachs"`
 }
 
 // RangePosition holds the data fields for a range position record.
@@ -12073,31 +12268,31 @@ type FileRange struct {
 	End   RangePosition `json:"end"`
 }
 
-// ViolationFile holds the data fields for a violation file record.
-// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ViolationFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/VIOLATIONFILE)
-type ViolationFile struct {
+// BreachFile holds the data fields for a breach file record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§BreachFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/VIOLATIONFILE)
+type BreachFile struct {
 	ID    string     `json:"id"`
 	Path  string     `json:"path"`
 	URI   string     `json:"uri"`
 	Range *FileRange `json:"range,omitempty"`
 }
 
-// ViolationFolder holds the data fields for a violation folder record.
-// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§ViolationFolder](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/VIOLATIONFOLDER)
-type ViolationFolder struct {
+// BreachFolder holds the data fields for a breach folder record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§BreachFolder](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/VIOLATIONFOLDER)
+type BreachFolder struct {
 	ID   string `json:"id"`
 	Path string `json:"path"`
 	URI  string `json:"uri"`
 }
 
-// CodebaseViolation holds the data fields for a codebase violation record.
-// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseViolation](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEVIOLATION)
-type CodebaseViolation struct {
+// CodebaseBreach holds the data fields for a codebase breach record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseBreach](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEVIOLATION)
+type CodebaseBreach struct {
 	ID          string            `json:"id"`
-	Folders     []ViolationFolder `json:"folders,omitempty"`
-	Files       []ViolationFile   `json:"files,omitempty"`
-	Kind        ViolationKind     `json:"kind"`
-	Priority    ViolationPriority `json:"priority"`
+	Folders     []BreachFolder `json:"folders,omitempty"`
+	Files       []BreachFile   `json:"files,omitempty"`
+	Kind        Statute     `json:"kind"`
+	Priority    BreachPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Reason      string            `json:"reason"`
 	Solution    string            `json:"solution"`
@@ -12125,11 +12320,11 @@ type CodebaseFolder struct {
 	Metrics  *FolderMetricsInternal `json:"metrics,omitempty"`
 }
 
-// FileViolationRef holds the data fields for a file violation ref record.
-// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§FileViolationRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/FILEVIOLATIONREF)
-type FileViolationRef struct {
-	Kind        ViolationKind     `json:"kind"`
-	Priority    ViolationPriority `json:"priority"`
+// FileBreachRef holds the data fields for a file breach ref record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§FileBreachRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/FILEVIOLATIONREF)
+type FileBreachRef struct {
+	Kind        Statute     `json:"kind"`
+	Priority    BreachPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Solution    string            `json:"solution"`
 }
@@ -12141,7 +12336,7 @@ type CodebaseFile struct {
 	Path       string               `json:"path"`
 	URI        string               `json:"uri"`
 	Metrics    *FileMetricsInternal `json:"metrics,omitempty"`
-	Violations []FileViolationRef   `json:"violations,omitempty"`
+	Breachs []FileBreachRef   `json:"breachs,omitempty"`
 }
 
 // CodebaseSection holds the data fields for a codebase section record.
@@ -12299,11 +12494,11 @@ type CodebaseTicket struct {
 	Definitions []TicketDefinitionContrib  `json:"definitions,omitempty"`
 }
 
-// PolicyViolationRef holds the data fields for a policy violation ref record.
-// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§PolicyViolationRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/POLICYVIOLATIONREF)
-type PolicyViolationRef struct {
-	Kind        ViolationKind     `json:"kind"`
-	Priority    ViolationPriority `json:"priority"`
+// PolicyBreachRef holds the data fields for a policy breach ref record.
+// [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§PolicyBreachRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/POLICYVIOLATIONREF)
+type PolicyBreachRef struct {
+	Kind        Statute     `json:"kind"`
+	Priority    BreachPriority `json:"priority"`
 	Autofixable bool              `json:"autofixable"`
 	Solution    string            `json:"solution"`
 }
@@ -12314,7 +12509,7 @@ type CodebasePolicy struct {
 	ID         string               `json:"id"`
 	Name       string               `json:"name"`
 	Scopes     []string             `json:"scopes,omitempty"`
-	Violations []PolicyViolationRef `json:"violations,omitempty"`
+	Breachs []PolicyBreachRef `json:"breachs,omitempty"`
 }
 
 // CbTreeNodeKind represents a cb tree node kind value.
@@ -12348,7 +12543,7 @@ type Codebase struct {
 	Contributors []CodebaseContributor  `json:"contributors"`
 	Tickets      []CodebaseTicket       `json:"tickets"`
 	Policies     []CodebasePolicy       `json:"policies"`
-	Violations   []CodebaseViolation    `json:"violations"`
+	Breachs   []CodebaseBreach    `json:"breachs"`
 	Tree         map[string]*CbTreeNode `json:"tree"`
 }
 
@@ -12842,10 +13037,10 @@ func TitleizeSlug(slug string) string {
 	return strings.Join(words, " ")
 }
 
-// ViolationKindPathToIdValue MUST complete the operation and return consistent results.
-// ViolationKindPathToIdValue performs the violation kind path to id value operation.
-// [🛠️semio-repo/cli/main.go#Types#Utils§ViolationKindPathToIdValue](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/VIOLATIONKINDPATHTOIDVALUE)
-func ViolationKindPathToIdValue(path string) string {
+// StatutePathToIdValue MUST complete the operation and return consistent results.
+// StatutePathToIdValue performs the statute path to id value operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§StatutePathToIdValue](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/VIOLATIONKINDPATHTOIDVALUE)
+func StatutePathToIdValue(path string) string {
 	parts := strings.Split(path, "/")
 	for i, p := range parts {
 		parts[i] = TitleizeSlug(p)
@@ -12853,10 +13048,10 @@ func ViolationKindPathToIdValue(path string) string {
 	return strings.Join(parts, "#")
 }
 
-// ViolationKindIdValueToPath MUST complete the operation and return consistent results.
-// ViolationKindIdValueToPath performs the violation kind id value to path operation.
-// [🛠️semio-repo/cli/main.go#Types#Utils§ViolationKindIdValueToPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/VIOLATIONKINDIDVALUETOPATH)
-func ViolationKindIdValueToPath(idValue string) string {
+// StatuteIdValueToPath MUST complete the operation and return consistent results.
+// StatuteIdValueToPath performs the statute id value to path operation.
+// [🛠️semio-repo/cli/main.go#Types#Utils§StatuteIdValueToPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/VIOLATIONKINDIDVALUETOPATH)
+func StatuteIdValueToPath(idValue string) string {
 	parts := strings.Split(idValue, "#")
 	for i, p := range parts {
 		parts[i] = strings.ToLower(strings.ReplaceAll(strings.TrimSpace(p), " ", "-"))
@@ -12953,8 +13148,8 @@ func NewOutput() *CommandOutput {
 	return &CommandOutput{Lines: []OutputLine{}, ExitCode: 0}
 }
 
-// Info MUST return the metadata entry for the violation kind.
-// Info returns the metadata for the violation kind.
+// Info MUST return the metadata entry for the statute.
+// Info returns the metadata for the statute.
 // [🛠️semio-repo/cli/main.go#Types#Utils§Info](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/INFO)
 func (o *CommandOutput) Info(text string) {
 	o.Lines = append(o.Lines, OutputLine{Type: OutputInfo, Text: text})
@@ -13748,7 +13943,7 @@ func FindSection(sections []Section, name string) *Section {
 
 // PolicyFunc is a function type for policy func callbacks.
 // [🛠️semio-repo/cli/main.go#Types#Policies§PolicyFunc](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/POLICYFUNC)
-type PolicyFunc func(ctx *PolicyContext) []Violation
+type PolicyFunc func(ctx *PolicyContext) []Breach
 
 var policies = []PolicyDef{
 	{
@@ -13756,129 +13951,129 @@ var policies = []PolicyDef{
 		Name:        "Code",
 		Description: "Validates source file headers, sections, and comments",
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-		Priority:    ViolationPriorityLow,
-		Groups: []ViolationKindGroup{
+		Priority:    BreachPriorityLow,
+		Territories: []Territory{
 			{
 				Name:        "File",
-				Description: "File header region violations",
+				Description: "File header region breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Groups: []ViolationKindGroup{
+				Territories: []Territory{
 					{
 						Name:        "Wrong Identification",
-						Description: "Wrong identification violations",
-						Kinds: []ViolationKind{
-							ViolationCodeFileWrongIdentificationId,
-							ViolationCodeFileWrongIdentificationUri,
+						Description: "Wrong identification breachs",
+						Kinds: []Statute{
+							BreachCodeFileWrongIdentificationId,
+							BreachCodeFileWrongIdentificationUri,
 						},
 					},
 				},
-				Kinds: []ViolationKind{
-					ViolationCodeFileMissingHeaderRegion,
-					ViolationCodeFileWrongHeaderRegionFormat,
-					ViolationCodeFileMissingIdentification,
-					ViolationCodeFileMissingContributors,
-					ViolationCodeFileMissingSummary,
-					ViolationCodeFileMissingLicense,
-					ViolationCodeFileWrongLicense,
-					ViolationCodeFileMissingSpecs,
-					ViolationCodeFileMissingDocs,
+				Kinds: []Statute{
+					BreachCodeFileMissingHeaderRegion,
+					BreachCodeFileWrongHeaderRegionFormat,
+					BreachCodeFileMissingIdentification,
+					BreachCodeFileMissingContributors,
+					BreachCodeFileMissingSummary,
+					BreachCodeFileMissingLicense,
+					BreachCodeFileWrongLicense,
+					BreachCodeFileMissingSpecs,
+					BreachCodeFileMissingDocs,
 				},
 			},
 			{
 				Name:        "Section",
-				Description: "Section structure violations",
+				Description: "Section structure breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Groups: []ViolationKindGroup{
+				Territories: []Territory{
 					{
 						Name:        "Wrong Format",
-						Description: "Section format violations",
-						Groups: []ViolationKindGroup{
+						Description: "Section format breachs",
+						Territories: []Territory{
 							{
 								Name:        "Summary",
-								Description: "Section summary format violations",
-								Kinds: []ViolationKind{
-									ViolationCodeSectionWrongFormatSummaryTooLong,
+								Description: "Section summary format breachs",
+								Kinds: []Statute{
+									BreachCodeSectionWrongFormatSummaryTooLong,
 								},
 							},
 							{
 								Name:        "Specs",
-								Description: "Section specs format violations",
-								Kinds: []ViolationKind{
-									ViolationCodeSectionWrongFormatSpecsSplitBlock,
+								Description: "Section specs format breachs",
+								Kinds: []Statute{
+									BreachCodeSectionWrongFormatSpecsSplitBlock,
 								},
 							},
 						},
-						Kinds: []ViolationKind{
-							ViolationCodeSectionWrongFormat,
-							ViolationCodeSectionWrongFormatDocs,
+						Kinds: []Statute{
+							BreachCodeSectionWrongFormat,
+							BreachCodeSectionWrongFormatDocs,
 						},
 					},
 				},
-				Kinds: []ViolationKind{
-					ViolationCodeSectionEmpty,
-					ViolationCodeSectionOrphanDefinition,
-					ViolationCodeSectionMissingStartName,
-					ViolationCodeSectionMissingEndName,
-					ViolationCodeSectionNameMismatch,
-					ViolationCodeSectionMissingIdentification,
-					ViolationCodeSectionMissingSummary,
-					ViolationCodeSectionMissingSpecs,
-					ViolationCodeSectionMissingDocs,
+				Kinds: []Statute{
+					BreachCodeSectionEmpty,
+					BreachCodeSectionOrphanDefinition,
+					BreachCodeSectionMissingStartName,
+					BreachCodeSectionMissingEndName,
+					BreachCodeSectionNameMismatch,
+					BreachCodeSectionMissingIdentification,
+					BreachCodeSectionMissingSummary,
+					BreachCodeSectionMissingSpecs,
+					BreachCodeSectionMissingDocs,
 				},
 			},
 			{
 				Name:        "Definition",
-				Description: "Definition documentation violations",
+				Description: "Definition documentation breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Groups: []ViolationKindGroup{
+				Territories: []Territory{
 					{
 						Name:        "Wrong Format",
-						Description: "Definition format violations",
-						Kinds: []ViolationKind{
-							ViolationCodeDefWrongFormat,
-							ViolationCodeDefNotNativeDocstring,
+						Description: "Definition format breachs",
+						Kinds: []Statute{
+							BreachCodeDefWrongFormat,
+							BreachCodeDefNotNativeDocstring,
 						},
 					},
 				},
-				Kinds: []ViolationKind{
-					ViolationCodeDefMissingIdentification,
-					ViolationCodeDefMissingSummary,
-					ViolationCodeDefMissingSpecs,
-					ViolationCodeDefMissingDocs,
+				Kinds: []Statute{
+					BreachCodeDefMissingIdentification,
+					BreachCodeDefMissingSummary,
+					BreachCodeDefMissingSpecs,
+					BreachCodeDefMissingDocs,
 				},
 			},
 			{
 				Name:        "Comment",
-				Description: "Forbidden comment violations",
+				Description: "Forbidden comment breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Kinds: []ViolationKind{
-					ViolationCodeCommentInline,
-					ViolationCodeCommentBlock,
-					ViolationCodeCommentJSDoc,
+				Kinds: []Statute{
+					BreachCodeCommentInline,
+					BreachCodeCommentBlock,
+					BreachCodeCommentJSDoc,
 				},
 			},
 			{
 				Name:        "Specs",
-				Description: "Specification content violations",
+				Description: "Specification content breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Kinds: []ViolationKind{
-					ViolationCodeSpecsSyntax,
+				Kinds: []Statute{
+					BreachCodeSpecsSyntax,
 				},
 			},
 			{
 				Name:        "Unicode",
-				Description: "Unicode character violations",
+				Description: "Unicode character breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Kinds: []ViolationKind{
-					ViolationCodeUnicodeEmojiVariation,
+				Kinds: []Statute{
+					BreachCodeUnicodeEmojiVariation,
 				},
 			},
 			{
 				Name:        "Docs",
-				Description: "Documentation file violations",
+				Description: "Documentation file breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Kinds: []ViolationKind{
-					ViolationCodeDocsMissingReadme,
+				Kinds: []Statute{
+					BreachCodeDocsMissingReadme,
 				},
 			},
 		},
@@ -13889,38 +14084,38 @@ var policies = []PolicyDef{
 		Name:        "DevDocs",
 		Description: "Validates README.md and AGENTS.md documentation structure",
 		Scopes:      []string{"README.md", "AGENTS.md"},
-		Priority:    ViolationPriorityLow,
-		Groups: []ViolationKindGroup{
+		Priority:    BreachPriorityLow,
+		Territories: []Territory{
 			{
 				Name:        "File",
-				Description: "File documentation violations",
+				Description: "File documentation breachs",
 				Scopes:      []string{"AGENTS.md"},
-				Kinds: []ViolationKind{
-					ViolationDevDocsMissingFile,
-					ViolationDevDocsWrongFilePath,
-					ViolationDevDocsWrongFileName,
-					ViolationDevDocsWrongFileOrder,
+				Kinds: []Statute{
+					BreachDevDocsMissingFile,
+					BreachDevDocsWrongFilePath,
+					BreachDevDocsWrongFileName,
+					BreachDevDocsWrongFileOrder,
 				},
 			},
 			{
 				Name:        "Folder",
-				Description: "Folder documentation violations",
+				Description: "Folder documentation breachs",
 				Scopes:      []string{"AGENTS.md"},
-				Kinds: []ViolationKind{
-					ViolationDevDocsMissingFolder,
-					ViolationDevDocsWrongFolderPath,
-					ViolationDevDocsWrongFolderName,
-					ViolationDevDocsWrongFolderOrder,
+				Kinds: []Statute{
+					BreachDevDocsMissingFolder,
+					BreachDevDocsWrongFolderPath,
+					BreachDevDocsWrongFolderName,
+					BreachDevDocsWrongFolderOrder,
 				},
 			},
 			{
 				Name:        "Component",
-				Description: "Component documentation violations",
+				Description: "Component documentation breachs",
 				Scopes:      []string{"README.md"},
-				Kinds: []ViolationKind{
-					ViolationDevDocsMissingComponent,
-					ViolationDevDocsWrongComponentName,
-					ViolationDevDocsWrongComponentOrder,
+				Kinds: []Statute{
+					BreachDevDocsMissingComponent,
+					BreachDevDocsWrongComponentName,
+					BreachDevDocsWrongComponentOrder,
 				},
 			},
 		},
@@ -13931,33 +14126,33 @@ var policies = []PolicyDef{
 		Name:        "Sketchpad",
 		Description: "Validates sketchpad imports, state management, and hook patterns",
 		Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
-		Priority:    ViolationPriorityHigh,
-		Groups: []ViolationKindGroup{
+		Priority:    BreachPriorityHigh,
+		Territories: []Territory{
 			{
 				Name:        "Import",
-				Description: "Import restriction violations",
+				Description: "Import restriction breachs",
 				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
-				Kinds: []ViolationKind{
-					ViolationSketchpadImportThirdParty,
+				Kinds: []Statute{
+					BreachSketchpadImportThirdParty,
 				},
 			},
 			{
 				Name:        "State",
-				Description: "State management violations",
+				Description: "State management breachs",
 				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
-				Kinds: []ViolationKind{
-					ViolationSketchpadStateMultipleMachines,
-					ViolationSketchpadStateCreateActor,
-					ViolationSketchpadStateYjsAppState,
-					ViolationSketchpadStateForbiddenStore,
+				Kinds: []Statute{
+					BreachSketchpadStateMultipleMachines,
+					BreachSketchpadStateCreateActor,
+					BreachSketchpadStateYjsAppState,
+					BreachSketchpadStateForbiddenStore,
 				},
 			},
 			{
 				Name:        "Hooks",
-				Description: "Hook pattern violations",
+				Description: "Hook pattern breachs",
 				Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
-				Kinds: []ViolationKind{
-					ViolationSketchpadHooksNonTriadic,
+				Kinds: []Statute{
+					BreachSketchpadHooksNonTriadic,
 				},
 			},
 		},
@@ -13968,15 +14163,15 @@ var policies = []PolicyDef{
 		Name:        "Repo",
 		Description: "Validates strict repo command implementation parity and ticket tracking",
 		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
-		Priority:    ViolationPriorityHigh,
-		Groups: []ViolationKindGroup{
+		Priority:    BreachPriorityHigh,
+		Territories: []Territory{
 			{
 				Name:        "Parity",
-				Description: "Command parity violations",
+				Description: "Command parity breachs",
 				Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
-				Kinds: []ViolationKind{
-					ViolationRepoMissingCommand,
-					ViolationRepoMissingTicketTracking,
+				Kinds: []Statute{
+					BreachRepoMissingCommand,
+					BreachRepoMissingTicketTracking,
 				},
 			},
 		},
@@ -13987,18 +14182,18 @@ var policies = []PolicyDef{
 		Name:        "System",
 		Description: "Validates system configuration files like devcontainer and editor settings",
 		Scopes:      []string{".vscode/settings.json", ".vscode/extensions.json", ".devcontainer/devcontainer.json"},
-		Priority:    ViolationPriorityHigh,
-		Groups: []ViolationKindGroup{
+		Priority:    BreachPriorityHigh,
+		Territories: []Territory{
 			{
 				Name:        "Devcontainer",
-				Description: "Devcontainer configuration violations",
-				Groups: []ViolationKindGroup{
+				Description: "Devcontainer configuration breachs",
+				Territories: []Territory{
 					{
 						Name:        "VSCode",
 						Description: "VSCode settings and extensions must be inside devcontainer.json",
-						Kinds: []ViolationKind{
-							ViolationSystemDevcontainerVscodeSettingsOutside,
-							ViolationSystemDevcontainerVscodeExtensionsOutside,
+						Kinds: []Statute{
+							BreachSystemDevcontainerVscodeSettingsOutside,
+							BreachSystemDevcontainerVscodeExtensionsOutside,
 						},
 					},
 				},
@@ -14011,17 +14206,17 @@ var policies = []PolicyDef{
 		Name:        "Folder",
 		Description: "Validates folder structure and detects illegal empty folders",
 		Scopes:      []string{"**/*"},
-		Priority:    ViolationPriorityLow,
-		Groups: []ViolationKindGroup{
+		Priority:    BreachPriorityLow,
+		Territories: []Territory{
 			{
 				Name:        "Illegal",
-				Description: "Illegal folder violations",
-				Groups: []ViolationKindGroup{
+				Description: "Illegal folder breachs",
+				Territories: []Territory{
 					{
 						Name:        "Empty",
 						Description: "Empty folders that should be removed",
-						Kinds: []ViolationKind{
-							ViolationFolderIllegalEmpty,
+						Kinds: []Statute{
+							BreachFolderIllegalEmpty,
 						},
 					},
 				},
@@ -14034,17 +14229,17 @@ var policies = []PolicyDef{
 		Name:        "File",
 		Description: "Validates file existence against the godfile allowlist",
 		Scopes:      []string{"**/*"},
-		Priority:    ViolationPriorityHigh,
-		Groups: []ViolationKindGroup{
+		Priority:    BreachPriorityHigh,
+		Territories: []Territory{
 			{
 				Name:        "Illegal",
-				Description: "Illegal file violations",
-				Groups: []ViolationKindGroup{
+				Description: "Illegal file breachs",
+				Territories: []Territory{
 					{
 						Name:        "Use Godfile",
 						Description: "Files not listed in .semio-repo/files.json godfile",
-						Kinds: []ViolationKind{
-							ViolationFileIllegalUseGodfile,
+						Kinds: []Statute{
+							BreachFileIllegalUseGodfile,
 						},
 					},
 				},
@@ -14248,13 +14443,13 @@ func (ctx *PolicyContext) IgnoreDirectives(filePath string) map[int][]string {
 // IsIgnored MUST return true only when the condition is met.
 // IsIgnored reports whether the PolicyContext is ignored.
 // [🛠️semio-repo/cli/main.go#Types#Policies§IsIgnored](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/ISIGNORED)
-func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind ViolationKind) bool {
+func (ctx *PolicyContext) IsIgnored(filePath string, breachLine int, kind Statute) bool {
 	ignores := ctx.IgnoreDirectives(filePath)
 	kindStr := string(kind)
 
 	for ignoreLine, patterns := range ignores {
 
-		if violationLine > ignoreLine && violationLine <= ignoreLine+100 {
+		if breachLine > ignoreLine && breachLine <= ignoreLine+100 {
 			for _, pattern := range patterns {
 
 				if strings.HasPrefix(kindStr, pattern) {
@@ -14266,12 +14461,12 @@ func (ctx *PolicyContext) IsIgnored(filePath string, violationLine int, kind Vio
 	return false
 }
 
-// CreateViolation MUST persist the new entity and return a reference to it.
-// CreateViolation creates a new violation and persists it.
-// [🛠️semio-repo/cli/main.go#Types#Policies§CreateViolation](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/CREATEVIOLATION)
-func (ctx *PolicyContext) CreateViolation(summary string, kind ViolationKind, scope string, line int, col int, excerpt string) Violation {
-	return Violation{
-		ID:      buildViolationID(scope, line, col),
+// CreateBreach MUST persist the new entity and return a reference to it.
+// CreateBreach creates a new breach and persists it.
+// [🛠️semio-repo/cli/main.go#Types#Policies§CreateBreach](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/CREATEVIOLATION)
+func (ctx *PolicyContext) CreateBreach(summary string, kind Statute, scope string, line int, col int, excerpt string) Breach {
+	return Breach{
+		ID:      buildBreachID(scope, line, col),
 		Summary: summary,
 		Kind:    kind,
 		Scope:   scope,
@@ -14296,9 +14491,9 @@ func extractFileFromScope(scope string) string {
 // FilterIgnored MUST preserve the tree structure while removing non-matching nodes.
 // FilterIgnored filters the ignored based on the given criteria.
 // [🛠️semio-repo/cli/main.go#Types#Policies§FilterIgnored](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/FILTERIGNORED)
-func (ctx *PolicyContext) FilterIgnored(violations []Violation) []Violation {
-	var result []Violation
-	for _, v := range violations {
+func (ctx *PolicyContext) FilterIgnored(breachs []Breach) []Breach {
+	var result []Breach
+	for _, v := range breachs {
 		file := extractFileFromScope(v.Scope)
 		if !ctx.IsIgnored(file, v.Line, v.Kind) {
 			result = append(result, v)
@@ -14628,19 +14823,19 @@ func randomString(n int) string {
 	return string(b)
 }
 
-// CheckPolicies MUST run all applicable policies and aggregate violations.
-// CheckPolicies validates the policies and returns any violations.
+// CheckPolicies MUST run all applicable policies and aggregate breachs.
+// CheckPolicies validates the policies and returns any breachs.
 // [🛠️semio-repo/cli/main.go#Types#Policies§CheckPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/CHECKPOLICIES)
-func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Violation, error) {
+func CheckPolicies(scope Scope, bundles []Bundle, policyIDs []string) ([]Breach, error) {
 	ctx := NewPolicyContext(scope, bundles)
 	return CheckPoliciesWithContext(ctx, policyIDs)
 }
 
-// CheckPoliciesWithContext MUST run all applicable policies and aggregate violations.
-// CheckPoliciesWithContext validates the policies with context and returns any violations.
+// CheckPoliciesWithContext MUST run all applicable policies and aggregate breachs.
+// CheckPoliciesWithContext validates the policies with context and returns any breachs.
 // [🛠️semio-repo/cli/main.go#Types#Policies§CheckPoliciesWithContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/POLICIES/CHECKPOLICIESWITHCONTEXT)
-func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Violation, error) {
-	var violations []Violation
+func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Breach, error) {
+	var breachs []Breach
 	var policiesToRun []PolicyDef
 	if len(policyIDs) > 0 {
 		for _, p := range policies {
@@ -14659,10 +14854,10 @@ func CheckPoliciesWithContext(ctx *PolicyContext, policyIDs []string) ([]Violati
 		}
 	}
 	for _, policy := range policiesToRun {
-		policyViolations := policy.Run(ctx)
-		violations = append(violations, policyViolations...)
+		policyBreachs := policy.Run(ctx)
+		breachs = append(breachs, policyBreachs...)
 	}
-	return violations, nil
+	return breachs, nil
 }
 
 func matchesScope(policyScopes []string, targetScope Scope) bool {
@@ -14689,11 +14884,11 @@ func matchesScope(policyScopes []string, targetScope Scope) bool {
 	return false
 }
 
-func headerPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func headerPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	files, err := ctx.Files()
 	if err != nil {
-		return violations
+		return breachs
 	}
 	agplMarkers := []string{"GNU Affero General Public License", "AGPL", "https://www.gnu.org/licenses/"}
 	for _, file := range files {
@@ -14714,9 +14909,9 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		if headerSection == nil {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Missing header region in %s", file),
-				ViolationCodeFileMissingHeaderRegion,
+				BreachCodeFileMissingHeaderRegion,
 				file, 0, 0, ""))
 			continue
 		}
@@ -14757,31 +14952,31 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				}
 			}
 			if oldFormatId {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Wrong header region format in %s: identification must use [ID](URI) format", file),
-					ViolationCodeFileWrongHeaderRegionFormat,
+					BreachCodeFileWrongHeaderRegionFormat,
 					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 			} else {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Missing identification in header of %s (expected [%s](%s))", file, expectedFileId, expectedFileUri),
-					ViolationCodeFileMissingIdentification,
+					BreachCodeFileMissingIdentification,
 					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 			}
 		} else {
 			normalizedParsedId := stripVS(parsedId)
 			normalizedExpectedId := stripVS(expectedFileId)
 			if normalizedParsedId != normalizedExpectedId {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Wrong file ID in header of %s (expected %s, got %s)", file, expectedFileId, parsedId),
-					ViolationCodeFileWrongIdentificationId,
+					BreachCodeFileWrongIdentificationId,
 					fmt.Sprintf("%s#Header", file), headerSection.StartLine+identificationLineIdx, 0, expectedFileId))
 			}
 			normalizedParsedUri := strings.ToUpper(stripVS(parsedUri))
 			normalizedExpectedUri := strings.ToUpper(stripVS(expectedFileUri))
 			if normalizedParsedUri != normalizedExpectedUri {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Wrong file URI in header of %s (expected %s, got %s)", file, expectedFileUri, parsedUri),
-					ViolationCodeFileWrongIdentificationUri,
+					BreachCodeFileWrongIdentificationUri,
 					fmt.Sprintf("%s#Header", file), headerSection.StartLine+identificationLineIdx, 0, expectedFileUri))
 			}
 		}
@@ -14794,9 +14989,9 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		if !hasContributors {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Missing contributors in header of %s", file),
-				ViolationCodeFileMissingContributors,
+				BreachCodeFileMissingContributors,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		}
 		hasLicense := false
@@ -14807,9 +15002,9 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			}
 		}
 		if !hasLicense {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Missing license in header of %s", file),
-				ViolationCodeFileMissingLicense,
+				BreachCodeFileMissingLicense,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		} else {
 			wrongLicenses := []string{"MIT", "Apache", "BSD"}
@@ -14824,9 +15019,9 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 				hasWrongLicense = true
 			}
 			if hasWrongLicense {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Wrong license in header of %s", file),
-					ViolationCodeFileWrongLicense,
+					BreachCodeFileWrongLicense,
 					fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 			}
 		}
@@ -14885,13 +15080,13 @@ func headerPolicy(ctx *PolicyContext) []Violation {
 			break
 		}
 		if !hasSummary && !isTestOrBenchmarkFile(file) {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Missing summary in header of %s", file),
-				ViolationCodeFileMissingSummary,
+				BreachCodeFileMissingSummary,
 				fmt.Sprintf("%s#Header", file), headerSection.StartLine, 0, ""))
 		}
 	}
-	return ctx.FilterIgnored(violations)
+	return ctx.FilterIgnored(breachs)
 }
 
 func isTestOrBenchmarkFile(file string) bool {
@@ -14945,11 +15140,11 @@ func requiresDefinitionSpecs(line string, langName string) bool {
 	}
 	return true
 }
-func sectionPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func sectionPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	files, err := ctx.Files()
 	if err != nil {
-		return violations
+		return breachs
 	}
 	for _, file := range files {
 		content := ctx.ReadText(file)
@@ -14971,9 +15166,9 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 			line = strings.TrimSuffix(line, "\r")
 			if matched, name := language.PolicySectionStartMatch(line); matched {
 				if name == "" {
-					violations = append(violations, ctx.CreateViolation(
+					breachs = append(breachs, ctx.CreateBreach(
 						fmt.Sprintf("Missing section name at %s:%d", file, lineNum),
-						ViolationCodeSectionMissingStartName,
+						BreachCodeSectionMissingStartName,
 						file, lineNum, 0, strings.TrimSpace(line)))
 				}
 				stack = append(stack, stackItem{name: name, line: lineNum})
@@ -14985,14 +15180,14 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					stack = stack[:len(stack)-1]
 					if open.name != "" {
 						if endName == "" {
-							violations = append(violations, ctx.CreateViolation(
+							breachs = append(breachs, ctx.CreateBreach(
 								fmt.Sprintf("Missing end section name at %s:%d", file, lineNum),
-								ViolationCodeSectionMissingEndName,
+								BreachCodeSectionMissingEndName,
 								file, lineNum, 0, strings.TrimSpace(line)))
 						} else if endName != open.name {
-							violations = append(violations, ctx.CreateViolation(
+							breachs = append(breachs, ctx.CreateBreach(
 								fmt.Sprintf("Section name mismatch at %s:%d", file, lineNum),
-								ViolationCodeSectionNameMismatch,
+								BreachCodeSectionNameMismatch,
 								file, lineNum, 0, fmt.Sprintf("Start: \"%s\" at line %d, End: \"%s\"", open.name, open.line, endName)))
 						}
 					}
@@ -15014,9 +15209,9 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 			}
 			isExempt := s.Name == "Header"
 			if nonEmpty == 0 && len(s.Children) == 0 && !isExempt {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Empty section \"%s\" in %s", s.Name, file),
-					ViolationCodeSectionEmpty,
+					BreachCodeSectionEmpty,
 					fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
 			}
 			if !isExempt && s.Name != "" && !isTestOrBenchmarkFile(file) {
@@ -15041,15 +15236,15 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 					hasSummary = true
 				}
 				if !hasIdentification {
-					violations = append(violations, ctx.CreateViolation(
+					breachs = append(breachs, ctx.CreateBreach(
 						fmt.Sprintf("Section \"%s\" is missing identification in %s", s.Name, file),
-						ViolationCodeSectionMissingIdentification,
+						BreachCodeSectionMissingIdentification,
 						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
 				}
 				if !hasSummary {
-					violations = append(violations, ctx.CreateViolation(
+					breachs = append(breachs, ctx.CreateBreach(
 						fmt.Sprintf("Section \"%s\" is missing a summary comment in %s", s.Name, file),
-						ViolationCodeSectionMissingSummary,
+						BreachCodeSectionMissingSummary,
 						fmt.Sprintf("%s#%s", file, s.Name), s.StartLine, 0, ""))
 				}
 			}
@@ -15195,9 +15390,9 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 						if value, ok := defExcerpts[defRange.name]; ok && value != "" {
 							excerpt = value
 						}
-						violations = append(violations, ctx.CreateViolation(
+						breachs = append(breachs, ctx.CreateBreach(
 							fmt.Sprintf("Orphan definition outside sections at %s:%d", file, defRange.start),
-							ViolationCodeSectionOrphanDefinition,
+							BreachCodeSectionOrphanDefinition,
 							fmt.Sprintf("%s::%s", file, defRange.name),
 							defRange.start, 0,
 							excerpt))
@@ -15209,9 +15404,9 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				continue
 			}
 			name := fmt.Sprintf("orphan-block-%d", orphanRange.start)
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Orphan definition outside sections at %s:%d", file, orphanRange.start),
-				ViolationCodeSectionOrphanDefinition,
+				BreachCodeSectionOrphanDefinition,
 				fmt.Sprintf("%s::%s", file, name),
 				orphanRange.start, 0,
 				orphanRange.firstLine))
@@ -15450,32 +15645,32 @@ func sectionPolicy(ctx *PolicyContext) []Violation {
 				}
 			}
 			if !isNativeDocstring && (hasSummary || hasSpecs || hasIdentification) {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Definition \"%s\" is not using native docstring format in %s:%d", def.name, file, def.start),
-					ViolationCodeDefNotNativeDocstring,
+					BreachCodeDefNotNativeDocstring,
 					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
 			}
 			if !hasIdentification {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Definition \"%s\" is missing identification in %s:%d", def.name, file, def.start),
-					ViolationCodeDefMissingIdentification,
+					BreachCodeDefMissingIdentification,
 					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
 			}
 			if !hasSummary {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Definition \"%s\" is missing a summary comment in %s:%d", def.name, file, def.start),
-					ViolationCodeDefMissingSummary,
+					BreachCodeDefMissingSummary,
 					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
 			}
 			if !hasSpecs && requiresDefinitionSpecs(defLine, language.Name()) {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Definition \"%s\" is missing spec comments in %s:%d", def.name, file, def.start),
-					ViolationCodeDefMissingSpecs,
+					BreachCodeDefMissingSpecs,
 					fmt.Sprintf("%s::%s", file, def.name), def.start, 0, def.name))
 			}
 		}
 	}
-	return ctx.FilterIgnored(violations)
+	return ctx.FilterIgnored(breachs)
 }
 
 // CommentTemplateState holds the data fields for a comment template state record.
@@ -15514,11 +15709,11 @@ func (state *CommentScanState) InTemplateRaw() bool {
 	return state.Templates[len(state.Templates)-1].ExprDepth == 0
 }
 
-func commentPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func commentPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	files, err := ctx.Files()
 	if err != nil {
-		return violations
+		return breachs
 	}
 	for _, file := range files {
 		content := ctx.ReadText(file)
@@ -15531,10 +15726,10 @@ func commentPolicy(ctx *PolicyContext) []Violation {
 		}
 
 		lines := strings.Split(content, "\n")
-		langViolations := language.ScanComments(ctx, file, content, lines)
-		violations = append(violations, langViolations...)
+		langBreachs := language.ScanComments(ctx, file, content, lines)
+		breachs = append(breachs, langBreachs...)
 	}
-	return ctx.FilterIgnored(violations)
+	return ctx.FilterIgnored(breachs)
 }
 
 func truncate(s string, maxLen int) string {
@@ -15544,11 +15739,11 @@ func truncate(s string, maxLen int) string {
 	return s[:maxLen]
 }
 
-func specsPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func specsPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	files, err := ctx.Files()
 	if err != nil {
-		return violations
+		return breachs
 	}
 	for _, file := range files {
 		content := ctx.ReadText(file)
@@ -15584,9 +15779,9 @@ func specsPolicy(ctx *PolicyContext) []Violation {
 							continue
 						}
 						if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
-							violations = append(violations, ctx.CreateViolation(
+							breachs = append(breachs, ctx.CreateBreach(
 								fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
-								ViolationCodeSpecsSyntax,
+								BreachCodeSpecsSyntax,
 								fmt.Sprintf("%s#Header/Specs", file), i, 0, commentText))
 						}
 					}
@@ -15610,9 +15805,9 @@ func specsPolicy(ctx *PolicyContext) []Violation {
 						continue
 					}
 					if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
-						violations = append(violations, ctx.CreateViolation(
+						breachs = append(breachs, ctx.CreateBreach(
 							fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
-							ViolationCodeSpecsSyntax,
+							BreachCodeSpecsSyntax,
 							fmt.Sprintf("%s#Header", file), i, 0, commentText))
 					}
 				}
@@ -15636,9 +15831,9 @@ func specsPolicy(ctx *PolicyContext) []Violation {
 					break
 				}
 				if hasSyntax, reason := hasImplementationSyntax(commentText); hasSyntax {
-					violations = append(violations, ctx.CreateViolation(
+					breachs = append(breachs, ctx.CreateBreach(
 						fmt.Sprintf("Spec contains implementation syntax in %s:%d (%s)", file, i, reason),
-						ViolationCodeSpecsSyntax,
+						BreachCodeSpecsSyntax,
 						fmt.Sprintf("%s#%s", file, s.Name), i, 0, commentText))
 				}
 			}
@@ -15650,25 +15845,25 @@ func specsPolicy(ctx *PolicyContext) []Violation {
 			checkSectionSpecs(s)
 		}
 	}
-	return ctx.FilterIgnored(violations)
+	return ctx.FilterIgnored(breachs)
 }
 
-func codePolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
-	violations = append(violations, headerPolicy(ctx)...)
-	violations = append(violations, sectionPolicy(ctx)...)
-	violations = append(violations, commentPolicy(ctx)...)
-	violations = append(violations, specsPolicy(ctx)...)
-	violations = append(violations, emojiPolicy(ctx)...)
-	violations = append(violations, docsPolicy(ctx)...)
-	return violations
+func codePolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
+	breachs = append(breachs, headerPolicy(ctx)...)
+	breachs = append(breachs, sectionPolicy(ctx)...)
+	breachs = append(breachs, commentPolicy(ctx)...)
+	breachs = append(breachs, specsPolicy(ctx)...)
+	breachs = append(breachs, emojiPolicy(ctx)...)
+	breachs = append(breachs, docsPolicy(ctx)...)
+	return breachs
 }
 
-func emojiPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func emojiPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	files, err := ctx.Files()
 	if err != nil {
-		return violations
+		return breachs
 	}
 
 	textDefaultEmojis := []string{
@@ -15709,19 +15904,19 @@ func emojiPolicy(ctx *PolicyContext) []Violation {
 				}
 
 				if lineHasVS15 || lineHasMissingVS16 {
-					violations = append(violations, ctx.CreateViolation(
+					breachs = append(breachs, ctx.CreateBreach(
 						"Emoji must use colorful variation (VS16) and avoid text variation (VS15)",
-						ViolationCodeUnicodeEmojiVariation,
+						BreachCodeUnicodeEmojiVariation,
 						file, i+1, 0, strings.TrimSpace(line)))
 				}
 			}
 		}
 	}
-	return violations
+	return breachs
 }
 
-func docsPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func docsPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	checked := make(map[string]bool)
 	for _, bundle := range ctx.Bundles {
 		bundleRoot := bundle.Root
@@ -15732,38 +15927,38 @@ func docsPolicy(ctx *PolicyContext) []Violation {
 		readmePath := filepath.Join(bundleRoot, "README.md")
 		absPath := filepath.Join(ctx.RootDir, readmePath)
 		if _, err := os.Stat(absPath); os.IsNotExist(err) {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Bundle %q is missing README.md with # Summary and # Specs sections", bundle.Name),
-				ViolationCodeDocsMissingReadme,
+				BreachCodeDocsMissingReadme,
 				readmePath, 0, 0, ""))
 			continue
 		}
 		content := ctx.ReadText(readmePath)
 		if !strings.Contains(content, "# Summary") {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Bundle %q README.md is missing # Summary section", bundle.Name),
-				ViolationCodeDocsMissingReadme,
+				BreachCodeDocsMissingReadme,
 				readmePath, 0, 0, ""))
 		}
 		if !strings.Contains(content, "# Specs") {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Bundle %q README.md is missing # Specs section", bundle.Name),
-				ViolationCodeDocsMissingReadme,
+				BreachCodeDocsMissingReadme,
 				readmePath, 0, 0, ""))
 		}
 	}
-	return violations
+	return breachs
 }
 
-func devDocsPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func devDocsPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	agentsContent := ctx.ReadText("AGENTS.md")
 	if agentsContent == "" {
-		return violations
+		return breachs
 	}
 	codebaseStart := strings.Index(agentsContent, "\n# Codebase")
 	if codebaseStart == -1 {
-		return violations
+		return breachs
 	}
 	codebaseContent := agentsContent[codebaseStart:]
 	nextH1 := strings.Index(codebaseContent[1:], "\n# ")
@@ -15804,28 +15999,28 @@ func devDocsPolicy(ctx *PolicyContext) []Violation {
 	}
 	for i := 0; i < len(fileSections)-1; i++ {
 		if fileSections[i].path > fileSections[i+1].path {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("File section '%s' should come after '%s' (alphabetical order)", fileSections[i].path, fileSections[i+1].path),
-				ViolationDevDocsWrongFileOrder,
+				BreachDevDocsWrongFileOrder,
 				"AGENTS.md", fileSections[i+1].line, 0, ""))
 		}
 	}
 	for i := 0; i < len(folderSections)-1; i++ {
 		if folderSections[i].path > folderSections[i+1].path {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Folder section '%s' should come after '%s' (alphabetical order)", folderSections[i].path, folderSections[i+1].path),
-				ViolationDevDocsWrongFolderOrder,
+				BreachDevDocsWrongFolderOrder,
 				"AGENTS.md", folderSections[i+1].line, 0, ""))
 		}
 	}
-	return ctx.FilterIgnored(violations)
+	return ctx.FilterIgnored(breachs)
 }
 
-func sketchpadPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func sketchpadPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	files, err := ctx.Files()
 	if err != nil {
-		return violations
+		return breachs
 	}
 	elementsFile := ""
 	for _, file := range files {
@@ -15867,9 +16062,9 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 				for _, pkg := range thirdPartyPackages {
 					importPattern := fmt.Sprintf(`from\s+['"]%s`, regexp.QuoteMeta(pkg))
 					if matched, _ := regexp.MatchString(importPattern, line); matched {
-						violations = append(violations, ctx.CreateViolation(
+						breachs = append(breachs, ctx.CreateBreach(
 							fmt.Sprintf("Third party import '%s' must only be in elements.tsx", pkg),
-							ViolationSketchpadImportThirdParty,
+							BreachSketchpadImportThirdParty,
 							file, lineNumber, 0, strings.TrimSpace(line)))
 						break
 					}
@@ -15878,16 +16073,16 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 			if strings.Contains(line, "createMachine(") || strings.Contains(line, "createMachine<") {
 				createMachineCount++
 				if createMachineCount > 1 {
-					violations = append(violations, ctx.CreateViolation(
+					breachs = append(breachs, ctx.CreateBreach(
 						"createMachine can only be used once in sketchpad",
-						ViolationSketchpadStateMultipleMachines,
+						BreachSketchpadStateMultipleMachines,
 						file, lineNumber, 0, strings.TrimSpace(line)))
 				}
 			}
 			if strings.Contains(line, "createActor(") || strings.Contains(line, "createActor<") {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					"createActor is forbidden in sketchpad",
-					ViolationSketchpadStateCreateActor,
+					BreachSketchpadStateCreateActor,
 					file, lineNumber, 0, strings.TrimSpace(line)))
 			}
 			yjsAppStatePatterns := []string{"Y.Doc(", "new Doc(", "Y.Map(", "Y.Array(", "Y.Text("}
@@ -15895,9 +16090,9 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 				if strings.Contains(line, pattern) && !isStateManagementSection(lineNumber) {
 					if !strings.Contains(strings.ToLower(file), "kit") &&
 						!strings.Contains(strings.ToLower(file), "sync") {
-						violations = append(violations, ctx.CreateViolation(
+						breachs = append(breachs, ctx.CreateBreach(
 							"Yjs should only be used for kit data synchronization, not app state",
-							ViolationSketchpadStateYjsAppState,
+							BreachSketchpadStateYjsAppState,
 							file, lineNumber, 0, strings.TrimSpace(line)))
 					}
 				}
@@ -15906,20 +16101,20 @@ func sketchpadPolicy(ctx *PolicyContext) []Violation {
 			for _, pattern := range storePatterns {
 				if strings.Contains(line, pattern) && !isStateManagementSection(lineNumber) {
 					if strings.Contains(line, "zustand") || strings.Contains(line, "store") {
-						violations = append(violations, ctx.CreateViolation(
+						breachs = append(breachs, ctx.CreateBreach(
 							"Stores outside of State Management sections are forbidden",
-							ViolationSketchpadStateForbiddenStore,
+							BreachSketchpadStateForbiddenStore,
 							file, lineNumber, 0, strings.TrimSpace(line)))
 					}
 				}
 			}
 		}
 	}
-	return ctx.FilterIgnored(violations)
+	return ctx.FilterIgnored(breachs)
 }
 
-func repoPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func repoPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 
 	canonicalCommands := []string{
 		"tree",
@@ -15941,9 +16136,9 @@ func repoPolicy(ctx *PolicyContext) []Violation {
 
 			mcpPattern := fmt.Sprintf("mcp.NewTool(\"%s\"", cmd)
 			if !strings.Contains(mainContent, mcpPattern) {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Missing MCP registration for %s in go/repo/main.go", cmd),
-					ViolationRepoMissingCommand,
+					BreachRepoMissingCommand,
 					mainGoPath, 1, 0, cmd))
 			}
 		}
@@ -15956,43 +16151,46 @@ func repoPolicy(ctx *PolicyContext) []Violation {
 
 		for _, token := range trackingTokens {
 			if !strings.Contains(mainContent, token) {
-				violations = append(violations, ctx.CreateViolation(
+				breachs = append(breachs, ctx.CreateBreach(
 					fmt.Sprintf("Missing ticket tracking function %s in go/repo/main.go", token),
-					ViolationRepoMissingTicketTracking,
+					BreachRepoMissingTicketTracking,
 					mainGoPath, 1, 0, token))
 			}
 		}
 	} else {
-		violations = append(violations, ctx.CreateViolation(
+		breachs = append(breachs, ctx.CreateBreach(
 			"Could not read go/repo/main.go for parity check",
-			ViolationRepoMissingCommand,
+			BreachRepoMissingCommand,
 			mainGoPath, 1, 0, ""))
 	}
 
-	return ctx.FilterIgnored(violations)
+	return ctx.FilterIgnored(breachs)
 }
 
-func systemPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func systemPolicy(ctx *PolicyContext) []Breach {
+	var breachs []Breach
 	settingsPath := filepath.Join(ctx.RootDir, ".vscode", "settings.json")
 	if _, err := os.Stat(settingsPath); err == nil {
-		violations = append(violations, ctx.CreateViolation(
+		breachs = append(breachs, ctx.CreateBreach(
 			"VSCode settings.json must be inside .devcontainer/devcontainer.json customizations.vscode.settings",
-			ViolationSystemDevcontainerVscodeSettingsOutside,
+			BreachSystemDevcontainerVscodeSettingsOutside,
 			".vscode/settings.json", 1, 0, ""))
 	}
 	extensionsPath := filepath.Join(ctx.RootDir, ".vscode", "extensions.json")
 	if _, err := os.Stat(extensionsPath); err == nil {
-		violations = append(violations, ctx.CreateViolation(
+		breachs = append(breachs, ctx.CreateBreach(
 			"VSCode extensions.json must be inside .devcontainer/devcontainer.json customizations.vscode.extensions",
-			ViolationSystemDevcontainerVscodeExtensionsOutside,
+			BreachSystemDevcontainerVscodeExtensionsOutside,
 			".vscode/extensions.json", 1, 0, ""))
 	}
-	return ctx.FilterIgnored(violations)
+	return ctx.FilterIgnored(breachs)
 }
 
-func folderPolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func folderPolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind != ScopeRepo {
+		return nil
+	}
+	var breachs []Breach
 	excludePrefixes := []string{
 		".git/",
 		".semio-repo/",
@@ -16022,15 +16220,15 @@ func folderPolicy(ctx *PolicyContext) []Violation {
 			return nil
 		}
 		if len(entries) == 0 {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("Empty folder %q must be removed", relPath),
-				ViolationFolderIllegalEmpty,
+				BreachFolderIllegalEmpty,
 				relPath+"/", 0, 0, relPath))
 		}
 		return nil
 	})
 	_ = err
-	return ctx.FilterIgnored(violations)
+	return breachs
 }
 
 func loadGodfile() (map[string]bool, error) {
@@ -16050,11 +16248,14 @@ func loadGodfile() (map[string]bool, error) {
 	return result, nil
 }
 
-func filePolicy(ctx *PolicyContext) []Violation {
-	var violations []Violation
+func filePolicy(ctx *PolicyContext) []Breach {
+	if ctx.Scope.Kind != ScopeRepo {
+		return nil
+	}
+	var breachs []Breach
 	godfile, err := loadGodfile()
 	if err != nil {
-		return violations
+		return breachs
 	}
 	excludePrefixes := []string{
 		".git/",
@@ -16070,6 +16271,9 @@ func filePolicy(ctx *PolicyContext) []Violation {
 		if d.IsDir() {
 			relPath, _ := filepath.Rel(ctx.RootDir, path)
 			relPath = NormalizePath(relPath)
+			if relPath == "." {
+				return nil
+			}
 			for _, prefix := range excludePrefixes {
 				if strings.HasPrefix(relPath+"/", prefix) {
 					return filepath.SkipDir
@@ -16083,15 +16287,15 @@ func filePolicy(ctx *PolicyContext) []Violation {
 			return nil
 		}
 		if !godfile[relPath] {
-			violations = append(violations, ctx.CreateViolation(
+			breachs = append(breachs, ctx.CreateBreach(
 				fmt.Sprintf("File %q is not listed in .semio-repo/files.json", relPath),
-				ViolationFileIllegalUseGodfile,
+				BreachFileIllegalUseGodfile,
 				relPath, 0, 0, relPath))
 		}
 		return nil
 	})
 	_ = err
-	return ctx.FilterIgnored(violations)
+	return breachs
 }
 
 // #endregion 🔖Policies
@@ -16099,7 +16303,7 @@ func filePolicy(ctx *PolicyContext) []Violation {
 // #region 🔖Codebase
 
 // [🔖semio-repo/cli/main.go#Codebase](semiorepo://section/semio-repo/cli/main.go/CODEBASE)
-// Codebase builder that assembles bundles, folders, files, sections, definitions, contributors, tickets, policies, and violations.
+// Codebase builder that assembles bundles, folders, files, sections, definitions, contributors, tickets, policies, and breachs.
 
 // CodebaseContext holds the data fields for a codebase context record.
 // [🛠️semio-repo/cli/main.go#Types#Codebase§CodebaseContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/CODEBASECONTEXT)
@@ -16108,7 +16312,7 @@ type CodebaseContext struct {
 	RootURI    string
 	Bundles    []Bundle
 	Files      []string
-	Violations []Violation
+	Breachs []Breach
 	Tickets    []Ticket
 	Policies   []PolicyDef
 }
@@ -16143,16 +16347,16 @@ func (ctx *CodebaseContext) LoadFiles() error {
 	return nil
 }
 
-// LoadViolations MUST read from the configured storage path.
-// LoadViolations loads the violations from storage.
-// [🛠️semio-repo/cli/main.go#Types#Codebase§LoadViolations](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/LOADVIOLATIONS)
-func (ctx *CodebaseContext) LoadViolations() error {
+// LoadBreachs MUST read from the configured storage path.
+// LoadBreachs loads the breachs from storage.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§LoadBreachs](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/LOADVIOLATIONS)
+func (ctx *CodebaseContext) LoadBreachs() error {
 	for _, file := range ctx.Files {
-		violations, err := AnalyzeFile(file, ctx.Bundles)
+		breachs, err := AnalyzeFile(file, ctx.Bundles)
 		if err != nil {
 			continue
 		}
-		ctx.Violations = append(ctx.Violations, violations...)
+		ctx.Breachs = append(ctx.Breachs, breachs...)
 	}
 	return nil
 }
@@ -16251,7 +16455,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 	folderSets := make(map[string]map[string]struct{})
 	contributorSets := make(map[string]map[string]struct{})
 	ticketSets := make(map[string]map[string]struct{})
-	violationCounts := make(map[string]int)
+	breachCounts := make(map[string]int)
 
 	for _, bundle := range ctx.Bundles {
 		name := normalizeBundleLabel(bundle.Name)
@@ -16303,10 +16507,10 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 		}
 	}
 
-	for _, v := range ctx.Violations {
+	for _, v := range ctx.Breachs {
 		bundleName := ctx.GetBundleForFile(v.Scope)
 		if bundleName != "" {
-			violationCounts[bundleName]++
+			breachCounts[bundleName]++
 		}
 	}
 
@@ -16388,7 +16592,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 				Sections:    sectionCounts[name],
 				Definitions: definitionCounts[name],
 				Lines:       lineCounts[name],
-				Violations:  violationCounts[name],
+				Breachs:  breachCounts[name],
 			},
 		})
 	}
@@ -16410,7 +16614,7 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 	folderSet := make(map[string]struct{})
 	fileCounts := make(map[string]int)
 	lineCounts := make(map[string]int)
-	violationCounts := make(map[string]int)
+	breachCounts := make(map[string]int)
 
 	for _, file := range ctx.Files {
 		folder := NormalizePath(filepath.Dir(file))
@@ -16425,12 +16629,12 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 		}
 	}
 
-	for _, v := range ctx.Violations {
+	for _, v := range ctx.Breachs {
 		filePath := extractFilePath(v.Scope)
 		if filePath != "" {
 			folder := NormalizePath(filepath.Dir(filePath))
 			if folder != "." {
-				violationCounts[folder]++
+				breachCounts[folder]++
 			}
 		}
 	}
@@ -16445,7 +16649,7 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 			Metrics: &FolderMetricsInternal{
 				Files:      fileCounts[folder],
 				Lines:      lineCounts[folder],
-				Violations: violationCounts[folder],
+				Breachs: breachCounts[folder],
 			},
 		})
 	}
@@ -16464,12 +16668,12 @@ func extractFilePath(scope string) string {
 // [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseFiles](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEFILES)
 func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 	var result []CodebaseFile
-	violationsByFile := make(map[string][]Violation)
+	breachsByFile := make(map[string][]Breach)
 
-	for _, v := range ctx.Violations {
+	for _, v := range ctx.Breachs {
 		filePath := extractFilePath(v.Scope)
 		if filePath != "" {
-			violationsByFile[filePath] = append(violationsByFile[filePath], v)
+			breachsByFile[filePath] = append(breachsByFile[filePath], v)
 		}
 	}
 
@@ -16495,10 +16699,10 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 			}
 		}
 
-		var violations []FileViolationRef
-		for _, v := range violationsByFile[file] {
+		var breachs []FileBreachRef
+		for _, v := range breachsByFile[file] {
 			info := v.Kind.Info()
-			violations = append(violations, FileViolationRef{
+			breachs = append(breachs, FileBreachRef{
 				Kind:        v.Kind,
 				Priority:    info.Priority,
 				Autofixable: info.Autofixable,
@@ -16511,7 +16715,7 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 			Path:       file,
 			URI:        ctx.FileURI(file),
 			Metrics:    metrics,
-			Violations: violations,
+			Breachs: breachs,
 		})
 	}
 	sort.Slice(result, func(i, j int) bool { return result[i].Path < result[j].Path })
@@ -16565,7 +16769,7 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, 
 			Metrics: &SectionMetricsInternal{
 				Definitions: defCount,
 				Lines:       section.EndLine - section.StartLine + 1,
-				Violations:  0,
+				Breachs:  0,
 			},
 		})
 		addSections(ctx, result, file, fileID, content, section.Children, sectionPath)
@@ -16608,7 +16812,7 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 				Metrics: &DefinitionMetricsInternal{
 					Definitions: 0,
 					Lines:       def.End - def.Start + 1,
-					Violations:  0,
+					Breachs:  0,
 				},
 			})
 		}
@@ -16784,21 +16988,21 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 // [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebasePolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEPOLICIES)
 func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 	var result []CodebasePolicy
-	violationsByPolicy := make(map[string][]Violation)
+	breachsByPolicy := make(map[string][]Breach)
 
-	for _, v := range ctx.Violations {
+	for _, v := range ctx.Breachs {
 		parts := strings.Split(string(v.Kind), "/")
 		if len(parts) > 0 {
 			policyID := parts[0]
-			violationsByPolicy[policyID] = append(violationsByPolicy[policyID], v)
+			breachsByPolicy[policyID] = append(breachsByPolicy[policyID], v)
 		}
 	}
 
 	for _, policy := range ctx.Policies {
-		var violations []PolicyViolationRef
-		for _, v := range violationsByPolicy[policy.ID] {
+		var breachs []PolicyBreachRef
+		for _, v := range breachsByPolicy[policy.ID] {
 			info := v.Kind.Info()
-			violations = append(violations, PolicyViolationRef{
+			breachs = append(breachs, PolicyBreachRef{
 				Kind:        v.Kind,
 				Priority:    info.Priority,
 				Autofixable: info.Autofixable,
@@ -16809,26 +17013,26 @@ func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 			ID:         policy.ID,
 			Name:       policy.Name,
 			Scopes:     policy.Scopes,
-			Violations: violations,
+			Breachs: breachs,
 		})
 	}
 	return result
 }
 
-// BuildCodebaseViolations MUST assemble the codebase violations from the available context data.
-// BuildCodebaseViolations constructs and returns the codebase violations structure.
-// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseViolations](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEVIOLATIONS)
-func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
-	var result []CodebaseViolation
+// BuildCodebaseBreachs MUST assemble the codebase breachs from the available context data.
+// BuildCodebaseBreachs constructs and returns the codebase breachs structure.
+// [🛠️semio-repo/cli/main.go#Types#Codebase§BuildCodebaseBreachs](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/BUILDCODEBASEVIOLATIONS)
+func BuildCodebaseBreachs(ctx *CodebaseContext) []CodebaseBreach {
+	var result []CodebaseBreach
 
-	for i, v := range ctx.Violations {
+	for i, v := range ctx.Breachs {
 		filePath := extractFilePath(v.Scope)
 		bundleName := ctx.GetBundleForFile(filePath)
 		info := v.Kind.Info()
 
-		violationID := fmt.Sprintf("%s#|%s|%s#%d", v.Kind, bundleName, filePath, i)
+		breachID := fmt.Sprintf("%s#|%s|%s#%d", v.Kind, bundleName, filePath, i)
 
-		var folders []ViolationFolder
+		var folders []BreachFolder
 		if filePath != "" {
 			folder := NormalizePath(filepath.Dir(filePath))
 			if folder != "." {
@@ -16836,7 +17040,7 @@ func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
 				if bundleName != "" {
 					folderID = bundleName + "/" + folder
 				}
-				folders = append(folders, ViolationFolder{
+				folders = append(folders, BreachFolder{
 					ID:   folderID,
 					Path: folder,
 					URI:  ctx.FolderURI(folder),
@@ -16844,13 +17048,13 @@ func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
 			}
 		}
 
-		var files []ViolationFile
+		var files []BreachFile
 		if filePath != "" {
 			fileID := filePath
 			if bundleName != "" {
 				fileID = bundleName + "/" + filepath.Base(filePath)
 			}
-			files = append(files, ViolationFile{
+			files = append(files, BreachFile{
 				ID:   fileID,
 				Path: filePath,
 				URI:  ctx.FileURI(filePath),
@@ -16861,8 +17065,8 @@ func BuildCodebaseViolations(ctx *CodebaseContext) []CodebaseViolation {
 			})
 		}
 
-		result = append(result, CodebaseViolation{
-			ID:          violationID,
+		result = append(result, CodebaseBreach{
+			ID:          breachID,
 			Folders:     folders,
 			Files:       files,
 			Kind:        v.Kind,
@@ -16935,7 +17139,7 @@ func BuildCodebase(ctx *CodebaseContext) *Codebase {
 	contributors := BuildCodebaseContributors(ctx)
 	tickets := BuildCodebaseTickets(ctx)
 	policies := BuildCodebasePolicies(ctx)
-	violations := BuildCodebaseViolations(ctx)
+	breachs := BuildCodebaseBreachs(ctx)
 	tree := BuildCodebaseTree(ctx, bundles, files, sections, definitions)
 
 	return &Codebase{
@@ -16947,7 +17151,7 @@ func BuildCodebase(ctx *CodebaseContext) *Codebase {
 		Contributors: contributors,
 		Tickets:      tickets,
 		Policies:     policies,
-		Violations:   violations,
+		Breachs:   breachs,
 		Tree:         tree,
 	}
 }
@@ -17228,7 +17432,7 @@ func ToolCodebase() ToolResult {
 	if err := ctx.LoadFiles(); err != nil {
 		return toolErrorResult(err)
 	}
-	if err := ctx.LoadViolations(); err != nil {
+	if err := ctx.LoadBreachs(); err != nil {
 		return toolErrorResult(err)
 	}
 	if err := ctx.LoadTickets(); err != nil {
@@ -17238,8 +17442,8 @@ func ToolCodebase() ToolResult {
 
 	codebase := BuildCodebase(ctx)
 
-	output.Success(fmt.Sprintf("Codebase loaded: %d bundles, %d files, %d violations",
-		len(codebase.Bundles), len(codebase.Files), len(codebase.Violations)))
+	output.Success(fmt.Sprintf("Codebase loaded: %d bundles, %d files, %d breachs",
+		len(codebase.Bundles), len(codebase.Files), len(codebase.Breachs)))
 
 	return ToolResult{Output: *output, Data: codebase}
 }
@@ -18901,8 +19105,8 @@ type StreamOptions struct {
 	IncludeContributors []string
 	ExcludePolicies     []string
 	IncludePolicies     []string
-	ExcludeViolations   []string
-	IncludeViolations   []string
+	ExcludeBreachs   []string
+	IncludeBreachs   []string
 }
 
 func matchesFilter(name string, opts StreamOptions) bool {
@@ -21451,8 +21655,8 @@ type ExportResult struct {
 	Contributors   int    `json:"contributors"`
 	Tickets        int    `json:"tickets"`
 	Policies       int    `json:"policies"`
-	ViolationKinds int    `json:"violationKinds"`
-	Violations     int    `json:"violations"`
+	Statutes int    `json:"statutes"`
+	Breachs     int    `json:"breachs"`
 }
 
 // ExportToSQLite MUST write the complete output to the target.
@@ -21502,15 +21706,15 @@ func ExportToSQLite(outputPath string, ctx RepoContext) (*ExportResult, error) {
 	if result.Tickets, err = exportTickets(tx, ctx); err != nil {
 		return nil, fmt.Errorf("failed to export tickets: %w", err)
 	}
-	if result.Policies, result.ViolationKinds, err = exportPolicies(tx, ctx); err != nil {
+	if result.Policies, result.Statutes, err = exportPolicies(tx, ctx); err != nil {
 		return nil, fmt.Errorf("failed to export policies: %w", err)
 	}
 	analyzeResult, err := ctx.Analyze(nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to analyze: %w", err)
 	}
-	if result.Violations, err = exportViolations(tx, analyzeResult.Violations); err != nil {
-		return nil, fmt.Errorf("failed to export violations: %w", err)
+	if result.Breachs, err = exportBreachs(tx, analyzeResult.Breachs); err != nil {
+		return nil, fmt.Errorf("failed to export breachs: %w", err)
 	}
 	if err := tx.Commit(); err != nil {
 		return nil, fmt.Errorf("failed to commit transaction: %w", err)
@@ -21820,7 +22024,7 @@ func exportPolicies(tx *sql.Tx, ctx RepoContext) (int, int, error) {
 		return 0, 0, err
 	}
 	defer scopeStmt.Close()
-	kindStmt, err := tx.Prepare(`INSERT INTO violation_kind (id, policy_id, priority, autofixable, reason, solution) VALUES (?, ?, ?, ?, ?, ?)`)
+	kindStmt, err := tx.Prepare(`INSERT INTO statute (id, policy_id, priority, autofixable, reason, solution) VALUES (?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -21840,7 +22044,7 @@ func exportPolicies(tx *sql.Tx, ctx RepoContext) (int, int, error) {
 				return 0, 0, err
 			}
 		}
-		for _, vk := range p.ViolationKinds {
+		for _, vk := range p.Statutes {
 			kindID := vk.GetID()
 			autofixable := 0
 			if vk.Autofixable {
@@ -21855,16 +22059,16 @@ func exportPolicies(tx *sql.Tx, ctx RepoContext) (int, int, error) {
 	return len(policies), totalKinds, nil
 }
 
-func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
-	stmt, err := tx.Prepare(`INSERT INTO violation (id, kind_id, scope, file_id, folder_id, line, column_num, excerpt, summary) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
+func exportBreachs(tx *sql.Tx, breachs []*Breach) (int, error) {
+	stmt, err := tx.Prepare(`INSERT INTO breach (id, kind_id, scope, file_id, folder_id, line, column_num, excerpt, summary) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return 0, err
 	}
 	defer stmt.Close()
 	ctx := NewCodebaseContext()
 	ctx.LoadBundles()
-	for _, v := range violations {
-		kindID := "semio-repo/violation-kind/" + string(v.Kind)
+	for _, v := range breachs {
+		kindID := "semio-repo/breach-kind/" + string(v.Kind)
 		var fileID, folderID, line, column, excerpt interface{}
 		if v.Line > 0 {
 			line = v.Line
@@ -21887,7 +22091,7 @@ func exportViolations(tx *sql.Tx, violations []*Violation) (int, error) {
 			return 0, err
 		}
 	}
-	return len(violations), nil
+	return len(breachs), nil
 }
 
 // ToolExport MUST complete the operation successfully.
@@ -21910,8 +22114,8 @@ func ToolExport(outputPath string) ToolResult {
 	output.Plain(fmt.Sprintf("  Contributors: %d", result.Contributors))
 	output.Plain(fmt.Sprintf("  Tickets: %d", result.Tickets))
 	output.Plain(fmt.Sprintf("  Policies: %d", result.Policies))
-	output.Plain(fmt.Sprintf("  Violation Kinds: %d", result.ViolationKinds))
-	output.Plain(fmt.Sprintf("  Violations: %d", result.Violations))
+	output.Plain(fmt.Sprintf("  Breach Kinds: %d", result.Statutes))
+	output.Plain(fmt.Sprintf("  Breachs: %d", result.Breachs))
 	return ToolResult{Output: *output, Data: result}
 }
 
@@ -21941,7 +22145,7 @@ type RepoContext interface {
 	GetPolicies() []*Policy
 	GetDrafts() ([]*Draft, error)
 	GetTodos(filter *FilterInput) ([]*Todo, error)
-	GetViolationKinds() []*ViolationKindMeta
+	GetStatutes() []*StatuteMeta
 	Analyze(scope *string) (*AnalyzeResult, error)
 	Fix(scope *string) (*FixResult, error)
 	GoalCreate(input GoalCreateInput) (*Goal, error)
@@ -22854,11 +23058,11 @@ func (c *repoContext) GetPolicies() []*Policy {
 			d := policies[i].Description
 			descPtr = &d
 		}
-		var violationKinds []*ViolationKindMeta
+		var statutes []*StatuteMeta
 		for _, kind := range policies[i].AllKinds() {
 			meta := kind.Info()
 			meta.PolicyID = policies[i].ID
-			violationKinds = append(violationKinds, &meta)
+			statutes = append(statutes, &meta)
 		}
 		result[i] = &Policy{
 			ID:             policies[i].ID,
@@ -22866,18 +23070,18 @@ func (c *repoContext) GetPolicies() []*Policy {
 			Description:    descPtr,
 			Scopes:         policies[i].Scopes,
 			Groups:         policies[i].Groups,
-			ViolationKinds: violationKinds,
+			Statutes: statutes,
 		}
 	}
 	return result
 }
 
-// GetViolationKinds MUST retrieve the requested value or return an error.
-// GetViolationKinds retrieves and returns the violation kinds.
-// [🛠️semio-repo/cli/main.go#Types#Default Context§GetViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETVIOLATIONKINDS)
-func (c *repoContext) GetViolationKinds() []*ViolationKindMeta {
-	var result []*ViolationKindMeta
-	for _, meta := range violationKindInfoTable {
+// GetStatutes MUST retrieve the requested value or return an error.
+// GetStatutes retrieves and returns the statutes.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetStatutes](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETVIOLATIONKINDS)
+func (c *repoContext) GetStatutes() []*StatuteMeta {
+	var result []*StatuteMeta
+	for _, meta := range statuteInfoTable {
 		m := meta
 		result = append(result, &m)
 	}
@@ -22892,18 +23096,18 @@ func (c *repoContext) Analyze(scope *string) (*AnalyzeResult, error) {
 	if scope != nil {
 		scopeStr = *scope
 	}
-	violations, err := CheckPolicies(ParseScope(scopeStr), c.bundles, nil)
+	breachs, err := CheckPolicies(ParseScope(scopeStr), c.bundles, nil)
 	if err != nil {
 		return nil, err
 	}
-	result := make([]*Violation, len(violations))
-	for i := range violations {
-		if violations[i].ID == "" {
-			fmt.Printf("Analyze found violation with empty definition: %+v\n", violations[i])
+	result := make([]*Breach, len(breachs))
+	for i := range breachs {
+		if breachs[i].ID == "" {
+			fmt.Printf("Analyze found breach with empty definition: %+v\n", breachs[i])
 		}
-		result[i] = &violations[i]
+		result[i] = &breachs[i]
 	}
-	return &AnalyzeResult{Violations: result, Metrics: &AnalyzeMetrics{Total: len(violations)}}, nil
+	return &AnalyzeResult{Breachs: result, Metrics: &AnalyzeMetrics{Total: len(breachs)}}, nil
 }
 
 // Fix MUST return a non-nil error when the operation fails.
@@ -22914,13 +23118,13 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 	if scope != nil {
 		scopeStr = *scope
 	}
-	violations, err := CheckPolicies(ParseScope(scopeStr), c.bundles, nil)
+	breachs, err := CheckPolicies(ParseScope(scopeStr), c.bundles, nil)
 	if err != nil {
 		return nil, err
 	}
-	var autofixable []Violation
-	var remaining []Violation
-	for _, v := range violations {
+	var autofixable []Breach
+	var remaining []Breach
+	for _, v := range breachs {
 		if v.Autofixable() {
 			autofixable = append(autofixable, v)
 		} else {
@@ -22928,25 +23132,25 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 		}
 	}
 	fixed := 0
-	var systemViolations []Violation
-	fileViolations := map[string][]Violation{}
+	var systemBreachs []Breach
+	fileBreachs := map[string][]Breach{}
 	for _, v := range autofixable {
-		if v.Kind == ViolationFolderIllegalEmpty {
-			systemViolations = append(systemViolations, v)
+		if v.Kind == BreachFolderIllegalEmpty {
+			systemBreachs = append(systemBreachs, v)
 			continue
 		}
 		file := extractFileFromScope(v.Scope)
-		fileViolations[file] = append(fileViolations[file], v)
+		fileBreachs[file] = append(fileBreachs[file], v)
 	}
-	if len(systemViolations) > 0 {
-		n, sysErr := applySystemAutofixes(systemViolations)
+	if len(systemBreachs) > 0 {
+		n, sysErr := applySystemAutofixes(systemBreachs)
 		if sysErr != nil {
-			remaining = append(remaining, systemViolations...)
+			remaining = append(remaining, systemBreachs...)
 		} else {
 			fixed += n
 		}
 	}
-	for file, vs := range fileViolations {
+	for file, vs := range fileBreachs {
 		n, fixErr := applyAutofixes(file, vs)
 		if fixErr != nil {
 			for _, v := range vs {
@@ -22956,14 +23160,14 @@ func (c *repoContext) Fix(scope *string) (*FixResult, error) {
 		}
 		fixed += n
 	}
-	remainingPtrs := make([]*Violation, len(remaining))
+	remainingPtrs := make([]*Breach, len(remaining))
 	for i := range remaining {
 		remainingPtrs[i] = &remaining[i]
 	}
-	return &FixResult{Fixed: fixed, Remaining: len(remaining), Violations: remainingPtrs}, nil
+	return &FixResult{Fixed: fixed, Remaining: len(remaining), Breachs: remainingPtrs}, nil
 }
 
-func applyAutofixes(file string, violations []Violation) (int, error) {
+func applyAutofixes(file string, breachs []Breach) (int, error) {
 	absPath := filepath.Join(rootDir, file)
 	content, err := ReadTextFile(absPath)
 	if err != nil {
@@ -22972,13 +23176,13 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 	language := GetLanguage(file)
 	fixed := 0
 	lines := strings.Split(content, "\n")
-	sort.Slice(violations, func(i, j int) bool {
-		return violations[i].Line > violations[j].Line
+	sort.Slice(breachs, func(i, j int) bool {
+		return breachs[i].Line > breachs[j].Line
 	})
 	linesToRemove := map[int]bool{}
-	for _, v := range violations {
+	for _, v := range breachs {
 		switch v.Kind {
-		case ViolationCodeFileMissingHeaderRegion:
+		case BreachCodeFileMissingHeaderRegion:
 			if language != nil && language.SupportsHeaders() {
 				headerContent := generateFileHeader(file, language)
 				if headerContent != "" {
@@ -22987,7 +23191,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					fixed++
 				}
 			}
-		case ViolationCodeFileMissingIdentification:
+		case BreachCodeFileMissingIdentification:
 			if language != nil {
 				expectedId := FileHeaderId(file)
 				expectedUri := FileHeaderUri(file)
@@ -23013,7 +23217,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					fixed++
 				}
 			}
-		case ViolationCodeFileWrongIdentificationId, ViolationCodeFileWrongIdentificationUri:
+		case BreachCodeFileWrongIdentificationId, BreachCodeFileWrongIdentificationUri:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				expectedId := FileHeaderId(file)
 				expectedUri := FileHeaderUri(file)
@@ -23022,7 +23226,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 				lines[v.Line-1] = newLine
 				fixed++
 			}
-		case ViolationCodeSectionEmpty:
+		case BreachCodeSectionEmpty:
 			sectionStartLine := 0
 			sectionEndLine := 0
 			for i := v.Line - 1; i >= 0; i-- {
@@ -23055,7 +23259,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 				}
 				fixed++
 			}
-		case ViolationCodeSectionMissingEndName:
+		case BreachCodeSectionMissingEndName:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				line := lines[v.Line-1]
 				if matched, _ := language.PolicySectionEndMatch(line); matched {
@@ -23066,7 +23270,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					}
 				}
 			}
-		case ViolationCodeSectionNameMismatch:
+		case BreachCodeSectionNameMismatch:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				startName := findMatchingSectionStartName(lines, v.Line-1, language)
 				if startName != "" {
@@ -23074,7 +23278,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					fixed++
 				}
 			}
-		case ViolationCodeSectionMissingIdentification:
+		case BreachCodeSectionMissingIdentification:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				sectionPath := ""
 				if idx := strings.Index(v.Scope, "#"); idx >= 0 {
@@ -23094,7 +23298,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					fixed++
 				}
 			}
-		case ViolationCodeDefMissingIdentification:
+		case BreachCodeDefMissingIdentification:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				defName := ""
 				filePart := file
@@ -23356,7 +23560,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					}
 				}
 			}
-		case ViolationCodeDefNotNativeDocstring:
+		case BreachCodeDefNotNativeDocstring:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				langName := language.Name()
 				defLineNum := v.Line
@@ -23647,7 +23851,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					}
 				}
 			}
-		case ViolationCodeDefMissingSummary:
+		case BreachCodeDefMissingSummary:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				defName := ""
 				if idx := strings.Index(v.Scope, "::"); idx >= 0 {
@@ -23879,7 +24083,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					}
 				}
 			}
-		case ViolationCodeDefMissingSpecs:
+		case BreachCodeDefMissingSpecs:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				defName := ""
 				if idx := strings.Index(v.Scope, "::"); idx >= 0 {
@@ -24060,7 +24264,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					}
 				}
 			}
-		case ViolationCodeSectionMissingSummary:
+		case BreachCodeSectionMissingSummary:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				sectionName := ""
 				if idx := strings.Index(v.Scope, "#"); idx >= 0 {
@@ -24092,7 +24296,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 					fixed++
 				}
 			}
-		case ViolationCodeCommentInline:
+		case BreachCodeCommentInline:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				startLine := v.Line
 				prefix := language.CommentPrefix()
@@ -24141,7 +24345,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 				}
 				fixed++
 			}
-		case ViolationCodeCommentBlock, ViolationCodeCommentJSDoc:
+		case BreachCodeCommentBlock, BreachCodeCommentJSDoc:
 			if v.Line > 0 && v.Line <= len(lines) && language != nil {
 				startLine := v.Line
 				endPrefix := language.BlockCommentEnd()
@@ -24194,7 +24398,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 				}
 				fixed++
 			}
-		case ViolationCodeUnicodeEmojiVariation:
+		case BreachCodeUnicodeEmojiVariation:
 			if v.Line > 0 && v.Line <= len(lines) {
 				line := lines[v.Line-1]
 
@@ -24220,7 +24424,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 				lines[v.Line-1] = line
 				fixed++
 			}
-		case ViolationCodeFileMissingLicense, ViolationCodeFileWrongLicense:
+		case BreachCodeFileMissingLicense, BreachCodeFileWrongLicense:
 			if language != nil {
 				sections := language.ParseSections(strings.Join(lines, "\n"))
 				var headerSec *Section
@@ -24286,7 +24490,7 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 			}
 		}
 	}
-	systemFixed, systemErr := applySystemAutofixes(violations)
+	systemFixed, systemErr := applySystemAutofixes(breachs)
 	if systemErr != nil {
 		return fixed, systemErr
 	}
@@ -24317,11 +24521,11 @@ func applyAutofixes(file string, violations []Violation) (int, error) {
 	return fixed, nil
 }
 
-func applySystemAutofixes(violations []Violation) (int, error) {
+func applySystemAutofixes(breachs []Breach) (int, error) {
 	fixed := 0
-	for _, v := range violations {
+	for _, v := range breachs {
 		switch v.Kind {
-		case ViolationSystemDevcontainerVscodeSettingsOutside:
+		case BreachSystemDevcontainerVscodeSettingsOutside:
 			settingsPath := filepath.Join(rootDir, ".vscode", "settings.json")
 			settingsData, err := os.ReadFile(settingsPath)
 			if err != nil {
@@ -24366,7 +24570,7 @@ func applySystemAutofixes(violations []Violation) (int, error) {
 				_ = os.Remove(vscodeDir)
 			}
 			fixed++
-		case ViolationFolderIllegalEmpty:
+		case BreachFolderIllegalEmpty:
 			folderPath := filepath.Join(rootDir, v.Excerpt)
 			entries, readErr := os.ReadDir(folderPath)
 			if readErr == nil && len(entries) == 0 {
@@ -24374,7 +24578,7 @@ func applySystemAutofixes(violations []Violation) (int, error) {
 					fixed++
 				}
 			}
-		case ViolationSystemDevcontainerVscodeExtensionsOutside:
+		case BreachSystemDevcontainerVscodeExtensionsOutside:
 			extensionsPath := filepath.Join(rootDir, ".vscode", "extensions.json")
 			extData, err := os.ReadFile(extensionsPath)
 			if err != nil {
@@ -25136,23 +25340,23 @@ func (c *defaultContext) GetTickets(year, month, day *int, status *TicketStatus)
 // [🛠️semio-repo/cli/main.go#Types#Default Context§GetPolicies](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETPOLICIES)
 func (c *defaultContext) GetPolicies() []*Policy { return []*Policy{} }
 
-// GetViolationKinds MUST retrieve the requested value or return an error.
-// GetViolationKinds retrieves and returns the violation kinds.
-// [🛠️semio-repo/cli/main.go#Types#Default Context§GetViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETVIOLATIONKINDS)
-func (c *defaultContext) GetViolationKinds() []*ViolationKindMeta { return []*ViolationKindMeta{} }
+// GetStatutes MUST retrieve the requested value or return an error.
+// GetStatutes retrieves and returns the statutes.
+// [🛠️semio-repo/cli/main.go#Types#Default Context§GetStatutes](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/GETVIOLATIONKINDS)
+func (c *defaultContext) GetStatutes() []*StatuteMeta { return []*StatuteMeta{} }
 
 // Analyze MUST return a non-nil error when the operation fails.
 // Analyze performs the analyze operation on the default context.
 // [🛠️semio-repo/cli/main.go#Types#Default Context§Analyze](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/ANALYZE)
 func (c *defaultContext) Analyze(scope *string) (*AnalyzeResult, error) {
-	return &AnalyzeResult{Violations: []*Violation{}, Metrics: &AnalyzeMetrics{}}, nil
+	return &AnalyzeResult{Breachs: []*Breach{}, Metrics: &AnalyzeMetrics{}}, nil
 }
 
 // Fix MUST return a non-nil error when the operation fails.
 // Fix performs the fix operation on the default context.
 // [🛠️semio-repo/cli/main.go#Types#Default Context§Fix](semiorepo://definition/semio-repo/cli/main.go/TYPES/DEFAULT-CONTEXT/FIX)
 func (c *defaultContext) Fix(scope *string) (*FixResult, error) {
-	return &FixResult{Violations: []*Violation{}}, nil
+	return &FixResult{Breachs: []*Breach{}}, nil
 }
 
 // TicketOpen MUST return a non-nil error when the operation fails.
@@ -25575,12 +25779,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		},
 	})
 
-	violationPriorityEnum := graphql.NewEnum(graphql.EnumConfig{
-		Name: "ViolationPriority",
+	breachPriorityEnum := graphql.NewEnum(graphql.EnumConfig{
+		Name: "BreachPriority",
 		Values: graphql.EnumValueConfigMap{
-			"HIGH":   &graphql.EnumValueConfig{Value: ViolationPriorityHigh},
-			"MEDIUM": &graphql.EnumValueConfig{Value: ViolationPriorityMedium},
-			"LOW":    &graphql.EnumValueConfig{Value: ViolationPriorityLow},
+			"HIGH":   &graphql.EnumValueConfig{Value: BreachPriorityHigh},
+			"MEDIUM": &graphql.EnumValueConfig{Value: BreachPriorityMedium},
+			"LOW":    &graphql.EnumValueConfig{Value: BreachPriorityLow},
 		},
 	})
 
@@ -25592,9 +25796,9 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	var sectionType *graphql.Object
 	var sectionItemInterface *graphql.Interface
 	var definitionType *graphql.Object
-	var violationType *graphql.Object
-	var violationKindType *graphql.Object
-	var violationKindGroupType *graphql.Object
+	var breachType *graphql.Object
+	var statuteType *graphql.Object
+	var territoryType *graphql.Object
 	var policyType *graphql.Object
 	var ticketType *graphql.Object
 	var todoType *graphql.Object
@@ -25712,10 +25916,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return []*File{}, nil
 					},
 				},
-				"violations": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+				"breachs": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Violation{}, nil
+						return []*Breach{}, nil
 					},
 				},
 			}
@@ -25761,10 +25965,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"ignored":   &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
 				"generated": &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
 				"bundle":    &graphql.Field{Type: bundleType},
-				"violations": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+				"breachs": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Violation{}, nil
+						return []*Breach{}, nil
 					},
 				},
 			}
@@ -25874,10 +26078,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return allDefs, nil
 					},
 				},
-				"violations": &graphql.Field{
-					Type: graphql.NewList(violationType),
+				"breachs": &graphql.Field{
+					Type: graphql.NewList(breachType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Violation{}, nil
+						return []*Breach{}, nil
 					},
 				},
 				"content": &graphql.Field{Type: graphql.String},
@@ -26012,10 +26216,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return definitions, nil
 					},
 				},
-				"violations": &graphql.Field{
-					Type: graphql.NewList(violationType),
+				"breachs": &graphql.Field{
+					Type: graphql.NewList(breachType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Violation{}, nil
+						return []*Breach{}, nil
 					},
 				},
 				"range": &graphql.Field{
@@ -26079,10 +26283,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						}, nil
 					},
 				},
-				"violations": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+				"breachs": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						return []*Violation{}, nil
+						return []*Breach{}, nil
 					},
 				},
 				"range": &graphql.Field{
@@ -26099,29 +26303,29 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		}),
 	})
 
-	violationType = graphql.NewObject(graphql.ObjectConfig{
-		Name: "Violation",
+	breachType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Breach",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
 				"id": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.ID),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						v := p.Source.(*Violation)
+						v := p.Source.(*Breach)
 						return v.GetID(), nil
 					},
 				},
 				"kindId": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.ID),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						violation := p.Source.(*Violation)
-						return string(violation.Kind), nil
+						breach := p.Source.(*Breach)
+						return string(breach.Kind), nil
 					},
 				},
 				"kind": &graphql.Field{
-					Type: graphql.NewNonNull(violationKindType),
+					Type: graphql.NewNonNull(statuteType),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						violation := p.Source.(*Violation)
-						info := violation.Kind.Info()
+						breach := p.Source.(*Breach)
+						info := breach.Kind.Info()
 						return &info, nil
 					},
 				},
@@ -26134,46 +26338,46 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"summary": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.String),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						violation := p.Source.(*Violation)
-						return violation.Summary, nil
+						breach := p.Source.(*Breach)
+						return breach.Summary, nil
 					},
 				},
 				"priority": &graphql.Field{
-					Type: graphql.NewNonNull(violationPriorityEnum),
+					Type: graphql.NewNonNull(breachPriorityEnum),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						violation := p.Source.(*Violation)
-						return violation.Priority(), nil
+						breach := p.Source.(*Breach)
+						return breach.Priority(), nil
 					},
 				},
 				"autofixable": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.Boolean),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						violation := p.Source.(*Violation)
-						return violation.Autofixable(), nil
+						breach := p.Source.(*Breach)
+						return breach.Autofixable(), nil
 					},
 				},
 			}
 		}),
 	})
 
-	violationKindType = graphql.NewObject(graphql.ObjectConfig{
-		Name: "ViolationKind",
+	statuteType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Statute",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
 				"id": &graphql.Field{
 					Type: graphql.NewNonNull(graphql.ID),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						kind := p.Source.(*ViolationKindMeta)
+						kind := p.Source.(*StatuteMeta)
 						return kind.GetID(), nil
 					},
 				},
 				"policy":      &graphql.Field{Type: graphql.NewNonNull(policyType)},
-				"priority":    &graphql.Field{Type: graphql.NewNonNull(violationPriorityEnum)},
+				"priority":    &graphql.Field{Type: graphql.NewNonNull(breachPriorityEnum)},
 				"autofixable": &graphql.Field{Type: graphql.NewNonNull(graphql.Boolean)},
 				"reason":      &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"solution":    &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
-				"violations": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+				"breachs": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType))),
 					Args: graphql.FieldConfigArgument{
 						"scope": &graphql.ArgumentConfig{Type: graphql.String},
 					},
@@ -26182,25 +26386,25 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		}),
 	})
 
-	violationKindGroupType = graphql.NewObject(graphql.ObjectConfig{
-		Name: "ViolationKindGroup",
+	territoryType = graphql.NewObject(graphql.ObjectConfig{
+		Name: "Territory",
 		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
 			return graphql.Fields{
 				"name":        &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"description": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
 				"scopes":      &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
 				"groups": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindGroupType))),
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(territoryType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						group := p.Source.(ViolationKindGroup)
+						group := p.Source.(Territory)
 						return group.Groups, nil
 					},
 				},
 				"kinds": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType))),
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(statuteType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-						group := p.Source.(ViolationKindGroup)
-						var result []*ViolationKindMeta
+						group := p.Source.(Territory)
+						var result []*StatuteMeta
 						for _, k := range group.Kinds {
 							meta := k.Info()
 							result = append(result, &meta)
@@ -26221,13 +26425,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				"description": &graphql.Field{Type: graphql.String},
 				"scopes":      &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(graphql.String)))},
 				"groups": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindGroupType))),
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(territoryType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						policy := p.Source.(*Policy)
 						return policy.Groups, nil
 					},
 				},
-				"violationKinds": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType)))},
+				"statutes": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(statuteType)))},
 			}
 		}),
 	})
@@ -26269,6 +26473,43 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					},
 				},
 				"author": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+			}
+		}),
+	})
+
+	interactionResourceType := graphql.NewObject(graphql.ObjectConfig{
+		Name: "InteractionResource",
+		Fields: (graphql.FieldsThunk)(func() graphql.Fields {
+			return graphql.Fields{
+				"kind":       &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"prompt":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"commit":     &graphql.Field{Type: graphql.String},
+				"author":     &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"sourceKind": &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"sourceId":   &graphql.Field{Type: graphql.NewNonNull(graphql.String)},
+				"goalId":     &graphql.Field{Type: graphql.String},
+				"ticketId":   &graphql.Field{Type: graphql.String},
+				"date": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ix := p.Source.(InteractionResource)
+						return ix.Date, nil
+					},
+				},
+				"system": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ix := p.Source.(InteractionResource)
+						return ix.System, nil
+					},
+				},
+				"client": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.String),
+					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+						ix := p.Source.(InteractionResource)
+						return ix.Client, nil
+					},
+				},
 			}
 		}),
 	})
@@ -26327,6 +26568,13 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 				},
 			},
 			"parent": &graphql.Field{Type: graphql.String},
+			"interactions": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(interactionType))),
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					goal := p.Source.(*Goal)
+					return goal.Interactions, nil
+				},
+			},
 		},
 	})
 
@@ -26927,15 +27175,15 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						return repoResolverInstance.Ctx.GetPolicies(), nil
 					},
 				},
-				"violationKinds": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType))),
+				"statutes": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(statuteType))),
 					Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 						_ = p.Source.(*Repo)
-						return repoResolverInstance.Ctx.GetViolationKinds(), nil
+						return repoResolverInstance.Ctx.GetStatutes(), nil
 					},
 				},
-				"violations": &graphql.Field{
-					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+				"breachs": &graphql.Field{
+					Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType))),
 					Args: graphql.FieldConfigArgument{
 						"scope": &graphql.ArgumentConfig{Type: graphql.String},
 					},
@@ -26945,7 +27193,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 						if v, ok := p.Args["scope"].(string); ok {
 							scope = &v
 						}
-						return repoResolverInstance.Violations(p.Context, repo, scope)
+						return repoResolverInstance.Breachs(p.Context, repo, scope)
 					},
 				},
 			}
@@ -26955,7 +27203,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 	analyzeResultType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "AnalyzeResult",
 		Fields: graphql.Fields{
-			"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
+			"breachs": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType)))},
 			"metrics":    &graphql.Field{Type: graphql.NewNonNull(analyzeMetricsType)},
 		},
 	})
@@ -26965,7 +27213,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Fields: graphql.Fields{
 			"fixed":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
 			"remaining":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"violations": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType)))},
+			"breachs": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType)))},
 		},
 	})
 
@@ -27051,7 +27299,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 			"node": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewUnion(graphql.UnionConfig{
 					Name:  "Node",
-					Types: []*graphql.Object{repoType, bundleType, folderType, fileType, sectionType, definitionType, contributorType, ticketType, policyType, violationKindType, violationType, draftType},
+					Types: []*graphql.Object{repoType, bundleType, folderType, fileType, sectionType, definitionType, contributorType, ticketType, policyType, statuteType, breachType, draftType},
 					ResolveType: func(p graphql.ResolveTypeParams) *graphql.Object {
 						switch p.Value.(type) {
 						case *Draft:
@@ -27074,10 +27322,10 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 							return ticketType
 						case *Policy:
 							return policyType
-						case *ViolationKindMeta:
-							return violationKindType
-						case *Violation:
-							return violationType
+						case *StatuteMeta:
+							return statuteType
+						case *Breach:
+							return breachType
 						default:
 							return nil
 						}
@@ -27189,6 +27437,12 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return queryResolverInstance.Tickets(p.Context, year, month, day, status, filter)
 				},
 			},
+			"interactions": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(interactionResourceType))),
+				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
+					return queryResolverInstance.Interactions(p.Context)
+				},
+			},
 			"drafts": &graphql.Field{
 				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(draftType))),
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
@@ -27205,14 +27459,14 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return queryResolverInstance.Policies(p.Context, filter)
 				},
 			},
-			"violationKinds": &graphql.Field{
-				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationKindType))),
+			"statutes": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(statuteType))),
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-					return queryResolverInstance.ViolationKinds(p.Context)
+					return queryResolverInstance.Statutes(p.Context)
 				},
 			},
-			"violations": &graphql.Field{
-				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(violationType))),
+			"breachs": &graphql.Field{
+				Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType))),
 				Args: graphql.FieldConfigArgument{
 					"scope": &graphql.ArgumentConfig{Type: graphql.String},
 				},
@@ -27221,7 +27475,7 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					if s, ok := p.Args["scope"].(string); ok {
 						scope = &s
 					}
-					return queryResolverInstance.Violations(p.Context, scope)
+					return queryResolverInstance.Breachs(p.Context, scope)
 				},
 			},
 			"bundle": &graphql.Field{
@@ -27318,14 +27572,14 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 					return queryResolverInstance.Policy(p.Context, id)
 				},
 			},
-			"violationKind": &graphql.Field{
-				Type: violationKindType,
+			"statute": &graphql.Field{
+				Type: statuteType,
 				Args: graphql.FieldConfigArgument{
 					"id": &graphql.ArgumentConfig{Type: graphql.NewNonNull(graphql.String)},
 				},
 				Resolve: func(p graphql.ResolveParams) (interface{}, error) {
 					id := p.Args["id"].(string)
-					return queryResolverInstance.ViolationKind(p.Context, id)
+					return queryResolverInstance.Statute(p.Context, id)
 				},
 			},
 			"analyze": &graphql.Field{
@@ -28106,68 +28360,73 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 		return r.Repo(ctx)
 	}
 
-	for _, e := range []string{EmojiProjects, EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch} {
-		prefix := emojiText(e)
-		if strings.HasPrefix(cleanID, prefix) {
-			rest := strings.TrimPrefix(cleanID, prefix)
-			name := strings.TrimPrefix(rest, "@")
-			return &Project{Name: name}, nil
+	stripPrefix := func(s, emoji string) (string, bool) {
+		p := strings.ReplaceAll(emoji, "\uFE0F", "")
+		p = strings.ReplaceAll(p, "\uFE0E", "")
+		if strings.HasPrefix(s, p) {
+			return strings.TrimPrefix(s, p), true
+		}
+		return s, false
+	}
+	stripAnyPrefix := func(s string, emojis []string) string {
+		for _, e := range emojis {
+			if rest, ok := stripPrefix(s, e); ok {
+				return rest
+			}
+		}
+		return s
+	}
+
+	if rest, ok := stripPrefix(cleanID, EmojiProjects); ok {
+		name := stripAnyPrefix(rest, []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch})
+		return &Project{Name: name}, nil
+	}
+
+	if rest, ok := stripPrefix(cleanID, EmojiBundles); ok {
+		name := stripAnyPrefix(rest, []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets})
+		return r.Bundle(ctx, name)
+	}
+
+	if rest, ok := stripPrefix(cleanID, EmojiFolders); ok {
+		path := stripAnyPrefix(rest, []string{EmojiFolderOrg, EmojiFolderRequired})
+		return r.Folder(ctx, path)
+	}
+
+	if rest, ok := stripPrefix(cleanID, EmojiFiles); ok {
+		path := stripAnyPrefix(rest, []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense})
+		return r.File(ctx, path)
+	}
+
+	if rest, ok := stripPrefix(cleanID, EmojiDefinitions); ok {
+		value := stripAnyPrefix(rest, []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant})
+		return &Definition{ID: value}, nil
+	}
+
+	if rest, ok := stripPrefix(cleanID, EmojiTicket); ok {
+		clean := strings.SplitN(rest, "?", 2)[0]
+		if len(clean) >= 8 {
+			y, _ := strconv.Atoi(clean[0:4])
+			m, _ := strconv.Atoi(clean[4:6])
+			d, _ := strconv.Atoi(clean[6:8])
+			slug := clean[8:]
+			return r.Ticket(ctx, y, m, d, slug)
 		}
 	}
 
-	for _, e := range []string{EmojiBundles, EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets} {
-		prefix := emojiText(e)
-		if strings.HasPrefix(cleanID, prefix) {
-			name := strings.TrimPrefix(cleanID, prefix)
-			return r.Bundle(ctx, name)
-		}
+	if rest, ok := stripPrefix(cleanID, EmojiGoal); ok {
+		return &Goal{ID: rest, Title: rest}, nil
 	}
 
-	for _, e := range []string{EmojiFolders, EmojiFolderOrg, EmojiFolderRequired} {
-		prefix := emojiText(e)
-		if strings.HasPrefix(cleanID, prefix) {
-			path := strings.TrimPrefix(cleanID, prefix)
-			return r.Folder(ctx, path)
-		}
+	if rest, ok := stripPrefix(cleanID, EmojiPolicy); ok {
+		return r.Policy(ctx, rest)
 	}
 
-	for _, e := range []string{EmojiFiles, EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense} {
-		prefix := emojiText(e)
-		if strings.HasPrefix(cleanID, prefix) {
-			path := strings.TrimPrefix(cleanID, prefix)
-			return r.File(ctx, path)
-		}
+	if rest, ok := stripPrefix(cleanID, EmojiContributor); ok {
+		return r.Contributor(ctx, rest)
 	}
 
-	if strings.HasPrefix(cleanID, emojiText(EmojiTicket)) {
-		slugID := strings.TrimPrefix(cleanID, emojiText(EmojiTicket))
-		parts := strings.Split(slugID, "/")
-		if len(parts) == 4 {
-			y, _ := strconv.Atoi(parts[0])
-			m, _ := strconv.Atoi(parts[1])
-			d, _ := strconv.Atoi(parts[2])
-			return r.Ticket(ctx, y, m, d, parts[3])
-		}
-	}
-
-	if strings.HasPrefix(cleanID, emojiText(EmojiGoal)) {
-		slug := strings.TrimPrefix(cleanID, emojiText(EmojiGoal))
-		return &Goal{ID: slug, Title: slug}, nil
-	}
-
-	if strings.HasPrefix(cleanID, emojiText(EmojiPolicy)) {
-		name := strings.TrimPrefix(cleanID, emojiText(EmojiPolicy))
-		return r.Policy(ctx, name)
-	}
-
-	if strings.HasPrefix(cleanID, emojiText(EmojiContributor)) {
-		name := strings.TrimPrefix(cleanID, emojiText(EmojiContributor))
-		return r.Contributor(ctx, name)
-	}
-
-	if strings.HasPrefix(cleanID, emojiText(EmojiCommit)) {
-		sha := strings.TrimPrefix(cleanID, emojiText(EmojiCommit))
-		return &Commit{SHA: sha}, nil
+	if rest, ok := stripPrefix(cleanID, EmojiCommit); ok {
+		return &Commit{SHA: rest}, nil
 	}
 
 	if strings.HasPrefix(id, "repo:") {
@@ -28191,9 +28450,9 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 	if strings.HasPrefix(id, "policy:") {
 		return r.Policy(ctx, strings.TrimPrefix(id, "policy:"))
 	}
-	if strings.HasPrefix(id, "violation:") {
+	if strings.HasPrefix(id, "breach:") {
 
-		return nil, fmt.Errorf("resolving violation by ID not implemented")
+		return nil, fmt.Errorf("resolving breach by ID not implemented")
 	}
 	if strings.HasPrefix(id, "ticket:") {
 		slugID := strings.TrimPrefix(id, "ticket:")
@@ -28438,6 +28697,12 @@ func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day 
 	return []*Ticket{}, nil
 }
 
+// Interactions aggregates all interactions from tickets and goals.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Interactions](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/INTERACTIONS)
+func (r *queryResolver) Interactions(ctx context.Context) ([]InteractionResource, error) {
+	return ListInteractions()
+}
+
 // Policies MUST return a non-nil error when the operation fails.
 // Policies performs the policies operation on the query resolver.
 // [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Policies](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/POLICIES)
@@ -28449,7 +28714,7 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 		var policies []*Policy
 		for p := range policyChan {
 			desc := p.Description
-			var vks []*ViolationKindMeta
+			var vks []*StatuteMeta
 			for _, k := range p.AllKinds() {
 				meta := k.Info()
 				meta.PolicyID = p.ID
@@ -28461,7 +28726,7 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 				Description:    &desc,
 				Scopes:         p.Scopes,
 				Groups:         p.Groups,
-				ViolationKinds: vks,
+				Statutes: vks,
 			})
 		}
 		return policies, nil
@@ -28469,28 +28734,28 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 	return []*Policy{}, nil
 }
 
-// ViolationKinds MUST return a non-nil error when the operation fails.
-// ViolationKinds performs the violation kinds operation on the query resolver.
-// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§ViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONKINDS)
-func (r *queryResolver) ViolationKinds(ctx context.Context) ([]*ViolationKindMeta, error) {
+// Statutes MUST return a non-nil error when the operation fails.
+// Statutes performs the statutes operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Statutes](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONKINDS)
+func (r *queryResolver) Statutes(ctx context.Context) ([]*StatuteMeta, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetViolationKinds(), nil
+		return r.Ctx.GetStatutes(), nil
 	}
-	return []*ViolationKindMeta{}, nil
+	return []*StatuteMeta{}, nil
 }
 
-// Violations MUST return a non-nil error when the operation fails.
-// Violations performs the violations operation on the query resolver.
-// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Violations](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONS)
-func (r *queryResolver) Violations(ctx context.Context, scope *string) ([]*Violation, error) {
+// Breachs MUST return a non-nil error when the operation fails.
+// Breachs performs the breachs operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Breachs](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONS)
+func (r *queryResolver) Breachs(ctx context.Context, scope *string) ([]*Breach, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
 		if err != nil {
 			return nil, err
 		}
-		return result.Violations, nil
+		return result.Breachs, nil
 	}
-	return []*Violation{}, nil
+	return []*Breach{}, nil
 }
 
 // Bundle MUST return a non-nil error when the operation fails.
@@ -28647,21 +28912,21 @@ func (r *queryResolver) Policy(ctx context.Context, id string) (*Policy, error) 
 	}, nil
 }
 
-// ViolationKind MUST return a non-nil error when the operation fails.
-// ViolationKind performs the violation kind operation on the query resolver.
-// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§ViolationKind](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONKIND)
-func (r *queryResolver) ViolationKind(ctx context.Context, id string) (*ViolationKindMeta, error) {
+// Statute MUST return a non-nil error when the operation fails.
+// Statute performs the statute operation on the query resolver.
+// [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Statute](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/VIOLATIONKIND)
+func (r *queryResolver) Statute(ctx context.Context, id string) (*StatuteMeta, error) {
 	if r.Ctx != nil {
-		kinds := r.Ctx.GetViolationKinds()
+		kinds := r.Ctx.GetStatutes()
 		for _, k := range kinds {
 			if string(k.Kind) == id {
 				return k, nil
 			}
 		}
 	}
-	return &ViolationKindMeta{
-		Kind:        ViolationKind(id),
-		Priority:    ViolationPriorityMedium,
+	return &StatuteMeta{
+		Kind:        Statute(id),
+		Priority:    BreachPriorityMedium,
 		Autofixable: false,
 		Reason:      "",
 		Solution:    "",
@@ -28676,7 +28941,7 @@ func (r *queryResolver) Analyze(ctx context.Context, scope *string) (*AnalyzeRes
 		return r.Ctx.Analyze(scope)
 	}
 	return &AnalyzeResult{
-		Violations: []*Violation{},
+		Breachs: []*Breach{},
 		Metrics: &AnalyzeMetrics{
 			Total:       0,
 			ByPriority:  &PriorityCount{High: 0, Medium: 0, Low: 0},
@@ -28721,7 +28986,7 @@ func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, 
 	return &FixResult{
 		Fixed:      0,
 		Remaining:  0,
-		Violations: []*Violation{},
+		Breachs: []*Breach{},
 	}, nil
 }
 
@@ -29154,7 +29419,7 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 		var policies []*Policy
 		for p := range policyChan {
 			desc := p.Description
-			var vks []*ViolationKindMeta
+			var vks []*StatuteMeta
 			for _, k := range p.AllKinds() {
 				meta := k.Info()
 				meta.PolicyID = p.ID
@@ -29166,7 +29431,7 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 				Description:    &desc,
 				Scopes:         p.Scopes,
 				Groups:         p.Groups,
-				ViolationKinds: vks,
+				Statutes: vks,
 			})
 		}
 		return policies, nil
@@ -29174,33 +29439,33 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 	return []*Policy{}, nil
 }
 
-// ViolationKinds MUST return a non-nil error when the operation fails.
-// ViolationKinds performs the violation kinds operation on the repo resolver.
-// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§ViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/VIOLATIONKINDS)
-func (r *repoResolver) ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error) {
+// Statutes MUST return a non-nil error when the operation fails.
+// Statutes performs the statutes operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Statutes](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/VIOLATIONKINDS)
+func (r *repoResolver) Statutes(ctx context.Context, obj *Repo) ([]*StatuteMeta, error) {
 	if r.Ctx != nil {
-		return r.Ctx.GetViolationKinds(), nil
+		return r.Ctx.GetStatutes(), nil
 	}
-	return []*ViolationKindMeta{}, nil
+	return []*StatuteMeta{}, nil
 }
 
-// Violations MUST return a non-nil error when the operation fails.
-// Violations performs the violations operation on the repo resolver.
-// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Violations](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/VIOLATIONS)
-func (r *repoResolver) Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error) {
+// Breachs MUST return a non-nil error when the operation fails.
+// Breachs performs the breachs operation on the repo resolver.
+// [🛠️semio-repo/cli/main.go#Types#Entity Resolvers§Breachs](semiorepo://definition/semio-repo/cli/main.go/TYPES/ENTITY-RESOLVERS/VIOLATIONS)
+func (r *repoResolver) Breachs(ctx context.Context, obj *Repo, scope *string) ([]*Breach, error) {
 	if r.Ctx != nil {
 		result, err := r.Ctx.Analyze(scope)
 		if err != nil {
 			return nil, err
 		}
-		for i, v := range result.Violations {
+		for i, v := range result.Breachs {
 			if v.ID == "" {
-				fmt.Printf("DEBUG: repoResolver violation %d has empty ID in memory: %+v\n", i, v)
+				fmt.Printf("DEBUG: repoResolver breach %d has empty ID in memory: %+v\n", i, v)
 			}
 		}
-		return result.Violations, nil
+		return result.Breachs, nil
 	}
-	return []*Violation{}, nil
+	return []*Breach{}, nil
 }
 
 // #endregion 🔖Entity Resolvers
@@ -29222,8 +29487,8 @@ type QueryResolver interface {
 	Todos(ctx context.Context, filter *FilterInput) ([]*Todo, error)
 	Tickets(ctx context.Context, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error)
 	Policies(ctx context.Context, filter *FilterInput) ([]*Policy, error)
-	ViolationKinds(ctx context.Context) ([]*ViolationKindMeta, error)
-	Violations(ctx context.Context, scope *string) ([]*Violation, error)
+	Statutes(ctx context.Context) ([]*StatuteMeta, error)
+	Breachs(ctx context.Context, scope *string) ([]*Breach, error)
 	Bundle(ctx context.Context, name string) (*Bundle, error)
 	Folder(ctx context.Context, path string) (*Folder, error)
 	File(ctx context.Context, path string) (*File, error)
@@ -29232,7 +29497,7 @@ type QueryResolver interface {
 	Contributor(ctx context.Context, id string) (*Contributor, error)
 	Ticket(ctx context.Context, year int, month int, day int, slug string) (*Ticket, error)
 	Policy(ctx context.Context, id string) (*Policy, error)
-	ViolationKind(ctx context.Context, id string) (*ViolationKindMeta, error)
+	Statute(ctx context.Context, id string) (*StatuteMeta, error)
 	Analyze(ctx context.Context, scope *string) (*AnalyzeResult, error)
 }
 
@@ -29272,8 +29537,8 @@ type RepoResolver interface {
 	Todos(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Todo, error)
 	Tickets(ctx context.Context, obj *Repo, year *int, month *int, day *int, status *TicketStatus, filter *FilterInput) ([]*Ticket, error)
 	Policies(ctx context.Context, obj *Repo, filter *FilterInput) ([]*Policy, error)
-	ViolationKinds(ctx context.Context, obj *Repo) ([]*ViolationKindMeta, error)
-	Violations(ctx context.Context, obj *Repo, scope *string) ([]*Violation, error)
+	Statutes(ctx context.Context, obj *Repo) ([]*StatuteMeta, error)
+	Breachs(ctx context.Context, obj *Repo, scope *string) ([]*Breach, error)
 }
 
 // #endregion 🔖Resolver Interfaces
@@ -29320,7 +29585,7 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddTool(
 		mcp.NewTool("analyze",
-			mcp.WithDescription("Analyze codebase for policy violations"),
+			mcp.WithDescription("Analyze codebase for policy breachs"),
 			mcp.WithString("scope", mcp.Description("Scope to analyze (e.g., semio, semio/js, path/to/file.ts)"), mcp.DefaultString("semio")),
 		),
 		analyze,
@@ -29394,12 +29659,12 @@ func createMcpServer() *server.MCPServer {
 		handlePolicyResource,
 	)
 	s.AddResource(
-		mcp.NewResource("semiorepo://violationKinds", "Violation Kinds", mcp.WithMIMEType("text/plain")),
-		handleViolationKindsResource,
+		mcp.NewResource("semiorepo://statutes", "Breach Kinds", mcp.WithMIMEType("text/plain")),
+		handleStatutesResource,
 	)
 	s.AddResourceTemplate(
-		mcp.NewResourceTemplate("semiorepo://violationKind/{id}", "Violation Kind"),
-		handleViolationKindResource,
+		mcp.NewResourceTemplate("semiorepo://statute/{id}", "Breach Kind"),
+		handleStatuteResource,
 	)
 	s.AddResource(
 		mcp.NewResource("semiorepo://contributors", "Contributors", mcp.WithMIMEType("text/plain")),
@@ -29419,7 +29684,7 @@ func createMcpServer() *server.MCPServer {
 	)
 	s.AddTool(
 		mcp.NewTool("fix",
-			mcp.WithDescription("Apply autofixes for policy violations"),
+			mcp.WithDescription("Apply autofixes for policy breachs"),
 			mcp.WithString("scope", mcp.Description("Scope to fix"), mcp.DefaultString("semio")),
 		),
 		fix,
@@ -30597,7 +30862,7 @@ func handleFoldersResource(ctx context.Context, request mcp.ReadResourceRequest)
 
 func handleFolderResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	path := PathFromUriPath(strings.TrimPrefix(request.Params.URI, "semiorepo://folder/"))
-	query := `query Folder($path: String!) { folder(path: $path) { id path name kind parent { path } children { path name kind } files { path name kind } violations { id } } }`
+	query := `query Folder($path: String!) { folder(path: $path) { id path name kind parent { path } children { path name kind } files { path name kind } breachs { id } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
 		return nil, err
@@ -30636,7 +30901,7 @@ func handleFilesResource(ctx context.Context, request mcp.ReadResourceRequest) (
 
 func handleFileResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	path := PathFromUriPath(strings.TrimPrefix(request.Params.URI, "semiorepo://file/"))
-	query := `query File($path: String!) { file(path: $path) { id path name kind extension folder { path } bundle { name } violations { id } } }`
+	query := `query File($path: String!) { file(path: $path) { id path name kind extension folder { path } bundle { name } breachs { id } } }`
 	result, err := gql(query, map[string]interface{}{"path": path})
 	if err != nil {
 		return nil, err
@@ -30849,7 +31114,7 @@ func handleGoalResource(ctx context.Context, request mcp.ReadResourceRequest) ([
 }
 
 func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query Policies { repo { policies { id description violations { id } } } }`
+	query := `query Policies { repo { policies { id description breachs { id } } } }`
 	result, err := gql(query, nil)
 	if err != nil {
 		return nil, err
@@ -30869,7 +31134,7 @@ func handlePoliciesResource(ctx context.Context, request mcp.ReadResourceRequest
 
 func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := strings.TrimPrefix(request.Params.URI, "semiorepo://policy/")
-	query := `query Policy($id: String!) { policy(id: $id) { id description violations { id } } }`
+	query := `query Policy($id: String!) { policy(id: $id) { id description breachs { id } } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
 		return nil, err
@@ -30887,8 +31152,8 @@ func handlePolicyResource(ctx context.Context, request mcp.ReadResourceRequest) 
 	}, nil
 }
 
-func handleViolationKindsResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
-	query := `query ViolationKinds { repo { violationKinds { id priority autofixable reason solution } } }`
+func handleStatutesResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+	query := `query Statutes { repo { statutes { id priority autofixable reason solution } } }`
 	result, err := gql(query, nil)
 	if err != nil {
 		return nil, err
@@ -30906,9 +31171,9 @@ func handleViolationKindsResource(ctx context.Context, request mcp.ReadResourceR
 	}, nil
 }
 
-func handleViolationKindResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
+func handleStatuteResource(ctx context.Context, request mcp.ReadResourceRequest) ([]mcp.ResourceContents, error) {
 	id := strings.TrimPrefix(request.Params.URI, "semiorepo://VIOLATION-KIND/")
-	query := `query ViolationKind($id: String!) { violationKind(id: $id) { id priority autofixable reason solution } }`
+	query := `query Statute($id: String!) { statute(id: $id) { id priority autofixable reason solution } }`
 	result, err := gql(query, map[string]interface{}{"id": id})
 	if err != nil {
 		return nil, err
@@ -31017,11 +31282,11 @@ func printGQL(query string, variables map[string]interface{}) error {
 // #region 🔖Analyze Command
 
 // [🔖semio-repo/cli/main.go#Analyze Command](semiorepo://section/semio-repo/cli/main.go/ANALYZE-COMMAND)
-// Analyze command implementation for policy violation detection.
+// Analyze command implementation for policy breach detection.
 
 var analyzeCmd = &cobra.Command{
 	Use:   "analyze [scope]",
-	Short: "Analyze codebase for violations",
+	Short: "Analyze codebase for breachs",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var scope *string
 		if len(args) > 0 {
@@ -31033,7 +31298,7 @@ var analyzeCmd = &cobra.Command{
 			if err := ctx.LoadFiles(); err != nil {
 				return err
 			}
-			if err := ctx.LoadViolations(); err != nil {
+			if err := ctx.LoadBreachs(); err != nil {
 				return err
 			}
 			if err := ctx.LoadTickets(); err != nil {
@@ -31053,7 +31318,7 @@ var analyzeCmd = &cobra.Command{
 		return printGQL(`
 			query Analyze($scope: String) {
 				analyze(scope: $scope) {
-					violations {
+					breachs {
 						id
 						summary
 						scope
@@ -31074,11 +31339,11 @@ var analyzeCmd = &cobra.Command{
 // #region 🔖Fix Command
 
 // [🔖semio-repo/cli/main.go#Fix Command](semiorepo://section/semio-repo/cli/main.go/FIX-COMMAND)
-// Fix command implementation for automatic policy violation repair.
+// Fix command implementation for automatic policy breach repair.
 
 var fixCmd = &cobra.Command{
 	Use:   "fix [scope]",
-	Short: "Apply autofixes for violations",
+	Short: "Apply autofixes for breachs",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		var scope *string
 		if len(args) > 0 {
@@ -31093,7 +31358,7 @@ var fixCmd = &cobra.Command{
 				fix(scope: $scope) {
 					fixed
 					remaining
-					violations {
+					breachs {
 						id
 						summary
 						scope
@@ -31322,14 +31587,14 @@ func GetGitDiffLines(baseCommit, headCommit string, paths []string) (map[string]
 	return result, nil
 }
 
-func buildViolationID(scope string, line int, col int) string {
+func buildBreachID(scope string, line int, col int) string {
 	if line > 0 && col > 0 {
-		return fmt.Sprintf("semio-repo/violation/%s#%d:%d", scope, line, col)
+		return fmt.Sprintf("semio-repo/breach/%s#%d:%d", scope, line, col)
 	}
 	if line > 0 {
-		return fmt.Sprintf("semio-repo/violation/%s#%d", scope, line)
+		return fmt.Sprintf("semio-repo/breach/%s#%d", scope, line)
 	}
-	return fmt.Sprintf("semio-repo/violation/%s", scope)
+	return fmt.Sprintf("semio-repo/breach/%s", scope)
 }
 
 // CanCloseTicket MUST return a deterministic boolean result.
@@ -31769,7 +32034,7 @@ func GetFolderFiles(folderPath string, bundleID *string) ([]*File, error) {
 // AnalyzeFile MUST return a non-nil error when the operation fails.
 // AnalyzeFile performs the analyze file operation.
 // [🛠️semio-repo/cli/main.go#Types#Cli§AnalyzeFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/ANALYZEFILE)
-func AnalyzeFile(filePath string, bundles []Bundle) ([]Violation, error) {
+func AnalyzeFile(filePath string, bundles []Bundle) ([]Breach, error) {
 	scope := Scope{
 		Kind:     ScopeFile,
 		FilePath: filePath,
@@ -32066,22 +32331,22 @@ func (r *Resolver) Policies(ctx context.Context, repo *Repo) ([]*Policy, error) 
 	return r.Ctx.GetPolicies(), nil
 }
 
-// ViolationKinds MUST return a non-nil error when the operation fails.
-// ViolationKinds performs the violation kinds operation on the resolver.
-// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§ViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/VIOLATIONKINDS)
-func (r *Resolver) ViolationKinds(ctx context.Context, repo *Repo) ([]*ViolationKindMeta, error) {
-	return r.Ctx.GetViolationKinds(), nil
+// Statutes MUST return a non-nil error when the operation fails.
+// Statutes performs the statutes operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Statutes](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/VIOLATIONKINDS)
+func (r *Resolver) Statutes(ctx context.Context, repo *Repo) ([]*StatuteMeta, error) {
+	return r.Ctx.GetStatutes(), nil
 }
 
-// Violations MUST return a non-nil error when the operation fails.
-// Violations performs the violations operation on the resolver.
-// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Violations](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/VIOLATIONS)
-func (r *Resolver) Violations(ctx context.Context, repo *Repo, scope *string) ([]*Violation, error) {
+// Breachs MUST return a non-nil error when the operation fails.
+// Breachs performs the breachs operation on the resolver.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Resolver Methods§Breachs](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/RESOLVER-METHODS/VIOLATIONS)
+func (r *Resolver) Breachs(ctx context.Context, repo *Repo, scope *string) ([]*Breach, error) {
 	analysis, err := r.Ctx.Analyze(scope)
 	if err != nil {
 		return nil, err
 	}
-	return analysis.Violations, nil
+	return analysis.Breachs, nil
 }
 
 // #endregion 🔖Resolver Methods
@@ -32097,13 +32362,13 @@ func (r *Resolver) Violations(ctx context.Context, repo *Repo, scope *string) ([
 func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	scope := ParseScope(scopeRaw)
 	bundles := GetProjects()
-	violations, err := CheckPolicies(scope, bundles, policyIDs)
+	breachs, err := CheckPolicies(scope, bundles, policyIDs)
 	if err != nil {
 		return ToolResult{Error: err.Error()}
 	}
 
 	byPriority := make(map[string]int)
-	for range violations {
+	for range breachs {
 
 	}
 
@@ -32111,9 +32376,9 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 		Timestamp:  time.Now().Format(time.RFC3339),
 		Status:     "success",
 		Scope:      scopeRaw,
-		Violations: violations,
+		Breachs: breachs,
 		Summary: Summary{
-			Total:      len(violations),
+			Total:      len(breachs),
 			ByPriority: byPriority,
 		},
 	}
@@ -32163,7 +32428,7 @@ func ToolPolicyTree() ToolResult {
 		for _, k := range p.AllKinds() {
 			meta := k.Info()
 			vkData := map[string]interface{}{"id": string(k), "description": meta.Reason}
-			sb.WriteString("  " + renderEntityMarkdown("violationKind", vkData) + "\n")
+			sb.WriteString("  " + renderEntityMarkdown("statute", vkData) + "\n")
 		}
 	}
 	treeOutput := NewOutput()
@@ -32178,10 +32443,10 @@ func ToolPolicyCheck(policyID, scopeRaw string) ToolResult {
 	return ToolAnalyze(scopeRaw, []string{policyID})
 }
 
-// ToolPolicyViolationList MUST complete the operation successfully.
-// ToolPolicyViolationList performs the tool policy violation list operation.
-// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Tool Functions§ToolPolicyViolationList](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-TOOL-FUNCTIONS/TOOLPOLICYVIOLATIONLIST)
-func ToolPolicyViolationList(policyID string) ToolResult {
+// ToolPolicyBreachList MUST complete the operation successfully.
+// ToolPolicyBreachList performs the tool policy breach list operation.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Missing Tool Functions§ToolPolicyBreachList](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/MISSING-TOOL-FUNCTIONS/TOOLPOLICYVIOLATIONLIST)
+func ToolPolicyBreachList(policyID string) ToolResult {
 
 	return ToolAnalyze("semio", []string{policyID})
 }
@@ -33000,16 +33265,16 @@ func StreamGoals(ctx context.Context, out chan<- *Goal, opts ...StreamOptions) e
 	return nil
 }
 
-// StreamViolationKinds MUST invoke the callback for each matching violation kinds entry.
-// StreamViolationKinds streams violation kinds entries through the callback.
-// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§StreamViolationKinds](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/STREAMVIOLATIONKINDS)
-func StreamViolationKinds(ctx context.Context, out chan<- ViolationKindMeta, opts ...StreamOptions) error {
+// StreamStatutes MUST invoke the callback for each matching statutes entry.
+// StreamStatutes streams statutes entries through the callback.
+// [🛠️semio-repo/cli/main.go#Types#Cli#Goals§StreamStatutes](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/STREAMVIOLATIONKINDS)
+func StreamStatutes(ctx context.Context, out chan<- StatuteMeta, opts ...StreamOptions) error {
 	defer close(out)
 	var options StreamOptions
 	if len(opts) > 0 {
 		options = opts[0]
 	}
-	for _, meta := range violationKindInfoTable {
+	for _, meta := range statuteInfoTable {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -33810,7 +34075,7 @@ func emojiText(emoji string) string {
 	textDefaultEmojis := []string{
 		"\U0001F3D7", "\u2328", "\U0001F5B1", "\U0001F5C3",
 		"\u2699", "\u2696", "\U0001F3F7", "\U0001F6E0",
-		"\u2702", "\U0001F6E1",
+		"\u2702", "\U0001F6E1", "\U0001F5D1",
 	}
 	base := strings.ReplaceAll(stripped, "\uFE0F", "")
 	for _, td := range textDefaultEmojis {
@@ -33911,6 +34176,19 @@ func definitionKindEmoji(data map[string]interface{}) string {
 		return emojiText(EmojiDefinitionConstant)
 	}
 	return emojiText(EmojiDefinitionImpl)
+}
+
+func interactionKindEmoji(data map[string]interface{}) string {
+	kind, _ := data["kind"].(string)
+	switch kind {
+	case "finished":
+		return emojiText(EmojiInteractionFinished)
+	case "restarted":
+		return emojiText(EmojiInteractionRestarted)
+	case "deleted":
+		return emojiText(EmojiInteractionDeleted)
+	}
+	return emojiText(EmojiInteractionStarted)
 }
 
 // ArtifactRef holds the data fields for a artifact ref record.
@@ -34101,10 +34379,10 @@ func ParseSectionUriPath(uriPath string) (filePath string, sectionSlugs []string
 	return
 }
 
-// ViolationKindIdToUriPath MUST complete the operation successfully.
-// ViolationKindIdToUriPath performs the violation kind id to uri path operation.
-// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ViolationKindIdToUriPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/VIOLATIONKINDIDTOURIPATH)
-func ViolationKindIdToUriPath(id string) string {
+// StatuteIdToUriPath MUST complete the operation successfully.
+// StatuteIdToUriPath performs the statute id to uri path operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§StatuteIdToUriPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/VIOLATIONKINDIDTOURIPATH)
+func StatuteIdToUriPath(id string) string {
 	parts := strings.Split(id, "/")
 	for i, p := range parts {
 		parts[i] = Slugify(p)
@@ -34112,10 +34390,10 @@ func ViolationKindIdToUriPath(id string) string {
 	return strings.Join(parts, "/")
 }
 
-// ViolationKindUriPathToId MUST complete the operation successfully.
-// ViolationKindUriPathToId performs the violation kind uri path to id operation.
-// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§ViolationKindUriPathToId](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/VIOLATIONKINDURIPATHTOID)
-func ViolationKindUriPathToId(uriPath string) string {
+// StatuteUriPathToId MUST complete the operation successfully.
+// StatuteUriPathToId performs the statute uri path to id operation.
+// [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§StatuteUriPathToId](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/VIOLATIONKINDURIPATHTOID)
+func StatuteUriPathToId(uriPath string) string {
 	parts := strings.Split(uriPath, "/")
 	for i, p := range parts {
 		parts[i] = strings.ToLower(strings.ReplaceAll(p, "-", "-"))
@@ -34133,13 +34411,14 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 	case "projects":
 		return emojiText(EmojiProjects)
 	case "project":
-		return fmt.Sprintf("%s@%s", emojiText(projectKindEmoji(data)), data["name"])
+		name, _ := data["name"].(string)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiProjects), projectKindEmoji(data), name)
 	case "bundles":
 		code, _ := data["projectCode"].(string)
 		return fmt.Sprintf("%s%s", emojiText(EmojiBundles), code)
 	case "bundle":
 		name, _ := data["name"].(string)
-		return fmt.Sprintf("%s%s", emojiText(bundleKindEmoji(data)), name)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiBundles), bundleKindEmoji(data), name)
 	case "folders":
 		parentPath, _ := data["parentPath"].(string)
 		if parentPath == "" {
@@ -34148,7 +34427,7 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		return fmt.Sprintf("%s%s", emojiText(EmojiFolders), parentPath)
 	case "folder":
 		path, _ := data["path"].(string)
-		return fmt.Sprintf("%s%s", emojiText(folderKindEmoji(data)), path)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiFolders), folderKindEmoji(data), path)
 	case "files":
 		folderPath, _ := data["folderPath"].(string)
 		if folderPath == "" {
@@ -34160,7 +34439,7 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		if path == "" {
 			path, _ = data["id"].(string)
 		}
-		return fmt.Sprintf("%s%s", emojiText(fileKindEmoji(data)), path)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiFiles), fileKindEmoji(data), path)
 	case "sections":
 		filePath, _ := data["filePath"].(string)
 		parentPath, _ := data["parentPath"].(string)
@@ -34193,7 +34472,7 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		k := definitionKindEmoji(data)
 		id, _ := data["id"].(string)
 		if id != "" {
-			return fmt.Sprintf("%s%s", emojiText(k), id)
+			return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), k, id)
 		}
 		filePath, _ := data["filePath"].(string)
 		sectionPath, _ := data["sectionPath"].(string)
@@ -34203,7 +34482,7 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 			val += "#" + sectionPath
 		}
 		val += "§" + name
-		return fmt.Sprintf("%s%s", emojiText(k), val)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), k, val)
 	case "tickets":
 		return emojiText(EmojiTickets)
 	case "ticket":
@@ -34211,7 +34490,6 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		month, _ := data["month"].(float64)
 		day, _ := data["day"].(float64)
 		slug, _ := data["slug"].(string)
-		status, _ := data["status"].(string)
 		if year == 0 && month == 0 && day == 0 {
 			if id, ok := data["id"].(string); ok && id != "" {
 				return id
@@ -34219,15 +34497,12 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 			if uri, ok := data["uri"].(string); ok && uri != "" {
 				if strings.HasPrefix(uri, "semiorepo://ticket/") {
 					suffix := strings.TrimPrefix(uri, "semiorepo://ticket/")
-					return fmt.Sprintf("%s%s", emojiText(EmojiTicket), suffix)
+					parts := strings.Split(suffix, "/")
+					return fmt.Sprintf("%s%s", emojiText(EmojiTicket), strings.Join(parts, ""))
 				}
 			}
 		}
-		id := fmt.Sprintf("%s%04d/%02d/%02d/%s", emojiText(EmojiTicket), int(year), int(month), int(day), slug)
-		if status != "" {
-			id += "?" + status
-		}
-		return id
+		return fmt.Sprintf("%s%04d%02d%02d%s", emojiText(EmojiTicket), int(year), int(month), int(day), slug)
 	case "goals":
 		return emojiText(EmojiGoals)
 	case "goal":
@@ -34250,15 +34525,13 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 		return emojiText(EmojiPolicies)
 	case "policy":
 		slug, _ := data["id"].(string)
-		if !strings.HasPrefix(slug, "/") {
-			slug = "/" + slug
-		}
+		slug = strings.TrimPrefix(slug, "/")
 		return fmt.Sprintf("%s%s", emojiText(EmojiPolicy), slug)
-	case "violationKinds":
-		return emojiText(EmojiViolationKinds)
-	case "violationKind":
+	case "statutes":
+		return emojiText(EmojiStatutes)
+	case "statute":
 		id, _ := data["id"].(string)
-		return fmt.Sprintf("%s%s", emojiText(EmojiViolationKind), ViolationKindPathToIdValue(id))
+		return fmt.Sprintf("%s%s", emojiText(EmojiStatute), StatutePathToIdValue(id))
 	case "contributors":
 		return emojiText(EmojiContributors)
 	case "contributor":
@@ -34269,6 +34542,12 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 	case "commit":
 		sha, _ := data["sha"].(string)
 		return fmt.Sprintf("%s%s", emojiText(EmojiCommit), sha)
+	case "interactions":
+		return emojiText(EmojiInteractions)
+	case "interaction":
+		k := interactionKindEmoji(data)
+		entityID, _ := data["entityId"].(string)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiInteractions), k, entityID)
 	}
 	return ""
 }
@@ -34284,21 +34563,21 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 		return "semiorepo://projects"
 	case "project":
 		name, _ := data["name"].(string)
-		return fmt.Sprintf("semiorepo://project/@%s", name)
+		return fmt.Sprintf("semiorepo://project/@%s", PathToUriPath(name))
 	case "bundles":
 		return "semiorepo://bundles"
 	case "bundle":
 		name, _ := data["name"].(string)
-		return fmt.Sprintf("semiorepo://bundle/%s", name)
+		return fmt.Sprintf("semiorepo://bundle/%s", PathToUriPath(name))
 	case "folders":
 		parentPath, _ := data["parentPath"].(string)
 		if parentPath == "" {
 			return "semiorepo://folders"
 		}
-		return fmt.Sprintf("semiorepo://folders/%s", parentPath)
+		return fmt.Sprintf("semiorepo://folders/%s", PathToUriPath(parentPath))
 	case "folder":
 		path, _ := data["path"].(string)
-		return fmt.Sprintf("semiorepo://folder/%s", path)
+		return fmt.Sprintf("semiorepo://folder/%s", PathToUriPath(path))
 	case "files":
 		folderPath, _ := data["folderPath"].(string)
 		if folderPath == "" {
@@ -34347,13 +34626,10 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 			}
 			if id, ok := data["id"].(string); ok && strings.HasPrefix(id, emojiText(EmojiTicket)) {
 				suffix := strings.TrimPrefix(id, emojiText(EmojiTicket))
-				if idx := strings.Index(suffix, "?"); idx >= 0 {
-					suffix = suffix[:idx]
-				}
 				return "semiorepo://ticket/" + suffix
 			}
 		}
-		return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", int(year), int(month), int(day), slug)
+		return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", int(year), int(month), int(day), strings.ToUpper(slug))
 	case "goals":
 		return "semiorepo://goals"
 	case "goal":
@@ -34371,17 +34647,17 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 		return "semiorepo://todos"
 	case "todo":
 		slug, _ := data["id"].(string)
-		return fmt.Sprintf("semiorepo://todo/%s", slug)
+		return fmt.Sprintf("semiorepo://todo/%s", strings.ToUpper(slug))
 	case "policies":
 		return "semiorepo://policies"
 	case "policy":
 		id, _ := data["id"].(string)
 		return fmt.Sprintf("semiorepo://policy/%s", strings.ToUpper(Slugify(id)))
-	case "violationKinds":
-		return "semiorepo://violationKinds"
-	case "violationKind":
+	case "statutes":
+		return "semiorepo://statutes"
+	case "statute":
 		id, _ := data["id"].(string)
-		return fmt.Sprintf("semiorepo://violationKind/%s", ViolationKindIdToUriPath(id))
+		return fmt.Sprintf("semiorepo://statute/%s", StatuteIdToUriPath(id))
 	case "contributors":
 		return "semiorepo://contributors"
 	case "contributor":
@@ -34392,6 +34668,18 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 	case "commit":
 		sha, _ := data["sha"].(string)
 		return fmt.Sprintf("semiorepo://commit/%s", strings.ToUpper(sha))
+	case "interactions":
+		return "semiorepo://interactions"
+	case "interaction":
+		entityUri, _ := data["entityUri"].(string)
+		if entityUri == "" {
+			entityID, _ := data["entityId"].(string)
+			entityUri = IdToUri(entityID)
+		}
+		if entityUri != "" {
+			return "semiorepo://interaction/" + strings.TrimPrefix(entityUri, "semiorepo://")
+		}
+		return ""
 	}
 	return ""
 }
@@ -34400,118 +34688,155 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 // IdToUri performs the id to uri operation.
 // [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§IdToUri](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/IDTOURI)
 func IdToUri(id string) string {
-	type emojiMapping struct {
-		emoji      string
-		artifact   string
-		collection string
-	}
-	mappings := []emojiMapping{
-		{"🌍", "repo", ""},
-		{"🏗️", "", "projects"},
-		{"🧰", "project", ""},
-		{"🔬", "project", ""},
-		{"📦", "", "bundles"},
-		{"📚", "bundle", ""},
-		{"🛂", "bundle", ""},
-		{"⌨️", "bundle", ""},
-		{"🖱️", "bundle", ""},
-		{"📔", "bundle", ""},
-		{"🌐", "bundle", ""},
-		{"🏪", "bundle", ""},
-		{"🗃️", "folder", ""},
-		{"📁", "folder", "folders"},
-		{"💻", "file", ""},
-		{"🧪", "file", ""},
-		{"📃", "file", ""},
-		{"⚙️", "file", ""},
-		{"💾", "file", ""},
-		{"⚖️", "file", ""},
-		{"📄", "file", "files"},
-		{"🔖", "section", ""},
-		{"🏷️", "", "definitions"},
-		{"🛠️", "definition", ""},
-		{"✂️️", "definition", ""},
-		{"🪨", "definition", ""},
-		{"🎫", "ticket", "tickets"},
-		{"🎯", "goal", "goals"},
-		{"✍", "draft", "drafts"},
-		{"📝", "todo", "todos"},
-		{"🛡️️", "policy", "policies"},
-		{"🚫", "violationKind", "violationKinds"},
-		{"👤", "contributor", "contributors"},
-		{"🔀", "commit", "commits"},
-	}
-
-	normalized := strings.ReplaceAll(id, "\uFE0E", "\uFE0F")
+	normalized := strings.ReplaceAll(id, "\uFE0E", "")
 	normalized = strings.ReplaceAll(normalized, "\uFE0F", "")
 	normalized = strings.TrimSpace(normalized)
-
-	for _, m := range mappings {
-		baseEmoji := strings.ReplaceAll(m.emoji, "\uFE0F", "")
-		baseEmoji = strings.ReplaceAll(baseEmoji, "\uFE0E", "")
-		if !strings.HasPrefix(normalized, baseEmoji) {
-			continue
+	if normalized == "" {
+		return ""
+	}
+	norm := func(e string) string {
+		r := strings.ReplaceAll(e, "\uFE0F", "")
+		return strings.ReplaceAll(r, "\uFE0E", "")
+	}
+	stripEntity := func(s, entity string) (string, bool) {
+		be := norm(entity)
+		if strings.HasPrefix(s, be) {
+			return strings.TrimPrefix(s, be), true
 		}
-		value := strings.TrimSpace(strings.TrimPrefix(normalized, baseEmoji))
-
-		if value == "" {
-			if m.collection != "" {
-				return "semiorepo://" + m.collection
+		return s, false
+	}
+	stripKind := func(s string, kinds []string) string {
+		for _, k := range kinds {
+			bk := norm(k)
+			if strings.HasPrefix(s, bk) {
+				return strings.TrimPrefix(s, bk)
 			}
-			if m.artifact == "repo" {
-				return "semiorepo://repo"
-			}
-			continue
 		}
-
-		if m.emoji == "👤" {
-			if strings.HasPrefix(value, "@") {
-				return "semiorepo://project/@" + PathToUriPath(strings.TrimPrefix(value, "@"))
-			}
-			return "semiorepo://contributor/" + strings.ToUpper(Slugify(value))
+		return s
+	}
+	if rest, ok := stripEntity(normalized, EmojiRepo); ok {
+		if rest == "" {
+			return "semiorepo://repo"
 		}
-		if m.emoji == "🧰" || m.emoji == "🔬" {
-			return "semiorepo://project/@" + PathToUriPath(strings.TrimPrefix(value, "@"))
+	}
+	if rest, ok := stripEntity(normalized, EmojiProjects); ok {
+		if rest == "" {
+			return "semiorepo://projects"
 		}
-
-		if m.emoji == "📁" {
-			return "semiorepo://folder/" + PathToUriPath(value)
+		rest = stripKind(rest, []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch})
+		return "semiorepo://project/@" + PathToUriPath(rest)
+	}
+	if rest, ok := stripEntity(normalized, EmojiBundles); ok {
+		stripped := stripKind(rest, []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets})
+		if stripped != rest {
+			return "semiorepo://bundle/" + PathToUriPath(stripped)
 		}
-		if m.emoji == "📄" {
-			return "semiorepo://file/" + PathToUriPath(value)
+		if rest == "" {
+			return "semiorepo://bundles"
 		}
-
-		switch m.artifact {
-		case "project":
-			return "semiorepo://project/@" + PathToUriPath(strings.TrimPrefix(value, "@"))
-		case "bundle":
-			return "semiorepo://bundle/" + PathToUriPath(value)
-		case "folder":
-			return "semiorepo://folder/" + PathToUriPath(value)
-		case "file":
-			return "semiorepo://file/" + PathToUriPath(value)
-		case "section":
-			return "semiorepo://section/" + SectionIdValueToUriPath(value)
-		case "definition":
-			return "semiorepo://definition/" + DefinitionIdValueToUriPath(value)
-		case "ticket":
-			clean := strings.SplitN(value, "?", 2)[0]
-			return "semiorepo://ticket/" + PathToUriPath(clean)
-		case "goal":
-			return "semiorepo://goal/" + PathToUriPath(value)
-		case "draft":
-			return "semiorepo://draft/" + strings.ToUpper(Slugify(value))
-		case "todo":
-			return "semiorepo://todo/" + strings.ToUpper(Slugify(value))
-		case "policy":
-			return "semiorepo://policy/" + strings.ToUpper(Slugify(strings.TrimPrefix(value, "/")))
-		case "violationKind":
-			return "semiorepo://violationKind/" + ViolationKindIdToUriPath(ViolationKindIdValueToPath(value))
-		case "contributor":
-			return "semiorepo://contributor/" + strings.ToUpper(value)
-		case "commit":
-			return "semiorepo://commit/" + strings.ToUpper(value)
+		return "semiorepo://bundles"
+	}
+	if rest, ok := stripEntity(normalized, EmojiFolders); ok {
+		stripped := stripKind(rest, []string{EmojiFolderOrg, EmojiFolderRequired})
+		if stripped != rest {
+			return "semiorepo://folder/" + PathToUriPath(stripped)
 		}
+		if rest == "" {
+			return "semiorepo://folders"
+		}
+		return "semiorepo://folders/" + PathToUriPath(rest)
+	}
+	if rest, ok := stripEntity(normalized, EmojiFiles); ok {
+		stripped := stripKind(rest, []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense})
+		if stripped != rest {
+			return "semiorepo://file/" + PathToUriPath(stripped)
+		}
+		if rest == "" {
+			return "semiorepo://files"
+		}
+		return "semiorepo://files/" + PathToUriPath(rest)
+	}
+	if rest, ok := stripEntity(normalized, EmojiSections); ok {
+		if rest == "" {
+			return "semiorepo://sections"
+		}
+		return "semiorepo://section/" + SectionIdValueToUriPath(rest)
+	}
+	if rest, ok := stripEntity(normalized, EmojiDefinitions); ok {
+		stripped := stripKind(rest, []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant})
+		if stripped != rest {
+			return "semiorepo://definition/" + DefinitionIdValueToUriPath(stripped)
+		}
+		if rest == "" {
+			return "semiorepo://definitions"
+		}
+		return "semiorepo://definitions/" + PathToUriPath(rest)
+	}
+	if rest, ok := stripEntity(normalized, EmojiTickets); ok {
+		if rest == "" {
+			return "semiorepo://tickets"
+		}
+		if len(rest) >= 8 {
+			year := rest[0:4]
+			month := rest[4:6]
+			day := rest[6:8]
+			slug := rest[8:]
+			return fmt.Sprintf("semiorepo://ticket/%s/%s/%s/%s", year, month, day, strings.ToUpper(slug))
+		}
+		return "semiorepo://ticket/" + PathToUriPath(rest)
+	}
+	if rest, ok := stripEntity(normalized, EmojiGoals); ok {
+		if rest == "" {
+			return "semiorepo://goals"
+		}
+		return "semiorepo://goal/" + PathToUriPath(rest)
+	}
+	if rest, ok := stripEntity(normalized, EmojiDrafts); ok {
+		if rest == "" {
+			return "semiorepo://drafts"
+		}
+		return "semiorepo://draft/" + strings.ToUpper(Slugify(rest))
+	}
+	if rest, ok := stripEntity(normalized, EmojiTodos); ok {
+		if rest == "" {
+			return "semiorepo://todos"
+		}
+		return "semiorepo://todo/" + strings.ToUpper(Slugify(rest))
+	}
+	if rest, ok := stripEntity(normalized, EmojiPolicies); ok {
+		if rest == "" {
+			return "semiorepo://policies"
+		}
+		return "semiorepo://policy/" + strings.ToUpper(Slugify(rest))
+	}
+	if rest, ok := stripEntity(normalized, EmojiStatutes); ok {
+		if rest == "" {
+			return "semiorepo://statutes"
+		}
+		return "semiorepo://statute/" + StatuteIdToUriPath(StatuteIdValueToPath(rest))
+	}
+	if rest, ok := stripEntity(normalized, EmojiContributors); ok {
+		if rest == "" {
+			return "semiorepo://contributors"
+		}
+		return "semiorepo://contributor/" + strings.ToUpper(Slugify(rest))
+	}
+	if rest, ok := stripEntity(normalized, EmojiCommits); ok {
+		if rest == "" {
+			return "semiorepo://commits"
+		}
+		return "semiorepo://commit/" + strings.ToUpper(rest)
+	}
+	if rest, ok := stripEntity(normalized, EmojiInteractions); ok {
+		if rest == "" {
+			return "semiorepo://interactions"
+		}
+		stripped := stripKind(rest, []string{EmojiInteractionStarted, EmojiInteractionFinished, EmojiInteractionRestarted, EmojiInteractionDeleted})
+		entityUri := IdToUri(stripped)
+		if entityUri == "" {
+			return ""
+		}
+		return "semiorepo://interaction/" + strings.TrimPrefix(entityUri, "semiorepo://")
 	}
 	return ""
 }
@@ -34524,110 +34849,128 @@ func UriToId(uri string) string {
 		return ""
 	}
 	p := strings.TrimPrefix(uri, "semiorepo://")
-
 	switch {
 	case p == "repo":
-		return emojiText("🌍")
+		return emojiText(EmojiRepo)
 	case p == "projects":
-		return emojiText("🏗️")
+		return emojiText(EmojiProjects)
 	case strings.HasPrefix(p, "project/"):
-		code := PathFromUriPath(strings.TrimPrefix(p, "project/"))
-		return fmt.Sprintf("%s%s", emojiText("👤"), code)
+		code := PathFromUriPath(strings.TrimPrefix(p, "project/@"))
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiProjects), emojiText(EmojiProjectUser), code)
 	case p == "bundles":
-		return emojiText("📦")
+		return emojiText(EmojiBundles)
 	case strings.HasPrefix(p, "bundle/"):
 		name := PathFromUriPath(strings.TrimPrefix(p, "bundle/"))
-		return fmt.Sprintf("%s%s", emojiText("📚"), name)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiBundles), emojiText(EmojiBundleLibrary), name)
 	case p == "folders" || strings.HasPrefix(p, "folders/"):
 		v := strings.TrimPrefix(p, "folders")
 		v = strings.TrimPrefix(v, "/")
 		if v == "" {
-			return emojiText("📁")
+			return emojiText(EmojiFolders)
 		}
-		return fmt.Sprintf("%s%s", emojiText("📁"), PathFromUriPath(v))
+		return fmt.Sprintf("%s%s", emojiText(EmojiFolders), PathFromUriPath(v))
 	case strings.HasPrefix(p, "folder/"):
 		v := PathFromUriPath(strings.TrimPrefix(p, "folder/"))
-		return fmt.Sprintf("%s%s", emojiText("📁"), v)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiFolders), emojiText(EmojiFolderOrg), v)
 	case p == "files" || strings.HasPrefix(p, "files/"):
 		v := strings.TrimPrefix(p, "files")
 		v = strings.TrimPrefix(v, "/")
 		if v == "" {
-			return emojiText("📄")
+			return emojiText(EmojiFiles)
 		}
-		return fmt.Sprintf("%s%s", emojiText("📄"), PathFromUriPath(v))
+		return fmt.Sprintf("%s%s", emojiText(EmojiFiles), PathFromUriPath(v))
 	case strings.HasPrefix(p, "file/"):
 		v := PathFromUriPath(strings.TrimPrefix(p, "file/"))
-		return fmt.Sprintf("%s%s", emojiText("📄"), v)
-	case strings.HasPrefix(p, "sections/"):
-		v := PathFromUriPath(strings.TrimPrefix(p, "sections/"))
-		return fmt.Sprintf("%s%s", emojiText("🔖"), v)
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiFiles), emojiText(EmojiFileCode), v)
+	case p == "sections" || strings.HasPrefix(p, "sections/"):
+		v := strings.TrimPrefix(p, "sections")
+		v = strings.TrimPrefix(v, "/")
+		if v == "" {
+			return emojiText(EmojiSections)
+		}
+		return fmt.Sprintf("%s%s", emojiText(EmojiSections), PathFromUriPath(v))
 	case strings.HasPrefix(p, "section/"):
 		v := strings.TrimPrefix(p, "section/")
 		filePath, slugs := ParseSectionUriPath(v)
 		if len(slugs) == 0 {
-			return fmt.Sprintf("%s%s", emojiText("🔖"), PathFromUriPath(filePath))
+			return fmt.Sprintf("%s%s", emojiText(EmojiSection), PathFromUriPath(filePath))
 		}
-		return fmt.Sprintf("%s%s#%s", emojiText("🔖"), PathFromUriPath(filePath), strings.Join(slugs, "#"))
-	case strings.HasPrefix(p, "definitions/"):
-		v := strings.TrimPrefix(p, "definitions/")
-		return fmt.Sprintf("%s%s", emojiText("🏷️"), v)
+		return fmt.Sprintf("%s%s#%s", emojiText(EmojiSection), PathFromUriPath(filePath), strings.Join(slugs, "#"))
+	case p == "definitions" || strings.HasPrefix(p, "definitions/"):
+		v := strings.TrimPrefix(p, "definitions")
+		v = strings.TrimPrefix(v, "/")
+		if v == "" {
+			return emojiText(EmojiDefinitions)
+		}
+		return fmt.Sprintf("%s%s", emojiText(EmojiDefinitions), v)
 	case strings.HasPrefix(p, "definition/"):
 		v := strings.TrimPrefix(p, "definition/")
 		filePath, slugs := ParseSectionUriPath(v)
 		path := PathFromUriPath(filePath)
 		if len(slugs) == 0 {
-			return fmt.Sprintf("%s%s", emojiText("🛠️"), path)
+			return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl), path)
 		}
 		if len(slugs) == 1 {
-			return fmt.Sprintf("%s%s§%s", emojiText("🛠️"), path, slugs[0])
+			return fmt.Sprintf("%s%s%s§%s", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl), path, slugs[0])
 		}
 		sectionPart := strings.Join(slugs[:len(slugs)-1], "#")
 		defPart := slugs[len(slugs)-1]
-		return fmt.Sprintf("%s%s#%s§%s", emojiText("🛠️"), path, sectionPart, defPart)
+		return fmt.Sprintf("%s%s%s#%s§%s", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl), path, sectionPart, defPart)
 	case p == "tickets":
-		return emojiText("🎫")
+		return emojiText(EmojiTickets)
 	case strings.HasPrefix(p, "ticket/"):
 		v := strings.TrimPrefix(p, "ticket/")
-		return fmt.Sprintf("%s%s", emojiText("🎫"), v)
+		parts := strings.SplitN(v, "/", 4)
+		if len(parts) == 4 {
+			return fmt.Sprintf("%s%s%s%s%s", emojiText(EmojiTicket), parts[0], parts[1], parts[2], parts[3])
+		}
+		return fmt.Sprintf("%s%s", emojiText(EmojiTicket), strings.Join(parts, ""))
 	case p == "goals":
-		return emojiText("🎯")
+		return emojiText(EmojiGoals)
 	case strings.HasPrefix(p, "goal/"):
 		v := strings.TrimPrefix(p, "goal/")
-		return fmt.Sprintf("%s%s", emojiText("🎯"), v)
+		return fmt.Sprintf("%s%s", emojiText(EmojiGoal), v)
 	case p == "drafts":
-		return emojiText("✍")
+		return emojiText(EmojiDrafts)
 	case strings.HasPrefix(p, "draft/"):
 		v := strings.ToLower(strings.TrimPrefix(p, "draft/"))
-		return fmt.Sprintf("%s%s", emojiText("✍"), v)
+		return fmt.Sprintf("%s%s", emojiText(EmojiDraft), v)
 	case p == "todos":
-		return emojiText("📝")
+		return emojiText(EmojiTodos)
 	case strings.HasPrefix(p, "todo/"):
 		v := strings.ToLower(strings.TrimPrefix(p, "todo/"))
-		return fmt.Sprintf("%s%s", emojiText("📝"), v)
+		return fmt.Sprintf("%s%s", emojiText(EmojiTodo), v)
 	case p == "policies":
-		return emojiText("🛡️️")
+		return emojiText(EmojiPolicies)
 	case strings.HasPrefix(p, "policy/"):
 		v := strings.TrimPrefix(p, "policy/")
 		v = strings.ToLower(v)
-		if !strings.HasPrefix(v, "/") {
-			v = "/" + v
-		}
-		return fmt.Sprintf("%s%s", emojiText("🛡️️"), v)
-	case p == "violationKinds":
-		return emojiText("🚫")
-	case strings.HasPrefix(p, "violationKind/"):
-		v := strings.TrimPrefix(p, "violationKind/")
-		return fmt.Sprintf("%s%s", emojiText("🚫"), ViolationKindPathToIdValue(ViolationKindUriPathToId(v)))
+		return fmt.Sprintf("%s%s", emojiText(EmojiPolicies), v)
+	case p == "statutes":
+		return emojiText(EmojiStatutes)
+	case strings.HasPrefix(p, "statute/"):
+		v := strings.TrimPrefix(p, "statute/")
+		return fmt.Sprintf("%s%s", emojiText(EmojiStatutes), StatutePathToIdValue(StatuteUriPathToId(v)))
 	case p == "contributors":
-		return emojiText("👤")
+		return emojiText(EmojiContributors)
 	case strings.HasPrefix(p, "contributor/"):
 		v := strings.TrimPrefix(p, "contributor/")
-		return fmt.Sprintf("%s%s", emojiText("👤"), strings.ToLower(v))
+		return fmt.Sprintf("%s%s", emojiText(EmojiContributors), strings.ToLower(v))
 	case p == "commits":
-		return emojiText("🔀")
+		return emojiText(EmojiCommits)
 	case strings.HasPrefix(p, "commit/"):
 		v := strings.TrimPrefix(p, "commit/")
-		return fmt.Sprintf("%s%s", emojiText("🔀"), strings.ToLower(v))
+		return fmt.Sprintf("%s%s", emojiText(EmojiCommits), strings.ToLower(v))
+	case p == "interactions":
+		return emojiText(EmojiInteractions)
+	case strings.HasPrefix(p, "interaction/"):
+		v := strings.TrimPrefix(p, "interaction/")
+		innerUri := "semiorepo://" + v
+		entityId := UriToId(innerUri)
+		if entityId == "" {
+			return ""
+		}
+		return fmt.Sprintf("%s%s%s", emojiText(EmojiInteractions), emojiText(EmojiInteractionStarted), entityId)
 	}
 	return ""
 }
@@ -34822,7 +35165,7 @@ func collectEntityProps(kind string, data map[string]interface{}, truncateDesc b
 	case "policy":
 		desc, _ := data["description"].(string)
 		appendNonEmpty(desc)
-	case "violationKind":
+	case "statute":
 		desc, _ := data["description"].(string)
 		appendNonEmpty(desc)
 	case "project":
@@ -34878,7 +35221,7 @@ func inferEntityKind(key string) string {
 		{"todo", "todo"},
 		{"draft", "draft"},
 		{"policy", "policy"},
-		{"violationkind", "violationKind"},
+		{"breachkind", "statute"},
 		{"bundle", "bundle"},
 		{"project", "project"},
 		{"commit", "commit"},

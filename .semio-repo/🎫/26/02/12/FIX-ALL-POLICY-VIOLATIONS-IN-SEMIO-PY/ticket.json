@@ -1,0 +1,411 @@
+{
+  "title": "Fix All Policy Breachs in Semio Py",
+  "status": "closed",
+  "prompt": "Fix all 985 policy breachs in semio/py/semio.py",
+  "summary": "Fixed all 985 policy breachs in semio/py/semio.py: 45 section summaries, 469 definition summaries, 470 definition specs, 1 orphan fix. 0 breachs remaining.",
+  "goal": "FIX-POLICY-VIOLATIONS/FIX-ALL-PY-VIOLATIONS",
+  "interactions": [
+    {
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "5684eabaeaa47e48c50c1bbc7dd84f6f03a1ae12",
+      "prompt": "Fix all 985 policy breachs in semio/py/semio.py",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio/py",
+              "lines": {
+                "added": 969,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/py/semio.py",
+              "lines": {
+                "added": 985,
+                "removed": 16
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": [
+            {
+              "path": "semio/py/semio.py#TODOs",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            }
+          ],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio/py/semio.py#Domain#Concept",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Port",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Logging",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Model",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Kit#Design Family Helpers",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#File",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Plane",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#FlattenDesign",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Author",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Imports",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Utility",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Stat",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Moved Graphene Nodes",
+              "lines": {
+                "added": 19,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Piece",
+              "lines": {
+                "added": 41,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Tag",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Modeling#Graphql",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Attribute",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Folder",
+              "lines": {
+                "added": 31,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Type",
+              "lines": {
+                "added": 55,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Prop",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Connector",
+              "lines": {
+                "added": 34,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Kit Diff Operations",
+              "lines": {
+                "added": 41,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Exceptions",
+              "lines": {
+                "added": 27,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#ArtifactAuthor",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Coord",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Side",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Location",
+              "lines": {
+                "added": 25,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Connection",
+              "lines": {
+                "added": 39,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Connector#CompatiblePort",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Point",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Graph Operations",
+              "lines": {
+                "added": 9,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Kit Import/Export",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Spatial Math",
+              "lines": {
+                "added": 7,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Type Hints",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Constants",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Modeling#Primitives",
+              "lines": {
+                "added": 29,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Vector",
+              "lines": {
+                "added": 15,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Design",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Validation#Dict-based Validation",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Quality",
+              "lines": {
+                "added": 53,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Kit",
+              "lines": {
+                "added": 37,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Benchmark",
+              "lines": {
+                "added": 23,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Group",
+              "lines": {
+                "added": 17,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Layer",
+              "lines": {
+                "added": 21,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Validation",
+              "lines": {
+                "added": 33,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#Domain#Kit#Type Family Helpers",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio/py/semio.py#TODOs",
+              "lines": {
+                "added": 0,
+                "removed": 14
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [],
+          "added": null
+        }
+      },
+      "date": "2026-02-12 11:57:39"
+    }
+  ]
+}

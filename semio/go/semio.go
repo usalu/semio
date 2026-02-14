@@ -4135,7 +4135,7 @@ type Fix struct {
 	Diff  KitDiff `json:"diff"`
 }
 
-// Problem represents a single validation constraint violation.
+// Problem represents a single validation constraint breach.
 // [🛠️semio/go/semio.go#Validation§Problem](semiorepo://definition/semio/go/semio.go/VALIDATION/PROBLEM)
 type Problem struct {
 	ConstraintId string         `json:"constraintId"`

@@ -272,9 +272,9 @@ CREATE TABLE IF NOT EXISTS policy_scope (
 
 -- #endregion 🔖Policy
 
--- #region 🔖Violation Kind
+-- #region 🔖Breach Kind
 
-CREATE TABLE IF NOT EXISTS violation_kind (
+CREATE TABLE IF NOT EXISTS statute (
     id TEXT PRIMARY KEY,
     policy_id TEXT NOT NULL REFERENCES policy(id) ON DELETE CASCADE,
     priority TEXT NOT NULL CHECK (priority IN ('high', 'medium', 'low')),
@@ -283,16 +283,16 @@ CREATE TABLE IF NOT EXISTS violation_kind (
     solution TEXT NOT NULL
 );
 
-CREATE INDEX IF NOT EXISTS idx_violation_kind_policy ON violation_kind(policy_id);
-CREATE INDEX IF NOT EXISTS idx_violation_kind_priority ON violation_kind(priority);
+CREATE INDEX IF NOT EXISTS idx_statute_policy ON statute(policy_id);
+CREATE INDEX IF NOT EXISTS idx_statute_priority ON statute(priority);
 
--- #endregion 🔖Violation Kind
+-- #endregion 🔖Breach Kind
 
--- #region 🔖Violation
+-- #region 🔖Breach
 
-CREATE TABLE IF NOT EXISTS violation (
+CREATE TABLE IF NOT EXISTS breach (
     id TEXT PRIMARY KEY,
-    kind_id TEXT NOT NULL REFERENCES violation_kind(id) ON DELETE CASCADE,
+    kind_id TEXT NOT NULL REFERENCES statute(id) ON DELETE CASCADE,
     scope TEXT NOT NULL,
     file_id TEXT REFERENCES file(id) ON DELETE SET NULL,
     folder_id TEXT REFERENCES folder(id) ON DELETE SET NULL,
@@ -304,11 +304,11 @@ CREATE TABLE IF NOT EXISTS violation (
     autofix_edits TEXT
 );
 
-CREATE INDEX IF NOT EXISTS idx_violation_kind ON violation(kind_id);
-CREATE INDEX IF NOT EXISTS idx_violation_file ON violation(file_id);
-CREATE INDEX IF NOT EXISTS idx_violation_folder ON violation(folder_id);
+CREATE INDEX IF NOT EXISTS idx_statute ON breach(kind_id);
+CREATE INDEX IF NOT EXISTS idx_breach_file ON breach(file_id);
+CREATE INDEX IF NOT EXISTS idx_breach_folder ON breach(folder_id);
 
--- #endregion 🔖Violation
+-- #endregion 🔖Breach
 
 -- #region 🔖Contribution
 
@@ -414,7 +414,7 @@ SELECT
     (SELECT COALESCE(SUM(lines), 0) FROM file) AS lines,
     (SELECT COUNT(*) FROM contributor) AS contributors,
     (SELECT COUNT(*) FROM ticket) AS tickets,
-    (SELECT COUNT(*) FROM violation) AS violations;
+    (SELECT COUNT(*) FROM breach) AS breachs;
 
 CREATE VIEW IF NOT EXISTS bundle_metrics_view AS
 SELECT
@@ -424,7 +424,7 @@ SELECT
     (SELECT COUNT(*) FROM section s JOIN file f ON s.file_id = f.id WHERE f.bundle_id = b.id) AS sections,
     (SELECT COUNT(*) FROM definition d JOIN file f ON d.file_id = f.id WHERE f.bundle_id = b.id) AS definitions,
     (SELECT COALESCE(SUM(f.lines), 0) FROM file f WHERE f.bundle_id = b.id) AS lines,
-    (SELECT COUNT(*) FROM violation v JOIN file f ON v.file_id = f.id WHERE f.bundle_id = b.id) AS violations
+    (SELECT COUNT(*) FROM breach v JOIN file f ON v.file_id = f.id WHERE f.bundle_id = b.id) AS breachs
 FROM bundle b;
 
 CREATE VIEW IF NOT EXISTS folder_metrics_view AS
@@ -432,7 +432,7 @@ SELECT
     fo.id AS folder_id,
     (SELECT COUNT(*) FROM file f WHERE f.folder_id = fo.id) AS files,
     (SELECT COALESCE(SUM(f.lines), 0) FROM file f WHERE f.folder_id = fo.id) AS lines,
-    (SELECT COUNT(*) FROM violation v WHERE v.folder_id = fo.id) AS violations
+    (SELECT COUNT(*) FROM breach v WHERE v.folder_id = fo.id) AS breachs
 FROM folder fo;
 
 CREATE VIEW IF NOT EXISTS file_metrics_view AS
@@ -448,14 +448,14 @@ SELECT
     s.id AS section_id,
     (SELECT COUNT(*) FROM definition d WHERE d.section_id = s.id) AS definitions,
     (s.end_line - s.start_line + 1) AS lines,
-    (SELECT COUNT(*) FROM violation v WHERE v.scope LIKE '%#' || s.name) AS violations
+    (SELECT COUNT(*) FROM breach v WHERE v.scope LIKE '%#' || s.name) AS breachs
 FROM section s;
 
-CREATE VIEW IF NOT EXISTS violation_priority_counts AS
+CREATE VIEW IF NOT EXISTS breach_priority_counts AS
 SELECT
-    (SELECT COUNT(*) FROM violation v JOIN violation_kind vk ON v.kind_id = vk.id WHERE vk.priority = 'high') AS high,
-    (SELECT COUNT(*) FROM violation v JOIN violation_kind vk ON v.kind_id = vk.id WHERE vk.priority = 'medium') AS medium,
-    (SELECT COUNT(*) FROM violation v JOIN violation_kind vk ON v.kind_id = vk.id WHERE vk.priority = 'low') AS low;
+    (SELECT COUNT(*) FROM breach v JOIN statute vk ON v.kind_id = vk.id WHERE vk.priority = 'high') AS high,
+    (SELECT COUNT(*) FROM breach v JOIN statute vk ON v.kind_id = vk.id WHERE vk.priority = 'medium') AS medium,
+    (SELECT COUNT(*) FROM breach v JOIN statute vk ON v.kind_id = vk.id WHERE vk.priority = 'low') AS low;
 
 CREATE VIEW IF NOT EXISTS contributor_metrics_view AS
 SELECT

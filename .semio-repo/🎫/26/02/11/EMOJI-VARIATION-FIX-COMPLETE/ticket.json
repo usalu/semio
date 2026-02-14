@@ -1,0 +1,450 @@
+{
+  "title": "Emoji Variation Fix Complete",
+  "status": "closed",
+  "prompt": "Remove debug panic in ScanComments, fix emojiPolicy and applyAutofixes to properly detect and fix text-default emojis missing VS16, extend tests, build CLI and verify no bare emojis remain in codebase after fix",
+  "summary": "Complete emoji variation fix: emojiText preserves VS16 for text-default emojis, header comparison made VS-agnostic, ScanComments uses regex for section markers, Interaction.UnmarshalJSON handles legacy JSON, all 212+ tests pass, fix converges to 0 idempotently",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/495"
+  },
+  "goal": "EMOJI-VARIATION-FIX-COMPLETE",
+  "interactions": [
+    {
+      "author": "usalu",
+      "system": "linux",
+      "client": "copilot-chat",
+      "commit": "760cbb465f75ca4a04db88230f000dad550ddee6",
+      "prompt": "Remove debug panic in ScanComments, fix emojiPolicy and applyAutofixes to properly detect and fix text-default emojis missing VS16, extend tests, build CLI and verify no bare emojis remain in codebase after fix",
+      "llm": "opus-4-6",
+      "diff": {
+        "bundles": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "semio/semio/semio-repo/cli",
+              "lines": {
+                "added": 130,
+                "removed": 0
+              }
+            }
+          ],
+          "added": null
+        },
+        "folders": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [],
+          "added": []
+        },
+        "files": {
+          "deleted": [],
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go",
+              "lines": {
+                "added": 100,
+                "removed": 41
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go",
+              "lines": {
+                "added": 102,
+                "removed": 31
+              }
+            }
+          ],
+          "added": []
+        },
+        "sections": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#GraphQL Types",
+              "lines": {
+                "added": 3,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context",
+              "lines": {
+                "added": 13,
+                "removed": 13
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages",
+              "lines": {
+                "added": 50,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages#TypeScript",
+              "lines": {
+                "added": 4,
+                "removed": 5
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies",
+              "lines": {
+                "added": 16,
+                "removed": 13
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID",
+              "lines": {
+                "added": 13,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli",
+              "lines": {
+                "added": 76,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests",
+              "lines": {
+                "added": 4,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests",
+              "lines": {
+                "added": 8,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests",
+              "lines": {
+                "added": 8,
+                "removed": 8
+              }
+            }
+          ],
+          "added": null
+        },
+        "definitions": {
+          "deleted": null,
+          "renamed": [],
+          "modified": [
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context§applyAutofixes",
+              "lines": {
+                "added": 13,
+                "removed": 13
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Default Context§applyAutofixes",
+              "lines": {
+                "added": 0,
+                "removed": 13
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§UnmarshalJSON",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§PolicyContext",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§PolicyContext",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§StreamPolicies",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§emojiPolicy",
+              "lines": {
+                "added": 11,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§emojiPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§headerPolicy",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§headerPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Policies§specsPolicy",
+              "lines": {
+                "added": 0,
+                "removed": 11
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers§Node",
+              "lines": {
+                "added": 1,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Query Resolvers§Node",
+              "lines": {
+                "added": 0,
+                "removed": 1
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§emojiText",
+              "lines": {
+                "added": 13,
+                "removed": 0
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§emojiText",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Todos§TodoToTicket",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileHeaderId",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileHeaderId",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileKindEmoji",
+              "lines": {
+                "added": 2,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli#Fix Tests§TestFileKindEmoji",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli§TestEmojiVariationAutofix",
+              "lines": {
+                "added": 76,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Cli§TestEmojiVariationAutofix",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests§TestRenderMonorepoTree",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests§TestRenderMonorepoTree",
+              "lines": {
+                "added": 4,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Monorepo Tree Tests§TestSearchMonorepoTree",
+              "lines": {
+                "added": 0,
+                "removed": 4
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsByLanguage",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsByLanguage",
+              "lines": {
+                "added": 8,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Policy Tests§TestFixtureBreachsGroupedInline",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestArtifactIDAndURI",
+              "lines": {
+                "added": 0,
+                "removed": 8
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestIdToUri",
+              "lines": {
+                "added": 3,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestIdToUri",
+              "lines": {
+                "added": 0,
+                "removed": 3
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestUriToId",
+              "lines": {
+                "added": 5,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests#Consolidated Tests§TestUriToId",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_GoalLifecycle_Syntaxes_NoGithub",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_TicketLifecycle_Syntaxes_NoGithub",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests§TestCliE2E_TicketLifecycle_Syntaxes_NoGithub",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go#Tree Tests§TestTreeCommands",
+              "lines": {
+                "added": 0,
+                "removed": 2
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go§TestFixHeaderWithShebang",
+              "lines": {
+                "added": 2,
+                "removed": 0
+              }
+            },
+            {
+              "path": "🧪semio-repo/cli/main_test.go§TestFixHeaderWithShebang",
+              "lines": {
+                "added": 0,
+                "removed": 5
+              }
+            }
+          ],
+          "added": [
+            {
+              "path": "💻semio-repo/cli/main.go#Types#Languages§UnmarshalJSON",
+              "lines": {
+                "added": 1,
+                "removed": 0
+              }
+            }
+          ]
+        }
+      },
+      "date": "2026-02-11 14:32:43"
+    }
+  ]
+}

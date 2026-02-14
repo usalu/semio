@@ -114,7 +114,7 @@ func envOrDefaultInt64(key string, fallback int64) int64 {
 // #region 🔖Models
 
 // [🔖semio-repo/server/main.go#Models](semiorepo://section/semio-repo/server/main.go/MODELS)
-// Data model types for tickets, scopes, warnings, violations, events, and API request/response payloads. MUST mirror the server SQLite schema.
+// Data model types for tickets, scopes, warnings, breachs, events, and API request/response payloads. MUST mirror the server SQLite schema.
 
 // Ticket represents a tracked work item with lifecycle status.
 // [🛠️semio-repo/server/main.go#Models§Ticket](semiorepo://definition/semio-repo/server/main.go/MODELS/TICKET)
@@ -159,9 +159,9 @@ type Warning struct {
 	AcknowledgedBy string     `json:"ack_by"`
 }
 
-// Violation represents a policy violation detected in source code.
-// [🛠️semio-repo/server/main.go#Models§Violation](semiorepo://definition/semio-repo/server/main.go/MODELS/VIOLATION)
-type Violation struct {
+// Breach represents a policy breach detected in source code.
+// [🛠️semio-repo/server/main.go#Models§Breach](semiorepo://definition/semio-repo/server/main.go/MODELS/VIOLATION)
+type Breach struct {
 	ID         string     `json:"id"`
 	Kind       string     `json:"kind"`
 	Priority   string     `json:"priority"`
@@ -267,7 +267,7 @@ type DiffIngestResponse struct {
 	ChangedFiles  []string    `json:"changed_files"`
 	ClaimedScopes []string    `json:"claimed_scopes"`
 	Warnings      []Warning   `json:"warnings"`
-	Violations    []Violation `json:"violations"`
+	Breachs    []Breach `json:"breachs"`
 	Blockers      []string    `json:"blockers"`
 }
 
@@ -286,7 +286,7 @@ type PrecommitResponse struct {
 	OK           bool        `json:"ok"`
 	Blockers     []string    `json:"blockers"`
 	Warnings     []Warning   `json:"warnings"`
-	Violations   []Violation `json:"violations"`
+	Breachs   []Breach `json:"breachs"`
 	AutofixPatch string      `json:"autofix_patch"`
 }
 
@@ -302,7 +302,7 @@ type IndexFileRequest struct {
 // #region 🔖Database
 
 // [🔖semio-repo/server/main.go#Database](semiorepo://section/semio-repo/server/main.go/DATABASE)
-// SQLite database layer for persistent storage of tickets, scopes, claims, warnings, violations, and events. MUST use WAL journal mode.
+// SQLite database layer for persistent storage of tickets, scopes, claims, warnings, breachs, and events. MUST use WAL journal mode.
 
 // Database wraps a sql.DB connection to the SQLite store.
 // [🛠️semio-repo/server/main.go#Database§Database](semiorepo://definition/semio-repo/server/main.go/DATABASE/DATABASE)
@@ -337,7 +337,7 @@ func (d *Database) migrate() error {
 		"CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, status TEXT, title TEXT, prompt TEXT, summary TEXT, llm TEXT, ui TEXT, author TEXT, github_issue TEXT, created_at DATETIME, closed_at DATETIME)",
 		"CREATE TABLE IF NOT EXISTS scopes (id TEXT PRIMARY KEY, kind TEXT, file_path TEXT, section_path TEXT, definition_name TEXT, start_line INT, end_line INT, updated_at DATETIME)",
 		"CREATE TABLE IF NOT EXISTS ticket_claims (ticket_id TEXT, scope_id TEXT, claim_type TEXT, first_seen_at DATETIME, last_seen_at DATETIME, PRIMARY KEY (ticket_id, scope_id))",
-		"CREATE TABLE IF NOT EXISTS violations (id TEXT PRIMARY KEY, kind TEXT, priority TEXT, scope_id TEXT, file_path TEXT, line INT, column INT, summary TEXT, excerpt TEXT, autofixable BOOL, detected_at DATETIME, ticket_id TEXT, resolved_at DATETIME)",
+		"CREATE TABLE IF NOT EXISTS breachs (id TEXT PRIMARY KEY, kind TEXT, priority TEXT, scope_id TEXT, file_path TEXT, line INT, column INT, summary TEXT, excerpt TEXT, autofixable BOOL, detected_at DATETIME, ticket_id TEXT, resolved_at DATETIME)",
 		"CREATE TABLE IF NOT EXISTS warnings (id TEXT PRIMARY KEY, kind TEXT, severity TEXT, message TEXT, ticket_id TEXT, scope_id TEXT, created_at DATETIME, acknowledged_at DATETIME, ack_by TEXT)",
 		"CREATE TABLE IF NOT EXISTS events (id TEXT PRIMARY KEY, type TEXT, source TEXT, payload_json TEXT, created_at DATETIME)",
 		"CREATE TABLE IF NOT EXISTS contributor_work (github TEXT, kind TEXT, item_id TEXT, PRIMARY KEY (github, kind, item_id))",
@@ -507,9 +507,9 @@ func (d *Database) listWarnings(ctx context.Context, ticketID string) ([]Warning
 	return warnings, nil
 }
 
-// listViolations retrieves violations optionally filtered by ticket ID.
-func (d *Database) listViolations(ctx context.Context, ticketID string) ([]Violation, error) {
-	query := "SELECT id, kind, priority, scope_id, file_path, line, column, summary, excerpt, autofixable, detected_at, ticket_id, resolved_at FROM violations"
+// listBreachs retrieves breachs optionally filtered by ticket ID.
+func (d *Database) listBreachs(ctx context.Context, ticketID string) ([]Breach, error) {
+	query := "SELECT id, kind, priority, scope_id, file_path, line, column, summary, excerpt, autofixable, detected_at, ticket_id, resolved_at FROM breachs"
 	args := []interface{}{}
 	if ticketID != "" {
 		query += " WHERE ticket_id = ?"
@@ -520,29 +520,29 @@ func (d *Database) listViolations(ctx context.Context, ticketID string) ([]Viola
 		return nil, err
 	}
 	defer rows.Close()
-	var violations []Violation
+	var breachs []Breach
 	for rows.Next() {
-		var violation Violation
+		var breach Breach
 		var line sql.NullInt64
 		var column sql.NullInt64
 		var resolved sql.NullTime
-		if err := rows.Scan(&violation.ID, &violation.Kind, &violation.Priority, &violation.ScopeID, &violation.FilePath, &line, &column, &violation.Summary, &violation.Excerpt, &violation.Autofix, &violation.DetectedAt, &violation.TicketID, &resolved); err != nil {
+		if err := rows.Scan(&breach.ID, &breach.Kind, &breach.Priority, &breach.ScopeID, &breach.FilePath, &line, &column, &breach.Summary, &breach.Excerpt, &breach.Autofix, &breach.DetectedAt, &breach.TicketID, &resolved); err != nil {
 			return nil, err
 		}
 		if line.Valid {
 			value := int(line.Int64)
-			violation.Line = &value
+			breach.Line = &value
 		}
 		if column.Valid {
 			value := int(column.Int64)
-			violation.Column = &value
+			breach.Column = &value
 		}
 		if resolved.Valid {
-			violation.ResolvedAt = &resolved.Time
+			breach.ResolvedAt = &resolved.Time
 		}
-		violations = append(violations, violation)
+		breachs = append(breachs, breach)
 	}
-	return violations, nil
+	return breachs, nil
 }
 
 // listConflicts finds scopes claimed by more than one open ticket.
@@ -1441,7 +1441,7 @@ func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	result, warnings, violations, err := s.processDiff(ctx, payload.TicketID, payload.Patch, payload.Snapshots)
+	result, warnings, breachs, err := s.processDiff(ctx, payload.TicketID, payload.Patch, payload.Snapshots)
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1450,7 +1450,7 @@ func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 		ChangedFiles:  result.ChangedFiles,
 		ClaimedScopes: result.ClaimedScopes,
 		Warnings:      warnings,
-		Violations:    violations,
+		Breachs:    breachs,
 		Blockers:      result.Blockers,
 	}
 	s.writeJSON(w, http.StatusOK, response)
@@ -1477,7 +1477,7 @@ func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	result, warnings, violations, err := s.processDiff(ctx, payload.TicketID, payload.Patch, nil)
+	result, warnings, breachs, err := s.processDiff(ctx, payload.TicketID, payload.Patch, nil)
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
@@ -1488,7 +1488,7 @@ func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
 		OK:           ok,
 		Blockers:     blockers,
 		Warnings:     warnings,
-		Violations:   violations,
+		Breachs:   breachs,
 		AutofixPatch: "",
 	}
 	s.writeJSON(w, http.StatusOK, response)
@@ -1566,8 +1566,8 @@ func (s *Server) handleWarnings(w http.ResponseWriter, r *http.Request) {
 	s.writeJSON(w, http.StatusOK, warnings)
 }
 
-// handleViolations returns violations optionally filtered by ticket ID.
-func (s *Server) handleViolations(w http.ResponseWriter, r *http.Request) {
+// handleBreachs returns breachs optionally filtered by ticket ID.
+func (s *Server) handleBreachs(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -1578,12 +1578,12 @@ func (s *Server) handleViolations(w http.ResponseWriter, r *http.Request) {
 	}
 	ctx, cancel := s.newRequestContext(r)
 	defer cancel()
-	violations, err := s.db.listViolations(ctx, r.URL.Query().Get("ticket_id"))
+	breachs, err := s.db.listBreachs(ctx, r.URL.Query().Get("ticket_id"))
 	if err != nil {
 		s.respondError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
-	s.writeJSON(w, http.StatusOK, violations)
+	s.writeJSON(w, http.StatusOK, breachs)
 }
 
 // handleScopes returns scopes for a given file query parameter.
@@ -1627,8 +1627,8 @@ type ProcessResult struct {
 }
 
 // processDiff parses the patch, indexes changed files, maps claims, and detects conflicts.
-// MUST return warnings and violations alongside the processing result.
-func (s *Server) processDiff(ctx context.Context, ticketID string, patch string, snapshots []FileSnapshot) (ProcessResult, []Warning, []Violation, error) {
+// MUST return warnings and breachs alongside the processing result.
+func (s *Server) processDiff(ctx context.Context, ticketID string, patch string, snapshots []FileSnapshot) (ProcessResult, []Warning, []Breach, error) {
 	diff := parseUnifiedDiff(patch)
 	changedFiles := uniqueFiles(diff.Files)
 	if err := s.bus.Publish(ctx, "DiffIngested", "repo-cli", map[string]interface{}{"ticket_id": ticketID, "files": changedFiles}); err != nil {
@@ -1679,7 +1679,7 @@ func (s *Server) processDiff(ctx context.Context, ticketID string, patch string,
 		ClaimedScopes: claimedIDs,
 		Blockers:      blockers,
 	}
-	return result, warnings, []Violation{}, nil
+	return result, warnings, []Breach{}, nil
 }
 
 // uniqueFiles extracts deduplicated file paths from a diff result.
@@ -2158,7 +2158,7 @@ func main() {
 	mux.HandleFunc("/repo/reindex", server.handleReindex)
 	mux.HandleFunc("/repo/index-file", server.handleIndexFile)
 	mux.HandleFunc("/warnings", server.handleWarnings)
-	mux.HandleFunc("/violations", server.handleViolations)
+	mux.HandleFunc("/breachs", server.handleBreachs)
 	mux.HandleFunc("/scopes", server.handleScopes)
 	mux.HandleFunc("/events", server.handleEvents)
 	mux.HandleFunc("/webhooks/github", server.handleGitHubWebhook)

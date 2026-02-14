@@ -44,11 +44,11 @@ Selecting a section navigates to its start, F2 triggers rename, drag-and-drop mo
 The view refreshes on editor focus and text changes so the tree stays aligned with the current file structure.
 JSON files surface object keys as section entries so structured config files are navigable in the same tree.
 
-## Violation Diagnostics
+## Breach Diagnostics
 
-Shows policy violations as diagnostics for all supported file types (TypeScript, JavaScript, JSON, Python, C#, Go):
+Shows policy breachs as diagnostics for all supported file types (TypeScript, JavaScript, JSON, Python, C#, Go):
 
-- Loads cached violations on file open for immediate feedback
+- Loads cached breachs on file open for immediate feedback
 - Re-runs `repo analyze` on file save and updates diagnostics
 - Quick Fix actions to apply automated fixes via `repo fix`
 - Promotes preview editors opened from the Problems list into regular tabs for save-ready edits

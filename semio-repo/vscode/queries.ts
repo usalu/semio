@@ -148,14 +148,14 @@ export const TicketsDocument = graphql(`
 `);
 
 /**
- * GraphQL document for querying policies and their violation kinds.
+ * GraphQL document for querying policies and their statutes.
  *
  *  * [🪨semio-repo/vscode/queries.ts#Queries§PoliciesDocument](semiorepo://definition/semio-repo/vscode/queries.ts/QUERIES/POLICIESDOCUMENT)
  **/
 export const PoliciesDocument = graphql(`
   query Policies {
     repo {
-      policies { id name description scopes violationKinds { id priority autofixable reason solution } }
+      policies { id name description scopes statutes { id priority autofixable reason solution } }
     }
   }
 `);
@@ -215,7 +215,7 @@ export const ContributorsDocument = graphql(`
 export const AnalyzeDocument = graphql(`
   query Analyze($scope: String) {
     analyze(scope: $scope) {
-      violations {
+      breachs {
         id summary priority autofixable scope line column excerpt
         kind { id policy { id name } reason solution }
       }
@@ -233,7 +233,7 @@ export const FixDocument = graphql(`
   mutation Fix($scope: String) {
     fix(scope: $scope) {
       fixed remaining
-      violations { id summary priority scope }
+      breachs { id summary priority scope }
     }
   }
 `);

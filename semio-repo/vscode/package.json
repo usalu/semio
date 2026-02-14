@@ -323,8 +323,8 @@
         "title": "semio-repo: Toggle Policy Filter"
       },
       {
-        "command": "semio.toggleViolationFilter",
-        "title": "semio-repo: Toggle Violation Filter"
+        "command": "semio.toggleBreachFilter",
+        "title": "semio-repo: Toggle Breach Filter"
       },
       {
         "command": "semio.filterAction",
@@ -750,7 +750,7 @@
         },
         {
           "command": "semio.copyId",
-          "when": "view == semio.monorepo && viewItem =~ /^(project|bundle|folder|file|section|definition|goal|ticket|policy|violation|contributor|commit|ticket_year|ticket_month|ticket_day|contributor_email|contributor_link)$/",
+          "when": "view == semio.monorepo && viewItem =~ /^(project|bundle|folder|file|section|definition|goal|ticket|policy|breach|contributor|commit|ticket_year|ticket_month|ticket_day|contributor_email|contributor_link)$/",
           "group": "inline@99"
         },
         {

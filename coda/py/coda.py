@@ -47,11 +47,13 @@ _PROJECT_ENV = "CODA_PROJECT"
 # [🔖coda/py/coda.py#Helpers](semiorepo://section/coda/py/coda.py/HELPERS)
 # Helpers MUST provide private functions for config loading and project root resolution.
 
+
 def _load_json_with_comments(path: Path) -> dict:
     """Load JSON file, stripping // line comments."""
     text = path.read_text(encoding="utf-8")
     text = re.sub(r"\s*//.*$", "", text, flags=re.MULTILINE)
     return json.loads(text)
+
 
 def _get_project_root() -> Path | None:
     """Resolve project root from CODA_PROJECT or cwd."""
@@ -64,11 +66,13 @@ def _get_project_root() -> Path | None:
             return d
     return None
 
+
 def _get_coda_config() -> dict:
     config_path = Path(os.environ.get("CODA_CONFIG", _CODA_JSON_PATH))
     if not config_path.is_absolute():
         config_path = _CODA_ROOT / config_path
     return _load_json_with_comments(config_path)
+
 
 def _get_project_config() -> dict | None:
     root = _get_project_root()
@@ -77,6 +81,7 @@ def _get_project_config() -> dict | None:
     path = root / ".coda" / "project.json"
     return json.loads(path.read_text(encoding="utf-8")) if path.exists() else None
 
+
 def _get_latest_run(root: Path) -> Path | None:
     runs = root / ".coda" / "runs"
     if not runs.exists():
@@ -84,12 +89,16 @@ def _get_latest_run(root: Path) -> Path | None:
     dirs = sorted(d for d in runs.iterdir() if d.is_dir())
     return dirs[-1] if dirs else None
 
+
 def _get_latest_iteration(run_dir: Path) -> Path | None:
     iters = run_dir / "iterations"
     if not iters.exists():
         return None
-    dirs = sorted(int(d.name) for d in iters.iterdir() if d.is_dir() and d.name.isdigit())
+    dirs = sorted(
+        int(d.name) for d in iters.iterdir() if d.is_dir() and d.name.isdigit()
+    )
     return iters / str(dirs[-1]) if dirs else None
+
 
 # endregion Helpers
 
@@ -97,6 +106,7 @@ def _get_latest_iteration(run_dir: Path) -> Path | None:
 
 # [🔖coda/py/coda.py#Resources](semiorepo://section/coda/py/coda.py/RESOURCES)
 # Resources MUST expose MCP resource handlers for measures, targets, properties, rules, and project data.
+
 
 @mcp.resource("coda://measures")
 def get_measures() -> str:
@@ -106,6 +116,7 @@ def get_measures() -> str:
     """
     config = _get_coda_config()
     return json.dumps(config.get("measures", []), indent=2)
+
 
 @mcp.resource("coda://measure/{id}")
 def get_measure(id: str) -> str:
@@ -119,6 +130,7 @@ def get_measure(id: str) -> str:
             return json.dumps(m, indent=2)
     return json.dumps({"error": f"measure not found: {id}"})
 
+
 @mcp.resource("coda://targets")
 def get_targets() -> str:
     """List all targets.
@@ -127,6 +139,7 @@ def get_targets() -> str:
     """
     config = _get_coda_config()
     return json.dumps(config.get("targets", []), indent=2)
+
 
 @mcp.resource("coda://target/{id}")
 def get_target(id: str) -> str:
@@ -140,6 +153,7 @@ def get_target(id: str) -> str:
             return json.dumps(t, indent=2)
     return json.dumps({"error": f"target not found: {id}"})
 
+
 @mcp.resource("coda://{target_id}/properties")
 def get_target_properties(target_id: str) -> str:
     """Get properties for a target.
@@ -151,6 +165,7 @@ def get_target_properties(target_id: str) -> str:
         if t.get("id") == target_id:
             return json.dumps(t.get("properties", []), indent=2)
     return json.dumps({"error": f"target not found: {target_id}"})
+
 
 @mcp.resource("coda://{target_id}/property/{id}")
 def get_target_property(target_id: str, id: str) -> str:
@@ -167,6 +182,7 @@ def get_target_property(target_id: str, id: str) -> str:
             return json.dumps({"error": f"property not found: {id}"})
     return json.dumps({"error": f"target not found: {target_id}"})
 
+
 @mcp.resource("coda://{target_id}/rules")
 def get_target_rules(target_id: str) -> str:
     """Get rules for a target.
@@ -178,6 +194,7 @@ def get_target_rules(target_id: str) -> str:
         if t.get("id") == target_id:
             return json.dumps(t.get("rules", []), indent=2)
     return json.dumps({"error": f"target not found: {target_id}"})
+
 
 @mcp.resource("coda://{target_id}/rule/{id}")
 def get_target_rule(target_id: str, id: str) -> str:
@@ -194,6 +211,7 @@ def get_target_rule(target_id: str, id: str) -> str:
             return json.dumps({"error": f"rule not found: {id}"})
     return json.dumps({"error": f"target not found: {target_id}"})
 
+
 @mcp.resource("coda://project")
 def get_project() -> str:
     """Get the current project configuration.
@@ -202,8 +220,13 @@ def get_project() -> str:
     """
     proj = _get_project_config()
     if proj is None:
-        return json.dumps({"error": "No coda project found. Set CODA_PROJECT or run from project root."})
+        return json.dumps(
+            {
+                "error": "No coda project found. Set CODA_PROJECT or run from project root."
+            }
+        )
     return json.dumps(proj, indent=2)
+
 
 @mcp.resource("coda://current-run")
 def get_current_run() -> str:
@@ -218,8 +241,13 @@ def get_current_run() -> str:
     if not run_dir:
         return json.dumps({"error": "No runs found"})
     run_json = run_dir / "run.json"
-    data = json.loads(run_json.read_text(encoding="utf-8")) if run_json.exists() else {"id": run_dir.name}
+    data = (
+        json.loads(run_json.read_text(encoding="utf-8"))
+        if run_json.exists()
+        else {"id": run_dir.name}
+    )
     return json.dumps(data, indent=2)
+
 
 @mcp.resource("coda://current-iteration")
 def get_current_iteration() -> str:
@@ -237,8 +265,13 @@ def get_current_iteration() -> str:
     if not iter_dir:
         return json.dumps({"error": "No iterations found"})
     iter_json = iter_dir / "iteration.json"
-    data = json.loads(iter_json.read_text(encoding="utf-8")) if iter_json.exists() else {"index": iter_dir.name}
+    data = (
+        json.loads(iter_json.read_text(encoding="utf-8"))
+        if iter_json.exists()
+        else {"index": iter_dir.name}
+    )
     return json.dumps(data, indent=2)
+
 
 @mcp.resource("coda://iterations")
 def get_iterations() -> str:
@@ -258,6 +291,7 @@ def get_iterations() -> str:
     dirs = [d for d in iters.iterdir() if d.is_dir() and d.name.isdigit()]
     entries = [{"index": d.name} for d in sorted(dirs, key=lambda x: int(x.name))]
     return json.dumps(entries, indent=2)
+
 
 @mcp.resource("coda://report")
 def get_report() -> str:
@@ -279,12 +313,14 @@ def get_report() -> str:
         return json.dumps({"error": "No report found"})
     return report_json.read_text(encoding="utf-8")
 
+
 # endregion Resources
 
 # region Tools
 
 # [🔖coda/py/coda.py#Tools](semiorepo://section/coda/py/coda.py/TOOLS)
 # Tools MUST expose MCP tool handlers for run management, translation, and design fixes.
+
 
 @mcp.tool()
 def start_run() -> dict:
@@ -303,6 +339,7 @@ def start_run() -> dict:
     (run_dir / "run.json").write_text("{}", encoding="utf-8")
     (run_dir / "iterations").mkdir()
     return {"run_id": run_id, "path": str(run_dir)}
+
 
 @mcp.tool()
 def start_iteration(run_id: str | None = None) -> dict:
@@ -324,13 +361,16 @@ def start_iteration(run_id: str | None = None) -> dict:
             return {"error": "No runs found"}
     iters_dir = run_dir / "iterations"
     iters_dir.mkdir(parents=True, exist_ok=True)
-    existing = [int(d.name) for d in iters_dir.iterdir() if d.is_dir() and d.name.isdigit()]
+    existing = [
+        int(d.name) for d in iters_dir.iterdir() if d.is_dir() and d.name.isdigit()
+    ]
     idx = max(existing, default=-1) + 1
     iter_dir = iters_dir / str(idx)
     iter_dir.mkdir()
     (iter_dir / "targets").mkdir()
     (iter_dir / "iteration.json").write_text("{}", encoding="utf-8")
     return {"run_id": run_dir.name, "iteration_index": idx, "path": str(iter_dir)}
+
 
 @mcp.tool()
 def translate(target_id: str) -> dict:
@@ -344,11 +384,15 @@ def translate(target_id: str) -> dict:
     targets = proj.get("targets", [])
     if not any(t.get("id") == target_id for t in targets):
         return {"error": f"Target not in project: {target_id}"}
-    return {"message": "Translate tool: invoke DESIGN-to-TARGET translator agent", "target_id": target_id}
+    return {
+        "message": "Translate tool: invoke DESIGN-to-TARGET translator agent",
+        "target_id": target_id,
+    }
+
 
 @mcp.tool()
 def fix(prompt: str) -> dict:
-    """Fix design to address violations. Invokes the fixer agent with the given prompt.
+    """Fix design to address breachs. Invokes the fixer agent with the given prompt.
     Implementations MUST verify project existence before invoking the fixer.
     [🛠️coda/py/coda.py#Tools§fix](semiorepo://definition/coda/py/coda.py/TOOLS/FIX)
     """
@@ -357,12 +401,14 @@ def fix(prompt: str) -> dict:
         return {"error": "No project"}
     return {"message": "Fix tool: invoke fixer agent via design MCP", "prompt": prompt}
 
+
 # endregion Tools
 
 # region Prompts
 
 # [🔖coda/py/coda.py#Prompts](semiorepo://section/coda/py/coda.py/PROMPTS)
 # Prompts MUST expose MCP prompt handlers for design change instructions.
+
 
 @mcp.prompt()
 def change(prompt: str) -> str:
@@ -372,6 +418,7 @@ def change(prompt: str) -> str:
     """
     return f"Change the design to address the following: {prompt}"
 
+
 # endregion Prompts
 
 # region Main
@@ -379,18 +426,22 @@ def change(prompt: str) -> str:
 # [🔖coda/py/coda.py#Main](semiorepo://section/coda/py/coda.py/MAIN)
 # Main MUST provide the CLI entry point for the coda MCP server.
 
+
 def main() -> None:
     """Parses CLI arguments and starts the MCP server.
     Implementations MUST support both stdio and HTTP transport modes.
     [🛠️coda/py/coda.py#Main§main](semiorepo://definition/coda/py/coda.py/MAIN/MAIN)
     """
     parser = argparse.ArgumentParser(description="coda MCP server")
-    parser.add_argument("--mcp-stdio", action="store_true", help="Run MCP server over stdio")
+    parser.add_argument(
+        "--mcp-stdio", action="store_true", help="Run MCP server over stdio"
+    )
     args = parser.parse_args()
     if args.mcp_stdio:
         mcp.run(transport="stdio")
     else:
         mcp.run(transport="streamable-http", host="127.0.0.1", port=8080)
+
 
 if __name__ == "__main__":
     main()
