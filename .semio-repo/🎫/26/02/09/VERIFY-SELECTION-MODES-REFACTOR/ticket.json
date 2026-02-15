@@ -1,13 +1,21 @@
 {
   "title": "Verify Selection Modes Refactor",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Implemented selection logic for Additive, Subtractive, and Intersect modes in Design app. Updated Design.tsx to handle Lasso selection via onSelectionStart/End/Change and single-node selection via onNodeDragStart/Stop. Exposed selection events in Diagram component.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/471"
+  },
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "Verify that the selection modes (additive, subtractive, intersect) are correctly implemented as settings in the toolbar and work as expected.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -17919,10 +17927,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Implemented selection logic for Additive, Subtractive, and Intersect modes in Design app. Updated Design.tsx to handle Lasso selection via onSelectionStart/End/Change and single-node selection via onNodeDragStart/Stop. Exposed selection events in Diagram component.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/471"
-  }
+  ]
 }

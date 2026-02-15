@@ -5,7 +5,9 @@
   "summary": "Consolidated repo-tooling Go tests into semio-repo/cli/main_test.go, removed redundant _test.go files, fixed path/root assumptions in folder/file tool tests, and verified go test ./... passes.",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-04 16:38:14",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
       "client": "codex",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
@@ -659,8 +661,7 @@
             }
           ]
         }
-      },
-      "date": "2026-02-04 16:38:14"
+      }
     }
   ]
 }

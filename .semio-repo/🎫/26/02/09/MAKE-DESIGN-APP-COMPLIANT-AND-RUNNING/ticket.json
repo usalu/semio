@@ -1,17 +1,20 @@
 {
   "title": "Make Design App Compliant and Running",
-  "interactions": [
-    {
-      "prompt": "get the design app comliant and running",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264"
-    }
-  ],
   "status": "open",
+  "prompt": "",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/465"
-  }
+  },
+  "interactions": [
+    {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
+      "prompt": "get the design app comliant and running",
+      "llm": "gemini-3-pro"
+    }
+  ]
 }

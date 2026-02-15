@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 15:18:13",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "windsurf-chat",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "Fix the breach system so that ./semio-repo/cli/cli fix properly fixes all autofixable breachs. Extend existing tests to cover all breach features. Refactor as needed.",
       "llm": "sonnet-4-5",
@@ -1061,9 +1064,7 @@
             }
           ]
         }
-      },
-      "client": "windsurf-chat",
-      "date": "2026-02-06 15:18:13"
+      }
     }
   ]
 }

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/js/sketchpad/Kit.tsx](semiorepo://file/semio/js/sketchpad/Kit.tsx)
+// [👤semio📚js🗃️sketchpad💻kittsx](semiorepo://file/SEMIO/JS/SKETCHPAD/KIT.TSX)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

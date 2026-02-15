@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-GOAL-MECHANISM",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-07 00:05:31",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "0289c4bd83eb052f0aaeaa8256cff387196d7b60",
       "prompt": "Improve the goal tree command output to show more and better structured information including slug, status, creation date, due date, and description.",
       "llm": "opus-4-6",
@@ -943,9 +946,7 @@
             }
           ]
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-07 00:05:31"
+      }
     }
   ]
 }

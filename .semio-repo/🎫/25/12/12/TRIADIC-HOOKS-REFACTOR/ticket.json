@@ -1,17 +1,18 @@
 {
-  "title": ">-",
+  "title": "\u003e-",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.922Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
-      "prompt": ">-",
-      "llm": "sonnet-4-5",
-      "date": "2025-12-16T17:06:07.922Z"
+      "prompt": "\u003e-",
+      "llm": "sonnet-4-5"
     }
   ]
 }

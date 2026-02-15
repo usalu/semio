@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/desktop/renderer.tsx](semiorepo://file/semio/desktop/renderer.tsx)
+// [👤semio🖱️desktop💻renderertsx](semiorepo://file/SEMIO/DESKTOP/RENDERER.TSX)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

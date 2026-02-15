@@ -5,13 +5,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.911Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Hooks auto-inject command origins via useOrigin",
-      "llm": "sonnet-4-5",
-      "date": "2025-12-16T17:06:07.911Z"
+      "llm": "sonnet-4-5"
     }
   ]
 }

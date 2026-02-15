@@ -8,7 +8,9 @@
   },
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-03T19:18:34.478184898Z",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "",
       "client": "copilot-chat",
       "commit": "5ebc07267f17579555695287e4e02d36b135a0ae",
@@ -2307,8 +2309,7 @@
             }
           ]
         }
-      },
-      "date": "2026-02-03T19:18:34.478184898Z"
+      }
     }
   ]
 }

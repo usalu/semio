@@ -5,7 +5,9 @@
   "summary": "Extended VS Code extension tests and stabilized headless test runner; aligned ticket interactions query; ensured build+tests pass.",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-04 15:06:15",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
@@ -329,8 +331,7 @@
             }
           ]
         }
-      },
-      "date": "2026-02-04 15:06:15"
+      }
     }
   ]
 }

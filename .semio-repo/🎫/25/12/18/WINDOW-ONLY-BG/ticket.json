@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-18T15:34:29.349Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "20a57039fec48f8c991d98769aa31e15cbd6859c",
       "prompt": "Remove per-element backgrounds so only Window surfaces have a background.",
-      "llm": "gpt-5.2-codex",
-      "date": "2025-12-18T15:34:29.349Z"
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

@@ -9,8 +9,11 @@
   "goal": "CODEHEALTH/POLICIES",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 20:38:21",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "windsurf-chat",
       "commit": "ed14664e8b9fd928006607e1035779b1723addc0",
       "prompt": "Refactor the policy/statute/breach/fix mechanism so that comment scanning works for all languages (Python, C#, Go, etc.) not just TypeScript. Move primitive comment scanning functionality to BaseLanguage. Extend existing test files to cover all languages.",
       "llm": "sonnet-4-5",
@@ -134,7 +137,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Expertise Levels",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
               "to": "AGENTS.md#Codebase#📁js/#Policies",
               "lines": {
                 "added": 10,
@@ -262,8 +265,8 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field<T>e Type",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field<T>e Type",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Core Types (shared.ts)#Field\u003cT\u003ee Type",
               "lines": {
                 "added": 46,
                 "removed": 46
@@ -302,7 +305,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Route Segments",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Route Segments",
               "to": "AGENTS.md#Codebase#📁js/semio/#Diff System#Collection Diffs",
               "lines": {
                 "added": 12,
@@ -342,8 +345,8 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips",
               "lines": {
                 "added": 38,
                 "removed": 38
@@ -351,7 +354,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/#Policies",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Expertise Levels",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Expertise Levels",
               "lines": {
                 "added": 10,
                 "removed": 10
@@ -359,7 +362,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Coordinate System#Three.js Coordinate System",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Components",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
               "lines": {
                 "added": 6,
                 "removed": 6
@@ -367,7 +370,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Overview",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#Tooltip Content",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
               "lines": {
                 "added": 8,
                 "removed": 8
@@ -375,7 +378,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Sketchpad App Plugin Architecture#Y.js-XState Bridge",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
               "lines": {
                 "added": 10,
                 "removed": 10
@@ -438,7 +441,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Content",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Content",
               "to": "AGENTS.md#Codebase#📁js/semio/#Hotkeys#Hotkey Paths",
               "lines": {
                 "added": 8,
@@ -454,8 +457,8 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration",
               "lines": {
                 "added": 39,
                 "removed": 39
@@ -463,7 +466,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/vscode/#Filters",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#AppConfig",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#AppConfig",
               "lines": {
                 "added": 15,
                 "removed": 15
@@ -471,7 +474,7 @@
             },
             {
               "from": "AGENTS.md#Codebase#📄 semio-repo/cli/cli_test.go",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Path Matching",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Path Matching",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -479,15 +482,15 @@
             },
             {
               "from": "AGENTS.md#Codebase#📁 js/semio/#Diff System#Collection Diffs",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Route Segments",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Route Segments",
               "lines": {
                 "added": 12,
                 "removed": 12
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Scope Providers",
-              "to": "AGENTS.md#Codebase#📁js/semio/#Routing & App Registration#Scope Providers",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Scope Providers",
+              "to": "AGENTS.md#Codebase#📁js/semio/#Routing \u0026 App Registration#Scope Providers",
               "lines": {
                 "added": 4,
                 "removed": 4
@@ -974,7 +977,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#i18n Keys for Tooltips",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#i18n Keys for Tooltips",
               "to": "AGENTS.md#Codebase#📁js/semio/#Sketchpad App Plugin Architecture#XState Hooks",
               "lines": {
                 "added": 10,
@@ -1414,7 +1417,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#AppConfig",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#AppConfig",
               "to": "AGENTS.md#Codebase#📁js/vscode/#Filters",
               "lines": {
                 "added": 15,
@@ -1606,7 +1609,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing & App Registration#Path Matching",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Routing \u0026 App Registration#Path Matching",
               "to": "AGENTS.md#Codebase#📄semio-repo/vscode/.vscode-test.mjs",
               "lines": {
                 "added": 4,
@@ -1622,7 +1625,7 @@
               }
             },
             {
-              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise & Tooltips#Tooltip Components",
+              "from": "AGENTS.md#Codebase#📁 js/semio/#Expertise \u0026 Tooltips#Tooltip Components",
               "to": "AGENTS.md#Codebase#📄semio-repo/vscode/extension.ts",
               "lines": {
                 "added": 6,
@@ -11156,9 +11159,7 @@
             }
           ]
         }
-      },
-      "client": "windsurf-chat",
-      "date": "2026-02-06 20:38:21"
+      }
     }
   ]
 }

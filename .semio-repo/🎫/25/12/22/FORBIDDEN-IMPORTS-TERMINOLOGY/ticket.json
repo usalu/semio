@@ -1,17 +1,18 @@
 {
   "title": "FORBIDDEN-IMPORTS-TERMINOLOGY",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-22T18:53:56.05Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "",
-      "prompt": ">-",
-      "llm": "sonnet-4-5",
-      "date": "2025-12-22T18:53:56.05Z"
+      "prompt": "\u003e-",
+      "llm": "sonnet-4-5"
     }
   ]
 }

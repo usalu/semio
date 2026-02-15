@@ -780,12 +780,16 @@ Press `Ctrl+Shift+P` (or `Cmd+Shift+P` on macOS) → "Tasks: Run Task" and selec
 - `fix` - Run auto-fixes/formatters
 - `analyze` - Run non-mutating checks
 - `preflight` - Run all preflight checks (default build task)
+- `pre-commit` - Run the monorepo pre-commit pipeline (`preflight`)
+- `pre-commit:global:install` - Install a global git `pre-commit` hook that runs this pipeline in this repo
 - `update` - Update dependencies
 - `publish:test` - Publish to test servers
 - `publish` - Publish packages
 - `dev` - Start all dev servers
 - `dev js js storybook` - Start `semio/js` Storybook
 - `dev js js sketchpad` - Start `semio/js` Vite Sketchpad (connector `3000`)
+
+Run `npm run pre-commit:global:install` once per machine to replace project-local Husky hooks with a global git hook path (`~/.config/git/hooks`).
 
 **Workspace-specific commands:**
 
@@ -1160,7 +1164,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
   <tbody>
     <tr style="border: none;">
       <td align="center" valign="top" width="145px" style="border: none;"><a href="https://github.com/usalu">
-        <img src=".semio-repo/contributors/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/usalu/avatar-round-90x90.png" alt="Ueli Saluz" style="border-radius: 50%;"/>
         <br />
         <sub><b>Ueli Saluz</b></sub>
         <br />
@@ -1188,7 +1192,7 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-starters-" title="🚀Starters"><sub>🚀<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kinansarak">
-        <img src=".semio-repo/contributors/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/kinansarak/avatar-round-90x90.png" width="90px" alt="KinanSarak" style="border-radius: 50%;"/>
         <br />
         <sub><b>KinanSarak</b></sub></a>
         <br />
@@ -1197,21 +1201,21 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/EinMysterium">
-        <img src=".semio-repo/contributors/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/EinMysterium/avatar-round-90x90.png" width="90px" alt="EinMysterium" style="border-radius: 50%;"/>
         <br />
         <sub><b>Christian Hödtke</b></sub></a>
         <br />
         <a href="#-semiograsshopper-" title="🦗semio/grasshopper"><sub>🦗<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/AdrianoCelentano">
-        <img src=".semio-repo/contributors/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/AdrianoCelentano/avatar-round-90x90.png" width="90px" alt="AdrianoCelentano" style="border-radius: 50%;"/>
         <br />
         <sub><b>AdrianoCelentano</b></sub></a>
         <br />
         <a href="#-semiojs-" title="🟨semio/js"><sub>🟨<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/ellumpine">
-        <img src=".semio-repo/contributors/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/ellumpine/avatar-round-90x90.png" width="90px" alt="ellumpine" style="border-radius: 50%;"/>
         <br />
         <sub><b>ellumpine</b></sub></a>
         <br />
@@ -1219,14 +1223,14 @@ If you have any security vulnerabilities or concerns, please contact [us over em
         <a href="#-semioladybug-" title="🐞ladybug"><sub>🐞<sub></a>
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/kaatzjo">
-        <img src=".semio-repo/contributors/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/kaatzjo/avatar-round-90x90.png" width="90px" alt="kaatzjo" style="border-radius: 50%;"/>
         <br />
         <sub><b>kaatzjo</b></sub></a>
         <br />
         <a href="#-semioengine-" title="⚙️️semio/engine"><sub>⚙️️<sub></a> 
       </td>
       <td align="center" valign="top" width="145px"><a href="https://github.com/pizzadizza">
-        <img src=".semio-repo/contributors/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
+        <img src=".semio-repo/👤/pizzadizza/avatar-round-90x90.png" width="90px" alt="pizzadizza" style="border-radius: 50%;"/>
         <br />
         <sub><b>pizzadizza</b></sub></a>
         <br />

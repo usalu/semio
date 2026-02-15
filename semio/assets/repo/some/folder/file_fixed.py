@@ -1,6 +1,6 @@
 # region Header
 
-# [💻semio/assets/repo/some/folder/file_fixed.py](semiorepo://file/semio/assets/repo/some/folder/file_fixed.py)
+# [💻filefixedpy](semiorepo://file/SEMIO/ASSETS/REPO/SOME/FOLDER/FILE_FIXED.PY)
 
 # 2025 Test User <test@test.com>
 

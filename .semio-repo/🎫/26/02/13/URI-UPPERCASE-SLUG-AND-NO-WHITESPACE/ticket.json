@@ -8,13 +8,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-02-13 18:42:33",
       "author": "usalu",
       "system": "linux",
       "client": "cursor-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
       "prompt": "semio repo: uri always have uppercase slug for everything dynamic inside the uri (e.g. file name, folder name, ticket title, etc). In the uri cant be a whitespace (but names can usually have them). Make sure to refactor and tests this.",
-      "llm": "opus-4-6",
-      "date": "2026-02-13 18:42:33"
+      "llm": "opus-4-6"
     }
   ]
 }

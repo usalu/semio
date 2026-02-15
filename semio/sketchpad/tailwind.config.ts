@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/sketchpad/tailwind.config.ts](semiorepo://file/semio/sketchpad/tailwind.config.ts)
+// [👤semio🖱️sketchpad⚙️tailwindconfigts](semiorepo://file/SEMIO/SKETCHPAD/TAILWIND.CONFIG.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

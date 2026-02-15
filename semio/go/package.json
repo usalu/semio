@@ -14,5 +14,8 @@
     "email": "ueli@semio-tech.com",
     "url": "https://github.com/usalu"
   },
-  "bundleKind": "library"
+  "bundleKind": "library",
+  "years": [
+    "2025-2026"
+  ]
 }

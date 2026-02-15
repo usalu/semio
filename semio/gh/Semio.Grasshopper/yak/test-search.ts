@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [📜semio/gh/Semio.Grasshopper/yak/test-search.ts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/test-search.ts)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜testsearchts](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/TEST-SEARCH.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

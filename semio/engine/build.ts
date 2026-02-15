@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [📜semio/engine/build.ts](semiorepo://file/semio/engine/build.ts)
+// [👤semio📚engine📜buildts](semiorepo://file/SEMIO/ENGINE/BUILD.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

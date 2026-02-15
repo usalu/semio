@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/rs/semio.rs](semiorepo://file/semio/rs/semio.rs)
+// [👤semio📚rs💻semiors](semiorepo://file/SEMIO/RS/SEMIO.RS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

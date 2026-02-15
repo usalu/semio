@@ -9,13 +9,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-01-29T09:49:05.588584487Z",
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "a07d89c331ee47b38a72a88015511fd77480e8d3",
       "prompt": "Refactor file kinds, ignored/generated flags, and filtering in CLI and VS Code",
-      "llm": "gemini-3-pro",
-      "date": "2026-01-29T09:49:05.588584487Z"
+      "llm": "gemini-3-pro"
     }
   ]
 }

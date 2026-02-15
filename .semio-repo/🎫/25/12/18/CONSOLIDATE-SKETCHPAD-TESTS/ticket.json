@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-18T07:37:49.084Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "",
       "prompt": "Consolidate all sketchpad tests from feature-based to app-based organization. One test per app covering all features.",
-      "llm": "opus-4-5",
-      "date": "2025-12-18T07:37:49.084Z"
+      "llm": "opus-4-5"
     }
   ]
 }

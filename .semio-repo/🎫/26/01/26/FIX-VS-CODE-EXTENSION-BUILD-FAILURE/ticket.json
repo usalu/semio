@@ -4,13 +4,14 @@
   "prompt": "",
   "interactions": [
     {
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "",
       "client": "",
       "commit": "eeb8272d91c5437d9c455971d216c6c538261f87",
       "prompt": "The vsce binary was not found during post-attach setup due to incomplete npm installation.",
-      "llm": "gemini-3-flash",
-      "date": ""
+      "llm": "gemini-3-flash"
     }
   ]
 }

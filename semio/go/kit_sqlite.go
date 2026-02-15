@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/go/kit_sqlite.go](semiorepo://file/semio/go/kit_sqlite.go)
+// [👤semio📚go💻kitsqlitego](semiorepo://file/SEMIO/GO/KIT_SQLITE.GO)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

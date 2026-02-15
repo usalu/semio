@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/js/eslint.config.ts](semiorepo://file/semio/js/eslint.config.ts)
+// [👤semio📚js⚙️eslintconfigts](semiorepo://file/SEMIO/JS/ESLINT.CONFIG.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

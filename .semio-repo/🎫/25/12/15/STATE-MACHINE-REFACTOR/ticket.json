@@ -1,17 +1,18 @@
 {
-  "title": ">-",
+  "title": "\u003e-",
   "status": "closed",
-  "prompt": ">-",
+  "prompt": "\u003e-",
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.961Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "76900221ecf5cfb30a37d69fbb66abb3e0a0e45a",
-      "prompt": ">-",
-      "llm": "opus-4-5",
-      "date": "2025-12-16T17:06:07.961Z"
+      "prompt": "\u003e-",
+      "llm": "opus-4-5"
     }
   ]
 }

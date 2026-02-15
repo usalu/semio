@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 10:43:17",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "The 🔖 emoji in region markers like // #region 🔖Header should not be part of the parsed section name. Strip the emoji from the captured name in ParseSections, PolicySectionStartMatch, and PolicySectionEndMatch.",
       "llm": "opus-4-6",
@@ -11236,9 +11239,7 @@
             }
           ]
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-06 10:43:17"
+      }
     }
   ]
 }

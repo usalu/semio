@@ -5,13 +5,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-TICKET-MECHANISM",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-01-03T00:10:18Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "97d1f2878938222b14d1919804fc3a4918a8f8eb",
       "prompt": "Creating a new ticket should always start the first interaction. At least one file needs to be provided per interaction (and when opening a ticket). The vscode extension should add a file dialog to select files from the repo. The current opened active file should be preselected.",
-      "llm": "opus-4",
-      "date": "2026-01-03T00:10:18Z"
+      "llm": "opus-4"
     }
   ]
 }

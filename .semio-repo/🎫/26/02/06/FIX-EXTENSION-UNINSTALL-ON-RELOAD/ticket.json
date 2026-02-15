@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/SANDBOXED-REPO/ZERO-TOUCH-DEVCONTAINER",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 11:55:41",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Extension uninstall not fully clearing on window reload; ensure stale semio-repo extension is removed before reinstall and caches/registries are reset.",
       "llm": "gpt-5-2-codex",
@@ -202,13 +205,14 @@
           "modified": [],
           "added": null
         }
-      },
-      "client": "codex",
-      "date": "2026-02-06 11:55:41"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 11:57:28",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Record GitHub label warning from close",
       "llm": "gpt-5-2-codex",
@@ -400,9 +404,7 @@
           "modified": [],
           "added": null
         }
-      },
-      "client": "codex",
-      "date": "2026-02-06 11:57:28"
+      }
     }
   ]
 }

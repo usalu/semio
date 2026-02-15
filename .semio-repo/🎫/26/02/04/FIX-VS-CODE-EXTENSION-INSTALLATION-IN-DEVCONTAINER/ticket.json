@@ -8,7 +8,9 @@
   },
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-04 18:35:29",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
       "client": "claude-code",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
@@ -84,8 +86,7 @@
           ],
           "added": null
         }
-      },
-      "date": "2026-02-04 18:35:29"
+      }
     }
   ]
 }

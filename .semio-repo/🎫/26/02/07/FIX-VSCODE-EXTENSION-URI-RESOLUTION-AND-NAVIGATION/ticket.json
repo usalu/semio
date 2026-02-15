@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-07 23:17:57",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "The semio repo vscode extension should properly resolve all URIs and navigate to them. Clicking on a URI should navigate to the resource, clicking on a tree item should navigate to the resource, the `semio-repo: Navigate to` command should navigate to the resource.",
       "llm": "opus-4-6",
@@ -627,13 +630,14 @@
             }
           ]
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-07 23:17:57"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-07 23:34:29",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "Fix the duplicate constructor in FilterTreeDataProvider that causes the build to fail.",
       "llm": "opus-4-6",
@@ -1010,13 +1014,14 @@
             }
           ]
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-07 23:34:29"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-07 23:38:42",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "Fix bundle tree items showing raw kind strings like 'librarysemio/js' instead of emoji-prefixed short names like '📚js'. Need to map BundleKind enum strings to emojis and use short bundle names.",
       "llm": "opus-4-6",
@@ -1590,18 +1595,17 @@
             }
           ]
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-07 23:38:42"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-07 23:52:59",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "Fix definition tree items appearing doubled - once as sections and once as definitions. The SectionTreeDataProvider seems to be listing definitions as both section children and definition children.",
-      "llm": "opus-4-6",
-      "client": "claude-code",
-      "date": "2026-02-07 23:52:59"
+      "llm": "opus-4-6"
     }
   ]
 }

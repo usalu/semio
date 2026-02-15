@@ -1,6 +1,6 @@
 # region Header
 
-# [🧪semio/py/semio.benchmark.py](semiorepo://file/semio/py/semio.benchmark.py)
+# [👤semio📚py🧪semiobenchmarkpy](semiorepo://file/SEMIO/PY/SEMIO.BENCHMARK.PY)
 
 # 2026 Ueli Saluz <ueli@semio-tech.de>
 

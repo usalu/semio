@@ -1,13 +1,21 @@
 {
   "title": "Minimal Design Force Overlap Prevention",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Scaled all Design diagram nodes to one-third size by introducing a dedicated node-size constant and applying it consistently to rendering, connector geometry, drag center calculations, and collision radius while leaving model-space unit conversions unchanged.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/335"
+  },
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "implement D3 force diagram in the design app like kit app, primarily to prevent node overlap, with minimal forces so intentional placement remains easy",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -783,12 +791,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "Adjust Design diagram force so nodes only avoid collisions without any global pull or centering; keep movement minimal and preserve intentional placement.",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -1529,12 +1539,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "Existing design layouts still get reorganized/pulled together; adjust overlap prevention so only actively overlapping nodes move and existing non-overlapping diagram positions remain unchanged.",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -2380,12 +2392,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "Make all nodes in the Design app diagram three times smaller.",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -4161,10 +4175,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Scaled all Design diagram nodes to one-third size by introducing a dedicated node-size constant and applying it consistently to rendering, connector geometry, drag center calculations, and collision radius while leaving model-space unit conversions unchanged.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/335"
-  }
+  ]
 }

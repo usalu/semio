@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.898Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Update Playwright drag-and-drop test for dnd-kit compatibility",
-      "llm": "sonnet-4-5",
-      "date": "2025-12-16T17:06:07.898Z"
+      "llm": "sonnet-4-5"
     }
   ]
 }

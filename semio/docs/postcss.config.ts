@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/docs/postcss.config.ts](semiorepo://file/semio/docs/postcss.config.ts)
+// [👤semio🌐docs⚙️postcssconfigts](semiorepo://file/SEMIO/DOCS/POSTCSS.CONFIG.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

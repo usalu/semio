@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio-repo/vscode/eslint.config.ts](semiorepo://file/semio-repo/vscode/eslint.config.ts)
+// [🧰semiorepo🖱️vscode⚙️eslintconfigts](semiorepo://file/SEMIO-REPO/VSCODE/ESLINT.CONFIG.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

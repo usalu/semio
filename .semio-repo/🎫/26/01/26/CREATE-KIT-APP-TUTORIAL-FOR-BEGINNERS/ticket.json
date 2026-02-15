@@ -8,7 +8,9 @@
   },
   "interactions": [
     {
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "",
       "client": "",
       "commit": "eeb8272d91c5437d9c455971d216c6c538261f87",
@@ -96,21 +98,21 @@
               }
             },
             {
-              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture & Relationships",
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture \u0026 Relationships",
               "lines": {
                 "added": 15,
                 "removed": 0
               }
             },
             {
-              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture & Relationships#Data Flow",
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture \u0026 Relationships#Data Flow",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture & Relationships#How it connects",
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#🏗️️ Architecture \u0026 Relationships#How it connects",
               "lines": {
                 "added": 6,
                 "removed": 0
@@ -131,7 +133,7 @@
               }
             },
             {
-              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#📦 Imports & Dependencies Explained",
+              "path": "plans/kit-tutorial.md#🎓 Kit App Tutorial: Managing the Building Sets#📦 Imports \u0026 Dependencies Explained",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -194,8 +196,7 @@
           "modified": [],
           "added": null
         }
-      },
-      "date": ""
+      }
     }
   ]
 }

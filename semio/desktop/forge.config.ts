@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/desktop/forge.config.ts](semiorepo://file/semio/desktop/forge.config.ts)
+// [👤semio🖱️desktop⚙️forgeconfigts](semiorepo://file/SEMIO/DESKTOP/FORGE.CONFIG.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/js/vite.config.ts](semiorepo://file/semio/js/vite.config.ts)
+// [👤semio📚js⚙️viteconfigts](semiorepo://file/SEMIO/JS/VITE.CONFIG.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -5,13 +5,14 @@
   "goal": "R26-03/RUNNING-NET",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.751Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Sync C# unit tests with JS semio.ts tests using same fixtures",
-      "llm": "sonnet-4",
-      "date": "2025-12-16T17:06:07.751Z"
+      "llm": "sonnet-4"
     }
   ]
 }

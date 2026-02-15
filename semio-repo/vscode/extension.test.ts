@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧪semio-repo/vscode/extension.test.ts](semiorepo://file/semio-repo/vscode/extension.test.ts)
+// [🧰semiorepo🖱️vscode🧪extensiontestts](semiorepo://file/SEMIO-REPO/VSCODE/EXTENSION.TEST.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -576,8 +576,8 @@ suite("Filter Provider Test Suite", () => {
     assert.ok(labels.some(l => l.startsWith("🎯Goals")), "Should have Goals");
     assert.ok(labels.some(l => l.startsWith("🎫Tickets")), "Should have Tickets");
     assert.ok(labels.some(l => l.startsWith("🎫Dates")), "Should have Dates");
-    assert.ok(labels.some(l => l.startsWith("🛡️Policies")), "Should have Policies");
-    assert.ok(labels.some(l => l.startsWith("👤Contributors")), "Should have Contributors");
+    assert.ok(labels.some(l => l.startsWith("�️Policies")), "Should have Policies");
+    assert.ok(labels.some(l => l.startsWith("🧑‍💻Contributors")), "Should have Contributors");
     assert.ok(labels.some(l => l.startsWith("🔄Commits")), "Should have Commits");
   });
 
@@ -859,7 +859,7 @@ suite("treeNodeDisplayLabel Test Suite", () => {
   test("Contributor node gets fallback emoji", () => {
     const node: TreeNodeData = { Kind: "contributor", ID: "", Label: "usalu", URI: "" };
     const label = treeNodeDisplayLabel(node);
-    assert.ok(label.includes("👤"));
+    assert.ok(label.includes("🧑‍💻"));
   });
 
   test("Commit node gets fallback emoji", () => {
@@ -917,14 +917,14 @@ suite("Breach Kind Hierarchy Test Suite", () => {
 
     const policyNode: TreeNodeData = {
       Kind: "policy",
-      ID: "🛡️code",
-      Label: "🛡️code",
+      ID: "�️code",
+      Label: "👮️code",
       URI: "semiorepo://policy/CODE",
       Children: [categoryNode]
     };
 
     const policyItem = treeNodeToItem(policyNode);
-    assert.strictEqual(policyItem.label, "🛡️code");
+    assert.strictEqual(policyItem.label, "�️code");
     assert.strictEqual(policyItem.collapsibleState, vscode.TreeItemCollapsibleState.Collapsed);
 
     const categoryItem = treeNodeToItem(categoryNode);

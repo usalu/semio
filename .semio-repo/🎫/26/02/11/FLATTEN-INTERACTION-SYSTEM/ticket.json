@@ -8,13 +8,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-02-11 09:26:12",
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "81d694cc3df080b478d7aed9e8e74beba56b9eff",
       "prompt": "Interactions should be flattened from nested system object to flat system and client strings. Migrate all existing goals.json and tickets.json to the new format.",
-      "llm": "gemini-3-pro",
-      "date": "2026-02-11 09:26:12"
+      "llm": "gemini-3-pro"
     }
   ]
 }

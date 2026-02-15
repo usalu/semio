@@ -1,6 +1,6 @@
 #region 🔖Header
 
-// [💻semio/net/Semio/Semio.cs](semiorepo://file/semio/net/Semio/Semio.cs)
+// [👤semio📚net🛅semio💻semiocs](semiorepo://file/SEMIO/NET/SEMIO/SEMIO.CS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

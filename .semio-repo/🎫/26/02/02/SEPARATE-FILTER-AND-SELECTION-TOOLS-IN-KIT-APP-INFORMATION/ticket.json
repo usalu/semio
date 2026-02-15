@@ -1,17 +1,20 @@
 {
   "title": "Separate Filter and Selection Tools in Kit App Information",
-  "interactions": [
-    {
-      "prompt": "Separate filter tools and selection tools into two distinct toolbar sections. Render them in separate horizontally-adjacent toolbar containers. Filter section shows all artifact kind toggles (currently all active by default—make them inactive by default, activate on click). Selection section should show tool kind buttons with icons. Both sections should use the same Toolbar component but be registered as separate sections with different specificity values to maintain left-to-right ordering",
-      "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418"
-    }
-  ],
   "status": "open",
+  "prompt": "",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/297"
-  }
+  },
+  "interactions": [
+    {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
+      "prompt": "Separate filter tools and selection tools into two distinct toolbar sections. Render them in separate horizontally-adjacent toolbar containers. Filter section shows all artifact kind toggles (currently all active by default—make them inactive by default, activate on click). Selection section should show tool kind buttons with icons. Both sections should use the same Toolbar component but be registered as separate sections with different specificity values to maintain left-to-right ordering",
+      "llm": "gemini-3-pro"
+    }
+  ]
 }

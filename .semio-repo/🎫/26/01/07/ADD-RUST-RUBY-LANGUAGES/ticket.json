@@ -5,13 +5,14 @@
   "goal": "AI-OPTIMIZED-REPO",
   "interactions": [
     {
-      "author": "Ueli Saluz <uelisemio.tech>",
+      "kind": "",
+      "date": "0001-01-01T00:00:00Z",
+      "author": "Ueli Saluz \u003cuelisemio.tech\u003e",
       "system": "",
       "client": "",
       "commit": "",
       "prompt": "Add Rust and Ruby as languages to the repo CLI. Use regions and modules for sections.",
-      "llm": "opus-4",
-      "date": "0001-01-01T00:00:00Z"
+      "llm": "opus-4"
     }
   ]
 }

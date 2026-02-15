@@ -9,13 +9,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-01-28T13:54:21.867352599Z",
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
       "prompt": "Extend repo CLI, VS Code extension, and GraphQL to support enhanced ticket commands (goal, parent, no-github) and new goal commands.",
-      "llm": "gemini-3-pro",
-      "date": "2026-01-28T13:54:21.867352599Z"
+      "llm": "gemini-3-pro"
     }
   ]
 }

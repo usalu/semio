@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/js/sketchpad/shared.ts](semiorepo://file/semio/js/sketchpad/shared.ts)
+// [👤semio📚js🗃️sketchpad💻sharedts](semiorepo://file/SEMIO/JS/SKETCHPAD/SHARED.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

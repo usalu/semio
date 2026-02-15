@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.728Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Fix drop coordinates for diagram and scene",
-      "llm": "sonnet-4",
-      "date": "2025-12-16T17:06:07.728Z"
+      "llm": "sonnet-4"
     }
   ]
 }

@@ -1,13 +1,18 @@
 {
   "title": "Toolbar Dropdown Subtool Alignment",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Added five Design selection subtools so the Selection dropdown renders as a one-column five-row list (Select, Hand, Additive, Subtractive, Intersect), with updated labels and docs.",
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "drop down toggle when activated in the toolbar renderes somwhere else . it should show a list of subtools directly on top of the tool as avertical table list . make sure selection and hand are within this table in the subtool. additive subtractive seelction should show in the setting tool bar instead of hand and selection curently",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -4836,12 +4841,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "reset all other toolbar changes and only fix the selection dropdown toggle behavior",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -9338,12 +9345,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "fix selection dropdown placement above toolbar tool; keep select+hand subtools in dropdown; show additive/subtractive controls in settings bar",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -14155,12 +14164,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "selection dropdown subtools must render as stacked list exactly above the dropdown tool",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -18986,12 +18997,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "selection dropdown must anchor exactly above button with same width, stacked subtool rows, clear hover and selected indication",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -20891,12 +20904,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "add five selection subtools in selection dropdown as one column five rows",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -24409,7 +24424,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Added five Design selection subtools so the Selection dropdown renders as a one-column five-row list (Select, Hand, Additive, Subtractive, Intersect), with updated labels and docs."
+  ]
 }

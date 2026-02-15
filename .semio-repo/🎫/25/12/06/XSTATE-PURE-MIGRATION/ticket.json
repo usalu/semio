@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.88Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Complete pure XState migration by removing all legacy controller code",
-      "llm": "sonnet-4-5",
-      "date": "2025-12-16T17:06:07.88Z"
+      "llm": "sonnet-4-5"
     }
   ]
 }

@@ -5,7 +5,9 @@
   "summary": "Documented styling-property mappings for the provided elements (AvatarFallback span and ReactFlow edge path), including CSS variable resolution.",
   "interactions": [
     {
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "",
       "client": "",
       "commit": "0e45db5aec012fab2128f478cbb2e3e2a104281d",
@@ -418,17 +420,17 @@
             }
           ]
         }
-      },
-      "date": ""
+      }
     },
     {
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "",
       "client": "",
       "commit": "0e45db5aec012fab2128f478cbb2e3e2a104281d",
       "prompt": "Create a list of the elements in the kit diagram window which the user can edit.",
-      "llm": "gpt-5-2-codex",
-      "date": ""
+      "llm": "gpt-5-2-codex"
     }
   ]
 }

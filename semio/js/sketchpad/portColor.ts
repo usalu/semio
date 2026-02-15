@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/js/sketchpad/portColor.ts](semiorepo://file/semio/js/sketchpad/portColor.ts)
+// [👤semio📚js🗃️sketchpad💻portcolorts](semiorepo://file/SEMIO/JS/SKETCHPAD/PORTCOLOR.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

@@ -6,13 +6,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-KIT-APP",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-11-21T00:00:00Z",
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Migration from old format",
-      "llm": "sonnet-4",
-      "date": "2025-11-21T00:00:00Z"
+      "llm": "sonnet-4"
     }
   ]
 }

@@ -5,12 +5,12 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "interactions": [
     {
-      "prompt": "",
-      "llm": "",
-      "author": {},
-      "started": "0001-01-01T00:00:00Z",
-      "commit": "",
-      "date": ""
+      "kind": "",
+      "date": "",
+      "author": "",
+      "system": "",
+      "client": "",
+      "commit": ""
     }
   ]
 }

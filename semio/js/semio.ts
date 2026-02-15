@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/js/semio.ts](semiorepo://file/semio/js/semio.ts)
+// [👤semio📚js💻semiots](semiorepo://file/SEMIO/JS/SEMIO.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/sketchpad/vite.config.ts](semiorepo://file/semio/sketchpad/vite.config.ts)
+// [👤semio🖱️sketchpad⚙️viteconfigts](semiorepo://file/SEMIO/SKETCHPAD/VITE.CONFIG.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

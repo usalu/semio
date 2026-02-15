@@ -74,7 +74,7 @@ Section and definition ranges expose line/column start/end positions so editors 
 Range selections always request start/end line/column subfields so Position objects satisfy schema selection requirements in CLI, MCP, and VS Code queries.
 Section list queries fetch nested children alongside ranges so tree views can render full section hierarchies.
 Repo tool definitions are top-level only (anchored at the start of the line); definitions inside classes, functions, or indents are ignored to keep the scope flat and manageable.
-Ticket listing reads from the active `.semio-repo/tickets` workspace and falls back to legacy root `tickets/` directories when needed.
+Ticket listing reads from the active `.semio-repo/🎫` workspace.
 Repo `tree` commands support a `--md` flag that renders the structure as a Markdown nested bullet list with links.
 The top-level `repo tree` command defaults to Markdown output; `--text` renders ASCII connectors and `--json` returns the raw tree object.
 Project tool listing is sourced from project records (`LoadProjects`) so project outputs and tool return types stay aligned on `Project` entities.
@@ -425,7 +425,7 @@ Legacy repo CLI adapter packages MUST NOT exist outside the single-file entrypoi
 
 Repo operational commands (benchmark, preflight, update) MUST live in the single-file repo entrypoint.
 
-Ticket close and reopen MUST address tickets via YYYY/MM/DD/SLUG path identifiers.
+Ticket close and reopen MUST address tickets via YY/MM/DD/SLUG path identifiers.
 
 Ticket close MUST support an all flag to bulk close all open tickets without summary requirements or GitHub interaction.
 

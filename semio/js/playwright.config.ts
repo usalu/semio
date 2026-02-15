@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/js/playwright.config.ts](semiorepo://file/semio/js/playwright.config.ts)
+// [👤semio📚js⚙️playwrightconfigts](semiorepo://file/SEMIO/JS/PLAYWRIGHT.CONFIG.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

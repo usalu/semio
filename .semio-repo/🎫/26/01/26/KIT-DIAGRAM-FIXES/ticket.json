@@ -8,7 +8,9 @@
   },
   "interactions": [
     {
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "",
       "client": "",
       "commit": "86d699419815d98b01c413b9a7f515a727af586b",
@@ -613,8 +615,7 @@
             }
           ]
         }
-      },
-      "date": ""
+      }
     }
   ]
 }

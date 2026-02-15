@@ -9,8 +9,11 @@
   "goal": "CODEBASE",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 17:45:32",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "windsurf-chat",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "Replace file path in source file headers with artifact IDs from the semio repo ID system. Make BreachCodeHeaderMissingFilename into BreachCodeHeaderWrongFileId that is autofixable. Fix all existing headers. Extend tests.",
       "llm": "sonnet-4-5",
@@ -361,7 +364,7 @@
               }
             },
             {
-              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
+              "path": "AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
               "lines": {
                 "added": 0,
                 "removed": 16
@@ -824,7 +827,7 @@
               }
             },
             {
-              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics & Logging",
+              "path": "📄AGENTS.md#Using TypeScript fallback#Testing#UI Component ID System#Integration Points#7. Analytics \u0026 Logging",
               "lines": {
                 "added": 0,
                 "removed": 16
@@ -995,9 +998,7 @@
             }
           ]
         }
-      },
-      "client": "windsurf-chat",
-      "date": "2026-02-06 17:45:32"
+      }
     }
   ]
 }

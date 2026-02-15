@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/js/sketchpad/apps/index.ts](semiorepo://file/semio/js/sketchpad/apps/index.ts)
+// [👤semio📚js🗃️sketchpad🗃️apps💻indexts](semiorepo://file/SEMIO/JS/SKETCHPAD/APPS/INDEX.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

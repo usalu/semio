@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/js/vite-env.d.ts](semiorepo://file/semio/js/vite-env.d.ts)
+// [👤semio📚js💻viteenvdts](semiorepo://file/SEMIO/JS/VITE-ENV.D.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/js/sketchpad/kitSelectionHelper.ts](semiorepo://file/semio/js/sketchpad/kitSelectionHelper.ts)
+// [👤semio📚js🗃️sketchpad💻kitselectionhelperts](semiorepo://file/SEMIO/JS/SKETCHPAD/KITSELECTIONHELPER.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -9,13 +9,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-01-29T18:20:28.135479136Z",
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "43c1eccea3598ada7fdfb4c987c28123e1e8e7dc",
       "prompt": "Ensure CLI commands return colored, compact text output by default, and JSON only with --json flag.",
-      "llm": "gemini-3-pro",
-      "date": "2026-01-29T18:20:28.135479136Z"
+      "llm": "gemini-3-pro"
     }
   ]
 }

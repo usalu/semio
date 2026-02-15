@@ -1,15 +1,18 @@
 {
   "title": "General Move Command With Integrate And Extract",
   "status": "closed",
-  "prompt": "Implement a general `move <source>e <target>e` CLI command that moves artifacts between kinds (folder, file, section, definition, etc.), including cross-kind moves: file→section calls integrate, section→file calls extract. Also implement standalone `integrate` and `extract` commands. All commands must auto-adjust AGENTS.md Codebase sections.",
+  "prompt": "Implement a general `move \u003csource\u003ee \u003ctarget\u003ee` CLI command that moves artifacts between kinds (folder, file, section, definition, etc.), including cross-kind moves: file→section calls integrate, section→file calls extract. Also implement standalone `integrate` and `extract` commands. All commands must auto-adjust AGENTS.md Codebase sections.",
   "summary": "Implemented general `move`, `integrate`, and `extract` CLI commands with MCP tool support. Added `ParseArtifactRef` for emoji-prefixed artifact ID parsing (📁 folder, 💻/📄 file, 🔖 section with #-delimited slugs), `UnSlugify`/`FindSectionBySlug`/`ResolveSectionName` for section slug resolution, `UpdateAgentsDocsPath`/`RemoveAgentsDocsEntry` for automatic AGENTS.md updates on file/folder moves. `moveCommand` dispatches on source/target kind pairs including cross-kind file→section (integrate+delete) and section→file (extract). `ToolFileMove`/`ToolFolderMove` now auto-update AGENTS.md headers. MCP handlers `sectionExtract` and `artifactMove` expose extract and move functionality. All commands wired into NewRootWithConfig and verified to compile and appear in CLI help.",
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-07 00:04:23",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "windsurf-chat",
       "commit": "0289c4bd83eb052f0aaeaa8256cff387196d7b60",
-      "prompt": "Implement a general `move <source>e <target>e` CLI command that moves artifacts between kinds (folder, file, section, definition, etc.), including cross-kind moves: file→section calls integrate, section→file calls extract. Also implement standalone `integrate` and `extract` commands. All commands must auto-adjust AGENTS.md Codebase sections.",
+      "prompt": "Implement a general `move \u003csource\u003ee \u003ctarget\u003ee` CLI command that moves artifacts between kinds (folder, file, section, definition, etc.), including cross-kind moves: file→section calls integrate, section→file calls extract. Also implement standalone `integrate` and `extract` commands. All commands must auto-adjust AGENTS.md Codebase sections.",
       "llm": "sonnet-4-5",
       "diff": {
         "bundles": {
@@ -306,9 +309,7 @@
           ],
           "added": null
         }
-      },
-      "client": "windsurf-chat",
-      "date": "2026-02-07 00:04:23"
+      }
     }
   ]
 }

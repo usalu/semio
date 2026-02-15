@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/desktop/main.ts](semiorepo://file/semio/desktop/main.ts)
+// [👤semio🖱️desktop💻maints](semiorepo://file/SEMIO/DESKTOP/MAIN.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

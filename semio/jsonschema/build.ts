@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [📜semio/jsonschema/build.ts](semiorepo://file/semio/jsonschema/build.ts)
+// [👤semio🛂jsonschema📜buildts](semiorepo://file/SEMIO/JSONSCHEMA/BUILD.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

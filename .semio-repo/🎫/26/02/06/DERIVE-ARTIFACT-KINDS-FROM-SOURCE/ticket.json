@@ -8,13 +8,14 @@
   "goal": "R26-02",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 17:59:05",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "copilot-chat",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "Derive bundle kind from package.json, folder kind from folder name and presence of certain files, file kind from general and repo-specific knowledge, and definition kind from language processor",
-      "llm": "opus-4-6",
-      "client": "copilot-chat",
-      "date": "2026-02-06 17:59:05"
+      "llm": "opus-4-6"
     }
   ]
 }

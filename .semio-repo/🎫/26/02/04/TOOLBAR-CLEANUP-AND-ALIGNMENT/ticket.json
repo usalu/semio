@@ -1,13 +1,21 @@
 {
   "title": "Toolbar Cleanup And Alignment",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Fixed toolbar visibility by correcting container width calculation while keeping overflow clipped and dropdown alignment intact.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/338"
+  },
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "Fix toolbar: remove scrollbar, align subtools dropdown above trigger, and clean toolbar border.",
       "llm": "gpt-5-2-codex",
-      "ui": "copilot-chat",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -1316,12 +1324,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "Toolbar is invisible now.",
       "llm": "gpt-5-2-codex",
-      "ui": "copilot-chat",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -2445,10 +2455,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Fixed toolbar visibility by correcting container width calculation while keeping overflow clipped and dropdown alignment intact.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/338"
-  }
+  ]
 }

@@ -9,13 +9,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-01-30T13:40:05.531504824Z",
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "923068ca75f4196ae30974c0e0ae39733780e301",
       "prompt": "Get sketchpad desktop dev running. Currently failing with TypeScript config errors: \"failed to resolve 'extends':'semio/js/tsconfig.json'\" and missing main.js build output.",
-      "llm": "gpt-5-2-codex",
-      "date": "2026-01-30T13:40:05.531504824Z"
+      "llm": "gpt-5-2-codex"
     }
   ]
 }

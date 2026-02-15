@@ -5,12 +5,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-CLI",
   "interactions": [
     {
-      "prompt": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
-      "llm": "claude",
-      "author": {},
-      "started": "0001-01-01T00:00:00Z",
+      "kind": "",
+      "date": "",
+      "author": "",
+      "system": "",
+      "client": "",
       "commit": "",
-      "date": ""
+      "prompt": "Add postCreateCommand to devcontainer.json to fix gh config ownership",
+      "llm": "claude"
     }
   ]
 }

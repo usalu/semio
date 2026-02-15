@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️vitest.config.ts](semiorepo://file/vitest.config.ts)
+// [⚙️vitestconfigts](semiorepo://file/VITEST.CONFIG.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

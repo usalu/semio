@@ -1,13 +1,21 @@
 {
   "title": "Fix Kit App Tests",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Fixed navigation timeout in kit selection tests by resolving an event bubbling issue in the Toggle component's Action button. Verified that clicking the Create button now properly triggers navigation instead of toggling the parent. Updated tests to use robust selectors and confirmed all kit app tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/293"
+  },
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "get the kit app test to comply. dont remove any funtionality from the test.",
       "llm": "gemini-3-pro",
-      "ui": "copilot-chat",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -421,10 +429,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Fixed navigation timeout in kit selection tests by resolving an event bubbling issue in the Toggle component's Action button. Verified that clicking the Create button now properly triggers navigation instead of toggling the parent. Updated tests to use robust selectors and confirmed all kit app tests pass.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/293"
-  }
+  ]
 }

@@ -8,8 +8,11 @@
   },
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-04 20:43:10",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "codex",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
       "prompt": "Create a new command: sync github that syncs local semio-repo artifacts with remote GitHub artifacts, closes issues when tickets close, ensures goal milestones applied, and cleans up @ labels to match projects/bundles.",
       "llm": "gpt-5-2-codex",
@@ -1835,13 +1838,14 @@
             }
           ]
         }
-      },
-      "client": "codex",
-      "date": "2026-02-04 20:43:10"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-04 21:07:36",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "codex",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
       "prompt": "Fix sync github milestones and labels",
       "llm": "gpt-5-2-codex",
@@ -4031,13 +4035,14 @@
             }
           ]
         }
-      },
-      "client": "codex",
-      "date": "2026-02-04 21:07:36"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-04 21:21:37",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "codex",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
       "prompt": "Fix sync github milestone list GET query handling",
       "llm": "gpt-5-2-codex",
@@ -6227,13 +6232,14 @@
             }
           ]
         }
-      },
-      "client": "codex",
-      "date": "2026-02-04 21:21:37"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-05 10:20:29",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Fix sync github to remove invalid @ labels across all GitHub issues",
       "llm": "gpt-5-2-codex",
@@ -8444,13 +8450,14 @@
             }
           ]
         }
-      },
-      "client": "codex",
-      "date": "2026-02-05 10:20:29"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-05 10:32:06",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Run sync github until invalid @ labels are gone and verify all remaining @ labels are valid",
       "llm": "gpt-5-2-codex",
@@ -10661,13 +10668,14 @@
             }
           ]
         }
-      },
-      "client": "codex",
-      "date": "2026-02-05 10:32:06"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-05 10:40:38",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "codex",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Fix sync github to synchronize repository label catalog for all @ project and bundle labels",
       "llm": "gpt-5-2-codex",
@@ -13137,9 +13145,7 @@
             }
           ]
         }
-      },
-      "client": "codex",
-      "date": "2026-02-05 10:40:38"
+      }
     }
   ]
 }

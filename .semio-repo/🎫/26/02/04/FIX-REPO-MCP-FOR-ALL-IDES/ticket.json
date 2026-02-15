@@ -7,13 +7,14 @@
   },
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-04 19:21:19",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
       "client": "copilot-chat",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
       "prompt": "Fix schema validation errors in MCP tools (missing items in array) and ensure tool availability in all IDEs.",
-      "llm": "gemini-3-pro",
-      "date": "2026-02-04 19:21:19"
+      "llm": "gemini-3-pro"
     }
   ]
 }

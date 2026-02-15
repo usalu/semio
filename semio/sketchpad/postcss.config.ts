@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/sketchpad/postcss.config.ts](semiorepo://file/semio/sketchpad/postcss.config.ts)
+// [👤semio🖱️sketchpad⚙️postcssconfigts](semiorepo://file/SEMIO/SKETCHPAD/POSTCSS.CONFIG.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

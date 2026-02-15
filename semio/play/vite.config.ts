@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/play/vite.config.ts](semiorepo://file/semio/play/vite.config.ts)
+// [👤semio🌐play⚙️viteconfigts](semiorepo://file/SEMIO/PLAY/VITE.CONFIG.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

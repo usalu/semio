@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 13:12:28",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "copilot-chat",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Refactor monorepo tree view with correct kind icons, nested sections, file-save refresh, per-item refresh buttons, complete filter menus, statute trees, and extended tests.",
       "llm": "opus-4-6",
@@ -173,7 +176,7 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
               "lines": {
                 "added": 2,
                 "removed": 2
@@ -377,21 +380,21 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§allowedDotDirectories",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§allowedDotDirectories",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§ignoredDirectories",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§ignoredDirectories",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§isInIgnoredDirectory",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§isInIgnoredDirectory",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -814,9 +817,7 @@
             }
           ]
         }
-      },
-      "client": "copilot-chat",
-      "date": "2026-02-06 13:12:28"
+      }
     }
   ]
 }

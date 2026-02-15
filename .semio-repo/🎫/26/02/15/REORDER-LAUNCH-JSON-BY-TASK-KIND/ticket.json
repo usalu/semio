@@ -1,0 +1,21 @@
+{
+  "title": "Reorder Launch Json by Task Kind",
+  "status": "closed",
+  "prompt": "Reorder .vscode/launch.json configurations by task kind (BUILD, PUBLISH:TEST, PUBLISH, DEV) instead of by package name. Rename generic language debuggers (Go → Go dev, Python → Python dev). Unify semio-repo/vscode package into build.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/573"
+  },
+  "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT",
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-02-15 15:38:35",
+      "author": "usalu",
+      "system": "linux",
+      "client": "claude-code",
+      "commit": "cfb3b6084ff3fe883d5f39b08810a0b90997907a",
+      "prompt": "Reorder .vscode/launch.json configurations by task kind (BUILD, PUBLISH:TEST, PUBLISH, DEV) instead of by package name. Rename generic language debuggers (Go → Go dev, Python → Python dev). Unify semio-repo/vscode package into build.",
+      "llm": "opus-4-6"
+    }
+  ]
+}

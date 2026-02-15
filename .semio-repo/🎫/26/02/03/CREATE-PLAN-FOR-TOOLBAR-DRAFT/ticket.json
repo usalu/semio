@@ -1,13 +1,21 @@
 {
   "title": "Create Plan for Toolbar Draft",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Created a phased toolbar implementation plan in .semio-repo/drafts/Toolbar.md and synchronized toolbar mechanism docs in README.md and AGENTS.md.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/325"
+  },
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "Create a plan for .semio-repo/drafts/Toolbar.md",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -122,10 +130,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Created a phased toolbar implementation plan in .semio-repo/drafts/Toolbar.md and synchronized toolbar mechanism docs in README.md and AGENTS.md.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/325"
-  }
+  ]
 }

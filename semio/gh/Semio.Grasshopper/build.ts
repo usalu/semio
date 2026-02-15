@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [📜semio/gh/Semio.Grasshopper/build.ts](semiorepo://file/semio/gh/Semio.Grasshopper/build.ts)
+// [👤semio📚gh🛅semiograsshopper📜buildts](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/BUILD.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

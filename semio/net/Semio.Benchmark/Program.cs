@@ -1,6 +1,6 @@
 #region 🔖Header
 
-// [💻semio/net/Semio.Benchmark/Program.cs](semiorepo://file/semio/net/Semio.Benchmark/Program.cs)
+// [👤semio📚net🛅semiobenchmark💻programcs](semiorepo://file/SEMIO/NET/SEMIO.BENCHMARK/PROGRAM.CS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

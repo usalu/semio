@@ -1,6 +1,6 @@
 # region Header
 
-# [💻coda/py/coda.py](semiorepo://file/coda/py/coda.py)
+# [🔬coda📚py💻codapy](semiorepo://file/CODA/PY/CODA.PY)
 
 # 2026 Ueli Saluz <ueli@semio-tech.de>
 

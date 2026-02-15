@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-DOCS-APP",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-16T17:06:07.709Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "0000000000000000000000000000000000000000",
       "prompt": "Update agents reports and docs",
-      "llm": "sonnet-4",
-      "date": "2025-12-16T17:06:07.709Z"
+      "llm": "sonnet-4"
     }
   ]
 }

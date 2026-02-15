@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio/assets/logo/logo.ts](semiorepo://file/semio/assets/logo/logo.ts)
+// [👤semio🏪assets🛅logo💻logots](semiorepo://file/SEMIO/ASSETS/LOGO/LOGO.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

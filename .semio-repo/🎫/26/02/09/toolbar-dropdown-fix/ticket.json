@@ -1,13 +1,18 @@
 {
   "title": "Toolbar Dropdown Fix",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Fixed toolbar dropdown positioning by centering the alignment. Updated the dropdown to include the currently selected tool in the list. Refactored Design app tool settings to display Additive/Subtractive modes for Selection tool and remove redundant Hand tool toggle.",
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "unknown",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "drop down toggle when activated in the toolbar renderes somwhere else . it should show a list of subtools directly on top of the tool as avertical table list . make sure selection and hand are within this table in the subtool. additive subtractive seelction should show in the setting tool bar instead of hand and selection curently",
       "llm": "unknown",
-      "ui": "unknown",
-      "author": "unknown",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -2853,7 +2858,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Fixed toolbar dropdown positioning by centering the alignment. Updated the dropdown to include the currently selected tool in the list. Refactored Design app tool settings to display Additive/Subtractive modes for Selection tool and remove redundant Hand tool toggle."
+  ]
 }

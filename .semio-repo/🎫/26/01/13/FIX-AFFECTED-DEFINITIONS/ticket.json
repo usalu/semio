@@ -5,11 +5,12 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-DEFINITION-MECHANISM",
   "interactions": [
     {
+      "kind": "",
+      "date": "",
       "author": "",
       "system": "",
       "client": "",
-      "commit": "",
-      "date": ""
+      "commit": ""
     }
   ]
 }

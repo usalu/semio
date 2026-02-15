@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [📜semio/gh/Semio.Grasshopper/build-value-lists.ts](semiorepo://file/semio/gh/Semio.Grasshopper/build-value-lists.ts)
+// [👤semio📚gh🛅semiograsshopper📜buildvalueliststs](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/BUILD-VALUE-LISTS.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

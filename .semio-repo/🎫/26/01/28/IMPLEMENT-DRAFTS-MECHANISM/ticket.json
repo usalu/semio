@@ -6,13 +6,14 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-DRAFT-MECHANISM",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-01-28T16:50:58.053517969Z",
       "author": "usalu",
       "system": "",
       "client": "",
       "commit": "adbb2c2a65b0ecfbc09d148c074a333e58857849",
       "prompt": "Extend repo mechanism to introduce drafts replacing plans",
-      "llm": "gemini-3-pro",
-      "date": "2026-01-28T16:50:58.053517969Z"
+      "llm": "gemini-3-pro"
     }
   ]
 }

@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-07 23:06:07",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "copilot-chat",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "semio repo vscode extension:\n- target and temp are appearing as user projects although they are not\n- sections in the explorer sideview are not appearing\n- definitions tree items are appearing twice - once wrongly with a section emoji in the right place and once on root of the section (not part of the subsection) as definitions.\n- filter kind menu buttons are working but should indicate the filter state.",
       "llm": "gemini-3-pro",
@@ -1002,9 +1005,7 @@
             }
           ]
         }
-      },
-      "client": "copilot-chat",
-      "date": "2026-02-07 23:06:07"
+      }
     }
   ]
 }

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio-repo/vscode/vite.config.ts](semiorepo://file/semio-repo/vscode/vite.config.ts)
+// [🧰semiorepo🖱️vscode⚙️viteconfigts](semiorepo://file/SEMIO-REPO/VSCODE/VITE.CONFIG.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

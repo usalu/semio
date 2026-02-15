@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 02:04:45",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "The VS Code extension tree view shows no sections when expanding a file because the GraphQL Range type mismatch between schema.graphql (Range { start: Int\\!, end: Int\\! }) and the Go schema builder (Range { start: Position\\!, end: Position\\! }). The query fails with 'Field start of type Position\\! must have a sub selection'.",
       "llm": "opus-4",
@@ -1185,13 +1188,14 @@
             }
           ]
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-06 02:04:45"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 02:18:56",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Definitions are not showing when unfolding sections in the VS Code extension tree view.",
       "llm": "opus-4-6",
@@ -2688,13 +2692,14 @@
             }
           ]
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-06 02:18:56"
+      }
     },
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 09:03:41",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Fix clicking on section or definition tree item not jumping to the right line of code. The openFileAtOffsets function uses doc.positionAt() which interprets the value as a character offset, but range.start/range.end are line numbers.",
       "llm": "opus-4-6",
@@ -3035,9 +3040,7 @@
           ],
           "added": null
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-06 09:03:41"
+      }
     }
   ]
 }

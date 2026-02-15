@@ -6,13 +6,12 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-VSCODE-EXTENSION",
   "interactions": [
     {
-      "prompt": "",
-      "llm": "",
-      "author": {},
-      "started": "0001-01-01T00:00:00Z",
-      "finished": "2026-02-03T08:49:28.556718798Z",
-      "commit": "",
-      "date": ""
+      "kind": "",
+      "date": "",
+      "author": "",
+      "system": "",
+      "client": "",
+      "commit": ""
     }
   ]
 }

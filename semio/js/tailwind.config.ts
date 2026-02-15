@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/js/tailwind.config.ts](semiorepo://file/semio/js/tailwind.config.ts)
+// [👤semio📚js⚙️tailwindconfigts](semiorepo://file/SEMIO/JS/TAILWIND.CONFIG.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

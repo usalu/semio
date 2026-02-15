@@ -5,12 +5,13 @@
   "goal": "AI-OPTIMIZED-REPO",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-01-29T19:44:04.192458Z",
       "author": "Migration Script",
       "system": "",
       "client": "",
       "commit": "",
-      "prompt": "Migrated from legacy files",
-      "date": "2026-01-29T19:44:04.192458Z"
+      "prompt": "Migrated from legacy files"
     }
   ]
 }

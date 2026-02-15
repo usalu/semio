@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio-repo/cli/main.go](semiorepo://file/semio-repo/cli/main.go)
+// [💻maingo](semiorepo://file/SEMIO-REPO/CLI/MAIN.GO)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -1514,7 +1514,7 @@ func ticketCommand(factory EngineFactory, config *Config) *cobra.Command {
 						"status": t.Status,
 					}
 
-					created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", t.Year, t.Month, t.Day)
+					created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", 2000+t.Year, t.Month, t.Day)
 					if started := t.GetDateStarted(); !started.IsZero() {
 						created = started.Format(time.RFC3339)
 					}
@@ -3456,8 +3456,8 @@ func getStreamOptions(cmd *cobra.Command) StreamOptions {
 		IncludeContributors:    includeContributors,
 		ExcludePolicies:        excludePolicies,
 		IncludePolicies:        includePolicies,
-		ExcludeBreachs:      excludeBreachs,
-		IncludeBreachs:      includeBreachs,
+		ExcludeBreachs:         excludeBreachs,
+		IncludeBreachs:         includeBreachs,
 		Filter:                 filter,
 		Query:                  query,
 		Regex:                  regex,
@@ -4287,25 +4287,58 @@ type GoalNode struct {
 // [🔖semio-repo/cli/main.go#Monorepo Tree Types](semiorepo://section/semio-repo/cli/main.go/MONOREPO-TREE-TYPES)
 // Tree node kinds, filter criteria, and matching logic for monorepo tree queries.
 
+// [🛠️entitykinds](semiorepo://definition/SEMIO-REPO/CLI/MAIN.GO/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/ENTITY-KINDS)
+// EntityKinds holds the data fields for a EntityKinds record.
+var EntityKinds = []string{
+	"root", "year", "month", "day", "hour", "minute", "second",
+	"project", "bundle", "folder", "file", "line", "range",
+	"section", "definition", "goal", "ticket", "draft", "todo",
+	"policy", "breach", "contributor", "commit", "interaction",
+}
+
+// [🛠️resourcekinds](semiorepo://definition/SEMIO-REPO/CLI/MAIN.GO/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/RESOURCE-KINDS)
+// ResourceKinds holds the data fields for a ResourceKinds record.
+var ResourceKinds = []string{
+	"repo", "project", "bundle", "folder", "file", "section", "definition",
+}
+
+// [🛠️diffablekinds](semiorepo://definition/SEMIO-REPO/CLI/MAIN.GO/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/DIFFABLE-KINDS)
+// DiffableKinds holds the data fields for a DiffableKinds record.
+var DiffableKinds = []string{
+	"root", "year", "month", "day", "hour",
+	"project", "bundle", "folder", "file", "section", "definition",
+	"goal", "ticket", "contributor", "commit", "interaction",
+}
+
+// [🛠️relatedtofilekinds](semiorepo://definition/SEMIO-REPO/CLI/MAIN.GO/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/RELATED-TO-FILE-KINDS)
+// RelatedToFileKinds holds the data fields for a RelatedToFileKinds record.
+var RelatedToFileKinds = []string{
+	"root", "year", "month", "day", "hour", "minute", "second",
+	"project", "bundle", "folder", "goal", "ticket", "draft", "todo",
+	"policy", "breach", "contributor", "commit", "interaction",
+}
+
 // TreeNodeKind represents a tree node kind value.
 // [🪨semio-repo/cli/main.go#Cli Adapter#Models#Monorepo Tree Types§TreeNodeKind](semiorepo://definition/semio-repo/cli/main.go/CLI-ADAPTER/MODELS/MONOREPO-TREE-TYPES/TREENODEKIND)
 type TreeNodeKind string
 
 const (
-	TreeNodeProject           TreeNodeKind = "project"
-	TreeNodeBundle            TreeNodeKind = "bundle"
-	TreeNodeFolder            TreeNodeKind = "folder"
-	TreeNodeFile              TreeNodeKind = "file"
-	TreeNodeSection           TreeNodeKind = "section"
-	TreeNodeDefinition        TreeNodeKind = "definition"
-	TreeNodeGoal              TreeNodeKind = "goal"
-	TreeNodeTicket            TreeNodeKind = "ticket"
-	TreeNodeDraft             TreeNodeKind = "draft"
-	TreeNodePolicy            TreeNodeKind = "policy"
-	TreeNodeStatuteNode TreeNodeKind = "statute"
-	TreeNodeContributor       TreeNodeKind = "contributor"
-	TreeNodeCommit            TreeNodeKind = "commit"
-	TreeNodeCategory          TreeNodeKind = "category"
+	TreeNodeProject     TreeNodeKind = "project"
+	TreeNodeBundle      TreeNodeKind = "bundle"
+	TreeNodeFolder      TreeNodeKind = "folder"
+	TreeNodeFile        TreeNodeKind = "file"
+	TreeNodeSection     TreeNodeKind = "section"
+	TreeNodeDefinition  TreeNodeKind = "definition"
+	TreeNodeGoal        TreeNodeKind = "goal"
+	TreeNodeTicket      TreeNodeKind = "ticket"
+	TreeNodeDraft       TreeNodeKind = "draft"
+	TreeNodeTodo        TreeNodeKind = "todo"
+	TreeNodePolicy      TreeNodeKind = "policy"
+	TreeNodeBreach      TreeNodeKind = "breach"
+	TreeNodeContributor TreeNodeKind = "contributor"
+	TreeNodeCommit      TreeNodeKind = "commit"
+	TreeNodeStatute     TreeNodeKind = "statute"
+	TreeNodeCategory    TreeNodeKind = "category"
 )
 
 // TreeNode holds the data fields for a tree node record.
@@ -5003,7 +5036,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 
 			bundleFolderMap := make(map[string]*folderEntry)
 			for path, fe := range globalFolderMap {
-				if strings.HasPrefix(path, bundleRoot+"/") || path == bundleRoot {
+				if strings.HasPrefix(path, bundleRoot+"/") {
 					bundleFolderMap[path] = fe
 				}
 			}
@@ -5121,6 +5154,7 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 				"finished": ticketFinished,
 				"prompt":   t.Prompt,
 				"summary":  t.Summary,
+				"goalId":   t.Goal,
 			},
 		}
 		if t.Goal != "" {
@@ -5194,13 +5228,39 @@ func BuildMonorepoTree(ctx context.Context, opts ...TreeBuildOptions) *TreeNode 
 			Year:  c.Date.Year(),
 			Month: int(c.Date.Month()),
 			Day:   c.Date.Day(),
-			Data:  map[string]interface{}{"sha": c.SHA, "message": c.Title},
+			Data: map[string]interface{}{"sha": c.SHA, "message": c.Title, "authorId": func() string {
+				if c.AuthorID != nil {
+					return *c.AuthorID
+				}
+				return ""
+			}()},
 		}
 		commitsNode.Children = append(commitsNode.Children, cNode)
 	}
 	root.Children = append(root.Children, commitsNode)
 
+	PropagateParentIDs(root, "")
 	return root
+}
+
+// PropagateParentIDs holds the data fields for a PropagateParentIDs record.
+// PropagateParentIDs MUST perform the PropagateParentIDs operation.
+// [🛠️propagateparentids](semiorepo://definition/SEMIO-REPO/CLI/MAIN.GO/CLI-ADAPTER/TREE-LOGIC/MONOREPO-TREE/PROPAGATE-PARENT-I-DS)
+func PropagateParentIDs(node *TreeNode, parentArtifactID string) {
+	if node.Data == nil {
+		node.Data = map[string]interface{}{}
+	}
+	entityKind := treeNodeKindToEntityKind(node.Kind)
+	currentID := ""
+	if entityKind != "" && node.Data != nil {
+		node.Data["parentId"] = parentArtifactID
+		currentID = GetArtifactID(entityKind, node.Data)
+	} else {
+		currentID = parentArtifactID
+	}
+	for _, child := range node.Children {
+		PropagateParentIDs(child, currentID)
+	}
 }
 
 func buildSectionTreeNode(s *Section) *TreeNode {
@@ -5246,7 +5306,7 @@ func buildStatuteTree(kinds []Statute) []*TreeNode {
 			if _, ok := current[part]; !ok {
 				isLeaf := i == len(parts)-1
 				n := &TreeNode{
-					Kind:  TreeNodeStatuteNode,
+					Kind:  TreeNodeStatute,
 					ID:    string(k),
 					Label: part,
 					URI:   "semiorepo://statute/" + StatuteIdToUriPath(string(k)),
@@ -5340,7 +5400,7 @@ func buildTerritoryTree(groups []Territory) []*TreeNode {
 			}
 			label := priorityIcon + StatutePathToIdValue(string(k))
 			vkNode := &TreeNode{
-				Kind:        TreeNodeStatuteNode,
+				Kind:        TreeNodeStatute,
 				ID:          meta.GetID(),
 				Label:       label,
 				URI:         meta.GetURI(),
@@ -5557,23 +5617,25 @@ func SearchMonorepoTree(root *TreeNode, query string) *TreeNode {
 }
 
 func pruneUnmatched(node *TreeNode, matchedIDs map[string]bool) *TreeNode {
+	return pruneUnmatchedInner(node, matchedIDs, false)
+}
+
+func pruneUnmatchedInner(node *TreeNode, matchedIDs map[string]bool, ancestorMatched bool) *TreeNode {
 	docID := node.ID
 	if docID == "" {
 		docID = node.Label
 	}
-
 	selfMatched := matchedIDs[docID]
-
+	keepDescendants := ancestorMatched || selfMatched
 	var kept []*TreeNode
 	for _, c := range node.Children {
-		fc := pruneUnmatched(c, matchedIDs)
+		fc := pruneUnmatchedInner(c, matchedIDs, keepDescendants)
 		if fc != nil {
 			kept = append(kept, fc)
 		}
 	}
-
-	if selfMatched || len(kept) > 0 || node.Kind == TreeNodeCategory {
-		if node.Kind == TreeNodeCategory && len(kept) == 0 && !selfMatched {
+	if keepDescendants || len(kept) > 0 || node.Kind == TreeNodeCategory {
+		if node.Kind == TreeNodeCategory && len(kept) == 0 && !selfMatched && !ancestorMatched {
 			return nil
 		}
 		copy := *node
@@ -5625,16 +5687,18 @@ func treeNodeKindToEntityKind(k TreeNodeKind) string {
 		return "ticket"
 	case TreeNodeDraft:
 		return "draft"
+	case TreeNodeTodo:
+		return "todo"
 	case TreeNodePolicy:
 		return "policy"
-	case TreeNodeStatuteNode:
-		return "statute"
+	case TreeNodeBreach:
+		return "breach"
 	case TreeNodeContributor:
 		return "contributor"
 	case TreeNodeCommit:
 		return "commit"
 	case TreeNodeCategory:
-		return "category"
+		return ""
 	}
 	return ""
 }
@@ -6461,7 +6525,7 @@ func formatResult(command string, data json.RawMessage, isTTY bool) string {
 		return fmt.Sprintf("%s item %s\n", prefix, id)
 	}
 
-	return renderEntityHuman("repo", payload, isTTY) + "\n"
+	return renderEntityHuman("root", payload, isTTY) + "\n"
 }
 
 // MarkdownRenderer holds the data fields for a markdown renderer record.
@@ -6494,7 +6558,7 @@ func (r MarkdownRenderer) Render(ctx context.Context, out, errOut io.Writer, str
 func formatMarkdownResult(command string, data json.RawMessage) string {
 	var raw map[string]interface{}
 	if err := json.Unmarshal(data, &raw); err != nil {
-		return renderEntityMarkdownLink("repo", map[string]interface{}{"name": string(data)}) + "\n"
+		return renderEntityMarkdownLink("root", map[string]interface{}{"name": string(data)}) + "\n"
 	}
 	payload := raw
 	if inner, ok := raw["data"].(map[string]interface{}); ok {
@@ -6629,7 +6693,7 @@ func formatMarkdownResult(command string, data json.RawMessage) string {
 		}
 	}
 
-	return renderEntityMarkdownLink("repo", payload) + "\n"
+	return renderEntityMarkdownLink("root", payload) + "\n"
 }
 
 func formatMarkdownFile(file map[string]interface{}) string {
@@ -7065,7 +7129,7 @@ func (r *Repo) GetID() string { return emojiText(EmojiRepo) }
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Repo.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
-func (r *Repo) GetURI() string { return "semiorepo://repo" }
+func (r *Repo) GetURI() string { return "semiorepo://root" }
 
 // ProjectKind represents a project kind value.
 // [🪨semio-repo/cli/main.go#GraphQL Types§ProjectKind](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/PROJECTKIND)
@@ -7194,14 +7258,14 @@ func (p *Project) GetID() string {
 			emoji = EmojiProjectResearch
 		}
 	}
-	return fmt.Sprintf("%s%s%s", emojiText(EmojiProjects), emojiText(emoji), p.Name)
+	return emojiText(emoji) + Flat(p.Name)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Project.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (p *Project) GetURI() string {
-	return "semiorepo://project/@" + PathToUriPath(strings.TrimPrefix(p.Name, "@"))
+	return "semiorepo://project/" + PathToUriPath(strings.TrimPrefix(p.Name, "@"))
 }
 
 // Bundle holds the data fields for a bundle record.
@@ -7251,7 +7315,14 @@ func (b *Bundle) GetID() string {
 	case "example":
 		emoji = EmojiBundleExample
 	}
-	return fmt.Sprintf("%s%s%s", emojiText(EmojiBundles), emojiText(emoji), b.Name)
+	parts := strings.SplitN(b.Name, "/", 2)
+	projectCode := parts[0]
+	bundleCode := projectCode
+	if len(parts) > 1 {
+		bundleCode = parts[1]
+	}
+	pKind := DeriveProjectKind(projectCode)
+	return emojiText(string(pKind)) + Flat(projectCode) + emojiText(emoji) + Flat(bundleCode)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7384,11 +7455,7 @@ func (f *Folder) IsNode() {}
 // GetID returns the i d of the Folder.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (f *Folder) GetID() string {
-	emoji := EmojiFolderRequired
-	if f.Kind == FolderKindOrganization {
-		emoji = EmojiFolderOrg
-	}
-	return fmt.Sprintf("%s%s%s", emojiText(EmojiFolders), emojiText(emoji), f.Path)
+	return buildFolderID(f.Path, f.BundleID)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7422,60 +7489,79 @@ const (
 )
 
 const (
-	EmojiRepo                  = "🌍"
-	EmojiProjects              = "🏗️"
-	EmojiProjectUser           = "👤"
-	EmojiProjectInfra          = "🧰"
-	EmojiProjectResearch       = "🔬"
-	EmojiBundles               = "📦"
-	EmojiBundleLibrary         = "📚"
-	EmojiBundleSchema          = "🛂"
-	EmojiBundleBinary          = "⌨️"
-	EmojiBundleUI              = "🖱️"
-	EmojiBundleExample         = "📔"
-	EmojiBundleSite            = "🌐"
-	EmojiBundleAssets          = "🏪"
-	EmojiFolders               = "📁"
-	EmojiFolderOrg             = "🗃️"
-	EmojiFolderRequired        = "🛅"
-	EmojiFiles                 = "📄"
-	EmojiFileCode              = "💻"
-	EmojiFileTest              = "🧪"
-	EmojiFileScript            = "📜"
-	EmojiFileDocs              = "📃"
-	EmojiFileConfig            = "⚙️"
-	EmojiFileResource          = "💾"
-	EmojiFileLicense           = "⚖️"
-	EmojiSections              = "🔖"
-	EmojiSection               = "🔖"
-	EmojiDefinitions           = "🏷️"
-	EmojiDefinitionImpl        = "🛠️"
-	EmojiDefinitionInterface   = "✂️"
-	EmojiDefinitionConstant    = "🪨"
-	EmojiTickets               = "🎫"
-	EmojiTicket                = "🎫"
-	EmojiGoals                 = "🎯"
-	EmojiGoal                  = "🎯"
-	EmojiDrafts                = "✍"
-	EmojiDraft                 = "✍"
-	EmojiTodos                 = "📝"
-	EmojiTodo                  = "📝"
-	EmojiPolicies              = "🛡️"
-	EmojiPolicy                = "🛡️"
-	EmojiTerritorys   = "🗄️"
-	EmojiTerritory    = "🗄️"
-	EmojiStatutes        = "🚫"
-	EmojiStatute         = "🚫"
-	EmojiBreach             = "🚫"
-	EmojiContributors          = "👤"
-	EmojiContributor           = "👤"
-	EmojiCommits               = "🔀"
-	EmojiCommit                = "🔀"
-	EmojiInteractions          = "⚡"
-	EmojiInteractionStarted    = "🌱"
-	EmojiInteractionFinished   = "✅"
-	EmojiInteractionRestarted  = "🔁"
-	EmojiInteractionDeleted    = "🗑️"
+	EmojiProjectUser          = "👤"
+	EmojiProjectInfra         = "🧰"
+	EmojiProjectResearch      = "🔬"
+	EmojiBundleLibrary        = "📚"
+	EmojiBundleSchema         = "🛂"
+	EmojiBundleBinary         = "⌨️"
+	EmojiBundleUI             = "🖱️"
+	EmojiBundleExample        = "📔"
+	EmojiBundleSite           = "🌐"
+	EmojiBundleAssets         = "🏪"
+	EmojiFolderOrg            = "🗃️"
+	EmojiFolderRequired       = "🛅"
+	EmojiFileCode             = "💻"
+	EmojiFileTest             = "🧪"
+	EmojiFileScript           = "📜"
+	EmojiFileDocs             = "📃"
+	EmojiFileConfig           = "⚙️"
+	EmojiFileResource         = "💾"
+	EmojiFileLicense          = "⚖️"
+	EmojiLine                 = "📌"
+	EmojiSection              = "🔖"
+	EmojiDefinitionImpl       = "🛠️"
+	EmojiDefinitionInterface  = "✂️"
+	EmojiDefinitionConstant   = "🪨"
+	EmojiYear                 = "🎆"
+	EmojiMonth                = "🌙"
+	EmojiDay                  = "☀️"
+	EmojiHour                 = "⏰"
+	EmojiMinute               = "⏳"
+	EmojiSecond               = "⏱️"
+	EmojiGoal                 = "🎯"
+	EmojiTicket               = "🎫"
+	EmojiDraft                = "📝"
+	EmojiTodo                 = "📝"
+	EmojiPolicy               = "👮"
+	EmojiBreach               = "🚫"
+	EmojiBreachScope          = "🔍"
+	EmojiContributor          = "🧑‍💻"
+	EmojiCommit               = "🔀"
+	EmojiInteractionStarted   = "🌱"
+	EmojiInteractionEdited    = "✏️"
+	EmojiInteractionFinished  = "✅"
+	EmojiInteractionRestarted = "🔁"
+	EmojiInteractionDeleted   = "🗑️"
+)
+
+var (
+	EmojiRepo         = ""
+	EmojiProjects     = "🏗️"
+	EmojiBundles      = "📦"
+	EmojiFolders      = "📁"
+	EmojiFiles        = "📄"
+	EmojiSections     = "🔖"
+	EmojiDefinitions  = "🏷️"
+	EmojiYears        = "🎆"
+	EmojiMonths       = "🌙"
+	EmojiDays         = "☀️"
+	EmojiHours        = "⏰"
+	EmojiMinutes      = "⏳"
+	EmojiSeconds      = "⏱️"
+	EmojiTickets      = "🎫"
+	EmojiGoals        = "🎯"
+	EmojiDrafts       = "📝"
+	EmojiTodos        = "📝"
+	EmojiPolicies     = "👮"
+	EmojiBreaches     = "🚫"
+	EmojiContributors = "🧑‍💻"
+	EmojiCommits      = "🔀"
+	EmojiInteractions = ""
+	EmojiTerritorys   = ""
+	EmojiTerritory    = ""
+	EmojiStatutes     = ""
+	EmojiStatute      = ""
 )
 
 // DeriveFileKind MUST return a valid value for any recognized input.
@@ -7616,24 +7702,7 @@ func IsSemanticallyIgnored(path string) bool {
 // GetID returns the i d of the File.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (f *File) GetID() string {
-	emoji := EmojiFiles
-	switch f.Kind {
-	case "code":
-		emoji = EmojiFileCode
-	case "test":
-		emoji = EmojiFileTest
-	case "script":
-		emoji = EmojiFileScript
-	case "docs":
-		emoji = EmojiFileDocs
-	case "config":
-		emoji = EmojiFileConfig
-	case "resource":
-		emoji = EmojiFileResource
-	case "license":
-		emoji = EmojiFileLicense
-	}
-	return fmt.Sprintf("%s%s%s", emojiText(EmojiFiles), emojiText(emoji), f.Path)
+	return buildFileID(f.Path, f.BundleID)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7665,16 +7734,7 @@ func (s *Section) IsNode() {}
 // GetID returns the i d of the Section.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (s *Section) GetID() string {
-	val := s.Name
-	if s.Path != "" {
-		val = s.Path
-	}
-	if s.FilePath != "" && val != "" {
-		if !strings.HasPrefix(val, s.FilePath) {
-			val = s.FilePath + "#" + val
-		}
-	}
-	return fmt.Sprintf("%s%s", emojiText(EmojiSection), val)
+	return emojiText(EmojiSection) + Flat(s.Name)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7720,22 +7780,7 @@ func (d *Definition) GetID() string {
 	case "constant":
 		emoji = EmojiDefinitionConstant
 	}
-	if d.ID != "" {
-		if strings.HasPrefix(d.ID, emojiText(EmojiDefinitions)) {
-			return d.ID
-		}
-		cleanID := strings.TrimPrefix(d.ID, "definition:")
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), emojiText(emoji), cleanID)
-	}
-	val := d.Name
-	if d.FilePath != "" {
-		val = d.FilePath
-		if d.SectionPath != "" {
-			val += "#" + d.SectionPath
-		}
-		val += "§" + d.Name
-	}
-	return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), emojiText(emoji), val)
+	return emojiText(emoji) + Flat(d.Name)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7825,7 +7870,7 @@ func (c *Contributor) IsNode() {}
 // GetID returns the i d of the Contributor.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (c *Contributor) GetID() string {
-	return fmt.Sprintf("%s%s", emojiText(EmojiContributor), c.Github)
+	return emojiText(EmojiContributor) + Flat(c.Github)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7865,7 +7910,7 @@ type Draft struct {
 // GetID returns the i d of the Draft.
 // [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/GETID)
 func (d *Draft) GetID() string {
-	return fmt.Sprintf("%s%s", emojiText(EmojiDraft), d.ID)
+	return emojiText(EmojiDraft) + Flat(d.ID)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -7879,7 +7924,7 @@ func (d *Draft) GetURI() string {
 // GetDraftsPath returns the drafts path of the value.
 // [🛠️semio-repo/cli/main.go#GraphQL Types#Drafts§GetDraftsPath](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/DRAFTS/GETDRAFTSPATH)
 func GetDraftsPath() string {
-	return filepath.Join(GetRootDir(), ".semio-repo", "drafts")
+	return filepath.Join(GetRootDir(), ".semio-repo", "✍️")
 }
 
 // ListDrafts MUST return a consistent snapshot of available entries.
@@ -7947,7 +7992,7 @@ func DeleteDraft(id string) error {
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Commit.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
-func (c *Commit) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiCommit), c.SHA) }
+func (c *Commit) GetID() string { return emojiText(EmojiCommit) + c.SHA }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Commit.
@@ -7986,14 +8031,14 @@ func (t *Ticket) IsNode() {}
 // GetID returns the i d of the Ticket.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (t *Ticket) GetID() string {
-	return fmt.Sprintf("%s%04d%02d%02d%s", emojiText(EmojiTicket), t.Year, t.Month, t.Day, t.Slug)
+	return emojiText(EmojiTicket) + Flat(t.Slug)
 }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Ticket.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetURI](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETURI)
 func (t *Ticket) GetURI() string {
-	return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", t.Year, t.Month, t.Day, strings.ToUpper(Slugify(t.Slug)))
+	return fmt.Sprintf("semiorepo://ticket/%02d/%02d/%02d/%s", t.Year, t.Month, t.Day, strings.ToUpper(Slugify(t.Slug)))
 }
 
 // GetTitle MUST return the stored value without modification.
@@ -8177,12 +8222,12 @@ type TicketSectionContrib struct {
 // Policy holds the data fields for a policy record.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§Policy](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/POLICY)
 type Policy struct {
-	ID             string               `json:"id"`
-	Name           string               `json:"name"`
-	Description    *string              `json:"description,omitempty"`
-	Scopes         []string             `json:"scopes"`
-	Groups         []Territory `json:"groups"`
-	Statutes []*StatuteMeta `json:"statutes"`
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description *string        `json:"description,omitempty"`
+	Scopes      []string       `json:"scopes"`
+	Groups      []Territory    `json:"groups"`
+	Statutes    []*StatuteMeta `json:"statutes"`
 }
 
 // IsNode MUST return true only when the condition is met.
@@ -8195,7 +8240,7 @@ func (p *Policy) IsNode() {}
 // [🛠️semio-repo/cli/main.go#GraphQL Types§GetID](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/GETID)
 func (p *Policy) GetID() string {
 	slug := strings.TrimPrefix(p.ID, "/")
-	return fmt.Sprintf("%s%s", emojiText(EmojiPolicy), slug)
+	return emojiText(EmojiPolicy) + Flat(slug)
 }
 
 // GetURI MUST return the stored value without modification.
@@ -8208,12 +8253,12 @@ func (p *Policy) GetURI() string {
 // StatuteMeta holds the data fields for a statute meta record.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§StatuteMeta](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/VIOLATIONKINDMETA)
 type StatuteMeta struct {
-	Kind        Statute     `json:"kind"`
-	PolicyID    string            `json:"policyId"`
+	Kind        Statute        `json:"kind"`
+	PolicyID    string         `json:"policyId"`
 	Priority    BreachPriority `json:"priority"`
-	Reason      string            `json:"reason"`
-	Solution    string            `json:"solution"`
-	Autofixable bool              `json:"autofixable"`
+	Reason      string         `json:"reason"`
+	Solution    string         `json:"solution"`
+	Autofixable bool           `json:"autofixable"`
 }
 
 // IsNode MUST return true only when the condition is met.
@@ -8238,16 +8283,16 @@ func (v *StatuteMeta) GetURI() string {
 // AnalyzeResult holds the data fields for a analyze result record.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§AnalyzeResult](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/ANALYZERESULT)
 type AnalyzeResult struct {
-	Breachs []*Breach    `json:"breachs"`
-	Metrics    *AnalyzeMetrics `json:"metrics"`
+	Breachs []*Breach       `json:"breachs"`
+	Metrics *AnalyzeMetrics `json:"metrics"`
 }
 
 // FixResult holds the data fields for a fix result record.
 // [🛠️semio-repo/cli/main.go#GraphQL Types§FixResult](semiorepo://definition/semio-repo/cli/main.go/GRAPHQL-TYPES/FIXRESULT)
 type FixResult struct {
-	Fixed      int          `json:"fixed"`
-	Remaining  int          `json:"remaining"`
-	Breachs []*Breach `json:"breachs"`
+	Fixed     int       `json:"fixed"`
+	Remaining int       `json:"remaining"`
+	Breachs   []*Breach `json:"breachs"`
 }
 
 // ContributorContributions holds the data fields for a contributor contributions record.
@@ -9073,7 +9118,7 @@ func (t *Todo) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Todo.
 // [🛠️semio-repo/cli/main.go#Types§GetID](semiorepo://definition/semio-repo/cli/main.go/TYPES/GETID)
-func (t *Todo) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiTodo), t.ID) }
+func (t *Todo) GetID() string { return emojiText(EmojiTodo) + Flat(t.ID) }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Todo.
@@ -9091,13 +9136,13 @@ type Location struct {
 // Breach holds the data fields for a breach record.
 // [🛠️semio-repo/cli/main.go#Types§Breach](semiorepo://definition/semio-repo/cli/main.go/TYPES/VIOLATION)
 type Breach struct {
-	ID      string        `json:"id"`
-	Summary string        `json:"summary"`
+	ID      string  `json:"id"`
+	Summary string  `json:"summary"`
 	Kind    Statute `json:"kind"`
-	Scope   string        `json:"scope"`
-	Line    int           `json:"line,omitempty"`
-	Column  int           `json:"column,omitempty"`
-	Excerpt string        `json:"excerpt,omitempty"`
+	Scope   string  `json:"scope"`
+	Line    int     `json:"line,omitempty"`
+	Column  int     `json:"column,omitempty"`
+	Excerpt string  `json:"excerpt,omitempty"`
 }
 
 // IsNode MUST return true only when the condition is met.
@@ -11375,6 +11420,7 @@ type InteractionResource struct {
 
 // ListInteractions aggregates interactions from all tickets and goals.
 // [🛠️semio-repo/cli/main.go#Types#Languages§ListInteractions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/LISTINTERACTIONS)
+// ListInteractions MUST perform the ListInteractions operation.
 func ListInteractions() ([]InteractionResource, error) {
 	var result []InteractionResource
 	tickets, err := ListTickets(nil, nil, nil)
@@ -11411,6 +11457,7 @@ func ListInteractions() ([]InteractionResource, error) {
 
 // StreamInteractions streams interactions from all tickets and goals.
 // [🛠️semio-repo/cli/main.go#Types#Languages§StreamInteractions](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/STREAMINTERACTIONS)
+// StreamInteractions MUST perform the StreamInteractions operation.
 func StreamInteractions(ctx context.Context, out chan<- InteractionResource) {
 	defer close(out)
 	tickets, _ := ListTickets(nil, nil, nil)
@@ -11537,7 +11584,7 @@ func (g *Goal) IsNode() {}
 // GetID MUST return the stored value without modification.
 // GetID returns the i d of the Goal.
 // [🛠️semio-repo/cli/main.go#Types#Languages§GetID](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/GETID)
-func (g *Goal) GetID() string { return fmt.Sprintf("%s%s", emojiText(EmojiGoal), g.ID) }
+func (g *Goal) GetID() string { return emojiText(EmojiGoal) + Flat(g.ID) }
 
 // GetURI MUST return the stored value without modification.
 // GetURI returns the u r i of the Goal.
@@ -12058,11 +12105,11 @@ func (k Statute) Info() StatuteMeta {
 // Territory holds the data fields for a statute group record.
 // [🛠️semio-repo/cli/main.go#Types#Languages§Territory](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/VIOLATIONKINDGROUP)
 type Territory struct {
-	Name        string               `json:"name"`
-	Description string               `json:"description"`
-	Scopes      []string             `json:"scopes,omitempty"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Scopes      []string    `json:"scopes,omitempty"`
 	Groups      []Territory `json:"groups,omitempty"`
-	Kinds       []Statute      `json:"kinds,omitempty"`
+	Kinds       []Statute   `json:"kinds,omitempty"`
 }
 
 // AllKinds MUST include all statutes from the group and its children.
@@ -12094,13 +12141,13 @@ func (g *Territory) GetURI() string {
 // PolicyDef holds the data fields for a policy def record.
 // [🛠️semio-repo/cli/main.go#Types#Languages§PolicyDef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/POLICYDEF)
 type PolicyDef struct {
-	ID          string               `json:"id"`
-	Name        string               `json:"name"`
-	Description string               `json:"description"`
-	Scopes      []string             `json:"scopes"`
-	Priority    BreachPriority    `json:"priority"`
-	Groups      []Territory `json:"groups"`
-	Run         PolicyFunc           `json:"-"`
+	ID          string         `json:"id"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Scopes      []string       `json:"scopes"`
+	Priority    BreachPriority `json:"priority"`
+	Groups      []Territory    `json:"groups"`
+	Run         PolicyFunc     `json:"-"`
 }
 
 // AllKinds MUST include all statutes from the group and its children.
@@ -12117,11 +12164,11 @@ func (p *PolicyDef) AllKinds() []Statute {
 // AnalyzeReport holds the data fields for a analyze report record.
 // [🛠️semio-repo/cli/main.go#Types#Languages§AnalyzeReport](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/ANALYZEREPORT)
 type AnalyzeReport struct {
-	Timestamp  string      `json:"timestamp"`
-	Status     string      `json:"status"`
-	Scope      string      `json:"scope"`
-	Summary    Summary     `json:"summary"`
-	Breachs []Breach `json:"breachs"`
+	Timestamp string   `json:"timestamp"`
+	Status    string   `json:"status"`
+	Scope     string   `json:"scope"`
+	Summary   Summary  `json:"summary"`
+	Breachs   []Breach `json:"breachs"`
 }
 
 // Summary holds the data fields for a summary record.
@@ -12135,10 +12182,10 @@ type Summary struct {
 // FileCache holds the data fields for a file cache record.
 // [🛠️semio-repo/cli/main.go#Types#Languages§FileCache](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/FILECACHE)
 type FileCache struct {
-	FilePath   string      `json:"filePath"`
-	Hash       string      `json:"hash"`
-	Timestamp  string      `json:"timestamp"`
-	Breachs []Breach `json:"breachs"`
+	FilePath  string   `json:"filePath"`
+	Hash      string   `json:"hash"`
+	Timestamp string   `json:"timestamp"`
+	Breachs   []Breach `json:"breachs"`
 }
 
 // OutputType represents a output type value.
@@ -12219,14 +12266,14 @@ type BundleMetricsInternal struct {
 	Sections    int `json:"sections"`
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
-	Breachs  int `json:"breachs"`
+	Breachs     int `json:"breachs"`
 }
 
 // FolderMetricsInternal holds the data fields for a folder metrics internal record.
 // [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§FolderMetricsInternal](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/FOLDERMETRICSINTERNAL)
 type FolderMetricsInternal struct {
-	Files      int `json:"files"`
-	Lines      int `json:"lines"`
+	Files   int `json:"files"`
+	Lines   int `json:"lines"`
 	Breachs int `json:"breachs"`
 }
 
@@ -12243,7 +12290,7 @@ type FileMetricsInternal struct {
 type SectionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
-	Breachs  int `json:"breachs"`
+	Breachs     int `json:"breachs"`
 }
 
 // DefinitionMetricsInternal holds the data fields for a definition metrics internal record.
@@ -12251,7 +12298,7 @@ type SectionMetricsInternal struct {
 type DefinitionMetricsInternal struct {
 	Definitions int `json:"definitions"`
 	Lines       int `json:"lines"`
-	Breachs  int `json:"breachs"`
+	Breachs     int `json:"breachs"`
 }
 
 // RangePosition holds the data fields for a range position record.
@@ -12288,14 +12335,14 @@ type BreachFolder struct {
 // CodebaseBreach holds the data fields for a codebase breach record.
 // [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseBreach](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEVIOLATION)
 type CodebaseBreach struct {
-	ID          string            `json:"id"`
+	ID          string         `json:"id"`
 	Folders     []BreachFolder `json:"folders,omitempty"`
 	Files       []BreachFile   `json:"files,omitempty"`
-	Kind        Statute     `json:"kind"`
+	Kind        Statute        `json:"kind"`
 	Priority    BreachPriority `json:"priority"`
-	Autofixable bool              `json:"autofixable"`
-	Reason      string            `json:"reason"`
-	Solution    string            `json:"solution"`
+	Autofixable bool           `json:"autofixable"`
+	Reason      string         `json:"reason"`
+	Solution    string         `json:"solution"`
 }
 
 // CodebaseBundle holds the data fields for a codebase bundle record.
@@ -12323,20 +12370,20 @@ type CodebaseFolder struct {
 // FileBreachRef holds the data fields for a file breach ref record.
 // [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§FileBreachRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/FILEVIOLATIONREF)
 type FileBreachRef struct {
-	Kind        Statute     `json:"kind"`
+	Kind        Statute        `json:"kind"`
 	Priority    BreachPriority `json:"priority"`
-	Autofixable bool              `json:"autofixable"`
-	Solution    string            `json:"solution"`
+	Autofixable bool           `json:"autofixable"`
+	Solution    string         `json:"solution"`
 }
 
 // CodebaseFile holds the data fields for a codebase file record.
 // [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebaseFile](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEFILE)
 type CodebaseFile struct {
-	ID         string               `json:"id"`
-	Path       string               `json:"path"`
-	URI        string               `json:"uri"`
-	Metrics    *FileMetricsInternal `json:"metrics,omitempty"`
-	Breachs []FileBreachRef   `json:"breachs,omitempty"`
+	ID      string               `json:"id"`
+	Path    string               `json:"path"`
+	URI     string               `json:"uri"`
+	Metrics *FileMetricsInternal `json:"metrics,omitempty"`
+	Breachs []FileBreachRef      `json:"breachs,omitempty"`
 }
 
 // CodebaseSection holds the data fields for a codebase section record.
@@ -12497,18 +12544,18 @@ type CodebaseTicket struct {
 // PolicyBreachRef holds the data fields for a policy breach ref record.
 // [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§PolicyBreachRef](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/POLICYVIOLATIONREF)
 type PolicyBreachRef struct {
-	Kind        Statute     `json:"kind"`
+	Kind        Statute        `json:"kind"`
 	Priority    BreachPriority `json:"priority"`
-	Autofixable bool              `json:"autofixable"`
-	Solution    string            `json:"solution"`
+	Autofixable bool           `json:"autofixable"`
+	Solution    string         `json:"solution"`
 }
 
 // CodebasePolicy holds the data fields for a codebase policy record.
 // [🛠️semio-repo/cli/main.go#Types#Languages#Codebase Types§CodebasePolicy](semiorepo://definition/semio-repo/cli/main.go/TYPES/LANGUAGES/CODEBASE-TYPES/CODEBASEPOLICY)
 type CodebasePolicy struct {
-	ID         string               `json:"id"`
-	Name       string               `json:"name"`
-	Scopes     []string             `json:"scopes,omitempty"`
+	ID      string            `json:"id"`
+	Name    string            `json:"name"`
+	Scopes  []string          `json:"scopes,omitempty"`
 	Breachs []PolicyBreachRef `json:"breachs,omitempty"`
 }
 
@@ -12543,7 +12590,7 @@ type Codebase struct {
 	Contributors []CodebaseContributor  `json:"contributors"`
 	Tickets      []CodebaseTicket       `json:"tickets"`
 	Policies     []CodebasePolicy       `json:"policies"`
-	Breachs   []CodebaseBreach    `json:"breachs"`
+	Breachs      []CodebaseBreach       `json:"breachs"`
 	Tree         map[string]*CbTreeNode `json:"tree"`
 }
 
@@ -12974,7 +13021,7 @@ func ISOTimestamp() string {
 // FormatDate formats the date into its string representation.
 // [🛠️semio-repo/cli/main.go#Types#Utils§FormatDate](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/FORMATDATE)
 func FormatDate(t time.Time) (year, month, day int) {
-	return t.Year(), int(t.Month()), t.Day()
+	return t.Year() % 100, int(t.Month()), t.Day()
 }
 
 // PadNumber MUST complete the operation and return consistent results.
@@ -13000,6 +13047,19 @@ func PathToUriPath(path string) string {
 // [🛠️semio-repo/cli/main.go#Types#Utils§PathFromUriPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/PATHFROMURIPATH)
 func PathFromUriPath(uriPath string) string {
 	return strings.ToLower(uriPath)
+}
+
+// Flat performs the Flat operation.
+// Flat MUST preserve only alphanumeric characters and emojis, then lower case.
+// [🛠️semio-repo/cli/main.go#Types#Utils§Flat](semiorepo://definition/semio-repo/cli/main.go/TYPES/UTILS/FLAT)
+func Flat(text string) string {
+	var buf strings.Builder
+	for _, r := range text {
+		if (r >= 'a' && r <= 'z') || (r >= 'A' && r <= 'Z') || (r >= '0' && r <= '9') || r > 0x7F {
+			buf.WriteRune(r)
+		}
+	}
+	return strings.ToLower(buf.String())
 }
 
 // Slugify MUST complete the operation and return consistent results.
@@ -13952,12 +14012,12 @@ var policies = []PolicyDef{
 		Description: "Validates source file headers, sections, and comments",
 		Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
 		Priority:    BreachPriorityLow,
-		Territories: []Territory{
+		Groups: []Territory{
 			{
 				Name:        "File",
 				Description: "File header region breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Territories: []Territory{
+				Groups: []Territory{
 					{
 						Name:        "Wrong Identification",
 						Description: "Wrong identification breachs",
@@ -13983,11 +14043,11 @@ var policies = []PolicyDef{
 				Name:        "Section",
 				Description: "Section structure breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Territories: []Territory{
+				Groups: []Territory{
 					{
 						Name:        "Wrong Format",
 						Description: "Section format breachs",
-						Territories: []Territory{
+						Groups: []Territory{
 							{
 								Name:        "Summary",
 								Description: "Section summary format breachs",
@@ -14025,7 +14085,7 @@ var policies = []PolicyDef{
 				Name:        "Definition",
 				Description: "Definition documentation breachs",
 				Scopes:      []string{"**/*.{ts,tsx,py,cs,go,rs}"},
-				Territories: []Territory{
+				Groups: []Territory{
 					{
 						Name:        "Wrong Format",
 						Description: "Definition format breachs",
@@ -14085,7 +14145,7 @@ var policies = []PolicyDef{
 		Description: "Validates README.md and AGENTS.md documentation structure",
 		Scopes:      []string{"README.md", "AGENTS.md"},
 		Priority:    BreachPriorityLow,
-		Territories: []Territory{
+		Groups: []Territory{
 			{
 				Name:        "File",
 				Description: "File documentation breachs",
@@ -14127,7 +14187,7 @@ var policies = []PolicyDef{
 		Description: "Validates sketchpad imports, state management, and hook patterns",
 		Scopes:      []string{"js/sketchpad/**/*.{ts,tsx}"},
 		Priority:    BreachPriorityHigh,
-		Territories: []Territory{
+		Groups: []Territory{
 			{
 				Name:        "Import",
 				Description: "Import restriction breachs",
@@ -14164,7 +14224,7 @@ var policies = []PolicyDef{
 		Description: "Validates strict repo command implementation parity and ticket tracking",
 		Scopes:      []string{"go/repo/main.go", "js/vscode/package.json", "graphql/repo/schema.graphql"},
 		Priority:    BreachPriorityHigh,
-		Territories: []Territory{
+		Groups: []Territory{
 			{
 				Name:        "Parity",
 				Description: "Command parity breachs",
@@ -14183,11 +14243,11 @@ var policies = []PolicyDef{
 		Description: "Validates system configuration files like devcontainer and editor settings",
 		Scopes:      []string{".vscode/settings.json", ".vscode/extensions.json", ".devcontainer/devcontainer.json"},
 		Priority:    BreachPriorityHigh,
-		Territories: []Territory{
+		Groups: []Territory{
 			{
 				Name:        "Devcontainer",
 				Description: "Devcontainer configuration breachs",
-				Territories: []Territory{
+				Groups: []Territory{
 					{
 						Name:        "VSCode",
 						Description: "VSCode settings and extensions must be inside devcontainer.json",
@@ -14207,11 +14267,11 @@ var policies = []PolicyDef{
 		Description: "Validates folder structure and detects illegal empty folders",
 		Scopes:      []string{"**/*"},
 		Priority:    BreachPriorityLow,
-		Territories: []Territory{
+		Groups: []Territory{
 			{
 				Name:        "Illegal",
 				Description: "Illegal folder breachs",
-				Territories: []Territory{
+				Groups: []Territory{
 					{
 						Name:        "Empty",
 						Description: "Empty folders that should be removed",
@@ -14230,11 +14290,11 @@ var policies = []PolicyDef{
 		Description: "Validates file existence against the godfile allowlist",
 		Scopes:      []string{"**/*"},
 		Priority:    BreachPriorityHigh,
-		Territories: []Territory{
+		Groups: []Territory{
 			{
 				Name:        "Illegal",
 				Description: "Illegal file breachs",
-				Territories: []Territory{
+				Groups: []Territory{
 					{
 						Name:        "Use Godfile",
 						Description: "Files not listed in .semio-repo/files.json godfile",
@@ -16308,13 +16368,13 @@ func filePolicy(ctx *PolicyContext) []Breach {
 // CodebaseContext holds the data fields for a codebase context record.
 // [🛠️semio-repo/cli/main.go#Types#Codebase§CodebaseContext](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/CODEBASECONTEXT)
 type CodebaseContext struct {
-	RootDir    string
-	RootURI    string
-	Bundles    []Bundle
-	Files      []string
-	Breachs []Breach
-	Tickets    []Ticket
-	Policies   []PolicyDef
+	RootDir  string
+	RootURI  string
+	Bundles  []Bundle
+	Files    []string
+	Breachs  []Breach
+	Tickets  []Ticket
+	Policies []PolicyDef
 }
 
 // NewCodebaseContext MUST initialize all required fields and return a valid CodebaseContext.
@@ -16426,7 +16486,7 @@ func (ctx *CodebaseContext) GetFileID(file string) string {
 // GetFolderID returns the folder i d of the CodebaseContext.
 // [🛠️semio-repo/cli/main.go#Types#Codebase§GetFolderID](semiorepo://definition/semio-repo/cli/main.go/TYPES/CODEBASE/GETFOLDERID)
 func (ctx *CodebaseContext) GetFolderID(folder string) string {
-	return "📂" + NormalizePath(folder)
+	return buildFolderID(folder, nil)
 }
 
 // FileURI MUST operate on the CodebaseContext receiver and return consistent results.
@@ -16592,7 +16652,7 @@ func BuildCodebaseBundles(ctx *CodebaseContext) []CodebaseBundle {
 				Sections:    sectionCounts[name],
 				Definitions: definitionCounts[name],
 				Lines:       lineCounts[name],
-				Breachs:  breachCounts[name],
+				Breachs:     breachCounts[name],
 			},
 		})
 	}
@@ -16647,8 +16707,8 @@ func BuildCodebaseFolders(ctx *CodebaseContext) []CodebaseFolder {
 			Path: folder,
 			URI:  ctx.FileURI(folder),
 			Metrics: &FolderMetricsInternal{
-				Files:      fileCounts[folder],
-				Lines:      lineCounts[folder],
+				Files:   fileCounts[folder],
+				Lines:   lineCounts[folder],
 				Breachs: breachCounts[folder],
 			},
 		})
@@ -16711,10 +16771,10 @@ func BuildCodebaseFiles(ctx *CodebaseContext) []CodebaseFile {
 		}
 
 		result = append(result, CodebaseFile{
-			ID:         id,
-			Path:       file,
-			URI:        ctx.FileURI(file),
-			Metrics:    metrics,
+			ID:      id,
+			Path:    file,
+			URI:     ctx.FileURI(file),
+			Metrics: metrics,
 			Breachs: breachs,
 		})
 	}
@@ -16769,7 +16829,7 @@ func addSections(ctx *CodebaseContext, result *[]CodebaseSection, file, fileID, 
 			Metrics: &SectionMetricsInternal{
 				Definitions: defCount,
 				Lines:       section.EndLine - section.StartLine + 1,
-				Breachs:  0,
+				Breachs:     0,
 			},
 		})
 		addSections(ctx, result, file, fileID, content, section.Children, sectionPath)
@@ -16812,7 +16872,7 @@ func BuildCodebaseDefinitions(ctx *CodebaseContext) []CodebaseDefinition {
 				Metrics: &DefinitionMetricsInternal{
 					Definitions: 0,
 					Lines:       def.End - def.Start + 1,
-					Breachs:  0,
+					Breachs:     0,
 				},
 			})
 		}
@@ -16879,8 +16939,8 @@ func BuildCodebaseContributors(ctx *CodebaseContext) []CodebaseContributor {
 
 		result = append(result, CodebaseContributor{
 			ID:            c.Github,
-			URI:           ctx.FileURI(".semio-repo/contributors/" + c.Github),
-			Path:          ".semio-repo/contributors/" + c.Github + "/contributor.json",
+			URI:           ctx.FileURI(".semio-repo/👤/" + c.Github),
+			Path:          ".semio-repo/👤/" + c.Github + "/contributor.json",
 			Name:          c.Name,
 			Icons:         icons,
 			Emails:        c.Emails,
@@ -16911,7 +16971,7 @@ func BuildCodebaseTickets(ctx *CodebaseContext) []CodebaseTicket {
 		ticketID := ticket.GetID()
 		ticketPath := ticket.TicketPath
 		if ticketPath == "" {
-			ticketPath = fmt.Sprintf(".semio-repo/tickets/%04d/%02d/%02d/%s/ticket.md", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
+			ticketPath = fmt.Sprintf(".semio-repo/🎫/%02d/%02d/%02d/%s/ticket.md", ticket.Year, ticket.Month, ticket.Day, ticket.Slug)
 		}
 
 		bundleFiles := make(map[string]int)
@@ -17010,9 +17070,9 @@ func BuildCodebasePolicies(ctx *CodebaseContext) []CodebasePolicy {
 			})
 		}
 		result = append(result, CodebasePolicy{
-			ID:         policy.ID,
-			Name:       policy.Name,
-			Scopes:     policy.Scopes,
+			ID:      policy.ID,
+			Name:    policy.Name,
+			Scopes:  policy.Scopes,
 			Breachs: breachs,
 		})
 	}
@@ -17151,7 +17211,7 @@ func BuildCodebase(ctx *CodebaseContext) *Codebase {
 		Contributors: contributors,
 		Tickets:      tickets,
 		Policies:     policies,
-		Breachs:   breachs,
+		Breachs:      breachs,
 		Tree:         tree,
 	}
 }
@@ -17459,14 +17519,14 @@ func ToolCodebase() ToolResult {
 // GetTicketsDir returns the tickets dir of the value.
 // [🛠️semio-repo/cli/main.go#Types#Tickets§GetTicketsDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/GETTICKETSDIR)
 func GetTicketsDir() string {
-	return filepath.Join(GetRepoMetaDir(), "tickets")
+	return filepath.Join(GetRepoMetaDir(), "🎫")
 }
 
 // GetTicketPath MUST return the stored value without modification.
 // GetTicketPath returns the ticket path of the value.
 // [🛠️semio-repo/cli/main.go#Types#Tickets§GetTicketPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/GETTICKETPATH)
 func GetTicketPath(year, month, day int, slug string) string {
-	return filepath.Join(GetTicketsDir(), strconv.Itoa(year), PadNumber(month, 2), PadNumber(day, 2), slug)
+	return filepath.Join(GetTicketsDir(), PadNumber(year, 2), PadNumber(month, 2), PadNumber(day, 2), slug)
 }
 
 // GetTicketFilePath MUST return the stored value without modification.
@@ -18366,7 +18426,7 @@ func ListTickets(year, month, day *int) ([]Ticket, error) {
 	var tickets []Ticket
 	var years []string
 	if year != nil {
-		years = []string{strconv.Itoa(*year)}
+		years = []string{PadNumber(*year, 2)}
 	} else {
 		entries, err := os.ReadDir(ticketsDir)
 		if err != nil {
@@ -18465,7 +18525,7 @@ func StreamTickets(ctx context.Context, year, month, day *int, out chan<- Ticket
 	}
 	var years []string
 	if year != nil {
-		years = []string{strconv.Itoa(*year)}
+		years = []string{PadNumber(*year, 2)}
 	} else {
 		entries, err := os.ReadDir(ticketsDir)
 		if err != nil {
@@ -19105,8 +19165,8 @@ type StreamOptions struct {
 	IncludeContributors []string
 	ExcludePolicies     []string
 	IncludePolicies     []string
-	ExcludeBreachs   []string
-	IncludeBreachs   []string
+	ExcludeBreachs      []string
+	IncludeBreachs      []string
 }
 
 func matchesFilter(name string, opts StreamOptions) bool {
@@ -19427,26 +19487,23 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 	}
 
 	root := rootDir
-	if bundleName, found := strings.CutPrefix(scope, "semio/"); found {
+	if scope != "" && scope != "semio" {
 		bundles := GetProjects()
 		matched := false
 		for _, b := range bundles {
-			if b.Name == bundleName || normalizeBundleLabel(b.Name) == bundleName {
+			if b.Name == scope || b.Root == scope || normalizeBundleLabel(b.Name) == scope {
 				root = filepath.Join(rootDir, b.Root)
 				matched = true
 				break
 			}
 		}
-
 		if !matched {
-			parts := strings.SplitN(bundleName, "/", 2)
-			if len(parts) == 2 {
-				prefix := parts[0]
-				subPath := parts[1]
+			parts := strings.SplitN(scope, "/", 3)
+			if len(parts) == 3 {
+				bundleScope := parts[0] + "/" + parts[1]
+				subPath := parts[2]
 				for _, b := range bundles {
-					bName := b.Name
-					bName = strings.TrimPrefix(bName, "semio/")
-					if bName == prefix || normalizeBundleLabel(bName) == "semio/"+prefix {
+					if b.Name == bundleScope || b.Root == bundleScope || normalizeBundleLabel(b.Name) == bundleScope {
 						root = filepath.Join(rootDir, b.Root, subPath)
 						matched = true
 						break
@@ -19454,11 +19511,12 @@ func StreamFiles(ctx context.Context, scope string, out chan<- File, opts ...Str
 				}
 			}
 		}
-	} else if scope != "" && scope != "semio" {
-		if filepath.IsAbs(scope) {
-			root = scope
-		} else {
-			root = filepath.Join(rootDir, scope)
+		if !matched {
+			if filepath.IsAbs(scope) {
+				root = scope
+			} else {
+				root = filepath.Join(rootDir, scope)
+			}
 		}
 	}
 
@@ -20232,7 +20290,7 @@ func ToolTicketOpen(title, prompt, llm, client, draft string, noIssue bool, goal
 			"day":    ticket.Day,
 			"status": ticket.Status,
 			"path":   ticket.FolderPath,
-			"uri":    fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, Slugify(ticket.Slug)),
+			"uri":    fmt.Sprintf("semiorepo://ticket/%02d/%02d/%02d/%s", ticket.Year, ticket.Month, ticket.Day, Slugify(ticket.Slug)),
 		},
 	})
 	events := []Event{{Kind: KindResult, Command: "graphql", Data: data}}
@@ -20249,7 +20307,7 @@ func ToolTicketList(year, month, day *int) ToolResult {
 	}
 	var events []Event
 	for _, t := range tickets {
-		created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", t.Year, t.Month, t.Day)
+		created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", 2000+t.Year, t.Month, t.Day)
 		if started := t.GetDateStarted(); !started.IsZero() {
 			created = started.Format(time.RFC3339)
 		}
@@ -20280,7 +20338,7 @@ func ToolTicketRead(year, month, day int, slug string) ToolResult {
 	if err != nil {
 		return toolErrorResult(err)
 	}
-	created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", ticket.Year, ticket.Month, ticket.Day)
+	created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", 2000+ticket.Year, ticket.Month, ticket.Day)
 	if started := ticket.GetDateStarted(); !started.IsZero() {
 		created = started.Format(time.RFC3339)
 	}
@@ -20328,7 +20386,7 @@ func ToolTicketClose(year, month, day int, slug, summary string, files []string,
 	if err := FinishTicket(ticket, summary, files, noGithub, false); err != nil {
 		return toolErrorResult(err)
 	}
-	created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", ticket.Year, ticket.Month, ticket.Day)
+	created := fmt.Sprintf("%04d-%02d-%02dT00:00:00Z", 2000+ticket.Year, ticket.Month, ticket.Day)
 	if started := ticket.GetDateStarted(); !started.IsZero() {
 		created = started.Format(time.RFC3339)
 	}
@@ -20803,12 +20861,19 @@ func FileHeaderId(path string) string {
 			}
 		}
 	}
-	data := map[string]interface{}{"path": path, "kind": kind}
-	result := GetArtifactID("file", data)
-	if strings.Contains(path, "eslint.config") {
-		fmt.Fprintf(os.Stderr, "[DEBUG] FileHeaderId(%s) kind=%s result_bytes=%x\n", path, kind, []byte(result))
+	normalized := NormalizePath(path)
+	dir := filepath.Dir(normalized)
+	parentID := ""
+	if dir != "." && dir != "" {
+		bundle := GetBundleByPath(normalized)
+		if bundle != nil && NormalizePath(bundle.Root) == NormalizePath(dir) {
+			parentID = bundle.GetID()
+		} else {
+			parentID = resolveParentIDFromPath(dir)
+		}
 	}
-	return result
+	data := map[string]interface{}{"path": normalized, "kind": kind, "parentId": parentID}
+	return GetArtifactID("file", data)
 }
 
 // AGPLLicenseText MUST complete the operation successfully.
@@ -21646,17 +21711,17 @@ func ToolUpdateMetabolism() ToolResult {
 // ExportResult holds the data fields for a export result record.
 // [🛠️semio-repo/cli/main.go#Types#Tickets#SQLite Export§ExportResult](semiorepo://definition/semio-repo/cli/main.go/TYPES/TICKETS/SQLITE-EXPORT/EXPORTRESULT)
 type ExportResult struct {
-	Path           string `json:"path"`
-	Bundles        int    `json:"bundles"`
-	Folders        int    `json:"folders"`
-	Files          int    `json:"files"`
-	Sections       int    `json:"sections"`
-	Definitions    int    `json:"definitions"`
-	Contributors   int    `json:"contributors"`
-	Tickets        int    `json:"tickets"`
-	Policies       int    `json:"policies"`
-	Statutes int    `json:"statutes"`
-	Breachs     int    `json:"breachs"`
+	Path         string `json:"path"`
+	Bundles      int    `json:"bundles"`
+	Folders      int    `json:"folders"`
+	Files        int    `json:"files"`
+	Sections     int    `json:"sections"`
+	Definitions  int    `json:"definitions"`
+	Contributors int    `json:"contributors"`
+	Tickets      int    `json:"tickets"`
+	Policies     int    `json:"policies"`
+	Statutes     int    `json:"statutes"`
+	Breachs      int    `json:"breachs"`
 }
 
 // ExportToSQLite MUST write the complete output to the target.
@@ -23009,17 +23074,11 @@ func (c *repoContext) TicketDelete(input TicketDeleteInput) (bool, error) {
 
 	path := ticket.FolderPath
 	if path == "" {
-		base := filepath.Join(GetRepoMetaDir(), "tickets", fmt.Sprintf("%d", input.Year), fmt.Sprintf("%02d", input.Month), fmt.Sprintf("%02d", input.Day), input.Slug)
-		path = base
+		path = GetTicketPath(input.Year, input.Month, input.Day, input.Slug)
 	}
 
 	if err := os.RemoveAll(path); err != nil {
 		return false, err
-	}
-
-	legacyPath := filepath.Join("tickets", fmt.Sprintf("%d", input.Year), fmt.Sprintf("%02d", input.Month), fmt.Sprintf("%02d", input.Day), input.Slug)
-	if FileExists(legacyPath) {
-		_ = os.RemoveAll(legacyPath)
 	}
 
 	return true, nil
@@ -23065,12 +23124,12 @@ func (c *repoContext) GetPolicies() []*Policy {
 			statutes = append(statutes, &meta)
 		}
 		result[i] = &Policy{
-			ID:             policies[i].ID,
-			Name:           policies[i].Name,
-			Description:    descPtr,
-			Scopes:         policies[i].Scopes,
-			Groups:         policies[i].Groups,
-			Statutes: statutes,
+			ID:          policies[i].ID,
+			Name:        policies[i].Name,
+			Description: descPtr,
+			Scopes:      policies[i].Scopes,
+			Groups:      policies[i].Groups,
+			Statutes:    statutes,
 		}
 	}
 	return result
@@ -27204,16 +27263,16 @@ func buildSchema(resolver *Resolver) (graphql.Schema, error) {
 		Name: "AnalyzeResult",
 		Fields: graphql.Fields{
 			"breachs": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType)))},
-			"metrics":    &graphql.Field{Type: graphql.NewNonNull(analyzeMetricsType)},
+			"metrics": &graphql.Field{Type: graphql.NewNonNull(analyzeMetricsType)},
 		},
 	})
 
 	fixResultType := graphql.NewObject(graphql.ObjectConfig{
 		Name: "FixResult",
 		Fields: graphql.Fields{
-			"fixed":      &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"remaining":  &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
-			"breachs": &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType)))},
+			"fixed":     &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"remaining": &graphql.Field{Type: graphql.NewNonNull(graphql.Int)},
+			"breachs":   &graphql.Field{Type: graphql.NewNonNull(graphql.NewList(graphql.NewNonNull(breachType)))},
 		},
 	})
 
@@ -28356,50 +28415,66 @@ func (r *queryResolver) Node(ctx context.Context, id string) (Node, error) {
 	cleanID := strings.ReplaceAll(id, "\uFE0E", "")
 	cleanID = strings.ReplaceAll(cleanID, "\uFE0F", "")
 
-	if cleanID == emojiText(EmojiRepo) {
+	if cleanID == "" {
 		return r.Repo(ctx)
 	}
 
 	stripPrefix := func(s, emoji string) (string, bool) {
 		p := strings.ReplaceAll(emoji, "\uFE0F", "")
 		p = strings.ReplaceAll(p, "\uFE0E", "")
+		if p == "" {
+			return s, false
+		}
 		if strings.HasPrefix(s, p) {
 			return strings.TrimPrefix(s, p), true
 		}
 		return s, false
 	}
-	stripAnyPrefix := func(s string, emojis []string) string {
+	findEmoji := func(s string, emojis []string) (before string, after string, found bool) {
 		for _, e := range emojis {
-			if rest, ok := stripPrefix(s, e); ok {
-				return rest
+			ne := strings.ReplaceAll(e, "\uFE0F", "")
+			ne = strings.ReplaceAll(ne, "\uFE0E", "")
+			if ne == "" {
+				continue
+			}
+			idx := strings.Index(s, ne)
+			if idx >= 0 {
+				return s[:idx], s[idx+len(ne):], true
 			}
 		}
-		return s
+		return s, "", false
 	}
 
-	if rest, ok := stripPrefix(cleanID, EmojiProjects); ok {
-		name := stripAnyPrefix(rest, []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch})
-		return &Project{Name: name}, nil
+	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch}
+	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets}
+	for _, pe := range projectEmojis {
+		if rest, ok := stripPrefix(cleanID, pe); ok {
+			if projectVal, bundleVal, found := findEmoji(rest, bundleEmojis); found {
+				return r.Bundle(ctx, projectVal+"/"+bundleVal)
+			}
+			return &Project{Name: rest}, nil
+		}
 	}
 
-	if rest, ok := stripPrefix(cleanID, EmojiBundles); ok {
-		name := stripAnyPrefix(rest, []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets})
-		return r.Bundle(ctx, name)
+	folderEmojis := []string{EmojiFolderOrg, EmojiFolderRequired}
+	for _, fe := range folderEmojis {
+		if rest, ok := stripPrefix(cleanID, fe); ok {
+			return r.Folder(ctx, rest)
+		}
 	}
 
-	if rest, ok := stripPrefix(cleanID, EmojiFolders); ok {
-		path := stripAnyPrefix(rest, []string{EmojiFolderOrg, EmojiFolderRequired})
-		return r.Folder(ctx, path)
+	fileEmojis := []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
+	for _, fe := range fileEmojis {
+		if rest, ok := stripPrefix(cleanID, fe); ok {
+			return r.File(ctx, rest)
+		}
 	}
 
-	if rest, ok := stripPrefix(cleanID, EmojiFiles); ok {
-		path := stripAnyPrefix(rest, []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense})
-		return r.File(ctx, path)
-	}
-
-	if rest, ok := stripPrefix(cleanID, EmojiDefinitions); ok {
-		value := stripAnyPrefix(rest, []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant})
-		return &Definition{ID: value}, nil
+	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant}
+	for _, de := range defEmojis {
+		if rest, ok := stripPrefix(cleanID, de); ok {
+			return &Definition{ID: rest}, nil
+		}
 	}
 
 	if rest, ok := stripPrefix(cleanID, EmojiTicket); ok {
@@ -28699,6 +28774,7 @@ func (r *queryResolver) Tickets(ctx context.Context, year *int, month *int, day 
 
 // Interactions aggregates all interactions from tickets and goals.
 // [🛠️semio-repo/cli/main.go#Types#Query Resolvers§Interactions](semiorepo://definition/semio-repo/cli/main.go/TYPES/QUERY-RESOLVERS/INTERACTIONS)
+// Interactions MUST perform the Interactions operation.
 func (r *queryResolver) Interactions(ctx context.Context) ([]InteractionResource, error) {
 	return ListInteractions()
 }
@@ -28721,12 +28797,12 @@ func (r *queryResolver) Policies(ctx context.Context, filter *FilterInput) ([]*P
 				vks = append(vks, &meta)
 			}
 			policies = append(policies, &Policy{
-				ID:             p.ID,
-				Name:           p.Name,
-				Description:    &desc,
-				Scopes:         p.Scopes,
-				Groups:         p.Groups,
-				Statutes: vks,
+				ID:          p.ID,
+				Name:        p.Name,
+				Description: &desc,
+				Scopes:      p.Scopes,
+				Groups:      p.Groups,
+				Statutes:    vks,
 			})
 		}
 		return policies, nil
@@ -28984,9 +29060,9 @@ func (r *mutationResolver) Fix(ctx context.Context, scope *string) (*FixResult, 
 		return r.Ctx.Fix(scope)
 	}
 	return &FixResult{
-		Fixed:      0,
-		Remaining:  0,
-		Breachs: []*Breach{},
+		Fixed:     0,
+		Remaining: 0,
+		Breachs:   []*Breach{},
 	}, nil
 }
 
@@ -29426,12 +29502,12 @@ func (r *repoResolver) Policies(ctx context.Context, obj *Repo, filter *FilterIn
 				vks = append(vks, &meta)
 			}
 			policies = append(policies, &Policy{
-				ID:             p.ID,
-				Name:           p.Name,
-				Description:    &desc,
-				Scopes:         p.Scopes,
-				Groups:         p.Groups,
-				Statutes: vks,
+				ID:          p.ID,
+				Name:        p.Name,
+				Description: &desc,
+				Scopes:      p.Scopes,
+				Groups:      p.Groups,
+				Statutes:    vks,
 			})
 		}
 		return policies, nil
@@ -29591,7 +29667,7 @@ func createMcpServer() *server.MCPServer {
 		analyze,
 	)
 	s.AddResource(
-		mcp.NewResource("semiorepo://repo", "Repo", mcp.WithMIMEType("text/plain")),
+		mcp.NewResource("semiorepo://root", "Root", mcp.WithMIMEType("text/plain")),
 		handleRepoResource,
 	)
 	s.AddResource(
@@ -30138,7 +30214,7 @@ func gql(query string, variables map[string]interface{}) (string, error) {
 // Request handler functions for CLI and MCP operations.
 
 func renderPromptTemplate(name string, data map[string]string) (string, error) {
-	path := filepath.Join(".semio-repo", "prompt", "templates", name+".tpl")
+	path := filepath.Join(".semio-repo", "💬", "📋", name+".tpl")
 	content, err := os.ReadFile(path)
 	if err != nil {
 		return "", err
@@ -31652,13 +31728,99 @@ func findBundleInfo(path string) (name, root string, ok bool) {
 	return "", "", false
 }
 
+func resolveParentIDFromPath(dirPath string) string {
+	normalized := NormalizePath(dirPath)
+	if normalized == "." || normalized == "" {
+		return ""
+	}
+	bundle := GetBundleByPath(normalized)
+	if bundle != nil {
+		bundleRoot := NormalizePath(bundle.Root)
+		if normalized == bundleRoot {
+			return bundle.GetID()
+		}
+		if strings.HasPrefix(normalized, bundleRoot+"/") {
+			relPath := normalized[len(bundleRoot)+1:]
+			parts := strings.Split(relPath, "/")
+			parentID := bundle.GetID()
+			currentPath := bundleRoot
+			for _, part := range parts {
+				currentPath += "/" + part
+				kind := DeriveFolderKind(currentPath)
+				if kind == FolderKindOrganization {
+					parentID += emojiText(EmojiFolderOrg) + Flat(part)
+				} else {
+					parentID += emojiText(EmojiFolderRequired) + Flat(part)
+				}
+			}
+			return parentID
+		}
+	}
+	parts := strings.Split(normalized, "/")
+	parentID := ""
+	currentPath := ""
+	for _, part := range parts {
+		if currentPath == "" {
+			currentPath = part
+		} else {
+			currentPath += "/" + part
+		}
+		kind := DeriveFolderKind(currentPath)
+		if kind == FolderKindOrganization {
+			parentID += emojiText(EmojiFolderOrg) + Flat(part)
+		} else {
+			parentID += emojiText(EmojiFolderRequired) + Flat(part)
+		}
+	}
+	return parentID
+}
+
 func buildFolderID(path string, bundleID *string) string {
-	return "📂" + NormalizePath(path)
+	normalized := NormalizePath(path)
+	if normalized == "." || normalized == "" {
+		return ""
+	}
+	dir := filepath.Dir(normalized)
+	name := filepath.Base(normalized)
+	parentID := ""
+	bundle := GetBundleByPath(normalized)
+	if bundle != nil {
+		bundleRoot := NormalizePath(bundle.Root)
+		if dir == bundleRoot || normalized == bundleRoot {
+			if normalized == bundleRoot {
+				return bundle.GetID()
+			}
+			parentID = bundle.GetID()
+		} else if strings.HasPrefix(dir, bundleRoot+"/") {
+			parentID = resolveParentIDFromPath(dir)
+		} else {
+			parentID = resolveParentIDFromPath(dir)
+		}
+	} else if dir != "." && dir != "" {
+		parentID = resolveParentIDFromPath(dir)
+	}
+	kind := DeriveFolderKind(normalized)
+	if kind == FolderKindOrganization {
+		return parentID + emojiText(EmojiFolderOrg) + Flat(name)
+	}
+	return parentID + emojiText(EmojiFolderRequired) + Flat(name)
 }
 
 func buildFileID(path string, bundleID *string) string {
-	kind := DeriveFileKind(filepath.Base(path))
-	return GetArtifactID("file", map[string]interface{}{"path": NormalizePath(path), "kind": kind})
+	normalized := NormalizePath(path)
+	name := filepath.Base(normalized)
+	kind := DeriveFileKind(name)
+	dir := filepath.Dir(normalized)
+	parentID := ""
+	if dir != "." && dir != "" {
+		bundle := GetBundleByPath(normalized)
+		if bundle != nil && NormalizePath(bundle.Root) == NormalizePath(dir) {
+			parentID = bundle.GetID()
+		} else {
+			parentID = resolveParentIDFromPath(dir)
+		}
+	}
+	return GetArtifactID("file", map[string]interface{}{"path": normalized, "kind": kind, "parentId": parentID})
 }
 
 func buildSectionID(fileID string, sectionPath []string) string {
@@ -32080,7 +32242,7 @@ func findSectionForDefinition(sections []Section, startLine, endLine int, prefix
 // [🛠️semio-repo/cli/main.go#Types#Cli§ListContributors](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/LISTCONTRIBUTORS)
 func ListContributors() ([]Contributor, error) {
 	var result []Contributor
-	dir := filepath.Join(GetRepoMetaDir(), "contributors")
+	dir := filepath.Join(GetRepoMetaDir(), "👤")
 	if !FileExists(dir) {
 		return []Contributor{{Github: "unknown", Name: "Unknown"}}, nil
 	}
@@ -32164,21 +32326,21 @@ func StreamContributors(ctx context.Context, out chan<- Contributor, opts ...Str
 // GetContributorAvatarPath retrieves and returns the contributor avatar path.
 // [🛠️semio-repo/cli/main.go#Types#Cli§GetContributorAvatarPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GETCONTRIBUTORAVATARPATH)
 func GetContributorAvatarPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar.png")
+	return filepath.Join(GetRepoMetaDir(), "👤", github, "avatar.png")
 }
 
 // GetContributorAvatarRoundPath MUST retrieve the requested value or return an error.
 // GetContributorAvatarRoundPath retrieves and returns the contributor avatar round path.
 // [🛠️semio-repo/cli/main.go#Types#Cli§GetContributorAvatarRoundPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GETCONTRIBUTORAVATARROUNDPATH)
 func GetContributorAvatarRoundPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "contributors", github, "avatar-round.png")
+	return filepath.Join(GetRepoMetaDir(), "👤", github, "avatar-round.png")
 }
 
 // GetContributorPath MUST retrieve the requested value or return an error.
 // GetContributorPath retrieves and returns the contributor path.
 // [🛠️semio-repo/cli/main.go#Types#Cli§GetContributorPath](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GETCONTRIBUTORPATH)
 func GetContributorPath(github string) string {
-	return filepath.Join(GetRepoMetaDir(), "contributors", github)
+	return filepath.Join(GetRepoMetaDir(), "👤", github)
 }
 
 // CreateContributor MUST create a new entry and return an error on conflict.
@@ -32234,7 +32396,7 @@ func SaveContributor(c Contributor) error {
 // RemoveContributor removes the specified contributor.
 // [🛠️semio-repo/cli/main.go#Types#Cli§RemoveContributor](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/REMOVECONTRIBUTOR)
 func RemoveContributor(github string) error {
-	dir := filepath.Join(GetRepoMetaDir(), "contributors", github)
+	dir := filepath.Join(GetRepoMetaDir(), "👤", github)
 	if !FileExists(dir) {
 		return fmt.Errorf("contributor not found: %s", github)
 	}
@@ -32373,10 +32535,10 @@ func ToolAnalyze(scopeRaw string, policyIDs []string) ToolResult {
 	}
 
 	report := AnalyzeReport{
-		Timestamp:  time.Now().Format(time.RFC3339),
-		Status:     "success",
-		Scope:      scopeRaw,
-		Breachs: breachs,
+		Timestamp: time.Now().Format(time.RFC3339),
+		Status:    "success",
+		Scope:     scopeRaw,
+		Breachs:   breachs,
 		Summary: Summary{
 			Total:      len(breachs),
 			ByPriority: byPriority,
@@ -33169,7 +33331,7 @@ func CopyFile(sourcePath, destPath string) error {
 // GetRepoGoalsDir retrieves and returns the repo goals dir.
 // [🛠️semio-repo/cli/main.go#Types#Cli#Goals§GetRepoGoalsDir](semiorepo://definition/semio-repo/cli/main.go/TYPES/CLI/GOALS/GETREPOGOALSDIR)
 func GetRepoGoalsDir() string {
-	return filepath.Join(GetRepoMetaDir(), "goals")
+	return filepath.Join(GetRepoMetaDir(), "🎯")
 }
 
 // ListGoals MUST return all available goals entries.
@@ -34076,6 +34238,7 @@ func emojiText(emoji string) string {
 		"\U0001F3D7", "\u2328", "\U0001F5B1", "\U0001F5C3",
 		"\u2699", "\u2696", "\U0001F3F7", "\U0001F6E0",
 		"\u2702", "\U0001F6E1", "\U0001F5D1",
+		"\u2600", "\u23F1", "\u270F", "\U0001F46E",
 	}
 	base := strings.ReplaceAll(stripped, "\uFE0F", "")
 	for _, td := range textDefaultEmojis {
@@ -34156,7 +34319,7 @@ func fileKindEmoji(data map[string]interface{}) string {
 	case "license":
 		return emojiText(EmojiFileLicense)
 	}
-	return emojiText(EmojiFiles)
+	return ""
 }
 
 func folderKindEmoji(data map[string]interface{}) string {
@@ -34176,6 +34339,15 @@ func definitionKindEmoji(data map[string]interface{}) string {
 		return emojiText(EmojiDefinitionConstant)
 	}
 	return emojiText(EmojiDefinitionImpl)
+}
+
+func goalArtifactID(rawGoalID string) string {
+	parts := strings.Split(rawGoalID, "/")
+	result := ""
+	for _, p := range parts {
+		result += emojiText(EmojiGoal) + Flat(p)
+	}
+	return result
 }
 
 func interactionKindEmoji(data map[string]interface{}) string {
@@ -34405,49 +34577,74 @@ func StatuteUriPathToId(uriPath string) string {
 // GetArtifactID retrieves and returns the artifact i d.
 // [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§GetArtifactID](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/GETARTIFACTID)
 func GetArtifactID(kind string, data map[string]interface{}) string {
+	parentId, _ := data["parentId"].(string)
 	switch kind {
-	case "repo":
-		return emojiText(EmojiRepo)
+	case "root":
+		return ""
+	case "years":
+		return parentId + emojiText(EmojiYears)
+	case "year":
+		yy, _ := data["yy"].(string)
+		return parentId + emojiText(EmojiYear) + yy
+	case "months":
+		return parentId + emojiText(EmojiMonths)
+	case "month":
+		mm, _ := data["mm"].(string)
+		return parentId + emojiText(EmojiMonth) + mm
+	case "days":
+		return parentId + emojiText(EmojiDays)
+	case "day":
+		dd, _ := data["dd"].(string)
+		return parentId + emojiText(EmojiDay) + dd
+	case "hours":
+		return parentId + emojiText(EmojiHours)
+	case "hour":
+		hh, _ := data["hh"].(string)
+		return parentId + emojiText(EmojiHour) + hh
+	case "minutes":
+		return parentId + emojiText(EmojiMinutes)
+	case "minute":
+		mm, _ := data["mm"].(string)
+		return parentId + emojiText(EmojiMinute) + mm
+	case "seconds":
+		return parentId + emojiText(EmojiSeconds)
+	case "second":
+		ss, _ := data["ss"].(string)
+		return parentId + emojiText(EmojiSecond) + ss
 	case "projects":
-		return emojiText(EmojiProjects)
+		return parentId + emojiText(EmojiProjects)
 	case "project":
 		name, _ := data["name"].(string)
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiProjects), projectKindEmoji(data), name)
+		return projectKindEmoji(data) + Flat(name)
 	case "bundles":
-		code, _ := data["projectCode"].(string)
-		return fmt.Sprintf("%s%s", emojiText(EmojiBundles), code)
+		return parentId + emojiText(EmojiBundles)
 	case "bundle":
 		name, _ := data["name"].(string)
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiBundles), bundleKindEmoji(data), name)
-	case "folders":
-		parentPath, _ := data["parentPath"].(string)
-		if parentPath == "" {
-			return emojiText(EmojiFolders)
+		parts := strings.SplitN(name, "/", 2)
+		projectCode := parts[0]
+		bundleCode := projectCode
+		if len(parts) > 1 {
+			bundleCode = parts[1]
 		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiFolders), parentPath)
+		pKind := DeriveProjectKind(projectCode)
+		return emojiText(string(pKind)) + Flat(projectCode) + bundleKindEmoji(data) + Flat(bundleCode)
+	case "folders":
+		return parentId + emojiText(EmojiFolders)
 	case "folder":
 		path, _ := data["path"].(string)
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiFolders), folderKindEmoji(data), path)
+		name := filepath.Base(path)
+		return parentId + folderKindEmoji(data) + Flat(name)
 	case "files":
-		folderPath, _ := data["folderPath"].(string)
-		if folderPath == "" {
-			return emojiText(EmojiFiles)
-		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiFiles), folderPath)
+		return parentId + emojiText(EmojiFiles)
 	case "file":
 		path, _ := data["path"].(string)
 		if path == "" {
 			path, _ = data["id"].(string)
 		}
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiFiles), fileKindEmoji(data), path)
+		name := filepath.Base(path)
+		return parentId + fileKindEmoji(data) + Flat(name)
 	case "sections":
-		filePath, _ := data["filePath"].(string)
-		parentPath, _ := data["parentPath"].(string)
-		val := filePath
-		if parentPath != "" {
-			val += "#" + parentPath
-		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiSections), val)
+		return parentId + emojiText(EmojiSections)
 	case "section":
 		path, _ := data["path"].(string)
 		if path == "" {
@@ -34459,95 +34656,124 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 				path = name
 			}
 		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiSection), path)
-	case "definitions":
-		filePath, _ := data["filePath"].(string)
-		sectionPath, _ := data["sectionPath"].(string)
-		val := filePath
-		if sectionPath != "" {
-			val += "#" + sectionPath
+		hashIdx := strings.LastIndex(path, "#")
+		sectionName := path
+		if hashIdx >= 0 {
+			sectionName = path[hashIdx+1:]
 		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiDefinitions), val)
+		return parentId + emojiText(EmojiSection) + Flat(sectionName)
+	case "definitions":
+		return parentId + emojiText(EmojiDefinitions)
 	case "definition":
 		k := definitionKindEmoji(data)
-		id, _ := data["id"].(string)
-		if id != "" {
-			return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), k, id)
-		}
-		filePath, _ := data["filePath"].(string)
-		sectionPath, _ := data["sectionPath"].(string)
 		name, _ := data["name"].(string)
-		val := filePath
-		if sectionPath != "" {
-			val += "#" + sectionPath
-		}
-		val += "§" + name
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), k, val)
-	case "tickets":
-		return emojiText(EmojiTickets)
-	case "ticket":
-		year, _ := data["year"].(float64)
-		month, _ := data["month"].(float64)
-		day, _ := data["day"].(float64)
-		slug, _ := data["slug"].(string)
-		if year == 0 && month == 0 && day == 0 {
-			if id, ok := data["id"].(string); ok && id != "" {
-				return id
-			}
-			if uri, ok := data["uri"].(string); ok && uri != "" {
-				if strings.HasPrefix(uri, "semiorepo://ticket/") {
-					suffix := strings.TrimPrefix(uri, "semiorepo://ticket/")
-					parts := strings.Split(suffix, "/")
-					return fmt.Sprintf("%s%s", emojiText(EmojiTicket), strings.Join(parts, ""))
+		if name == "" {
+			id, _ := data["id"].(string)
+			if id != "" {
+				paragraphIdx := strings.LastIndex(id, "§")
+				if paragraphIdx >= 0 {
+					name = id[paragraphIdx+len("§"):]
+				} else {
+					hashIdx := strings.LastIndex(id, "#")
+					if hashIdx >= 0 {
+						name = id[hashIdx+1:]
+					} else {
+						name = id
+					}
 				}
 			}
 		}
-		return fmt.Sprintf("%s%04d%02d%02d%s", emojiText(EmojiTicket), int(year), int(month), int(day), slug)
+		return parentId + k + Flat(name)
+	case "tickets":
+		return parentId + emojiText(EmojiTickets)
+	case "ticket":
+		if parentId == "" {
+			if goalId, ok := data["goalId"].(string); ok && goalId != "" {
+				parentId = goalArtifactID(goalId)
+			}
+		}
+		slug, _ := data["slug"].(string)
+		title, _ := data["title"].(string)
+		if slug == "" && title != "" {
+			slug = title
+		}
+		if slug == "" {
+			if id, ok := data["id"].(string); ok && id != "" {
+				return id
+			}
+		}
+		return parentId + emojiText(EmojiTicket) + Flat(slug)
 	case "goals":
-		return emojiText(EmojiGoals)
+		return parentId + emojiText(EmojiGoals)
 	case "goal":
 		id, _ := data["id"].(string)
-		return fmt.Sprintf("%s%s", emojiText(EmojiGoal), id)
+		name := id
+		if idx := strings.LastIndex(id, "/"); idx >= 0 {
+			name = id[idx+1:]
+		}
+		return parentId + emojiText(EmojiGoal) + Flat(name)
 	case "drafts":
-		return emojiText(EmojiDrafts)
+		return parentId + emojiText(EmojiDrafts)
 	case "draft":
 		slug, _ := data["slug"].(string)
 		if slug == "" {
 			slug, _ = data["id"].(string)
 		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiDraft), slug)
+		return parentId + emojiText(EmojiDraft) + Flat(slug)
 	case "todos":
-		return emojiText(EmojiTodos)
+		return parentId + emojiText(EmojiTodos)
 	case "todo":
 		slug, _ := data["id"].(string)
-		return fmt.Sprintf("%s%s", emojiText(EmojiTodo), slug)
+		return parentId + emojiText(EmojiTodo) + Flat(slug)
 	case "policies":
-		return emojiText(EmojiPolicies)
+		return parentId + emojiText(EmojiPolicies)
 	case "policy":
 		slug, _ := data["id"].(string)
 		slug = strings.TrimPrefix(slug, "/")
-		return fmt.Sprintf("%s%s", emojiText(EmojiPolicy), slug)
+		return parentId + emojiText(EmojiPolicy) + Flat(slug)
 	case "statutes":
-		return emojiText(EmojiStatutes)
+		return ""
 	case "statute":
-		id, _ := data["id"].(string)
-		return fmt.Sprintf("%s%s", emojiText(EmojiStatute), StatutePathToIdValue(id))
+		return ""
 	case "contributors":
-		return emojiText(EmojiContributors)
+		return parentId + emojiText(EmojiContributors)
 	case "contributor":
 		github, _ := data["github"].(string)
-		return fmt.Sprintf("%s%s", emojiText(EmojiContributor), github)
+		return emojiText(EmojiContributor) + Flat(github)
 	case "commits":
-		return emojiText(EmojiCommits)
+		return parentId + emojiText(EmojiCommits)
 	case "commit":
 		sha, _ := data["sha"].(string)
-		return fmt.Sprintf("%s%s", emojiText(EmojiCommit), sha)
+		contributorId, _ := data["contributorId"].(string)
+		if contributorId == "" {
+			if authorId, ok := data["authorId"].(string); ok && authorId != "" {
+				contributorId = emojiText(EmojiContributor) + Flat(authorId)
+			}
+		}
+		return contributorId + emojiText(EmojiCommit) + sha
+	case "line":
+		lineNum, _ := data["line"].(float64)
+		return parentId + emojiText(EmojiLine) + fmt.Sprintf("%d", int(lineNum))
+	case "range":
+		startLine, _ := data["startLine"].(float64)
+		endLine, _ := data["endLine"].(float64)
+		return parentId + emojiText(EmojiLine) + fmt.Sprintf("%d", int(startLine)) + emojiText(EmojiLine) + fmt.Sprintf("%d", int(endLine))
+	case "breach":
+		policyId := parentId
+		affected, _ := data["affected"].(string)
+		lineId, _ := data["lineId"].(string)
+		secondId, _ := data["secondId"].(string)
+		return policyId + emojiText(EmojiBreach) + affected + emojiText(EmojiBreachScope) + lineId + secondId
+	case "breaches":
+		return parentId + emojiText(EmojiBreaches)
 	case "interactions":
-		return emojiText(EmojiInteractions)
+		return parentId + emojiText(EmojiInteractions)
 	case "interaction":
 		k := interactionKindEmoji(data)
+		secondId, _ := data["secondId"].(string)
+		contributorId, _ := data["contributorId"].(string)
 		entityID, _ := data["entityId"].(string)
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiInteractions), k, entityID)
+		return secondId + contributorId + entityID + k
 	}
 	return ""
 }
@@ -34557,13 +34783,13 @@ func GetArtifactID(kind string, data map[string]interface{}) string {
 // [🛠️semio-repo/cli/main.go#Types#Todos#Entity Rendering#Artifact ID§GetArtifactURI](semiorepo://definition/semio-repo/cli/main.go/TYPES/TODOS/ENTITY-RENDERING/ARTIFACT-ID/GETARTIFACTURI)
 func GetArtifactURI(kind string, data map[string]interface{}) string {
 	switch kind {
-	case "repo":
-		return "semiorepo://repo"
+	case "root":
+		return "semiorepo://root"
 	case "projects":
 		return "semiorepo://projects"
 	case "project":
 		name, _ := data["name"].(string)
-		return fmt.Sprintf("semiorepo://project/@%s", PathToUriPath(name))
+		return fmt.Sprintf("semiorepo://project/%s", PathToUriPath(strings.TrimPrefix(name, "@")))
 	case "bundles":
 		return "semiorepo://bundles"
 	case "bundle":
@@ -34629,7 +34855,7 @@ func GetArtifactURI(kind string, data map[string]interface{}) string {
 				return "semiorepo://ticket/" + suffix
 			}
 		}
-		return fmt.Sprintf("semiorepo://ticket/%04d/%02d/%02d/%s", int(year), int(month), int(day), strings.ToUpper(slug))
+		return fmt.Sprintf("semiorepo://ticket/%02d/%02d/%02d/%s", int(year), int(month), int(day), strings.ToUpper(slug))
 	case "goals":
 		return "semiorepo://goals"
 	case "goal":
@@ -34698,145 +34924,132 @@ func IdToUri(id string) string {
 		r := strings.ReplaceAll(e, "\uFE0F", "")
 		return strings.ReplaceAll(r, "\uFE0E", "")
 	}
-	stripEntity := func(s, entity string) (string, bool) {
-		be := norm(entity)
-		if strings.HasPrefix(s, be) {
-			return strings.TrimPrefix(s, be), true
+	hasPrefix := func(s, emoji string) (string, bool) {
+		p := norm(emoji)
+		if p == "" {
+			return s, false
+		}
+		if strings.HasPrefix(s, p) {
+			return strings.TrimPrefix(s, p), true
 		}
 		return s, false
 	}
-	stripKind := func(s string, kinds []string) string {
-		for _, k := range kinds {
-			bk := norm(k)
-			if strings.HasPrefix(s, bk) {
-				return strings.TrimPrefix(s, bk)
+	hasSuffix := func(s, emoji string) (string, bool) {
+		p := norm(emoji)
+		if p == "" {
+			return s, false
+		}
+		if strings.HasSuffix(s, p) {
+			return strings.TrimSuffix(s, p), true
+		}
+		return s, false
+	}
+	findEmoji := func(s string, emojis []string) (before string, emoji string, after string, found bool) {
+		for _, e := range emojis {
+			ne := norm(e)
+			if ne == "" {
+				continue
+			}
+			idx := strings.Index(s, ne)
+			if idx >= 0 {
+				return s[:idx], e, s[idx+len(ne):], true
 			}
 		}
-		return s
+		return s, "", "", false
 	}
-	if rest, ok := stripEntity(normalized, EmojiRepo); ok {
-		if rest == "" {
-			return "semiorepo://repo"
+	projectEmojis := []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch}
+	bundleEmojis := []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets}
+	folderEmojis := []string{EmojiFolderOrg, EmojiFolderRequired}
+	fileEmojis := []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense}
+	defEmojis := []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant}
+	interactionEmojis := []string{EmojiInteractionStarted, EmojiInteractionEdited, EmojiInteractionFinished, EmojiInteractionRestarted, EmojiInteractionDeleted}
+	for _, ie := range interactionEmojis {
+		if entityPart, ok := hasSuffix(normalized, ie); ok {
+			if entityPart == "" {
+				return "semiorepo://interactions"
+			}
+			entityUri := IdToUri(entityPart)
+			if entityUri == "" {
+				return ""
+			}
+			return "semiorepo://interaction/" + strings.TrimPrefix(entityUri, "semiorepo://")
 		}
 	}
-	if rest, ok := stripEntity(normalized, EmojiProjects); ok {
-		if rest == "" {
-			return "semiorepo://projects"
+	for _, pe := range projectEmojis {
+		if rest, ok := hasPrefix(normalized, pe); ok {
+			if projectVal, _, bundleVal, found := findEmoji(rest, bundleEmojis); found {
+				return "semiorepo://bundle/" + strings.ToUpper(projectVal) + "/" + strings.ToUpper(bundleVal)
+			}
+			return "semiorepo://project/" + strings.ToUpper(rest)
 		}
-		rest = stripKind(rest, []string{EmojiProjectUser, EmojiProjectInfra, EmojiProjectResearch})
-		return "semiorepo://project/@" + PathToUriPath(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiBundles); ok {
-		stripped := stripKind(rest, []string{EmojiBundleLibrary, EmojiBundleSchema, EmojiBundleBinary, EmojiBundleUI, EmojiBundleExample, EmojiBundleSite, EmojiBundleAssets})
-		if stripped != rest {
-			return "semiorepo://bundle/" + PathToUriPath(stripped)
+	for _, fe := range folderEmojis {
+		if rest, ok := hasPrefix(normalized, fe); ok {
+			return "semiorepo://folder/" + strings.ToUpper(rest)
 		}
-		if rest == "" {
-			return "semiorepo://bundles"
-		}
-		return "semiorepo://bundles"
 	}
-	if rest, ok := stripEntity(normalized, EmojiFolders); ok {
-		stripped := stripKind(rest, []string{EmojiFolderOrg, EmojiFolderRequired})
-		if stripped != rest {
-			return "semiorepo://folder/" + PathToUriPath(stripped)
+	for _, fe := range fileEmojis {
+		if rest, ok := hasPrefix(normalized, fe); ok {
+			return "semiorepo://file/" + strings.ToUpper(rest)
 		}
-		if rest == "" {
-			return "semiorepo://folders"
-		}
-		return "semiorepo://folders/" + PathToUriPath(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiFiles); ok {
-		stripped := stripKind(rest, []string{EmojiFileCode, EmojiFileTest, EmojiFileScript, EmojiFileDocs, EmojiFileConfig, EmojiFileResource, EmojiFileLicense})
-		if stripped != rest {
-			return "semiorepo://file/" + PathToUriPath(stripped)
-		}
-		if rest == "" {
-			return "semiorepo://files"
-		}
-		return "semiorepo://files/" + PathToUriPath(rest)
-	}
-	if rest, ok := stripEntity(normalized, EmojiSections); ok {
+	if rest, ok := hasPrefix(normalized, EmojiSection); ok {
 		if rest == "" {
 			return "semiorepo://sections"
 		}
 		return "semiorepo://section/" + SectionIdValueToUriPath(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiDefinitions); ok {
-		stripped := stripKind(rest, []string{EmojiDefinitionImpl, EmojiDefinitionInterface, EmojiDefinitionConstant})
-		if stripped != rest {
-			return "semiorepo://definition/" + DefinitionIdValueToUriPath(stripped)
+	for _, de := range defEmojis {
+		if rest, ok := hasPrefix(normalized, de); ok {
+			return "semiorepo://definition/" + DefinitionIdValueToUriPath(rest)
 		}
-		if rest == "" {
-			return "semiorepo://definitions"
-		}
-		return "semiorepo://definitions/" + PathToUriPath(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiTickets); ok {
+	if rest, ok := hasPrefix(normalized, EmojiTicket); ok {
 		if rest == "" {
 			return "semiorepo://tickets"
 		}
-		if len(rest) >= 8 {
-			year := rest[0:4]
-			month := rest[4:6]
-			day := rest[6:8]
-			slug := rest[8:]
-			return fmt.Sprintf("semiorepo://ticket/%s/%s/%s/%s", year, month, day, strings.ToUpper(slug))
-		}
-		return "semiorepo://ticket/" + PathToUriPath(rest)
+		return "semiorepo://ticket/" + strings.ToUpper(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiGoals); ok {
+	if rest, ok := hasPrefix(normalized, EmojiGoal); ok {
 		if rest == "" {
 			return "semiorepo://goals"
 		}
-		return "semiorepo://goal/" + PathToUriPath(rest)
+		goalEmoji := emojiText(EmojiGoal)
+		segments := strings.Split(rest, goalEmoji)
+		for i, seg := range segments {
+			segments[i] = strings.ToUpper(seg)
+		}
+		return "semiorepo://goal/" + strings.Join(segments, "/")
 	}
-	if rest, ok := stripEntity(normalized, EmojiDrafts); ok {
+	if rest, ok := hasPrefix(normalized, EmojiDraft); ok {
 		if rest == "" {
 			return "semiorepo://drafts"
 		}
-		return "semiorepo://draft/" + strings.ToUpper(Slugify(rest))
+		return "semiorepo://draft/" + strings.ToUpper(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiTodos); ok {
-		if rest == "" {
-			return "semiorepo://todos"
-		}
-		return "semiorepo://todo/" + strings.ToUpper(Slugify(rest))
-	}
-	if rest, ok := stripEntity(normalized, EmojiPolicies); ok {
+	if rest, ok := hasPrefix(normalized, EmojiPolicy); ok {
 		if rest == "" {
 			return "semiorepo://policies"
 		}
-		return "semiorepo://policy/" + strings.ToUpper(Slugify(rest))
+		return "semiorepo://policy/" + strings.ToUpper(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiStatutes); ok {
+	if rest, ok := hasPrefix(normalized, EmojiBreach); ok {
 		if rest == "" {
-			return "semiorepo://statutes"
+			return "semiorepo://breachs"
 		}
-		return "semiorepo://statute/" + StatuteIdToUriPath(StatuteIdValueToPath(rest))
+		return "semiorepo://breach/" + strings.ToUpper(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiContributors); ok {
+	if rest, ok := hasPrefix(normalized, EmojiContributor); ok {
 		if rest == "" {
 			return "semiorepo://contributors"
 		}
-		return "semiorepo://contributor/" + strings.ToUpper(Slugify(rest))
+		return "semiorepo://contributor/" + strings.ToUpper(rest)
 	}
-	if rest, ok := stripEntity(normalized, EmojiCommits); ok {
+	if rest, ok := hasPrefix(normalized, EmojiCommit); ok {
 		if rest == "" {
 			return "semiorepo://commits"
 		}
 		return "semiorepo://commit/" + strings.ToUpper(rest)
-	}
-	if rest, ok := stripEntity(normalized, EmojiInteractions); ok {
-		if rest == "" {
-			return "semiorepo://interactions"
-		}
-		stripped := stripKind(rest, []string{EmojiInteractionStarted, EmojiInteractionFinished, EmojiInteractionRestarted, EmojiInteractionDeleted})
-		entityUri := IdToUri(stripped)
-		if entityUri == "" {
-			return ""
-		}
-		return "semiorepo://interaction/" + strings.TrimPrefix(entityUri, "semiorepo://")
 	}
 	return ""
 }
@@ -34850,119 +35063,108 @@ func UriToId(uri string) string {
 	}
 	p := strings.TrimPrefix(uri, "semiorepo://")
 	switch {
-	case p == "repo":
-		return emojiText(EmojiRepo)
+	case p == "root":
+		return ""
 	case p == "projects":
 		return emojiText(EmojiProjects)
 	case strings.HasPrefix(p, "project/"):
-		code := PathFromUriPath(strings.TrimPrefix(p, "project/@"))
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiProjects), emojiText(EmojiProjectUser), code)
+		code := strings.TrimPrefix(p, "project/")
+		code = strings.TrimPrefix(code, "@")
+		code = strings.ToLower(code)
+		pKind := DeriveProjectKind(code)
+		return emojiText(string(pKind)) + Flat(code)
 	case p == "bundles":
 		return emojiText(EmojiBundles)
 	case strings.HasPrefix(p, "bundle/"):
-		name := PathFromUriPath(strings.TrimPrefix(p, "bundle/"))
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiBundles), emojiText(EmojiBundleLibrary), name)
+		name := strings.ToLower(strings.TrimPrefix(p, "bundle/"))
+		parts := strings.SplitN(name, "/", 2)
+		projectCode := parts[0]
+		bundleCode := projectCode
+		if len(parts) > 1 {
+			bundleCode = parts[1]
+		}
+		pKind := DeriveProjectKind(projectCode)
+		return emojiText(string(pKind)) + Flat(projectCode) + emojiText(EmojiBundleLibrary) + Flat(bundleCode)
 	case p == "folders" || strings.HasPrefix(p, "folders/"):
-		v := strings.TrimPrefix(p, "folders")
-		v = strings.TrimPrefix(v, "/")
-		if v == "" {
-			return emojiText(EmojiFolders)
-		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiFolders), PathFromUriPath(v))
+		return emojiText(EmojiFolders)
 	case strings.HasPrefix(p, "folder/"):
-		v := PathFromUriPath(strings.TrimPrefix(p, "folder/"))
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiFolders), emojiText(EmojiFolderOrg), v)
+		v := strings.ToLower(strings.TrimPrefix(p, "folder/"))
+		return emojiText(EmojiFolderOrg) + Flat(v)
 	case p == "files" || strings.HasPrefix(p, "files/"):
-		v := strings.TrimPrefix(p, "files")
-		v = strings.TrimPrefix(v, "/")
-		if v == "" {
-			return emojiText(EmojiFiles)
-		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiFiles), PathFromUriPath(v))
+		return emojiText(EmojiFiles)
 	case strings.HasPrefix(p, "file/"):
-		v := PathFromUriPath(strings.TrimPrefix(p, "file/"))
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiFiles), emojiText(EmojiFileCode), v)
+		v := strings.ToLower(strings.TrimPrefix(p, "file/"))
+		return emojiText(EmojiFileCode) + Flat(v)
 	case p == "sections" || strings.HasPrefix(p, "sections/"):
-		v := strings.TrimPrefix(p, "sections")
-		v = strings.TrimPrefix(v, "/")
-		if v == "" {
-			return emojiText(EmojiSections)
-		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiSections), PathFromUriPath(v))
+		return emojiText(EmojiSections)
 	case strings.HasPrefix(p, "section/"):
 		v := strings.TrimPrefix(p, "section/")
 		filePath, slugs := ParseSectionUriPath(v)
 		if len(slugs) == 0 {
-			return fmt.Sprintf("%s%s", emojiText(EmojiSection), PathFromUriPath(filePath))
+			return emojiText(EmojiSection) + Flat(PathFromUriPath(filePath))
 		}
-		return fmt.Sprintf("%s%s#%s", emojiText(EmojiSection), PathFromUriPath(filePath), strings.Join(slugs, "#"))
+		return emojiText(EmojiSection) + Flat(PathFromUriPath(filePath)) + "#" + strings.Join(slugs, "#")
 	case p == "definitions" || strings.HasPrefix(p, "definitions/"):
-		v := strings.TrimPrefix(p, "definitions")
-		v = strings.TrimPrefix(v, "/")
-		if v == "" {
-			return emojiText(EmojiDefinitions)
-		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiDefinitions), v)
+		return emojiText(EmojiDefinitions)
 	case strings.HasPrefix(p, "definition/"):
 		v := strings.TrimPrefix(p, "definition/")
 		filePath, slugs := ParseSectionUriPath(v)
 		path := PathFromUriPath(filePath)
 		if len(slugs) == 0 {
-			return fmt.Sprintf("%s%s%s", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl), path)
+			return emojiText(EmojiDefinitionImpl) + Flat(path)
 		}
 		if len(slugs) == 1 {
-			return fmt.Sprintf("%s%s%s§%s", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl), path, slugs[0])
+			return emojiText(EmojiDefinitionImpl) + Flat(path) + "§" + slugs[0]
 		}
 		sectionPart := strings.Join(slugs[:len(slugs)-1], "#")
 		defPart := slugs[len(slugs)-1]
-		return fmt.Sprintf("%s%s%s#%s§%s", emojiText(EmojiDefinitions), emojiText(EmojiDefinitionImpl), path, sectionPart, defPart)
+		return emojiText(EmojiDefinitionImpl) + Flat(path) + "#" + sectionPart + "§" + defPart
 	case p == "tickets":
 		return emojiText(EmojiTickets)
 	case strings.HasPrefix(p, "ticket/"):
 		v := strings.TrimPrefix(p, "ticket/")
-		parts := strings.SplitN(v, "/", 4)
-		if len(parts) == 4 {
-			return fmt.Sprintf("%s%s%s%s%s", emojiText(EmojiTicket), parts[0], parts[1], parts[2], parts[3])
-		}
-		return fmt.Sprintf("%s%s", emojiText(EmojiTicket), strings.Join(parts, ""))
+		return emojiText(EmojiTicket) + Flat(v)
 	case p == "goals":
 		return emojiText(EmojiGoals)
 	case strings.HasPrefix(p, "goal/"):
 		v := strings.TrimPrefix(p, "goal/")
-		return fmt.Sprintf("%s%s", emojiText(EmojiGoal), v)
+		parts := strings.Split(v, "/")
+		result := ""
+		for _, part := range parts {
+			result += emojiText(EmojiGoal) + Flat(part)
+		}
+		return result
 	case p == "drafts":
 		return emojiText(EmojiDrafts)
 	case strings.HasPrefix(p, "draft/"):
 		v := strings.ToLower(strings.TrimPrefix(p, "draft/"))
-		return fmt.Sprintf("%s%s", emojiText(EmojiDraft), v)
+		return emojiText(EmojiDraft) + Flat(v)
 	case p == "todos":
 		return emojiText(EmojiTodos)
 	case strings.HasPrefix(p, "todo/"):
 		v := strings.ToLower(strings.TrimPrefix(p, "todo/"))
-		return fmt.Sprintf("%s%s", emojiText(EmojiTodo), v)
+		return emojiText(EmojiTodo) + Flat(v)
 	case p == "policies":
 		return emojiText(EmojiPolicies)
 	case strings.HasPrefix(p, "policy/"):
 		v := strings.TrimPrefix(p, "policy/")
-		v = strings.ToLower(v)
-		return fmt.Sprintf("%s%s", emojiText(EmojiPolicies), v)
+		return emojiText(EmojiPolicy) + Flat(v)
 	case p == "statutes":
-		return emojiText(EmojiStatutes)
+		return ""
 	case strings.HasPrefix(p, "statute/"):
-		v := strings.TrimPrefix(p, "statute/")
-		return fmt.Sprintf("%s%s", emojiText(EmojiStatutes), StatutePathToIdValue(StatuteUriPathToId(v)))
+		return ""
 	case p == "contributors":
 		return emojiText(EmojiContributors)
 	case strings.HasPrefix(p, "contributor/"):
 		v := strings.TrimPrefix(p, "contributor/")
-		return fmt.Sprintf("%s%s", emojiText(EmojiContributors), strings.ToLower(v))
+		return emojiText(EmojiContributor) + Flat(v)
 	case p == "commits":
 		return emojiText(EmojiCommits)
 	case strings.HasPrefix(p, "commit/"):
 		v := strings.TrimPrefix(p, "commit/")
-		return fmt.Sprintf("%s%s", emojiText(EmojiCommits), strings.ToLower(v))
+		return emojiText(EmojiCommit) + strings.ToLower(v)
 	case p == "interactions":
-		return emojiText(EmojiInteractions)
+		return ""
 	case strings.HasPrefix(p, "interaction/"):
 		v := strings.TrimPrefix(p, "interaction/")
 		innerUri := "semiorepo://" + v
@@ -34970,7 +35172,7 @@ func UriToId(uri string) string {
 		if entityId == "" {
 			return ""
 		}
-		return fmt.Sprintf("%s%s%s", emojiText(EmojiInteractions), emojiText(EmojiInteractionStarted), entityId)
+		return entityId + emojiText(EmojiInteractionStarted)
 	}
 	return ""
 }
@@ -35174,7 +35376,7 @@ func collectEntityProps(kind string, data map[string]interface{}, truncateDesc b
 	case "commit":
 		msg, _ := data["message"].(string)
 		appendNonEmpty(msg)
-	case "repo":
+	case "root":
 		name, _ := data["name"].(string)
 		appendNonEmpty(name)
 	}
@@ -35198,9 +35400,16 @@ func renderEntityHuman(kind string, data map[string]interface{}, isTTY bool) str
 			return ColorDim
 		}
 	}
-	out := fmt.Sprintf("%s", colorize(sanitizeProp(id), ColorBold, isTTY))
+	out := ""
+	if id != "" {
+		out = fmt.Sprintf("%s", colorize(sanitizeProp(id), ColorBold, isTTY))
+	}
 	for i, p := range props {
-		out += fmt.Sprintf(" %s", colorize(p, propColor(i), isTTY))
+		if out == "" {
+			out = colorize(p, propColor(i), isTTY)
+		} else {
+			out += fmt.Sprintf(" %s", colorize(p, propColor(i), isTTY))
+		}
 	}
 	return sanitizeSingleLine(out)
 }
@@ -35225,11 +35434,11 @@ func inferEntityKind(key string) string {
 		{"bundle", "bundle"},
 		{"project", "project"},
 		{"commit", "commit"},
-		{"repo", "repo"},
-		{"syncgithub", "repo"},
+		{"repo", "root"},
+		{"syncgithub", "root"},
 		{"integrate", "file"},
 		{"extract", "file"},
-		{"fix", "repo"},
+		{"fix", "root"},
 	}
 	for _, p := range prefixes {
 		if strings.HasPrefix(key, p.prefix) {

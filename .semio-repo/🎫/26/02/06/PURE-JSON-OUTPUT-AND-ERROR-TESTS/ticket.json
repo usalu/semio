@@ -6,8 +6,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 11:09:45",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "windsurf-chat",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "All --json commands should return pure data without extra wrapping. Errors go to stderr. All commands must be tested with semantically wrong arguments.",
       "llm": "sonnet-4-5",
@@ -3033,9 +3036,7 @@
             }
           ]
         }
-      },
-      "client": "windsurf-chat",
-      "date": "2026-02-06 11:09:45"
+      }
     }
   ]
 }

@@ -1,13 +1,21 @@
 {
   "title": "Fix Browser Launch and Attach",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Provisioned Playwright browsers in devcontainer setup and documented shared cache expectations.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/337"
+  },
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "unable launch browser, unable to attch browser",
       "llm": "gpt-5-2-codex",
-      "ui": "copilot-chat",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -227,10 +235,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Provisioned Playwright browsers in devcontainer setup and documented shared cache expectations.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/337"
-  }
+  ]
 }

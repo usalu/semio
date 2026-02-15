@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio-repo/server/main.go](semiorepo://file/semio-repo/server/main.go)
+// [🧰semiorepo⌨️server💻maingo](semiorepo://file/SEMIO-REPO/SERVER/MAIN.GO)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

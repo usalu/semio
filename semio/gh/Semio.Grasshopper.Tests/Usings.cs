@@ -1,6 +1,6 @@
 #region 🔖Header
 
-// [💻semio/gh/Semio.Grasshopper.Tests/Usings.cs](semiorepo://file/semio/gh/Semio.Grasshopper.Tests/Usings.cs)
+// [👤semio📚gh🛅semiograsshoppertests💻usingscs](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER.TESTS/USINGS.CS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

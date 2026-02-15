@@ -7,13 +7,14 @@
   },
   "interactions": [
     {
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
       "system": "",
       "client": "",
       "commit": "0e45db5aec012fab2128f478cbb2e3e2a104281d",
       "prompt": "Fix the auto-select bug, enable selectionOnDrag, configure Shift+Click behavior, and implement rectangular selection in the Diagram component for the Kit app.",
-      "llm": "gemini-3-flash",
-      "date": ""
+      "llm": "gemini-3-flash"
     }
   ]
 }

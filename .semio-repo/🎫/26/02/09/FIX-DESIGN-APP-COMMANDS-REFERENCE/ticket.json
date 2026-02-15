@@ -1,13 +1,18 @@
 {
   "title": "Fix Design App Commands Reference",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Fixed Design app panel hotkeys to use useDesignAppTogglePanel output instead of undefined appCommands and documented the command binding requirements in README.md and AGENTS.md.",
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "Fix sketchpad design app runtime error: Uncaught ReferenceError: appCommands is not defined in Design.tsx and verify toolbar behavior remains stable.",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -5612,7 +5617,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Fixed Design app panel hotkeys to use useDesignAppTogglePanel output instead of undefined appCommands and documented the command binding requirements in README.md and AGENTS.md."
+  ]
 }

@@ -9,8 +9,11 @@
   "goal": "FIX-VSCODE-VIEWS-MISSING",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 14:22:57",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "claude-code",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Fix GraphQL query mismatches causing Goals, Tickets, and Contributors tree views to fail in the VS Code extension.",
       "llm": "opus-4-6",
@@ -738,9 +741,7 @@
             }
           ]
         }
-      },
-      "client": "claude-code",
-      "date": "2026-02-06 14:22:57"
+      }
     }
   ]
 }

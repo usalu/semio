@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio-repo/vscode/queries.ts](semiorepo://file/semio-repo/vscode/queries.ts)
+// [🧰semiorepo🖱️vscode💻queriests](semiorepo://file/SEMIO-REPO/VSCODE/QUERIES.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

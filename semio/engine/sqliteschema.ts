@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [📜semio/engine/sqliteschema.ts](semiorepo://file/semio/engine/sqliteschema.ts)
+// [👤semio📚engine📜sqliteschemats](semiorepo://file/SEMIO/ENGINE/SQLITESCHEMA.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

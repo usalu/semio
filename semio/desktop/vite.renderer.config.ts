@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/desktop/vite.renderer.config.ts](semiorepo://file/semio/desktop/vite.renderer.config.ts)
+// [👤semio🖱️desktop⚙️viterendererconfigts](semiorepo://file/SEMIO/DESKTOP/VITE.RENDERER.CONFIG.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

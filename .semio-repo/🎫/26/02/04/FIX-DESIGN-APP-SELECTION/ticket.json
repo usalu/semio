@@ -1,13 +1,21 @@
 {
   "title": "Fix Design App Selection",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Fixed scene model selection by stamping piece identity metadata on transform and mesh wrapper ancestors so loaded model picks resolve to piece guids; selection sync now works across diagram and scene.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/336"
+  },
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "fix the selection in the design app",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -657,12 +665,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "i still cant select either in the diagram nor in the scene in the design app",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -1530,12 +1540,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "prompt": "selection is stil not working on the model in the scene window",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "419ee7380a80af0a44038f1495f70838d3058418",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -2514,10 +2526,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Fixed scene model selection by stamping piece identity metadata on transform and mesh wrapper ancestors so loaded model picks resolve to piece guids; selection sync now works across diagram and scene.",
-  "github": {
-    "issue": "https://github.com/usalu/semio/issues/336"
-  }
+  ]
 }

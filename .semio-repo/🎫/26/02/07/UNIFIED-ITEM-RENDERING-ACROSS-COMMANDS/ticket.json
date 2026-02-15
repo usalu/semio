@@ -9,8 +9,11 @@
   "goal": "R26-02",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-07 23:53:49",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "copilot-chat",
       "commit": "eb7850254c8c12916f4040bd86afec46482dead2",
       "prompt": "All items should always be identically rendered across all commands regardless the originating command. Define rendering once for text and once for markdown, and reuse for all commands. Extend tests to guarantee identical representations.",
       "llm": "opus-4-6",
@@ -1550,9 +1553,7 @@
             }
           ]
         }
-      },
-      "client": "copilot-chat",
-      "date": "2026-02-07 23:53:49"
+      }
     }
   ]
 }

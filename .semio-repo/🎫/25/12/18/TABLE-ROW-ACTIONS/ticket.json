@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-18T15:36:11.11Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "",
       "prompt": "Create actions in table rows are not right aligned; tags strip should appear between name and action.",
-      "llm": "gpt-5.2-codex",
-      "date": "2025-12-18T15:36:11.11Z"
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

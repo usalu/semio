@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-19T22:05:57.199Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "2ac49129091a7cee4b05f2fe08423415f179ea77",
       "prompt": "IMPLEMENT the refactor plan to remove Yjs from all app stores and keep Yjs only in KitStore",
-      "llm": "opus-4-5",
-      "date": "2025-12-19T22:05:57.199Z"
+      "llm": "opus-4-5"
     }
   ]
 }

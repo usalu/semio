@@ -1,6 +1,6 @@
 # region Header
 
-# [💻semio/py/semio.py](semiorepo://file/semio/py/semio.py)
+# [👤semio📚py💻semiopy](semiorepo://file/SEMIO/PY/SEMIO.PY)
 
 # 2026 Ueli Saluz <ueli@semio-tech.com>
 

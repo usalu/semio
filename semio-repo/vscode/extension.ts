@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio-repo/vscode/extension.ts](semiorepo://file/semio-repo/vscode/extension.ts)
+// [🧰semiorepo🖱️vscode💻extensionts](semiorepo://file/SEMIO-REPO/VSCODE/EXTENSION.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -584,7 +584,7 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
   if (node.Status === "open") statusIcon = "🔵";
   else if (node.Status === "closed") statusIcon = "🟢";
   const fallbackEmojis: Record<string, string> = {
-    contributor: "👤", commit: "🔀", policy: "🛡️", statute: "⚠",
+    contributor: "🧑‍💻", commit: "🔀", policy: "👮", statute: "⚠",
   };
   const prefix = emoji || fallbackEmojis[node.Kind] || "";
   let label = node.Label;
@@ -801,25 +801,21 @@ async function navigateToUri(uri: string): Promise<void> {
       return vscode.commands.executeCommand("semio.monorepo.focus") as any;
     }
     case "ticket": {
-      const ticketMdPath = path.join(wsRoot, ".semio-repo", "tickets", parsed.path, "ticket.md");
+      const ticketMdPath = path.join(wsRoot, ".semio-repo", "🎫", parsed.path, "ticket.md");
       if (fs.existsSync(ticketMdPath)) {
         return vscode.commands.executeCommand("semio.navigateToFile", ticketMdPath) as any;
-      }
-      const legacyTicketMdPath = path.join(wsRoot, "tickets", parsed.path, "ticket.md");
-      if (fs.existsSync(legacyTicketMdPath)) {
-        return vscode.commands.executeCommand("semio.navigateToFile", legacyTicketMdPath) as any;
       }
       break;
     }
     case "goal": {
-      const goalJsonPath = path.join(wsRoot, ".semio-repo", "goals", parsed.path, "goal.json");
+      const goalJsonPath = path.join(wsRoot, ".semio-repo", "🎯", parsed.path, "goal.json");
       if (fs.existsSync(goalJsonPath)) {
         return vscode.commands.executeCommand("semio.navigateToFile", goalJsonPath) as any;
       }
       break;
     }
     case "draft": {
-      const draftPath = path.join(wsRoot, ".semio-repo", "drafts", parsed.path);
+      const draftPath = path.join(wsRoot, ".semio-repo", "✍️", parsed.path);
       if (fs.existsSync(draftPath)) {
         return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(draftPath)) as any;
       }
@@ -1041,12 +1037,8 @@ function resolveTicketPath(ticket: { year: number; month: number; day: number; s
   const root = getWorkspaceRoot();
   if (!root) return undefined;
 
-  const relPath = path.join(String(ticket.year), String(ticket.month).padStart(2, "0"), String(ticket.day).padStart(2, "0"), ticket.slug, "ticket.md");
-  const metaPath = path.join(root, ".semio-repo", "tickets", relPath);
-  if (fs.existsSync(metaPath)) {
-    return metaPath;
-  }
-  return path.join(root, "tickets", relPath);
+  const relPath = path.join(String(ticket.year).padStart(2, "0"), String(ticket.month).padStart(2, "0"), String(ticket.day).padStart(2, "0"), ticket.slug, "ticket.md");
+  return path.join(root, ".semio-repo", "🎫", relPath);
 }
 
 async function openFileAtLine(filePath: string, startLine: number, endLine?: number): Promise<void> {
@@ -1339,8 +1331,8 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
         this.createFilterItem("🎯Goals", "filter_goal", "Goals filter"),
         this.createFilterItem("🎫Tickets", "filter_ticket", "Tickets filter"),
         this.createFilterItem("🎫Dates", "filter_time", "Dates filter", vscode.TreeItemCollapsibleState.Collapsed),
-        this.createFilterItem("🛡️Policies", "filter_policy", "Policies filter"),
-        this.createFilterItem("👤Contributors", "filter_contributor", "Contributors filter"),
+        this.createFilterItem("�️Policies", "filter_policy", "Policies filter"),
+        this.createFilterItem("🧑‍💻Contributors", "filter_contributor", "Contributors filter"),
         this.createFilterItem("🔄Commits", "filter_commit", "Commits filter"),
       ];
     }

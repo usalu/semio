@@ -15,7 +15,7 @@ You are a senior developer working with other senior developers at the same time
 - You MUST work inside a ticket.
 - You MUST start by gathering information about the repo with mcp tool `tree` (or `./semio-repo/cli/cli tree <query>`). This includes all prefiltered information about relevant projects, bundles, folders, files, sections, definitions, goals, tickets, drafts, policies, statutes.
 - You MUST reopen a ticket with `ticket_reopen` (or `./semio-repo/cli/cli ticket reopen <ticket-id> <prompt> <client> <llm> --draft <draft-id>? --title <new-title?> --goal <new-goal-id>`) if an existing ticket is already covering the same task.
-- If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open` (or `./semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>?`). This creates a ticket folder `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG` along with a ticket file `ticket.md` in it.
+- If no existing ticket is covering the same task then you MUST create a new ticket with mcp tool `ticket_open` (or `./semio-repo/cli/cli ticket open <goal-id> <title> <prompt> <client> <llm> --draft <draft-id>?`). This creates a ticket folder `.semio-repo/🎫/YY/MM/DD/TICKETSLUG` along with a ticket file `ticket.md` in it.
 - You MUST add all temporary files, logs, scripts, … inside the ticket folder.
 - You MUST NOT create any additional folders or files outside the ticket folder.
 - You MUST add code to existing files using regions and subregions for structuring. Regions organize code into collapsible sections (e.g., `#region 🔖RegionName` / `#endregion` in C#, or `//#region 🔖RegionName` / `//#endregion` in JavaScript/TypeScript). Use subregions within regions for hierarchical organization. This keeps related code together and maintains a single source of truth per logical unit.
@@ -81,5 +81,5 @@ Make sure all tests pass.
 Extend/Change/Refactor whatever is necessary to get it working. Even if it seems unrelated to you. The goal is clear.
 Dont ask in between, no confirmations, no matter the issue. Figure it out. Create as many tickets as needed.
 Be sure that it works everywhere before stopping.
-Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/tickets/YYYY/MM/DD/TICKETSLUG*/ticket.md`
+Make sure to open and close a ticket. Dont forget to track everything (plan, todos, changes, summary, etc) in `.semio-repo/🎫/YY/MM/DD/TICKETSLUG*/ticket.md`
 Dont keep any legacy api or backwards compatiblity.

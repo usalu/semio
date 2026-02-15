@@ -9,8 +9,11 @@
   "goal": "REPO-VSCODE-EXTENSION",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 13:54:23",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "copilot-chat",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Goals, Tickets and Contributors are not loading in the tree. Change/refactor/extend whatever is necessary to get it working.",
       "llm": "gemini-3-flash",
@@ -82,7 +85,7 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
               "lines": {
                 "added": 2,
                 "removed": 2
@@ -286,21 +289,21 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§allowedDotDirectories",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§allowedDotDirectories",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§ignoredDirectories",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§ignoredDirectories",
               "lines": {
                 "added": 0,
                 "removed": 4
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics§isInIgnoredDirectory",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§isInIgnoredDirectory",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -603,9 +606,7 @@
           ],
           "added": null
         }
-      },
-      "client": "copilot-chat",
-      "date": "2026-02-06 13:54:23"
+      }
     }
   ]
 }

@@ -9,6 +9,8 @@
   "goal": "CODE-QUALITY/CLI-POLICIES",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-02-12 12:00:14",
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -1053,8 +1055,7 @@
             }
           ]
         }
-      },
-      "date": "2026-02-12 12:00:14"
+      }
     }
   ]
 }

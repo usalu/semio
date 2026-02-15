@@ -1,19 +1,21 @@
 {
   "title": "Add System Policy for Devcontainer VSCode Settings and Extensions",
   "status": "closed",
-  "prompt": "Add a new \"System\" policy to semio-repo CLI with Devcontainer > VSCode group containing two autofixable statutes: Settings Outside Devcontainer (moves .vscode/settings.json into devcontainer.json customizations) and Recommended Extensions Outside Devcontainer (moves .vscode/extensions.json into devcontainer.json customizations).",
-  "summary": "Added new \"System\" policy to semio-repo CLI with Devcontainer > VSCode group containing two autofixable statutes: (1) Settings Outside Devcontainer - detects .vscode/settings.json and autofixes by moving content to customizations.vscode.settings inside .devcontainer/devcontainer.json, (2) Recommended Extensions Outside Devcontainer - detects .vscode/extensions.json and autofixes by moving recommendations to customizations.vscode.extensions inside .devcontainer/devcontainer.json. Both autofixes merge into existing devcontainer.json if present, create it if absent, and clean up empty .vscode/ directory. Added 9 comprehensive test cases covering detection, autofix, merge, combined fix, policy registration, and statute metadata.",
+  "prompt": "Add a new \"System\" policy to semio-repo CLI with Devcontainer \u003e VSCode group containing two autofixable statutes: Settings Outside Devcontainer (moves .vscode/settings.json into devcontainer.json customizations) and Recommended Extensions Outside Devcontainer (moves .vscode/extensions.json into devcontainer.json customizations).",
+  "summary": "Added new \"System\" policy to semio-repo CLI with Devcontainer \u003e VSCode group containing two autofixable statutes: (1) Settings Outside Devcontainer - detects .vscode/settings.json and autofixes by moving content to customizations.vscode.settings inside .devcontainer/devcontainer.json, (2) Recommended Extensions Outside Devcontainer - detects .vscode/extensions.json and autofixes by moving recommendations to customizations.vscode.extensions inside .devcontainer/devcontainer.json. Both autofixes merge into existing devcontainer.json if present, create it if absent, and clean up empty .vscode/ directory. Added 9 comprehensive test cases covering detection, autofix, merge, combined fix, policy registration, and statute metadata.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/561"
   },
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-02-13 20:05:15",
       "author": "usalu",
       "system": "linux",
       "client": "windsurf-chat",
       "commit": "c22d6a2992c6c66eda18b1e9d792bfaeacd1d099",
-      "prompt": "Add a new \"System\" policy to semio-repo CLI with Devcontainer > VSCode group containing two autofixable statutes: Settings Outside Devcontainer (moves .vscode/settings.json into devcontainer.json customizations) and Recommended Extensions Outside Devcontainer (moves .vscode/extensions.json into devcontainer.json customizations).",
+      "prompt": "Add a new \"System\" policy to semio-repo CLI with Devcontainer \u003e VSCode group containing two autofixable statutes: Settings Outside Devcontainer (moves .vscode/settings.json into devcontainer.json customizations) and Recommended Extensions Outside Devcontainer (moves .vscode/extensions.json into devcontainer.json customizations).",
       "llm": "sonnet-4-5",
       "diff": {
         "bundles": {
@@ -185,8 +187,7 @@
             }
           ]
         }
-      },
-      "date": "2026-02-13 20:05:15"
+      }
     }
   ]
 }

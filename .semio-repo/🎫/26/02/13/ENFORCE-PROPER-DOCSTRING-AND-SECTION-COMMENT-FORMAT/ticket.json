@@ -9,6 +9,8 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-02-13 08:43:23",
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -727,7 +729,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
+              "path": "💻semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -1287,7 +1289,7 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine",
               "lines": {
                 "added": 38,
                 "removed": 9
@@ -4136,7 +4138,7 @@
               }
             },
             {
-              "path": "💻semio-repo/vscode/extension.ts#File Analysis & Diagnostics§analyzeFile",
+              "path": "💻semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics§analyzeFile",
               "lines": {
                 "added": 0,
                 "removed": 4
@@ -6684,28 +6686,28 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
               "lines": {
                 "added": 7,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
               "lines": {
                 "added": 0,
                 "removed": 2
@@ -13603,10 +13605,11 @@
             }
           ]
         }
-      },
-      "date": "2026-02-13 08:43:23"
+      }
     },
     {
+      "kind": "",
+      "date": "2026-02-13 09:54:47",
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -14606,7 +14609,7 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine",
               "lines": {
                 "added": 38,
                 "removed": 9
@@ -19630,28 +19633,28 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
               "lines": {
                 "added": 0,
                 "removed": 1
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
               "lines": {
                 "added": 5,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
               "lines": {
                 "added": 0,
                 "removed": 2
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
               "lines": {
                 "added": 7,
                 "removed": 0
@@ -26150,8 +26153,7 @@
             }
           ]
         }
-      },
-      "date": "2026-02-13 09:54:47"
+      }
     }
   ]
 }

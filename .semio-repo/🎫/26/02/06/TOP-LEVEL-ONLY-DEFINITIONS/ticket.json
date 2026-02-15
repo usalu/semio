@@ -9,8 +9,11 @@
   "goal": "REPO-DEFINITION-MECHANISM",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 09:59:06",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "copilot-chat",
       "commit": "9a553af01e973b0b042fbedcf2ef4e4af086af51",
       "prompt": "Definitions in semio-repo are just top-level. They start on a newline and declaration/statements inside, dont count as definition. E.g. in python in semio.py __str__ is wrongly being identified as definition",
       "llm": "gemini-3-flash",
@@ -11292,9 +11295,7 @@
             }
           ]
         }
-      },
-      "client": "copilot-chat",
-      "date": "2026-02-06 09:59:06"
+      }
     }
   ]
 }

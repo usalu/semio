@@ -8,12 +8,12 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-FILE-MECHANISM",
   "interactions": [
     {
-      "prompt": "",
-      "llm": "",
-      "author": {},
-      "started": "0001-01-01T00:00:00Z",
-      "commit": "",
-      "date": ""
+      "kind": "",
+      "date": "",
+      "author": "",
+      "system": "",
+      "client": "",
+      "commit": ""
     }
   ]
 }

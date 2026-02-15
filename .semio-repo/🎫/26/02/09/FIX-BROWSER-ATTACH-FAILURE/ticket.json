@@ -1,13 +1,18 @@
 {
   "title": "Fix Browser Attach Failure",
+  "status": "closed",
+  "prompt": "",
+  "summary": "Switched app dev launch profiles to attach-free node launches with serverReadyAction openExternally to eliminate Unable to attach browser failures in remote/devcontainer sessions.",
   "interactions": [
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "Fix UNABLE TO LAUNCH BROWER: Unable to attach browser in local VS Code/debug workflow",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -228,12 +233,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "User still gets Unable to attach browser after pwa-chrome migration; fix remote container browser attach path.",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -475,12 +482,14 @@
       }
     },
     {
+      "kind": "",
+      "date": "",
+      "author": "KinanSarak \u003ckinan.sarak@gmail.com\u003e",
+      "system": "",
+      "client": "",
+      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "prompt": "Browser attach still failing; switch dev launch profiles to attach-free node launches with external URL open.",
       "llm": "gpt-5-2-codex",
-      "ui": "codex",
-      "author": "KinanSarak <kinan.sarak@gmail.com>",
-      "date": "",
-      "commit": "e0ae770ddafa0b6b494784c87d8847466b72c264",
       "diff": {
         "bundles": {
           "deleted": null,
@@ -808,7 +817,5 @@
         }
       }
     }
-  ],
-  "status": "closed",
-  "summary": "Switched app dev launch profiles to attach-free node launches with serverReadyAction openExternally to eliminate Unable to attach browser failures in remote/devcontainer sessions."
+  ]
 }

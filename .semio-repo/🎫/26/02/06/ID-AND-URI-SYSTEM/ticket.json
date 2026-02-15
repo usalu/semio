@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 15:36:07",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "windsurf-chat",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "Implement primary ID system and secondary URI system for semio-repo. IDs use emoji prefixes with paths. URIs use semiorepo:// scheme. Extend MCP resources, VS Code extension navigation, and add a general navigate command. Extend existing tests.",
       "llm": "sonnet-4-5",
@@ -216,7 +219,7 @@
               }
             },
             {
-              "path": "📄semio-repo/vscode/extension.ts#File Analysis & Diagnostics",
+              "path": "📄semio-repo/vscode/extension.ts#File Analysis \u0026 Diagnostics",
               "lines": {
                 "added": 1,
                 "removed": 1
@@ -1108,9 +1111,7 @@
             }
           ]
         }
-      },
-      "client": "windsurf-chat",
-      "date": "2026-02-06 15:36:07"
+      }
     }
   ]
 }

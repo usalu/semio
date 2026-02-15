@@ -5,13 +5,14 @@
   "goal": "R26-02/RUNNING-SKETCHPAD",
   "interactions": [
     {
+      "kind": "",
+      "date": "2025-12-17T18:15:25.407Z",
       "author": "uelisaluz",
       "system": "",
       "client": "",
       "commit": "7c4820638369104ae259b238d9240f08e429e67e",
       "prompt": "The windows dont have a border on the bottom and on the right. Make the window border dashed.",
-      "llm": "gpt-5.2-codex",
-      "date": "2025-12-17T18:15:25.407Z"
+      "llm": "gpt-5.2-codex"
     }
   ]
 }

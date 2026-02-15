@@ -9,8 +9,11 @@
   "goal": "AI-OPTIMIZED-REPO/REPO-CLIENT/REPO-BINARY/REPO-MECHANISMS/REPO-POLICY-MECHANISM",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-06 16:18:56",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "copilot-chat",
       "commit": "df235df7f33f1413f4268ee98ad6bf2b649a4fbd",
       "prompt": "Improve the comment fix logic to ignore TODOs and their descriptions, ignore config files, and support partial line removal for comments. Extend tests to cover these cases.",
       "llm": "sonnet-5",
@@ -1888,9 +1891,7 @@
             }
           ]
         }
-      },
-      "client": "copilot-chat",
-      "date": "2026-02-06 16:18:56"
+      }
     }
   ]
 }

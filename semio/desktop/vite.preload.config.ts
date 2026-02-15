@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️semio/desktop/vite.preload.config.ts](semiorepo://file/semio/desktop/vite.preload.config.ts)
+// [👤semio🖱️desktop⚙️vitepreloadconfigts](semiorepo://file/SEMIO/DESKTOP/VITE.PRELOAD.CONFIG.TS)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

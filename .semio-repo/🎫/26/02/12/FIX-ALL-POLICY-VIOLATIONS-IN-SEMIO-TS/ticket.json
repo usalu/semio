@@ -9,6 +9,8 @@
   "goal": "AI-OPTIMIZED-REPO/SINGLE-FILE-REPO/CONSISTENT-SECTIONS",
   "interactions": [
     {
+      "kind": "",
+      "date": "2026-02-12 11:03:41",
       "author": "usalu",
       "system": "linux",
       "client": "copilot-chat",
@@ -405,7 +407,7 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine",
               "lines": {
                 "added": 10,
                 "removed": 0
@@ -1888,14 +1890,14 @@
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§Constraint",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§Constraint",
               "lines": {
                 "added": 1,
                 "removed": 0
               }
             },
             {
-              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context & engine§defaultConstraints",
+              "path": "💻semio/js/semio.ts#Kit#Validation#Validation context \u0026 engine§defaultConstraints",
               "lines": {
                 "added": 2,
                 "removed": 0
@@ -2745,8 +2747,7 @@
             }
           ]
         }
-      },
-      "date": "2026-02-12 11:03:41"
+      }
     }
   ]
 }

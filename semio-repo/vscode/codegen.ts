@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [💻semio-repo/vscode/codegen.ts](semiorepo://file/semio-repo/vscode/codegen.ts)
+// [🧰semiorepo🖱️vscode💻codegents](semiorepo://file/SEMIO-REPO/VSCODE/CODEGEN.TS)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

@@ -5,8 +5,11 @@
   "summary": "Refactored VS Code sidebar into two views (Monorepo + Filter), fixed repo binary resolution so root nodes expand, moved filter options into menu actions, wired filter state across all monorepo branches, and updated tests/docs accordingly.",
   "interactions": [
     {
-      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "kind": "",
+      "date": "2026-02-04 16:14:44",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
       "system": "linux",
+      "client": "vscode",
       "commit": "23fb6e1d28e6cc802ce986b46d7a7aa951394ef6",
       "prompt": "Refactor semio-repo/vscode sideview into two sections (Monorepo + Filter), fix missing children, and convert filter options into menu actions.",
       "llm": "sonnet-4-5",
@@ -426,9 +429,7 @@
             }
           ]
         }
-      },
-      "client": "vscode",
-      "date": "2026-02-04 16:14:44"
+      }
     }
   ]
 }

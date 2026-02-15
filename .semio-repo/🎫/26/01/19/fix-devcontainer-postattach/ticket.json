@@ -5,12 +5,12 @@
   "goal": "AI-OPTIMIZED-REPO/SANDBOXED-REPO/ZERO-TOUCH-DEVCONTAINER",
   "interactions": [
     {
-      "prompt": "",
-      "llm": "",
-      "author": {},
-      "started": "0001-01-01T00:00:00Z",
-      "commit": "",
-      "date": ""
+      "kind": "",
+      "date": "",
+      "author": "",
+      "system": "",
+      "client": "",
+      "commit": ""
     }
   ]
 }
