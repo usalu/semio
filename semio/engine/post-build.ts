@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚engine📜postbuildts](semiorepo://file/SEMIO/ENGINE/POST-BUILD.TS)
+// [👤semio📚engine📜postbuildts](semiorepo://file/semio/engine/post-build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Post Build
 
-// [👤semio📚engine💻postbuildts🔖postbuild](semiorepo://section/SEMIO/ENGINE/POST-BUILD.TS/POST-BUILD)
+// [👤semio📚engine💻postbuildts🔖postbuild](semiorepo://section/semio/engine/post-build.ts/Post%20Build)
 // Post-build script. MUST relocate the PyInstaller output to the Grasshopper bin folder.
 
 import { existsSync, renameSync, rmSync } from "fs";

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio🖱️desktop⚙️postcssconfigts](semiorepo://file/SEMIO/DESKTOP/POSTCSS.CONFIG.TS)
+// [👤semio🖱️desktop⚙️postcssconfigts](semiorepo://file/semio/desktop/postcss.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🖱️desktop⚙️postcssconfigts🔖configuration](semiorepo://section/SEMIO/DESKTOP/POSTCSS.CONFIG.TS/CONFIGURATION)
+// [👤semio🖱️desktop⚙️postcssconfigts🔖configuration](semiorepo://section/semio/desktop/postcss.config.ts/Configuration)
 // PostCSS plugin configuration for the desktop application.
 // Configuration MUST use postcss-import and postcss-nesting plugins.
 

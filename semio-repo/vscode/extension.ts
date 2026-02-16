@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo🖱️vscode💻extensionts](semiorepo://file/SEMIO-REPO/VSCODE/EXTENSION.TS)
+// [🧰semiorepo🖱️vscode💻extensionts](semiorepo://file/semio-repo/vscode/extension.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Imports
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖imports](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/IMPORTS)
+// [🧰semiorepo🖱️vscode💻extensionts🔖imports](semiorepo://section/semio-repo/vscode/extension.ts/Imports)
 // Imports MUST include VS Code API, Node.js utilities, and semio validation.
 
 import { deserializeKit, Problem, validateKit } from "@semio/js/semio";
@@ -37,7 +37,7 @@ const execFileAsync = promisify(execFile);
 /**
  * Structured event emitted by the repo CLI binary.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖imports🛠️repoevent](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/IMPORTS/REPO-EVENT)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖imports🛠️repoevent](semiorepo://definition/semio-repo/vscode/extension.ts/Imports/RepoEvent)
  **/
 export type RepoEvent = {
   kind: string;
@@ -51,7 +51,7 @@ export type RepoEvent = {
 
 // #region 🔖Constants
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖constants](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/CONSTANTS)
+// [🧰semiorepo🖱️vscode💻extensionts🔖constants](semiorepo://section/semio-repo/vscode/extension.ts/Constants)
 // Constants MUST define static configuration for diagnostics and UI strings.
 
 const SEMIO_KIT_LANGUAGE = "json";
@@ -78,13 +78,13 @@ const UI_STRINGS = {
 
 // #region 🔖Types
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖types](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES)
+// [🧰semiorepo🖱️vscode💻extensionts🔖types](semiorepo://section/semio-repo/vscode/extension.ts/Types)
 // Types MUST define interfaces for repo events, tool results, and data models.
 
 /**
  * Structured output from a repo CLI tool invocation.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️toolresult](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/TOOL-RESULT)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️toolresult](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ToolResult)
  **/
 export interface ToolResult<T = unknown> {
   output: { lines: { type: string; text: string }[]; exitCode: number };
@@ -95,7 +95,7 @@ export interface ToolResult<T = unknown> {
 /**
  * NX project metadata for a workspace package.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️projectdata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/PROJECT-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️projectdata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ProjectData)
  **/
 export interface ProjectData {
   name: string;
@@ -109,7 +109,7 @@ export interface ProjectData {
 /**
  * Code policy configuration with id, name, and description.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️policydata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/POLICY-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️policydata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/PolicyData)
  **/
 export interface PolicyData {
   id: string;
@@ -120,7 +120,7 @@ export interface PolicyData {
 /**
  * YAML frontmatter fields parsed from a ticket markdown file.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️ticketfrontmatter](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/TICKET-FRONTMATTER)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️ticketfrontmatter](semiorepo://definition/semio-repo/vscode/extension.ts/Types/TicketFrontmatter)
  **/
 export interface TicketFrontmatter {
   status: string;
@@ -136,7 +136,7 @@ export interface TicketFrontmatter {
 /**
  * Single interaction record within a ticket lifecycle.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️ticketinteraction](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/TICKET-INTERACTION)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️ticketinteraction](semiorepo://definition/semio-repo/vscode/extension.ts/Types/TicketInteraction)
  **/
 export interface TicketInteraction {
   prompt: string;
@@ -150,7 +150,7 @@ export interface TicketInteraction {
 /**
  * Full ticket data including date, slug, frontmatter, and interactions.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️ticketdata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/TICKET-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️ticketdata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/TicketData)
  **/
 export interface TicketData {
   year: number;
@@ -166,7 +166,7 @@ export interface TicketData {
 /**
  * Line-level contribution metrics for added and removed lines.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorlinemetrics](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-LINE-METRICS)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorlinemetrics](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorLineMetrics)
  **/
 export interface ContributorLineMetrics {
   added: number;
@@ -176,7 +176,7 @@ export interface ContributorLineMetrics {
 /**
  * Contributor metrics scoped to a single definition.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributordefinitiondata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-DEFINITION-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributordefinitiondata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorDefinitionData)
  **/
 export interface ContributorDefinitionData {
   name: string;
@@ -186,7 +186,7 @@ export interface ContributorDefinitionData {
 /**
  * Contributor metrics scoped to a file section and its definitions.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorsectiondata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-SECTION-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorsectiondata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorSectionData)
  **/
 export interface ContributorSectionData {
   name: string;
@@ -197,7 +197,7 @@ export interface ContributorSectionData {
 /**
  * Contributor metrics scoped to a single file and its sections.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorfiledata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-FILE-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorfiledata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorFileData)
  **/
 export interface ContributorFileData {
   name: string;
@@ -208,7 +208,7 @@ export interface ContributorFileData {
 /**
  * Contributor metrics scoped to a folder and its files.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorfolderdata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-FOLDER-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorfolderdata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorFolderData)
  **/
 export interface ContributorFolderData {
   name: string;
@@ -219,7 +219,7 @@ export interface ContributorFolderData {
 /**
  * Contributor metrics scoped to a bundle and its folders.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorbundledata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-BUNDLE-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorbundledata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorBundleData)
  **/
 export interface ContributorBundleData {
   name: string;
@@ -230,7 +230,7 @@ export interface ContributorBundleData {
 /**
  * Ticket metadata associated with a contributor.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorticketdata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-TICKET-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorticketdata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorTicketData)
  **/
 export interface ContributorTicketData {
   year: number;
@@ -247,7 +247,7 @@ export interface ContributorTicketData {
 /**
  * Commit metadata associated with a contributor.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorcommitdata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-COMMIT-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributorcommitdata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorCommitData)
  **/
 export interface ContributorCommitData {
   title: string;
@@ -257,7 +257,7 @@ export interface ContributorCommitData {
 /**
  * Full contributor profile with contributions across bundles, tickets, and commits.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributordata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/TYPES/CONTRIBUTOR-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖types🛠️contributordata](semiorepo://definition/semio-repo/vscode/extension.ts/Types/ContributorData)
  **/
 export interface ContributorData {
   github: string;
@@ -334,7 +334,7 @@ interface GraphqlSection {
 
 // #region 🔖Globals
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖globals](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/GLOBALS)
+// [🧰semiorepo🖱️vscode💻extensionts🔖globals](semiorepo://section/semio-repo/vscode/extension.ts/Globals)
 // Globals MUST hold module-level state for output channel, diagnostics, caches, and providers.
 
 let outputChannel: vscode.OutputChannel;
@@ -353,7 +353,7 @@ let monorepoProvider: MonorepoTreeDataProvider | undefined;
 
 // #region 🔖Utilities
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖utilities](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/UTILITIES)
+// [🧰semiorepo🖱️vscode💻extensionts🔖utilities](semiorepo://section/semio-repo/vscode/extension.ts/Utilities)
 // Utilities MUST provide shared functions for logging, shell execution, and binary resolution.
 
 function writeLog(level: string, args: any[]): void {
@@ -478,7 +478,7 @@ async function runRepoCommandJson<T>(args: string): Promise<T | null> {
  *
  * Implementations MUST split output by newlines and parse each non-empty line as JSON.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖utilities🛠️parserepoevents](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/UTILITIES/PARSE-REPO-EVENTS)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖utilities🛠️parserepoevents](semiorepo://definition/semio-repo/vscode/extension.ts/Utilities/parseRepoEvents)
  **/
 export function parseRepoEvents(output: string): RepoEvent[] {
   const lines = output.split("\n").map((line) => line.trim()).filter((line) => line.length > 0);
@@ -490,7 +490,7 @@ export function parseRepoEvents(output: string): RepoEvent[] {
  *
  * Implementations MUST throw on fatal errors and return the last meaningful result.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖utilities🛠️extractreporesult](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/UTILITIES/EXTRACT-REPO-RESULT)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖utilities🛠️extractreporesult](semiorepo://definition/semio-repo/vscode/extension.ts/Utilities/extractRepoResult)
  **/
 export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> {
   const results: unknown[] = [];
@@ -529,13 +529,13 @@ export function extractRepoResult(events: RepoEvent[]): Record<string, unknown> 
 
 // #region 🔖URI Resolution
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION)
+// [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution](semiorepo://section/semio-repo/vscode/extension.ts/URI%20Resolution)
 // URI Resolution MUST handle parsing, tree node caching, and semiorepo URI navigation.
 
 /**
  * Tree node data structure representing a monorepo artifact in the sidebar tree.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️treenodedata](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/TREE-NODE-DATA)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️treenodedata](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/TreeNodeData)
  **/
 export interface TreeNodeData {
   Kind: string;
@@ -563,7 +563,7 @@ const TREE_CACHE_TTL = 30000;
  *
  * Implementations MUST use Unicode emoji properties to detect the prefix.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️extractleadingemoji](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/EXTRACT-LEADING-EMOJI)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️extractleadingemoji](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/extractLeadingEmoji)
  **/
 export function extractLeadingEmoji(text: string): string {
   const match = text.match(/^[\p{Emoji_Presentation}\p{Extended_Pictographic}][\u{FE0E}\u{FE0F}\u{200D}\p{Emoji_Component}]*/u);
@@ -575,7 +575,7 @@ export function extractLeadingEmoji(text: string): string {
  *
  * Implementations MUST prepend the node emoji and status indicator to the label.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️treenodedisplaylabel](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/TREE-NODE-DISPLAY-LABEL)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️treenodedisplaylabel](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/treeNodeDisplayLabel)
  **/
 export function treeNodeDisplayLabel(node: TreeNodeData): string {
   if (node.Kind === "category") return node.Label;
@@ -599,7 +599,7 @@ export function treeNodeDisplayLabel(node: TreeNodeData): string {
  *
  * Implementations MUST distinguish open and closed tickets.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️treenodecontextvalue](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/TREE-NODE-CONTEXT-VALUE)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️treenodecontextvalue](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/treeNodeContextValue)
  **/
 export function treeNodeContextValue(node: TreeNodeData): string {
   if (node.Kind === "ticket") return node.Status === "open" ? "ticketOpen" : "ticketClosed";
@@ -611,7 +611,7 @@ export function treeNodeContextValue(node: TreeNodeData): string {
  *
  * Implementations MUST return undefined for category nodes and navigate for others.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️treenodecommand](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/TREE-NODE-COMMAND)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️treenodecommand](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/treeNodeCommand)
  **/
 export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined {
   if (node.Kind === "category") return undefined;
@@ -624,7 +624,7 @@ export function treeNodeCommand(node: TreeNodeData): vscode.Command | undefined 
  *
  * Implementations MUST translate each filter toggle into the corresponding CLI flag.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️buildclitreeargs](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/BUILD-CLI-TREE-ARGS)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️buildclitreeargs](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/buildCliTreeArgs)
  **/
 export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
   const args: string[] = [];
@@ -681,7 +681,7 @@ export function buildCliTreeArgs(fp?: FilterTreeDataProvider): string[] {
  *
  * Implementations MUST uppercase the input and strip leading and trailing hyphens.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️slugify](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/SLUGIFY)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️slugify](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/slugify)
  **/
 export function slugify(text: string): string {
   return text.toUpperCase().replace(/[^A-Z0-9]+/g, "-").replace(/^-|-$/g, "");
@@ -753,7 +753,7 @@ async function fetchTreeWithArgs(args: string[]): Promise<TreeNodeData | null> {
  *
  * Implementations MUST reset all cache fields and the timestamp.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️invalidatetreenodecache](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/INVALIDATE-TREE-NODE-CACHE)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️invalidatetreenodecache](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/invalidateTreeNodeCache)
  **/
 export function invalidateTreeNodeCache(): void {
   treeNodeCache = null;
@@ -766,12 +766,12 @@ export function invalidateTreeNodeCache(): void {
  *
  * Implementations MUST return null for URIs that do not match the semiorepo scheme.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️parseuri](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/URI-RESOLUTION/PARSE-URI)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖uriresolution🛠️parseuri](semiorepo://definition/semio-repo/vscode/extension.ts/URI%20Resolution/parseUri)
  **/
 export function parseUri(uri: string): { type: string; path: string } | null {
   const match = uri.match(/^semiorepo:\/\/([a-zA-Z]+)(?:\/(.*)?)?$/);
   if (!match) return null;
-  return { type: match[1], path: match[2] ?? "" };
+  return { type: match[1], path: match[2] ? decodeURIComponent(match[2]) : "" };
 }
 
 async function navigateToUri(uri: string): Promise<void> {
@@ -779,6 +779,9 @@ async function navigateToUri(uri: string): Promise<void> {
   if (!wsRoot) return;
   const parsed = parseUri(uri);
   if (!parsed) return;
+
+  const cache = await getTreeNodeCache();
+  const node = cache.get(uri);
 
   switch (parsed.type) {
     case "repo": {
@@ -801,13 +804,32 @@ async function navigateToUri(uri: string): Promise<void> {
       return vscode.commands.executeCommand("semio.monorepo.focus") as any;
     }
     case "ticket": {
-      const ticketMdPath = path.join(wsRoot, ".semio-repo", "🎫", parsed.path, "ticket.md");
-      if (fs.existsSync(ticketMdPath)) {
-        return vscode.commands.executeCommand("semio.navigateToFile", ticketMdPath) as any;
+      let ticketPath = "";
+      if (node && node.Year && node.Month && node.Day && node.ID) {
+
+        const slug = node.ID.replace(/^[^\w]+/, "");
+        const year = String(node.Year).padStart(2, "0");
+        const month = String(node.Month).padStart(2, "0");
+        const day = String(node.Day).padStart(2, "0");
+        ticketPath = path.join(wsRoot, ".semio-repo", "🎫", year, month, day, slug, "ticket.md");
+      } else {
+
+        if (parsed.path.match(/^\d+\/\d+\/\d+\/.+/)) {
+          ticketPath = path.join(wsRoot, ".semio-repo", "🎫", parsed.path, "ticket.md");
+        } else {
+
+          const slug = path.basename(parsed.path);
+
+        }
+      }
+
+      if (ticketPath && fs.existsSync(ticketPath)) {
+        return vscode.commands.executeCommand("semio.navigateToFile", ticketPath) as any;
       }
       break;
     }
     case "goal": {
+
       const goalJsonPath = path.join(wsRoot, ".semio-repo", "🎯", parsed.path, "goal.json");
       if (fs.existsSync(goalJsonPath)) {
         return vscode.commands.executeCommand("semio.navigateToFile", goalJsonPath) as any;
@@ -815,25 +837,29 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "draft": {
-      const draftPath = path.join(wsRoot, ".semio-repo", "✍️", parsed.path);
+
+      const slug = path.basename(parsed.path);
+      const draftPath = path.join(wsRoot, ".semio-repo", "✍️", slug);
       if (fs.existsSync(draftPath)) {
         return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(draftPath)) as any;
       }
       break;
     }
     case "todo": {
-      const todoPath = path.join(wsRoot, ".semio-repo", "todos", parsed.path);
+
+      const slug = path.basename(parsed.path);
+      const todoPath = path.join(wsRoot, ".semio-repo", "todos", slug);
       if (fs.existsSync(todoPath)) {
         return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(todoPath)) as any;
       }
       break;
     }
     case "contributor": {
-      const github = parsed.path;
+      const github = path.basename(parsed.path);
       return vscode.env.openExternal(vscode.Uri.parse(`https://github.com/${github}`)) as any;
     }
     case "commit": {
-      const sha = parsed.path;
+      const sha = path.basename(parsed.path);
       const baseUrl = getGitHubRepoBaseUrl();
       if (baseUrl) {
         return vscode.env.openExternal(vscode.Uri.parse(`${baseUrl}/commit/${sha}`)) as any;
@@ -848,13 +874,16 @@ async function navigateToUri(uri: string): Promise<void> {
       break;
     }
     case "bundle": {
-      const cache = await getTreeNodeCache();
-      const node = cache.get(uri);
       if (node?.Data?.root) {
         const abs = path.join(wsRoot, node.Data.root);
         if (fs.existsSync(abs)) {
           return vscode.commands.executeCommand("revealInExplorer", vscode.Uri.file(abs)) as any;
         }
+      }
+
+      const parts = parsed.path.split("/");
+      if (parts.length >= 2) {
+
       }
       break;
     }
@@ -937,7 +966,7 @@ async function navigateToUri(uri: string): Promise<void> {
             const events = parseRepoEvents(stdout);
             for (const event of events) {
               const def = (event as any).definition;
-              if (def && slugify(def.name) === defName && def.startLine) {
+              if (def && slugify(def.name) === slugify(defName) && def.startLine) {
                 return openFileAtLine(filePath, def.startLine, def.endLine);
               }
             }
@@ -947,22 +976,18 @@ async function navigateToUri(uri: string): Promise<void> {
       return vscode.commands.executeCommand("semio.navigateToFile", filePath) as any;
     }
     case "policy": {
-      const cache = await getTreeNodeCache();
-      const node = cache.get(uri);
       if (node) {
         vscode.window.showInformationMessage(`Policy: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
       } else {
-        vscode.window.showInformationMessage(`Policy: ${parsed.path}`);
+        vscode.window.showInformationMessage(`Policy: ${path.basename(parsed.path)}`);
       }
       break;
     }
     case "statute": {
-      const cache = await getTreeNodeCache();
-      const node = cache.get(uri);
       if (node) {
         vscode.window.showInformationMessage(`Breach Kind: ${node.Label}${node.Description ? " - " + node.Description : ""}`);
       } else {
-        vscode.window.showInformationMessage(`Breach Kind: ${parsed.path}`);
+        vscode.window.showInformationMessage(`Breach Kind: ${path.basename(parsed.path)}`);
       }
       break;
     }
@@ -986,7 +1011,7 @@ function findSectionByPath(section: any, sectionPath: string): any | null {
 
 // #region 🔖Helpers
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖helpers](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/HELPERS)
+// [🧰semiorepo🖱️vscode💻extensionts🔖helpers](semiorepo://section/semio-repo/vscode/extension.ts/Helpers)
 // Helpers MUST provide file path extraction, ticket path resolution, and editor navigation.
 
 function extractFilePathFromScope(scope: string): string | undefined {
@@ -1059,7 +1084,7 @@ async function openFileAtLine(filePath: string, startLine: number, endLine?: num
 
 // #region 🔖File Analysis & Diagnostics
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖fileanalysisdiagnostics](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/FILE-ANALYSIS-DIAGNOSTICS)
+// [🧰semiorepo🖱️vscode💻extensionts🔖fileanalysisdiagnostics](semiorepo://section/semio-repo/vscode/extension.ts/File%20Analysis%20&%20Diagnostics)
 // File Analysis & Diagnostics MUST handle analysis, breach diagnostics, bundle caching, and kit validation.
 
 async function updateBundleCache() {
@@ -1232,7 +1257,7 @@ function validateKitDocument(document: vscode.TextDocument): void {
 
 // #region 🔖Providers
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖providers](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/PROVIDERS)
+// [🧰semiorepo🖱️vscode💻extensionts🔖providers](semiorepo://section/semio-repo/vscode/extension.ts/Providers)
 // Providers MUST implement VS Code tree data providers for filter, monorepo, and sections views.
 
 /**
@@ -1240,7 +1265,7 @@ function validateKitDocument(document: vscode.TextDocument): void {
  *
  * Implementations MUST extend vscode.TreeItem and expose filter metadata.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️filtertreeitem](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/PROVIDERS/FILTER-TREE-ITEM)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️filtertreeitem](semiorepo://definition/semio-repo/vscode/extension.ts/Providers/FilterTreeItem)
  **/
 export class FilterTreeItem extends vscode.TreeItem {
   constructor(
@@ -1261,7 +1286,7 @@ export class FilterTreeItem extends vscode.TreeItem {
  *
  * Implementations MUST implement vscode.TreeDataProvider and emit change events on toggle.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️filtertreedataprovider](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/PROVIDERS/FILTER-TREE-DATA-PROVIDER)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️filtertreedataprovider](semiorepo://definition/semio-repo/vscode/extension.ts/Providers/FilterTreeDataProvider)
  **/
 export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<FilterTreeItem | undefined | null | void>();
@@ -1468,7 +1493,7 @@ export class FilterTreeDataProvider implements vscode.TreeDataProvider<FilterTre
  *
  * Implementations MUST extend vscode.TreeItem and carry the original node data.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️monorepotreeitem](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/PROVIDERS/MONOREPO-TREE-ITEM)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️monorepotreeitem](semiorepo://definition/semio-repo/vscode/extension.ts/Providers/MonorepoTreeItem)
  **/
 export class MonorepoTreeItem extends vscode.TreeItem {
   constructor(
@@ -1489,7 +1514,7 @@ export class MonorepoTreeItem extends vscode.TreeItem {
  *
  * Implementations MUST set label, description, tooltip, and command from node data.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️treenodetoitem](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/PROVIDERS/TREE-NODE-TO-ITEM)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️treenodetoitem](semiorepo://definition/semio-repo/vscode/extension.ts/Providers/treeNodeToItem)
  **/
 export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
   const label = treeNodeDisplayLabel(node);
@@ -1512,7 +1537,7 @@ export function treeNodeToItem(node: TreeNodeData): MonorepoTreeItem {
  *
  * Implementations MUST implement vscode.TreeDataProvider and fetch data via CLI.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️monorepotreedataprovider](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/PROVIDERS/MONOREPO-TREE-DATA-PROVIDER)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️monorepotreedataprovider](semiorepo://definition/semio-repo/vscode/extension.ts/Providers/MonorepoTreeDataProvider)
  **/
 export class MonorepoTreeDataProvider implements vscode.TreeDataProvider<MonorepoTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<MonorepoTreeItem | undefined | null | void>();
@@ -1577,7 +1602,7 @@ class SectionTreeItem extends vscode.TreeItem {
  *
  * Implementations MUST refresh when the active editor changes or the document is edited.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️sectionstreedataprovider](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/PROVIDERS/SECTIONS-TREE-DATA-PROVIDER)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖providers🛠️sectionstreedataprovider](semiorepo://definition/semio-repo/vscode/extension.ts/Providers/SectionsTreeDataProvider)
  **/
 export class SectionsTreeDataProvider implements vscode.TreeDataProvider<SectionTreeItem> {
   private _onDidChangeTreeData = new vscode.EventEmitter<SectionTreeItem | undefined | null | void>();
@@ -1658,7 +1683,7 @@ export class SectionsTreeDataProvider implements vscode.TreeDataProvider<Section
 
 // #region 🔖Activation
 
-// [🧰semiorepo🖱️vscode💻extensionts🔖activation](semiorepo://section/SEMIO-REPO/VSCODE/EXTENSION.TS/ACTIVATION)
+// [🧰semiorepo🖱️vscode💻extensionts🔖activation](semiorepo://section/semio-repo/vscode/extension.ts/Activation)
 // Activation MUST handle extension activation, command registration, and lifecycle management.
 
 function registerSidebarViews(context: vscode.ExtensionContext): void {
@@ -1993,7 +2018,7 @@ async function loadAvailableFilterValues(): Promise<void> {
  *
  * Implementations MUST register sidebar views, commands, diagnostics, and event handlers.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖activation🛠️activate](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/ACTIVATION/ACTIVATE)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖activation🛠️activate](semiorepo://definition/semio-repo/vscode/extension.ts/Activation/activate)
  **/
 export function activate(context: vscode.ExtensionContext) {
   outputChannel = vscode.window.createOutputChannel("semio-repo");
@@ -2036,7 +2061,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.workspace.registerTextDocumentContentProvider("semiorepo", {
       provideTextDocumentContent(uri: vscode.Uri): string {
-        const semiorepoUri = `semiorepo://${uri.authority}${uri.path}`;
+        const semiorepoUri = `semiorepo://${uri.authority.toLowerCase()}${uri.path.toLowerCase()}`;
         vscode.commands.executeCommand("semio.navigate", semiorepoUri);
         return "";
       }
@@ -2044,7 +2069,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.window.registerUriHandler({
       handleUri(uri: vscode.Uri) {
-        const semiorepoUri = `semiorepo://${uri.authority}${uri.path}`;
+        const semiorepoUri = `semiorepo://${uri.authority.toLowerCase()}${uri.path.toLowerCase()}`;
         vscode.commands.executeCommand("semio.navigate", semiorepoUri);
       }
     }));
@@ -2071,7 +2096,7 @@ export function activate(context: vscode.ExtensionContext) {
  *
  * Implementations MUST clean up any active subscriptions.
  *
- *  * [🧰semiorepo🖱️vscode💻extensionts🔖activation🛠️deactivate](semiorepo://definition/SEMIO-REPO/VSCODE/EXTENSION.TS/ACTIVATION/DEACTIVATE)
+ *  * [🧰semiorepo🖱️vscode💻extensionts🔖activation🛠️deactivate](semiorepo://definition/semio-repo/vscode/extension.ts/Activation/deactivate)
  **/
 export function deactivate() { }
 

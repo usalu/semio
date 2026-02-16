@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js🗃️sketchpad💻hometsx](semiorepo://file/SEMIO/JS/SKETCHPAD/HOME.TSX)
+// [👤semio📚js🗃️sketchpad💻hometsx](semiorepo://file/semio/js/sketchpad/Home.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Imports
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖imports](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/IMPORTS)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖imports](semiorepo://section/semio/js/sketchpad/Home.tsx/Imports)
 // External and internal module imports MUST be declared here.
 
 import { formatDistanceToNow } from "date-fns";
@@ -90,13 +90,13 @@ const useHome = useHomeApp;
 
 // #region 🔖Types
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖types](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖types](semiorepo://section/semio/js/sketchpad/Home.tsx/Types)
 // Home app type definitions MUST be declared here.
 
 /**
  * Window kind identifiers for the Home app.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homeappwindowkind](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-APP-WINDOW-KIND)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homeappwindowkind](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeAppWindowKind)
  **/
 export enum HomeAppWindowKind {
   Table = "table",
@@ -105,7 +105,7 @@ export enum HomeAppWindowKind {
 /**
  * Selected kit GUIDs in the Home app.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homeselection](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-SELECTION)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homeselection](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeSelection)
  **/
 export interface HomeSelection {
   kits?: Guid[];
@@ -114,7 +114,7 @@ export interface HomeSelection {
 /**
  * Incremental selection changes with added and removed GUIDs.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homeselectiondiff](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-SELECTION-DIFF)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homeselectiondiff](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeSelectionDiff)
  **/
 export interface HomeSelectionDiff {
   added?: Guid[];
@@ -124,7 +124,7 @@ export interface HomeSelectionDiff {
 /**
  * Hovered kit GUIDs in the Home app.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homehover](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-HOVER)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homehover](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeHover)
  **/
 export interface HomeHover {
   kits?: Guid[];
@@ -133,20 +133,20 @@ export interface HomeHover {
 /**
  * Available columns for sorting the Home kit table.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homesortcolumn](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-SORT-COLUMN)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homesortcolumn](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeSortColumn)
  **/
 export type HomeSortColumn = "name" | "type" | "updatedAt" | "createdAt";
 /**
  * Sort direction for the Home kit table.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homesortdirection](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-SORT-DIRECTION)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homesortdirection](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeSortDirection)
  **/
 export type HomeSortDirection = "asc" | "desc";
 
 /**
  * A kit currently being loaded with a temporary GUID.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️loadingkit](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/LOADING-KIT)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️loadingkit](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/LoadingKit)
  **/
 export interface LoadingKit {
   tempGuid: Guid;
@@ -156,7 +156,7 @@ export interface LoadingKit {
 /**
  * Complete state of the Home app.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homestate](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-STATE)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homestate](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeState)
  **/
 export interface HomeState {
   panelVisibility: PanelVisibility;
@@ -171,7 +171,7 @@ export interface HomeState {
 /**
  * Partial state diff for updating the Home app.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homediff](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-DIFF)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homediff](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeDiff)
  **/
 export interface HomeDiff {
   panelVisibility?: Partial<PanelVisibility>;
@@ -183,14 +183,14 @@ export interface HomeDiff {
 /**
  * Edit event for the Home app selection.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homeedit](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-EDIT)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homeedit](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeEdit)
  **/
 export interface HomeEdit extends AppEdit<HomeSelectionDiff> { }
 
 /**
  * Command context carrying Home state and origin.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homecommandcontext](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-COMMAND-CONTEXT)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homecommandcontext](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeCommandContext)
  **/
 export interface HomeCommandContext {
   home: HomeState;
@@ -200,7 +200,7 @@ export interface HomeCommandContext {
 /**
  * Result returned from a Home command execution.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homecommandresult](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/TYPES/HOME-COMMAND-RESULT)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖types🛠️homecommandresult](semiorepo://definition/semio/js/sketchpad/Home.tsx/Types/HomeCommandResult)
  **/
 export interface HomeCommandResult {
   diff?: HomeDiff;
@@ -210,7 +210,7 @@ export interface HomeCommandResult {
 
 // #region 🔖Home App Plugin Registration
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖homeapppluginregistration](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/HOME-APP-PLUGIN-REGISTRATION)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖homeapppluginregistration](semiorepo://section/semio/js/sketchpad/Home.tsx/Home%20App%20Plugin%20Registration)
 // Home app plugin and event handler registration MUST initialize XState context.
 
 const createDefaultHomeState = (): HomeState => ({
@@ -265,7 +265,7 @@ if (typeof window !== "undefined") {
 
 // #region 🔖Hooks (XState-based)
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖hooksxstatebased](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/HOOKS-X-STATE-BASED)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖hooksxstatebased](semiorepo://section/semio/js/sketchpad/Home.tsx/Hooks%20(XState-based))
 // XState-based hooks MUST re-export state selectors for the Home app.
 
 export { useHomeApp as useHomeAppExported, useHomeLoadingKits as useHomeLoadingKitsExported, useHomePanelVisibility as useHomePanelVisibilityExported, useHomeSelection as useHomeSelectionExported } from "./Sketchpad";
@@ -286,7 +286,7 @@ export { useHome };
 
 // #region 🔖Table
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas](semiorepo://section/semio/js/sketchpad/Home.tsx/Canvas)
 // Table window MUST display kit entries in tabular form.
 
 export { };
@@ -307,13 +307,13 @@ export { };
 
 // #region 🔖Details
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖details](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/DETAILS)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right](semiorepo://section/semio/js/sketchpad/Home.tsx/Canvas/Panels/Right)
 // Details panel MUST show properties of selected kits.
 
 /**
  * Kit section component displaying selected kit properties.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖details🪨kitsection](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/DETAILS/KIT-SECTION)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖details🪨kitsection](semiorepo://definition/semio/js/sketchpad/Home.tsx/Canvas/Panels/Right/Details/KitSection)
  **/
 export const KitSection: FC = () => {
   const home = useHome() as HomeState;
@@ -443,7 +443,7 @@ const MultipleKitsSection: FC<{ kitIds: string[] }> = ({ kitIds }) => {
 
 // #region 🔖Chat
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖chat](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/CHAT)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖chat](semiorepo://section/semio/js/sketchpad/Home.tsx/Canvas/Panels/Right/Chat)
 // Chat panel MUST show the chat placeholder content.
 
 const ChatPlaceholder: FC = () => {
@@ -460,7 +460,7 @@ const ChatPlaceholder: FC = () => {
 
 // #region 🔖Settings
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖settings](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CANVAS/PANELS/RIGHT/SETTINGS)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖canvas🔖panels🔖right🔖settings](semiorepo://section/semio/js/sketchpad/Home.tsx/Canvas/Panels/Right/Settings)
 // Settings panel MUST expose theme, language, device, expertise, and mode toggles.
 
 const SettingsContent: FC = () => {
@@ -569,7 +569,7 @@ const SettingsContent: FC = () => {
 
 // #region 🔖Footer
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖footer](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/FOOTER)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖footer](semiorepo://section/semio/js/sketchpad/Home.tsx/Footer)
 // Footer component MUST manage Home app footer items.
 
 const HomeAppFooter: FC = () => {
@@ -590,7 +590,7 @@ const HomeAppFooter: FC = () => {
 
 // #region 🔖DropZone
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖dropzone](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/DROP-ZONE)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖dropzone](semiorepo://section/semio/js/sketchpad/Home.tsx/DropZone)
 // DropZone component MUST handle drag-and-drop kit imports.
 
 const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -701,7 +701,7 @@ const HomeDropZone: FC<{ children: React.ReactNode }> = ({ children }) => {
 
 // #region 🔖App
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖app](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/APP)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖app](semiorepo://section/semio/js/sketchpad/Home.tsx/App)
 // App components MUST compose the Home app toolbar, table, and logic.
 
 type KitKind = "temporary" | "local" | "remote";
@@ -1666,7 +1666,7 @@ const HomeTableContent: FC = () => {
 
 // #region 🔖Multi-Window App
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖app🔖multiwindowapp](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/APP/MULTI-WINDOW-APP)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖app🔖multiwindowapp](semiorepo://section/semio/js/sketchpad/Home.tsx/App/Multi-Window%20App)
 // Multi-window app MUST orchestrate the Home canvas and layout.
 
 const TableWindow = memo(() => {
@@ -1796,13 +1796,13 @@ export default Home;
 
 // #region 🔖Config
 
-// [👤semio📚js🗃️sketchpad💻hometsx🔖config](semiorepo://section/SEMIO/JS/SKETCHPAD/HOME.TSX/CONFIG)
+// [👤semio📚js🗃️sketchpad💻hometsx🔖config](semiorepo://section/semio/js/sketchpad/Home.tsx/Config)
 // Config MUST define the Home app registration and panel setup.
 
 /**
  * Home app configuration defining routes and panels.
  *
- *  * [👤semio📚js🗃️sketchpad💻hometsx🔖config🪨config](semiorepo://definition/SEMIO/JS/SKETCHPAD/HOME.TSX/CONFIG/CONFIG)
+ *  * [👤semio📚js🗃️sketchpad💻hometsx🔖config🪨config](semiorepo://definition/semio/js/sketchpad/Home.tsx/Config/config)
  **/
 export const config: AppConfig = {
   id: "home",

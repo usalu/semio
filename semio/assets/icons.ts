@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio🏪assets💻iconsts](semiorepo://file/SEMIO/ASSETS/ICONS.TS)
+// [👤semio🏪assets💻iconsts](semiorepo://file/semio/assets/icons.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Exports
 
-// [👤semio🏪assets💻iconsts🔖exports](semiorepo://section/SEMIO/ASSETS/ICONS.TS/EXPORTS)
+// [👤semio🏪assets💻iconsts🔖exports](semiorepo://section/semio/assets/icons.ts/Exports)
 // Re-exports of Lucide React icons with semantic aliases for the UI.
 // Exports MUST map each Lucide icon to a domain-specific alias name.
 

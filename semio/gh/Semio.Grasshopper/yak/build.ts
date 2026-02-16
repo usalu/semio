@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜buildts](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/BUILD.TS)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜buildts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Build
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🔖build](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/BUILD.TS/BUILD)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻buildts🔖build](semiorepo://section/semio/gh/Semio.Grasshopper/yak/build.ts/Build)
 // Yak package build script. MUST prepare the distribution folder and build the .yak package.
 
 import { execSync } from "child_process";

@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚gh🛅semiograsshopper📜buildvalueliststs](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/BUILD-VALUE-LISTS.TS)
+// [👤semio📚gh🛅semiograsshopper📜buildvalueliststs](semiorepo://file/semio/gh/Semio.Grasshopper/build-value-lists.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Value List Generation
 
-// [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🔖valuelistgeneration](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/BUILD-VALUE-LISTS.TS/VALUE-LIST-GENERATION)
+// [👤semio📚gh🛅semiograsshopper💻buildvalueliststs🔖valuelistgeneration](semiorepo://section/semio/gh/Semio.Grasshopper/build-value-lists.ts/Value%20List%20Generation)
 // Value list generation script. MUST convert CSV data into Grasshopper value list text files.
 
 import { parse } from "csv-parse/sync";

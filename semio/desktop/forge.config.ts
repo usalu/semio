@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio🖱️desktop⚙️forgeconfigts](semiorepo://file/SEMIO/DESKTOP/FORGE.CONFIG.TS)
+// [👤semio🖱️desktop⚙️forgeconfigts](semiorepo://file/semio/desktop/forge.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🖱️desktop⚙️forgeconfigts🔖configuration](semiorepo://section/SEMIO/DESKTOP/FORGE.CONFIG.TS/CONFIGURATION)
+// [👤semio🖱️desktop⚙️forgeconfigts🔖configuration](semiorepo://section/semio/desktop/forge.config.ts/Configuration)
 // Electron Forge build configuration for the desktop application.
 // Configuration MUST define packager, makers, and plugins for Electron Forge.
 

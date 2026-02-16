@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜logints](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/LOGIN.TS)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜logints](semiorepo://file/semio/gh/Semio.Grasshopper/yak/login.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Login
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🔖login](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/LOGIN.TS/LOGIN)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻logints🔖login](semiorepo://section/semio/gh/Semio.Grasshopper/yak/login.ts/Login)
 // Yak login script. MUST authenticate with the Yak package manager.
 
 import { execSync } from "child_process";

@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚engine📜buildts](semiorepo://file/SEMIO/ENGINE/BUILD.TS)
+// [👤semio📚engine📜buildts](semiorepo://file/semio/engine/build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Build
 
-// [👤semio📚engine💻buildts🔖build](semiorepo://section/SEMIO/ENGINE/BUILD.TS/BUILD)
+// [👤semio📚engine💻buildts🔖build](semiorepo://section/semio/engine/build.ts/Build)
 // Build script for the engine binary. MUST bundle the engine via PyInstaller.
 
 import { execSync } from "child_process";

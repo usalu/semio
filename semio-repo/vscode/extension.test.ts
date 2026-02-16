@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo🖱️vscode🧪extensiontestts](semiorepo://file/SEMIO-REPO/VSCODE/EXTENSION.TEST.TS)
+// [🧰semiorepo🖱️vscode🧪extensiontestts](semiorepo://file/semio-repo/vscode/extension.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -903,7 +903,7 @@ suite("Breach Kind Hierarchy Test Suite", () => {
       ID: "🚫Code#Header#Missing Region",
       Label: "🚫Code#Header#Missing Region",
       Description: "Header required",
-      URI: "semiorepo://statute/CODE/HEADER/MISSING-REGION",
+      URI: "semiorepo://statute/code/header/missing-region",
       Data: { autofixable: true }
     };
 
@@ -919,7 +919,7 @@ suite("Breach Kind Hierarchy Test Suite", () => {
       Kind: "policy",
       ID: "�️code",
       Label: "👮️code",
-      URI: "semiorepo://policy/CODE",
+      URI: "semiorepo://policy/code",
       Children: [categoryNode]
     };
 
@@ -1134,7 +1134,7 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses section URI with file and section path", () => {
-    const result = parseUri("semiorepo://section/semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE");
+    const result = parseUri("semiorepo://section/semio/js/sketchpad/design.tsx/state-management/design-store");
     assert.ok(result);
     assert.strictEqual(result!.type, "section");
     assert.strictEqual(result!.path, "semio/js/sketchpad/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE");
@@ -1148,7 +1148,7 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses definition URI", () => {
-    const result = parseUri("semiorepo://definition/semio/js/semio.ts/VALIDATE-KIT");
+    const result = parseUri("semiorepo://definition/semio/js/semio.ts/validate-kit");
     assert.ok(result);
     assert.strictEqual(result!.type, "definition");
     assert.strictEqual(result!.path, "semio/js/semio.ts/VALIDATE-KIT");
@@ -1162,7 +1162,7 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses ticket URI", () => {
-    const result = parseUri("semiorepo://ticket/2026/02/07/MY-TICKET");
+    const result = parseUri("semiorepo://ticket/2026/02/07/my-ticket");
     assert.ok(result);
     assert.strictEqual(result!.type, "ticket");
     assert.strictEqual(result!.path, "2026/02/07/MY-TICKET");
@@ -1176,7 +1176,7 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses goal URI with path", () => {
-    const result = parseUri("semiorepo://goal/R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP");
+    const result = parseUri("semiorepo://goal/r26-02/running-sketchpad/running-sketchpad-apps/running-home-app");
     assert.ok(result);
     assert.strictEqual(result!.type, "goal");
     assert.strictEqual(result!.path, "R26-02/RUNNING-SKETCHPAD/RUNNING-SKETCHPAD-APPS/RUNNING-HOME-APP");
@@ -1190,7 +1190,7 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses draft URI", () => {
-    const result = parseUri("semiorepo://draft/MY-DRAFT");
+    const result = parseUri("semiorepo://draft/my-draft");
     assert.ok(result);
     assert.strictEqual(result!.type, "draft");
     assert.strictEqual(result!.path, "MY-DRAFT");
@@ -1204,7 +1204,7 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses todo URI", () => {
-    const result = parseUri("semiorepo://todo/FIX-BUG");
+    const result = parseUri("semiorepo://todo/fix-bug");
     assert.ok(result);
     assert.strictEqual(result!.type, "todo");
     assert.strictEqual(result!.path, "FIX-BUG");
@@ -1232,7 +1232,7 @@ suite("parseUri Test Suite", () => {
   });
 
   test("Parses statute URI with path", () => {
-    const result = parseUri("semiorepo://statute/CODE/HEADER/MISSING-REGION");
+    const result = parseUri("semiorepo://statute/code/header/missing-region");
     assert.ok(result);
     assert.strictEqual(result!.type, "statute");
     assert.strictEqual(result!.path, "CODE/HEADER/MISSING-REGION");
@@ -1306,7 +1306,7 @@ suite("Navigation Commands Test Suite", function () {
   });
 
   test("semio.navigate handles unknown URI type gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://unknown/SOMETHING");
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://unknown/something");
     assert.ok(true, "Should not throw on unknown URI type");
   });
 
@@ -1344,22 +1344,22 @@ suite("Navigation Commands Test Suite", function () {
   });
 
   test("semio.navigate handles ticket URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://ticket/2099/01/01/NONEXISTENT");
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://ticket/2099/01/01/nonexistent");
     assert.ok(true, "Should not throw on nonexistent ticket URI");
   });
 
   test("semio.navigate handles goal URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://goal/NONEXISTENT-GOAL");
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://goal/nonexistent-goal");
     assert.ok(true, "Should not throw on nonexistent goal URI");
   });
 
   test("semio.navigate handles draft URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://draft/NONEXISTENT");
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://draft/nonexistent");
     assert.ok(true, "Should not throw on nonexistent draft URI");
   });
 
   test("semio.navigate handles todo URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://todo/NONEXISTENT");
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://todo/nonexistent");
     assert.ok(true, "Should not throw on nonexistent todo URI");
   });
 
@@ -1369,7 +1369,7 @@ suite("Navigation Commands Test Suite", function () {
   });
 
   test("semio.navigate handles statute URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://statute/CODE/HEADER/MISSING-REGION");
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://statute/code/header/missing-region");
     assert.ok(true, "Should not throw on statute URI");
   });
 
@@ -1384,12 +1384,12 @@ suite("Navigation Commands Test Suite", function () {
   });
 
   test("semio.navigate handles section URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://section/semio/js/semio.ts/HEADER");
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://section/semio/js/semio.ts/header");
     assert.ok(true, "Should not throw on section URI");
   });
 
   test("semio.navigate handles definition URI gracefully", async function () {
-    await vscode.commands.executeCommand("semio.navigate", "semiorepo://definition/semio/js/semio.ts/VALIDATE-KIT");
+    await vscode.commands.executeCommand("semio.navigate", "semiorepo://definition/semio/js/semio.ts/validate-kit");
     assert.ok(true, "Should not throw on definition URI");
   });
 

@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚go💻semiogo](semiorepo://file/SEMIO/GO/SEMIO.GO)
+// [👤semio📚go💻semiogo](semiorepo://file/semio/go/semio.go)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Imports
 
-// [👤semio📚go💻semiogo🔖imports](semiorepo://section/SEMIO/GO/SEMIO.GO/IMPORTS)
+// [👤semio📚go💻semiogo🔖imports](semiorepo://section/semio/go/semio.go/Imports)
 // Imports MUST include all required packages for the semio domain library.
 
 package semio
@@ -42,7 +42,7 @@ import (
 
 // #region 🔖Constants
 
-// [👤semio📚go💻semiogo🔖constants](semiorepo://section/SEMIO/GO/SEMIO.GO/CONSTANTS)
+// [👤semio📚go💻semiogo🔖constants](semiorepo://section/semio/go/semio.go/Constants)
 // Constants MUST define shared constant values for the semio domain.
 
 const (
@@ -54,12 +54,12 @@ const (
 
 // #region 🔖Utils
 
-// [👤semio📚go💻semiogo🔖utils](semiorepo://section/SEMIO/GO/SEMIO.GO/UTILS)
+// [👤semio📚go💻semiogo🔖utils](semiorepo://section/semio/go/semio.go/Utils)
 // Utils MUST provide general-purpose utility functions for the semio domain.
 
 // Guid MUST return a cryptographically random 128-bit hex string.
 // Guid generates a new random 128-bit hex-encoded unique identifier.
-// [👤semio📚go💻semiogo🔖utils🛠️guid](semiorepo://definition/SEMIO/GO/SEMIO.GO/UTILS/GUID)
+// [👤semio📚go💻semiogo🔖utils🛠️guid](semiorepo://definition/semio/go/semio.go/Utils/Guid)
 func Guid() string {
 	bytes := make([]byte, 16)
 	rand.Read(bytes)
@@ -68,14 +68,14 @@ func Guid() string {
 
 // Normalize MUST trim whitespace and convert to lowercase.
 // Normalize converts a string to lowercase trimmed form.
-// [👤semio📚go💻semiogo🔖utils🛠️normalize](semiorepo://definition/SEMIO/GO/SEMIO.GO/UTILS/NORMALIZE)
+// [👤semio📚go💻semiogo🔖utils🛠️normalize](semiorepo://definition/semio/go/semio.go/Utils/Normalize)
 func Normalize(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
 // Round MUST return the value rounded to exactly the given decimal places.
 // Round rounds a float64 to the specified number of decimal places.
-// [👤semio📚go💻semiogo🔖utils🛠️round](semiorepo://definition/SEMIO/GO/SEMIO.GO/UTILS/ROUND)
+// [👤semio📚go💻semiogo🔖utils🛠️round](semiorepo://definition/semio/go/semio.go/Utils/Round)
 func Round(value float64, decimals int) float64 {
 	shift := 1.0
 	for i := 0; i < decimals; i++ {
@@ -86,7 +86,7 @@ func Round(value float64, decimals int) float64 {
 
 // DeepEqual MUST return true only when both values produce identical JSON.
 // DeepEqual compares two values for deep equality via JSON serialization.
-// [👤semio📚go💻semiogo🔖utils🛠️deepequal](semiorepo://definition/SEMIO/GO/SEMIO.GO/UTILS/DEEP-EQUAL)
+// [👤semio📚go💻semiogo🔖utils🛠️deepequal](semiorepo://definition/semio/go/semio.go/Utils/DeepEqual)
 func DeepEqual(a, b interface{}) bool {
 	aJSON, _ := json.Marshal(a)
 	bJSON, _ := json.Marshal(b)
@@ -97,113 +97,113 @@ func DeepEqual(a, b interface{}) bool {
 
 // #region 🔖Entity IDs
 
-// [👤semio📚go💻semiogo🔖entityids](semiorepo://section/SEMIO/GO/SEMIO.GO/ENTITY-I-DS)
+// [👤semio📚go💻semiogo🔖entityids](semiorepo://section/semio/go/semio.go/Entity%20IDs)
 // Entity IDs MUST define identifier types for all semio domain entities.
 
 // AttributeId identifies an attribute entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️attributeid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/ATTRIBUTE-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️attributeid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/AttributeId)
 type AttributeId struct {
 	Guid string `json:"guid"`
 }
 
 // LocationId identifies a location entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️locationid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/LOCATION-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️locationid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/LocationId)
 type LocationId struct {
 	Guid string `json:"guid"`
 }
 
 // AuthorId identifies an author entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️authorid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/AUTHOR-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️authorid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/AuthorId)
 type AuthorId struct {
 	Guid string `json:"guid"`
 }
 
 // FileId identifies a file entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️fileid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/FILE-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️fileid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/FileId)
 type FileId struct {
 	Guid string `json:"guid"`
 }
 
 // FolderId identifies a folder entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️folderid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/FOLDER-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️folderid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/FolderId)
 type FolderId struct {
 	Guid string `json:"guid"`
 }
 
 // BenchmarkId identifies a benchmark entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️benchmarkid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/BENCHMARK-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️benchmarkid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/BenchmarkId)
 type BenchmarkId struct {
 	Guid string `json:"guid"`
 }
 
 // QualityId identifies a quality entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️qualityid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/QUALITY-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️qualityid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/QualityId)
 type QualityId struct {
 	Guid string `json:"guid"`
 }
 
 // PortId identifies a port entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️portid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/PORT-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️portid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/PortId)
 type PortId struct {
 	Guid string `json:"guid"`
 }
 
 // PropId identifies a prop entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️propid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/PROP-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️propid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/PropId)
 type PropId struct {
 	Guid string `json:"guid"`
 }
 
 // TagId identifies a tag entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️tagid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/TAG-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️tagid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/TagId)
 type TagId struct {
 	Guid string `json:"guid"`
 }
 
 // ConceptId identifies a concept entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️conceptid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/CONCEPT-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️conceptid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/ConceptId)
 type ConceptId struct {
 	Guid string `json:"guid"`
 }
 
 // ModelId identifies a model entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️modelid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/MODEL-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️modelid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/ModelId)
 type ModelId struct {
 	Guid string `json:"guid"`
 }
 
 // ConnectorId identifies a connector entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️connectorid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/CONNECTOR-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️connectorid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/ConnectorId)
 type ConnectorId struct {
 	Guid string `json:"guid"`
 }
 
 // TypeId identifies a type entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️typeid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/TYPE-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️typeid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/TypeId)
 type TypeId struct {
 	Guid string `json:"guid"`
 }
 
 // LayerId identifies a layer entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️layerid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/LAYER-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️layerid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/LayerId)
 type LayerId struct {
 	Guid string `json:"guid"`
 }
 
 // PieceId identifies a piece entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️pieceid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/PIECE-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️pieceid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/PieceId)
 type PieceId struct {
 	Guid string `json:"guid"`
 }
 
 // GroupId identifies a group entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️groupid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/GROUP-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️groupid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/GroupId)
 type GroupId struct {
 	Guid string `json:"guid"`
 }
 
 // SideId identifies a connection side by piece, design piece and connector references.
-// [👤semio📚go💻semiogo🔖entityids✂️sideid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/SIDE-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️sideid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/SideId)
 type SideId struct {
 	Piece          PieceId      `json:"piece"`
 	DesignPiece    *PieceId     `json:"designPiece,omitempty"`
@@ -211,25 +211,25 @@ type SideId struct {
 }
 
 // ConnectionId identifies a connection entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️connectionid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/CONNECTION-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️connectionid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/ConnectionId)
 type ConnectionId struct {
 	Guid string `json:"guid"`
 }
 
 // StatId identifies a stat entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️statid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/STAT-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️statid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/StatId)
 type StatId struct {
 	Guid string `json:"guid"`
 }
 
 // DesignId identifies a design entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️designid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/DESIGN-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️designid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/DesignId)
 type DesignId struct {
 	Guid string `json:"guid"`
 }
 
 // KitId identifies a kit entity by GUID.
-// [👤semio📚go💻semiogo🔖entityids✂️kitid](semiorepo://definition/SEMIO/GO/SEMIO.GO/ENTITY-I-DS/KIT-ID)
+// [👤semio📚go💻semiogo🔖entityids✂️kitid](semiorepo://definition/semio/go/semio.go/Entity%20IDs/KitId)
 type KitId struct {
 	Guid string `json:"guid"`
 }
@@ -238,25 +238,25 @@ type KitId struct {
 
 // #region 🔖Weak Entities
 
-// [👤semio📚go💻semiogo🔖weakentities](semiorepo://section/SEMIO/GO/SEMIO.GO/WEAK-ENTITIES)
+// [👤semio📚go💻semiogo🔖weakentities](semiorepo://section/semio/go/semio.go/Weak%20Entities)
 // Weak Entities MUST define value types that exist only as part of parent entities.
 
 // Coord represents a 2D coordinate with U and V components.
-// [👤semio📚go💻semiogo🔖weakentities✂️coord](semiorepo://definition/SEMIO/GO/SEMIO.GO/WEAK-ENTITIES/COORD)
+// [👤semio📚go💻semiogo🔖weakentities✂️coord](semiorepo://definition/semio/go/semio.go/Weak%20Entities/Coord)
 type Coord struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
 
 // Vec represents a 2D vector with U and V components.
-// [👤semio📚go💻semiogo🔖weakentities✂️vec](semiorepo://definition/SEMIO/GO/SEMIO.GO/WEAK-ENTITIES/VEC)
+// [👤semio📚go💻semiogo🔖weakentities✂️vec](semiorepo://definition/semio/go/semio.go/Weak%20Entities/Vec)
 type Vec struct {
 	U float64 `json:"u"`
 	V float64 `json:"v"`
 }
 
 // Point represents a 3D point with X, Y and Z components.
-// [👤semio📚go💻semiogo🔖weakentities✂️point](semiorepo://definition/SEMIO/GO/SEMIO.GO/WEAK-ENTITIES/POINT)
+// [👤semio📚go💻semiogo🔖weakentities✂️point](semiorepo://definition/semio/go/semio.go/Weak%20Entities/Point)
 type Point struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
@@ -264,7 +264,7 @@ type Point struct {
 }
 
 // Vector represents a 3D vector with X, Y and Z components.
-// [👤semio📚go💻semiogo🔖weakentities✂️vector](semiorepo://definition/SEMIO/GO/SEMIO.GO/WEAK-ENTITIES/VECTOR)
+// [👤semio📚go💻semiogo🔖weakentities✂️vector](semiorepo://definition/semio/go/semio.go/Weak%20Entities/Vector)
 type Vector struct {
 	X float64 `json:"x"`
 	Y float64 `json:"y"`
@@ -272,7 +272,7 @@ type Vector struct {
 }
 
 // Plane represents a 3D plane defined by origin, X-axis and Y-axis.
-// [👤semio📚go💻semiogo🔖weakentities✂️plane](semiorepo://definition/SEMIO/GO/SEMIO.GO/WEAK-ENTITIES/PLANE)
+// [👤semio📚go💻semiogo🔖weakentities✂️plane](semiorepo://definition/semio/go/semio.go/Weak%20Entities/Plane)
 type Plane struct {
 	Origin Point  `json:"origin"`
 	XAxis  Vector `json:"xAxis"`
@@ -280,7 +280,7 @@ type Plane struct {
 }
 
 // Camera represents a 3D camera with position, forward and up vectors.
-// [👤semio📚go💻semiogo🔖weakentities✂️camera](semiorepo://definition/SEMIO/GO/SEMIO.GO/WEAK-ENTITIES/CAMERA)
+// [👤semio📚go💻semiogo🔖weakentities✂️camera](semiorepo://definition/semio/go/semio.go/Weak%20Entities/Camera)
 type Camera struct {
 	Position Point  `json:"position"`
 	Forward  Vector `json:"forward"`
@@ -291,11 +291,11 @@ type Camera struct {
 
 // #region 🔖Attribute
 
-// [👤semio📚go💻semiogo🔖attribute](semiorepo://section/SEMIO/GO/SEMIO.GO/ATTRIBUTE)
+// [👤semio📚go💻semiogo🔖attribute](semiorepo://section/semio/go/semio.go/Attribute)
 // Attribute MUST define the key-value metadata entity and its diff types.
 
 // Attribute represents a key-value metadata entry with optional definition.
-// [👤semio📚go💻semiogo🔖attribute✂️attribute](semiorepo://definition/SEMIO/GO/SEMIO.GO/ATTRIBUTE/ATTRIBUTE)
+// [👤semio📚go💻semiogo🔖attribute✂️attribute](semiorepo://definition/semio/go/semio.go/Attribute/Attribute)
 type Attribute struct {
 	Guid       string  `json:"guid"`
 	Key        string  `json:"key"`
@@ -304,7 +304,7 @@ type Attribute struct {
 }
 
 // AttributeDiff represents changes to an attribute entity.
-// [👤semio📚go💻semiogo🔖attribute✂️attributediff](semiorepo://definition/SEMIO/GO/SEMIO.GO/ATTRIBUTE/ATTRIBUTE-DIFF)
+// [👤semio📚go💻semiogo🔖attribute✂️attributediff](semiorepo://definition/semio/go/semio.go/Attribute/AttributeDiff)
 type AttributeDiff struct {
 	Key        *string `json:"key,omitempty"`
 	Value      *string `json:"value,omitempty"`
@@ -312,7 +312,7 @@ type AttributeDiff struct {
 }
 
 // AttributesDiff represents a collection of attribute additions, removals and updates.
-// [👤semio📚go💻semiogo🔖attribute✂️attributesdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/ATTRIBUTE/ATTRIBUTES-DIFF)
+// [👤semio📚go💻semiogo🔖attribute✂️attributesdiff](semiorepo://definition/semio/go/semio.go/Attribute/AttributesDiff)
 type AttributesDiff struct {
 	Removed []AttributeId `json:"removed,omitempty"`
 	Updated []struct {
@@ -326,11 +326,11 @@ type AttributesDiff struct {
 
 // #region 🔖Location
 
-// [👤semio📚go💻semiogo🔖location](semiorepo://section/SEMIO/GO/SEMIO.GO/LOCATION)
+// [👤semio📚go💻semiogo🔖location](semiorepo://section/semio/go/semio.go/Location)
 // Location MUST define geographic location entities and their diff types.
 
 // Location represents a geographic location with longitude, latitude and optional altitude.
-// [👤semio📚go💻semiogo🔖location✂️location](semiorepo://definition/SEMIO/GO/SEMIO.GO/LOCATION/LOCATION)
+// [👤semio📚go💻semiogo🔖location✂️location](semiorepo://definition/semio/go/semio.go/Location/Location)
 type Location struct {
 	Guid       string      `json:"guid"`
 	Longitude  float64     `json:"longitude"`
@@ -340,7 +340,7 @@ type Location struct {
 }
 
 // LocationDiff represents changes to a location entity.
-// [👤semio📚go💻semiogo🔖location✂️locationdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/LOCATION/LOCATION-DIFF)
+// [👤semio📚go💻semiogo🔖location✂️locationdiff](semiorepo://definition/semio/go/semio.go/Location/LocationDiff)
 type LocationDiff struct {
 	Longitude  *float64        `json:"longitude,omitempty"`
 	Latitude   *float64        `json:"latitude,omitempty"`
@@ -352,11 +352,11 @@ type LocationDiff struct {
 
 // #region 🔖Author
 
-// [👤semio📚go💻semiogo🔖author](semiorepo://section/SEMIO/GO/SEMIO.GO/AUTHOR)
+// [👤semio📚go💻semiogo🔖author](semiorepo://section/semio/go/semio.go/Author)
 // Author MUST define authorship entities and their diff types.
 
 // Author represents a named authorship entity with optional email.
-// [👤semio📚go💻semiogo🔖author✂️author](semiorepo://definition/SEMIO/GO/SEMIO.GO/AUTHOR/AUTHOR)
+// [👤semio📚go💻semiogo🔖author✂️author](semiorepo://definition/semio/go/semio.go/Author/Author)
 type Author struct {
 	Guid       string      `json:"guid"`
 	Name       string      `json:"name"`
@@ -367,7 +367,7 @@ type Author struct {
 }
 
 // AuthorDiff represents changes to an author entity.
-// [👤semio📚go💻semiogo🔖author✂️authordiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/AUTHOR/AUTHOR-DIFF)
+// [👤semio📚go💻semiogo🔖author✂️authordiff](semiorepo://definition/semio/go/semio.go/Author/AuthorDiff)
 type AuthorDiff struct {
 	Name       *string         `json:"name,omitempty"`
 	Email      *string         `json:"email,omitempty"`
@@ -375,7 +375,7 @@ type AuthorDiff struct {
 }
 
 // AuthorsDiff represents a collection of author additions, removals and updates.
-// [👤semio📚go💻semiogo🔖author✂️authorsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/AUTHOR/AUTHORS-DIFF)
+// [👤semio📚go💻semiogo🔖author✂️authorsdiff](semiorepo://definition/semio/go/semio.go/Author/AuthorsDiff)
 type AuthorsDiff struct {
 	Removed []AuthorId `json:"removed,omitempty"`
 	Updated []struct {
@@ -389,11 +389,11 @@ type AuthorsDiff struct {
 
 // #region 🔖File
 
-// [👤semio📚go💻semiogo🔖file](semiorepo://section/SEMIO/GO/SEMIO.GO/FILE)
+// [👤semio📚go💻semiogo🔖file](semiorepo://section/semio/go/semio.go/File)
 // File MUST define file reference entities and their diff types.
 
 // File represents a file reference entity with name, remote URL and metadata.
-// [👤semio📚go💻semiogo🔖file✂️file](semiorepo://definition/SEMIO/GO/SEMIO.GO/FILE/FILE)
+// [👤semio📚go💻semiogo🔖file✂️file](semiorepo://definition/semio/go/semio.go/File/File)
 type File struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -408,7 +408,7 @@ type File struct {
 }
 
 // FileDiff represents changes to a file entity.
-// [👤semio📚go💻semiogo🔖file✂️filediff](semiorepo://definition/SEMIO/GO/SEMIO.GO/FILE/FILE-DIFF)
+// [👤semio📚go💻semiogo🔖file✂️filediff](semiorepo://definition/semio/go/semio.go/File/FileDiff)
 type FileDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Remote      *string         `json:"remote,omitempty"`
@@ -420,7 +420,7 @@ type FileDiff struct {
 }
 
 // FilesDiff represents a collection of file additions, removals and updates.
-// [👤semio📚go💻semiogo🔖file✂️filesdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/FILE/FILES-DIFF)
+// [👤semio📚go💻semiogo🔖file✂️filesdiff](semiorepo://definition/semio/go/semio.go/File/FilesDiff)
 type FilesDiff struct {
 	Removed []FileId `json:"removed,omitempty"`
 	Updated []struct {
@@ -434,11 +434,11 @@ type FilesDiff struct {
 
 // #region 🔖Folder
 
-// [👤semio📚go💻semiogo🔖folder](semiorepo://section/SEMIO/GO/SEMIO.GO/FOLDER)
+// [👤semio📚go💻semiogo🔖folder](semiorepo://section/semio/go/semio.go/Folder)
 // Folder MUST define folder hierarchy entities and their diff types.
 
 // Folder represents a folder hierarchy entity with name and parent reference.
-// [👤semio📚go💻semiogo🔖folder✂️folder](semiorepo://definition/SEMIO/GO/SEMIO.GO/FOLDER/FOLDER)
+// [👤semio📚go💻semiogo🔖folder✂️folder](semiorepo://definition/semio/go/semio.go/Folder/Folder)
 type Folder struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -450,7 +450,7 @@ type Folder struct {
 }
 
 // FolderDiff represents changes to a folder entity.
-// [👤semio📚go💻semiogo🔖folder✂️folderdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/FOLDER/FOLDER-DIFF)
+// [👤semio📚go💻semiogo🔖folder✂️folderdiff](semiorepo://definition/semio/go/semio.go/Folder/FolderDiff)
 type FolderDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *FolderId       `json:"parent,omitempty"`
@@ -459,7 +459,7 @@ type FolderDiff struct {
 }
 
 // FoldersDiff represents a collection of folder additions, removals and updates.
-// [👤semio📚go💻semiogo🔖folder✂️foldersdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/FOLDER/FOLDERS-DIFF)
+// [👤semio📚go💻semiogo🔖folder✂️foldersdiff](semiorepo://definition/semio/go/semio.go/Folder/FoldersDiff)
 type FoldersDiff struct {
 	Removed []FolderId `json:"removed,omitempty"`
 	Updated []struct {
@@ -473,11 +473,11 @@ type FoldersDiff struct {
 
 // #region 🔖Benchmark
 
-// [👤semio📚go💻semiogo🔖benchmark](semiorepo://section/SEMIO/GO/SEMIO.GO/BENCHMARK)
+// [👤semio📚go💻semiogo🔖benchmark](semiorepo://section/semio/go/semio.go/Benchmark)
 // Benchmark MUST define benchmark threshold entities and their diff types.
 
 // Benchmark represents a named metric threshold with min and max bounds.
-// [👤semio📚go💻semiogo🔖benchmark✂️benchmark](semiorepo://definition/SEMIO/GO/SEMIO.GO/BENCHMARK/BENCHMARK)
+// [👤semio📚go💻semiogo🔖benchmark✂️benchmark](semiorepo://definition/semio/go/semio.go/Benchmark/Benchmark)
 type Benchmark struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -491,7 +491,7 @@ type Benchmark struct {
 }
 
 // BenchmarkDiff represents changes to a benchmark entity.
-// [👤semio📚go💻semiogo🔖benchmark✂️benchmarkdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/BENCHMARK/BENCHMARK-DIFF)
+// [👤semio📚go💻semiogo🔖benchmark✂️benchmarkdiff](semiorepo://definition/semio/go/semio.go/Benchmark/BenchmarkDiff)
 type BenchmarkDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Icon        *string         `json:"icon,omitempty"`
@@ -504,7 +504,7 @@ type BenchmarkDiff struct {
 }
 
 // BenchmarksDiff represents a collection of benchmark additions, removals and updates.
-// [👤semio📚go💻semiogo🔖benchmark✂️benchmarksdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/BENCHMARK/BENCHMARKS-DIFF)
+// [👤semio📚go💻semiogo🔖benchmark✂️benchmarksdiff](semiorepo://definition/semio/go/semio.go/Benchmark/BenchmarksDiff)
 type BenchmarksDiff struct {
 	Removed []BenchmarkId `json:"removed,omitempty"`
 	Updated []struct {
@@ -518,11 +518,11 @@ type BenchmarksDiff struct {
 
 // #region 🔖Quality
 
-// [👤semio📚go💻semiogo🔖quality](semiorepo://section/SEMIO/GO/SEMIO.GO/QUALITY)
+// [👤semio📚go💻semiogo🔖quality](semiorepo://section/semio/go/semio.go/Quality)
 // Quality MUST define measurable quality entities and their diff types.
 
 // QualityKind is a bitfield enum for quality scope classification.
-// [👤semio📚go💻semiogo🔖quality✂️qualitykind](semiorepo://definition/SEMIO/GO/SEMIO.GO/QUALITY/QUALITY-KIND)
+// [👤semio📚go💻semiogo🔖quality✂️qualitykind](semiorepo://definition/semio/go/semio.go/Quality/QualityKind)
 type QualityKind int
 
 const (
@@ -535,7 +535,7 @@ const (
 )
 
 // Quality represents a measurable property with formula, units and benchmarks.
-// [👤semio📚go💻semiogo🔖quality✂️quality](semiorepo://definition/SEMIO/GO/SEMIO.GO/QUALITY/QUALITY)
+// [👤semio📚go💻semiogo🔖quality✂️quality](semiorepo://definition/semio/go/semio.go/Quality/Quality)
 type Quality struct {
 	Guid                string      `json:"guid"`
 	Key                 string      `json:"key"`
@@ -558,7 +558,7 @@ type Quality struct {
 }
 
 // QualityDiff represents changes to a quality entity.
-// [👤semio📚go💻semiogo🔖quality✂️qualitydiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/QUALITY/QUALITY-DIFF)
+// [👤semio📚go💻semiogo🔖quality✂️qualitydiff](semiorepo://definition/semio/go/semio.go/Quality/QualityDiff)
 type QualityDiff struct {
 	Key                 *string         `json:"key,omitempty"`
 	Name                *string         `json:"name,omitempty"`
@@ -578,7 +578,7 @@ type QualityDiff struct {
 }
 
 // QualitiesDiff represents a collection of quality additions, removals and updates.
-// [👤semio📚go💻semiogo🔖quality✂️qualitiesdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/QUALITY/QUALITIES-DIFF)
+// [👤semio📚go💻semiogo🔖quality✂️qualitiesdiff](semiorepo://definition/semio/go/semio.go/Quality/QualitiesDiff)
 type QualitiesDiff struct {
 	Removed []QualityId `json:"removed,omitempty"`
 	Updated []struct {
@@ -592,11 +592,11 @@ type QualitiesDiff struct {
 
 // #region 🔖Port
 
-// [👤semio📚go💻semiogo🔖port](semiorepo://section/SEMIO/GO/SEMIO.GO/PORT)
+// [👤semio📚go💻semiogo🔖port](semiorepo://section/semio/go/semio.go/Port)
 // Port MUST define connector port entities and their diff types.
 
 // Port represents a named connector port with compatible port references.
-// [👤semio📚go💻semiogo🔖port✂️port](semiorepo://definition/SEMIO/GO/SEMIO.GO/PORT/PORT)
+// [👤semio📚go💻semiogo🔖port✂️port](semiorepo://definition/semio/go/semio.go/Port/Port)
 type Port struct {
 	Guid                 string        `json:"guid"`
 	Name                 string        `json:"name"`
@@ -609,7 +609,7 @@ type Port struct {
 }
 
 // PortDiff represents changes to a port entity.
-// [👤semio📚go💻semiogo🔖port✂️portdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/PORT/PORT-DIFF)
+// [👤semio📚go💻semiogo🔖port✂️portdiff](semiorepo://definition/semio/go/semio.go/Port/PortDiff)
 type PortDiff struct {
 	Name                 *string         `json:"name,omitempty"`
 	Description          *string         `json:"description,omitempty"`
@@ -621,7 +621,7 @@ type PortDiff struct {
 
 // UnmarshalJSON MUST populate the setFields map for all present JSON keys.
 // UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
-// [👤semio📚go💻semiogo🔖port🛠️unmarshaljson](semiorepo://definition/SEMIO/GO/SEMIO.GO/PORT/UNMARSHAL-JSON)
+// [👤semio📚go💻semiogo🔖port🛠️unmarshaljson](semiorepo://definition/semio/go/semio.go/Port/UnmarshalJSON)
 func (d *PortDiff) UnmarshalJSON(data []byte) error {
 	type Alias PortDiff
 	aux := &struct {
@@ -642,7 +642,7 @@ func (d *PortDiff) UnmarshalJSON(data []byte) error {
 
 // HasField MUST return false when setFields is nil.
 // HasField returns whether a JSON field was present in the unmarshaled data.
-// [👤semio📚go💻semiogo🔖port🛠️hasfield](semiorepo://definition/SEMIO/GO/SEMIO.GO/PORT/HAS-FIELD)
+// [👤semio📚go💻semiogo🔖port🛠️hasfield](semiorepo://definition/semio/go/semio.go/Port/HasField)
 func (d *PortDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -651,7 +651,7 @@ func (d *PortDiff) HasField(field string) bool {
 }
 
 // PortsDiff represents a collection of port additions, removals and updates.
-// [👤semio📚go💻semiogo🔖port✂️portsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/PORT/PORTS-DIFF)
+// [👤semio📚go💻semiogo🔖port✂️portsdiff](semiorepo://definition/semio/go/semio.go/Port/PortsDiff)
 type PortsDiff struct {
 	Removed []PortId `json:"removed,omitempty"`
 	Updated []struct {
@@ -665,11 +665,11 @@ type PortsDiff struct {
 
 // #region 🔖Prop
 
-// [👤semio📚go💻semiogo🔖prop](semiorepo://section/SEMIO/GO/SEMIO.GO/PROP)
+// [👤semio📚go💻semiogo🔖prop](semiorepo://section/semio/go/semio.go/Prop)
 // Prop MUST define property value entities and their diff types.
 
 // Prop represents a quality property value with optional unit.
-// [👤semio📚go💻semiogo🔖prop✂️prop](semiorepo://definition/SEMIO/GO/SEMIO.GO/PROP/PROP)
+// [👤semio📚go💻semiogo🔖prop✂️prop](semiorepo://definition/semio/go/semio.go/Prop/Prop)
 type Prop struct {
 	Guid       string      `json:"guid"`
 	Quality    QualityId   `json:"quality"`
@@ -679,7 +679,7 @@ type Prop struct {
 }
 
 // PropDiff represents changes to a prop entity.
-// [👤semio📚go💻semiogo🔖prop✂️propdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/PROP/PROP-DIFF)
+// [👤semio📚go💻semiogo🔖prop✂️propdiff](semiorepo://definition/semio/go/semio.go/Prop/PropDiff)
 type PropDiff struct {
 	Quality    *QualityId      `json:"quality,omitempty"`
 	Value      *string         `json:"value,omitempty"`
@@ -688,7 +688,7 @@ type PropDiff struct {
 }
 
 // PropsDiff represents a collection of prop additions, removals and updates.
-// [👤semio📚go💻semiogo🔖prop✂️propsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/PROP/PROPS-DIFF)
+// [👤semio📚go💻semiogo🔖prop✂️propsdiff](semiorepo://definition/semio/go/semio.go/Prop/PropsDiff)
 type PropsDiff struct {
 	Removed []PropId `json:"removed,omitempty"`
 	Updated []struct {
@@ -702,11 +702,11 @@ type PropsDiff struct {
 
 // #region 🔖Tag
 
-// [👤semio📚go💻semiogo🔖tag](semiorepo://section/SEMIO/GO/SEMIO.GO/TAG)
+// [👤semio📚go💻semiogo🔖tag](semiorepo://section/semio/go/semio.go/Tag)
 // Tag MUST define tag classification entities and their diff types.
 
 // Tag represents a named classification tag with optional description and icon.
-// [👤semio📚go💻semiogo🔖tag✂️tag](semiorepo://definition/SEMIO/GO/SEMIO.GO/TAG/TAG)
+// [👤semio📚go💻semiogo🔖tag✂️tag](semiorepo://definition/semio/go/semio.go/Tag/Tag)
 type Tag struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -718,7 +718,7 @@ type Tag struct {
 }
 
 // TagDiff represents changes to a tag entity.
-// [👤semio📚go💻semiogo🔖tag✂️tagdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/TAG/TAG-DIFF)
+// [👤semio📚go💻semiogo🔖tag✂️tagdiff](semiorepo://definition/semio/go/semio.go/Tag/TagDiff)
 type TagDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -729,7 +729,7 @@ type TagDiff struct {
 
 // UnmarshalJSON MUST populate the setFields map for all present JSON keys.
 // UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
-// [👤semio📚go💻semiogo🔖tag🛠️unmarshaljson](semiorepo://definition/SEMIO/GO/SEMIO.GO/TAG/UNMARSHAL-JSON)
+// [👤semio📚go💻semiogo🔖tag🛠️unmarshaljson](semiorepo://definition/semio/go/semio.go/Tag/UnmarshalJSON)
 func (d *TagDiff) UnmarshalJSON(data []byte) error {
 	type Alias TagDiff
 	aux := &struct {
@@ -750,7 +750,7 @@ func (d *TagDiff) UnmarshalJSON(data []byte) error {
 
 // HasField MUST return false when setFields is nil.
 // HasField returns whether a JSON field was present in the unmarshaled data.
-// [👤semio📚go💻semiogo🔖tag🛠️hasfield](semiorepo://definition/SEMIO/GO/SEMIO.GO/TAG/HAS-FIELD)
+// [👤semio📚go💻semiogo🔖tag🛠️hasfield](semiorepo://definition/semio/go/semio.go/Tag/HasField)
 func (d *TagDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -759,7 +759,7 @@ func (d *TagDiff) HasField(field string) bool {
 }
 
 // TagsDiff represents a collection of tag additions, removals and updates.
-// [👤semio📚go💻semiogo🔖tag✂️tagsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/TAG/TAGS-DIFF)
+// [👤semio📚go💻semiogo🔖tag✂️tagsdiff](semiorepo://definition/semio/go/semio.go/Tag/TagsDiff)
 type TagsDiff struct {
 	Removed []TagId `json:"removed,omitempty"`
 	Updated []struct {
@@ -773,11 +773,11 @@ type TagsDiff struct {
 
 // #region 🔖Concept
 
-// [👤semio📚go💻semiogo🔖concept](semiorepo://section/SEMIO/GO/SEMIO.GO/CONCEPT)
+// [👤semio📚go💻semiogo🔖concept](semiorepo://section/semio/go/semio.go/Concept)
 // Concept MUST define concept categorization entities and their diff types.
 
 // Concept represents a named categorization concept with optional description.
-// [👤semio📚go💻semiogo🔖concept✂️concept](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONCEPT/CONCEPT)
+// [👤semio📚go💻semiogo🔖concept✂️concept](semiorepo://definition/semio/go/semio.go/Concept/Concept)
 type Concept struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -789,7 +789,7 @@ type Concept struct {
 }
 
 // ConceptDiff represents changes to a concept entity.
-// [👤semio📚go💻semiogo🔖concept✂️conceptdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONCEPT/CONCEPT-DIFF)
+// [👤semio📚go💻semiogo🔖concept✂️conceptdiff](semiorepo://definition/semio/go/semio.go/Concept/ConceptDiff)
 type ConceptDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
@@ -800,7 +800,7 @@ type ConceptDiff struct {
 
 // UnmarshalJSON MUST populate the setFields map for all present JSON keys.
 // UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
-// [👤semio📚go💻semiogo🔖concept🛠️unmarshaljson](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONCEPT/UNMARSHAL-JSON)
+// [👤semio📚go💻semiogo🔖concept🛠️unmarshaljson](semiorepo://definition/semio/go/semio.go/Concept/UnmarshalJSON)
 func (d *ConceptDiff) UnmarshalJSON(data []byte) error {
 	type Alias ConceptDiff
 	aux := &struct {
@@ -821,7 +821,7 @@ func (d *ConceptDiff) UnmarshalJSON(data []byte) error {
 
 // HasField MUST return false when setFields is nil.
 // HasField returns whether a JSON field was present in the unmarshaled data.
-// [👤semio📚go💻semiogo🔖concept🛠️hasfield](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONCEPT/HAS-FIELD)
+// [👤semio📚go💻semiogo🔖concept🛠️hasfield](semiorepo://definition/semio/go/semio.go/Concept/HasField)
 func (d *ConceptDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -830,7 +830,7 @@ func (d *ConceptDiff) HasField(field string) bool {
 }
 
 // ConceptsDiff represents a collection of concept additions, removals and updates.
-// [👤semio📚go💻semiogo🔖concept✂️conceptsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONCEPT/CONCEPTS-DIFF)
+// [👤semio📚go💻semiogo🔖concept✂️conceptsdiff](semiorepo://definition/semio/go/semio.go/Concept/ConceptsDiff)
 type ConceptsDiff struct {
 	Removed []ConceptId `json:"removed,omitempty"`
 	Updated []struct {
@@ -844,11 +844,11 @@ type ConceptsDiff struct {
 
 // #region 🔖Model
 
-// [👤semio📚go💻semiogo🔖model](semiorepo://section/SEMIO/GO/SEMIO.GO/MODEL)
+// [👤semio📚go💻semiogo🔖model](semiorepo://section/semio/go/semio.go/Model)
 // Model MUST define 3D model reference entities and their diff types.
 
 // Model represents a 3D model reference associated with a file and tags.
-// [👤semio📚go💻semiogo🔖model✂️model](semiorepo://definition/SEMIO/GO/SEMIO.GO/MODEL/MODEL)
+// [👤semio📚go💻semiogo🔖model✂️model](semiorepo://definition/semio/go/semio.go/Model/Model)
 type Model struct {
 	Guid        string      `json:"guid"`
 	File        FileId      `json:"file"`
@@ -859,7 +859,7 @@ type Model struct {
 }
 
 // ModelDiff represents changes to a model entity.
-// [👤semio📚go💻semiogo🔖model✂️modeldiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/MODEL/MODEL-DIFF)
+// [👤semio📚go💻semiogo🔖model✂️modeldiff](semiorepo://definition/semio/go/semio.go/Model/ModelDiff)
 type ModelDiff struct {
 	File        *FileId         `json:"file,omitempty"`
 	Name        *string         `json:"name,omitempty"`
@@ -869,7 +869,7 @@ type ModelDiff struct {
 }
 
 // ModelsDiff represents a collection of model additions, removals and updates.
-// [👤semio📚go💻semiogo🔖model✂️modelsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/MODEL/MODELS-DIFF)
+// [👤semio📚go💻semiogo🔖model✂️modelsdiff](semiorepo://definition/semio/go/semio.go/Model/ModelsDiff)
 type ModelsDiff struct {
 	Removed []ModelId `json:"removed,omitempty"`
 	Updated []struct {
@@ -883,11 +883,11 @@ type ModelsDiff struct {
 
 // #region 🔖Connector
 
-// [👤semio📚go💻semiogo🔖connector](semiorepo://section/SEMIO/GO/SEMIO.GO/CONNECTOR)
+// [👤semio📚go💻semiogo🔖connector](semiorepo://section/semio/go/semio.go/Connector)
 // Connector MUST define spatial connector entities and their diff types.
 
 // Connector represents a spatial connection point on a type with position and direction.
-// [👤semio📚go💻semiogo🔖connector✂️connector](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONNECTOR/CONNECTOR)
+// [👤semio📚go💻semiogo🔖connector✂️connector](semiorepo://definition/semio/go/semio.go/Connector/Connector)
 type Connector struct {
 	Guid        string       `json:"guid"`
 	Name        *string      `json:"name,omitempty"`
@@ -902,7 +902,7 @@ type Connector struct {
 }
 
 // PointDiff represents changes to a 3D point.
-// [👤semio📚go💻semiogo🔖connector✂️pointdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONNECTOR/POINT-DIFF)
+// [👤semio📚go💻semiogo🔖connector✂️pointdiff](semiorepo://definition/semio/go/semio.go/Connector/PointDiff)
 type PointDiff struct {
 	X *float64 `json:"x,omitempty"`
 	Y *float64 `json:"y,omitempty"`
@@ -910,7 +910,7 @@ type PointDiff struct {
 }
 
 // VectorDiff represents changes to a 3D vector.
-// [👤semio📚go💻semiogo🔖connector✂️vectordiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONNECTOR/VECTOR-DIFF)
+// [👤semio📚go💻semiogo🔖connector✂️vectordiff](semiorepo://definition/semio/go/semio.go/Connector/VectorDiff)
 type VectorDiff struct {
 	X *float64 `json:"x,omitempty"`
 	Y *float64 `json:"y,omitempty"`
@@ -918,7 +918,7 @@ type VectorDiff struct {
 }
 
 // ConnectorDiff represents changes to a connector entity.
-// [👤semio📚go💻semiogo🔖connector✂️connectordiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONNECTOR/CONNECTOR-DIFF)
+// [👤semio📚go💻semiogo🔖connector✂️connectordiff](semiorepo://definition/semio/go/semio.go/Connector/ConnectorDiff)
 type ConnectorDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Point       *PointDiff      `json:"point,omitempty"`
@@ -932,7 +932,7 @@ type ConnectorDiff struct {
 }
 
 // ConnectorsDiff represents a collection of connector additions, removals and updates.
-// [👤semio📚go💻semiogo🔖connector✂️connectorsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONNECTOR/CONNECTORS-DIFF)
+// [👤semio📚go💻semiogo🔖connector✂️connectorsdiff](semiorepo://definition/semio/go/semio.go/Connector/ConnectorsDiff)
 type ConnectorsDiff struct {
 	Removed []ConnectorId `json:"removed,omitempty"`
 	Updated []struct {
@@ -946,11 +946,11 @@ type ConnectorsDiff struct {
 
 // #region 🔖Type
 
-// [👤semio📚go💻semiogo🔖type](semiorepo://section/SEMIO/GO/SEMIO.GO/TYPE)
+// [👤semio📚go💻semiogo🔖type](semiorepo://section/semio/go/semio.go/Type)
 // Type MUST define component type entities and their diff types.
 
 // Type represents a component type with models, connectors and hierarchical inheritance.
-// [👤semio📚go💻semiogo🔖type✂️type](semiorepo://definition/SEMIO/GO/SEMIO.GO/TYPE/TYPE)
+// [👤semio📚go💻semiogo🔖type✂️type](semiorepo://definition/semio/go/semio.go/Type/Type)
 type Type struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -975,7 +975,7 @@ type Type struct {
 }
 
 // TypeDiff represents changes to a type entity.
-// [👤semio📚go💻semiogo🔖type✂️typediff](semiorepo://definition/SEMIO/GO/SEMIO.GO/TYPE/TYPE-DIFF)
+// [👤semio📚go💻semiogo🔖type✂️typediff](semiorepo://definition/semio/go/semio.go/Type/TypeDiff)
 type TypeDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Parent      *TypeId         `json:"parent,omitempty"`
@@ -999,7 +999,7 @@ type TypeDiff struct {
 
 // UnmarshalJSON MUST populate the setFields map for all present JSON keys.
 // UnmarshalJSON deserializes JSON while tracking which fields were explicitly set.
-// [👤semio📚go💻semiogo🔖type🛠️unmarshaljson](semiorepo://definition/SEMIO/GO/SEMIO.GO/TYPE/UNMARSHAL-JSON)
+// [👤semio📚go💻semiogo🔖type🛠️unmarshaljson](semiorepo://definition/semio/go/semio.go/Type/UnmarshalJSON)
 func (d *TypeDiff) UnmarshalJSON(data []byte) error {
 	type Alias TypeDiff
 	aux := &struct {
@@ -1020,7 +1020,7 @@ func (d *TypeDiff) UnmarshalJSON(data []byte) error {
 
 // HasField MUST return false when setFields is nil.
 // HasField returns whether a JSON field was present in the unmarshaled data.
-// [👤semio📚go💻semiogo🔖type🛠️hasfield](semiorepo://definition/SEMIO/GO/SEMIO.GO/TYPE/HAS-FIELD)
+// [👤semio📚go💻semiogo🔖type🛠️hasfield](semiorepo://definition/semio/go/semio.go/Type/HasField)
 func (d *TypeDiff) HasField(field string) bool {
 	if d.setFields == nil {
 		return false
@@ -1029,7 +1029,7 @@ func (d *TypeDiff) HasField(field string) bool {
 }
 
 // TypesDiff represents a collection of type additions, removals and updates.
-// [👤semio📚go💻semiogo🔖type✂️typesdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/TYPE/TYPES-DIFF)
+// [👤semio📚go💻semiogo🔖type✂️typesdiff](semiorepo://definition/semio/go/semio.go/Type/TypesDiff)
 type TypesDiff struct {
 	Removed []TypeId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1043,11 +1043,11 @@ type TypesDiff struct {
 
 // #region 🔖Layer
 
-// [👤semio📚go💻semiogo🔖layer](semiorepo://section/SEMIO/GO/SEMIO.GO/LAYER)
+// [👤semio📚go💻semiogo🔖layer](semiorepo://section/semio/go/semio.go/Layer)
 // Layer MUST define layer hierarchy entities and their diff types.
 
 // Layer represents a named layer with visibility, lock and color properties.
-// [👤semio📚go💻semiogo🔖layer✂️layer](semiorepo://definition/SEMIO/GO/SEMIO.GO/LAYER/LAYER)
+// [👤semio📚go💻semiogo🔖layer✂️layer](semiorepo://definition/semio/go/semio.go/Layer/Layer)
 type Layer struct {
 	Guid        string      `json:"guid"`
 	Path        string      `json:"path"`
@@ -1059,7 +1059,7 @@ type Layer struct {
 }
 
 // LayerDiff represents changes to a layer entity.
-// [👤semio📚go💻semiogo🔖layer✂️layerdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/LAYER/LAYER-DIFF)
+// [👤semio📚go💻semiogo🔖layer✂️layerdiff](semiorepo://definition/semio/go/semio.go/Layer/LayerDiff)
 type LayerDiff struct {
 	Path        *string         `json:"path,omitempty"`
 	IsHidden    *bool           `json:"isHidden,omitempty"`
@@ -1070,7 +1070,7 @@ type LayerDiff struct {
 }
 
 // LayersDiff represents a collection of layer additions, removals and updates.
-// [👤semio📚go💻semiogo🔖layer✂️layersdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/LAYER/LAYERS-DIFF)
+// [👤semio📚go💻semiogo🔖layer✂️layersdiff](semiorepo://definition/semio/go/semio.go/Layer/LayersDiff)
 type LayersDiff struct {
 	Removed []LayerId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1084,11 +1084,11 @@ type LayersDiff struct {
 
 // #region 🔖Piece
 
-// [👤semio📚go💻semiogo🔖piece](semiorepo://section/SEMIO/GO/SEMIO.GO/PIECE)
+// [👤semio📚go💻semiogo🔖piece](semiorepo://section/semio/go/semio.go/Piece)
 // Piece MUST define placed piece entities and their diff types.
 
 // Piece represents a placed component instance within a design.
-// [👤semio📚go💻semiogo🔖piece✂️piece](semiorepo://definition/SEMIO/GO/SEMIO.GO/PIECE/PIECE)
+// [👤semio📚go💻semiogo🔖piece✂️piece](semiorepo://definition/semio/go/semio.go/Piece/Piece)
 type Piece struct {
 	Guid        string      `json:"guid"`
 	Name        *string     `json:"name,omitempty"`
@@ -1107,14 +1107,14 @@ type Piece struct {
 }
 
 // CoordDiff represents changes to a 2D coordinate.
-// [👤semio📚go💻semiogo🔖piece✂️coorddiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/PIECE/COORD-DIFF)
+// [👤semio📚go💻semiogo🔖piece✂️coorddiff](semiorepo://definition/semio/go/semio.go/Piece/CoordDiff)
 type CoordDiff struct {
 	U *float64 `json:"u,omitempty"`
 	V *float64 `json:"v,omitempty"`
 }
 
 // PlaneDiff represents changes to a 3D plane.
-// [👤semio📚go💻semiogo🔖piece✂️planediff](semiorepo://definition/SEMIO/GO/SEMIO.GO/PIECE/PLANE-DIFF)
+// [👤semio📚go💻semiogo🔖piece✂️planediff](semiorepo://definition/semio/go/semio.go/Piece/PlaneDiff)
 type PlaneDiff struct {
 	Origin *PointDiff  `json:"origin,omitempty"`
 	XAxis  *VectorDiff `json:"xAxis,omitempty"`
@@ -1122,7 +1122,7 @@ type PlaneDiff struct {
 }
 
 // PieceDiff represents changes to a piece entity.
-// [👤semio📚go💻semiogo🔖piece✂️piecediff](semiorepo://definition/SEMIO/GO/SEMIO.GO/PIECE/PIECE-DIFF)
+// [👤semio📚go💻semiogo🔖piece✂️piecediff](semiorepo://definition/semio/go/semio.go/Piece/PieceDiff)
 type PieceDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Type        *TypeId         `json:"type,omitempty"`
@@ -1140,7 +1140,7 @@ type PieceDiff struct {
 }
 
 // PiecesDiff represents a collection of piece additions, removals and updates.
-// [👤semio📚go💻semiogo🔖piece✂️piecesdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/PIECE/PIECES-DIFF)
+// [👤semio📚go💻semiogo🔖piece✂️piecesdiff](semiorepo://definition/semio/go/semio.go/Piece/PiecesDiff)
 type PiecesDiff struct {
 	Removed []PieceId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1154,11 +1154,11 @@ type PiecesDiff struct {
 
 // #region 🔖Group
 
-// [👤semio📚go💻semiogo🔖group](semiorepo://section/SEMIO/GO/SEMIO.GO/GROUP)
+// [👤semio📚go💻semiogo🔖group](semiorepo://section/semio/go/semio.go/Group)
 // Group MUST define piece grouping entities and their diff types.
 
 // Group represents a named collection of pieces within a design.
-// [👤semio📚go💻semiogo🔖group✂️group](semiorepo://definition/SEMIO/GO/SEMIO.GO/GROUP/GROUP)
+// [👤semio📚go💻semiogo🔖group✂️group](semiorepo://definition/semio/go/semio.go/Group/Group)
 type Group struct {
 	Guid        string      `json:"guid"`
 	Pieces      []PieceId   `json:"pieces,omitempty"`
@@ -1169,7 +1169,7 @@ type Group struct {
 }
 
 // GroupDiff represents changes to a group entity.
-// [👤semio📚go💻semiogo🔖group✂️groupdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/GROUP/GROUP-DIFF)
+// [👤semio📚go💻semiogo🔖group✂️groupdiff](semiorepo://definition/semio/go/semio.go/Group/GroupDiff)
 type GroupDiff struct {
 	Pieces      []PieceId       `json:"pieces,omitempty"`
 	Name        *string         `json:"name,omitempty"`
@@ -1179,7 +1179,7 @@ type GroupDiff struct {
 }
 
 // GroupsDiff represents a collection of group additions, removals and updates.
-// [👤semio📚go💻semiogo🔖group✂️groupsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/GROUP/GROUPS-DIFF)
+// [👤semio📚go💻semiogo🔖group✂️groupsdiff](semiorepo://definition/semio/go/semio.go/Group/GroupsDiff)
 type GroupsDiff struct {
 	Removed []GroupId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1193,11 +1193,11 @@ type GroupsDiff struct {
 
 // #region 🔖Side
 
-// [👤semio📚go💻semiogo🔖side](semiorepo://section/SEMIO/GO/SEMIO.GO/SIDE)
+// [👤semio📚go💻semiogo🔖side](semiorepo://section/semio/go/semio.go/Side)
 // Side MUST define connection side reference entities and their diff types.
 
 // Side represents one end of a connection referencing a piece and optional connector.
-// [👤semio📚go💻semiogo🔖side✂️side](semiorepo://definition/SEMIO/GO/SEMIO.GO/SIDE/SIDE)
+// [👤semio📚go💻semiogo🔖side✂️side](semiorepo://definition/semio/go/semio.go/Side/Side)
 type Side struct {
 	Piece       PieceId      `json:"piece"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
@@ -1205,7 +1205,7 @@ type Side struct {
 }
 
 // SideDiff represents changes to a connection side.
-// [👤semio📚go💻semiogo🔖side✂️sidediff](semiorepo://definition/SEMIO/GO/SEMIO.GO/SIDE/SIDE-DIFF)
+// [👤semio📚go💻semiogo🔖side✂️sidediff](semiorepo://definition/semio/go/semio.go/Side/SideDiff)
 type SideDiff struct {
 	Piece       *PieceId     `json:"piece,omitempty"`
 	DesignPiece *PieceId     `json:"designPiece,omitempty"`
@@ -1216,11 +1216,11 @@ type SideDiff struct {
 
 // #region 🔖Connection
 
-// [👤semio📚go💻semiogo🔖connection](semiorepo://section/SEMIO/GO/SEMIO.GO/CONNECTION)
+// [👤semio📚go💻semiogo🔖connection](semiorepo://section/semio/go/semio.go/Connection)
 // Connection MUST define spatial connection entities and their diff types.
 
 // Connection represents a spatial relationship between two pieces with transform parameters.
-// [👤semio📚go💻semiogo🔖connection✂️connection](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONNECTION/CONNECTION)
+// [👤semio📚go💻semiogo🔖connection✂️connection](semiorepo://definition/semio/go/semio.go/Connection/Connection)
 type Connection struct {
 	Guid        string      `json:"guid"`
 	Connected   Side        `json:"connected"`
@@ -1238,7 +1238,7 @@ type Connection struct {
 }
 
 // ConnectionDiff represents changes to a connection entity.
-// [👤semio📚go💻semiogo🔖connection✂️connectiondiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONNECTION/CONNECTION-DIFF)
+// [👤semio📚go💻semiogo🔖connection✂️connectiondiff](semiorepo://definition/semio/go/semio.go/Connection/ConnectionDiff)
 type ConnectionDiff struct {
 	Connected   *SideDiff       `json:"connected,omitempty"`
 	Connecting  *SideDiff       `json:"connecting,omitempty"`
@@ -1255,7 +1255,7 @@ type ConnectionDiff struct {
 }
 
 // ConnectionsDiff represents a collection of connection additions, removals and updates.
-// [👤semio📚go💻semiogo🔖connection✂️connectionsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/CONNECTION/CONNECTIONS-DIFF)
+// [👤semio📚go💻semiogo🔖connection✂️connectionsdiff](semiorepo://definition/semio/go/semio.go/Connection/ConnectionsDiff)
 type ConnectionsDiff struct {
 	Removed []ConnectionId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1269,11 +1269,11 @@ type ConnectionsDiff struct {
 
 // #region 🔖Stat
 
-// [👤semio📚go💻semiogo🔖stat](semiorepo://section/SEMIO/GO/SEMIO.GO/STAT)
+// [👤semio📚go💻semiogo🔖stat](semiorepo://section/semio/go/semio.go/Stat)
 // Stat MUST define statistical measure entities and their diff types.
 
 // Stat represents a statistical quality measurement with min and max bounds.
-// [👤semio📚go💻semiogo🔖stat✂️stat](semiorepo://definition/SEMIO/GO/SEMIO.GO/STAT/STAT)
+// [👤semio📚go💻semiogo🔖stat✂️stat](semiorepo://definition/semio/go/semio.go/Stat/Stat)
 type Stat struct {
 	Guid       string      `json:"guid"`
 	Quality    QualityId   `json:"quality"`
@@ -1284,7 +1284,7 @@ type Stat struct {
 }
 
 // StatDiff represents changes to a stat entity.
-// [👤semio📚go💻semiogo🔖stat✂️statdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/STAT/STAT-DIFF)
+// [👤semio📚go💻semiogo🔖stat✂️statdiff](semiorepo://definition/semio/go/semio.go/Stat/StatDiff)
 type StatDiff struct {
 	Quality    *QualityId      `json:"quality,omitempty"`
 	Min        *float64        `json:"min,omitempty"`
@@ -1294,7 +1294,7 @@ type StatDiff struct {
 }
 
 // StatsDiff represents a collection of stat additions, removals and updates.
-// [👤semio📚go💻semiogo🔖stat✂️statsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/STAT/STATS-DIFF)
+// [👤semio📚go💻semiogo🔖stat✂️statsdiff](semiorepo://definition/semio/go/semio.go/Stat/StatsDiff)
 type StatsDiff struct {
 	Removed []StatId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1308,11 +1308,11 @@ type StatsDiff struct {
 
 // #region 🔖Design
 
-// [👤semio📚go💻semiogo🔖design](semiorepo://section/SEMIO/GO/SEMIO.GO/DESIGN)
+// [👤semio📚go💻semiogo🔖design](semiorepo://section/semio/go/semio.go/Design)
 // Design MUST define assembly design entities and their diff types.
 
 // Design represents an assembly of pieces, connections, layers and groups.
-// [👤semio📚go💻semiogo🔖design✂️design](semiorepo://definition/SEMIO/GO/SEMIO.GO/DESIGN/DESIGN)
+// [👤semio📚go💻semiogo🔖design✂️design](semiorepo://definition/semio/go/semio.go/Design/Design)
 type Design struct {
 	Guid        string       `json:"guid"`
 	Name        string       `json:"name"`
@@ -1342,7 +1342,7 @@ type Design struct {
 }
 
 // CameraDiff represents changes to a camera view.
-// [👤semio📚go💻semiogo🔖design✂️cameradiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/DESIGN/CAMERA-DIFF)
+// [👤semio📚go💻semiogo🔖design✂️cameradiff](semiorepo://definition/semio/go/semio.go/Design/CameraDiff)
 type CameraDiff struct {
 	Position *PointDiff  `json:"position,omitempty"`
 	Forward  *VectorDiff `json:"forward,omitempty"`
@@ -1350,7 +1350,7 @@ type CameraDiff struct {
 }
 
 // DesignDiff represents changes to a design entity.
-// [👤semio📚go💻semiogo🔖design✂️designdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/DESIGN/DESIGN-DIFF)
+// [👤semio📚go💻semiogo🔖design✂️designdiff](semiorepo://definition/semio/go/semio.go/Design/DesignDiff)
 type DesignDiff struct {
 	Name        *string          `json:"name,omitempty"`
 	Parent      *DesignId        `json:"parent,omitempty"`
@@ -1377,7 +1377,7 @@ type DesignDiff struct {
 }
 
 // DesignsDiff represents a collection of design additions, removals and updates.
-// [👤semio📚go💻semiogo🔖design✂️designsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/DESIGN/DESIGNS-DIFF)
+// [👤semio📚go💻semiogo🔖design✂️designsdiff](semiorepo://definition/semio/go/semio.go/Design/DesignsDiff)
 type DesignsDiff struct {
 	Removed []DesignId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1391,11 +1391,11 @@ type DesignsDiff struct {
 
 // #region 🔖Kit
 
-// [👤semio📚go💻semiogo🔖kit](semiorepo://section/SEMIO/GO/SEMIO.GO/KIT)
+// [👤semio📚go💻semiogo🔖kit](semiorepo://section/semio/go/semio.go/Kit)
 // Kit MUST define the root kit container entity and its diff types.
 
 // Kit represents the root container for all domain entities.
-// [👤semio📚go💻semiogo🔖kit✂️kit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT/KIT)
+// [👤semio📚go💻semiogo🔖kit✂️kit](semiorepo://definition/semio/go/semio.go/Kit/Kit)
 type Kit struct {
 	Guid        string      `json:"guid"`
 	Name        string      `json:"name"`
@@ -1422,7 +1422,7 @@ type Kit struct {
 }
 
 // KitDiff represents changes to a kit entity.
-// [👤semio📚go💻semiogo🔖kit✂️kitdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT/KIT-DIFF)
+// [👤semio📚go💻semiogo🔖kit✂️kitdiff](semiorepo://definition/semio/go/semio.go/Kit/KitDiff)
 type KitDiff struct {
 	Name        *string         `json:"name,omitempty"`
 	Version     *string         `json:"version,omitempty"`
@@ -1447,7 +1447,7 @@ type KitDiff struct {
 }
 
 // KitsDiff represents a collection of kit additions, removals and updates.
-// [👤semio📚go💻semiogo🔖kit✂️kitsdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT/KITS-DIFF)
+// [👤semio📚go💻semiogo🔖kit✂️kitsdiff](semiorepo://definition/semio/go/semio.go/Kit/KitsDiff)
 type KitsDiff struct {
 	Removed []KitId `json:"removed,omitempty"`
 	Updated []struct {
@@ -1461,19 +1461,19 @@ type KitsDiff struct {
 
 // #region 🔖Serialization
 
-// [👤semio📚go💻semiogo🔖serialization](semiorepo://section/SEMIO/GO/SEMIO.GO/SERIALIZATION)
+// [👤semio📚go💻semiogo🔖serialization](semiorepo://section/semio/go/semio.go/Serialization)
 // Serialization MUST provide JSON marshaling and unmarshaling for kit data.
 
 // SerializeKit MUST return valid JSON with two-space indentation.
 // SerializeKit marshals a kit to indented JSON bytes.
-// [👤semio📚go💻semiogo🔖serialization🛠️serializekit](semiorepo://definition/SEMIO/GO/SEMIO.GO/SERIALIZATION/SERIALIZE-KIT)
+// [👤semio📚go💻semiogo🔖serialization🛠️serializekit](semiorepo://definition/semio/go/semio.go/Serialization/SerializeKit)
 func SerializeKit(kit Kit) ([]byte, error) {
 	return json.MarshalIndent(kit, "", "  ")
 }
 
 // DeserializeKit MUST return an error if the data is not valid kit JSON.
 // DeserializeKit unmarshals JSON bytes into a kit.
-// [👤semio📚go💻semiogo🔖serialization🛠️deserializekit](semiorepo://definition/SEMIO/GO/SEMIO.GO/SERIALIZATION/DESERIALIZE-KIT)
+// [👤semio📚go💻semiogo🔖serialization🛠️deserializekit](semiorepo://definition/semio/go/semio.go/Serialization/DeserializeKit)
 func DeserializeKit(data []byte) (Kit, error) {
 	var kit Kit
 	err := json.Unmarshal(data, &kit)
@@ -1482,14 +1482,14 @@ func DeserializeKit(data []byte) (Kit, error) {
 
 // SerializeKitDiff MUST return valid JSON with two-space indentation.
 // SerializeKitDiff marshals a kit diff to indented JSON bytes.
-// [👤semio📚go💻semiogo🔖serialization🛠️serializekitdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/SERIALIZATION/SERIALIZE-KIT-DIFF)
+// [👤semio📚go💻semiogo🔖serialization🛠️serializekitdiff](semiorepo://definition/semio/go/semio.go/Serialization/SerializeKitDiff)
 func SerializeKitDiff(diff KitDiff) ([]byte, error) {
 	return json.MarshalIndent(diff, "", "  ")
 }
 
 // DeserializeKitDiff MUST return an error if the data is not valid kit diff JSON.
 // DeserializeKitDiff unmarshals JSON bytes into a kit diff.
-// [👤semio📚go💻semiogo🔖serialization🛠️deserializekitdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/SERIALIZATION/DESERIALIZE-KIT-DIFF)
+// [👤semio📚go💻semiogo🔖serialization🛠️deserializekitdiff](semiorepo://definition/semio/go/semio.go/Serialization/DeserializeKitDiff)
 func DeserializeKitDiff(data []byte) (KitDiff, error) {
 	var diff KitDiff
 	err := json.Unmarshal(data, &diff)
@@ -1500,12 +1500,12 @@ func DeserializeKitDiff(data []byte) (KitDiff, error) {
 
 // #region 🔖Helpers
 
-// [👤semio📚go💻semiogo🔖helpers](semiorepo://section/SEMIO/GO/SEMIO.GO/HELPERS)
+// [👤semio📚go💻semiogo🔖helpers](semiorepo://section/semio/go/semio.go/Helpers)
 // Helpers MUST provide lookup functions for finding entities within kits.
 
 // FindTypeInKit MUST return nil when no type matches the GUID.
 // FindTypeInKit returns a pointer to the type with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findtypeinkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-TYPE-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️findtypeinkit](semiorepo://definition/semio/go/semio.go/Helpers/FindTypeInKit)
 func FindTypeInKit(kit *Kit, typeGuid string) *Type {
 	for i := range kit.Types {
 		if kit.Types[i].Guid == typeGuid {
@@ -1517,7 +1517,7 @@ func FindTypeInKit(kit *Kit, typeGuid string) *Type {
 
 // FindDesignInKit MUST return nil when no design matches the GUID.
 // FindDesignInKit returns a pointer to the design with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️finddesigninkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-DESIGN-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️finddesigninkit](semiorepo://definition/semio/go/semio.go/Helpers/FindDesignInKit)
 func FindDesignInKit(kit *Kit, designGuid string) *Design {
 	for i := range kit.Designs {
 		if kit.Designs[i].Guid == designGuid {
@@ -1529,7 +1529,7 @@ func FindDesignInKit(kit *Kit, designGuid string) *Design {
 
 // FindPieceInDesign MUST return nil when no piece matches the GUID.
 // FindPieceInDesign returns a pointer to the piece with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findpieceindesign](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-PIECE-IN-DESIGN)
+// [👤semio📚go💻semiogo🔖helpers🛠️findpieceindesign](semiorepo://definition/semio/go/semio.go/Helpers/FindPieceInDesign)
 func FindPieceInDesign(design *Design, pieceGuid string) *Piece {
 	for i := range design.Pieces {
 		if design.Pieces[i].Guid == pieceGuid {
@@ -1541,7 +1541,7 @@ func FindPieceInDesign(design *Design, pieceGuid string) *Piece {
 
 // FindConnectionInDesign MUST return nil when no connection matches the GUID.
 // FindConnectionInDesign returns a pointer to the connection with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findconnectionindesign](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-CONNECTION-IN-DESIGN)
+// [👤semio📚go💻semiogo🔖helpers🛠️findconnectionindesign](semiorepo://definition/semio/go/semio.go/Helpers/FindConnectionInDesign)
 func FindConnectionInDesign(design *Design, connectionGuid string) *Connection {
 	for i := range design.Connections {
 		if design.Connections[i].Guid == connectionGuid {
@@ -1553,7 +1553,7 @@ func FindConnectionInDesign(design *Design, connectionGuid string) *Connection {
 
 // FindConnectorInType MUST return nil when no connector matches the GUID.
 // FindConnectorInType returns a pointer to the connector with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findconnectorintype](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-CONNECTOR-IN-TYPE)
+// [👤semio📚go💻semiogo🔖helpers🛠️findconnectorintype](semiorepo://definition/semio/go/semio.go/Helpers/FindConnectorInType)
 func FindConnectorInType(typ *Type, connectorGuid string) *Connector {
 	for i := range typ.Connectors {
 		if typ.Connectors[i].Guid == connectorGuid {
@@ -1565,7 +1565,7 @@ func FindConnectorInType(typ *Type, connectorGuid string) *Connector {
 
 // FindFileInKit MUST return nil when no file matches the GUID.
 // FindFileInKit returns a pointer to the file with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findfileinkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-FILE-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️findfileinkit](semiorepo://definition/semio/go/semio.go/Helpers/FindFileInKit)
 func FindFileInKit(kit *Kit, fileGuid string) *File {
 	for i := range kit.Files {
 		if kit.Files[i].Guid == fileGuid {
@@ -1577,7 +1577,7 @@ func FindFileInKit(kit *Kit, fileGuid string) *File {
 
 // FindFolderInKit MUST return nil when no folder matches the GUID.
 // FindFolderInKit returns a pointer to the folder with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findfolderinkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-FOLDER-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️findfolderinkit](semiorepo://definition/semio/go/semio.go/Helpers/FindFolderInKit)
 func FindFolderInKit(kit *Kit, folderGuid string) *Folder {
 	for i := range kit.Folders {
 		if kit.Folders[i].Guid == folderGuid {
@@ -1589,7 +1589,7 @@ func FindFolderInKit(kit *Kit, folderGuid string) *Folder {
 
 // FindQualityInKit MUST return nil when no quality matches the GUID.
 // FindQualityInKit returns a pointer to the quality with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findqualityinkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-QUALITY-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️findqualityinkit](semiorepo://definition/semio/go/semio.go/Helpers/FindQualityInKit)
 func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
 	for i := range kit.Qualities {
 		if kit.Qualities[i].Guid == qualityGuid {
@@ -1601,7 +1601,7 @@ func FindQualityInKit(kit *Kit, qualityGuid string) *Quality {
 
 // FindPortInKit MUST return nil when no port matches the GUID.
 // FindPortInKit returns a pointer to the port with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findportinkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-PORT-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️findportinkit](semiorepo://definition/semio/go/semio.go/Helpers/FindPortInKit)
 func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
 	for i := range kit.Ports {
 		if kit.Ports[i].Guid == interfaceGuid {
@@ -1613,7 +1613,7 @@ func FindPortInKit(kit *Kit, interfaceGuid string) *Port {
 
 // FindTagInKit MUST return nil when no tag matches the GUID.
 // FindTagInKit returns a pointer to the tag with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findtaginkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-TAG-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️findtaginkit](semiorepo://definition/semio/go/semio.go/Helpers/FindTagInKit)
 func FindTagInKit(kit *Kit, tagGuid string) *Tag {
 	for i := range kit.Tags {
 		if kit.Tags[i].Guid == tagGuid {
@@ -1625,7 +1625,7 @@ func FindTagInKit(kit *Kit, tagGuid string) *Tag {
 
 // FindConceptInKit MUST return nil when no concept matches the GUID.
 // FindConceptInKit returns a pointer to the concept with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findconceptinkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-CONCEPT-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️findconceptinkit](semiorepo://definition/semio/go/semio.go/Helpers/FindConceptInKit)
 func FindConceptInKit(kit *Kit, conceptGuid string) *Concept {
 	for i := range kit.Concepts {
 		if kit.Concepts[i].Guid == conceptGuid {
@@ -1637,7 +1637,7 @@ func FindConceptInKit(kit *Kit, conceptGuid string) *Concept {
 
 // FindAuthorInKit MUST return nil when no author matches the GUID.
 // FindAuthorInKit returns a pointer to the author with the given GUID or nil.
-// [👤semio📚go💻semiogo🔖helpers🛠️findauthorinkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/HELPERS/FIND-AUTHOR-IN-KIT)
+// [👤semio📚go💻semiogo🔖helpers🛠️findauthorinkit](semiorepo://definition/semio/go/semio.go/Helpers/FindAuthorInKit)
 func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
 	for i := range kit.Authors {
 		if kit.Authors[i].Guid == authorGuid {
@@ -1651,12 +1651,12 @@ func FindAuthorInKit(kit *Kit, authorGuid string) *Author {
 
 // #region 🔖Factories
 
-// [👤semio📚go💻semiogo🔖factories](semiorepo://section/SEMIO/GO/SEMIO.GO/FACTORIES)
+// [👤semio📚go💻semiogo🔖factories](semiorepo://section/semio/go/semio.go/Factories)
 // Factories MUST provide constructor functions for creating new domain entities.
 
 // NewKit MUST generate a unique GUID and set version to 0.0.1.
 // NewKit creates a new kit with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-KIT)
+// [👤semio📚go💻semiogo🔖factories🛠️newkit](semiorepo://definition/semio/go/semio.go/Factories/NewKit)
 func NewKit(name string) Kit {
 	now := ""
 	return Kit{
@@ -1670,7 +1670,7 @@ func NewKit(name string) Kit {
 
 // NewType MUST generate a unique GUID for the new type.
 // NewType creates a new type with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newtype](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-TYPE)
+// [👤semio📚go💻semiogo🔖factories🛠️newtype](semiorepo://definition/semio/go/semio.go/Factories/NewType)
 func NewType(name string) Type {
 	now := ""
 	return Type{
@@ -1683,7 +1683,7 @@ func NewType(name string) Type {
 
 // NewDesign MUST generate a unique GUID for the new design.
 // NewDesign creates a new design with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newdesign](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-DESIGN)
+// [👤semio📚go💻semiogo🔖factories🛠️newdesign](semiorepo://definition/semio/go/semio.go/Factories/NewDesign)
 func NewDesign(name string) Design {
 	now := ""
 	return Design{
@@ -1696,7 +1696,7 @@ func NewDesign(name string) Design {
 
 // NewPiece MUST generate a unique GUID for the new piece.
 // NewPiece creates a new piece with a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newpiece](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-PIECE)
+// [👤semio📚go💻semiogo🔖factories🛠️newpiece](semiorepo://definition/semio/go/semio.go/Factories/NewPiece)
 func NewPiece() Piece {
 	return Piece{
 		Guid: Guid(),
@@ -1705,7 +1705,7 @@ func NewPiece() Piece {
 
 // NewConnection MUST generate a unique GUID and set both connected and connecting sides.
 // NewConnection creates a new connection between two pieces by their GUIDs.
-// [👤semio📚go💻semiogo🔖factories🛠️newconnection](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-CONNECTION)
+// [👤semio📚go💻semiogo🔖factories🛠️newconnection](semiorepo://definition/semio/go/semio.go/Factories/NewConnection)
 func NewConnection(connectedPieceGuid, connectingPieceGuid string) Connection {
 	return Connection{
 		Guid:       Guid(),
@@ -1716,7 +1716,7 @@ func NewConnection(connectedPieceGuid, connectingPieceGuid string) Connection {
 
 // NewConnector MUST generate a unique GUID for the new connector.
 // NewConnector creates a new connector with position, direction and parameter t.
-// [👤semio📚go💻semiogo🔖factories🛠️newconnector](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-CONNECTOR)
+// [👤semio📚go💻semiogo🔖factories🛠️newconnector](semiorepo://definition/semio/go/semio.go/Factories/NewConnector)
 func NewConnector(point Point, direction Vector, t float64) Connector {
 	return Connector{
 		Guid:      Guid(),
@@ -1728,7 +1728,7 @@ func NewConnector(point Point, direction Vector, t float64) Connector {
 
 // NewFile MUST generate a unique GUID for the new file.
 // NewFile creates a new file with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newfile](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-FILE)
+// [👤semio📚go💻semiogo🔖factories🛠️newfile](semiorepo://definition/semio/go/semio.go/Factories/NewFile)
 func NewFile(name string) File {
 	now := ""
 	return File{
@@ -1741,7 +1741,7 @@ func NewFile(name string) File {
 
 // NewFolder MUST generate a unique GUID for the new folder.
 // NewFolder creates a new folder with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newfolder](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-FOLDER)
+// [👤semio📚go💻semiogo🔖factories🛠️newfolder](semiorepo://definition/semio/go/semio.go/Factories/NewFolder)
 func NewFolder(name string) Folder {
 	now := ""
 	return Folder{
@@ -1754,7 +1754,7 @@ func NewFolder(name string) Folder {
 
 // NewQuality MUST generate a unique GUID for the new quality.
 // NewQuality creates a new quality with the given key, name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newquality](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-QUALITY)
+// [👤semio📚go💻semiogo🔖factories🛠️newquality](semiorepo://definition/semio/go/semio.go/Factories/NewQuality)
 func NewQuality(key, name string) Quality {
 	now := ""
 	return Quality{
@@ -1768,7 +1768,7 @@ func NewQuality(key, name string) Quality {
 
 // NewPort MUST generate a unique GUID for the new port.
 // NewPort creates a new port with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newport](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-PORT)
+// [👤semio📚go💻semiogo🔖factories🛠️newport](semiorepo://definition/semio/go/semio.go/Factories/NewPort)
 func NewPort(name string) Port {
 	now := ""
 	return Port{
@@ -1781,7 +1781,7 @@ func NewPort(name string) Port {
 
 // NewTag MUST generate a unique GUID for the new tag.
 // NewTag creates a new tag with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newtag](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-TAG)
+// [👤semio📚go💻semiogo🔖factories🛠️newtag](semiorepo://definition/semio/go/semio.go/Factories/NewTag)
 func NewTag(name string) Tag {
 	now := ""
 	return Tag{
@@ -1794,7 +1794,7 @@ func NewTag(name string) Tag {
 
 // NewConcept MUST generate a unique GUID for the new concept.
 // NewConcept creates a new concept with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newconcept](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-CONCEPT)
+// [👤semio📚go💻semiogo🔖factories🛠️newconcept](semiorepo://definition/semio/go/semio.go/Factories/NewConcept)
 func NewConcept(name string) Concept {
 	now := ""
 	return Concept{
@@ -1807,7 +1807,7 @@ func NewConcept(name string) Concept {
 
 // NewAuthor MUST generate a unique GUID for the new author.
 // NewAuthor creates a new author with the given name and a generated GUID.
-// [👤semio📚go💻semiogo🔖factories🛠️newauthor](semiorepo://definition/SEMIO/GO/SEMIO.GO/FACTORIES/NEW-AUTHOR)
+// [👤semio📚go💻semiogo🔖factories🛠️newauthor](semiorepo://definition/semio/go/semio.go/Factories/NewAuthor)
 func NewAuthor(name string) Author {
 	now := ""
 	return Author{
@@ -1822,12 +1822,12 @@ func NewAuthor(name string) Author {
 
 // #region 🔖Kit Operations
 
-// [👤semio📚go💻semiogo🔖kitoperations](semiorepo://section/SEMIO/GO/SEMIO.GO/KIT-OPERATIONS)
+// [👤semio📚go💻semiogo🔖kitoperations](semiorepo://section/semio/go/semio.go/Kit%20Operations)
 // Kit Operations MUST provide comparison, diffing, and application of kit changes.
 
 // AreKitsEqual MUST compare all entities by GUID and structural fields.
 // AreKitsEqual compares two kits for structural equality.
-// [👤semio📚go💻semiogo🔖kitoperations🛠️arekitsequal](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-OPERATIONS/ARE-KITS-EQUAL)
+// [👤semio📚go💻semiogo🔖kitoperations🛠️arekitsequal](semiorepo://definition/semio/go/semio.go/Kit%20Operations/AreKitsEqual)
 func AreKitsEqual(a, b Kit) bool {
 	if a.Guid != b.Guid || a.Name != b.Name || a.Version != b.Version {
 		return false
@@ -2002,7 +2002,7 @@ func AreKitsEqual(a, b Kit) bool {
 
 // AreKitDiffsEqual MUST compare all diff fields including nested entity diffs.
 // AreKitDiffsEqual compares two kit diffs for structural equality.
-// [👤semio📚go💻semiogo🔖kitoperations🛠️arekitdiffsequal](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-OPERATIONS/ARE-KIT-DIFFS-EQUAL)
+// [👤semio📚go💻semiogo🔖kitoperations🛠️arekitdiffsequal](semiorepo://definition/semio/go/semio.go/Kit%20Operations/AreKitDiffsEqual)
 func AreKitDiffsEqual(a, b KitDiff) bool {
 	if (a.Name == nil) != (b.Name == nil) {
 		return false
@@ -2323,7 +2323,7 @@ func areAuthorsDiffsEqual(a, b *AuthorsDiff) bool {
 
 // GetKitDiff MUST return a diff that when applied to before produces after.
 // GetKitDiff computes the diff between a before and after kit state.
-// [👤semio📚go💻semiogo🔖kitoperations🛠️getkitdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-OPERATIONS/GET-KIT-DIFF)
+// [👤semio📚go💻semiogo🔖kitoperations🛠️getkitdiff](semiorepo://definition/semio/go/semio.go/Kit%20Operations/GetKitDiff)
 func GetKitDiff(before, after Kit) KitDiff {
 	diff := KitDiff{}
 	if before.Name != after.Name {
@@ -2755,7 +2755,7 @@ func isAuthorDiffEmpty(diff AuthorDiff) bool {
 
 // InverseKitDiff MUST return a diff that when applied restores the original state.
 // InverseKitDiff computes the reverse diff that undoes an applied diff.
-// [👤semio📚go💻semiogo🔖kitoperations🛠️inversekitdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-OPERATIONS/INVERSE-KIT-DIFF)
+// [👤semio📚go💻semiogo🔖kitoperations🛠️inversekitdiff](semiorepo://definition/semio/go/semio.go/Kit%20Operations/InverseKitDiff)
 func InverseKitDiff(original Kit, appliedDiff KitDiff) KitDiff {
 	inverse := KitDiff{}
 	if appliedDiff.Name != nil {
@@ -3348,7 +3348,7 @@ func areAuthorsEqual(a, b Author) bool {
 
 // ApplyKitDiff MUST apply all additions, removals and updates from the diff.
 // ApplyKitDiff applies a diff to a base kit producing the updated kit.
-// [👤semio📚go💻semiogo🔖kitoperations🛠️applykitdiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-OPERATIONS/APPLY-KIT-DIFF)
+// [👤semio📚go💻semiogo🔖kitoperations🛠️applykitdiff](semiorepo://definition/semio/go/semio.go/Kit%20Operations/ApplyKitDiff)
 func ApplyKitDiff(base Kit, diff KitDiff) Kit {
 	result := base
 	if diff.Name != nil {
@@ -3928,7 +3928,7 @@ func applyAuthorDiff(base Author, diff AuthorDiff) Author {
 
 // FilterDesignsWithoutParent MUST exclude all designs that have a non-nil parent.
 // FilterDesignsWithoutParent returns only root-level designs with no parent.
-// [👤semio📚go💻semiogo🔖kitoperations🛠️filterdesignswithoutparent](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-OPERATIONS/FILTER-DESIGNS-WITHOUT-PARENT)
+// [👤semio📚go💻semiogo🔖kitoperations🛠️filterdesignswithoutparent](semiorepo://definition/semio/go/semio.go/Kit%20Operations/FilterDesignsWithoutParent)
 func FilterDesignsWithoutParent(designs []Design) []Design {
 	result := make([]Design, 0)
 	for _, d := range designs {
@@ -3943,12 +3943,12 @@ func FilterDesignsWithoutParent(designs []Design) []Design {
 
 // #region 🔖Kit Diff Helpers
 
-// [👤semio📚go💻semiogo🔖kitdiffhelpers](semiorepo://section/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers](semiorepo://section/semio/go/semio.go/Kit%20Diff%20Helpers)
 // Kit Diff Helpers MUST provide convenience functions for single-entity kit diffs.
 
 // AddTypeToKit MUST return a diff with exactly one added type.
 // AddTypeToKit creates a diff that adds a single type to a kit.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addtypetokit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/ADD-TYPE-TO-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addtypetokit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/AddTypeToKit)
 func AddTypeToKit(typ Type) KitDiff {
 	return KitDiff{
 		Types: &TypesDiff{
@@ -3959,7 +3959,7 @@ func AddTypeToKit(typ Type) KitDiff {
 
 // RemoveTypeFromKit MUST return a diff with exactly one removed type ID.
 // RemoveTypeFromKit creates a diff that removes a type by GUID.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removetypefromkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/REMOVE-TYPE-FROM-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removetypefromkit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/RemoveTypeFromKit)
 func RemoveTypeFromKit(typeGuid string) KitDiff {
 	return KitDiff{
 		Types: &TypesDiff{
@@ -3970,7 +3970,7 @@ func RemoveTypeFromKit(typeGuid string) KitDiff {
 
 // AddDesignToKit MUST return a diff with exactly one added design.
 // AddDesignToKit creates a diff that adds a single design to a kit.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️adddesigntokit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/ADD-DESIGN-TO-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️adddesigntokit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/AddDesignToKit)
 func AddDesignToKit(design Design) KitDiff {
 	return KitDiff{
 		Designs: &DesignsDiff{
@@ -3981,7 +3981,7 @@ func AddDesignToKit(design Design) KitDiff {
 
 // RemoveDesignFromKit MUST return a diff with exactly one removed design ID.
 // RemoveDesignFromKit creates a diff that removes a design by GUID.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removedesignfromkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/REMOVE-DESIGN-FROM-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removedesignfromkit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/RemoveDesignFromKit)
 func RemoveDesignFromKit(designGuid string) KitDiff {
 	return KitDiff{
 		Designs: &DesignsDiff{
@@ -3992,7 +3992,7 @@ func RemoveDesignFromKit(designGuid string) KitDiff {
 
 // AddFileToKit MUST return a diff with exactly one added file.
 // AddFileToKit creates a diff that adds a single file to a kit.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addfiletokit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/ADD-FILE-TO-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addfiletokit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/AddFileToKit)
 func AddFileToKit(file File) KitDiff {
 	return KitDiff{
 		Files: &FilesDiff{
@@ -4003,7 +4003,7 @@ func AddFileToKit(file File) KitDiff {
 
 // RemoveFileFromKit MUST return a diff with exactly one removed file ID.
 // RemoveFileFromKit creates a diff that removes a file by GUID.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removefilefromkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/REMOVE-FILE-FROM-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removefilefromkit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/RemoveFileFromKit)
 func RemoveFileFromKit(fileGuid string) KitDiff {
 	return KitDiff{
 		Files: &FilesDiff{
@@ -4014,7 +4014,7 @@ func RemoveFileFromKit(fileGuid string) KitDiff {
 
 // AddPortToKit MUST return a diff with exactly one added port.
 // AddPortToKit creates a diff that adds a single port to a kit.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addporttokit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/ADD-PORT-TO-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addporttokit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/AddPortToKit)
 func AddPortToKit(iface Port) KitDiff {
 	return KitDiff{
 		Ports: &PortsDiff{
@@ -4025,7 +4025,7 @@ func AddPortToKit(iface Port) KitDiff {
 
 // RemovePortFromKit MUST return a diff with exactly one removed port ID.
 // RemovePortFromKit creates a diff that removes a port by GUID.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removeportfromkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/REMOVE-PORT-FROM-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removeportfromkit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/RemovePortFromKit)
 func RemovePortFromKit(interfaceGuid string) KitDiff {
 	return KitDiff{
 		Ports: &PortsDiff{
@@ -4036,7 +4036,7 @@ func RemovePortFromKit(interfaceGuid string) KitDiff {
 
 // AddTagToKit MUST return a diff with exactly one added tag.
 // AddTagToKit creates a diff that adds a single tag to a kit.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addtagtokit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/ADD-TAG-TO-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addtagtokit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/AddTagToKit)
 func AddTagToKit(tag Tag) KitDiff {
 	return KitDiff{
 		Tags: &TagsDiff{
@@ -4047,7 +4047,7 @@ func AddTagToKit(tag Tag) KitDiff {
 
 // RemoveTagFromKit MUST return a diff with exactly one removed tag ID.
 // RemoveTagFromKit creates a diff that removes a tag by GUID.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removetagfromkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/REMOVE-TAG-FROM-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removetagfromkit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/RemoveTagFromKit)
 func RemoveTagFromKit(tagGuid string) KitDiff {
 	return KitDiff{
 		Tags: &TagsDiff{
@@ -4058,7 +4058,7 @@ func RemoveTagFromKit(tagGuid string) KitDiff {
 
 // AddConceptToKit MUST return a diff with exactly one added concept.
 // AddConceptToKit creates a diff that adds a single concept to a kit.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addconcepttokit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/ADD-CONCEPT-TO-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️addconcepttokit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/AddConceptToKit)
 func AddConceptToKit(concept Concept) KitDiff {
 	return KitDiff{
 		Concepts: &ConceptsDiff{
@@ -4069,7 +4069,7 @@ func AddConceptToKit(concept Concept) KitDiff {
 
 // RemoveConceptFromKit MUST return a diff with exactly one removed concept ID.
 // RemoveConceptFromKit creates a diff that removes a concept by GUID.
-// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removeconceptfromkit](semiorepo://definition/SEMIO/GO/SEMIO.GO/KIT-DIFF-HELPERS/REMOVE-CONCEPT-FROM-KIT)
+// [👤semio📚go💻semiogo🔖kitdiffhelpers🛠️removeconceptfromkit](semiorepo://definition/semio/go/semio.go/Kit%20Diff%20Helpers/RemoveConceptFromKit)
 func RemoveConceptFromKit(conceptGuid string) KitDiff {
 	return KitDiff{
 		Concepts: &ConceptsDiff{
@@ -4082,11 +4082,11 @@ func RemoveConceptFromKit(conceptGuid string) KitDiff {
 
 // #region 🔖Validation
 
-// [👤semio📚go💻semiogo🔖validation](semiorepo://section/SEMIO/GO/SEMIO.GO/VALIDATION)
+// [👤semio📚go💻semiogo🔖validation](semiorepo://section/semio/go/semio.go/Validation)
 // Validation MUST provide constraint-based validation of kit data integrity.
 
 // SemioEntityKind enumerates the kinds of semio domain entities.
-// [👤semio📚go💻semiogo🔖validation✂️semioentitykind](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/SEMIO-ENTITY-KIND)
+// [👤semio📚go💻semiogo🔖validation✂️semioentitykind](semiorepo://definition/semio/go/semio.go/Validation/SemioEntityKind)
 type SemioEntityKind string
 
 const (
@@ -4112,7 +4112,7 @@ const (
 )
 
 // Severity enumerates validation problem severity levels.
-// [👤semio📚go💻semiogo🔖validation✂️severity](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/SEVERITY)
+// [👤semio📚go💻semiogo🔖validation✂️severity](semiorepo://definition/semio/go/semio.go/Validation/Severity)
 type Severity string
 
 const (
@@ -4121,7 +4121,7 @@ const (
 )
 
 // DomainLocation identifies the entity and field where a validation problem occurs.
-// [👤semio📚go💻semiogo🔖validation✂️domainlocation](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/DOMAIN-LOCATION)
+// [👤semio📚go💻semiogo🔖validation✂️domainlocation](semiorepo://definition/semio/go/semio.go/Validation/DomainLocation)
 type DomainLocation struct {
 	EntityKind SemioEntityKind `json:"entityKind"`
 	EntityGuid string          `json:"entityGuid,omitempty"`
@@ -4129,14 +4129,14 @@ type DomainLocation struct {
 }
 
 // Fix represents a suggested correction for a validation problem.
-// [👤semio📚go💻semiogo🔖validation✂️fix](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/FIX)
+// [👤semio📚go💻semiogo🔖validation✂️fix](semiorepo://definition/semio/go/semio.go/Validation/Fix)
 type Fix struct {
 	Title string  `json:"title"`
 	Diff  KitDiff `json:"diff"`
 }
 
 // Problem represents a single validation constraint breach.
-// [👤semio📚go💻semiogo🔖validation✂️problem](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/PROBLEM)
+// [👤semio📚go💻semiogo🔖validation✂️problem](semiorepo://definition/semio/go/semio.go/Validation/Problem)
 type Problem struct {
 	ConstraintId string         `json:"constraintId"`
 	Severity     Severity       `json:"severity,omitempty"`
@@ -4147,13 +4147,13 @@ type Problem struct {
 }
 
 // ValidationResult contains all problems found during kit validation.
-// [👤semio📚go💻semiogo🔖validation✂️validationresult](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATION-RESULT)
+// [👤semio📚go💻semiogo🔖validation✂️validationresult](semiorepo://definition/semio/go/semio.go/Validation/ValidationResult)
 type ValidationResult struct {
 	Problems []Problem `json:"problems"`
 }
 
 // ValidationContext provides indexed access to kit entities for constraint evaluation.
-// [👤semio📚go💻semiogo🔖validation✂️validationcontext](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATION-CONTEXT)
+// [👤semio📚go💻semiogo🔖validation✂️validationcontext](semiorepo://definition/semio/go/semio.go/Validation/ValidationContext)
 type ValidationContext struct {
 	Kit                Kit
 	TypesByGuid        map[string]*Type
@@ -4167,7 +4167,7 @@ type ValidationContext struct {
 }
 
 // Constraint is a function that evaluates a validation rule against a kit context.
-// [👤semio📚go💻semiogo🔖validation✂️constraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation✂️constraint](semiorepo://definition/semio/go/semio.go/Validation/Constraint)
 type Constraint func(ctx *ValidationContext) []Problem
 
 func buildValidationContext(kit Kit) *ValidationContext {
@@ -4223,7 +4223,7 @@ func makeFix(ctx *ValidationContext, title string, mutate func(clone *Kit)) Fix 
 
 // GuidUniquenessConstraint MUST report each duplicate GUID as a separate problem.
 // GuidUniquenessConstraint checks that all entity GUIDs are unique within a kit.
-// [👤semio📚go💻semiogo🔖validation🛠️guiduniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/GUID-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️guiduniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/GuidUniquenessConstraint)
 func GuidUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	seen := make(map[string]SemioEntityKind)
@@ -4372,7 +4372,7 @@ func updateGuidEverywhere(kit *Kit, oldGuid, newGuid string) {
 
 // TypeNameUniquenessConstraint MUST report duplicate names among types with the same parent.
 // TypeNameUniquenessConstraint checks that sibling type names are unique.
-// [👤semio📚go💻semiogo🔖validation🛠️typenameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/TYPE-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️typenameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/TypeNameUniquenessConstraint)
 func TypeNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Type)
@@ -4429,7 +4429,7 @@ func TypeNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // DesignNameUniquenessConstraint MUST report duplicate names among designs with the same parent.
 // DesignNameUniquenessConstraint checks that sibling design names are unique.
-// [👤semio📚go💻semiogo🔖validation🛠️designnameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/DESIGN-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️designnameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/DesignNameUniquenessConstraint)
 func DesignNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Design)
@@ -4486,7 +4486,7 @@ func DesignNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // PieceNameUniquenessConstraint MUST report duplicate piece names within each design.
 // PieceNameUniquenessConstraint checks that piece names are unique within each design.
-// [👤semio📚go💻semiogo🔖validation🛠️piecenameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/PIECE-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️piecenameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/PieceNameUniquenessConstraint)
 func PieceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	for _, design := range ctx.Kit.Designs {
@@ -4550,7 +4550,7 @@ func PieceNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // QualityNameUniquenessConstraint MUST report each duplicate quality name.
 // QualityNameUniquenessConstraint checks that quality names are unique within a kit.
-// [👤semio📚go💻semiogo🔖validation🛠️qualitynameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/QUALITY-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️qualitynameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/QualityNameUniquenessConstraint)
 func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	names := make(map[string][]Quality)
@@ -4597,7 +4597,7 @@ func QualityNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // PortNameUniquenessConstraint MUST report each duplicate port name.
 // PortNameUniquenessConstraint checks that port names are unique within a kit.
-// [👤semio📚go💻semiogo🔖validation🛠️portnameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/PORT-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️portnameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/PortNameUniquenessConstraint)
 func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	names := make(map[string][]Port)
@@ -4644,7 +4644,7 @@ func PortNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // FileNameUniquenessConstraint MUST report each duplicate file name.
 // FileNameUniquenessConstraint checks that file names are unique within a kit.
-// [👤semio📚go💻semiogo🔖validation🛠️filenameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/FILE-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️filenameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/FileNameUniquenessConstraint)
 func FileNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	names := make(map[string][]File)
@@ -4691,7 +4691,7 @@ func FileNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // FolderNameUniquenessConstraint MUST report duplicate names among folders with the same parent.
 // FolderNameUniquenessConstraint checks that sibling folder names are unique.
-// [👤semio📚go💻semiogo🔖validation🛠️foldernameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/FOLDER-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️foldernameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/FolderNameUniquenessConstraint)
 func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	byParent := make(map[string][]Folder)
@@ -4748,7 +4748,7 @@ func FolderNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // ConnectorNameUniquenessConstraint MUST report duplicate connector names within each type.
 // ConnectorNameUniquenessConstraint checks that connector names are unique within each type.
-// [👤semio📚go💻semiogo🔖validation🛠️connectornameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/CONNECTOR-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️connectornameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/ConnectorNameUniquenessConstraint)
 func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	for typeGuid, connectors := range ctx.ConnectorsByTypeGuid {
@@ -4817,7 +4817,7 @@ func ConnectorNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // ModelNameUniquenessConstraint MUST report duplicate model names within each type.
 // ModelNameUniquenessConstraint checks that model names are unique within each type.
-// [👤semio📚go💻semiogo🔖validation🛠️modelnameuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/MODEL-NAME-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️modelnameuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/ModelNameUniquenessConstraint)
 func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	for typeGuid, models := range ctx.ModelsByTypeGuid {
@@ -4886,7 +4886,7 @@ func ModelNameUniquenessConstraint(ctx *ValidationContext) []Problem {
 
 // LayerPathUniquenessConstraint MUST report duplicate layer paths within each design.
 // LayerPathUniquenessConstraint checks that layer paths are unique within each design.
-// [👤semio📚go💻semiogo🔖validation🛠️layerpathuniquenessconstraint](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/LAYER-PATH-UNIQUENESS-CONSTRAINT)
+// [👤semio📚go💻semiogo🔖validation🛠️layerpathuniquenessconstraint](semiorepo://definition/semio/go/semio.go/Validation/LayerPathUniquenessConstraint)
 func LayerPathUniquenessConstraint(ctx *ValidationContext) []Problem {
 	var problems []Problem
 	for _, design := range ctx.Kit.Designs {
@@ -4938,7 +4938,7 @@ func LayerPathUniquenessConstraint(ctx *ValidationContext) []Problem {
 }
 
 // DefaultConstraints lists all built-in validation constraints.
-// [👤semio📚go💻semiogo🔖validation🪨defaultconstraints](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/DEFAULT-CONSTRAINTS)
+// [👤semio📚go💻semiogo🔖validation🪨defaultconstraints](semiorepo://definition/semio/go/semio.go/Validation/DefaultConstraints)
 var DefaultConstraints = []Constraint{
 	GuidUniquenessConstraint,
 	TypeNameUniquenessConstraint,
@@ -4955,14 +4955,14 @@ var DefaultConstraints = []Constraint{
 
 // ValidateKit MUST apply all default constraints and return all found problems.
 // ValidateKit validates a kit using the default set of constraints.
-// [👤semio📚go💻semiogo🔖validation🛠️validatekit](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATE-KIT)
+// [👤semio📚go💻semiogo🔖validation🛠️validatekit](semiorepo://definition/semio/go/semio.go/Validation/ValidateKit)
 func ValidateKit(kit Kit) ValidationResult {
 	return ValidateKitWithConstraints(kit, DefaultConstraints)
 }
 
 // ValidateKitWithConstraints MUST apply each constraint and aggregate all problems.
 // ValidateKitWithConstraints validates a kit using the provided constraints.
-// [👤semio📚go💻semiogo🔖validation🛠️validatekitwithconstraints](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATE-KIT-WITH-CONSTRAINTS)
+// [👤semio📚go💻semiogo🔖validation🛠️validatekitwithconstraints](semiorepo://definition/semio/go/semio.go/Validation/ValidateKitWithConstraints)
 func ValidateKitWithConstraints(kit Kit, constraints []Constraint) ValidationResult {
 	ctx := buildValidationContext(kit)
 	var problems []Problem
@@ -4974,7 +4974,7 @@ func ValidateKitWithConstraints(kit Kit, constraints []Constraint) ValidationRes
 
 // HasErrors MUST return true when any problem has error severity or empty severity.
 // HasErrors returns true if the validation result contains any error-severity problems.
-// [👤semio📚go💻semiogo🔖validation🛠️haserrors](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/HAS-ERRORS)
+// [👤semio📚go💻semiogo🔖validation🛠️haserrors](semiorepo://definition/semio/go/semio.go/Validation/HasErrors)
 func HasErrors(result ValidationResult) bool {
 	for _, p := range result.Problems {
 		if p.Severity == SeverityError || p.Severity == "" {
@@ -4986,11 +4986,11 @@ func HasErrors(result ValidationResult) bool {
 
 // #region 🔖Validation Serialization
 
-// [👤semio📚go💻semiogo🔖validation🔖validationserialization](semiorepo://section/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATION-SERIALIZATION)
+// [👤semio📚go💻semiogo🔖validation🔖validationserialization](semiorepo://section/semio/go/semio.go/Validation/Validation%20Serialization)
 // Validation Serialization MUST provide serializable representations of validation results.
 
 // ProblemSerialized is the JSON-serializable representation of a validation problem.
-// [👤semio📚go💻semiogo🔖validation🔖validationserialization✂️problemserialized](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATION-SERIALIZATION/PROBLEM-SERIALIZED)
+// [👤semio📚go💻semiogo🔖validation🔖validationserialization✂️problemserialized](semiorepo://definition/semio/go/semio.go/Validation/Validation%20Serialization/ProblemSerialized)
 type ProblemSerialized struct {
 	ConstraintId string `json:"constraintId"`
 	Severity     string `json:"severity,omitempty"`
@@ -5001,14 +5001,14 @@ type ProblemSerialized struct {
 }
 
 // ValidationResultSerialized is the JSON-serializable representation of a validation result.
-// [👤semio📚go💻semiogo🔖validation🔖validationserialization✂️validationresultserialized](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATION-SERIALIZATION/VALIDATION-RESULT-SERIALIZED)
+// [👤semio📚go💻semiogo🔖validation🔖validationserialization✂️validationresultserialized](semiorepo://definition/semio/go/semio.go/Validation/Validation%20Serialization/ValidationResultSerialized)
 type ValidationResultSerialized struct {
 	Problems []ProblemSerialized `json:"problems"`
 }
 
 // ToValidationResult MUST default empty severity to error.
 // ToValidationResult converts a validation result to its serializable form.
-// [👤semio📚go💻semiogo🔖validation🔖validationserialization🛠️tovalidationresult](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATION-SERIALIZATION/TO-VALIDATION-RESULT)
+// [👤semio📚go💻semiogo🔖validation🔖validationserialization🛠️tovalidationresult](semiorepo://definition/semio/go/semio.go/Validation/Validation%20Serialization/ToValidationResult)
 func ToValidationResult(result ValidationResult) ValidationResultSerialized {
 	problems := make([]ProblemSerialized, len(result.Problems))
 	for i, p := range result.Problems {
@@ -5030,7 +5030,7 @@ func ToValidationResult(result ValidationResult) ValidationResultSerialized {
 
 // AreValidationResultsEqual MUST compare problems regardless of their order.
 // AreValidationResultsEqual compares two serialized validation results for equality.
-// [👤semio📚go💻semiogo🔖validation🔖validationserialization🛠️arevalidationresultsequal](semiorepo://definition/SEMIO/GO/SEMIO.GO/VALIDATION/VALIDATION-SERIALIZATION/ARE-VALIDATION-RESULTS-EQUAL)
+// [👤semio📚go💻semiogo🔖validation🔖validationserialization🛠️arevalidationresultsequal](semiorepo://definition/semio/go/semio.go/Validation/Validation%20Serialization/AreValidationResultsEqual)
 func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 	if len(a.Problems) != len(b.Problems) {
 		return false
@@ -5066,7 +5066,7 @@ func AreValidationResultsEqual(a, b ValidationResultSerialized) bool {
 
 // #region 🔖Flatten Design
 
-// [👤semio📚go💻semiogo🔖flattendesign](semiorepo://section/SEMIO/GO/SEMIO.GO/FLATTEN-DESIGN)
+// [👤semio📚go💻semiogo🔖flattendesign](semiorepo://section/semio/go/semio.go/Flatten%20Design)
 // Flatten Design MUST compute absolute piece planes from relative connections.
 
 func planeToMatrix(p Plane) *mat.Dense {
@@ -5320,7 +5320,7 @@ func getConnector(typesDict map[string]*Type, typ *Type, connectorGuid *string) 
 
 // FlattenDesign MUST traverse the connection graph via BFS to compute piece transforms.
 // FlattenDesign computes absolute planes and centers for all pieces in a design.
-// [👤semio📚go💻semiogo🔖flattendesign🛠️flattendesign](semiorepo://definition/SEMIO/GO/SEMIO.GO/FLATTEN-DESIGN/FLATTEN-DESIGN)
+// [👤semio📚go💻semiogo🔖flattendesign🛠️flattendesign](semiorepo://definition/semio/go/semio.go/Flatten%20Design/FlattenDesign)
 func FlattenDesign(kit *Kit, designGuid string) DesignDiff {
 	design := FindDesignInKit(kit, designGuid)
 	if design == nil || len(design.Pieces) == 0 {
@@ -5527,7 +5527,7 @@ func planesEqualApprox(a, b Plane) bool {
 
 // ApplyDesignDiff MUST apply all piece, connection and property changes from the diff.
 // ApplyDesignDiff applies a design diff to a base design.
-// [👤semio📚go💻semiogo🔖flattendesign🛠️applydesigndiff](semiorepo://definition/SEMIO/GO/SEMIO.GO/FLATTEN-DESIGN/APPLY-DESIGN-DIFF)
+// [👤semio📚go💻semiogo🔖flattendesign🛠️applydesigndiff](semiorepo://definition/semio/go/semio.go/Flatten%20Design/ApplyDesignDiff)
 func ApplyDesignDiff(base Design, diff DesignDiff) Design {
 	return applyDesignDiff(base, diff)
 }

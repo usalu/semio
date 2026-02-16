@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo🖱️vscode💻queriests](semiorepo://file/SEMIO-REPO/VSCODE/QUERIES.TS)
+// [🧰semiorepo🖱️vscode💻queriests](semiorepo://file/semio-repo/vscode/queries.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -21,7 +21,7 @@
 
 //#region 🔖Queries
 
-// [🧰semiorepo🖱️vscode💻queriests🔖queries](semiorepo://section/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES)
+// [🧰semiorepo🖱️vscode💻queriests🔖queries](semiorepo://section/semio-repo/vscode/queries.ts/Queries)
 // Typed GraphQL document constants MUST use generated graphql tag functions.
 
 import { graphql } from "./generated/gql";
@@ -29,7 +29,7 @@ import { graphql } from "./generated/gql";
 /**
  * GraphQL document for querying the full repo structure with projects and bundles.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨repostructuredocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/REPO-STRUCTURE-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨repostructuredocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/RepoStructureDocument)
  **/
 export const RepoStructureDocument = graphql(`
   query RepoStructure {
@@ -70,7 +70,7 @@ export const RepoStructureDocument = graphql(`
 /**
  * GraphQL document for querying recent repo commits.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨repocommitsdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/REPO-COMMITS-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨repocommitsdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/RepoCommitsDocument)
  **/
 export const RepoCommitsDocument = graphql(`
   query RepoCommits {
@@ -88,7 +88,7 @@ export const RepoCommitsDocument = graphql(`
 /**
  * GraphQL document for querying folder contents by path.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨foldercontentdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/FOLDER-CONTENT-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨foldercontentdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/FolderContentDocument)
  **/
 export const FolderContentDocument = graphql(`
   query FolderContent($path: String!) {
@@ -110,7 +110,7 @@ export const FolderContentDocument = graphql(`
 /**
  * GraphQL document for querying all bundles in the repo.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨bundlesdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/BUNDLES-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨bundlesdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/BundlesDocument)
  **/
 export const BundlesDocument = graphql(`
   query Bundles {
@@ -123,7 +123,7 @@ export const BundlesDocument = graphql(`
 /**
  * GraphQL document for querying tickets with filtering by date and status.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨ticketsdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/TICKETS-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨ticketsdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/TicketsDocument)
  **/
 export const TicketsDocument = graphql(`
   query Tickets($year: Int, $month: Int, $day: Int, $status: TicketStatus) {
@@ -150,7 +150,7 @@ export const TicketsDocument = graphql(`
 /**
  * GraphQL document for querying policies and their statutes.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨policiesdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/POLICIES-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨policiesdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/PoliciesDocument)
  **/
 export const PoliciesDocument = graphql(`
   query Policies {
@@ -163,7 +163,7 @@ export const PoliciesDocument = graphql(`
 /**
  * GraphQL document for querying contributors with their contributions.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨contributorsdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/CONTRIBUTORS-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨contributorsdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/ContributorsDocument)
  **/
 export const ContributorsDocument = graphql(`
   query Contributors {
@@ -210,7 +210,7 @@ export const ContributorsDocument = graphql(`
 /**
  * GraphQL document for running codebase analysis with optional scope.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨analyzedocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/ANALYZE-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨analyzedocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/AnalyzeDocument)
  **/
 export const AnalyzeDocument = graphql(`
   query Analyze($scope: String) {
@@ -227,7 +227,7 @@ export const AnalyzeDocument = graphql(`
 /**
  * GraphQL mutation document for applying autofixes with optional scope.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨fixdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/FIX-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨fixdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/FixDocument)
  **/
 export const FixDocument = graphql(`
   mutation Fix($scope: String) {
@@ -241,7 +241,7 @@ export const FixDocument = graphql(`
 /**
  * GraphQL document for querying file content with sections and definitions.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨filecontentdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/FILE-CONTENT-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨filecontentdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/FileContentDocument)
  **/
 export const FileContentDocument = graphql(`
   query FileContent($path: String!) {
@@ -290,7 +290,7 @@ export const FileContentDocument = graphql(`
 /**
  * GraphQL document for querying all goals in the repo.
  *
- *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨goalsdocument](semiorepo://definition/SEMIO-REPO/VSCODE/QUERIES.TS/QUERIES/GOALS-DOCUMENT)
+ *  * [🧰semiorepo🖱️vscode💻queriests🔖queries🪨goalsdocument](semiorepo://definition/semio-repo/vscode/queries.ts/Queries/GoalsDocument)
  **/
 export const GoalsDocument = graphql(`
   query Goals {

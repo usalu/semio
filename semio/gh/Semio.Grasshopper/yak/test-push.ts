@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜testpushts](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/TEST-PUSH.TS)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜testpushts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/test-push.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Test Push
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🔖testpush](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/TEST-PUSH.TS/TEST-PUSH)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻testpushts🔖testpush](semiorepo://section/semio/gh/Semio.Grasshopper/yak/test-push.ts/Test%20Push)
 // Yak test push script. MUST push the package to the test Yak server.
 
 import { execSync } from "child_process";

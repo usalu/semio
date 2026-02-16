@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js💻indexts](semiorepo://file/SEMIO/JS/INDEX.TS)
+// [👤semio📚js💻indexts](semiorepo://file/semio/js/index.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Exports
 
-// [👤semio📚js💻indexts🔖exports](semiorepo://section/SEMIO/JS/INDEX.TS/EXPORTS)
+// [👤semio📚js💻indexts🔖exports](semiorepo://section/semio/js/index.ts/Exports)
 // Public API surface re-exporting sketchpad components, semio domain, and shared configs.
 // MUST re-export all public types alongside their runtime counterparts.
 

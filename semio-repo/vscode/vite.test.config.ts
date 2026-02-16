@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo🖱️vscode⚙️vitetestconfigts](semiorepo://file/SEMIO-REPO/VSCODE/VITE.TEST.CONFIG.TS)
+// [🧰semiorepo🖱️vscode⚙️vitetestconfigts](semiorepo://file/semio-repo/vscode/vite.test.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [🧰semiorepo🖱️vscode⚙️vitetestconfigts🔖configuration](semiorepo://section/SEMIO-REPO/VSCODE/VITE.TEST.CONFIG.TS/CONFIGURATION)
+// [🧰semiorepo🖱️vscode⚙️vitetestconfigts🔖configuration](semiorepo://section/semio-repo/vscode/vite.test.config.ts/Configuration)
 // Vite build configuration for the VS Code extension test bundle.
 // Configuration MUST output a CJS test bundle targeting Node 18.
 

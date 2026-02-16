@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚go🧪semiotestgo](semiorepo://file/SEMIO/GO/SEMIO_TEST.GO)
+// [👤semio📚go🧪semiotestgo](semiorepo://file/semio/go/semio_test.go)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

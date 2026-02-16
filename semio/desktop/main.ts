@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio🖱️desktop💻maints](semiorepo://file/SEMIO/DESKTOP/MAIN.TS)
+// [👤semio🖱️desktop💻maints](semiorepo://file/semio/desktop/main.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Main Process
 
-// [👤semio🖱️desktop💻maints🔖mainprocess](semiorepo://section/SEMIO/DESKTOP/MAIN.TS/MAIN-PROCESS)
+// [👤semio🖱️desktop💻maints🔖mainprocess](semiorepo://section/semio/desktop/main.ts/Main%20Process)
 // Electron main process that creates the browser window and registers IPC handlers.
 // MUST quit on all windows closed except on macOS.
 

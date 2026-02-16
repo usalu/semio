@@ -1,6 +1,6 @@
 #region 🔖Header
 
-// [👤semio📚net🛅semiotests💻usingscs](semiorepo://file/SEMIO/NET/SEMIO.TESTS/USINGS.CS)
+// [👤semio📚net🛅semiotests💻usingscs](semiorepo://file/semio/net/Semio.Tests/Usings.cs)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

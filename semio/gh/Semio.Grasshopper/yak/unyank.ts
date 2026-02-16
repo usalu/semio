@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜unyankts](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/UNYANK.TS)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜unyankts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/unyank.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Unyank
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🔖unyank](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/UNYANK.TS/UNYANK)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻unyankts🔖unyank](semiorepo://section/semio/gh/Semio.Grasshopper/yak/unyank.ts/Unyank)
 // Yak unyank script. MUST restore a previously yanked package version.
 
 import { execSync } from "child_process";

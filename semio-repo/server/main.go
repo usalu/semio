@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo⌨️server💻maingo](semiorepo://file/SEMIO-REPO/SERVER/MAIN.GO)
+// [🧰semiorepo⌨️server💻maingo](semiorepo://file/semio-repo/server/main.go)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Package
 
-// [🧰semiorepo⌨️server💻maingo🔖package](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/PACKAGE)
+// [🧰semiorepo⌨️server💻maingo🔖package](semiorepo://section/semio-repo/server/main.go/Package)
 // Package declaration for the semio repo server binary. MUST be package main.
 package main
 
@@ -29,7 +29,7 @@ package main
 
 // #region 🔖Imports
 
-// [🧰semiorepo⌨️server💻maingo🔖imports](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/IMPORTS)
+// [🧰semiorepo⌨️server💻maingo🔖imports](semiorepo://section/semio-repo/server/main.go/Imports)
 // Standard library and third-party imports MUST be grouped by origin.
 import (
 	"bufio"
@@ -62,11 +62,11 @@ import (
 
 // #region 🔖Config
 
-// [🧰semiorepo⌨️server💻maingo🔖config](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/CONFIG)
+// [🧰semiorepo⌨️server💻maingo🔖config](semiorepo://section/semio-repo/server/main.go/Config)
 // Server configuration loading from environment variables. MUST provide sensible defaults.
 
 // Config holds all server configuration values.
-// [🧰semiorepo⌨️server💻maingo🔖config✂️config](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/CONFIG/CONFIG)
+// [🧰semiorepo⌨️server💻maingo🔖config✂️config](semiorepo://definition/semio-repo/server/main.go/Config/Config)
 type Config struct {
 	Address          string
 	DatabasePath     string
@@ -113,11 +113,11 @@ func envOrDefaultInt64(key string, fallback int64) int64 {
 
 // #region 🔖Models
 
-// [🧰semiorepo⌨️server💻maingo🔖models](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/MODELS)
+// [🧰semiorepo⌨️server💻maingo🔖models](semiorepo://section/semio-repo/server/main.go/Models)
 // Data model types for tickets, scopes, warnings, breachs, events, and API request/response payloads. MUST mirror the server SQLite schema.
 
 // Ticket represents a tracked work item with lifecycle status.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️ticket](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/TICKET)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️ticket](semiorepo://definition/semio-repo/server/main.go/Models/Ticket)
 type Ticket struct {
 	ID        string     `json:"id"`
 	Status    string     `json:"status"`
@@ -125,7 +125,7 @@ type Ticket struct {
 	Prompt    string     `json:"prompt"`
 	Summary   string     `json:"summary"`
 	LLM       string     `json:"llm"`
-	Client        string     `json:"client"`
+	Client    string     `json:"client"`
 	Author    string     `json:"author"`
 	GitHub    string     `json:"github_issue"`
 	CreatedAt time.Time  `json:"created_at"`
@@ -133,7 +133,7 @@ type Ticket struct {
 }
 
 // Scope represents a code region (file, section, or definition) with line range.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️scope](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/SCOPE)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️scope](semiorepo://definition/semio-repo/server/main.go/Models/Scope)
 type Scope struct {
 	ID          string    `json:"id"`
 	Kind        string    `json:"kind"`
@@ -146,7 +146,7 @@ type Scope struct {
 }
 
 // Warning represents a detected issue such as a scope conflict between tickets.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️warning](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/WARNING)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️warning](semiorepo://definition/semio-repo/server/main.go/Models/Warning)
 type Warning struct {
 	ID             string     `json:"id"`
 	Kind           string     `json:"kind"`
@@ -160,7 +160,7 @@ type Warning struct {
 }
 
 // Breach represents a policy breach detected in source code.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️breach](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/BREACH)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️breach](semiorepo://definition/semio-repo/server/main.go/Models/Breach)
 type Breach struct {
 	ID         string     `json:"id"`
 	Kind       string     `json:"kind"`
@@ -178,7 +178,7 @@ type Breach struct {
 }
 
 // Event represents a system event persisted to the event log.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️event](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/EVENT)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️event](semiorepo://definition/semio-repo/server/main.go/Models/Event)
 type Event struct {
 	ID        string    `json:"id"`
 	Type      string    `json:"type"`
@@ -188,21 +188,21 @@ type Event struct {
 }
 
 // LineRange represents a contiguous range of line numbers.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️linerange](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/LINE-RANGE)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️linerange](semiorepo://definition/semio-repo/server/main.go/Models/LineRange)
 type LineRange struct {
 	Start int
 	End   int
 }
 
 // DiffHunk represents a single hunk with old and new line ranges from a unified diff.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️diffhunk](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/DIFF-HUNK)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️diffhunk](semiorepo://definition/semio-repo/server/main.go/Models/DiffHunk)
 type DiffHunk struct {
 	OldRange LineRange
 	NewRange LineRange
 }
 
 // DiffFile represents a single file entry in a unified diff with its hunks.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️difffile](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/DIFF-FILE)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️difffile](semiorepo://definition/semio-repo/server/main.go/Models/DiffFile)
 type DiffFile struct {
 	Path    string
 	Hunks   []DiffHunk
@@ -211,32 +211,32 @@ type DiffFile struct {
 }
 
 // DiffResult aggregates all parsed diff files from a patch.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️diffresult](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/DIFF-RESULT)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️diffresult](semiorepo://definition/semio-repo/server/main.go/Models/DiffResult)
 type DiffResult struct {
 	Files []DiffFile
 }
 
 // FileSnapshot holds the full content of a file for snapshot-based indexing.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️filesnapshot](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/FILE-SNAPSHOT)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️filesnapshot](semiorepo://definition/semio-repo/server/main.go/Models/FileSnapshot)
 type FileSnapshot struct {
 	Path    string `json:"path"`
 	Content string `json:"content"`
 }
 
 // TicketOpenRequest is the JSON payload for opening a new ticket.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketopenrequest](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/TICKET-OPEN-REQUEST)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketopenrequest](semiorepo://definition/semio-repo/server/main.go/Models/TicketOpenRequest)
 type TicketOpenRequest struct {
 	TicketID    string `json:"ticket_id"`
 	Title       string `json:"title"`
 	Prompt      string `json:"prompt"`
 	LLM         string `json:"llm"`
-	Client          string `json:"client"`
+	Client      string `json:"client"`
 	Author      string `json:"author"`
 	GitHubIssue string `json:"github_issue"`
 }
 
 // TicketCloseRequest is the JSON payload for closing a ticket.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketcloserequest](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/TICKET-CLOSE-REQUEST)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketcloserequest](semiorepo://definition/semio-repo/server/main.go/Models/TicketCloseRequest)
 type TicketCloseRequest struct {
 	TicketID string   `json:"ticket_id"`
 	Summary  string   `json:"summary"`
@@ -244,7 +244,7 @@ type TicketCloseRequest struct {
 }
 
 // TicketReopenRequest is the JSON payload for reopening a closed ticket.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketreopenrequest](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/TICKET-REOPEN-REQUEST)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️ticketreopenrequest](semiorepo://definition/semio-repo/server/main.go/Models/TicketReopenRequest)
 type TicketReopenRequest struct {
 	TicketID string `json:"ticket_id"`
 	Prompt   string `json:"prompt"`
@@ -253,7 +253,7 @@ type TicketReopenRequest struct {
 }
 
 // DiffIngestRequest is the JSON payload for ingesting a diff patch.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️diffingestrequest](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/DIFF-INGEST-REQUEST)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️diffingestrequest](semiorepo://definition/semio-repo/server/main.go/Models/DiffIngestRequest)
 type DiffIngestRequest struct {
 	TicketID  string         `json:"ticket_id"`
 	RepoID    string         `json:"repo_id"`
@@ -262,17 +262,17 @@ type DiffIngestRequest struct {
 }
 
 // DiffIngestResponse holds the results of a diff ingestion operation.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️diffingestresponse](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/DIFF-INGEST-RESPONSE)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️diffingestresponse](semiorepo://definition/semio-repo/server/main.go/Models/DiffIngestResponse)
 type DiffIngestResponse struct {
-	ChangedFiles  []string    `json:"changed_files"`
-	ClaimedScopes []string    `json:"claimed_scopes"`
-	Warnings      []Warning   `json:"warnings"`
-	Breachs    []Breach `json:"breachs"`
-	Blockers      []string    `json:"blockers"`
+	ChangedFiles  []string  `json:"changed_files"`
+	ClaimedScopes []string  `json:"claimed_scopes"`
+	Warnings      []Warning `json:"warnings"`
+	Breachs       []Breach  `json:"breachs"`
+	Blockers      []string  `json:"blockers"`
 }
 
 // PrecommitRequest is the JSON payload for a pre-commit check.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️precommitrequest](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/PRECOMMIT-REQUEST)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️precommitrequest](semiorepo://definition/semio-repo/server/main.go/Models/PrecommitRequest)
 type PrecommitRequest struct {
 	TicketID      string `json:"ticket_id"`
 	Patch         string `json:"patch"`
@@ -281,17 +281,17 @@ type PrecommitRequest struct {
 }
 
 // PrecommitResponse holds the result of a pre-commit check.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️precommitresponse](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/PRECOMMIT-RESPONSE)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️precommitresponse](semiorepo://definition/semio-repo/server/main.go/Models/PrecommitResponse)
 type PrecommitResponse struct {
-	OK           bool        `json:"ok"`
-	Blockers     []string    `json:"blockers"`
-	Warnings     []Warning   `json:"warnings"`
-	Breachs   []Breach `json:"breachs"`
-	AutofixPatch string      `json:"autofix_patch"`
+	OK           bool      `json:"ok"`
+	Blockers     []string  `json:"blockers"`
+	Warnings     []Warning `json:"warnings"`
+	Breachs      []Breach  `json:"breachs"`
+	AutofixPatch string    `json:"autofix_patch"`
 }
 
 // IndexFileRequest is the JSON payload for indexing a single file.
-// [🧰semiorepo⌨️server💻maingo🔖models✂️indexfilerequest](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/MODELS/INDEX-FILE-REQUEST)
+// [🧰semiorepo⌨️server💻maingo🔖models✂️indexfilerequest](semiorepo://definition/semio-repo/server/main.go/Models/IndexFileRequest)
 type IndexFileRequest struct {
 	FilePath string `json:"file_path"`
 	Content  string `json:"content"`
@@ -301,11 +301,11 @@ type IndexFileRequest struct {
 
 // #region 🔖Database
 
-// [🧰semiorepo⌨️server💻maingo🔖database](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/DATABASE)
+// [🧰semiorepo⌨️server💻maingo🔖database](semiorepo://section/semio-repo/server/main.go/Database)
 // SQLite database layer for persistent storage of tickets, scopes, claims, warnings, breachs, and events. MUST use WAL journal mode.
 
 // Database wraps a sql.DB connection to the SQLite store.
-// [🧰semiorepo⌨️server💻maingo🔖database✂️database](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/DATABASE/DATABASE)
+// [🧰semiorepo⌨️server💻maingo🔖database✂️database](semiorepo://definition/semio-repo/server/main.go/Database/Database)
 type Database struct {
 	db *sql.DB
 }
@@ -352,7 +352,7 @@ func (d *Database) migrate() error {
 
 // Close closes the underlying SQL database connection.
 // MUST release all database resources.
-// [🧰semiorepo⌨️server💻maingo🔖database🛠️close](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/DATABASE/CLOSE)
+// [🧰semiorepo⌨️server💻maingo🔖database🛠️close](semiorepo://definition/semio-repo/server/main.go/Database/Close)
 func (d *Database) Close() error {
 	return d.db.Close()
 }
@@ -613,15 +613,15 @@ func (d *Database) removeContributorWorkForCommit(ctx context.Context, github st
 
 // #region 🔖EventBus
 
-// [🧰semiorepo⌨️server💻maingo🔖eventbus](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/EVENT-BUS)
+// [🧰semiorepo⌨️server💻maingo🔖eventbus](semiorepo://section/semio-repo/server/main.go/EventBus)
 // Asynchronous in-process event bus for decoupled event publishing and subscription. MUST persist events to the database before dispatching.
 
 // EventHandler is a callback invoked when an event of a subscribed type is published.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus✂️eventhandler](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/EVENT-BUS/EVENT-HANDLER)
+// [🧰semiorepo⌨️server💻maingo🔖eventbus✂️eventhandler](semiorepo://definition/semio-repo/server/main.go/EventBus/EventHandler)
 type EventHandler func(context.Context, Event)
 
 // EventBus is a buffered channel-based event dispatcher with persistent storage.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus✂️eventbus](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/EVENT-BUS/EVENT-BUS)
+// [🧰semiorepo⌨️server💻maingo🔖eventbus✂️eventbus](semiorepo://definition/semio-repo/server/main.go/EventBus/EventBus)
 type EventBus struct {
 	ch       chan Event
 	handlers map[string][]EventHandler
@@ -633,7 +633,7 @@ type EventBus struct {
 
 // NewEventBus creates a new event bus backed by the given database.
 // MUST initialize the channel buffer to 256 and create a cancellable context.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️neweventbus](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/EVENT-BUS/NEW-EVENT-BUS)
+// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️neweventbus](semiorepo://definition/semio-repo/server/main.go/EventBus/NewEventBus)
 func NewEventBus(db *Database) *EventBus {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &EventBus{
@@ -647,14 +647,14 @@ func NewEventBus(db *Database) *EventBus {
 
 // Subscribe registers a handler for the given event type.
 // MUST append the handler to the handlers map.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️subscribe](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/EVENT-BUS/SUBSCRIBE)
+// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️subscribe](semiorepo://definition/semio-repo/server/main.go/EventBus/Subscribe)
 func (b *EventBus) Subscribe(eventType string, handler EventHandler) {
 	b.handlers[eventType] = append(b.handlers[eventType], handler)
 }
 
 // Publish persists an event and dispatches it to subscribers.
 // MUST store the event in the database before sending to the channel.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️publish](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/EVENT-BUS/PUBLISH)
+// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️publish](semiorepo://definition/semio-repo/server/main.go/EventBus/Publish)
 func (b *EventBus) Publish(ctx context.Context, eventType string, source string, payload interface{}) error {
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {
@@ -680,7 +680,7 @@ func (b *EventBus) Publish(ctx context.Context, eventType string, source string,
 
 // Start launches the event dispatch goroutine.
 // MUST consume events from the channel and invoke registered handlers.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️start](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/EVENT-BUS/START)
+// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️start](semiorepo://definition/semio-repo/server/main.go/EventBus/Start)
 func (b *EventBus) Start() {
 	b.wg.Add(1)
 	go func() {
@@ -702,7 +702,7 @@ func (b *EventBus) Start() {
 
 // Stop cancels the event bus context and waits for the dispatch goroutine to finish.
 // MUST block until the goroutine exits.
-// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️stop](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/EVENT-BUS/STOP)
+// [🧰semiorepo⌨️server💻maingo🔖eventbus🛠️stop](semiorepo://definition/semio-repo/server/main.go/EventBus/Stop)
 func (b *EventBus) Stop() {
 	b.cancel()
 	b.wg.Wait()
@@ -712,7 +712,7 @@ func (b *EventBus) Stop() {
 
 // #region 🔖DiffParsing
 
-// [🧰semiorepo⌨️server💻maingo🔖diffparsing](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/DIFF-PARSING)
+// [🧰semiorepo⌨️server💻maingo🔖diffparsing](semiorepo://section/semio-repo/server/main.go/DiffParsing)
 // Unified diff parser that extracts file paths and hunk line ranges from patch text. MUST handle standard git diff output format.
 
 // hunkHeader is a regex pattern matching unified diff hunk headers.
@@ -785,11 +785,11 @@ func parseHunkIntWithDefault(value string, fallback int) int {
 
 // #region 🔖Indexing
 
-// [🧰semiorepo⌨️server💻maingo🔖indexing](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/INDEXING)
+// [🧰semiorepo⌨️server💻maingo🔖indexing](semiorepo://section/semio-repo/server/main.go/Indexing)
 // Source code indexer that parses files into scopes covering files, sections, and definitions. MUST support region-marker-based sections and language-specific definition patterns.
 
 // IndexCache holds in-memory caches of indexed scopes partitioned by file path.
-// [🧰semiorepo⌨️server💻maingo🔖indexing✂️indexcache](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/INDEXING/INDEX-CACHE)
+// [🧰semiorepo⌨️server💻maingo🔖indexing✂️indexcache](semiorepo://definition/semio-repo/server/main.go/Indexing/IndexCache)
 type IndexCache struct {
 	Sections    map[string][]Scope
 	Definitions map[string][]Scope
@@ -1023,7 +1023,7 @@ func definitionPatterns(ext string) []*regexp.Regexp {
 
 // #region 🔖Claims
 
-// [🧰semiorepo⌨️server💻maingo🔖claims](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/CLAIMS)
+// [🧰semiorepo⌨️server💻maingo🔖claims](semiorepo://section/semio-repo/server/main.go/Claims)
 // Scope claim mapping logic that associates diff hunks with overlapping scopes. MUST detect multi-ticket conflicts.
 
 // mapClaims maps diff hunks to overlapping scopes and returns claimed IDs.
@@ -1089,7 +1089,7 @@ func appendIfMissing(list []string, value string) []string {
 
 // #region 🔖Warnings
 
-// [🧰semiorepo⌨️server💻maingo🔖warnings](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/WARNINGS)
+// [🧰semiorepo⌨️server💻maingo🔖warnings](semiorepo://section/semio-repo/server/main.go/Warnings)
 // Conflict warning generation from multi-ticket scope overlaps. MUST produce error-severity warnings for blocking conflicts.
 
 // buildConflictWarnings creates warning records from detected scope conflicts.
@@ -1117,11 +1117,11 @@ func buildConflictWarnings(conflicts []struct {
 
 // #region 🔖Server
 
-// [🧰semiorepo⌨️server💻maingo🔖server](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/SERVER)
+// [🧰semiorepo⌨️server💻maingo🔖server](semiorepo://section/semio-repo/server/main.go/Server)
 // HTTP server with ticket lifecycle, diff ingestion, pre-commit checks, indexing, and webhook endpoints. MUST enforce authentication on mutating routes.
 
 // Server is the main HTTP server holding configuration, database, event bus, and caches.
-// [🧰semiorepo⌨️server💻maingo🔖server✂️server](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/SERVER/SERVER)
+// [🧰semiorepo⌨️server💻maingo🔖server✂️server](semiorepo://definition/semio-repo/server/main.go/Server/Server)
 type Server struct {
 	config      Config
 	db          *Database
@@ -1135,7 +1135,7 @@ type Server struct {
 
 // NewServer creates a new Server with the given config, database, and event bus.
 // MUST initialize the index cache and GitHub comment cache.
-// [🧰semiorepo⌨️server💻maingo🔖server🛠️newserver](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/SERVER/NEW-SERVER)
+// [🧰semiorepo⌨️server💻maingo🔖server🛠️newserver](semiorepo://definition/semio-repo/server/main.go/Server/NewServer)
 func NewServer(config Config, db *Database, bus *EventBus) *Server {
 	return &Server{
 		config:      config,
@@ -1257,7 +1257,7 @@ func (s *Server) handleTicketOpen(w http.ResponseWriter, r *http.Request) {
 		Title:     payload.Title,
 		Prompt:    payload.Prompt,
 		LLM:       payload.LLM,
-		Client:        payload.Client,
+		Client:    payload.Client,
 		Author:    payload.Author,
 		GitHub:    payload.GitHubIssue,
 		CreatedAt: now,
@@ -1450,7 +1450,7 @@ func (s *Server) handleDiffIngest(w http.ResponseWriter, r *http.Request) {
 		ChangedFiles:  result.ChangedFiles,
 		ClaimedScopes: result.ClaimedScopes,
 		Warnings:      warnings,
-		Breachs:    breachs,
+		Breachs:       breachs,
 		Blockers:      result.Blockers,
 	}
 	s.writeJSON(w, http.StatusOK, response)
@@ -1488,7 +1488,7 @@ func (s *Server) handlePrecommit(w http.ResponseWriter, r *http.Request) {
 		OK:           ok,
 		Blockers:     blockers,
 		Warnings:     warnings,
-		Breachs:   breachs,
+		Breachs:      breachs,
 		AutofixPatch: "",
 	}
 	s.writeJSON(w, http.StatusOK, response)
@@ -1615,11 +1615,11 @@ func (s *Server) handleScopes(w http.ResponseWriter, r *http.Request) {
 
 // #region 🔖Processing
 
-// [🧰semiorepo⌨️server💻maingo🔖processing](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/PROCESSING)
+// [🧰semiorepo⌨️server💻maingo🔖processing](semiorepo://section/semio-repo/server/main.go/Processing)
 // Diff processing pipeline that indexes changed files, maps claims, detects conflicts, and produces warnings. MUST be transactional per request.
 
 // ProcessResult holds the outcome of a diff processing operation.
-// [🧰semiorepo⌨️server💻maingo🔖processing✂️processresult](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/PROCESSING/PROCESS-RESULT)
+// [🧰semiorepo⌨️server💻maingo🔖processing✂️processresult](semiorepo://definition/semio-repo/server/main.go/Processing/ProcessResult)
 type ProcessResult struct {
 	ChangedFiles  []string
 	ClaimedScopes []string
@@ -1774,11 +1774,11 @@ func (s *Server) walkRepoFiles() ([]string, error) {
 
 // #region 🔖Webhooks
 
-// [🧰semiorepo⌨️server💻maingo🔖webhooks](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/WEBHOOKS)
+// [🧰semiorepo⌨️server💻maingo🔖webhooks](semiorepo://section/semio-repo/server/main.go/Webhooks)
 // GitHub webhook handlers for issue comment caching and issue event processing. MUST verify HMAC signatures when a secret is configured.
 
 // GitHubComment stores a cached GitHub issue comment for correlating close/reopen events.
-// [🧰semiorepo⌨️server💻maingo🔖webhooks✂️githubcomment](semiorepo://definition/SEMIO-REPO/SERVER/MAIN.GO/WEBHOOKS/GIT-HUB-COMMENT)
+// [🧰semiorepo⌨️server💻maingo🔖webhooks✂️githubcomment](semiorepo://definition/semio-repo/server/main.go/Webhooks/GitHubComment)
 type GitHubComment struct {
 	Body      string
 	Actor     string
@@ -1976,7 +1976,7 @@ func extractActorLogin(payload map[string]interface{}) string {
 
 // #region 🔖Discord
 
-// [🧰semiorepo⌨️server💻maingo🔖discord](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/DISCORD)
+// [🧰semiorepo⌨️server💻maingo🔖discord](semiorepo://section/semio-repo/server/main.go/Discord)
 // Discord notification integration for ticket lifecycle events. MUST silently skip when no webhook URL is configured.
 
 // notifyDiscord sends a message to the configured Discord webhook.
@@ -2118,7 +2118,7 @@ func filterOut(list []string, exclude string) []string {
 
 // #region 🔖Utilities
 
-// [🧰semiorepo⌨️server💻maingo🔖utilities](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/UTILITIES)
+// [🧰semiorepo⌨️server💻maingo🔖utilities](semiorepo://section/semio-repo/server/main.go/Utilities)
 // Shared utility functions used across the server. MUST produce unique identifiers.
 
 // newID generates a unique identifier from the current timestamp and a random value.
@@ -2130,7 +2130,7 @@ func newID() string {
 
 // #region 🔖Main
 
-// [🧰semiorepo⌨️server💻maingo🔖main](semiorepo://section/SEMIO-REPO/SERVER/MAIN.GO/MAIN)
+// [🧰semiorepo⌨️server💻maingo🔖main](semiorepo://section/semio-repo/server/main.go/Main)
 // Application entry point that initializes the database, event bus, server, and HTTP routes. MUST register all handlers before listening.
 
 // main initializes the server and starts listening for HTTP requests.

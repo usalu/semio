@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜yankts](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/YANK.TS)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜yankts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/yank.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Yank
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🔖yank](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/YANK.TS/YANK)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻yankts🔖yank](semiorepo://section/semio/gh/Semio.Grasshopper/yak/yank.ts/Yank)
 // Yak yank script. MUST remove a package version from the Yak server.
 
 import { execSync } from "child_process";

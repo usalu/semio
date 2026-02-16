@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚go💻kitsqlitego](semiorepo://file/SEMIO/GO/KIT_SQLITE.GO)
+// [👤semio📚go💻kitsqlitego](semiorepo://file/semio/go/kit_sqlite.go)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖SQLite Kit Operations
 
-// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations](semiorepo://section/SEMIO/GO/KIT_SQLITE.GO/SQ-LITE-KIT-OPERATIONS)
+// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations](semiorepo://section/semio/go/kit_sqlite.go/SQLite%20Kit%20Operations)
 // SQLite kit operations. MUST provide serialization and deserialization of Kit to and from SQLite and zip formats.
 
 package semio
@@ -40,7 +40,7 @@ import (
 
 // KitFromSqlite reads a Kit from a SQLite database file
 // Callers MUST provide a valid path to an existing SQLite database
-// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations🛠️kitfromsqlite](semiorepo://definition/SEMIO/GO/KIT_SQLITE.GO/SQ-LITE-KIT-OPERATIONS/KIT-FROM-SQLITE)
+// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations🛠️kitfromsqlite](semiorepo://definition/semio/go/kit_sqlite.go/SQLite%20Kit%20Operations/KitFromSqlite)
 func KitFromSqlite(dbPath string) (*Kit, error) {
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -273,7 +273,7 @@ func loadConnectors(db *sql.DB, typeGuid string) ([]Connector, error) {
 
 // KitToSqlite writes a Kit to a SQLite database file
 // Callers MUST provide a valid Kit, writable database path, and schema SQL
-// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations🛠️kittosqlite](semiorepo://definition/SEMIO/GO/KIT_SQLITE.GO/SQ-LITE-KIT-OPERATIONS/KIT-TO-SQLITE)
+// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations🛠️kittosqlite](semiorepo://definition/semio/go/kit_sqlite.go/SQLite%20Kit%20Operations/KitToSqlite)
 func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
     db, err := sql.Open("sqlite3", dbPath)
     if err != nil { return err }
@@ -364,7 +364,7 @@ func KitToSqlite(kit *Kit, dbPath string, schemaSQL string) error {
 
 // KitFromZip extracts a Kit and its files from a zip archive
 // Callers MUST provide a valid path to an existing zip file containing kit.db
-// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations🛠️kitfromzip](semiorepo://definition/SEMIO/GO/KIT_SQLITE.GO/SQ-LITE-KIT-OPERATIONS/KIT-FROM-ZIP)
+// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations🛠️kitfromzip](semiorepo://definition/semio/go/kit_sqlite.go/SQLite%20Kit%20Operations/KitFromZip)
 func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
     tmpDir, err := os.MkdirTemp("", "semio-kit-*")
     if err != nil { return nil, nil, err }
@@ -410,7 +410,7 @@ func KitFromZip(zipPath string) (*Kit, map[string][]byte, error) {
 
 // KitToZip packages a Kit and its files into a zip archive
 // Callers MUST provide a valid Kit, file map, writable zip path, and schema SQL
-// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations🛠️kittozip](semiorepo://definition/SEMIO/GO/KIT_SQLITE.GO/SQ-LITE-KIT-OPERATIONS/KIT-TO-ZIP)
+// [👤semio📚go💻kitsqlitego🔖sqlitekitoperations🛠️kittozip](semiorepo://definition/semio/go/kit_sqlite.go/SQLite%20Kit%20Operations/KitToZip)
 func KitToZip(kit *Kit, files map[string][]byte, zipPath string, schemaSQL string) error {
     tmpDir, err := os.MkdirTemp("", "semio-kit-*")
     if err != nil { return err }

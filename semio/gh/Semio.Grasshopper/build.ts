@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚gh🛅semiograsshopper📜buildts](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/BUILD.TS)
+// [👤semio📚gh🛅semiograsshopper📜buildts](semiorepo://file/semio/gh/Semio.Grasshopper/build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Build
 
-// [👤semio📚gh🛅semiograsshopper💻buildts🔖build](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/BUILD.TS/BUILD)
+// [👤semio📚gh🛅semiograsshopper💻buildts🔖build](semiorepo://section/semio/gh/Semio.Grasshopper/build.ts/Build)
 // Grasshopper build script. MUST compile the solution and copy artifacts to the Yak distribution folder.
 
 import { execSync } from "child_process";

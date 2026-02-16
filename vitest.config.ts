@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [⚙️vitestconfigts](semiorepo://file/VITEST.CONFIG.TS)
+// [⚙️vitestconfigts](semiorepo://file/vitest.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [⚙️vitestconfigts🔖configuration](semiorepo://section/VITEST.CONFIG.TS/CONFIGURATION)
+// [⚙️vitestconfigts🔖configuration](semiorepo://section/vitest.config.ts/Configuration)
 // Root Vitest configuration aggregating all workspace test projects.
 // Configuration MUST reference all workspace vite config files that define tests.
 

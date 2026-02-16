@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js💻devts](semiorepo://file/SEMIO/JS/DEV.TS)
+// [👤semio📚js💻devts](semiorepo://file/semio/js/dev.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Dev
 
-// [👤semio📚js💻devts🔖dev](semiorepo://section/SEMIO/JS/DEV.TS/DEV)
+// [👤semio📚js💻devts🔖dev](semiorepo://section/semio/js/dev.ts/Dev)
 // Spawns parallel sketchpad and storybook dev servers.
 // MUST kill both child processes on SIGINT and SIGTERM.
 

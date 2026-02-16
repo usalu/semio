@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js🧪semiobenchmarkts](semiorepo://file/SEMIO/JS/SEMIO.BENCHMARK.TS)
+// [👤semio📚js🧪semiobenchmarkts](semiorepo://file/semio/js/semio.benchmark.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 

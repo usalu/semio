@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak📜publishts](semiorepo://file/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/PUBLISH.TS)
+// [👤semio📚gh🛅semiograsshopper🗃️yak📜publishts](semiorepo://file/semio/gh/Semio.Grasshopper/yak/publish.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Publish
 
-// [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🔖publish](semiorepo://section/SEMIO/GH/SEMIO.GRASSHOPPER/YAK/PUBLISH.TS/PUBLISH)
+// [👤semio📚gh🛅semiograsshopper🗃️yak💻publishts🔖publish](semiorepo://section/semio/gh/Semio.Grasshopper/yak/publish.ts/Publish)
 // Yak publish script. MUST push the built package to the Yak server.
 
 import { execSync } from "child_process";

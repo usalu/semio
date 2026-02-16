@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js⚙️postcssconfigts](semiorepo://file/SEMIO/JS/POSTCSS.CONFIG.TS)
+// [👤semio📚js⚙️postcssconfigts](semiorepo://file/semio/js/postcss.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio📚js⚙️postcssconfigts🔖configuration](semiorepo://section/SEMIO/JS/POSTCSS.CONFIG.TS/CONFIGURATION)
+// [👤semio📚js⚙️postcssconfigts🔖configuration](semiorepo://section/semio/js/postcss.config.ts/Configuration)
 // PostCSS plugin configuration for the js library.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 

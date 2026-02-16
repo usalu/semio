@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚net🛅semio📜buildts](semiorepo://file/SEMIO/NET/SEMIO/BUILD.TS)
+// [👤semio📚net🛅semio📜buildts](semiorepo://file/semio/net/Semio/build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Build
 
-// [👤semio📚net🛅semio💻buildts🔖build](semiorepo://section/SEMIO/NET/SEMIO/BUILD.TS/BUILD)
+// [👤semio📚net🛅semio💻buildts🔖build](semiorepo://section/semio/net/Semio/build.ts/Build)
 // .NET build script. MUST compile the Semio C# project via MSBuild.
 
 import { execSync } from "child_process";

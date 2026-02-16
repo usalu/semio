@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio🛂jsonschema📜buildts](semiorepo://file/SEMIO/JSONSCHEMA/BUILD.TS)
+// [👤semio🛂jsonschema📜buildts](semiorepo://file/semio/jsonschema/build.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Schema Export
 
-// [👤semio🛂jsonschema💻buildts🔖schemaexport](semiorepo://section/SEMIO/JSONSCHEMA/BUILD.TS/SCHEMA-EXPORT)
+// [👤semio🛂jsonschema💻buildts🔖schemaexport](semiorepo://section/semio/jsonschema/build.ts/Schema%20Export)
 // JSON Schema export script. MUST unescape and write the kit schema file.
 
 import { readFileSync, writeFileSync } from "fs";

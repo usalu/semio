@@ -1,7 +1,7 @@
 
 // #region 🔖Header
 
-// [👤semio🖱️desktop💻forgeenvdts](semiorepo://file/SEMIO/DESKTOP/FORGE.ENV.D.TS)
+// [👤semio🖱️desktop💻forgeenvdts](semiorepo://file/semio/desktop/forge.env.d.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Electron Fuses
 
-// [👤semio🖱️desktop💻forgeenvdts🔖electronfuses](semiorepo://section/SEMIO/DESKTOP/FORGE.ENV.D.TS/ELECTRON-FUSES)
+// [👤semio🖱️desktop💻forgeenvdts🔖electronfuses](semiorepo://section/semio/desktop/forge.env.d.ts/Electron%20Fuses)
 // Type declarations for Electron Forge fuse options.
 // Consumers MUST use these enums for configuring fuse settings.
 

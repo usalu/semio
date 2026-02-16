@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js💻sitetsx](semiorepo://file/SEMIO/JS/SITE.TSX)
+// [👤semio📚js💻sitetsx](semiorepo://file/semio/js/site.tsx)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Entrypoint
 
-// [👤semio📚js💻sitetsx🔖entrypoint](semiorepo://section/SEMIO/JS/SITE.TSX/ENTRYPOINT)
+// [👤semio📚js💻sitetsx🔖entrypoint](semiorepo://section/semio/js/site.tsx/Entrypoint)
 // Site entrypoint that mounts the Sketchpad React component into the DOM.
 // Entrypoint MUST render into the root element defined in index.html.
 

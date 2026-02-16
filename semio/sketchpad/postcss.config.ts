@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio🖱️sketchpad⚙️postcssconfigts](semiorepo://file/SEMIO/SKETCHPAD/POSTCSS.CONFIG.TS)
+// [👤semio🖱️sketchpad⚙️postcssconfigts](semiorepo://file/semio/sketchpad/postcss.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🖱️sketchpad⚙️postcssconfigts🔖configuration](semiorepo://section/SEMIO/SKETCHPAD/POSTCSS.CONFIG.TS/CONFIGURATION)
+// [👤semio🖱️sketchpad⚙️postcssconfigts🔖configuration](semiorepo://section/semio/sketchpad/postcss.config.ts/Configuration)
 // PostCSS plugin configuration for the sketchpad application.
 // Configuration MUST use the @tailwindcss/postcss plugin.
 

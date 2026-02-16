@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 // #region 🔖Header
 
-// [👤semio📚engine📜sqliteschemats](semiorepo://file/SEMIO/ENGINE/SQLITESCHEMA.TS)
+// [👤semio📚engine📜sqliteschemats](semiorepo://file/semio/engine/sqliteschema.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -22,7 +22,7 @@
 
 // #region 🔖Schema Export
 
-// [👤semio📚engine💻sqliteschemats🔖schemaexport](semiorepo://section/SEMIO/ENGINE/SQLITESCHEMA.TS/SCHEMA-EXPORT)
+// [👤semio📚engine💻sqliteschemats🔖schemaexport](semiorepo://section/semio/engine/sqliteschema.ts/Schema%20Export)
 // SQLite schema export script. MUST dump the database schema to a SQL file.
 
 import { execSync } from "child_process";

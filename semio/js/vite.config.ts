@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js⚙️viteconfigts](semiorepo://file/SEMIO/JS/VITE.CONFIG.TS)
+// [👤semio📚js⚙️viteconfigts](semiorepo://file/semio/js/vite.config.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio📚js⚙️viteconfigts🔖configuration](semiorepo://section/SEMIO/JS/VITE.CONFIG.TS/CONFIGURATION)
+// [👤semio📚js⚙️viteconfigts🔖configuration](semiorepo://section/semio/js/vite.config.ts/Configuration)
 // Vite build and test configuration for the js library.
 // Configuration MUST include MDX, React, WASM, and Tailwind CSS plugins.
 

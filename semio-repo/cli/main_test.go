@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [🧰semiorepo⌨️cli🧪maintestgo](semiorepo://file/SEMIO-REPO/CLI/MAIN_TEST.GO)
+// [🧰semiorepo⌨️cli🧪maintestgo](semiorepo://file/semio-repo/cli/main_test.go)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 
@@ -28,6 +28,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -1199,6 +1200,12 @@ func toolOutputText(result ToolResult) string {
 	return strings.Join(lines, "\n")
 }
 
+var relativeTimePattern = regexp.MustCompile(`\b(opened |closed |created )?(a long while ago|\d+ (?:second|minute|hour|day|week|month|year)s? (?:ago|from now))\b`)
+
+func normalizeRelativeTimes(s string) string {
+	return relativeTimePattern.ReplaceAllString(s, "<TIME>")
+}
+
 // #endregion 🔖Helpers
 
 // #region 🔖Codebase Tests
@@ -1436,7 +1443,7 @@ func TestFixHeaderWrongFileId(t *testing.T) {
 	filePath := "some/folder/code.ts"
 	absPath := filepath.Join(tmpDir, filePath)
 	os.MkdirAll(filepath.Dir(absPath), 0755)
-	content := "// #region \U0001F516Header\n\n// [\U0001F4BBold/wrong/path.ts](semiorepo://file/OLD/WRONG/PATH.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	content := "// #region \U0001F516Header\n\n// [\U0001F4BBold/wrong/path.ts](semiorepo://file/old/wrong/path.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
 	os.WriteFile(absPath, []byte(content), 0644)
 
 	expectedId := FileHeaderId(filePath)
@@ -1504,7 +1511,7 @@ func TestFixHeaderWrongFileIdDetection(t *testing.T) {
 	filePath := "some/folder/code.ts"
 	absPath := filepath.Join(tmpDir, filePath)
 	os.MkdirAll(filepath.Dir(absPath), 0755)
-	content := "// #region \U0001F516Header\n\n// [\U0001F4BBwrong/path.ts](semiorepo://file/WRONG/PATH.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	content := "// #region \U0001F516Header\n\n// [\U0001F4BBwrong/path.ts](semiorepo://file/wrong/path.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
 	os.WriteFile(absPath, []byte(content), 0644)
 
 	bundles := LoadBundles()
@@ -1547,7 +1554,7 @@ func TestFixHeaderWrongFileIdEndToEnd(t *testing.T) {
 	filePath := "some/folder/code.ts"
 	absPath := filepath.Join(tmpDir, filePath)
 	os.MkdirAll(filepath.Dir(absPath), 0755)
-	content := "// #region \U0001F516Header\n\n// [\U0001F4BBwrong/path.ts](semiorepo://file/WRONG/PATH.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
+	content := "// #region \U0001F516Header\n\n// [\U0001F4BBwrong/path.ts](semiorepo://file/wrong/path.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// #endregion \U0001F516Header\n\n// #region \U0001F516Main\n\nconst x = 1;\n\n// #endregion \U0001F516Main\n"
 	os.WriteFile(absPath, []byte(content), 0644)
 
 	bundles := LoadBundles()
@@ -3205,27 +3212,27 @@ func TestSectionMissingIdentification(t *testing.T) {
 		{
 			name:    "TypeScript section without identification",
 			file:    "src/app.ts",
-			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/do-work)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Go section without identification",
 			file:    "src/app.go",
-			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/SRC/APP.GO/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/src/app.go/functions/do-work)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Python section without identification",
 			file:    "src/app.py",
-			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/functions/do-work)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
 		},
 		{
 			name:    "CSharp section without identification",
 			file:    "src/App.cs",
-			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/SRC/APP.CS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Rust section without identification",
 			file:    "src/app.rs",
-			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/SRC/APP.RS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
 		},
 	}
 	for _, tc := range tests {
@@ -3268,27 +3275,27 @@ func TestSectionWithIdentification(t *testing.T) {
 		{
 			name:    "TypeScript section with identification",
 			file:    "src/app.ts",
-			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Go section with identification",
 			file:    "src/app.go",
-			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/SRC/APP.GO/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/SRC/APP.GO/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/functions)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/src/app.go/functions/dowork)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Python section with identification",
 			file:    "src/app.py",
-			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/functions/do_work)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
 		},
 		{
 			name:    "CSharp section with identification",
 			file:    "src/App.cs",
-			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/SRC/APP.CS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/SRC/APP.CS/FUNCTIONS)\n\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/app.cs/functions)\n\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Rust section with identification",
 			file:    "src/app.rs",
-			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/SRC/APP.RS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/SRC/APP.RS/FUNCTIONS)\n\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
 		},
 	}
 	for _, tc := range tests {
@@ -3326,27 +3333,27 @@ func TestDefinitionMissingIdentification(t *testing.T) {
 		{
 			name:    "TypeScript definition without identification",
 			file:    "src/app.ts",
-			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Go definition without identification",
 			file:    "src/app.go",
-			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/SRC/APP.GO/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/functions)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Python definition without identification",
 			file:    "src/app.py",
-			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
 		},
 		{
 			name:    "CSharp definition without identification",
 			file:    "src/App.cs",
-			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/SRC/APP.CS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/SRC/APP.CS/FUNCTIONS)\n\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/app.cs/functions)\n\n// Function declarations.\n\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Rust definition without identification",
 			file:    "src/app.rs",
-			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/SRC/APP.RS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/SRC/APP.RS/FUNCTIONS)\n\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
 		},
 	}
 	for _, tc := range tests {
@@ -3389,27 +3396,27 @@ func TestDefinitionWithIdentification(t *testing.T) {
 		{
 			name:    "TypeScript definition with identification",
 			file:    "src/app.ts",
-			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Go definition with identification",
 			file:    "src/app.go",
-			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/SRC/APP.GO/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/SRC/APP.GO/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content: "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/functions)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/src/app.go/functions/dowork)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Python definition with identification",
 			file:    "src/app.py",
-			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+			content: "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/functions/do_work)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
 		},
 		{
 			name:    "CSharp definition with identification",
 			file:    "src/App.cs",
-			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/SRC/APP.CS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/SRC/APP.CS/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork processes items.\n// [🛠️src/App.cs#Functions§DoWork](semiorepo://definition/SRC/APP.CS/FUNCTIONS/DO-WORK)\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/App.cs#Functions](semiorepo://section/src/app.cs/functions)\n\n// Function declarations.\n\n// DoWork processes items.\n// [🛠️src/App.cs#Functions§DoWork](semiorepo://definition/src/app.cs/functions/dowork)\npublic static void DoWork() {}\n\n// #endregion 🔖Functions\n",
 		},
 		{
 			name:    "Rust definition with identification",
 			file:    "src/app.rs",
-			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/SRC/APP.RS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/SRC/APP.RS/FUNCTIONS)\n\n// Function declarations.\n\n// do_work processes items.\n// [🛠️src/app.rs#Functions§do_work](semiorepo://definition/SRC/APP.RS/FUNCTIONS/DO-WORK)\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
+			content: "// #region 🔖Header\n\n// [💻src/app.rs](semiorepo://file/src/app.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.rs#Functions](semiorepo://section/src/app.rs/functions)\n\n// Function declarations.\n\n// do_work processes items.\n// [🛠️src/app.rs#Functions§do_work](semiorepo://definition/src/app.rs/functions/do_work)\npub fn do_work() {}\n\n// #endregion 🔖Functions\n",
 		},
 	}
 	for _, tc := range tests {
@@ -3445,7 +3452,7 @@ func TestSectionIdentificationAutofix(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/do-work)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
 	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -3486,7 +3493,7 @@ func TestDefinitionIdentificationAutofix(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
 	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -3527,7 +3534,7 @@ func TestSectionWrongIdentificationDetected(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [wrong-section-id](semiorepo://section/WRONG/SECTION)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [wrong-section-id](semiorepo://section/wrong/section)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/do-work)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
 	testFile := "src/app.ts"
 	if err := WriteTextFile(filepath.Join(tmpDir, testFile), content); err != nil {
 		t.Fatalf("failed to write: %v", err)
@@ -3562,7 +3569,7 @@ func TestDefinitionWrongIdentificationDetected(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\n// [wrong-definition-id](semiorepo://definition/WRONG/DEFINITION)\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
+	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/src/app.go/graphql-types)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/src/app.go/graphql-types/graphql-input-types)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\n// [wrong-definition-id](semiorepo://definition/wrong/definition)\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
 	testFile := "src/app.go"
 	if err := WriteTextFile(filepath.Join(tmpDir, testFile), content); err != nil {
 		t.Fatalf("failed to write: %v", err)
@@ -3597,7 +3604,7 @@ func TestSectionWrongIdentificationAutofix(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [wrong-section-id](semiorepo://section/WRONG/SECTION)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [wrong-section-id](semiorepo://section/wrong/section)\n\n// Function declarations.\n\n// Does work.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/do-work)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
 	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -3638,7 +3645,7 @@ func TestDefinitionWrongIdentificationAutofixGoTypeUsesInterfaceKind(t *testing.
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\n// [wrong-definition-id](semiorepo://definition/WRONG/DEFINITION)\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
+	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/src/app.go/graphql-types)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/src/app.go/graphql-types/graphql-input-types)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\n// [wrong-definition-id](semiorepo://definition/wrong/definition)\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
 	testFile := "src/app.go"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -3680,7 +3687,7 @@ func TestDefinitionMissingIdentificationAutofixGoTypeUsesInterfaceKind(t *testin
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/SRC/APP.GO/GRAPHQL-TYPES/GRAPHQL-INPUT-TYPES)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
+	content := "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖GraphQL Types\n\n// [section-id](semiorepo://section/src/app.go/graphql-types)\n\n// GraphQL declarations.\n\n// #region 🔖GraphQL Input Types\n\n// [nested-section-id](semiorepo://section/src/app.go/graphql-types/graphql-input-types)\n\n// Input declarations.\n\n// TicketCloseInput holds ticket close inputs.\ntype TicketCloseInput struct {\n    TicketID string\n}\n\n// #endregion 🔖GraphQL Input Types\n\n// #endregion 🔖GraphQL Types\n"
 	testFile := "src/app.go"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -3725,55 +3732,55 @@ func TestDefinitionNativeDocstring(t *testing.T) {
 		{
 			name:         "TypeScript // comments should flag breach",
 			file:         "src/app.ts",
-			content:      "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+			content:      "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
 			expectBreach: true,
 		},
 		{
 			name:         "TypeScript JSDoc should NOT flag breach",
 			file:         "src/app.ts",
-			content:      "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n *\n *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\n **/\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
+			content:      "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n *\n *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)\n **/\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n",
 			expectBreach: false,
 		},
 		{
 			name:         "Go // comments should NOT flag breach (native format)",
 			file:         "src/app.go",
-			content:      "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/SRC/APP.GO)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/SRC/APP.GO/FUNCTIONS)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/SRC/APP.GO/FUNCTIONS/DO-WORK)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
+			content:      "package main\n\n// #region 🔖Header\n\n// [💻src/app.go](semiorepo://file/src/app.go)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.go#Functions](semiorepo://section/src/app.go/functions)\n\n// Function declarations.\n\n// DoWork does work.\n// DoWork MUST be idempotent.\n// [🛠️src/app.go#Functions§DoWork](semiorepo://definition/src/app.go/functions/dowork)\nfunc DoWork() {}\n\n// #endregion 🔖Functions\n",
 			expectBreach: false,
 		},
 		{
 			name:         "Python # comments should flag breach (should use triple-quote docstring)",
 			file:         "src/app.py",
-			content:      "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
+			content:      "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/functions/do_work)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n",
 			expectBreach: true,
 		},
 		{
 			name:         "Python triple-quote docstring should NOT flag breach",
 			file:         "src/app.py",
-			content:      "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\ndef do_work():\n    \"\"\"Does work.\n    do_work MUST be idempotent.\n    [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\n    \"\"\"\n    pass\n\n# #endregion 🔖Functions\n",
+			content:      "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\ndef do_work():\n    \"\"\"Does work.\n    do_work MUST be idempotent.\n    [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/functions/do_work)\n    \"\"\"\n    pass\n\n# #endregion 🔖Functions\n",
 			expectBreach: false,
 		},
 		{
 			name:         "CSharp // comments should flag breach (should use ///)",
 			file:         "src/App.cs",
-			content:      "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/SRC/APP.CS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](semiorepo://section/src/App.cs/TYPES)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/App.cs#Types§AppState](semiorepo://definition/src/App.cs/TYPES/APP-STATE)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
+			content:      "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](semiorepo://section/src/app.cs/types)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/App.cs#Types§AppState](semiorepo://definition/src/app.cs/types/appstate)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
 			expectBreach: true,
 		},
 		{
 			name:         "CSharp /// comments should NOT flag breach",
 			file:         "src/App.cs",
-			content:      "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/SRC/APP.CS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](semiorepo://section/src/App.cs/TYPES)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/App.cs#Types§AppState](semiorepo://definition/src/App.cs/TYPES/APP-STATE)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
+			content:      "// #region 🔖Header\n\n// [💻src/App.cs](semiorepo://file/src/app.cs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/App.cs#Types](semiorepo://section/src/app.cs/types)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/App.cs#Types§AppState](semiorepo://definition/src/app.cs/types/appstate)\npublic class AppState()\n{\n}\n\n// #endregion 🔖Types\n",
 			expectBreach: false,
 		},
 		{
 			name:         "Rust // comments should flag breach (should use ///)",
 			file:         "src/lib.rs",
-			content:      "// #region 🔖Header\n\n// [💻src/lib.rs](semiorepo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](semiorepo://section/src/lib.rs/TYPES)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/lib.rs#Types§AppState](semiorepo://definition/src/lib.rs/TYPES/APP-STATE)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
+			content:      "// #region 🔖Header\n\n// [💻src/lib.rs](semiorepo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](semiorepo://section/src/lib.rs/types)\n\n// Type declarations.\n\n// Represents app state.\n// AppState MUST be serializable.\n// [🛠️src/lib.rs#Types§AppState](semiorepo://definition/src/lib.rs/types/appstate)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
 			expectBreach: true,
 		},
 		{
 			name:         "Rust /// comments should NOT flag breach",
 			file:         "src/lib.rs",
-			content:      "// #region 🔖Header\n\n// [💻src/lib.rs](semiorepo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](semiorepo://section/src/lib.rs/TYPES)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/lib.rs#Types§AppState](semiorepo://definition/src/lib.rs/TYPES/APP-STATE)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
+			content:      "// #region 🔖Header\n\n// [💻src/lib.rs](semiorepo://file/src/lib.rs)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Types\n\n// [🔖src/lib.rs#Types](semiorepo://section/src/lib.rs/types)\n\n// Type declarations.\n\n/// Represents app state.\n/// AppState MUST be serializable.\n/// [🛠️src/lib.rs#Types§AppState](semiorepo://definition/src/lib.rs/types/appstate)\npub struct AppState {}\n\n// #endregion 🔖Types\n",
 			expectBreach: false,
 		},
 	}
@@ -3819,7 +3826,7 @@ func TestDefinitionNativeDocstringAutofix(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n// Does work.\n// doWork MUST be idempotent.\n// [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
 	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -3872,7 +3879,7 @@ func TestPythonTripleQuoteDocstringAutofix(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n"
+	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\n# Does work.\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/functions/do_work)\ndef do_work():\n    pass\n\n# #endregion 🔖Functions\n"
 	testFile := "src/app.py"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -3925,7 +3932,7 @@ func TestPythonTripleQuoteDocstringMerge(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\ndef do_work():\n    \"\"\"Does work.\"\"\"\n    pass\n\n# #endregion 🔖Functions\n"
+	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\n# do_work MUST be idempotent.\n# [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/functions/do_work)\ndef do_work():\n    \"\"\"Does work.\"\"\"\n    pass\n\n# #endregion 🔖Functions\n"
 	testFile := "src/app.py"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -3975,7 +3982,7 @@ func TestPythonTripleQuoteDocstringExemptFromCommentBan(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/SRC/APP.PY)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/SRC/APP.PY/FUNCTIONS)\n\n# Function declarations.\n\ndef do_work():\n    \"\"\"Does work.\n    do_work MUST be idempotent.\n    [🛠️src/app.py#Functions§do_work](semiorepo://definition/SRC/APP.PY/FUNCTIONS/DO-WORK)\n    \"\"\"\n    pass\n\n# #endregion 🔖Functions\n"
+	content := "# #region 🔖Header\n\n# [💻src/app.py](semiorepo://file/src/app.py)\n\n# 2025 Test <t@t.com>\n\n# GNU Affero General Public License\n# https://www.gnu.org/licenses/\n\n# Summary of the file.\n\n# #endregion 🔖Header\n\n# #region 🔖Functions\n\n# [🔖src/app.py#Functions](semiorepo://section/src/app.py/functions)\n\n# Function declarations.\n\ndef do_work():\n    \"\"\"Does work.\n    do_work MUST be idempotent.\n    [🛠️src/app.py#Functions§do_work](semiorepo://definition/src/app.py/functions/do_work)\n    \"\"\"\n    pass\n\n# #endregion 🔖Functions\n"
 	testFile := "src/app.py"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -4004,7 +4011,7 @@ func TestDefinitionJSDocExemptFromCommentBan(t *testing.T) {
 	defer func() { rootDir = oldRoot }()
 	subDir := filepath.Join(tmpDir, "src")
 	os.MkdirAll(subDir, 0o755)
-	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/SRC/APP.TS)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/SRC/APP.TS/FUNCTIONS)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n *\n *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/SRC/APP.TS/FUNCTIONS/DO-WORK)\n **/\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
+	content := "// #region 🔖Header\n\n// [💻src/app.ts](semiorepo://file/src/app.ts)\n\n// 2025 Test <t@t.com>\n\n// GNU Affero General Public License\n// https://www.gnu.org/licenses/\n\n// Summary of the file.\n\n// #endregion 🔖Header\n\n// #region 🔖Functions\n\n// [🔖src/app.ts#Functions](semiorepo://section/src/app.ts/functions)\n\n// Function declarations.\n\n/**\n * Does work.\n *\n * doWork MUST be idempotent.\n *\n *  * [🛠️src/app.ts#Functions§doWork](semiorepo://definition/src/app.ts/functions/dowork)\n **/\nexport function doWork(): void {}\n\n// #endregion 🔖Functions\n"
 	testFile := "src/app.ts"
 	absPath := filepath.Join(tmpDir, testFile)
 	if err := WriteTextFile(absPath, content); err != nil {
@@ -4038,7 +4045,7 @@ func TestSectionHeaderIdAndUri(t *testing.T) {
 	if !strings.HasPrefix(uri, "semiorepo://section/") {
 		t.Fatalf("unexpected section header uri: %s", uri)
 	}
-	if !strings.Contains(uri, "FUNCTIONS") {
+	if !strings.Contains(uri, "Functions") {
 		t.Fatalf("section uri should contain slugified section name: %s", uri)
 	}
 }
@@ -4052,7 +4059,7 @@ func TestDefinitionHeaderIdAndUri(t *testing.T) {
 	if !strings.HasPrefix(uri, "semiorepo://definition/") {
 		t.Fatalf("unexpected definition header uri: %s", uri)
 	}
-	if !strings.Contains(uri, "DO-WORK") {
+	if !strings.Contains(uri, "doWork") {
 		t.Fatalf("definition uri should contain slugified def name: %s", uri)
 	}
 }
@@ -7842,15 +7849,15 @@ func TestCliJsonPureData(t *testing.T) {
 		name string
 		args []string
 	}{
-		{"bundle list", []string{"bundle", "list"}},
-		{"ticket list", []string{"ticket", "list"}},
-		{"folder list", []string{"folder", "list", "semio-repo/go"}},
-		{"file list", []string{"file", "list", "semio-repo/go"}},
-		{"section list", []string{"section", "list", "semio-repo/go/main.go"}},
-		{"definition list", []string{"definition", "list", "semio-repo/go/main.go"}},
-		{"policy list", []string{"policy", "list"}},
-		{"contributor list", []string{"contributor", "list"}},
-		{"goal list", []string{"goal", "list"}},
+		{"bundle list", []string{"list", "--only-bundle"}},
+		{"ticket list", []string{"list", "--only-ticket"}},
+		{"folder list", []string{"list", "--only-folder", "semio-repo/go"}},
+		{"file list", []string{"list", "--only-file", "semio-repo/go"}},
+		{"section list", []string{"list", "--only-section", "semio-repo/go/main.go"}},
+		{"definition list", []string{"list", "--only-definition", "semio-repo/go/main.go"}},
+		{"policy list", []string{"list", "--only-policy"}},
+		{"contributor list", []string{"list", "--only-contributor"}},
+		{"goal list", []string{"list", "--only-goal"}},
 	}
 
 	for _, c := range cmds {
@@ -8696,7 +8703,7 @@ func TestRenderEntityMarkdownLink_AllKinds(t *testing.T) {
 				t.Errorf("link for %s missing '](': %s", tt.kind, output)
 			}
 			if !strings.Contains(output, "semiorepo://") {
-				t.Errorf("link for %s missing 'semiorepo://' URI: %s", tt.kind, output)
+				t.Errorf("link for %s missing 'semiorepo://' uri: %s", tt.kind, output)
 			}
 			if strings.Contains(output, "```") {
 				t.Errorf("link for %s contains code fence: %s", tt.kind, output)
@@ -9463,21 +9470,21 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio", "kind": "user"},
 			wantID:  emojiText(EmojiProjectUser) + "semio",
-			wantURI: "semiorepo://project/SEMIO",
+			wantURI: "semiorepo://project/semio",
 		},
 		{
 			name:    "project infrastructure",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "semio-repo", "kind": "infrastructure"},
 			wantID:  emojiText(EmojiProjectInfra) + "semiorepo",
-			wantURI: "semiorepo://project/SEMIO-REPO",
+			wantURI: "semiorepo://project/semio-repo",
 		},
 		{
 			name:    "project research",
 			kind:    "project",
 			data:    map[string]interface{}{"name": "coda", "kind": "research"},
 			wantID:  emojiText(EmojiProjectResearch) + "coda",
-			wantURI: "semiorepo://project/CODA",
+			wantURI: "semiorepo://project/coda",
 		},
 		{
 			name:    "bundles collection",
@@ -9491,21 +9498,21 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/js", "kind": "library"},
 			wantID:  emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js",
-			wantURI: "semiorepo://bundle/SEMIO/JS",
+			wantURI: "semiorepo://bundle/semio/js",
 		},
 		{
 			name:    "bundle example",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "coda/examples", "kind": "library"},
 			wantID:  emojiText(EmojiProjectResearch) + "coda" + emojiText(EmojiBundleLibrary) + "examples",
-			wantURI: "semiorepo://bundle/CODA/EXAMPLES",
+			wantURI: "semiorepo://bundle/coda/examples",
 		},
 		{
 			name:    "bundle ui",
 			kind:    "bundle",
 			data:    map[string]interface{}{"name": "semio/desktop", "kind": "ui"},
 			wantID:  emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleUI) + "desktop",
-			wantURI: "semiorepo://bundle/SEMIO/DESKTOP",
+			wantURI: "semiorepo://bundle/semio/desktop",
 		},
 		{
 			name:    "folders collection empty",
@@ -9519,21 +9526,21 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "folders",
 			data:    map[string]interface{}{"parentPath": "semio/js/src", "parentId": emojiText(EmojiFolderOrg) + "src"},
 			wantID:  emojiText(EmojiFolderOrg) + "src" + emojiText(EmojiFolders),
-			wantURI: "semiorepo://folders/SEMIO/JS/SRC",
+			wantURI: "semiorepo://folders/semio/js/src",
 		},
 		{
 			name:    "folder required",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/src", "kind": "required"},
 			wantID:  emojiText(EmojiFolderRequired) + "src",
-			wantURI: "semiorepo://folder/SEMIO/JS/SRC",
+			wantURI: "semiorepo://folder/semio/js/src",
 		},
 		{
 			name:    "folder organization",
 			kind:    "folder",
 			data:    map[string]interface{}{"path": "semio/js/utils", "kind": "organization"},
 			wantID:  emojiText(EmojiFolderOrg) + "utils",
-			wantURI: "semiorepo://folder/SEMIO/JS/UTILS",
+			wantURI: "semiorepo://folder/semio/js/utils",
 		},
 		{
 			name:    "files collection empty",
@@ -9547,105 +9554,105 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "file",
 			data:    map[string]interface{}{"path": "test.txt", "kind": "docs"},
 			wantID:  emojiText(EmojiFileDocs) + "testtxt",
-			wantURI: "semiorepo://file/TEST.TXT",
+			wantURI: "semiorepo://file/test.txt",
 		},
 		{
 			name:    "file code",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "main.go", "kind": "code"},
 			wantID:  emojiText(EmojiFileCode) + "maingo",
-			wantURI: "semiorepo://file/MAIN.GO",
+			wantURI: "semiorepo://file/main.go",
 		},
 		{
 			name:    "file test",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "semio/js/src/index.test.ts", "kind": "test"},
 			wantID:  emojiText(EmojiFileTest) + "indextestts",
-			wantURI: "semiorepo://file/SEMIO/JS/SRC/INDEX.TEST.TS",
+			wantURI: "semiorepo://file/semio/js/src/index.test.ts",
 		},
 		{
 			name:    "file config",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "tsconfig.json", "kind": "config"},
 			wantID:  emojiText(EmojiFileConfig) + "tsconfigjson",
-			wantURI: "semiorepo://file/TSCONFIG.JSON",
+			wantURI: "semiorepo://file/tsconfig.json",
 		},
 		{
 			name:    "file script",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "build.sh", "kind": "script"},
 			wantID:  emojiText(EmojiFileScript) + "buildsh",
-			wantURI: "semiorepo://file/BUILD.SH",
+			wantURI: "semiorepo://file/build.sh",
 		},
 		{
 			name:    "file resource",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "logo.png", "kind": "resource"},
 			wantID:  emojiText(EmojiFileResource) + "logopng",
-			wantURI: "semiorepo://file/LOGO.PNG",
+			wantURI: "semiorepo://file/logo.png",
 		},
 		{
 			name:    "file license",
 			kind:    "file",
 			data:    map[string]interface{}{"path": "LICENSE.md", "kind": "license"},
 			wantID:  emojiText(EmojiFileLicense) + "licensemd",
-			wantURI: "semiorepo://file/LICENSE.MD",
+			wantURI: "semiorepo://file/LICENSE.md",
 		},
 		{
 			name:    "sections collection",
 			kind:    "sections",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiFileCode) + "indexts"},
 			wantID:  emojiText(EmojiFileCode) + "indexts" + emojiText(EmojiSections),
-			wantURI: "semiorepo://sections/SEMIO/JS/SRC/INDEX.TS",
+			wantURI: "semiorepo://sections/semio/js/src/index.ts",
 		},
 		{
 			name:    "section",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/Design.tsx#State Management#Design Store"},
 			wantID:  buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"}),
-			wantURI: "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE",
+			wantURI: "semiorepo://section/semio/js/src/Design.tsx/State%20Management/Design%20Store",
 		},
 		{
 			name:    "section single level",
 			kind:    "section",
 			data:    map[string]interface{}{"path": "semio/js/src/file.ts#Imports"},
 			wantID:  buildSectionID(buildFileID("semio/js/src/file.ts", nil), []string{"Imports"}),
-			wantURI: "semiorepo://section/SEMIO/JS/SRC/FILE.TS/IMPORTS",
+			wantURI: "semiorepo://section/semio/js/src/file.ts/Imports",
 		},
 		{
 			name:    "definitions collection",
 			kind:    "definitions",
 			data:    map[string]interface{}{"filePath": "semio/js/src/index.ts", "parentId": emojiText(EmojiSection) + "types"},
 			wantID:  emojiText(EmojiSection) + "types" + emojiText(EmojiDefinitions),
-			wantURI: "semiorepo://definitions/SEMIO/JS/SRC/INDEX.TS",
+			wantURI: "semiorepo://definitions/semio/js/src/index.ts",
 		},
 		{
 			name:    "definition with id",
 			kind:    "definition",
 			data:    map[string]interface{}{"id": "semio/js/src/index.ts#MyClass", "kind": "implementation"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/index.ts", nil), nil, "MyClass", DefinitionKindImplementation),
-			wantURI: "semiorepo://definition/SEMIO/JS/SRC/INDEX.TS/MY-CLASS",
+			wantURI: "semiorepo://definition/semio/js/src/index.ts/MyClass",
 		},
 		{
 			name:    "definition interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "interface", "filePath": "semio/js/src/file.ts", "sectionPath": "Types", "name": "MyInterface"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Types"}, "MyInterface", DefinitionKindInterface),
-			wantURI: "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/TYPES/MY-INTERFACE",
+			wantURI: "semiorepo://definition/semio/js/src/file.ts/Types/MyInterface",
 		},
 		{
 			name:    "definition go type treated as interface",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "type", "filePath": "semio-repo/cli/main.go", "sectionPath": "GraphQL Types#GraphQL Input Types", "name": "TicketCloseInput"},
 			wantID:  buildDefinitionID(buildFileID("semio-repo/cli/main.go", nil), []string{"GraphQL Types", "GraphQL Input Types"}, "TicketCloseInput", DefinitionKindInterface),
-			wantURI: "semiorepo://definition/SEMIO-REPO/CLI/MAIN.GO/GRAPH-QL-TYPES/GRAPH-QL-INPUT-TYPES/TICKET-CLOSE-INPUT",
+			wantURI: "semiorepo://definition/semio-repo/cli/main.go/GraphQL%20Types/GraphQL%20Input%20Types/TicketCloseInput",
 		},
 		{
 			name:    "definition constant",
 			kind:    "definition",
 			data:    map[string]interface{}{"kind": "constant", "filePath": "semio/js/src/file.ts", "name": "MAX_SIZE"},
 			wantID:  buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MAX_SIZE", DefinitionKindConstant),
-			wantURI: "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/MAX-SIZE",
+			wantURI: "semiorepo://definition/semio/js/src/file.ts/MAX_SIZE",
 		},
 		{
 			name:    "tickets collection",
@@ -9664,7 +9671,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"slug":  "test-ticket",
 			},
 			wantID:  emojiText(EmojiTicket) + "testticket",
-			wantURI: "semiorepo://ticket/2025/02/04/TEST-TICKET",
+			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
 			name: "ticket with status",
@@ -9677,7 +9684,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 				"status": "open",
 			},
 			wantID:  emojiText(EmojiTicket) + "testticket",
-			wantURI: "semiorepo://ticket/2025/02/04/TEST-TICKET",
+			wantURI: "semiorepo://ticket/2025/02/04/test-ticket",
 		},
 		{
 			name:    "goals collection",
@@ -9712,7 +9719,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "draft",
 			data:    map[string]interface{}{"slug": "my-draft"},
 			wantID:  emojiText(EmojiDraft) + "mydraft",
-			wantURI: "semiorepo://draft/MY-DRAFT",
+			wantURI: "semiorepo://draft/my-draft",
 		},
 		{
 			name:    "todos collection",
@@ -9726,7 +9733,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "todo",
 			data:    map[string]interface{}{"id": "my-todo"},
 			wantID:  emojiText(EmojiTodo) + "mytodo",
-			wantURI: "semiorepo://todo/MY-TODO",
+			wantURI: "semiorepo://todo/my-todo",
 		},
 		{
 			name:    "policies collection",
@@ -9740,7 +9747,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "policy",
 			data:    map[string]interface{}{"id": "/code-hygiene"},
 			wantID:  emojiText(EmojiPolicy) + "codehygiene",
-			wantURI: "semiorepo://policy/CODE-HYGIENE",
+			wantURI: "semiorepo://policy/code-hygiene",
 		},
 		{
 			name:    "statutes collection",
@@ -9753,8 +9760,8 @@ func TestArtifactIDAndURI(t *testing.T) {
 			name:    "statute",
 			kind:    "statute",
 			data:    map[string]interface{}{"id": "code/inline-comment"},
-			wantID:  "",
-			wantURI: "semiorepo://statute/CODE/INLINE-COMMENT",
+			wantID:  "codeinlinecomment",
+			wantURI: "semiorepo://statute/code/inline-comment",
 		},
 		{
 			name:    "contributors collection",
@@ -9768,7 +9775,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "contributor",
 			data:    map[string]interface{}{"github": "usalu"},
 			wantID:  emojiText(EmojiContributor) + "usalu",
-			wantURI: "semiorepo://contributor/USALU",
+			wantURI: "semiorepo://contributor/usalu",
 		},
 		{
 			name:    "commits collection",
@@ -9782,7 +9789,7 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "commit",
 			data:    map[string]interface{}{"sha": "abc123"},
 			wantID:  emojiText(EmojiCommit) + "abc123",
-			wantURI: "semiorepo://commit/ABC123",
+			wantURI: "semiorepo://commit/abc123",
 		},
 		{
 			name:    "interactions collection",
@@ -9796,14 +9803,14 @@ func TestArtifactIDAndURI(t *testing.T) {
 			kind:    "interaction",
 			data:    map[string]interface{}{"kind": "started", "entityId": emojiText(EmojiTicket) + "introduceinteractionmechanism"},
 			wantID:  emojiText(EmojiTicket) + "introduceinteractionmechanism" + emojiText(EmojiInteractionStarted),
-			wantURI: "semiorepo://interaction/ticket/INTRODUCEINTERACTIONMECHANISM",
+			wantURI: "semiorepo://interaction/on/ticket/introduceinteractionmechanism/started",
 		},
 		{
 			name:    "interaction finished goal",
 			kind:    "interaction",
 			data:    map[string]interface{}{"kind": "finished", "entityId": emojiText(EmojiGoal) + "r2602"},
 			wantID:  emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished),
-			wantURI: "semiorepo://interaction/goal/R2602",
+			wantURI: "semiorepo://interaction/on/goal/r2602/finished",
 		},
 	}
 
@@ -9827,31 +9834,31 @@ func TestIdToUri(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"project user", emojiText(EmojiProjectUser) + "semio", "semiorepo://project/SEMIO"},
-		{"project infra", emojiText(EmojiProjectInfra) + "semiorepo", "semiorepo://project/SEMIOREPO"},
-		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://bundle/SEMIO/JS"},
-		{"folder required", emojiText(EmojiFolderRequired) + "src", "semiorepo://folder/SRC"},
-		{"folder org", emojiText(EmojiFolderOrg) + "utils", "semiorepo://folder/UTILS"},
-		{"file docs", emojiText(EmojiFileDocs) + "testtxt", "semiorepo://file/TESTTXT"},
-		{"file code", emojiText(EmojiFileCode) + "maingo", "semiorepo://file/MAINGO"},
+		{"project user", emojiText(EmojiProjectUser) + "semio", "semiorepo://project/semio"},
+		{"project infra", emojiText(EmojiProjectInfra) + "semiorepo", "semiorepo://project/semiorepo"},
+		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://bundle/semio/js"},
+		{"folder required", emojiText(EmojiFolderRequired) + "src", "semiorepo://folder/src"},
+		{"folder org", emojiText(EmojiFolderOrg) + "utils", "semiorepo://folder/utils"},
+		{"file docs", emojiText(EmojiFileDocs) + "testtxt", "semiorepo://file/testtxt"},
+		{"file code", emojiText(EmojiFileCode) + "maingo", "semiorepo://file/maingo"},
 		{"section collection", emojiText(EmojiSection), "semiorepo://sections"},
-		{"section", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), "semiorepo://section/SEMIO/JS/SRC/DESIGNTSX/STATEMANAGMENT/STORE"},
-		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), "semiorepo://definition/SEMIO/JS/SRC/FILETS/TYPES/MYCLASS"},
+		{"section", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"state managment", "store"}), "semiorepo://section/semio/js/src/designtsx/statemanagment/store"},
+		{"definition impl", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"types"}, "myclass", DefinitionKindImplementation), "semiorepo://definition/semio/js/src/filets/types/myclass"},
 		{"ticket collection", emojiText(EmojiTicket), "semiorepo://tickets"},
-		{"ticket", emojiText(EmojiTicket) + "testticket", "semiorepo://ticket/TESTTICKET"},
+		{"ticket", emojiText(EmojiTicket) + "testticket", "semiorepo://ticket/testticket"},
 		{"goal collection", emojiText(EmojiGoal), "semiorepo://goals"},
-		{"goal", emojiText(EmojiGoal) + "r2602runningsketchpad", "semiorepo://goal/R2602RUNNINGSKETCHPAD"},
-		{"goal nested", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", "semiorepo://goal/R2602/RUNNINGSKETCHPAD"},
+		{"goal", emojiText(EmojiGoal) + "r2602runningsketchpad", "semiorepo://goal/r2602runningsketchpad"},
+		{"goal nested", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad", "semiorepo://goal/r2602/runningsketchpad"},
 		{"draft collection", emojiText(EmojiDraft), "semiorepo://drafts"},
-		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://draft/MYDRAFT"},
+		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://draft/mydraft"},
 		{"policy collection", emojiText(EmojiPolicy), "semiorepo://policies"},
-		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://policy/CODEHYGIENE"},
+		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://policy/codehygiene"},
 		{"contributor collection", emojiText(EmojiContributor), "semiorepo://contributors"},
-		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://contributor/USALU"},
+		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://contributor/usalu"},
 		{"commit collection", emojiText(EmojiCommit), "semiorepo://commits"},
-		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://commit/ABC123"},
-		{"interaction started ticket", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), "semiorepo://interaction/ticket/TESTTICKET"},
-		{"interaction finished goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished), "semiorepo://interaction/goal/R2602"},
+		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://commit/abc123"},
+		{"interaction started ticket", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted), "semiorepo://interaction/on/ticket/testticket/started"},
+		{"interaction finished goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionFinished), "semiorepo://interaction/on/goal/r2602/finished"},
 		{"empty string", "", ""},
 	}
 	for _, tt := range tests {
@@ -9872,40 +9879,40 @@ func TestUriToId(t *testing.T) {
 	}{
 		{"repo", "semiorepo://root", ""},
 		{"projects", "semiorepo://projects", emojiText(EmojiProjects)},
-		{"project", "semiorepo://project/SEMIO", emojiText(EmojiProjectUser) + "semio"},
-		{"project infra", "semiorepo://project/SEMIO-REPO", emojiText(EmojiProjectInfra) + "semiorepo"},
+		{"project", "semiorepo://project/semio", emojiText(EmojiProjectUser) + "semio"},
+		{"project infra", "semiorepo://project/semio-repo", emojiText(EmojiProjectInfra) + "semiorepo"},
 		{"bundles", "semiorepo://bundles", emojiText(EmojiBundles)},
-		{"bundle", "semiorepo://bundle/SEMIO/JS", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
+		{"bundle", "semiorepo://bundle/semio/js", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js"},
 		{"folders", "semiorepo://folders", emojiText(EmojiFolders)},
-		{"folders with parent", "semiorepo://folders/SEMIO/JS/SRC", emojiText(EmojiFolders)},
-		{"folder", "semiorepo://folder/SEMIO/JS/SRC", emojiText(EmojiFolderOrg) + "semiojssrc"},
+		{"folders with parent", "semiorepo://folders/semio/js/src", emojiText(EmojiFolders)},
+		{"folder", "semiorepo://folder/semio/js/src", emojiText(EmojiFolderOrg) + "semiojssrc"},
 		{"files", "semiorepo://files", emojiText(EmojiFiles)},
-		{"file", "semiorepo://file/TEST.TXT", emojiText(EmojiFileCode) + "testtxt"},
+		{"file", "semiorepo://file/test.txt", emojiText(EmojiFileCode) + "testtxt"},
 		{"sections", "semiorepo://sections", emojiText(EmojiSections)},
-		{"section", "semiorepo://section/SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE", buildSectionID(buildFileID("semio/js/src/design.tsx", nil), []string{"STATE-MANAGEMENT", "DESIGN-STORE"})},
+		{"section", "semiorepo://section/semio/js/src/Design.tsx/State%20Management/Design%20Store", buildSectionID(buildFileID("semio/js/src/Design.tsx", nil), []string{"State Management", "Design Store"})},
 		{"definitions", "semiorepo://definitions", emojiText(EmojiDefinitions)},
-		{"definition single", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/MY-FUNC", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "MY-FUNC", DefinitionKindImplementation)},
-		{"definition with section", "semiorepo://definition/SEMIO/JS/SRC/FILE.TS/SECTION/MY-FUNC", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"SECTION"}, "MY-FUNC", DefinitionKindImplementation)},
+		{"definition single", "semiorepo://definition/semio/js/src/file.ts/myFunc", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), nil, "myFunc", DefinitionKindImplementation)},
+		{"definition with section", "semiorepo://definition/semio/js/src/file.ts/Section/myFunc", buildDefinitionID(buildFileID("semio/js/src/file.ts", nil), []string{"Section"}, "myFunc", DefinitionKindImplementation)},
 		{"tickets", "semiorepo://tickets", emojiText(EmojiTicket)},
-		{"ticket", "semiorepo://ticket/2025/02/04/TEST-TICKET", emojiText(EmojiTicket) + "20250204testticket"},
+		{"ticket", "semiorepo://ticket/2025/02/04/test-ticket", emojiText(EmojiTicket) + "20250204testticket"},
 		{"goals", "semiorepo://goals", emojiText(EmojiGoal)},
 		{"goal", "semiorepo://goal/RUNNING-SKETCHPAD", emojiText(EmojiGoal) + "runningsketchpad"},
 		{"goal nested", "semiorepo://goal/R26-02/RUNNING-SKETCHPAD", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiGoal) + "runningsketchpad"},
 		{"drafts", "semiorepo://drafts", emojiText(EmojiDraft)},
-		{"draft", "semiorepo://draft/MY-DRAFT", emojiText(EmojiDraft) + "mydraft"},
+		{"draft", "semiorepo://draft/my-draft", emojiText(EmojiDraft) + "mydraft"},
 		{"todos", "semiorepo://todos", emojiText(EmojiTodo)},
-		{"todo", "semiorepo://todo/MY-TODO", emojiText(EmojiTodo) + "mytodo"},
+		{"todo", "semiorepo://todo/my-todo", emojiText(EmojiTodo) + "mytodo"},
 		{"policies", "semiorepo://policies", emojiText(EmojiPolicy)},
-		{"policy", "semiorepo://policy/CODE-HYGIENE", emojiText(EmojiPolicy) + "codehygiene"},
+		{"policy", "semiorepo://policy/code-hygiene", emojiText(EmojiPolicy) + "codehygiene"},
 		{"statutes", "semiorepo://statutes", ""},
-		{"statute", "semiorepo://statute/CODE/INLINE-COMMENT", ""},
+		{"statute", "semiorepo://statute/code/inline-comment", ""},
 		{"contributors", "semiorepo://contributors", emojiText(EmojiContributor)},
-		{"contributor", "semiorepo://contributor/USALU", emojiText(EmojiContributor) + "usalu"},
+		{"contributor", "semiorepo://contributor/usalu", emojiText(EmojiContributor) + "usalu"},
 		{"commits", "semiorepo://commits", emojiText(EmojiCommit)},
-		{"commit", "semiorepo://commit/ABC123", emojiText(EmojiCommit) + "abc123"},
+		{"commit", "semiorepo://commit/abc123", emojiText(EmojiCommit) + "abc123"},
 		{"interactions", "semiorepo://interactions", ""},
-		{"interaction ticket", "semiorepo://interaction/ticket/TESTTICKET", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
-		{"interaction goal", "semiorepo://interaction/goal/R2602", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
+		{"interaction ticket", "semiorepo://interaction/on/ticket/testticket/started", emojiText(EmojiTicket) + "testticket" + emojiText(EmojiInteractionStarted)},
+		{"interaction goal", "semiorepo://interaction/on/goal/r2602/started", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted)},
 		{"invalid", "https://example.com", ""},
 		{"empty", "", ""},
 	}
@@ -9924,10 +9931,10 @@ func TestPathToUriPath(t *testing.T) {
 		path string
 		want string
 	}{
-		{"semio/js/src", "SEMIO/JS/SRC"},
-		{"semio-repo/cli/main.go", "SEMIO-REPO/CLI/MAIN.GO"},
-		{"test.txt", "TEST.TXT"},
-		{"a b/c d", "A-B/C-D"},
+		{"semio/js/src", "semio/js/src"},
+		{"semio-repo/cli/main.go", "semio-repo/cli/main.go"},
+		{"test.txt", "test.txt"},
+		{"a b/c d", "a%20b/c%20d"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.path, func(t *testing.T) {
@@ -9943,8 +9950,9 @@ func TestPathFromUriPath(t *testing.T) {
 		uriPath string
 		want    string
 	}{
-		{"SEMIO/JS/SRC", "semio/js/src"},
-		{"SEMIO-REPO/CLI/MAIN.GO", "semio-repo/cli/main.go"},
+		{"semio/js/src", "semio/js/src"},
+		{"semio-repo/cli/main.go", "semio-repo/cli/main.go"},
+		{"a%20b/c%20d", "a b/c d"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.uriPath, func(t *testing.T) {
@@ -9961,9 +9969,9 @@ func TestSectionIdValueToUriPath(t *testing.T) {
 		value string
 		want  string
 	}{
-		{"no hash", "semio/js/src/file.ts", "SEMIO/JS/SRC/FILE.TS"},
-		{"single section", "semio/js/src/file.ts#Imports", "SEMIO/JS/SRC/FILE.TS/IMPORTS"},
-		{"nested sections", "semio/js/src/Design.tsx#State Management#Design Store", "SEMIO/JS/SRC/DESIGN.TSX/STATE-MANAGEMENT/DESIGN-STORE"},
+		{"no hash", "semio/js/src/file.ts", "semio/js/src/file.ts"},
+		{"single section", "semio/js/src/file.ts#Imports", "semio/js/src/file.ts/Imports"},
+		{"nested sections", "semio/js/src/Design.tsx#State Management#Design Store", "semio/js/src/Design.tsx/State%20Management/Design%20Store"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -9981,9 +9989,9 @@ func TestDefinitionIdValueToUriPath(t *testing.T) {
 		value string
 		want  string
 	}{
-		{"no hash", "semio/js/src/file.ts", "SEMIO/JS/SRC/FILE.TS"},
-		{"with section and def", "semio/js/src/file.ts#Section§myFunc", "SEMIO/JS/SRC/FILE.TS/SECTION/MY-FUNC"},
-		{"def only", "semio/js/src/file.ts§myFunc", "SEMIO/JS/SRC/FILE.TS/MY-FUNC"},
+		{"no hash", "semio/js/src/file.ts", "semio/js/src/file.ts"},
+		{"with section and def", "semio/js/src/file.ts#Section§myFunc", "semio/js/src/file.ts/Section/myFunc"},
+		{"def only", "semio/js/src/file.ts§myFunc", "semio/js/src/file.ts/myFunc"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -10003,8 +10011,8 @@ func TestParseSectionUriPath(t *testing.T) {
 		wantSlugs []string
 	}{
 		{"file only", "semio/js/src/file.ts", "semio/js/src/file.ts", nil},
-		{"file with sections", "semio/js/src/Design.tsx/STATE-MANAGEMENT/DESIGN-STORE", "semio/js/src/Design.tsx", []string{"STATE-MANAGEMENT", "DESIGN-STORE"}},
-		{"file with one section", "semio/js/src/file.ts/IMPORTS", "semio/js/src/file.ts", []string{"IMPORTS"}},
+		{"file with sections", "semio/js/src/Design.tsx/State%20Management/Design%20Store", "semio/js/src/Design.tsx", []string{"State%20Management", "Design%20Store"}},
+		{"file with one section", "semio/js/src/file.ts/Imports", "semio/js/src/file.ts", []string{"Imports"}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -10031,9 +10039,9 @@ func TestStatuteIdToUriPath(t *testing.T) {
 		id   string
 		want string
 	}{
-		{"single segment", "code", "CODE"},
-		{"two segments", "code/inline-comment", "CODE/INLINE-COMMENT"},
-		{"three segments", "code/file/missing-header-region", "CODE/FILE/MISSING-HEADER-REGION"},
+		{"single segment", "code", "code"},
+		{"two segments", "code/inline-comment", "code/inline-comment"},
+		{"three segments", "code/file/missing-header-region", "code/file/missing-header-region"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -10051,9 +10059,9 @@ func TestStatuteUriPathToId(t *testing.T) {
 		uriPath string
 		want    string
 	}{
-		{"single segment", "CODE", "code"},
-		{"two segments", "CODE/INLINE-COMMENT", "code/inline-comment"},
-		{"three segments", "CODE/FILE/MISSING-HEADER-REGION", "code/file/missing-header-region"},
+		{"single segment", "code", "code"},
+		{"two segments", "code/inline-comment", "code/inline-comment"},
+		{"three segments", "code/file/missing-header-region", "code/file/missing-header-region"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -10157,17 +10165,17 @@ func TestIdUriRoundTrip(t *testing.T) {
 		id   string
 		uri  string
 	}{
-		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://policy/CODEHYGIENE"},
-		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://contributor/USALU"},
-		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://commit/ABC123"},
-		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://draft/MYDRAFT"},
-		{"section", emojiText(EmojiSection) + "imports", "semiorepo://section/IMPORTS"},
-		{"file", emojiText(EmojiFileCode) + "indexts", "semiorepo://file/INDEXTS"},
-		{"ticket", emojiText(EmojiTicket) + "20260115someticket", "semiorepo://ticket/20260115SOMETICKET"},
-		{"goal", emojiText(EmojiGoal) + "r2602running", "semiorepo://goal/R2602RUNNING"},
-		{"interaction goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted), "semiorepo://interaction/goal/R2602"},
-		{"project", emojiText(EmojiProjectUser) + "semio", "semiorepo://project/SEMIO"},
-		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://bundle/SEMIO/JS"},
+		{"policy", emojiText(EmojiPolicy) + "codehygiene", "semiorepo://policy/codehygiene"},
+		{"contributor", emojiText(EmojiContributor) + "usalu", "semiorepo://contributor/usalu"},
+		{"commit", emojiText(EmojiCommit) + "abc123", "semiorepo://commit/abc123"},
+		{"draft", emojiText(EmojiDraft) + "mydraft", "semiorepo://draft/mydraft"},
+		{"section", emojiText(EmojiSection) + "imports", "semiorepo://section/imports"},
+		{"file", emojiText(EmojiFileCode) + "indexts", "semiorepo://file/indexts"},
+		{"ticket", emojiText(EmojiTicket) + "20260115someticket", "semiorepo://ticket/20260115someticket"},
+		{"goal", emojiText(EmojiGoal) + "r2602running", "semiorepo://goal/r2602running"},
+		{"interaction goal", emojiText(EmojiGoal) + "r2602" + emojiText(EmojiInteractionStarted), "semiorepo://interaction/on/goal/r2602/started"},
+		{"project", emojiText(EmojiProjectUser) + "semio", "semiorepo://project/semio"},
+		{"bundle", emojiText(EmojiProjectUser) + "semio" + emojiText(EmojiBundleLibrary) + "js", "semiorepo://bundle/semio/js"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name+"_IdToUri", func(t *testing.T) {
@@ -11049,7 +11057,7 @@ func TestParityGoalList(t *testing.T) {
 			t.Fatalf("ToolGoalList returned error: %s", toolResult.Error)
 		}
 		mcpOut := toolOutputText(toolResult)
-		if cliOut != mcpOut {
+		if normalizeRelativeTimes(cliOut) != normalizeRelativeTimes(mcpOut) {
 			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
 		}
 	})
@@ -11094,7 +11102,7 @@ func TestParityContributorList(t *testing.T) {
 			t.Fatalf("ToolContributorList returned error: %s", toolResult.Error)
 		}
 		mcpOut := toolOutputText(toolResult)
-		if cliOut != mcpOut {
+		if normalizeRelativeTimes(cliOut) != normalizeRelativeTimes(mcpOut) {
 			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
 		}
 	})
@@ -11126,7 +11134,7 @@ func TestParityTicketList(t *testing.T) {
 			t.Fatalf("ToolTicketList returned error: %s", toolResult.Error)
 		}
 		mcpOut := toolOutputText(toolResult)
-		if cliOut != mcpOut {
+		if normalizeRelativeTimes(cliOut) != normalizeRelativeTimes(mcpOut) {
 			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
 		}
 	})
@@ -11195,7 +11203,7 @@ func TestParityProjectList(t *testing.T) {
 			t.Fatalf("ToolProjectList returned error: %s", toolResult.Error)
 		}
 		mcpOut := toolOutputText(toolResult)
-		if cliOut != mcpOut {
+		if normalizeRelativeTimes(cliOut) != normalizeRelativeTimes(mcpOut) {
 			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
 		}
 	})
@@ -11228,7 +11236,7 @@ func TestParityProjectTree(t *testing.T) {
 			t.Fatalf("ToolProjectTree returned error: %s", toolResult.Error)
 		}
 		mcpOut := toolOutputText(toolResult)
-		if cliOut != mcpOut {
+		if normalizeRelativeTimes(cliOut) != normalizeRelativeTimes(mcpOut) {
 			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
 		}
 	})
@@ -11236,9 +11244,20 @@ func TestParityProjectTree(t *testing.T) {
 	t.Run("projects are sorted alphabetically", func(t *testing.T) {
 		mcpOut := toolOutputText(ToolProjectTree())
 		lines := strings.Split(strings.TrimSpace(mcpOut), "\n")
-		for i := 1; i < len(lines); i++ {
-			if lines[i] < lines[i-1] {
-				t.Errorf("projects not sorted: %q comes after %q", lines[i], lines[i-1])
+		var projectNames []string
+		for _, line := range lines {
+			trimmed := strings.TrimSpace(line)
+			if idx := strings.Index(trimmed, "semiorepo://project/"); idx >= 0 {
+				nameStart := idx + len("semiorepo://project/")
+				nameEnd := strings.Index(trimmed[nameStart:], ")")
+				if nameEnd >= 0 {
+					projectNames = append(projectNames, trimmed[nameStart:nameStart+nameEnd])
+				}
+			}
+		}
+		for i := 1; i < len(projectNames); i++ {
+			if projectNames[i] < projectNames[i-1] {
+				t.Errorf("projects not sorted: %q comes after %q", projectNames[i], projectNames[i-1])
 			}
 		}
 	})
@@ -11260,7 +11279,7 @@ func TestParityPolicyList(t *testing.T) {
 			t.Fatalf("ToolPolicyList returned error: %s", toolResult.Error)
 		}
 		mcpOut := toolOutputText(toolResult)
-		if cliOut != mcpOut {
+		if normalizeRelativeTimes(cliOut) != normalizeRelativeTimes(mcpOut) {
 			t.Errorf("output mismatch:\nCLI:\n%s\nMCP:\n%s", cliOut, mcpOut)
 		}
 	})
@@ -11911,11 +11930,62 @@ func TestBuildMonorepoTree(t *testing.T) {
 			categoryIDs[c.ID] = true
 		}
 
-		expected := []string{"projects", "goals", "drafts", "policies", "contributors", "commits"}
+		expected := []string{"folders", "projects", "goals", "drafts", "policies", "contributors", "commits"}
 		for _, id := range expected {
 			if !categoryIDs[id] {
 				t.Errorf("missing category: %s", id)
 			}
+		}
+	})
+
+	t.Run("folders category has folder and file hierarchy", func(t *testing.T) {
+		ctx := context.Background()
+		tree := BuildMonorepoTree(ctx, TreeBuildOptions{IncludeSections: true})
+		var foldersNode *TreeNode
+		for _, c := range tree.Children {
+			if c.ID == "folders" {
+				foldersNode = c
+				break
+			}
+		}
+		if foldersNode == nil {
+			t.Fatal("folders category not found")
+		}
+		if len(foldersNode.Children) == 0 {
+			t.Fatal("folders category should have children")
+		}
+		hasFolder := false
+		hasFile := false
+		hasSection := false
+		hasDefinition := false
+		var walk func(*TreeNode)
+		walk = func(node *TreeNode) {
+			switch node.Kind {
+			case TreeNodeFolder:
+				hasFolder = true
+			case TreeNodeFile:
+				hasFile = true
+			case TreeNodeSection:
+				hasSection = true
+			case TreeNodeDefinition:
+				hasDefinition = true
+			}
+			for _, child := range node.Children {
+				walk(child)
+			}
+		}
+		walk(foldersNode)
+		if !hasFolder {
+			t.Error("folders category should include folder nodes")
+		}
+		if !hasFile {
+			t.Error("folders category should include file nodes")
+		}
+		if !hasSection {
+			t.Error("folders category should include section nodes when IncludeSections is true")
+		}
+		if !hasDefinition {
+			t.Error("folders category should include definition nodes when IncludeSections is true")
 		}
 	})
 
@@ -11949,6 +12019,46 @@ func TestBuildMonorepoTree(t *testing.T) {
 		}
 		if !hasBundles {
 			t.Error("at least one project should have bundles")
+		}
+	})
+
+	t.Run("policies category uses entitykind grouping", func(t *testing.T) {
+		ctx := context.Background()
+		tree := BuildMonorepoTree(ctx)
+		var policiesNode *TreeNode
+		for _, c := range tree.Children {
+			if c.ID == "policies" {
+				policiesNode = c
+				break
+			}
+		}
+		if policiesNode == nil {
+			t.Fatal("policies category not found")
+		}
+		if len(policiesNode.Children) == 0 {
+			t.Fatal("policies should have children")
+		}
+		policy := policiesNode.Children[0]
+		if policy.Kind != TreeNodePolicy {
+			t.Fatalf("expected policy node, got %s", policy.Kind)
+		}
+		if len(policy.Children) == 0 {
+			t.Fatal("policy should contain entitykind children")
+		}
+		entityKind := policy.Children[0]
+		if entityKind.Kind != TreeNodeCategory {
+			t.Fatalf("expected entitykind category node, got %s", entityKind.Kind)
+		}
+		if entityKind.SubKind != "entitykind" {
+			t.Fatalf("expected entitykind subkind, got %s", entityKind.SubKind)
+		}
+		if len(entityKind.Children) == 0 {
+			t.Fatal("entitykind should contain statute children")
+		}
+		for _, statute := range entityKind.Children {
+			if statute.Kind != TreeNodeStatute {
+				t.Fatalf("expected statute child under entitykind, got %s", statute.Kind)
+			}
 		}
 	})
 
@@ -12266,7 +12376,7 @@ func TestUnifiedRenderingGoalIdentity(t *testing.T) {
 			Kind:  TreeNodeGoal,
 			ID:    "TEST-GOAL",
 			Label: "TEST-GOAL",
-			URI:   "semiorepo://goal/TEST-GOAL",
+			URI:   "semiorepo://goal/test-goal",
 			Data:  data,
 		}
 		var sb strings.Builder
@@ -12292,7 +12402,7 @@ func TestUnifiedRenderingGoalIdentity(t *testing.T) {
 			Kind:  TreeNodeGoal,
 			ID:    "TEST-GOAL",
 			Label: "TEST-GOAL",
-			URI:   "semiorepo://goal/TEST-GOAL",
+			URI:   "semiorepo://goal/test-goal",
 			Data:  data,
 		}
 		var sb strings.Builder
@@ -12498,7 +12608,7 @@ func TestUnifiedRenderingSectionIdentity(t *testing.T) {
 			Kind:  TreeNodeSection,
 			ID:    "sec1",
 			Label: "MySection",
-			URI:   "semiorepo://section/test/file.ts/MYSECTION",
+			URI:   "semiorepo://section/test/file.ts/mysection",
 			Data:  data,
 		}
 		var sb strings.Builder

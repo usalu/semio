@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio📚js🧪sketchpadtestts](semiorepo://file/SEMIO/JS/SKETCHPAD.TEST.TS)
+// [👤semio📚js🧪sketchpadtestts](semiorepo://file/semio/js/sketchpad.test.ts)
 
 // 2025 Ueli Saluz <ueli@semio-tech.com>
 

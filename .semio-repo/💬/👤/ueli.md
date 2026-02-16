@@ -39,12 +39,23 @@ Update tree to not have sections but every section should have a tree. A tab sho
 
 ### [👤semio📚js🗃️sketchpad]()
 
-#### [👤semio📚js🗃️sketchpad💻designtsx]
+#### [👤semio📚js🗃️sketchpad💻designtsx](semiorepo://file/semio/js/sketchpad/Design.tsx)
 
 # 🧰semiorepo
 
 ## 🧰semiorepo⌨️cli
 
+The test mechanism should be centralized to only use
+```bash
+./semio-repo/cli/cli test # run all tests
+./semio-repo/cli/cli test <test-id> # run shared tests
+./semio-repo/cli/cli test <entity-id-or-uri> # run tests for a specific entity
+```
+---
+The uri are only uri-escaped but dont contain any modification such as case changing.
+No modifcation, no slugs, nothing - just uri encode. No loss of information.
+Fix implementations and tests.
+---
 semio repo cli tree is not showing the full project tree.
 Note that TODO, STATUTE, BREACH are not shown because they can be children of most entities.
 - FOLDER*
@@ -112,6 +123,8 @@ sections: `{{(parent-file-id|parent-section-id)?}}🔖` parent: section | file, 
 section: `{{(parent-file-id|parent-section-id)?}}{{flat-section-name}}`, parent: section | file, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store` for `Store` section with parent section `State Managment`
 definitions: `{{<diffable-id>}}🏷️` parent: diffable, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🏷️` for all definitions in `Store` section
 definition: `{{<section-id>}}<kind>{{flat-definition-name}}`, parent: section, <kind> - 🛠️:implementation, ✂️:interface, 🪨:constant e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🛠️createsketchpadstore` for `createSketchpadStore`
+test: `{{<testable-id>}}🧪`, parent: testable, e.g. `👤semio📚js💻semiots🧪flattendesign` for `Store` section with parent section `State Managment`
+tests: `{{(parent-testable-id|parent-test-id)?}}🧪` parent: testable | test, e.g. `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🧪` for all tests in `Store` section
 goals: `{{(repo-id|parent-goal-id)?}}🎯` parent: goal | repo, e.g. `🎯` for all goals on the repo or `🎯r26021🎯runningsketchpad🎯` for all goals under `Running Sketchpad`
 goal: `{{(repo-id|parent-goal-id)?}}🎯{{flat-name}}` parent: goal | repo, e.g. `🎯r26021🎯runningsketchpad` for goal with name `Running Sketchpad` for parent `r26.02-1`
 tickets: `{{diffable-id?}}🎫` parent: diffable, e.g. `🎫` for all tickets (on repo) | `👤semio📚js🗃️sketchpad💻designtsx🔖statemanagment🔖store🎫` for all tickets that diffed `Store` section | `🎯r26021🎯runningsketchpad🎫` for all tickets under `Running Sketchpad`

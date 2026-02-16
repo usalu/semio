@@ -1,6 +1,6 @@
 // #region 🔖Header
 
-// [👤semio🖱️desktop⚙️vitepreloadconfigts](semiorepo://file/SEMIO/DESKTOP/VITE.PRELOAD.CONFIG.TS)
+// [👤semio🖱️desktop⚙️vitepreloadconfigts](semiorepo://file/semio/desktop/vite.preload.config.ts)
 
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 
@@ -21,7 +21,7 @@
 
 // #region 🔖Configuration
 
-// [👤semio🖱️desktop⚙️vitepreloadconfigts🔖configuration](semiorepo://section/SEMIO/DESKTOP/VITE.PRELOAD.CONFIG.TS/CONFIGURATION)
+// [👤semio🖱️desktop⚙️vitepreloadconfigts🔖configuration](semiorepo://section/semio/desktop/vite.preload.config.ts/Configuration)
 // Vite configuration for building the Electron preload script as a CJS library.
 // Configuration MUST externalize Electron and Node.js built-in modules.
 
